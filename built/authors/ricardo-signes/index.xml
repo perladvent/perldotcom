@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ricardo Signes on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/ricardo-signes/</link>
+    <description>Recent content in Ricardo Signes on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 09 Mar 2010 16:14:12 -0800</lastBuildDate>
+    <atom:link href="/authors/ricardo-signes/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>More Code, Less Cruft: Managing Distributions with Dist::Zilla</title>
+      <link>http://localhost:1313/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html/</link>
+      <pubDate>Tue, 09 Mar 2010 16:14:12 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html/</guid>
+      <description>
+
+&lt;p&gt;Every software distribution is a bunch of files written and maintained by programmers. The files are of three types: code, documentation, and crap—though this distinction is too subtle. Much of the documentation and code is crap, too. It&amp;rsquo;s pointless. It&amp;rsquo;s boring to write and to maintain, but convention dictates that it exist.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s killer feature is the CPAN, and &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla&#34;&gt;Dist::Zilla&lt;/a&gt; is a tool for packaging code to release to the CPAN. The central notion of Dzil is that no programmer should ever have to waste his or her precious time on boring things like &lt;em&gt;README&lt;/em&gt; files, prerequisite accounting, duplicated license statements, or anything else other than solving real problems.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s worth noting, too, that the &amp;ldquo;CPAN distribution&amp;rdquo; format is useful even if your code never escapes to the CPAN. Libraries packaged &lt;em&gt;in any way&lt;/em&gt; are much easier to manage than their unpackaged counterpart, and any libraries package the CPAN way can interact with all the standard CPAN tools. As long are you&amp;rsquo;re going to package up your code, you might as well use the same tools as everyone else in the game.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-step-by-step-conversion&#34;&gt;&lt;strong&gt;A Step-by-Step Conversion&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Switching your old code to use Dist::Zilla is easy. You can be conservative and work in small steps, or you can go whole hog. This article demonstrates the process with one of my distributions, &lt;a href=&#34;https://metacpan.org/pod/Number::Nary&#34;&gt;Number::Nary&lt;/a&gt;. To follow along, clone its git repository and start with the commit tagged &lt;code&gt;pre-dzil&lt;/code&gt;. If you don&amp;rsquo;t want to use &lt;code&gt;git&lt;/code&gt;, that&amp;rsquo;s fine. You&amp;rsquo;ll still be able to see what&amp;rsquo;s going on.&lt;/p&gt;
+
+&lt;h4 id=&#34;replacing-makefile-pl&#34;&gt;&lt;strong&gt;Replacing Makefile.PL&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;The first thing to do is to replace &lt;em&gt;Makefile.PL&lt;/em&gt;, the traditional program for building and installing distributions (or &lt;em&gt;dists&lt;/em&gt;). If you started with a &lt;a href=&#34;https://metacpan.org/pod/Module::Build&#34;&gt;Module::Build&lt;/a&gt;-based distribution, you&amp;rsquo;d replace &lt;em&gt;Build.PL&lt;/em&gt;, instead. Dist::Zilla will build those files for you in the dist you ship so that installing users have them, but you&amp;rsquo;ll never need to think about them again.&lt;/p&gt;
+
+&lt;p&gt;I packaged &lt;code&gt;Number::Nary&lt;/code&gt; with &lt;a href=&#34;https://metacpan.org/pod/Module::Install&#34;&gt;Module::Install&lt;/a&gt;, the library that inspired me to build &lt;code&gt;Dist::Zilla&lt;/code&gt;. Its &lt;em&gt;Makefile.PL&lt;/em&gt; looked like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use inc::Module::Install;
+  all_from(&#39;lib/Number/Nary.pm&#39;);
+  requires(&#39;Carp&#39;            =&amp;gt; 0);
+  requires(&#39;Test::More&#39;      =&amp;gt; 0);
+  requires(&#39;List::MoreUtils&#39; =&amp;gt; 0.09);
+  requires(&#39;Sub::Exporter&#39;   =&amp;gt; 0.90);
+  requires(&#39;UDCode&#39;          =&amp;gt; 0);
+  auto_manifest;
+  extra_tests;
+  WriteAll;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If I&amp;rsquo;d used &lt;code&gt;ExtUtils::MakeMaker&lt;/code&gt;, it might&amp;rsquo;ve looked something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use ExtUtils::MakeMaker;
+
+  WriteMakefile(
+    NAME      =&amp;gt; &#39;Number::Nary&#39;,
+    DISTNAME  =&amp;gt; &#39;Number-Nary&#39;,
+    AUTHOR    =&amp;gt; &#39;Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;&#39;,
+    ABSTRACT  =&amp;gt; &#39;encode and decode numbers as n-ary strings&#39;,
+    VERSION   =&amp;gt; &#39;0.108&#39;,
+    LICENSE   =&amp;gt; &#39;perl&#39;,
+    PREREQ_PM =&amp;gt; {
+      &#39;Carp&#39;                =&amp;gt; 0
+      &#39;List::MoreUtils&#39;     =&amp;gt; &#39;0.09&#39;,
+      &#39;Sub::Exporter&#39;       =&amp;gt; 0,
+      &#39;Test::More&#39;          =&amp;gt; 0,
+      &#39;UDCode&#39;              =&amp;gt; 0,
+    }
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Delete that file and replace it with the file &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  name    = Number-Nary
+  version = 0.108
+  author  = Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;
+  license = Perl_5
+  copyright_holder = Ricardo Signes
+
+  [AllFiles]
+  [MetaYAML]
+  [MakeMaker]
+  [Manifest]
+
+  [Prereq]
+  Carp            = 0
+  Test::More      = 0
+  List::MoreUtils = 0.09
+  Sub::Exporter   = 0.90
+  UDCode          = 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yes, this file contains &lt;em&gt;more&lt;/em&gt; lines than the original version, but don&amp;rsquo;t worry—that won&amp;rsquo;t last long.&lt;/p&gt;
+
+&lt;p&gt;Most of this should be self-explanatory, but the cluster of square-bracketed names isn&amp;rsquo;t. Each line enables a Dzil plugin, and every plugin helps with part of the well-defined process of building your dist. The plugins I&amp;rsquo;ve used here enable the absolute minimum behavior needed to replace &lt;em&gt;Makefile.PL&lt;/em&gt;: they pull in all the files in your checkout. When you build the dist, they add the extra files you need to ship.&lt;/p&gt;
+
+&lt;p&gt;At this point, you can build a releasable tarball by running &lt;code&gt;dzil build&lt;/code&gt; (instead of &lt;code&gt;perl Makefile.PL &amp;amp;&amp;amp; make dist&lt;/code&gt;). There are more savings on the way, too.&lt;/p&gt;
+
+&lt;h4 id=&#34;eliminating-pointless-packaging-files&#34;&gt;&lt;strong&gt;Eliminating Pointless Packaging Files&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;The &lt;em&gt;MANIFEST.SKIP&lt;/em&gt; file tells other packaging tools which files to exclude when building a distribution. You can keep using it (with the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::ManifestSkip&#34;&gt;ManifestSkip&lt;/a&gt; plugin), but you can almost always just drop the file and use the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PruneCruft&#34;&gt;PruneCruft&lt;/a&gt; plugin instead. It prunes all the files people usually put in their skip file.&lt;/p&gt;
+
+&lt;p&gt;The CPAN community has a tradition of shipping lots of good documentation written in Pod. Even so, several tools expect you also to provide a plain &lt;em&gt;README&lt;/em&gt; file. The &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::Readme&#34;&gt;Readme&lt;/a&gt; plugin will generate one for you.&lt;/p&gt;
+
+&lt;p&gt;Downstream distributors (like Linux distributions) like to see really clear license statements, especially in the form of a &lt;em&gt;LICENSE&lt;/em&gt; file. Because your &lt;em&gt;dist.ini&lt;/em&gt; knows the details of your license, the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::License&#34;&gt;License&lt;/a&gt; plugin can generate this file for you.&lt;/p&gt;
+
+&lt;p&gt;All three of these plugins are part of the &lt;code&gt;Dist::Zilla&lt;/code&gt; distribution. Thus you can delete three whole files—&lt;em&gt;MANIFEST.SKIP&lt;/em&gt;, &lt;em&gt;LICENSE&lt;/em&gt;, and *README*—at the cost of a couple of extra lines in &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [PruneCruft]
+  [License]
+  [Readme]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s not bad, especially when you remember that now when you edit your dist version, license, or abstract, these generated files will &lt;em&gt;always&lt;/em&gt; contain the new data.&lt;/p&gt;
+
+&lt;h4 id=&#34;stock-tests&#34;&gt;&lt;strong&gt;Stock Tests&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;People expect CPAN authors to run several tests before releasing a distribution to the public. &lt;code&gt;Number::Nary&lt;/code&gt; had three of them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  xt/release/perl-critic.t
+  xt/release/pod-coverage.t
+  xt/release/pod-syntax.t
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Storing them under the &lt;em&gt;./xt/release&lt;/em&gt; directory indicates that only people interested in testing a new release should run them.)&lt;/p&gt;
+
+&lt;p&gt;These files are pretty simple, but the last thing you want is to find out that you&amp;rsquo;ve copied and pasted a slightly buggy version of the file around. Instead, you can generate these files as needed. If there&amp;rsquo;s a bug, fix the plugin once and everything gets the fix on the next rebuild. Once again, you can delete those three files in favor of three plugins:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [ExtraTests]
+  [CriticTests]
+  [PodTests]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;CriticTests&lt;/code&gt; and &lt;code&gt;PodTests&lt;/code&gt; add test files to your &lt;em&gt;./xt&lt;/em&gt; directory. &lt;code&gt;ExtraTests&lt;/code&gt; rewrites them to live in &lt;em&gt;./t&lt;/em&gt;, but only under the correct circumstances, such as during release testing.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve customized your Pod coverage tests to consider certain methods trusted despite having no docs, you can move that configuration into your Pod itself. Add a line like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  =for Pod::Coverage some_method some_other_method this_is_covered_too
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::CriticTests&#34;&gt;CriticTests&lt;/a&gt; plugin, by the way, does not come with &lt;code&gt;Dist::Zilla&lt;/code&gt;. It&amp;rsquo;s a third party plugin, written by Jerome Quelin. There are a bunch of those on the CPAN, and they&amp;rsquo;re easy to install. &lt;code&gt;[CriticTests]&lt;/code&gt; tells &lt;code&gt;Dist::Zilla&lt;/code&gt; to load Dist::Zilla::Plugin::CriticTests. Install it with &lt;em&gt;cpan&lt;/em&gt; or your package manager and you&amp;rsquo;re ready to use the plugin.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-classic-bundle-and-cutting-releases&#34;&gt;&lt;strong&gt;The @Classic Bundle and Cutting Releases&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Because most of the time you want to use the same config everywhere, &lt;code&gt;Dist::Zilla&lt;/code&gt; makes it easy to reuse configuration. The current &lt;em&gt;dist.ini&lt;/em&gt; file is very close to the &amp;ldquo;Classic&amp;rdquo; old-school plugin bundle shipped with &lt;code&gt;Dist::Zilla&lt;/code&gt;. You ca replace all the plugin configuration (except for Prereq) with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [CriticTests]
+  [@Classic]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;which makes for a nice, small config file.&lt;/p&gt;
+
+&lt;p&gt;Classic enables a few other plugins, most of which aren&amp;rsquo;t worth mentioning right now. A notable exception is &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::UploadToCPAN&#34;&gt;UploadToCPAN&lt;/a&gt;. It enables the command &lt;code&gt;dzil release&lt;/code&gt;, which will build a tarball and upload it to the CPAN, assuming you have a &lt;em&gt;~/.dzil/config.ini&lt;/em&gt; which resembles:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [!release]
+  user     = rjbs
+  password = PeasAreDelicious
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;letting-dist-zilla-alter-your-modules&#34;&gt;&lt;strong&gt;Letting Dist::Zilla Alter Your Modules&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;So far, this &lt;code&gt;Dist::Zilla&lt;/code&gt; configuration builds extra files like tests and packaging files. You can get a lot more out of &lt;code&gt;Dist::Zilla&lt;/code&gt; if you also let it mess around with your library files.&lt;/p&gt;
+
+&lt;p&gt;Add the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PkgVersion&#34;&gt;PkgVersion&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PodVersion&#34;&gt;PodVersion&lt;/a&gt; plugins to let &lt;code&gt;Dist::Zilla&lt;/code&gt; take care of setting the version in every library file. They find &lt;em&gt;.pm&lt;/em&gt; files and add a &lt;code&gt;our $VERSION = ...&lt;/code&gt; declaration and a &lt;code&gt;=head1 VERSION&lt;/code&gt; section to the Pod—which means you can delete all those lines from the code and not worry about keeping them up to date anymore.&lt;/p&gt;
+
+&lt;h4 id=&#34;prereq-detection&#34;&gt;&lt;strong&gt;Prereq Detection&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now the &lt;em&gt;dist.ini&lt;/em&gt; looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  name    = Number-Nary
+  version = 0.108
+  author  = Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;
+  license = Perl_5
+  copyright_holder = Ricardo Signes
+
+  [CriticTests]
+  [PodVersion]
+  [PkgVersion]
+  [@Classic]
+
+  [Prereq]
+  Carp            = 0
+  Test::More      = 0
+  List::MoreUtils = 0.09
+  Sub::Exporter   = 0.90
+  UDCode          = 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Way too much of this file handles prerequisites. &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::AutoPrereq&#34;&gt;AutoPrereq&lt;/a&gt; fixes all of that by analyzing the code to determine all of the necessary dependencies and their versions. Install this third-party plugin (also by Jerome Quelin!) and replace &lt;code&gt;Prereq&lt;/code&gt; with &lt;code&gt;AutoPrereq&lt;/code&gt;. This plugin requires the use of the &lt;code&gt;use MODULE VERSION&lt;/code&gt; form for modules which require specific versions. This is actually a &lt;em&gt;very good&lt;/em&gt; thing, because it means that your code will no longer even &lt;em&gt;compile&lt;/em&gt; if Perl cannot meet those prerequisites. It also keeps code and installation data in sync. (Make sure that you&amp;rsquo;re requiring the right version in your code. Many dists require one version in the code and one in the prereq listing. Now that you have only one place to list the required version, make sure you get it right.)&lt;/p&gt;
+
+&lt;p&gt;You don&amp;rsquo;t have to modify &lt;em&gt;all&lt;/em&gt; &lt;code&gt;use&lt;/code&gt; statements to that form. In this example, it&amp;rsquo;s only necessary for &lt;code&gt;List::MoreUtils&lt;/code&gt; and &lt;code&gt;Sub::Exporter&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;pod-rewriting&#34;&gt;&lt;strong&gt;Pod Rewriting&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now it&amp;rsquo;s time to bring out some heavy guns. &lt;a href=&#34;https://metacpan.org/pod/Pod::Weaver&#34;&gt;Pod::Weaver&lt;/a&gt; is a system for rewriting documentation. It can add sections, rejigger existing sections, or even translate non-Pod syntax into Pod as needed. Its basic built-in configuration can take the place of PodVersion, which allows you to delete gobs of boring boilerplate Pod. For example, you can get rid of all the NAME sections. All you need to do is provide an abstract in a comment. If your library says:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Number::Nary;
+  # ABSTRACT: encode and decode numbers as n-ary strings
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; then you&amp;rsquo;ll get a &lt;code&gt;NAME&lt;/code&gt; section containing that abstract. You can document methods and attributes and functions with &lt;code&gt;=method&lt;/code&gt; and &lt;code&gt;=attr&lt;/code&gt; and &lt;code&gt;=func&lt;/code&gt; respectively. &lt;code&gt;Pod::Weaver&lt;/code&gt; will gather them up, put them under a top-level heading, and make them into real Pod.&lt;/p&gt;
+
+&lt;p&gt;You can delete your &amp;ldquo;License and Copyright&amp;rdquo; sections. &lt;code&gt;Pod::Weaver&lt;/code&gt; will generate those just like &lt;code&gt;Dist::Zilla&lt;/code&gt; generates a &lt;em&gt;LICENSE&lt;/em&gt; file. It&amp;rsquo;ll generate an &lt;code&gt;AUTHOR&lt;/code&gt; section, so you can drop that too.&lt;/p&gt;
+
+&lt;h4 id=&#34;release-automation&#34;&gt;&lt;strong&gt;Release Automation&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now you&amp;rsquo;re in the home stretch, ready to understand the &amp;ldquo;maximum overkill&amp;rdquo; approach to using Dist::Zilla. First, get rid of the version setting in the &lt;em&gt;dist.ini&lt;/em&gt; and load the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::AutoVersion&#34;&gt;AutoVersion&lt;/a&gt; plugin. It will set a new version per day, or use any other sort of scheme you configure. Then add &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::NextRelease&#34;&gt;NextRelease&lt;/a&gt;, which will update the changelog with every new release. In other words, the changelog file now starts with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  {{$NEXT}}
+            updated distribution to use Dist::Zilla
+            expect lots more releases now that it&#39;s so easy!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you next run &lt;code&gt;dzil release&lt;/code&gt;, the distribution will pick a new version number and build a dist using it. It will replace &lt;code&gt;{{$NEXT}}&lt;/code&gt; with that version number (and the date and time of the build). After it has uploaded the release, it will update the changelog on disk to replace the marker with the release that was made and re-add it above, making room for notes on the next release.&lt;/p&gt;
+
+&lt;h4 id=&#34;version-control&#34;&gt;&lt;strong&gt;Version Control&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Finally, you can tie the whole thing into your version control system. I use Git. (That&amp;rsquo;s convenient, because it&amp;rsquo;s the only VCS with a &lt;code&gt;Dist::Zilla&lt;/code&gt; plugin so far.) Add a single line to &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [@Git]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Git plugin bundle will refuse to cut a release if there are uncommitted changes in the working tree. Once the tree is clean for a release, Dzil will commit the changes to the changelog, tag the release, and push the changes and the new tag to the remote origin.&lt;/p&gt;
+
+&lt;p&gt;Like the CriticTests, the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::PluginBundle::Git&#34;&gt;Dzil Git plugins&lt;/a&gt; aren&amp;rsquo;t bundled with Dist::Zilla (thank Jerome Quelin one more time). The at sign in the plugin name indicates that it&amp;rsquo;s a &lt;em&gt;bundle&lt;/em&gt; of Dzil plugins, but you can load or install the whole thing at once. To install it, install &lt;code&gt;Dist::Zilla::PluginBundle::Git&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;total-savings&#34;&gt;&lt;strong&gt;Total Savings?&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Switching this little dist to Dist::Zilla entirely eliminated seven files from the repository. It cleaned out a lot of garbage Pod that was a drag to maintain. It improved the chances that every dist will have consistent data throughout, and it made cutting a new release as easy as running &lt;code&gt;dzil release&lt;/code&gt;. That release command will do absolutely everything needed to make a pristine, installable CPAN distribution, apart from the actual programming.&lt;/p&gt;
+
+&lt;p&gt;All told, it takes under half an hour to upgrade a dist to Dist::Zilla, depending on the number of files from which you have to delete cruft. Once you&amp;rsquo;ve converted a few, explore some Dzil plugins. When you see how easy it is to write one, you&amp;rsquo;ll probably want make a few of your own. Pretty soon you may find your &lt;em&gt;dist.ini&lt;/em&gt; files contain exactly as much configuration as mine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [@RJBS]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s the best kind of lazy.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Lightning Articles</title>
+      <link>http://localhost:1313/pub/2004/09/09/lightning.html/</link>
+      <pubDate>Thu, 09 Sep 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/09/09/lightning.html/</guid>
+      <description>
+
+&lt;h4 id=&#34;simon-cozens&#34;&gt;Simon Cozens&lt;/h4&gt;
+
+&lt;p&gt;Serendipity &amp;ndash; it means those occasions when things come together to give you moments of inspiration. While preparing perl.com one week, I was editing an article on how to give lightning talks by Mark Fowler and at the same time I was dealing with another author who said he was having difficulty stretching out an article &amp;ndash; a very good article, on a topic I wanted to see covered &amp;ndash; to a full 2,500-words-or-so length.&lt;/p&gt;
+
+&lt;p&gt;I then realized there were probably a load of people out there with interesting things to say about what they&amp;rsquo;re doing with Perl, but who couldn&amp;rsquo;t or didn&amp;rsquo;t want to write a full-sized article. This is, after all, the principle that makes lightning talks so popular. Maybe we could create a forum where people could have short, informal articles published on an interesting Perl topic of their choice &amp;ndash; lightning articles.&lt;/p&gt;
+
+&lt;p&gt;In the same vein as lightning talks, they can be both about an interesting use of the technology, or social commentary on Perl and its community, or just a bit of fun. If you&amp;rsquo;ve got something you want to get off your chest, or you&amp;rsquo;ve got an interesting new idea you want to talk about, but don&amp;rsquo;t think you could fill 2,500 words, try writing a lightning article. You have an absolute maximum of 500 words &amp;ndash; as measured by &lt;code&gt;wc -w&lt;/code&gt; (or &lt;code&gt;perl -0lne    &#39;print scalar split/\s+/&#39;&lt;/code&gt;) on your POD or plain text file &amp;ndash; to say what you need to say.&lt;/p&gt;
+
+&lt;p&gt;Send them to &lt;code&gt;chromatic@oreilly.com&lt;/code&gt;, and when we&amp;rsquo;ve got a good batch of five or six together, we&amp;rsquo;ll publish them here.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-detecting-problem-automatically-detecting-problems-automatically-span&#34;&gt;&lt;span id=&#34;detecting_problem_automatically&#34;&gt;Detecting Problems Automatically&lt;/span&gt;&lt;/h3&gt;
+
+&lt;h4 id=&#34;mark-fowler&#34;&gt;Mark Fowler&lt;/h4&gt;
+
+&lt;p&gt;How many times have you shipped something, and then as soon as it&amp;rsquo;s gone live you&amp;rsquo;ve spotted a glaring mistake that, despite staring you in the face the entire time you were developing the code, you&amp;rsquo;ve somehow overlooked?&lt;/p&gt;
+
+&lt;p&gt;One thing we have problems with at work is double-encoded HTML entities in our web pages. We often use HTML entities to encode letters that aren&amp;rsquo;t ASCII, since this way we then don&amp;rsquo;t have to worry about the text encoding we&amp;rsquo;re using.&lt;/p&gt;
+
+&lt;p&gt;For example, we want to render the string &lt;code&gt;Hello Léon&lt;/code&gt;&amp;gt; into our HTML document. So, instead of including the é into our document directly we transform it into its entity form, replacing it with &lt;code&gt;&amp;amp;eacute;&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;p&amp;gt;Hello L&amp;amp;eacute;on&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This can be done automatically by Perl in numerous ways, e.g. with &lt;strong&gt;HTML::Entities&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use HTML::Entities;
+
+  my $string = &amp;quot;Hello $name&amp;quot;;
+  encode_entity($string);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or if you&amp;rsquo;re using the Template Toolkit through the &lt;code&gt;html_entity&lt;/code&gt; filter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;p&amp;gt;Hello [% name | html_entity %]&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The root of the troubles we were experiencing was that entity encoding could occur in our code in multiple, different places depending on where the string we were about to render came from. And if we accidentally did it more than once then we ended up with HTML that looked like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   &amp;lt;p&amp;gt;Hello L&amp;amp;amp;eactue;on&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This means the web browser sees the &lt;code&gt;&amp;amp;amp;&lt;/code&gt; and converts it to an ampersand and then renders the rest of the &lt;code&gt;eacute;&lt;/code&gt; as normal text:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Hello L&amp;amp;eacute;on
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Not exactly what we wanted. Of course, these things are fairly trivial to fix once you spot them. The real problem we were having is that these errors kept repeatedly popping up, and having our testing department coming back to us every release with another one of these errors was getting embarrassing. We&amp;rsquo;d gone blind to the errors &amp;ndash; working so closely with the web site we&amp;rsquo;d glance at the page and not notice what should have been staring us in the face.&lt;/p&gt;
+
+&lt;p&gt;So we decided to automatically test for the problem.&lt;/p&gt;
+
+&lt;p&gt;In the end I decided to write &lt;strong&gt;Test::DoubleEncodedEntities&lt;/strong&gt;, a &lt;strong&gt;Test::Builder&lt;/strong&gt; module that would test for these errors and run under &lt;strong&gt;Test::Harness&lt;/strong&gt; like all our other tests. The &lt;code&gt;ok_dee&lt;/code&gt; function relies on the fact that none of our web sites would ever use strings like &lt;code&gt;&amp;amp;amp;eacute;&lt;/code&gt; (this is true of most web sites - the only web sites that do are ones like this that feature articles on how to encode HTML).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use LWP::Simple qw(get);
+  use Test::More tests =&amp;gt; 2;
+  use Test::DoubleEncodedEntities;
+
+  my $page = get &amp;quot;http://testserver/index.html&amp;quot;;
+  ok($page, &amp;quot;got page okay&amp;quot;);
+  ok_dee($page, &amp;quot;check for double encoded entities&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the test fails then we get some useful diagnostic output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  1..2
+  ok 1 - got page okay
+  not ok 2 - check for double encoded entities
+  #     Failed test (t/website.t at line 7)
+  # Found 1 &amp;quot;&amp;amp;amp;eacute;&amp;quot;
+  # Looks like you failed 1 test of 2.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now we don&amp;rsquo;t even have to look for these things. Our test suite catches double-encoded entities for us and brings them to our attention. Problem solved.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-cpan-miniaturized-cpan-miniaturized-span&#34;&gt;&lt;span id=&#34;cpan_miniaturized&#34;&gt;CPAN, Miniaturized&lt;/span&gt;&lt;/h3&gt;
+
+&lt;h4 id=&#34;ricardo-signes&#34;&gt;Ricardo Signes&lt;/h4&gt;
+
+&lt;p&gt;Everyone has seen a problem too boring to solve. Rather than keep a stiff upper lip and trudge forward, you head to the CPAN and find the pre-packaged solution that probably already exists. It&amp;rsquo;s just another display of your complete impatience and laziness, and that&amp;rsquo;s great: with the CPAN at your side, you can solve boring problems effortlessly.&lt;/p&gt;
+
+&lt;p&gt;The problem, of course, is that CPAN isn&amp;rsquo;t always at your side. Sure, a simple &lt;code&gt;install Class::DBI&lt;/code&gt; might be enough to implement half of your project, but when you&amp;rsquo;re offline and stuck on the plane, good luck getting to your usual mirror. I&amp;rsquo;ve found myself in that position a number of times, and usually when I&amp;rsquo;ve most wanted to get some work done. On the way home from conventions, I&amp;rsquo;ve sat in cars and planes, wishing I&amp;rsquo;d remembered to install &lt;code&gt;Test::Smoke&lt;/code&gt; or &lt;code&gt;DBD::SQLite&lt;/code&gt; before leaving home.&lt;/p&gt;
+
+&lt;p&gt;The solution, of course, is to just mirror the whole CPAN. It&amp;rsquo;s only three gigs, and if you&amp;rsquo;ve got a week to spare on your dial-up, that&amp;rsquo;s just fine. After all, later rsyncs are just a few hours a week!&lt;/p&gt;
+
+&lt;p&gt;Other problems loom, not the least of which is the possibility of losing those three gigs when your drive crashes on the road. You can always back up the mirror to a DVD in case you need to re-mirror it quickly&amp;hellip; but by this point the solution to your problem has become tedious, and I know how you feel about solving tedious problems.&lt;/p&gt;
+
+&lt;p&gt;A better solution to this problem was published a few years ago by Randal Schwartz: mini-CPAN. Its guiding principle is an old programmer standard: &amp;ldquo;You aren&amp;rsquo;t going to need 90 percent of that crap.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Randal&amp;rsquo;s script only retrieves the CPAN indices, and then the modules listed in the package index &amp;ndash; basically, only the newest version of every distribution &amp;ndash; the only files ever used by CPAN.pm and CPANPLUS to install modules. On subsequent runs, only those distributions that have changed are updated.&lt;/p&gt;
+
+&lt;p&gt;With this miniature CPAN, you&amp;rsquo;ve cut CPAN down to about 400 MB. Not only does it take a fraction of the time to mirror, but it fits nicely onto a CD. You can stick it in your bag, right behind your rescue disk, and know that no matter what happens, the CPAN will be right by your side.&lt;/p&gt;
+
+&lt;p&gt;With the script configured and run, you&amp;rsquo;ll have your own personal CPAN sitting on your machine, ready to be used. Pointing CPAN.pm at it is easy as can be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        cpan&amp;gt; o conf urllist unshift file:///home/japh/minicpan
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Alternately, just edit your CPAN::Config or CPANPLUS::Config.&lt;/p&gt;
+
+&lt;p&gt;The only problem left with mini-CPAN is that it was so hard to find. It&amp;rsquo;s been such a fantastic addition to my toolbox that I feel slighted, having spent two years oblivious to its existence. To help others avoid this pain, I&amp;rsquo;ve tweaked the script, shoved its guts into a module, and stuck it onto CPAN. Just by installing &lt;a href=&#34;https://metacpan.org/pod/CPAN::Mini&#34;&gt;CPAN::Mini&lt;/a&gt;, you can have &lt;code&gt;minicpan&lt;/code&gt; dropped into place and ready to go:
+&amp;ldquo; &amp;gt;}}
+     minicpan -r &lt;a href=&#34;http://your.favorite.mirror/of/cpan&#34;&gt;http://your.favorite.mirror/of/cpan&lt;/a&gt; -l /home/japh/minicpan&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip;and your personal CPAN is waiting.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-database-bittwiddling-bit-twiddling-in-your-database-span&#34;&gt;&lt;span id=&#34;database_bittwiddling&#34;&gt;Bit-twiddling in your Database&lt;/span&gt;&lt;/h3&gt;
+
+&lt;h4 id=&#34;aaron-trevena&#34;&gt;Aaron Trevena&lt;/h4&gt;
+
+&lt;p&gt;Why would you use a bit mask in your database ?&lt;/p&gt;
+
+&lt;p&gt;They can be useful where you have a many-to-many relationship where one side changes rarely and the other frequently. A good example is facilities provided by a Tourist Resort, where the actual amenities change rarely but resorts are added and updated often.&lt;/p&gt;
+
+&lt;p&gt;Normalization would add an intermediate table between them, but that can be painfully slow if you have a significant number of amenities and frequently queried records about many of them.&lt;/p&gt;
+
+&lt;p&gt;The same problem can occur to a lesser degree within a single table; perhaps you are doing some statistical analysis on demographics with columns representing gender, marital status, etc. For more than a few thousand records, querying subsets of the table based on these criteria can become expensive very quickly.&lt;/p&gt;
+
+&lt;p&gt;How would you use bit masks?&lt;/p&gt;
+
+&lt;p&gt;Instead of holding information in a separate table or a group of columns, use a bit mask with each bit representing a column in the table or a record in a second table. For example, use 8 bits to represent gender, marital status, employment status, smoker, drinker, driver, car-owner, and house-owner. A query to find drivers under 25 who don&amp;rsquo;t drink or smoke and own their own car contains six conditions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    select id, age from people where age &amp;lt; 25 and employment_status =
+    &#39;employed&#39; and smoker = &#39;N&#39; and drinker = &#39;N&#39; and car_owner = &#39;Y&#39;
+    and driver = &#39;Y&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;While a bitmap would use two:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    select id, age from people where age &amp;lt; 25 where bitmap_col &amp;amp; 00000110
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To allow employment status to have values for child, student, unemployed, employed, and retired, you would add extra bits representing each value. This applies to any column with a low number of potential values.&lt;/p&gt;
+
+&lt;p&gt;This is a simple bitmap index, and you can use all kinds of bitwise operations on your queries against it. Complex queries can be simplified to a couple of binary operations. Of course, there is a downside. It&amp;rsquo;s harder to maintain, and if mapping a many-to-many relationship, you need to ensure consistency between the bit mask order and the contents of the other table. This can be enforced using a trigger or within the application.&lt;/p&gt;
+
+&lt;p&gt;If you split the bitmap into individual columns and rotate it you can make a compressed bitmap index that only stores ranges of records that are true for each column or value of a column. Oracle provides this feature.&lt;/p&gt;
+
+&lt;p&gt;These compressed bitmap indexes are even faster to query when used together in combination, and take up very little space. However, as multiple records&amp;rsquo; values can be held in a single entry in the index, updates to indexed columns can be slower and suffer from excessive locking on the index itself.&lt;/p&gt;
+
+&lt;p&gt;Well-designed bitmap indices can have a huge impact on the performance of queries, as they are much smaller than standard b-tree indices and much faster on queries where a large proportion of that dataset is being queried.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.jlcomp.demon.co.uk/bitmaps.doc&#34; class=&#34;uri&#34; class=&#34;podlinkurl&#34;&gt;&lt;a href=&#34;http://www.jlcomp.demon.co.uk/bitmaps.doc&#34;&gt;http://www.jlcomp.demon.co.uk/bitmaps.doc&lt;/a&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.dbazine.com/jlewis3.shtml&#34; class=&#34;uri&#34; class=&#34;podlinkurl&#34;&gt;&lt;a href=&#34;http://www.dbazine.com/jlewis3.shtml&#34;&gt;http://www.dbazine.com/jlewis3.shtml&lt;/a&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.oracle.com/technology/oramag/oracle/02-may/o32expert.html&#34; class=&#34;uri&#34; class=&#34;podlinkurl&#34;&gt;&lt;a href=&#34;http://www.oracle.com/technology/oramag/oracle/02-may/o32expert.html&#34;&gt;http://www.oracle.com/technology/oramag/oracle/02-may/o32expert.html&lt;/a&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;span-id-goodbye-farewell-amen-goodbye-farewell-amen-span&#34;&gt;&lt;span id=&#34;goodbye_farewell_amen&#34;&gt;Goodbye, Farewell, Amen&lt;/span&gt;&lt;/h3&gt;
+
+&lt;h4 id=&#34;simon-cozens-1&#34;&gt;Simon Cozens&lt;/h4&gt;
+
+&lt;p&gt;Let me first apologize for this personal note; I won&amp;rsquo;t do it again.&lt;/p&gt;
+
+&lt;p&gt;Around the time I was busy being born, or maybe just a little after, Larry Wall was planning to be a missionary with the Wycliffe Bible Translators. Working on a degree in &amp;ldquo;Natural and Artificial Languages,&amp;rdquo; and then in linguistics graduate school, he learned about the ideas of tagmemics, semantics, and the cultural and anthropological concepts that have found their expression in the Perl language and culture. Unfortunately due to health problems, Larry couldn&amp;rsquo;t do the missionary thing, so he invented Perl. That&amp;rsquo;s why we&amp;rsquo;re all here.&lt;/p&gt;
+
+&lt;p&gt;It was the beginning of May 2001 when Mark Dominus asked me if I&amp;rsquo;d be interesting in taking over the job of managing editor here at perl.com. I was delighted, and excited about the thought of working with the Perl community and hopefully producing and publishing some great resources for Perl programmers. I hope I&amp;rsquo;ve done a fair bit of that over the last three years, but now my time is up. I&amp;rsquo;m moving on, and starting next week the man simply known as &amp;ldquo;chromatic&amp;rdquo; will become Mr. Perl.com. Please treat him as well as you&amp;rsquo;ve treated me!&lt;/p&gt;
+
+&lt;p&gt;I need to thank a bunch of people, who&amp;rsquo;ve done all the hard work behind the scenes that you don&amp;rsquo;t hear about: Mark, of course, for getting me involved here; Chris Coleman and Bruce Stewart from the O&amp;rsquo;Reilly Network who&amp;rsquo;ve had the curious experience of trying to manage me; Steve McCannell and Chris Valdez have been the producers of perl.com, and worked incessantly to get articles up on the site, often on shockingly short notice; Tara McGoldrick and others have been the copy editors; and of course, I&amp;rsquo;ve worked with a wide range of great authors and contributors. Thank you all. And thanks, of course, to the Perl community &amp;ndash; that&amp;rsquo;s &lt;strong&gt;you&lt;/strong&gt; &amp;ndash; without whom this wouldn&amp;rsquo;t be half as much fun.&lt;/p&gt;
+
+&lt;p&gt;And about that missionary thing? Well, if Larry&amp;rsquo;s not going to be able to do it, someone has to. Like many Perl programmers, and indeed Larry himself, I&amp;rsquo;ve been interested in Japan for a very long time. In fact, I lived in Japan for a year, and was studying Japanese for my university major back when I started at perl.com; last year I decided that the time was right to prepare to move back to Japan, as a fulltime missionary.&lt;/p&gt;
+
+&lt;p&gt;So in two weeks I&amp;rsquo;ll be going to All Nations University here in England for a two-year course to get me ready, and then I shall be off! I&amp;rsquo;m sure you won&amp;rsquo;t have heard the last of me, though, and I certainly won&amp;rsquo;t be stopping programming &amp;ndash; missionaries have things they need to automate too&amp;hellip; But for now, farewell! It&amp;rsquo;s been fun, and now it&amp;rsquo;s going to be fun in a different way.&lt;/p&gt;
+
+&lt;p&gt;Take care out there, and happy hacking!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

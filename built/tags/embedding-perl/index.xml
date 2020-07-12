@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Embedding Perl on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/embedding-perl/</link>
+    <description>Recent content in Embedding Perl on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 11 Dec 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/embedding-perl/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Programming with Mason</title>
+      <link>http://localhost:1313/pub/2002/12/11/mason.html/</link>
+      <pubDate>Wed, 11 Dec 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/12/11/mason.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Dave Rolsky and Ken Williams are the authors of &lt;a href=&#34;http://www.oreilly.com/catalog/perlhtmlmason/&#34;&gt;Embedding Perl in HTML with Mason&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Mason is a powerful framework for generating dynamic text, and is especially useful when creating complex, featureful Web sites. For those (hopefully few) folks who haven&amp;rsquo;t yet heard of Mason, it is a Perl-based templating framework comparable to frameworks such as Apache::ASP, Embperl, and Template Toolkit. Like the first two, and unlike the latter, Mason operates by embedding Perl in text.&lt;/p&gt;
+
+&lt;p&gt;Mason is based around the idea of a &lt;em&gt;component&lt;/em&gt;. A component is roughly equivalent to a Perl subroutine, and can contain text and/or code. Here is a &lt;em&gt;very&lt;/em&gt; simple, but complete component that has both text and code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; % my $planet = &amp;quot;World&amp;quot;;
+ Hello, &amp;lt;% $planet %&amp;gt;!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When Mason runs this code, the output is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Hello, World!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The rest of this article assumes at least a minimal familiarity with Mason, though if you&amp;rsquo;re at all familiar with other templating systems, you&amp;rsquo;ll probably be able to grok the code we show. For more details, I would of course recommend &lt;em&gt;Embedding Perl in HTML with Mason&lt;/em&gt;, written by Ken Williams and myself. Mason also comes with its own documentation, which can be seen online at &lt;a href=&#34;http://www.masonhq.com/&#34;&gt;www.masonhq.com&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;As with any powerful and flexible system, Mason is applicable to a lot of problems, and there is always more than one way to do it. It is a &lt;em&gt;Perl&lt;/em&gt;-based system, after all!&lt;/p&gt;
+
+&lt;p&gt;Below you&amp;rsquo;ll find some cookbook recipes for solving a few typical Web application problems. All the recipes assume that you are using the latest version of Mason, which at the time of this writing is 1.15, though most of them will work untouched with older versions.&lt;/p&gt;
+
+&lt;h3 id=&#34;putting-a-session-id-in-all-urls&#34;&gt;Putting a Session ID in All URLs&lt;/h3&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve ever written a dynamic Web application, then it&amp;rsquo;s likely that you&amp;rsquo;ve used sessions to store data as the user moves through the application. Typically, sessions are identified by session IDs that are stored in a cookie.&lt;/p&gt;
+
+&lt;p&gt;If you cannot use cookies, then you can store the session ID in the URL. There are security and application problems with this approach (as well as with the user of cookies), but those are outside the scope of this article. The mod_perl user list archives at &lt;a href=&#34;http://marc.theaimsgroup.com/?l=apache-modperl&#34;&gt;marc.theaimsgroup.com/?l=apache-modperl&lt;/a&gt; contain a number of discussions related to this topic.&lt;/p&gt;
+
+&lt;p&gt;Putting the session ID in the URL can be a hassle, because it means that you have to somehow process all the URLs you generate. Using Mason, this isn&amp;rsquo;t as difficult as it would be otherwise. There are at least two ways to do this.&lt;/p&gt;
+
+&lt;p&gt;The first would be to put a filter in your top level &lt;code&gt;autohandler&lt;/code&gt; component:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;%filter&amp;gt;
+   s/href=&amp;quot;([^&amp;quot;])+&amp;quot;/&#39;href=&amp;quot;&#39; . add_session_id($1) . &#39;&amp;quot;&#39;/eg;
+   s/action=&amp;quot;([^&amp;quot;])+&amp;quot;/&#39;href=&amp;quot;&#39; . add_session_id($1) . &#39;&amp;quot;&#39;/eg;
+  &amp;lt;/%filter&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;add_session_id()&lt;/code&gt; subroutine, which should be defined in a module, might look something like this:
+      sub add_session_id {
+          my $url = shift;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      return $url if $url =~ m{^\w+://}; # Don&#39;t alter external URLs
+
+      if ($url =~ /\?/) {
+      $url =~ s/\?/?session_id=$MasonBook::Session{_session_id}&amp;amp;/;
+      } else {
+          $url .= &amp;quot;?session_id=$MasonBook::Session{_session_id}&amp;quot;;
+      }
+
+      return $url;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This routine accounts for external links as well as links with or without an existing query string.&lt;/p&gt;
+
+&lt;p&gt;The drawback to putting this in a &lt;code&gt;&amp;lt;%filter&amp;gt;&lt;/code&gt; section is that it only filters URLs in the content generated by components, and misses any URLs that might be in headers, such as in a redirect. Therefore, you&amp;rsquo;d need to handle those cases separately with this solution.&lt;/p&gt;
+
+&lt;p&gt;Another solution would be to create all URLs (including those intended for redirects) via a dedicated component or subroutine that adds the session id. This latter solution is probably a better idea, as it handles redirects properly. The drawback with this strategy is that you&amp;rsquo;ll have a Mason component call for every link, instead of just regular HTML.&lt;/p&gt;
+
+&lt;p&gt;Here is just such a component:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;%args&amp;gt;
+   $scheme   =&amp;gt; &#39;http&#39;
+   $username =&amp;gt; undef
+   $password =&amp;gt; &#39;&#39;
+   $host     =&amp;gt; undef
+   $port     =&amp;gt; undef
+   $path
+   %query    =&amp;gt; ()
+   $fragment =&amp;gt; undef
+  &amp;lt;/%args&amp;gt;
+  &amp;lt;%init&amp;gt;
+   my $uri = URI-&amp;gt;new;
+
+   if ($host) {
+       $uri-&amp;gt;scheme($scheme);
+
+       if (defined $username) {
+           $uri-&amp;gt;authority( &amp;quot;$username:$password&amp;quot; );
+       }
+
+       $uri-&amp;gt;host($host);
+       $uri-&amp;gt;port($port) if $port;
+   }
+
+   # Sometimes we may want to include a path in a query string as part
+   # of the path but the URI module will escape the question mark.
+   my $q;
+
+   if ( $path =~ s/\?(.*)$// ) {
+       $q = $1;
+   }
+
+   $uri-&amp;gt;path($path);
+
+   # If there was a query string, we integrate it into the query
+   # parameter.
+   if ($q) {
+       %query = ( %query, split /[&amp;amp;=]/, $q );
+   }
+
+   $query{session_id} = $UserSession{session_id};
+
+   # $uri-&amp;gt;query_form doesn&#39;t handle hash ref values properly
+   while ( my ( $key, $value ) = each %query ) {
+       $query{$key} = ref $value eq &#39;HASH&#39; ? [ %$value ] : $value;
+   }
+
+   $uri-&amp;gt;query_form(%query) if %query;
+
+   $uri-&amp;gt;fragment($fragment) if $fragment;
+  &amp;lt;/%init&amp;gt;
+  &amp;lt;% $uri-&amp;gt;canonical | n %&amp;gt;\
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you didn&amp;rsquo;t want to put the session ID in the query string, then you might instead make it part of the URL path. The application could retrieve the session id from incoming requests by using a mod_perl handler during the URL translation stage of request handling.&lt;/p&gt;
+
+&lt;p&gt;This component provides a programmatic interface to URL generation. Here is an example of how to use it, assuming that you&amp;rsquo;ve saved it as a component called &lt;code&gt;/url&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   ... some HTML ...
+   Look at &amp;lt;a href=&amp;quot;&amp;lt;&amp;amp; /url, path =&amp;gt; &amp;quot;books.html&amp;quot; &amp;amp;&amp;gt;&amp;quot;&amp;gt;our books&amp;lt;/a&amp;gt;
+   or &amp;lt;a href=&amp;quot;&amp;lt;&amp;amp; /url, host =&amp;gt; &amp;quot;www.oreilly.com&amp;quot;
+                        path =&amp;gt; &amp;quot;/catalog&amp;quot; &amp;amp;&amp;gt;&amp;quot;&amp;gt;O&#39;Reilly&#39;s&amp;lt;/a&amp;gt;.
+   ... some HTML ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;making-use-of-autoflush&#34;&gt;Making Use of Autoflush&lt;/h3&gt;
+
+&lt;p&gt;Every once in a while, you may have to output a very large component or a file to the client. If you simply let this accumulate in the output buffer, you could use up a lot of memory. Furthermore, the slow response time may make the user think that the site has stalled.&lt;/p&gt;
+
+&lt;p&gt;Here is an example that sends out the contents of a potentially large file without sucking up lots of memory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;%args&amp;gt;
+   $filename
+  &amp;lt;/%args&amp;gt;
+  &amp;lt;%init&amp;gt;
+   local *FILE;
+   open FILE, &amp;quot;&amp;lt; $filename&amp;quot; or die &amp;quot;Cannot open $filename: $!&amp;quot;;
+   $m-&amp;gt;autoflush(1);
+   while (&amp;lt;FILE&amp;gt;) {
+       $m-&amp;gt;print($_);
+   }
+   $m-&amp;gt;autoflush(0);
+  &amp;lt;/%init&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If each line wasn&amp;rsquo;t too huge, then you might just flush the buffer every once in a while:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;%args&amp;gt;
+   $filename
+  &amp;lt;/%args&amp;gt;
+  &amp;lt;%init&amp;gt;
+   local *FILE;
+   open FILE, &amp;quot;&amp;lt; $filename&amp;quot; or die &amp;quot;Cannot open $filename: $!&amp;quot;;
+   while (&amp;lt;FILE&amp;gt;) {
+       $m-&amp;gt;print($_);
+       $m-&amp;gt;flush_buffer unless $. % 10;
+   }
+   $m-&amp;gt;flush_buffer;
+  &amp;lt;/%init&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;unless $. % 10&lt;/code&gt; bit makes use of the special Perl variable &lt;code&gt;$.&lt;/code&gt;, which is the current line number of the file being read. If this number modulo 10 is equal to zero, then we flush the buffer. This means that we flush the buffer every 10 lines. (Replace the number 10 with any desired value.)&lt;/p&gt;
+
+&lt;h3 id=&#34;user-authentication-and-authorization&#34;&gt;User Authentication and Authorization&lt;/h3&gt;
+
+&lt;p&gt;One problem that Web sites have to solve over and over again is user authentication and authorization. These two topics are related but not the same, as some might think. Authentication is the process of figuring out if someone is who they say they are, and usually involves checking passwords or keys. Authorization comes after this, when we want to determine whether a particular person is allowed to perform a certain action.&lt;/p&gt;
+
+&lt;p&gt;There are a number of modules on CPAN that are intended to help do these things under &lt;code&gt;mod_perl&lt;/code&gt;. In fact, Apache has separate request-handling phases for both authentication and authorization that &lt;code&gt;mod_perl&lt;/code&gt; can handle. It is certainly possible to use these modules with Mason.&lt;/p&gt;
+
+&lt;p&gt;You can also do authentication and authorization using Mason components. Authentication will usually involve some sort of request for a login and a password, after which you give the user some sort of token (either in a cookie or a session) that indicates that they have been authenticated. You can then check the validity of this token for each request.&lt;/p&gt;
+
+&lt;p&gt;If you have such a token, then authorization simply consists of checking that the user to whom the token belongs is allowed to perform a given action.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-apache-authcookie&#34;&gt;Using Apache::AuthCookie&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;Apache::AuthCookie&lt;/code&gt; module, available from CPAN, is a module that handles both authentication and authorization via &lt;code&gt;mod_perl&lt;/code&gt; and can be easily hooked into Mason. Rather than go through all the details of configuring &lt;code&gt;Apache::AuthCookie&lt;/code&gt;, which requires various settings in your server config file, let&amp;rsquo;s just skip all that and show you how you&amp;rsquo;d make the interface to Mason.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Apache::AuthCookie&lt;/code&gt; requires that you create a &amp;ldquo;login script&amp;rdquo; that will be executed the first time a browser tries to access a protected area. Calling this a script is actually somewhat misleading since it is really a page rather than a script (though it could be a script that generates a page). Regardless, using a Mason component for your &amp;ldquo;login script&amp;rdquo; merely requires that you specify the path to your Mason component for the login script parameter.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll call this &amp;ldquo;script&amp;rdquo; &lt;code&gt;AuthCookieLoginForm.comp&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;
+  &amp;lt;title&amp;gt;Mason Book AuthCookie Login Form&amp;lt;/title&amp;gt;
+  &amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+  &amp;lt;p&amp;gt;
+  Your attempt to access this document was denied
+  (&amp;lt;% $r-&amp;gt;prev-&amp;gt;subprocess_env(&amp;quot;AuthCookieReason&amp;quot;) %&amp;gt;).  Please enter
+  your username and password.
+  &amp;lt;/p&amp;gt;
+
+  &amp;lt;form action=&amp;quot;/AuthCookieLoginSubmit&amp;quot;&amp;gt;
+  &amp;lt;input type=&amp;quot;hidden&amp;quot; name=&amp;quot;destination&amp;quot; value=&amp;quot;&amp;lt;% $r-&amp;gt;prev-&amp;gt;uri %&amp;gt;&amp;quot;&amp;gt;
+  &amp;lt;table align=&amp;quot;left&amp;quot;&amp;gt;
+   &amp;lt;tr&amp;gt;
+    &amp;lt;td align=&amp;quot;right&amp;quot;&amp;gt;&amp;lt;b&amp;gt;Username:&amp;lt;/b&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;td&amp;gt;&amp;lt;input type=&amp;quot;text&amp;quot; name=&amp;quot;credential_0&amp;quot; size=&amp;quot;10&amp;quot; maxlength=&amp;quot;10&amp;quot;&amp;gt;&amp;lt;/td&amp;gt;
+   &amp;lt;/tr&amp;gt;
+   &amp;lt;tr&amp;gt;
+    &amp;lt;td align=&amp;quot;right&amp;quot;&amp;gt;&amp;lt;b&amp;gt;Password:&amp;lt;/b&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;td&amp;gt;&amp;lt;input type=&amp;quot;password&amp;quot; name=&amp;quot;credential_1&amp;quot; size=&amp;quot;8&amp;quot; maxlength=&amp;quot;8&amp;quot;&amp;gt;&amp;lt;/td&amp;gt;
+   &amp;lt;/tr&amp;gt;
+   &amp;lt;tr&amp;gt;
+    &amp;lt;td colspan=&amp;quot;2&amp;quot; align=&amp;quot;center&amp;quot;&amp;gt;&amp;lt;input type=&amp;quot;submit&amp;quot; value=&amp;quot;Continue&amp;quot;&amp;gt;&amp;lt;/td&amp;gt;
+   &amp;lt;/tr&amp;gt;
+  &amp;lt;/table&amp;gt;
+  &amp;lt;/form&amp;gt;
+
+  &amp;lt;/body&amp;gt;
+  &amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This component is modified version of the example login script included with the &lt;code&gt;Apache::AuthCookie&lt;/code&gt; distribution.&lt;/p&gt;
+
+&lt;p&gt;The action used for this form, `&lt;code&gt;, is configured as part of your AuthCookie configuration in your&lt;/code&gt;httpd.conf` file.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s about all it takes to glue &lt;code&gt;Apache::AuthCookie&lt;/code&gt; and Mason together. The rest of authentication and authorization is handled by configuring &lt;code&gt;mod_perl&lt;/code&gt; to use &lt;code&gt;Apache::AuthCookie&lt;/code&gt; to protect anything on your site that needs authorization. A very simple configuration might include the following directives:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlSetVar MasonBookLoginScript /AuthCookieLoginForm.comp
+
+  &amp;lt;location /authcookieloginsubmit&amp;gt;
+    AuthType MasonBook::AuthCookieHandler
+    AuthName MasonBook
+    SetHandler  perl-script
+    PerlHandler MasonBook::AuthCookieHandler-&amp;gt;login
+  &amp;lt;/location&amp;gt;
+
+  &amp;lt;location /protected&amp;gt;
+    AuthType MasonBook::AuthCookieHandler
+    AuthName MasonBook
+    PerlAuthenHandler MasonBook::AuthCookieHandler-&amp;gt;authenticate
+    PerlAuthzHandler  MasonBook::AuthCookieHandler-&amp;gt;authorize
+    require valid-user
+  &amp;lt;/location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;MasonBook::AuthCookieHandler&lt;/code&gt; module would look like this:
+      package MasonBook::AuthCookieHandler;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use strict;
+
+  use base qw(Apache::AuthCookie);
+
+  use Digest::SHA1;
+
+  my $secret = &amp;quot;You think I&#39;d tell you?  Hah!&amp;quot;;
+
+  sub authen_cred {
+      my $self = shift;
+      my $r = shift;
+      my ($username, $password) = @_;
+
+      # implementing _is_valid_user() is out of the scope of this chapter
+      if ( _is_valid_user($username, $password) ) {
+          my $session_key =
+            $username . &#39;::&#39; . Digest::SHA1::sha1_hex( $username, $secret );
+          return $session_key;
+      }
+  }
+
+  sub authen_ses_key {
+      my $self = shift;
+      my $r = shift;
+      my $session_key = shift;
+
+      my ($username, $mac) = split /::/, $session_key;
+
+      if ( Digest::SHA1::sha1_hex( $username, $secret ) eq $mac ) {
+          return $session_key;
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This provides the minimal interface an &lt;code&gt;Apache::AuthCookie&lt;/code&gt; subclass needs to provide to get authentication working.&lt;/p&gt;
+
+&lt;h3 id=&#34;doing-it-my-way-thanks-frank&#34;&gt;Doing It My Way (Thanks Frank)&lt;/h3&gt;
+
+&lt;p&gt;But what if you don&amp;rsquo;t want to use &lt;code&gt;Apache::AuthCookie&lt;/code&gt;? For example, your site may need to work without using cookies. No doubt this was exactly what Frank Sinatra was thinking about when he sang &amp;ldquo;My Way,&amp;rdquo; so let&amp;rsquo;s do it our way.&lt;/p&gt;
+
+&lt;p&gt;First, we will show an example authentication system that only uses Mason and passes the authentication token around via the URL (actually, via a session).&lt;/p&gt;
+
+&lt;p&gt;This example assumes that we already have some sort of session system that passes the session id around as part of the URL, as discussed previously.&lt;/p&gt;
+
+&lt;p&gt;We start with a quick login form. We will call this component &lt;code&gt;login_form.html&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;%args&amp;gt;
+   $username =&amp;gt; &#39;&#39;
+   $password =&amp;gt; &#39;&#39;
+   $redirect_to =&amp;gt; &#39;&#39;
+   @errors =&amp;gt; ()
+  &amp;lt;/%args&amp;gt;
+  &amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;
+  &amp;lt;title&amp;gt;Mason Book Login&amp;lt;/title&amp;gt;
+  &amp;lt;/head&amp;gt;
+
+  &amp;lt;body&amp;gt;
+
+  % if (@errors) {
+  &amp;lt;h2&amp;gt;Errors&amp;lt;/h2&amp;gt;
+  %   foreach (@errors) {
+  &amp;lt;b&amp;gt;&amp;lt;% $_ | h %&amp;gt;&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;
+  %   }
+  % }
+
+  &amp;lt;form action=&amp;quot;login_submit.html&amp;quot;&amp;gt;
+  &amp;lt;input type=&amp;quot;hidden&amp;quot; name=&amp;quot;redirect_to&amp;quot; value=&amp;quot;&amp;lt;% $redirect_to %&amp;gt;&amp;quot;&amp;gt;
+  &amp;lt;table align=&amp;quot;left&amp;quot;&amp;gt;
+   &amp;lt;tr&amp;gt;
+    &amp;lt;td align=&amp;quot;right&amp;quot;&amp;gt;&amp;lt;b&amp;gt;Login:&amp;lt;/b&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;td&amp;gt;&amp;lt;input type=&amp;quot;text&amp;quot; name=&amp;quot;username&amp;quot; value=&amp;quot;&amp;lt;% $username %&amp;gt;&amp;quot;&amp;gt;&amp;lt;/td&amp;gt;
+   &amp;lt;/tr&amp;gt;
+   &amp;lt;tr&amp;gt;
+    &amp;lt;td align=&amp;quot;right&amp;quot;&amp;gt;&amp;lt;b&amp;gt;Password:&amp;lt;/b&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;td&amp;gt;&amp;lt;input type=&amp;quot;password&amp;quot; name=&amp;quot;password&amp;quot; value=&amp;quot;&amp;lt;% $password %&amp;gt;&amp;quot;&amp;gt;&amp;lt;/td&amp;gt;
+   &amp;lt;/tr&amp;gt;
+   &amp;lt;tr&amp;gt;
+    &amp;lt;td colspan=&amp;quot;2&amp;quot; align=&amp;quot;center&amp;quot;&amp;gt;&amp;lt;input type=&amp;quot;submit&amp;quot; value=&amp;quot;Login&amp;quot;&amp;gt;&amp;lt;/td&amp;gt;
+   &amp;lt;/tr&amp;gt;
+  &amp;lt;/table&amp;gt;
+  &amp;lt;/form&amp;gt;
+
+  &amp;lt;/body&amp;gt;
+  &amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This form uses some of the same techniques we show in Chapter 8 (&amp;ldquo;Building a Mason Site&amp;rdquo;) to pre-populate the form and to handle errors.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s make the component that handles the form submission. This component, called &lt;code&gt;login_submit.html&lt;/code&gt;, will check the username and password and, if they are valid, place an authentication token into the user&amp;rsquo;s session:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;%args&amp;gt;
+   $username
+   $password
+   $redirect_to
+  &amp;lt;/%args&amp;gt;
+  &amp;lt;%init&amp;gt;
+   if (my @errors = check_login($username, $password) {
+       $m-&amp;gt;comp( &#39;redirect.mas&#39;,
+                  path =&amp;gt; &#39;login_form.html&#39;,
+                  query =&amp;gt; { errors =&amp;gt; \@errors,
+                             username =&amp;gt; $username,
+                             password =&amp;gt; $password,
+                             redirect_to =&amp;gt; $redirect_to } );
+   }
+
+   $MasonBook::Session{username} = $username;
+   $MasonBook::Session{token} =
+       Digest::SHA1::sha1_hex( &#39;My secret phrase&#39;, $username );
+
+   $m-&amp;gt;comp( &#39;redirect.mas&#39;,
+             path =&amp;gt; $redirect_to );
+  &amp;lt;/%init&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This component simply checks (via magic hand waving) that the username and password are valid and if they are, it generates an authentication token, which is added to the user&amp;rsquo;s session. To generate this token, we take the username, which is also in the session, and combine it with a secret phrase. We then generate a MAC from those two things.&lt;/p&gt;
+
+&lt;p&gt;The authentication and authorization check looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  if ( $MasonBook::Session{token} ) {
+      if ( $MasonBook::Session{token} eq
+           Digest::SHA1::sha1_hex( &#39;My secret phrase&#39;,
+                                   $MasonBook::Session{username} ) {
+
+          # R&amp;lt;... valid login, do something here&amp;gt;
+      } else {
+          # R&amp;lt;... someone is trying to be sneaky!&amp;gt;
+      }
+  } else { # no token
+       my $wanted_page = $r-&amp;gt;uri;
+
+       # Append query string if we have one.
+       $wanted_page .= &#39;?&#39; . $r-&amp;gt;args if $r-&amp;gt;args;
+
+       $m-&amp;gt;comp( &#39;redirect.mas&#39;,
+                  path =&amp;gt; &#39;/login/login_form.html&#39;,
+                  query =&amp;gt; { redirect_to =&amp;gt; $wanted_page } );
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We could put all the pages that require authorization in a single directory tree and have a top-level autohandler in that tree do the check. If there is no token to check, then we redirect the browser to the login page, and after a successful login they&amp;rsquo;ll return, assuming that they submit valid login credentials.&lt;/p&gt;
+
+&lt;h3 id=&#34;access-controls-with-attributes&#34;&gt;Access Controls With Attributes&lt;/h3&gt;
+
+&lt;p&gt;The components we saw previously assumed that there are only two access levels, unauthenticated and authenticated. A more complicated version of this code might involve checking that the user has a certain access level or role.&lt;/p&gt;
+
+&lt;p&gt;In that case, we&amp;rsquo;d first check that we had a valid authentication token and then go on to check that the user actually had the appropriate access rights. This is simply an extra step in the authorization process.&lt;/p&gt;
+
+&lt;p&gt;Using attributes, we can easily define access controls for different portions of our site. Let&amp;rsquo;s assume that we have four access levels, &amp;ldquo;Guest,&amp;rdquo; &amp;ldquo;User,&amp;rdquo; &amp;ldquo;Editor&amp;rdquo; and &amp;ldquo;Admin.&amp;rdquo; Most of the site is public, and viewable by anyone. Some parts of the site require a valid login, while some require a higher level of privilege.&lt;/p&gt;
+
+&lt;p&gt;We implement our access check in our top-level autohandler, ``, from which all other components &lt;em&gt;must&lt;/em&gt; inherit in order for the access control code to be effective.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;%init&amp;gt;
+   my $user = get_user();  # again, hand waving
+
+   my $required_access = $m-&amp;gt;base_comp-&amp;gt;attr(&#39;required_access&#39;);
+
+   unless ( $user-&amp;gt;has_access_level($required_access) ) {
+      # R&amp;lt;... do something like send them to another page&amp;gt;
+   }
+
+   $m-&amp;gt;call_next;
+  &amp;lt;/%init&amp;gt;
+  &amp;lt;%attr&amp;gt;
+   required_access =&amp;gt; &#39;Guest&#39;
+  &amp;lt;/%attr&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It is crucial that we set a default access level in this autohandler. By doing this, we are saying that by default, all components are accessible by all people, since every visitor will have at least &amp;ldquo;Guest&amp;rdquo; access.&lt;/p&gt;
+
+&lt;p&gt;We can override this default elsewhere. For example, in a component called &lt;code&gt;/admin/autohandler&lt;/code&gt;, we might have:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;%attr&amp;gt;
+   required_access =&amp;gt; &#39;Admin&#39;
+  &amp;lt;/%attr&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As long as all the components in the &lt;code&gt;directory inherit from the&lt;/code&gt; component and don&amp;rsquo;t override the &lt;code&gt;required_access&lt;/code&gt; attribute, we have effectively limited that directory (and its subdirectories) to administration users only. If we, for some reason, had an individual component in the `` directory that we wanted editors to be able to see, we could simply set the &amp;ldquo;required_access&amp;rdquo; attribute for that component to &amp;ldquo;Editor.&amp;rdquo;&lt;/p&gt;
+
+&lt;h3 id=&#34;managing-dbi-connections&#34;&gt;Managing DBI Connections&lt;/h3&gt;
+
+&lt;p&gt;Not infrequently, we see people on the Mason users list asking questions about how to handle caching DBI connections.&lt;/p&gt;
+
+&lt;p&gt;Our recipe for this is really simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Apache::DBI
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Rather than reinventing the wheel, use &lt;code&gt;Apache::DBI&lt;/code&gt;, which provides the following features:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;It is completely transparent to use. Once you&amp;rsquo;ve used it, you simply call &lt;code&gt;DBI-&amp;gt;connect()&lt;/code&gt; as always and &lt;code&gt;Apache::DBI&lt;/code&gt; gives you an existing handle if one is available.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;It makes sure that the handle is live, so that if your RDBMS goes down and then back up, your connections still work just fine.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;It does not cache handles made before Apache forks, as many DBI drivers do not support using a handle after a fork.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;generating-config-files&#34;&gt;Generating Config Files&lt;/h3&gt;
+
+&lt;p&gt;Config files are a good candidate for generation by Mason. For example, your production and staging Web server config files might differ in only a few areas. Changes to one usually will need to be propagated to another. This is especially true with &lt;code&gt;mod_perl&lt;/code&gt;, where Web server configuration can basically be part of a Web-based application.&lt;/p&gt;
+
+&lt;p&gt;On top of this, you may decide to set up a per-developer environment, either by having each developer run the necessary software on their own machine, or by starting Web servers on many different ports on a single development server. In this scenario, a template-driven config file generator becomes even more appealing.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a simple script to drive this generation. This script assumes that all the processes are running on one shared development machine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -w
+
+  use strict;
+
+  use Cwd;
+  use File::Spec;
+  use HTML::Mason;
+  use User::pwent;
+
+  my $comp_root =
+      File::Spec-&amp;gt;rel2abs( File::Spec-&amp;gt;catfile( cwd(), &#39;config&#39; ) );
+
+  my $output;
+  my $interp =
+      HTML::Mason::Interp-&amp;gt;new( comp_root  =&amp;gt; $comp_root,
+                out_method =&amp;gt; \$output,
+                  );
+
+  my $user = getpwuid($&amp;lt;);
+
+  $interp-&amp;gt;exec( &#39;/httpd.conf.mas&#39;, user =&amp;gt; $user );
+
+  my $file =  File::Spec-&amp;gt;catfile( $user-&amp;gt;dir, &#39;etc&#39;, &#39;httpd.conf&#39; );
+  open FILE, &amp;quot;&amp;gt;$file&amp;quot; or die &amp;quot;Cannot open $file: $!&amp;quot;;
+  print FILE $output;
+  close FILE;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A &lt;code&gt;httpd.conf.mas&lt;/code&gt; component might look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  ServerRoot &amp;lt;% $user-&amp;gt;dir %&amp;gt;
+
+  PidFile &amp;lt;% File::Spec-&amp;gt;catfile( $user-&amp;gt;dir, &#39;logs&#39;, &#39;httpd.pid&#39; ) %&amp;gt;
+
+  LockFile &amp;lt;% File::Spec-&amp;gt;catfile( $user-&amp;gt;dir, &#39;logs&#39;, &#39;httpd.lock&#39; ) %&amp;gt;
+
+  Port &amp;lt;% $user-&amp;gt;uid + 5000 %&amp;gt;
+
+  # loads Apache modules, defines content type handling, etc.
+  &amp;lt;&amp;amp; standard_apache_config.mas &amp;amp;&amp;gt;
+
+  &amp;lt;perl&amp;gt;
+   use lib &amp;lt;% File::Spec-&amp;gt;catfile( $user-&amp;gt;dir, &#39;project&#39;, &#39;lib&#39; ) %&amp;gt;;
+  &amp;lt;/perl&amp;gt;
+
+  DocumentRoot &amp;lt;% File::Spec-&amp;gt;catfile( $user-&amp;gt;dir, &#39;project&#39;, &#39;htdocs&#39; ) %&amp;gt;
+
+  PerlSetVar MasonCompRoot &amp;lt;% File::Spec-&amp;gt;catfile( $user-&amp;gt;dir, &#39;project&#39;, &#39;htdocs&#39; ) %&amp;gt;
+  PerlSetVar MasonDataDir &amp;lt;% File::Spec-&amp;gt;catfile( $user-&amp;gt;dir, &#39;mason&#39; ) %&amp;gt;
+
+  PerlModule HTML::Mason::ApacheHandler
+
+  &amp;lt;filesmatch &amp;quot;\.html$&amp;quot;&amp;gt;
+   SetHandler perl-script
+   PerlHandler HTML::Mason::ApacheHandler
+  &amp;lt;/filesmatch&amp;gt;
+
+  &amp;lt;%args&amp;gt;
+  $user
+  &amp;lt;/%args&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This points the server&amp;rsquo;s document root to the developer&amp;rsquo;s working directory. Similarly, it adds the &lt;code&gt;project/lib&lt;/code&gt; directory to Perl&amp;rsquo;s &lt;code&gt;@INC&lt;/code&gt; via &lt;code&gt;use lib&lt;/code&gt; so that the user&amp;rsquo;s working copy of the project&amp;rsquo;s modules are seen first. The server will listen on a port equal to the user&amp;rsquo;s user ID, plus 5,000.&lt;/p&gt;
+
+&lt;p&gt;Obviously, this is an incomplete example. It doesn&amp;rsquo;t specify where logs will go, or other necessary config items. It also doesn&amp;rsquo;t handle generating the config file for a server intended to be run by the root user on a standard port.&lt;/p&gt;
+
+&lt;h3 id=&#34;if-you-want-more&#34;&gt;If You Want More &amp;hellip;&lt;/h3&gt;
+
+&lt;p&gt;These recipes were adapted from Chapter 11, &amp;ldquo;Recipes,&amp;rdquo; of &lt;em&gt;Embedding Perl in HTML With Mason&lt;/em&gt;. And, of course, the book contains a lot more than just recipes. If you&amp;rsquo;re interested in learning more about Mason, the book is a great place to start.&lt;/p&gt;
+
+&lt;p&gt;Also, don&amp;rsquo;t forget to check out the Mason HQ site at &lt;a href=&#34;http://www.masonhq.com/&#34;&gt;www.masonhq.com/&lt;/a&gt;, which contains online documentation, user-contributed code and docs, and links to the Mason users mailing list, which is another great resource for developers using Mason.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;O&amp;rsquo;Reilly &amp;amp; Associates recently released (October 2002) &lt;a href=&#34;http://www.oreilly.com/catalog/perlhtmlmason/&#34;&gt;Embedding Perl in HTML with Mason&lt;/a&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/perlhtmlmason/chapter/index.html&#34;&gt;Sample Chapter 5, Advanced Features&lt;/a&gt;, is available free online.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;You can also look at the [Table of Contents](), the [Index](), and the [Full Description]() of the book.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;For more information, or to order the book, [click here]().&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

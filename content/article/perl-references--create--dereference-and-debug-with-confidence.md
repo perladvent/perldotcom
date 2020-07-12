@@ -71,7 +71,7 @@ my $customer = { name   => 'Mr Smith',
                                     zip    => '11025',
                                     city   => 'New York',
                                     state  => 'NY',
-                                }, 
+                                },
                                 {   street => '23 Broadway',
                                     zip    => '10125',
                                     city   => 'New York',
@@ -189,7 +189,7 @@ $VAR1 = {
         };
 ```
 
-Another useful tool is the Perl's [ref](http://perldoc.perl.org/functions/ref.html) function. Just pass the reference variable into ref, and it will return which variable type the reference points to.
+Another useful tool is the Perl's [ref]({{</* perlfunc "ref" */>}}) function. Just pass the reference variable into ref, and it will return which variable type the reference points to.
 
 ### Creating references from variables
 

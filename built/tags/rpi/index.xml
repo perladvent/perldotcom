@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rpi on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/rpi/</link>
+    <description>Recent content in Rpi on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 23 Jan 2020 10:39:00 +0000</lastBuildDate>
+    <atom:link href="/tags/rpi/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The Rock Pi S Review</title>
+      <link>http://localhost:1313/article/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/</link>
+      <pubDate>Thu, 23 Jan 2020 10:39:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/</guid>
+      <description>&lt;p&gt;When writing articles like these, there is an inevitable comparison to the
+Raspberry Pi series. There is no way to fight this,
+and for good reason. The first Raspberry Pi ushered in a slew of Single
+Board Computers (SBCs), and one of them is the Rock Pi S, a new board from Seeed
+Studio.&lt;/p&gt;
+
+&lt;p&gt;In the interest of full disclosure, the Rock Pi S was provided by Seeed
+Studio for this review. Specifically, it&amp;rsquo;s the model with 512MB of RAM and
+4Gb of built-in flash.&lt;/p&gt;
+
+&lt;p&gt;The Rock Pi S competes in the same segment as the Raspberry Pi Zero, particularly the Zero W
+with built-in WiFi. Its form factor is different; where the Zero is
+shaped like a stick of gum, the Rock Pi S is closer to a square. The Rock
+also has USB-C for power, an ethernet jack, and a USB-A port. Depending on the
+project, it can end up being cheaper than the Zero, since you don&amp;rsquo;t have to
+buy a micro-USB to USB-A adapter to hook up most other devices.&lt;/p&gt;
+
+&lt;p&gt;You do still need a micro SD card. While there are versions of the Rock with
+built-in flash, it&amp;rsquo;s small and not meant for booting an OS. Note that the size of the built-in flash
+is listed in giga&lt;em&gt;bits&lt;/em&gt;. The 4Gb version is actually 512 mega&lt;em&gt;bytes&lt;/em&gt;. So get an
+SD card.&lt;/p&gt;
+
+&lt;p&gt;Which leaves us the question of which SD card. Some people automatically
+reach for a class 10 or UHS-I card, since those have the highest performance on
+the box. Trouble is, the traditional class ratings on SD cards only tell you
+the sequential read and write performance. That&amp;rsquo;s fine for cameras, but
+running an operating system means lots of random reads. Testing often showed
+that a good class 4 card was better than a lot of the class 10 cards out there.&lt;/p&gt;
+
+&lt;p&gt;These days, we don&amp;rsquo;t have to worry about that, because the SD Association
+came up with the &lt;a href=&#34;https://www.sdcard.org/developers/overview/application/index.html&#34;&gt;Application Performance Classes&lt;/a&gt;
+of A1 and A2. These set a minimum of random IO operations per second, which
+is just what we want. So get an A1 card and you&amp;rsquo;ll be happy with the results.&lt;/p&gt;
+
+&lt;p&gt;The big thing in the Rock&amp;rsquo;s favor is a quad core ARM processor. While it&amp;rsquo;s not
+going to set any Bitcoin mining records, I&amp;rsquo;ve found multicore
+processors are handy for hardware projects. On a single core processor running
+Linux, your program can get interrupted by something else at any time. This
+means that a program running on a mere 16MHz Arduino may run better than a
+1GHz Raspberry Pi. A quad core processor mitigates this, since secondary
+programs have 3 other cores to work with.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/rockpi2.jpg&#34; alt=&#34;The Rock Pi S&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The Rock is powered over its USB-C port. I found attaching it to a
+laptop USB port provided enough power to get going. This is also handy because
+you can run &lt;code&gt;adb shell&lt;/code&gt; to connect to the Rock&amp;rsquo;s OS. &amp;ldquo;ADB&amp;rdquo; is the
+Android Debug Bridge, and while the Rock does support running Android, I used
+a Ubuntu Bionic image. Yes, &lt;code&gt;adb&lt;/code&gt; did still work with Ubuntu installed. This is great for
+headless installs, since you won&amp;rsquo;t have networking available at first boot.&lt;/p&gt;
+
+&lt;p&gt;Since it&amp;rsquo;s running Ubuntu, we have &lt;code&gt;perl&lt;/code&gt; from the start:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -v:
+
+This is perl 5, version 26, subversion 1 (v5.26.1) built for aarch64-linux-gnu-thread-multi
+(with 67 registered patches, see perl -V for more detail)
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What you won&amp;rsquo;t have is an equivalent to &lt;a href=&#34;https://metacpan.org/pod/RPi::WiringPi&#34;&gt;RPi::WiringPi&lt;/a&gt;
+to control GPIO (&amp;ldquo;General Purpose Input/Output&amp;rdquo;). GPIO is the most basic
+building block for hardware programming. We&amp;rsquo;re either controlling the output
+voltage to cause something to happen, like blinking an LED, or we&amp;rsquo;re taking
+input to see if something happened, like hitting a switch. It&amp;rsquo;s simple, but
+very useful. Tons of hardware projects come down to just seeing if something
+is on, or turning something on.&lt;/p&gt;
+
+&lt;p&gt;What we lack is a library to do that on the Rock Pi S. That&amp;rsquo;s OK, because it&amp;rsquo;s
+Linux, and Linux provides a simple sysfs interface to access GPIO pins. As long
+as there&amp;rsquo;s a GPIO driver for the board, you can control the pins.&lt;/p&gt;
+
+&lt;p&gt;The Rock has two headers, one of which is color coded and has the main pins you want to work with in most projects. Note
+that there are a few variations of the pinout depending on the version of
+the board you get. The version should be printed on the board (I received a
+V12 board), so make sure you&amp;rsquo;re looking at the right pinout for your board.
+See the &lt;a href=&#34;https://wiki.radxa.com/RockpiS/hardware/rockpiS#gpio&#34;&gt;GPIO header documentation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;One thing to keep in mind is that the pins are specified as 3.3V input. That means you don&amp;rsquo;t want to put 5V
+into them. Feeding it 5V might cause glitches, or could break the board
+completely.&lt;/p&gt;
+
+&lt;p&gt;To get at the pins, we can use the &lt;a href=&#34;https://www.kernel.org/doc/html/latest/admin-guide/gpio/sysfs.html&#34;&gt;Linux sysfs interface&lt;/a&gt;.
+You will note a big fat deprecation warning at the top. The new way to do it
+is with gpio-cdev, which requires some &lt;code&gt;ioctl()&lt;/code&gt; calls. Since this is
+more difficult to handle&amp;ndash;it requires importing some constants from the
+kernel headers, instead of just accessing files&amp;ndash;we&amp;rsquo;ll stick with the sysfs
+interface for now. That said, if someone would like to make a CPAN module
+that provides those kernel symbols (and maybe the ones for I2C and SPI, as
+well), I would welcome that.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s what we need to do:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Make the pin accessible by writing the pin number to &lt;code&gt;/sys/class/gpio/export&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Set the pin as an input pin by writing &amp;ldquo;in&amp;rdquo; to &lt;code&gt;/sys/class/gpioN/direction&lt;/code&gt; (where N is the pin number)&lt;/li&gt;
+&lt;li&gt;Read the current value from &lt;code&gt;/sys/class/gpioN/value&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Since pullups are active, a pin not connected to anything will output a 1, and connecting it to ground will give you a 0&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can connect a wire from a ground pin to the pin you select, and the value
+output should go from 1 to 0.&lt;/p&gt;
+
+&lt;p&gt;You may be wondering why this is backwards; don&amp;rsquo;t you want to see a 1 when
+something is connected? The reason is pullup resistors. If a pin is
+disconnected, it will tend to &amp;ldquo;float&amp;rdquo;, picking up interference from the
+electronics around it. That results in getting random 0&amp;rsquo;s and 1&amp;rsquo;s. If you
+instead connect a resistor tied to high voltage, 1 is what you consistently get
+on the pin.
+If you then connect that pin to ground, it will see a 0 instead. We
+just have to remember that the whole thing is backwards from what we normally
+expect&amp;ndash;1 for disconnected, 0 for connected.&lt;/p&gt;
+
+&lt;p&gt;The full program is at the end of the article. The &lt;code&gt;export_pin&lt;/code&gt; and &lt;code&gt;set_input&lt;/code&gt;
+functions both take a pin number and ask the kernel to export it for
+use or set it as input (respectively).  The &lt;code&gt;read_pin&lt;/code&gt; function takes a pin
+and returns its current value (either 1 or 0). The &lt;code&gt;write_pin&lt;/code&gt; function is
+just a helper function for doing the file IO for other functions.&lt;/p&gt;
+
+&lt;p&gt;At the very bottom is the code to wrap all this together. We export the pin
+passed in from the command line, set it as input, and then read the pin in a
+loop. By outputting &amp;ldquo;\r&amp;rdquo;, the previously printed value is overwritten in the
+terminal, rather than having one long string of values. Since we&amp;rsquo;re using
+the &lt;a href=&#34;https://metacpan.org/pod/Time::HiRes&#34;&gt;Time::HiRes&lt;/a&gt; version of &lt;code&gt;sleep&lt;/code&gt;, we can use
+seconds in floating point to slow the output down without being too slow.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve been waiting for a board like this for a while, packing in a multicore
+processor, networking, a full sized USB jack, and running on Linux in a sub $20
+price range. This might be a new favorite.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.26&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Time::HiRes &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;sleep&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; constant BASE_PATH &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/sys/class/gpio&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; constant SLEEP_TIME &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0.1&lt;/span&gt;;
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $GPIO &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; usage();
+$GPIO &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/\A\d+\z/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; usage();
+
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;set_input&lt;/span&gt;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($pin) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; write_pin( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/gpio&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $pin &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/direction&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;in&amp;#34;&lt;/span&gt; );
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;export_pin&lt;/span&gt;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($pin) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; write_pin( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/export&amp;#39;&lt;/span&gt;, $pin );
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;read_pin&lt;/span&gt;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($pin) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $full_path &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; BASE_PATH &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/gpio&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $pin &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/value&amp;#39;&lt;/span&gt;;
+    open( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $in, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, $full_path )
+        &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Can&amp;#39;t read from $full_path: $!\n&amp;#34;&lt;/span&gt;;
+    
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $line &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$in&amp;gt;&lt;/span&gt; ) {
+        $data &lt;span style=&#34;color:#f92672&#34;&gt;.=&lt;/span&gt; $line;
+    }
+
+    close( $in );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $data;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;write_pin&lt;/span&gt;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($path, $data) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $full_path &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; BASE_PATH &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $path;
+    open( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $out, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;gt;&amp;#39;&lt;/span&gt;, $full_path )
+        &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Can&amp;#39;t write to $full_path: $!\n&amp;#34;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $out &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$data&amp;#34;&lt;/span&gt;;
+    close $out;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;usage&lt;/span&gt;
+{
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Usage: rockpi_gpio.pl &amp;lt;pin number&amp;gt;\n&amp;#34;&lt;/span&gt;;
+}
+
+
+export_pin( $GPIO );
+set_input( $GPIO );
+$| &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# Autoflush output&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $in &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; read_pin( $GPIO );
+    chomp $in;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$in\r&amp;#34;&lt;/span&gt;;
+    sleep SLEEP_TIME;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - June 2019</title>
+      <link>http://localhost:1313/article/what-s-new-on-cpan---june-2019/</link>
+      <pubDate>Fri, 26 Jul 2019 00:31:19 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/what-s-new-on-cpan---june-2019/</guid>
+      <description>
+
+&lt;p&gt;Welcome to &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo;, a curated look at last month&amp;rsquo;s new CPAN uploads for your reading and programming pleasure. Enjoy!&lt;/p&gt;
+
+&lt;h2 id=&#34;apis-apps&#34;&gt;APIs &amp;amp; Apps&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Install all modules under a certain CPAN namespace using &lt;a href=&#34;https://metacpan.org/pod/App::cpanm::namespace&#34;&gt;App::cpanm::namespace&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/OpenTracing&#34;&gt;OpenTracing&lt;/a&gt; - application process monitoring as defined by opentracing.io&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/VoIPms&#34;&gt;VoIPms&lt;/a&gt; is an API wrapper for VoIP.ms&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WebService::WordsAPI&#34;&gt;WebService::WordsAPI&lt;/a&gt; provides a Perly interface for retrieving data about words&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;data&#34;&gt;Data&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Use ChromaPrint with Perl using &lt;a href=&#34;https://metacpan.org/pod/Audio::Chromaprint&#34;&gt;Audio::Chromaprint&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/IO::Uncompress::Untar&#34;&gt;IO::Uncompress::Untar&lt;/a&gt; is a Pure-perl module for reading tar, tgz, .tar.bz2 etc files/buffers&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Linux::PacketFilter&#34;&gt;Linux::PacketFilter&lt;/a&gt; provides a simple interface to Linux packet filtering&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/YAML::Safe&#34;&gt;YAML::Safe&lt;/a&gt; is a refactored version of YAML::XS&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;development-version-control&#34;&gt;Development &amp;amp; Version Control&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Dig into the guts of a live Perl program with &lt;a href=&#34;https://metacpan.org/pod/Endoscope&#34;&gt;Endoscope&lt;/a&gt; (great name!)&lt;/li&gt;
+&lt;li&gt;Process a list with callbacks with &lt;a href=&#34;https://metacpan.org/pod/Mojo::AsyncList&#34;&gt;Mojo::AsyncList&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Get subroutine meta information with &lt;a href=&#34;https://metacpan.org/pod/Sub::Meta&#34;&gt;Sub::Meta&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Test::Pod::LinkCheck::Lite&#34;&gt;Test::Pod::LinkCheck::Lite&lt;/a&gt; tests non-URL POD links&lt;/li&gt;
+&lt;li&gt;Aggregate tests with &lt;a href=&#34;https://metacpan.org/pod/Test2::Aggregate&#34;&gt;Test2::Aggregate&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Try::Harder&#34;&gt;Try::Harder&lt;/a&gt; is a pure-Perl, source-filter attempt to get the functionality of Syntax::Keyword::Try compatible with older Perl versions&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Web::Solid::Test::Basic&#34;&gt;Web::Solid::Test::Basic&lt;/a&gt; provides reusable tests via RDF&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;hardware&#34;&gt;Hardware&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Device::AVR::UPDI&#34;&gt;Device::AVR::UPDI&lt;/a&gt; interacts with an AVR microcontroller over UPDI&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/RPi::EEPROM::AT24C32&#34;&gt;RPi::EEPROM::AT24C32&lt;/a&gt; reads and writes to the AT24C32 based EEPROM ICs&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/RPi::OLED::SSD1306::128_64&#34;&gt;RPi::OLED::SSD1306::128_64&lt;/a&gt; is an interface to the SSD1306-esque 128x64 OLED displays&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/RPi::SysInfo&#34;&gt;RPi::SysInfo&lt;/a&gt; retrieves hardware system information from a Raspberry Pi&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;other&#34;&gt;Other&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Game::LevelMap&#34;&gt;Game::LevelMap&lt;/a&gt; is a module for representing game level maps&lt;/li&gt;
+&lt;li&gt;Play the Platforms of Peril game: &lt;a href=&#34;https://metacpan.org/pod/Game::PlatformsOfPeril&#34;&gt;Game::PlatformsOfPeril&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Z3::FFI&#34;&gt;Z3::FFI&lt;/a&gt; provides an FFI to the Z3 solver/prover&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;web&#34;&gt;Web&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Mozilla::IntermediateCerts&#34;&gt;Mozilla::IntermediateCerts&lt;/a&gt; can download and parse Mozilla intermediate certificates&lt;/li&gt;
+&lt;li&gt;Serve GraphQL from Plack / PSGI with &lt;a href=&#34;https://metacpan.org/pod/Plack::App::GraphQL&#34;&gt;Plack::App::GraphQL&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Search::QS&#34;&gt;Search::QS&lt;/a&gt; parses a query string DSL into a search query&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/URI::Pure&#34;&gt;URI::Pure&lt;/a&gt; adds support to URI for Internationalized Domain Names (IDN) and Internationalized Resource Identifiers (IRI)&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - June 2018</title>
+      <link>http://localhost:1313/article/what-s-new-on-cpan---june-2018/</link>
+      <pubDate>Wed, 04 Jul 2018 10:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/what-s-new-on-cpan---june-2018/</guid>
+      <description>
+
+&lt;p&gt;It&amp;rsquo;s the Fourth of July holiday here in the US, so this month&amp;rsquo;s cover image has been given a USA-style makeover. Below you&amp;rsquo;ll find my curated list of June&amp;rsquo;s new CPAN uploads for your reading and programming pleasure. Enjoy!&lt;/p&gt;
+
+&lt;h3 id=&#34;apis-apps&#34;&gt;APIs &amp;amp; Apps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Grep Microsoft Office documents with &lt;a href=&#34;https://metacpan.org/pod/App::Greple::msdoc&#34;&gt;App::Greple::msdoc&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/App::JC::Client&#34;&gt;App::JC::Client&lt;/a&gt; is a small command line client for JIRA&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/App::ReportPrereqs&#34;&gt;App::ReportPrereqs&lt;/a&gt; prints a nicely formatted report on distribution / project dependencies using the cpanfile&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/AWS::XRay&#34;&gt;AWS::XRay&lt;/a&gt; provides an interface to the request tracing service&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Email::SendGrid::V3&#34;&gt;Email::SendGrid::V3&lt;/a&gt; is a class for emailing via the SendGrid v3 Web API&lt;/li&gt;
+&lt;li&gt;A base class for Mattermost bots: &lt;a href=&#34;https://metacpan.org/pod/Net::Mattermost::Bot&#34;&gt;Net::Mattermost::Bot&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Access OpenGL prototyping tools using &lt;a href=&#34;https://metacpan.org/pod/OpenGL::Sandbox&#34;&gt;OpenGL::Sandbox&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Use the You Need A Budget API with &lt;a href=&#34;https://metacpan.org/pod/WWW::YNAB&#34;&gt;WWW::YNAB&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;config-devops&#34;&gt;Config &amp;amp; Devops&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Extract the version of Perl a module declares with &lt;a href=&#34;https://metacpan.org/pod/Module::Extract::DeclaredVersion&#34;&gt;Module::Extract::DeclaredVersion&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Get module permissions from MetaCPAN API using &lt;a href=&#34;https://metacpan.org/pod/PAUSE::Permissions::MetaCPAN&#34;&gt;PAUSE::Permissions::MetaCPAN&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;data&#34;&gt;Data&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Elasticsearch::Model&#34;&gt;Elasticsearch::Model&lt;/a&gt; is a replacement for ElasticSearchX::Model that works with Elasticsearch v6+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Finance::AMEX::Transaction&#34;&gt;Finance::AMEX::Transaction&lt;/a&gt; parses AMEX transaction files: EPRAW, EPPRC, EPTRN, CBNOT, GRRCN&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;development-version-control&#34;&gt;Development &amp;amp; Version Control&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Devel::CallParser has been patched to fix RT#110623 as an alt distribution: &lt;a href=&#34;https://metacpan.org/pod/Alt::Devel::CallParser::ButWorking&#34;&gt;Alt::Devel::CallParser::ButWorking&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Class::XSConstructor&#34;&gt;Class::XSConstructor&lt;/a&gt; is a wow-fast (but limited) constructor in XS, See also &lt;a href=&#34;https://metacpan.org/pod/MooX::XSConstructor&#34;&gt;MooX::XSConstructor&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Embed Tiny C code in your Perl program using &lt;a href=&#34;https://metacpan.org/pod/FFI::TinyCC::Inline&#34;&gt;FFI::TinyCC::Inline&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Perl::Critic::TooMuchCode&#34;&gt;Perl::Critic::TooMuchCode&lt;/a&gt; provides critic policies for unused imports, constants and other detritus&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;hardware&#34;&gt;Hardware&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Wow, get a Perl interface to the Gameboy Advance with &lt;a href=&#34;https://metacpan.org/pod/Device::GBA&#34;&gt;Device::GBA&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Manage and monitor the Synaccess NP-05B networked power strip with &lt;a href=&#34;https://metacpan.org/pod/Device::Power::Synaccess::NP05B&#34;&gt;Device::Power::Synaccess::NP05B&lt;/a&gt;. See also &lt;a href=&#34;https://metacpan.org/pod/App::np05bctl&#34;&gt;App::np05bctl&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Control a FeelTech FY32xx signal generator using &lt;a href=&#34;https://metacpan.org/pod/Electronics::SigGen::FY3200&#34;&gt;Electronics::SigGen::FY3200&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::TL1UDP&#34;&gt;Net::TL1UDP&lt;/a&gt; provides a Transaction Language 1 (TL-1) UDP interface&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/RPi::GPIOExpander::MCP23017&#34;&gt;RPi::GPIOExpander::MCP23017&lt;/a&gt; interface with the MCP23017 GPIO Expander Integrated Circuit over I2C&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web&#34;&gt;Web&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Plugin::Showterm&#34;&gt;Dancer2::Plugin::Showterm&lt;/a&gt; is a Dancer2 port of &lt;a href=&#34;http://showterm.io/&#34;&gt;showterm&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/MojoX::ConfigAppStart&#34;&gt;MojoX::ConfigAppStart&lt;/a&gt; can start Mojo apps using Config::App&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - May 2017</title>
+      <link>http://localhost:1313/article/what-s-new-on-cpan---may-2017/</link>
+      <pubDate>Tue, 13 Jun 2017 09:30:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/what-s-new-on-cpan---may-2017/</guid>
+      <description>
+
+&lt;p&gt;Welcome to &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo;, a curated look at last month&amp;rsquo;s new CPAN uploads for your reading and programming pleasure. Enjoy!&lt;/p&gt;
+
+&lt;p&gt;N.B. I&amp;rsquo;ll be speaking at &lt;a href=&#34;http://www.perlconference.us/tpc-2017-dc/&#34;&gt;The Perl Conference: DC 2017&lt;/a&gt;. My talk &lt;a href=&#34;http://www.perlconference.us/tpc-2017-dc/talks/#what_s_new_on_cpan_annual_edition&#34;&gt;What&amp;rsquo;s New on CPAN - Annual Edition&lt;/a&gt; will cover some highlights and curiosities from the past year of CPAN uploads. Come and say hi!&lt;/p&gt;
+
+&lt;h3 id=&#34;apis-apps&#34;&gt;APIs &amp;amp; Apps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::Async::Trello&#34;&gt;Net::Async::Trello&lt;/a&gt; is a low level, minimalist client for Trello&lt;/li&gt;
+&lt;li&gt;Get a non blocking interface to Music Player Daemon with &lt;a href=&#34;https://metacpan.org/pod/AnyEvent::Net::MPD&#34;&gt;AnyEvent::Net::MPD&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/VMware::vCloudDirector&#34;&gt;VMware::vCloudDirector&lt;/a&gt; provides an interface to VMWare vCloud Directory REST API&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;config-devops&#34;&gt;Config &amp;amp; Devops&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/CloudDeploy&#34;&gt;CloudDeploy&lt;/a&gt; is a toolkit for building and managing AWS CloudFormation stacks&lt;/li&gt;
+&lt;li&gt;A simple distributed cloud friendly cron for the masses using &lt;a href=&#34;https://metacpan.org/pod/CloudCron&#34;&gt;CloudCron&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;data&#34;&gt;Data&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Generate color data for testing using &lt;a href=&#34;https://metacpan.org/pod/Data::Faker::Colour&#34;&gt;Data::Faker::Colour&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/File::PCAP&#34;&gt;File::PCAP&lt;/a&gt; is a module for reading/writing PCAP files&lt;/li&gt;
+&lt;li&gt;Automatically normalize Unicode hash keys with &lt;a href=&#34;https://metacpan.org/pod/Hash::Normalize&#34;&gt;Hash::Normalize&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::DNS::Extlang&#34;&gt;Net::DNS::Extlang&lt;/a&gt; is a DNS extension language&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;development-version-control&#34;&gt;Development &amp;amp; Version Control&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/API::CLI&#34;&gt;API::CLI&lt;/a&gt; is a generic framework for creating REST API command line clients&lt;/li&gt;
+&lt;li&gt;Benchmark different parameter validation modules using &lt;a href=&#34;https://metacpan.org/pod/Benchmark::Featureset::ParamCheck&#34;&gt;Benchmark::Featureset::ParamCheck&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Ref::Util::XS&#34;&gt;Ref::Util::XS&lt;/a&gt; is the XS implementation of Ref::Util&lt;/li&gt;
+&lt;li&gt;Get a superfast router using &lt;a href=&#34;https://metacpan.org/pod/Router::XS&#34;&gt;Router::XS&lt;/a&gt; (disclaimer: I am the module author)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/SQS::Worker&#34;&gt;SQS::Worker&lt;/a&gt; is a lightweight framework for async processing of messages from SQS queues&lt;/li&gt;
+&lt;li&gt;Get tab completion in the Reply REPL for exported symbol names with &lt;a href=&#34;https://metacpan.org/pod/Reply::Plugin::Autocomplete::ExportedSymbols&#34;&gt;Reply::Plugin::Autocomplete::ExportedSymbols&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;hardware&#34;&gt;Hardware&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Interact with the Palo Alto firewall API with &lt;a href=&#34;https://metacpan.org/pod/Device::PaloAlto::Firewall&#34;&gt;Device::PaloAlto::Firewall&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Extract GPS data from GPS units using &lt;a href=&#34;https://metacpan.org/pod/GPSD::Parse&#34;&gt;GPSD::Parse&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Access and manipulate Raspberry Pi GPIO pins with &lt;a href=&#34;https://metacpan.org/pod/RPi::Pin&#34;&gt;RPi::Pin&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Image::Sane&#34;&gt;Image::Sane&lt;/a&gt; let&amp;rsquo;s you use SANE-compatible scanner devices from Perl&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;other&#34;&gt;Other&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/XS::Tutorial&#34;&gt;XS::Tutorial&lt;/a&gt; provides documentation for learning Perl XS (disclosure, I am the module author).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;science-mathematics&#34;&gt;Science &amp;amp; Mathematics&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/AI::XGBoost&#34;&gt;AI::XGBoost&lt;/a&gt; is a Perl wrapper for XGBoost, the gradient boosting machine learning framework&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Bio::DB::Big&#34;&gt;Bio::DB::Big&lt;/a&gt; provides a perly interface to BigWig and BigBed files via libBigWig&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web&#34;&gt;Web&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Log LWP requests as curl commands using &lt;a href=&#34;https://metacpan.org/pod/LWP::CurlLog&#34;&gt;LWP::CurlLog&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Test::HTTP::LocalServer&#34;&gt;Test::HTTP::LocalServer&lt;/a&gt; implements a tiny HTTP server for testing&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WWW::Mechanize::Plugin::Selector&#34;&gt;WWW::Mechanize::Plugin::Selector&lt;/a&gt; adds a CSS selector method for WWW::Mechanize&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

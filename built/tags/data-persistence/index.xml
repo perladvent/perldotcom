@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Data Persistence on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/data-persistence/</link>
+    <description>Recent content in Data Persistence on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 16 Feb 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/data-persistence/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Managing Rich Data Structures</title>
+      <link>http://localhost:1313/pub/2006/02/16/mldbm.html/</link>
+      <pubDate>Thu, 16 Feb 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/02/16/mldbm.html/</guid>
+      <description>
+
+&lt;p&gt;As a Perl beginner, I wrote many scripts that created text files to store snippets of data. Eventually I had hundreds of little text files in a data directory, each one holding one piece of information in the form of a text string. I decided to move from snippets to a single database. Here&amp;rsquo;s how I did it.&lt;/p&gt;
+
+&lt;p&gt;I didn&amp;rsquo;t go all the way to creating a relational database with SQL, in part because I had not yet learned to use Perl modules to work with such databases. Plus I wanted to try the apparently simpler technique described in Chapters 11 and 14 of &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/&#34;&gt;Perl Cookbook, 2nd Edition&lt;/a&gt;, namely the use of one of the DBM libraries. I was intrigued by the idea of creating and using a database without needing to learn SQL or run a database server such as PostgreSQL or MySQL.&lt;/p&gt;
+
+&lt;p&gt;One of my scripts created HTML for a clickable banner ad; the HTML would be inserted into an HTML email newsletter I publish daily. For any particular issue, the script pulled data from three different text files, each of which held a different piece of information in the form of a text string on the file&amp;rsquo;s first and only line:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The URL of the advertiser&amp;rsquo;s web page, to which the reader would be taken when the banner is clicked,&lt;/li&gt;
+&lt;li&gt;The location of the .gif file (the banner), or&lt;/li&gt;
+&lt;li&gt;A one-line headline that would appear above the banner.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A different script created those files and named them according to (i) the type of data in the file and (ii) the date of the newsletter in which the ad would appear. For example, data for the December 9, 2005 ad was contained in three files named &lt;em&gt;url_2005_12_09&lt;/em&gt;, &lt;em&gt;gif_2005_12_09&lt;/em&gt; and &lt;em&gt;headline_2005_12_09&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-hash-of-hashes&#34;&gt;A Hash of Hashes&lt;/h3&gt;
+
+&lt;p&gt;First I considered the kind of data structure needed to hold the data. I looked at the relationship between the three text files. It became clear that I basically had a hash for each ad. The data for any particular ad consisted of three different keys and their values: URL, gif and headline. The name of any particular file would provide the key (the type of information contained in the file). The contents of the file would provide the key&amp;rsquo;s value.&lt;/p&gt;
+
+&lt;p&gt;I thought about finding some way to store those hashes as an array of anonymous hashes (one hash per ad), but then I realized that an array wouldn&amp;rsquo;t let me access a particular ad&amp;rsquo;s data easily. The hashes would be in the order in which I saved them into the array, but that wouldn&amp;rsquo;t translate easily to the ad for a particular date. For example, how would I know where to find the data for next Monday&amp;rsquo;s newsletter? Is it in &lt;code&gt;$array[8]&lt;/code&gt; or &lt;code&gt;$array[17]&lt;/code&gt;?&lt;/p&gt;
+
+&lt;p&gt;Hmm. Each anonymous hash could be identified by a particular date&amp;ndash;the key (!) to locating the ad for any particular date. What kind of data structure associates a unique key with a value? A hash, of course! My data would fit nicely into a hash of hashes.&lt;/p&gt;
+
+&lt;p&gt;The name I chose for the hash was &lt;code&gt;%data_for_ad_on&lt;/code&gt;. Choosing a hash name that ends in a preposition provides a more natural-reading and meaningful name; the key for data for the December 8, 2005 banner ad would be &lt;code&gt;2005_12_08&lt;/code&gt;, for example, and the way to access the value associated with that key would be &lt;code&gt;$data_for_ad_on{2005_12_08}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In code, this is how the data for two days of newsletters could be represented as a hash of hashes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%data_for_ad_on = (
+
+  &#39;2005_12_08&#39; =&amp;gt; { &#39;url&#39;      =&amp;gt; &#39;http://roadrunners-r-us.com/index.html&#39;,
+                    &#39;gif&#39;      =&amp;gt; &#39;http://myserver.com/banners/roadrunners_banner.gif&#39;,
+                    &#39;headline&#39; =&amp;gt; &#39;Use Roadrunners R Us for speedy, reliable deliveries!&#39;,
+                  },
+
+  &#39;2005_12_09&#39; =&amp;gt; { &#39;url&#39;      =&amp;gt; &#39;http://acme.com/index.html&#39;,
+                    &#39;gif&#39;      =&amp;gt; &#39;http://myserver.com/banners/acme_banner.gif&#39;,
+                    &#39;headline&#39; =&amp;gt; &#39;Look to Acme for quality, inexpensive widgets!&#39;,
+                  },
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The keys of the named hash are 2005_12_08 and 2005_12_09. Each key&amp;rsquo;s value is a reference to an anonymous hash that contains its own keys and values. When a hash is created using braces instead of parentheses, its value is a reference to that unnamed, &amp;ldquo;anonymous&amp;rdquo; hash. I need to use a reference because a hash is permitted to contain only scalar keys and scalar values; another hash can&amp;rsquo;t be stored as a value. A reference to that hash works, because it acts like a scalar.&lt;/p&gt;
+
+&lt;h3 id=&#34;storing-the-data&#34;&gt;Storing the Data&lt;/h3&gt;
+
+&lt;p&gt;Now I knew what the data structure would be; but how would I store it? Being Perl, of course there&amp;rsquo;s more than one way to store data to disk. Some of those solutions involve the parsing of potentially large amounts of data and then the need to programmatically find a particular desired piece of data, however.&lt;/p&gt;
+
+&lt;p&gt;I came across a single-file database solution in Recipes 11.14 and 14.6 of &lt;em&gt;Perl Cookbook, 2nd Edition&lt;/em&gt;. These describe the use of a DBM file on disk. A Perl script can read data from a DBM file as if it were contained in a hash in memory. For data having unique keys, it&amp;rsquo;s a great fit. In addition to data persistence from one run of your script to the next, using a DBM database file means your script won&amp;rsquo;t need to read all the data into memory. Instead, you pull up only data associated with a particular key. This applies especially to large data sets; a DBM database file on disk might hold data for hundreds of thousands of keys.&lt;/p&gt;
+
+&lt;p&gt;A straightforward but tedious way to get data into a DBM file is shown below. The code creates a database called ad_data.db and inserts data for two newsletters.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/local/bin/perl
+use strict;
+use warnings;
+use MLDBM qw( DB_File Storable );
+use Fcntl qw( :flock O_CREAT O_RDWR );
+
+my $db = &#39;/www/cgi-bin/databases/ad_data.db&#39;;
+my %data_for_ad_on;
+
+tie %data_for_ad_on, &#39;MLDBM&#39;, $db, O_CREAT|O_RDWR, 0644
+  or die &amp;quot;Trouble opening $db, stopped: $!&amp;quot;;
+
+%data_for_ad_on = (
+  &#39;2005_12_09&#39; =&amp;gt; { &#39;url&#39;      =&amp;gt; &#39;http://acme.com/index.html&#39;,
+                    &#39;gif&#39;      =&amp;gt; &#39;http://myserver.com/banners/acme_banner.gif&#39;,
+                    &#39;headline&#39; =&amp;gt; &#39;Look to Acme for quality, inexpensive widgets!&#39;,
+                  },
+
+  &#39;2005_12_08&#39; =&amp;gt; { &#39;url&#39;      =&amp;gt; &#39;http://roadrunners-r-us.com/index.html&#39;,
+                    &#39;gif&#39;      =&amp;gt; &#39;http://myserver.com/banners/roadrunners_banner.gif&#39;,
+                    &#39;headline&#39; =&amp;gt; &#39;Use Roadrunners R Us for speedy, reliable deliveries!&#39;,
+                  },
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After the script is run, the data contained in &lt;code&gt;%data_for_ad_on&lt;/code&gt; are saved automatically into the DBM database file named &lt;code&gt;/www/cgi-bin/databases/ad_data.db&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The secret is Perl&amp;rsquo;s &lt;code&gt;tie&lt;/code&gt; function. It associates a particular hash (here named &lt;code&gt;%data_for_ad_on&lt;/code&gt;) with a &amp;ldquo;class&amp;rdquo; and a file. A class that works for &amp;ldquo;complex&amp;rdquo; data (data containing references) is the &lt;a href=&#34;https://metacpan.org/pod/MLDBM&#34;&gt;MLDBM&lt;/a&gt; module, available from CPAN.&lt;/p&gt;
+
+&lt;p&gt;Note: if the values being stored are scalars only, a tied hash using the DB_File module as the class, rather than the &lt;code&gt;MLDBM&lt;/code&gt; module, will be much easier to work with. I&amp;rsquo;m using &lt;code&gt;MLDBM&lt;/code&gt; because my values include references to data structures. I&amp;rsquo;ll discuss some of &lt;code&gt;MLDBM&lt;/code&gt;&amp;rsquo;s limitations later in this article.&lt;/p&gt;
+
+&lt;p&gt;The script shown above uses the &lt;a href=&#34;https://metacpan.org/pod/Fcntl&#34;&gt;Fcntl&lt;/a&gt; module to make it easier to create or update the DBM database file. The imported &lt;code&gt;O_CREAT|O_RDWR&lt;/code&gt; parameters tell the script to create the database file if it doesn&amp;rsquo;t yet exist or to update (read/write) the file if it exists.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;DB_File&lt;/code&gt; and &lt;code&gt;Storable&lt;/code&gt; parameters passed to &lt;code&gt;MLDBM&lt;/code&gt; specify the particular kind of DBM database to use and the serialization module to use. They handle the behind-the-scenes conversion of references into strings. (A recent version of &lt;code&gt;MLDBM&lt;/code&gt; is necessary to be able to specify such parameters.) &lt;code&gt;DB_File&lt;/code&gt; won&amp;rsquo;t work with every system, however, because it depends upon your system&amp;rsquo;s configuration, like all DBM modules. In particular, the Berkeley DB library (a C library) must be present; see the &lt;code&gt;DB_File&lt;/code&gt; documentation for details. You can get another DBM module from CPAN if &lt;code&gt;DB_File&lt;/code&gt; won&amp;rsquo;t work for you.&lt;/p&gt;
+
+&lt;p&gt;Manually entering hash keys and their values into a script is time-consuming and error-prone, of course. I prefer to programmatically add data created or copied from existing files, and used a script to copy data from my hundreds of text files into the DBM database file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/local/bin/perl -T
+use strict;
+use warnings;
+use MLDBM qw( DB_File Storable );
+use Fcntl qw( :flock O_CREAT O_RDWR );
+
+my $db = &#39;/www/cgi-bin/databases/ad_data.db&#39;;
+my %data_for_ad_on;
+
+tie %data_for_ad_on, &#39;MLDBM&#39;, $db, O_CREAT|O_RDWR, 0644
+  or die &amp;quot;Can&#39;t open $db: $!&amp;quot;;
+
+my $data_dir = &#39;/www/cgi-bin/newsletter_data_text_files&#39;;
+
+opendir my $dir_handle, $data_dir
+  or die &amp;quot;Can&#39;t open $data_dir, stopped: $!&amp;quot;;
+
+# All of the data files are in the same directory; each file&#39;s name
+# is url_YYYY_MM_DD, gif_YYYY_MM_DD or headline_YYYY_MM_DD (where
+# YYYY is the year, MM is the month, with a leading zero if needed,
+# and DD is the day of the month, with a leading zero if needed).
+# No other files in that directory end with YYYY_MM_DD.
+
+my @data_files = grep { /\d\d\d\d_\d\d_\d\d$/ } readdir $dir_handle;
+
+close $dir_handle;
+
+my $entry;
+foreach my $file ( @data_files ) {
+
+  # Test the filename to see if the file contains the advertiser&#39;s
+  # URL...
+
+  if ($file =~ /^url_(\d\d\d\d_\d\d_\d\d)/ ) {
+
+      $entry = $data_for_ad_on{$1};
+
+      open (FILE, &amp;quot;$data_dir/$file&amp;quot;) or die;
+      my $url = do { local $/; &amp;lt;FILE&amp;gt; };
+      close FILE;
+
+      $entry-&amp;gt;{url}       = $url;
+      $data_for_ad_on{$1} = $entry;
+      print &amp;quot;Advertiser&#39;s URL for $1 has been saved.\n&amp;quot;;
+
+  # Test the filename to see if the file contains the .gif location...
+
+  } elsif ($file =~ /^gif_(\d\d\d\d_\d\d_\d\d)/ ) {
+
+      $entry = $data_for_ad_on{$1};
+
+      open (FILE, &amp;quot;$data_dir/$file&amp;quot;) or die;
+      my $gif = do { local $/; &amp;lt;FILE&amp;gt; };
+      close FILE;
+
+      $entry-&amp;gt;{gif}       = $gif;
+      $data_for_ad_on{$1} = $entry;
+      print &amp;quot;.gif file location for $1 has been saved.\n&amp;quot;;
+
+  # Test the filename to see if the file contains the headline...
+
+  } elsif ($file =~ /^headline_(\d\d\d\d_\d\d_\d\d)/ ) {
+
+      $entry = $data_for_ad_on{$1};
+
+      open (FILE, &amp;quot;$data_dir/$file&amp;quot;) or die;
+      my $headline = do { local $/; &amp;lt;FILE&amp;gt; };
+      close FILE;
+
+      $entry-&amp;gt;{headline}  = $headline;
+      $data_for_ad_on{$1} = $entry;
+      print &amp;quot;Headline for $1 has been saved.\n&amp;quot;;
+  }
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A limitation of &lt;code&gt;MLDBM&lt;/code&gt; is that you can&amp;rsquo;t work piecemeal with the data structures (the values for keys in the tied hash). You must retrieve a copy of the data structure in the form of a reference (&lt;code&gt;$entry&lt;/code&gt; in the example); use that reference to add, update or delete parts of the data structure; and then save the reference back to the database in order for &lt;code&gt;MLDBM&lt;/code&gt; to put the changed data structure back onto disk. This is because the data structure is no longer tied, once it has been retrieved from disk.&lt;/p&gt;
+
+&lt;p&gt;For example, the script above works piecemeal with the data structure: it builds one key at a time in the anonymous hash. A temporary variable called $entry holds a reference to the retrieved anonymous hash, which now exists in memory; then &lt;code&gt;$entry&lt;/code&gt; is used to dereference the anonymous hash (and to select a named key in the hash, on the right side of the infix operator); then the script alters a part of that data structure (assigning a value to the named key); then the now-changed anonymous hash is saved back into the database file on disk by assigning &lt;code&gt;$entry&lt;/code&gt; to the key.&lt;/p&gt;
+
+&lt;p&gt;As shown in earlier examples, an entire data structure can be stored as the value of a key in the tied hash without fetching the existing data structure (if any) associated with that key. In such a case, you&amp;rsquo;re overwriting any existing data structure completely, so there is no need to fetch the existing data structure first or to work with it using the temporary variable technique.&lt;/p&gt;
+
+&lt;p&gt;Note: a recently added CPAN module called &lt;code&gt;DBM_Deep&lt;/code&gt; allows tied hashes of complex data as does &lt;code&gt;MLDBM&lt;/code&gt;, but appears to avoid the need for fetching data first in order to work with it through a temporary variable.&lt;/p&gt;
+
+&lt;p&gt;By the way, &lt;code&gt;MLDBM&lt;/code&gt; allows stored data structures to be arrays, not just hashes. Hence &lt;code&gt;MLDBM&lt;/code&gt; might be a good disk-based storage solution for you if a hash of arrays works best to hold your data. Plus, whether you&amp;rsquo;re storing a hash of hashes or a hash of arrays, those stored hashes or arrays are permitted to contain values that consist of even more hashes or arrays!&lt;/p&gt;
+
+&lt;p&gt;Another thing to know about &lt;code&gt;MLDBM&lt;/code&gt; is that file locking is not provided automatically. The solution presented in this article works well in a single-user environment, but data corruption is possible when more than one instance of the script (or more than one script) needs to access the disk-based data while another process is writing to it. See section 10.2.1 of &lt;a href=&#34;http://www.oreilly.com/catalog/cgi2/&#34;&gt;CGI Programming with Perl&lt;/a&gt; for an example of file locking with the DB_File DBM module.&lt;/p&gt;
+
+&lt;h3 id=&#34;reading-hoh-data&#34;&gt;Reading HoH Data&lt;/h3&gt;
+
+&lt;p&gt;Here is a portion of a script that prints a report for my stored newsletter data.&lt;/p&gt;
+
+&lt;p&gt;I reach into the &lt;code&gt;%data_for_ad_on&lt;/code&gt; hash by specifying a key (the date of a particular newsletter); the key&amp;rsquo;s associated value is a reference to the anonymous hash holding ad data for that date. Use infix (arrow) notation to dereference the anonymous hash and also to access a specified key.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;tie %data_for_ad_on, &#39;MLDBM&#39;, $db, O_RDWR, 0644
+  or die &amp;quot;Can&#39;t open $db: $!&amp;quot;;
+
+my @newsletter_dates = sort keys %data_for_ad_on;
+
+foreach my $date ( @newsletter_dates ) {
+
+   my $url      = $data_for_ad_on{$date}-&amp;gt;{url};
+   my $gif      = $data_for_ad_on{$date}-&amp;gt;{gif};
+   my $headline = $data_for_ad_on{$date}-&amp;gt;{headline};
+
+   print &amp;quot;\nHere are details for the banner ad in the $date newsletter:\n&amp;quot;;
+   print &amp;quot;          Advertiser&#39;s URL: $url\n&amp;quot;;
+   print &amp;quot;        Location of banner: $gif\n&amp;quot;;
+   print &amp;quot;     Headline above banner: $headline\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A temporary variable to work with the data was unnecessary because I was merely reading data. I had no need to save a changed data structure back to disk after working with it. A temporary variable would be needed as a reference to the data structure, as noted earlier, if I were adding, updating or deleting something in the data structure, in order to save the changed data structure back to disk.&lt;/p&gt;
+
+&lt;p&gt;Nevertheless, a temporary variable is useful for storing a fetched data structure even when a tied hash is being used only to read data from disk. The &lt;code&gt;MLDBM&lt;/code&gt; documentation points out that disk fetch occurs each time a script names a key in the tied hash; a new copy of the entire data structure for that key gets created with each fetch. For efficiency, scripts that merely read data work better if the data structure for a particular key is stored first into a temporary variable and the script works with that single copy of data in memory. For example, the lines in the preceding code that get values for &lt;code&gt;$url&lt;/code&gt;, &lt;code&gt;$gif&lt;/code&gt;, and &lt;code&gt;$headline&lt;/code&gt; should be rewritten to cut the number of fetches from three to one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   my $entry    = $data_for_ad_on{$date};
+   my $url      = $entry-&amp;gt;{url};
+   my $gif      = $entry-&amp;gt;{gif};
+   my $headline = $entry-&amp;gt;{headline};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;updating-hoh-data&#34;&gt;Updating HoH Data&lt;/h3&gt;
+
+&lt;p&gt;My next task was to update existing data. An advertiser informed me that its web page had changed. The advertiser&amp;rsquo;s banner ad in a particular upcoming newsletter needed to point to the new page rather than to the URL I had stored earlier for the ad. So I tried this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;tie %data_for_ad_on, &#39;MLDBM&#39;, $db, O_CREAT|O_RDWR, 0644
+  or die &amp;quot;Can&#39;t open $db: $!&amp;quot;;
+
+$data_for_ad_on{&#39;2005_12_14&#39;}-&amp;gt;{url}
+  = &#39;http://roadrunners-r-us.com/new_home_page.html&#39;;   # WRONG
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Despite the apparently correct syntax, the line marked &amp;ldquo;# WRONG&amp;rdquo; did not change the data in the tied hash. &lt;code&gt;MLDBM&lt;/code&gt; can&amp;rsquo;t add, update or delete just a part of a data structure stored on disk; it must retrieve the entire data structure first. Unfortunately that doesn&amp;rsquo;t happen automatically when a part of the tied hash is used as an lvalue (the left side of an assignment).&lt;/p&gt;
+
+&lt;p&gt;Here is the correct syntax for updating part of a data structure:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $entry = $data_for_ad_on{&#39;2005_12_14&#39;};                        # Get
+$entry-&amp;gt;{url} = &#39;http://roadrunners-r-us.com/new_home_page.html&#39;; # Change
+$data_for_ad_on{&#39;2005_12_14&#39;} = $entry;                           # Save
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A different kind of update would be to add a new kind of information to an existing data structure. Until now I have been working with each ad&amp;rsquo;s data as an anonymous hash of three keys because I only had three pieces of information per ad. Here&amp;rsquo;s how I can modify the data structure for any particular ad&amp;ndash;that is, the value of any particular key in the tied hash&amp;ndash;to include a fourth piece of information. I&amp;rsquo;ll record whether or not a particular ad has been billed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;tie %data_for_ad_on, &#39;MLDBM&#39;, $db, O_CREAT|O_RDWR, 0644
+  or die &amp;quot;Can&#39;t open $db: $!&amp;quot;;
+
+my $entry = $data_for_ad_on{&#39;2005_12_02&#39;};  # Get
+$entry-&amp;gt;{has_been_billed} = &#39;yes&#39;;           # Change (by creating a key and value)
+$data_for_ad_on{&#39;2005_12_02&#39;} = $entry;      # Save
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Adding a fourth key as shown is not remarkable because it&amp;rsquo;s done the same way I created the original three keys. But note how I&amp;rsquo;ve added a fourth key to just one of the ads (for the 2005_12_02 newsletter). I don&amp;rsquo;t need to define such a fourth key in each of the other anonymous hashes because &lt;code&gt;MLDBM&lt;/code&gt; doesn&amp;rsquo;t require that the anonymous hashes have the same structure.&lt;/p&gt;
+
+&lt;p&gt;Now that I&amp;rsquo;ve added a fourth key to one of the ads, I want to see that key&amp;rsquo;s information when I run my report, even though the information for each of the other newsletters is incomplete. Just as with a hash in memory, the &lt;code&gt;exists&lt;/code&gt; operator can test for the existence of a key in a tied hash, or test for the existence of a key in one of the stored anonymous hashes. The earlier reporting script can be improved:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;foreach my $date ( @newsletter_dates ) {
+
+   my $entry    = $data_for_ad_on{$date};
+   my $url      = $entry-&amp;gt;{url};
+   my $gif      = $entry-&amp;gt;{gif};
+   my $headline = $entry-&amp;gt;{headline};
+
+   my $has_been_billed = exists ( $entry-&amp;gt;{has_been_billed} ) ?
+                         $entry-&amp;gt;{has_been_billed}
+                         : &#39;Billing status is unknown&#39;;
+
+   print &amp;quot;\nHere are details for the banner ad in the $date newsletter:\n&amp;quot;;
+   print &amp;quot;            Advertiser&#39;s URL: $url\n&amp;quot;;
+   print &amp;quot;          Location of banner: $gif\n&amp;quot;;
+   print &amp;quot;       Headline above banner: $headline\n&amp;quot;;
+   print &amp;quot;  Has advertiser been billed? $has_been_billed\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note how a default value is provided for &lt;code&gt;$has_been_billed&lt;/code&gt; (the string &amp;lsquo;Billing status is unknown&amp;rsquo;). If &lt;code&gt;$entry-&amp;gt;{has_been_billed}&lt;/code&gt; had been assigned to &lt;code&gt;$has_been_billed&lt;/code&gt; without providing a default value, the script (if it is using the &lt;code&gt;warnings&lt;/code&gt; pragma) would report &amp;ldquo;Use of uninitialized value in concatenation (.) or string&amp;rdquo; every time it processes the &amp;ldquo;Has advertiser been billed?&amp;rdquo; statement for an anonymous hash that has no &lt;code&gt;&#39;has_been_billed&#39;&lt;/code&gt; key. The value of a nonexistent key in a hash is undefined, whether or not the hash is tied.&lt;/p&gt;
+
+&lt;p&gt;Because the value of a nonexistent key in a hash is undefined, remember when working with &lt;code&gt;MLDBM&lt;/code&gt; not to assume your tied hash&amp;rsquo;s keys will return either a reference to a data structure or a reference to an empty data structure. For example, this code produces a runtime error if the &amp;lsquo;2005_12_32&amp;rsquo; key does not exist in the tied hash (there is no December 32) and the script is using the strict pragma:&lt;/p&gt;
+
+&lt;p&gt;``
+    my $entry = $data_for_ad_on{2005_12_32};
+    my %named_hash = %{ $entry };&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ( $named_hash{url} ) {
+    print &amp;quot;The advertiser&#39;s URL for the ad dated 2005_12_32 is $named_hash{url}.\n&amp;quot;;
+
+} else {
+    print &amp;quot;We have no URL on file for the ad dated 2005_12_32.\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The runtime error would be &amp;lsquo;Can&amp;rsquo;t use string (&amp;ldquo;&amp;rdquo;) as a HASH ref while &amp;ldquo;strict refs&amp;rdquo; in use&amp;rsquo; on the line number of &lt;code&gt;my %named_hash = %{ $entry }&lt;/code&gt;. The code doesn&amp;rsquo;t create a named hash that has no elements.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;I hope this article helps you move from a swamp of weedy text files into the simplicity of a single disk-based database file. A DBM database file enables you to work with your data as if it were a single hash of keys and their values.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;MLDBM&lt;/code&gt; module extends the &amp;ldquo;hash on a disk&amp;rdquo; capability by letting you store a key&amp;rsquo;s value as a hash, as illustrated in this article, or store a key&amp;rsquo;s value as an array.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;MLDBM&lt;/code&gt; requires a special technique for working piecemeal with stored hashes (or stored arrays). Also, the solution described works well in my single-user environment; file locking to protect the disk-based data would become important in a multi-user environment such as a script executed by a publicly accessible web server. Still, you get all this hash-like goodness for key-based data without running a relational database server or using SQL, without parsing large amounts of disk-based data, and without storing all the data in memory first.&lt;/p&gt;
+
+&lt;p&gt;Happy hashing!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

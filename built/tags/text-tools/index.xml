@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Text Tools on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/text-tools/</link>
+    <description>Recent content in Text Tools on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 14 Mar 2008 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/text-tools/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Reverse Callback Templating</title>
+      <link>http://localhost:1313/pub/2008/03/14/reverse-callback-templating.html/</link>
+      <pubDate>Fri, 14 Mar 2008 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2008/03/14/reverse-callback-templating.html/</guid>
+      <description>
+
+&lt;p&gt;Programmers have long recognized that separating code logic from presentation is good. The Perl community has produced many fine systems for doing just this. While there are many systems, they largely fall within two execution models, &lt;em&gt;pipeline&lt;/em&gt; and &lt;em&gt;callback&lt;/em&gt; (as noted by Perrin Harkins in &lt;a href=&#34;http://localhost:1313/pub/2001/08/21/templating.html&#34;&gt;Choosing a Templating System&lt;/a&gt;). &lt;a href=&#34;https://metacpan.org/pod/HTML::Template&#34;&gt;HTML::Template&lt;/a&gt; and &lt;a href=&#34;http://www.template-toolkit.org/&#34;&gt;Template Toolkit&lt;/a&gt; are in the pipeline category. Their templates consist of simple presentation logic in the form of loops and conditionals and template variables. The Perl program does its work, then loads and renders the appropriate template, as if data were flowing through a pipeline. &lt;a href=&#34;http://www.masonhq.com/&#34;&gt;Mason&lt;/a&gt; and &lt;a href=&#34;http://perl.apache.org/embperl/&#34;&gt;Embperl&lt;/a&gt; fall into the callback category. They mix code in with the template markup, and the template &amp;ldquo;calls back&amp;rdquo; to Perl when it encounters program logic.&lt;/p&gt;
+
+&lt;p&gt;A third execution model exists: the &lt;em&gt;reverse callback&lt;/em&gt; model. Template and code files are separate, just like in the pipeline approach. Instead of using a mini-language to handle display logic, however, the template consists of named sections. Perl executes and calls a specific section of the template at the appropriate time, rendering it. Effectively, this is the opposite of the callback method, which wraps Perl logic around portions (or sections) of a template in a single file. Reverse callback uses Perl statements to load, or call, specific portions of the the template. This approach has a few distinct advantages.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-reverse-callback-example&#34;&gt;A Reverse Callback Example&lt;/h3&gt;
+
+&lt;p&gt;Suppose that you have a simple data structure you are dying to output as pretty HTML.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @goods = (
+    &amp;quot;oxfords,Brown leather,\$85,0&amp;quot;,
+    &amp;quot;hiking,All sizes,\$55,7&amp;quot;,
+    &amp;quot;tennis shoes,Women&#39;s sizes,\$35,15&amp;quot;,
+    &amp;quot;flip flops,Colors of the rainbow,\$7,90&amp;quot;
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, you need an HTML template with the appropriate sections defined. Sections are of vital importance; they enable &lt;code&gt;Template::Recall&lt;/code&gt; to keep the logic squarely in the code. &lt;code&gt;Template::Recall&lt;/code&gt; uses the default pattern &lt;code&gt;/[\s*=+\s*\w+\s*=+\s*]/&lt;/code&gt; (to match, for example, &lt;code&gt;[==== section_name ====]&lt;/code&gt;) to determine sections in a single file. The start of one section denotes the end of another. This is because &lt;code&gt;Template::Recall&lt;/code&gt; uses a &lt;code&gt;split()&lt;/code&gt; operation based on the above regex, saving the &lt;code&gt;\w+&lt;/code&gt; as the section key in an internal data structure.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[ =================== header ===================]
+
+&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+    &amp;lt;title&amp;gt;my site - [&#39; title &#39;]&amp;lt;/title&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body&amp;gt;
+
+&amp;lt;h4&amp;gt;The date is [&#39; date &#39;]&amp;lt;/h4&amp;gt;
+
+
+
+&amp;lt;table border=&amp;quot;1&amp;quot;&amp;gt;
+
+    &amp;lt;tr&amp;gt;
+        &amp;lt;th&amp;gt;Shoe&amp;lt;/th&amp;gt;
+        &amp;lt;th&amp;gt;Details&amp;lt;/th&amp;gt;
+        &amp;lt;th&amp;gt;Price&amp;lt;/th&amp;gt;
+        &amp;lt;th&amp;gt;Quantity&amp;lt;/th&amp;gt;
+    &amp;lt;/tr&amp;gt;
+
+[ =================== product_row =================== ]
+    &amp;lt;tr&amp;gt;
+        &amp;lt;td&amp;gt;[&#39; shoe &#39;]&amp;lt;/td&amp;gt;
+        &amp;lt;td&amp;gt;[&#39; details &#39;]&amp;lt;/td&amp;gt;
+        &amp;lt;td&amp;gt;[&#39; price &#39;]&amp;lt;/td&amp;gt;
+        &amp;lt;td&amp;gt;[&#39; quantity &#39;]&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+
+
+[= footer =]
+&amp;lt;/table&amp;gt;
+
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This template is quite simple. It has three sections, a &amp;ldquo;header,&amp;rdquo; &amp;ldquo;product_row,&amp;rdquo; and &amp;ldquo;footer.&amp;rdquo; The sections essentially give away how the program logic is going to work. A driver program would call header and footer only once during program execution (start and end, respectively). product_row will be called multiple times during iteration over an array.&lt;/p&gt;
+
+&lt;p&gt;Names contained within the delimeters &lt;code&gt;[&#39;&lt;/code&gt; and &lt;code&gt;&#39;]&lt;/code&gt; are template variables for replacement during rendering. For example, &lt;code&gt;[&#39; date &#39;]&lt;/code&gt; will be replaced by the current date when the program executes.&lt;/p&gt;
+
+&lt;p&gt;The driver code must first instantiate a new Template::Recall object, &lt;code&gt;$tr&lt;/code&gt;, and pass it the path of the template, which I&amp;rsquo;ve saved as the file &lt;em&gt;template1.html&lt;/em&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Template::Recall;
+
+my $tr = Template::Recall-&amp;gt;new( template_path =&amp;gt; &#39;template1.html&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With &lt;code&gt;$tr&lt;/code&gt; created, the template sections are loaded and ready for use. The obvious first step is to render the header section with the &lt;code&gt;render()&lt;/code&gt; method. &lt;code&gt;render()&lt;/code&gt; takes the name of the section to process, and optionally, a hash of names and values to replace in that section. There are two template variables in the header section, &lt;code&gt;[&#39; title &#39;]&lt;/code&gt; and &lt;code&gt;[&#39; date &#39;]&lt;/code&gt;, so the call looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;print $tr-&amp;gt;render( &#39;header&#39;, { title =&amp;gt; &#39;MyStore&#39;, date =&amp;gt; scalar(localtime) } );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The names used in the hash must match the names of the template variables in the section you intend to render. For example, &lt;code&gt;date =&amp;gt; scalar(localtime)&lt;/code&gt; means that &lt;code&gt;[&#39; date &#39;]&lt;/code&gt; in the header section will be dynamically replaced by the value produced by &lt;code&gt;scalar(localtime)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;You probably noticed from the template that the header section created the start of an HTML table. This is a fine time to render &lt;code&gt;@goods&lt;/code&gt; as the table&amp;rsquo;s rows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for my $good (@goods)
+{
+    my @attr     = split(/,/, $good);
+    my $quantity = $attr[3] eq &#39;0&#39; ? &#39;Out of stock&#39; : $attr[3];
+
+    my %row      = (
+        shoe     =&amp;gt; $attr[0],
+        details  =&amp;gt; $attr[1],
+        price    =&amp;gt; $attr[2],
+        quantity =&amp;gt; $quantity,
+    );
+
+    print $tr-&amp;gt;render(&#39;product_row&#39;, \%row);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In actual code, this array would likely come from a database. For each row, the driver makes necessary logical decisions (such as displaying &amp;ldquo;Out of stock&amp;rdquo; if the quantity equals &amp;ldquo;0&amp;rdquo;), then calls &lt;code&gt;$tr-&amp;gt;render()&lt;/code&gt; to replace the placeholders in the template section with the values from &lt;code&gt;%row&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, the driver renders the footer of the HTML output. There are no template variables to replace, so there&amp;rsquo;s no need to pass in a hash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;print $tr-&amp;gt;render(&#39;footer&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The result is this nice little output of footwear inventory:&lt;/p&gt;
+
+&lt;h4 id=&#34;the-date-is-fri-aug-10-14-22-30-2007&#34;&gt;The date is Fri Aug 10 14:22:30 2007&lt;/h4&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Shoe&lt;/th&gt;
+&lt;th&gt;Details&lt;/th&gt;
+&lt;th&gt;Price&lt;/th&gt;
+&lt;th&gt;Quantity&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;oxfords&lt;/td&gt;
+&lt;td&gt;Brown leather&lt;/td&gt;
+&lt;td&gt;$85&lt;/td&gt;
+&lt;td&gt;Out of stock&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;hiking&lt;/td&gt;
+&lt;td&gt;All sizes&lt;/td&gt;
+&lt;td&gt;$55&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;tennis shoes&lt;/td&gt;
+&lt;td&gt;Women&amp;rsquo;s sizes&lt;/td&gt;
+&lt;td&gt;$35&lt;/td&gt;
+&lt;td&gt;15&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;flip flops&lt;/td&gt;
+&lt;td&gt;Colors of the rainbow&lt;/td&gt;
+&lt;td&gt;$7&lt;/td&gt;
+&lt;td&gt;90&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&#34;the-logic-is-in-the-code&#34;&gt;The Logic Is in the Code&lt;/h3&gt;
+
+&lt;p&gt;What happens if you extend your shoe data slightly, to add categories? For instance, what if &lt;code&gt;@goods&lt;/code&gt; looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @goods = (
+    &amp;quot;dress,oxfords,Brown leather,\$85,0&amp;quot;,
+    &amp;quot;sports,hiking,All sizes,\$55,7&amp;quot;,
+    &amp;quot;sports,tennis shoes,Women&#39;s sizes,\$35,15&amp;quot;,
+    &amp;quot;recreation,flip flops,Colors of the rainbow,\$7,90&amp;quot;
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The output now needs grouping, which implies the use of nested loops. One loop can output the category header &amp;ndash; sports, dress, or recreation shoes &amp;ndash; and another will output the details of each shoe in that category.&lt;/p&gt;
+
+&lt;p&gt;To handle this in HTML::Template, you would generally build a nested data structure of anonymous arrays and hashes, and then process it against nested &lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt; directives in the template. Template::Recall logic remains in the code, you would build a nested loop structure in Perl that calls the appropriate sections. You can also use a hash to render the category sections as keys and detail sections as values in a single pass, and output them together using &lt;code&gt;join&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The template needs some modification:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[====== table_start ====]
+&amp;lt;table border=&amp;quot;1&amp;quot;&amp;gt;
+[====== category =======]
+&amp;lt;tr&amp;gt;&amp;lt;td colspan=&amp;quot;4&amp;quot;&amp;gt;&amp;lt;b&amp;gt;[&#39;category&#39;]&amp;lt;/b&amp;gt;&amp;lt;/td&amp;gt;&amp;lt;/tr&amp;gt;
+[====== detail ======]
+&amp;lt;tr&amp;gt;&amp;lt;td&amp;gt;[&#39;shoe&#39;]&amp;lt;/td&amp;gt;&amp;lt;td&amp;gt;[&#39;detail&#39;]&amp;lt;/td&amp;gt;&amp;lt;td&amp;gt;[&#39;price&#39;]&amp;lt;/td&amp;gt;&amp;lt;td&amp;gt;[&#39;quantity&#39;]&amp;lt;/td&amp;gt;&amp;lt;/tr&amp;gt;
+[======= table_end ====]
+&amp;lt;/table&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This template now has a section called &amp;ldquo;category,&amp;rdquo; a single table row that spans all columns. The &amp;ldquo;detail&amp;rdquo; section is pretty much the same as in the previous.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %inventory;
+
+for my $good (@goods) {
+    my @attr = split(/,/, $good);
+    my $q    = $attr[4] == 0 ? &#39;Out of stock&#39; : $attr[4];
+
+    $inventory{ $tr-&amp;gt;render(&#39;category&#39;, { category =&amp;gt; $attr[0] } ) } .=
+        $tr-&amp;gt;render(&#39;detail&#39;,
+            {
+                shoe     =&amp;gt; $attr[1],
+                detail   =&amp;gt; $attr[2],
+                price    =&amp;gt; $attr[3],
+                quantity =&amp;gt; $q,
+            } );
+}
+
+print $tr-&amp;gt;render(&#39;table_start&#39;) .
+    join(&#39;&#39;, %inventory) .
+    $tr-&amp;gt;render(&#39;table_end&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This loop looks surprisingly similar to the first example, doesn&amp;rsquo;t it? That&amp;rsquo;s because it is. Instead of printing each row, however, this code renders the first column in &lt;code&gt;@goods&lt;/code&gt; against the category template section, and then storing the output as a key in &lt;code&gt;%inventory&lt;/code&gt;. In the same iteration, it renders the remaining columns against the detail section and appends to the value of that key.&lt;/p&gt;
+
+&lt;p&gt;After storing the rendered sections in this way to &lt;code&gt;%inventory&lt;/code&gt;, the code prints everything with a single statement, using &lt;code&gt;join&lt;/code&gt; to print all the values in &lt;code&gt;%inventory&lt;/code&gt;, including keys. The output is:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;recreation&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;flip flops&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;sports&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;hiking&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;tennis shoes&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;dress&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;oxfords&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The code also handles conditional output. Suppose that at your growing online shoe emporium you provide special deals to customers who have bought over a certain dollar amount. As they browse your shoe inventory, these deals appear.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ( $customer-&amp;gt;is_elite ) {
+    print $tr-&amp;gt;render(&#39;special_deals&#39;, get_deals(&#39;elite&#39;) );
+}
+else {
+    print $tr-&amp;gt;render(&#39;standard_deals&#39;, get_deals() );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What about producing XML output? This usually requires a separate template? You can conditionally load a &lt;em&gt;.xml&lt;/em&gt; or &lt;em&gt;.html&lt;/em&gt; template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tr;
+if ( $q-&amp;gt;param(&#39;fmt&#39;) eq &#39;xml&#39; ) {
+    $tr = Template::Recall-&amp;gt;new( template_path =&amp;gt; &#39;inventory.xml&#39; );
+}
+else {
+    $tr = Template::Recall-&amp;gt;new( template_path =&amp;gt; &#39;inventory.html&#39; );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Perl provides everything you need to handle model, controller, &lt;em&gt;and&lt;/em&gt; view logic. Template::Recall capitalizes on this and helps to make projects code driven.&lt;/p&gt;
+
+&lt;h3 id=&#34;template-model-comparison&#34;&gt;Template Model Comparison&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s important to note a few things that occurred in these examples &amp;ndash; or failed to occur, rather. First, there&amp;rsquo;s no mixture of code and template markup. All template access occurs through the method call &lt;code&gt;$tr-&amp;gt;render()&lt;/code&gt;. This is strong separation of concerns (SOC), just like the pipeline model, and unlike the callback model, which mixes template markup and code in the same file. Not only does strong SOC provide good code organization, it also keeps designers from having to sift through code to change markup. Consider using Mason to output the rows of &lt;code&gt;@goods&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;% for my $good (@goods) {
+%  my @attr     = split(/,/, $good);
+%  my $quantity = $attr[3] eq &#39;0&#39; ? &#39;Out of stock&#39; : $attr[3];
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;&amp;lt;% $attr[0] %&amp;gt;&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;&amp;lt;% $attr[1] %&amp;gt;&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;&amp;lt;% $attr[2] %&amp;gt;&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;&amp;lt;% $quantity %&amp;gt;&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+% }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is an efficient approach, and easy enough for a programmer to walk through. It becomes difficult to maintain though, when designers are involved, if for no other reason than because a designer and a programmer need to access the same file to do their respective work. Design changes and code changes will not always share the same schedule because they belong to different domains. It also means that in order to switch templates, say to output XML or text (or both), you have to add more and more conditionals and templates to the code, making it increasingly difficult to read.&lt;/p&gt;
+
+&lt;p&gt;The other thing that did not occur in this example is the leaking of any kind of logic (presentation or otherwise) into the template. Consider that HTML::Template would have to insert the &lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt; statement in the template in order to output the rows of &lt;code&gt;@goods&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;TMPL_LOOP NAME=&amp;quot;PRODUCT&amp;quot;&amp;gt;
+    &amp;lt;tr&amp;gt;
+    &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=SHOE&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=DETAILS&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=PRICE&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=QUANTITY&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/TMPL_LOOP&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s not a big deal, really. If you care about line count, this only requires one extra line over the Template::Recall version, and that&amp;rsquo;s the the closing tag &lt;code&gt;&amp;lt;/TMPL_LOOP&amp;gt;&lt;/code&gt;. Nonetheless, the template now states some of the logic for the application. Sure, it&amp;rsquo;s only presentation logic, but it&amp;rsquo;s logic nonetheless. HTML::Template also provides &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;&lt;/code&gt; for displaying items conditionally, and &lt;code&gt;&amp;lt;TMPL_INCLUDE&amp;gt;&lt;/code&gt; for including other templates. Again, this is logic contained in the template files.&lt;/p&gt;
+
+&lt;p&gt;Template::Recall keeps as much logic as possible in the code. If you need to display something conditionally, use Perl&amp;rsquo;s &lt;code&gt;if&lt;/code&gt; statement. If you need to include other templates, load them using a Template::Recall object. Whereas the pipeline models likely work better for projects with a fairly sophisticated design team, Template::Recall tries to be the programmer&amp;rsquo;s friend and let him or her steer from the most comfortable place, the code.&lt;/p&gt;
+
+&lt;p&gt;There is also a subtle cost to using the pipeline model for a simple loop like that above. Consider this HTML::Template footwear data code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $template = HTML::Template-&amp;gt;new(filename =&amp;gt; template1.tmpl&#39;);
+
+my @output;
+
+for my $good (@goods)
+{
+    my @attr = split(/,/, $_);
+    my %row  = (
+        SHOE     =&amp;gt; $attr[0],
+        DETAILS  =&amp;gt; $attr[1],
+        PRICE    =&amp;gt; $attr[2],
+        QUANTITY =&amp;gt; $attr[3],
+    );
+    push( @output, \%row );
+}
+
+$template-&amp;gt;param(PRODUCT =&amp;gt; \@output);
+
+print $template-&amp;gt;output();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code iterates over &lt;code&gt;@goods&lt;/code&gt; and builds a second array, &lt;code&gt;@output&lt;/code&gt;, with the rows as hash references. Then the template iterates over &lt;code&gt;@output&lt;/code&gt; within &lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt;. That&amp;rsquo;s walking over the same data twice. Template sections do not suffer this cost, because you can output the data immediately, as you get it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;print $tr-&amp;gt;render(&#39;product_row&#39;, \%row);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is essentially what happens with Mason (or JSP/PHP/ASP for that matter). The main difference is that Template::Recall renders the section through a method call rather than mixing code and template.&lt;/p&gt;
+
+&lt;p&gt;Template::Recall, by using sectioned templates, combines the efficiency of the callback model with the strong, clean separation of concerns inherent in the pipeline model, and perhaps gets the best of both worlds.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>FMTYEWTK About Mass Edits In Perl</title>
+      <link>http://localhost:1313/pub/2004/10/14/file_editing.html/</link>
+      <pubDate>Thu, 14 Oct 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/10/14/file_editing.html/</guid>
+      <description>
+
+&lt;p&gt;For those not used to the terminology, FMTYEWTK stands for *F*ar *M*ore *T*han *Y*ou *E*ver *W*anted *T*o *K*now. This one is fairly light as FMTYEWTKs usually go. In any case, the question before us is, &amp;ldquo;How do you apply an edit against a list of files using Perl?&amp;rdquo; Well, that depends on what you want to do&amp;hellip;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-beginning-the-beginning-span&#34;&gt;&lt;span id=&#34;beginning&#34;&gt;The Beginning&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you only want to read in one or more files, apply a regex to the contents, and spit out the altered text as one big stream &amp;ndash; the best approach is probably a one-liner such as the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -p -e &amp;quot;s/Foo/Bar/g&amp;quot; &amp;lt;FileList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This command calls &lt;code&gt;perl&lt;/code&gt; with the options &lt;code&gt;-p&lt;/code&gt; and &lt;code&gt;-e &amp;quot;s/Foo/Bar/g&amp;quot;&lt;/code&gt; against the files listed in &lt;code&gt;FileList&lt;/code&gt;. The first argument, &lt;code&gt;-p&lt;/code&gt;, tells Perl to *p*rint each line it reads after applying the alteration. The second option, &lt;code&gt;-e&lt;/code&gt;, tells Perl to *e*valuate the provided substitution regex rather than reading a script from a file. The Perl interpreter then evaluates this regex against every line of all (space separated) files listed on the command line and spits out one huge stream of the concatenated fixed lines.&lt;/p&gt;
+
+&lt;p&gt;In standard fashion, Perl allows you to concatenate options without arguments with following options for brevity and convenience. Therefore, you&amp;rsquo;ll more often see the previous example written as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -pe &amp;quot;s/Foo/Bar/g&amp;quot; &amp;lt;FileList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-inplace-in-place-editing-span&#34;&gt;&lt;span id=&#34;inplace&#34;&gt;In-place Editing&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you want to edit the files in place, editing each file before going on to the next, that&amp;rsquo;s pretty easy, too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -pi.bak -e &amp;quot;s/Foo/Bar/g&amp;quot; &amp;lt;FileList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only change from the last command is the new option &lt;code&gt;-i.bak&lt;/code&gt;, which tells Perl to operate on files *i*n-place, rather than concatenating them together into one big output stream. Like the &lt;code&gt;-e&lt;/code&gt; option, &lt;code&gt;-i&lt;/code&gt; takes one argument, an extension to add to the original file names when making backup copies; for this example I chose &lt;code&gt;.bak&lt;/code&gt;. &lt;strong&gt;Warning:&lt;/strong&gt; If you execute the command twice, you&amp;rsquo;ve most likely just overwritten your backups with the changed versions from the first run. You probably didn&amp;rsquo;t want to do that.&lt;/p&gt;
+
+&lt;p&gt;Because &lt;code&gt;-i&lt;/code&gt; takes an argument, I had to separate out the &lt;code&gt;-e&lt;/code&gt; option, which Perl otherwise would interpret as the argument to &lt;code&gt;-i&lt;/code&gt;, leaving us with a backup extension of &lt;code&gt;.bake&lt;/code&gt;, unlikely to be correct unless you happen to be a pastry chef. In addition, Perl would have thought that &lt;code&gt;&amp;quot;s/Foo/Bar/&amp;quot;&lt;/code&gt; was the filename of the script to run, and would complain when it could not find a script by that name.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-multiple-running-multiple-regexes-span&#34;&gt;&lt;span id=&#34;multiple&#34;&gt;Running Multiple Regexes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Of course, you may want to make more extensive changes than just one regex. To make several changes all at once, add more code to the evaluated script. Remember to separate each additional line of code with a semicolon (technically, you should place a semicolon at the end of each line of code, but the very last one in any code block is optional). For example, you could make a series of changes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -pi.bak -e &amp;quot;s/Bill Gates/Microsoft CEO/g;
+    s/CEO/Overlord/g&amp;quot; &amp;lt;FileList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;ldquo;Bill Gates&amp;rdquo; would then become &amp;ldquo;Microsoft Overlord&amp;rdquo; throughout the files. (Here, as in all examples, we ignore such finicky things as making sure we don&amp;rsquo;t change &amp;ldquo;HERBACEOUS&amp;rdquo; to &amp;ldquo;HERBAOverlordUS&amp;rdquo;; for that kind of information, refer to a good treatise on regular expressions, such as Jeffrey Friedl&amp;rsquo;s impressive book &lt;a href=&#34;http://www.oreilly.com/catalog/regex2/&#34;&gt;Mastering Regular Expressions, 2nd Edition&lt;/a&gt;. Also, I&amp;rsquo;ve wrapped the command to fit, but you should type it in as just one line.)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-printing-doing-your-own-printing-span&#34;&gt;&lt;span id=&#34;printing&#34;&gt;Doing Your Own Printing&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;You may wish to override the behavior created by &lt;code&gt;-p&lt;/code&gt;, which prints every line read in, after any changes made by your script. In this case, change to the &lt;code&gt;-n&lt;/code&gt; option. &lt;code&gt;-p -e &amp;quot;s/Foo/Bar/&amp;quot;&lt;/code&gt; is roughly equivalent to &lt;code&gt;-n -e &amp;quot;s/Foo/Bar/; print&amp;quot;&lt;/code&gt;. This allows you to write interesting commands, such as removing lines beginning with hash marks (Perl comments, C-style preprocessor directives, etc.):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -ni.bak -e &amp;quot;print unless /^\s*#/;&amp;quot; &amp;lt;FileList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-fields-fields-and-scripts-span&#34;&gt;&lt;span id=&#34;fields&#34;&gt;Fields and Scripts&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Of course, there are far more powerful things you can do with this. For example, imagine a flat-file database, with one row per line of the file, and fields separated by colons, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Bill:Hennig:Male:43:62000
+Mary:Myrtle:Female:28:56000
+Jim:Smith:Male:24:50700
+Mike:Jones:Male:29:35200
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Suppose you want to find everyone who was over 25, but paid less than $40,000. At the same time, you&amp;rsquo;d like to document the number and percentage of women and men found. This time, instead of providing a mini-script on the command line, we&amp;rsquo;ll create a file, &lt;code&gt;glass.pl&lt;/code&gt;, which contains the script. Here&amp;rsquo;s how to run the query:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -naF&#39;:&#39; glass.pl &amp;lt;FileList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;&lt;code&gt;glass.pl&lt;/code&gt; contains the following&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;BEGIN { $men = $women = $lowmen = $lowwomen = 0; }
+
+next unless /:/;
+/Female/ ? $women++ : $men++;
+if ($F[3] &amp;gt; 25 and $F[4] &amp;lt; 40000)
+    { print; /Female/ ? $lowwomen++ : $lowmen++; }
+
+END {
+print &amp;quot;\n\n$lowwomen of $women women (&amp;quot;,
+      int($lowwomen / $women * 100),
+      &amp;quot;%) and $lowmen of $men men (&amp;quot;,
+      int($lowmen / $men * 100),
+      &amp;quot;%) seem to be underpaid.\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Don&amp;rsquo;t worry too much about the syntax, other than to note some of the awk and C similarities. The important thing here and in later sections is to see how Perl makes these problems easily solvable.&lt;/p&gt;
+
+&lt;p&gt;Several new features appear in this example; first, if there is no &lt;code&gt;-e&lt;/code&gt; option to evaluate, Perl assumes the first filename listed, in this case &lt;code&gt;glass.pl&lt;/code&gt;, refers to a Perl script for it to execute. Secondly, two new options make it easy to deal with field-based data. &lt;code&gt;-a&lt;/code&gt; (*a*utosplit mode) takes each line and splits its fields into the array &lt;code&gt;@F&lt;/code&gt;, based on the field delimiter given by the &lt;code&gt;-F&lt;/code&gt; (*F*ield delimiter) option, which can be a string or a regex. If no &lt;code&gt;-F&lt;/code&gt; option exists, the field delimiter defaults to &lt;code&gt;&#39; &#39;&lt;/code&gt; (one single-quoted space). By default, arrays in Perl are zero-based, so &lt;code&gt;$F[3]&lt;/code&gt; and &lt;code&gt;$F[4]&lt;/code&gt; refer to the age and pay fields, respectively. Finally, the &lt;code&gt;BEGIN&lt;/code&gt; and &lt;code&gt;END&lt;/code&gt; blocks allow the programmer to perform actions before file reading begins and after it finishes, respectively.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-files-file-handling-span&#34;&gt;&lt;span id=&#34;files&#34;&gt;File Handling&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;All of these little tidbits have made use only of data from within the files being operated on. What if you want to be able to read in data from elsewhere? For example, imagine that you had some sort of file that allows includes; in this case, we&amp;rsquo;ll assume that you somehow specify these files by relative pathname, rather than looking them up in an include path. Perhaps the includes look like the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;...
+#include foo.bar, baz.bar, boo.bar
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you want to see what the file looks like with the includes placed into the master file, you might try something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -ni.bak -e &amp;quot;if (s/#include\s+//) {foreach $file
+ (split /,\s*/) {open FILE, &#39;&amp;lt;&#39;, $file; print &amp;lt;FILE&amp;gt;}}
+ else {print}&amp;quot; &amp;lt;FileList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make it easier to see what&amp;rsquo;s going on here, this is what it looks like with a full set of line breaks added for clarity:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -ni.bak -e &amp;quot;
+        if (s/#include\s+//) {
+            foreach $file (split /,\s*/) {
+                open FILE, &#39;&amp;lt;&#39;, $file;
+                print &amp;lt;FILE&amp;gt;
+            }
+        } else {
+            print
+        }
+    &amp;quot; &amp;lt;FileList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, this only expands one level of include, but then we haven&amp;rsquo;t provided any way for the script to know when to stop if there&amp;rsquo;s an include loop. In this little example, we take advantage of the fact that the substitution operator returns the number of changes made, so if it manages to chop off the &lt;code&gt;#include&lt;/code&gt; at the beginning of the line, it returns a non-zero (true) value, and the rest of the code splits apart the list of includes, opens each one in turn, and prints its entire contents.&lt;/p&gt;
+
+&lt;p&gt;There are some handy shortcuts as well: if you open a new file using the name of an old file handle (&lt;code&gt;FILE&lt;/code&gt; in this case), Perl automatically closes the old file first. In addition, if you read from a file using the &lt;code&gt;&amp;lt;&amp;gt;&lt;/code&gt; operator into a list (which the &lt;code&gt;print&lt;/code&gt; function expects), it happily reads in the entire file at once, one line per list entry. The &lt;code&gt;print&lt;/code&gt; call then prints the entire list, inserting it into the current file, as expected. Finally, the &lt;code&gt;else&lt;/code&gt; clause handles printing non-include lines from the source, because we are using &lt;code&gt;-n&lt;/code&gt; rather than &lt;code&gt;-p&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-filelists-better-file-lists-span&#34;&gt;&lt;span id=&#34;filelists&#34;&gt;Better File Lists&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The fact that it is relatively easy to handle filenames listed within other files indicates that it ought to be fairly easy to deal entirely with files read from some other source than a list on the end of the command line. The simplest case is to read all of the file contents from standard input as a single stream, which is common when building up pipes. As a matter of fact, this is so common that Perl automatically switches to this mode if there are no files listed on the command line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Source&amp;gt; | perl -pe &amp;quot;s/Foo/Bar/g&amp;quot; | &amp;lt;Sink&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here &lt;em&gt;Source&lt;/em&gt; and &lt;em&gt;Sink&lt;/em&gt; are the commands that generate the raw data and handle the altered output from Perl, respectively. Incidentally, the filename consisting of a single hyphen (&lt;code&gt;-&lt;/code&gt;) is an explicit alias for standard input; this allows the Perl programmer to merge input from files and pipes, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Source&amp;gt; | perl -pe &amp;quot;s/Foo/Bar/g&amp;quot; header.bar - footer.bar
+ | &amp;lt;Sink&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example first reads a header file, then the input from the pipe source, and then a footer file — the whole mess. The program modifies this text and sends it through to the out pipe.&lt;/p&gt;
+
+&lt;p&gt;As I mentioned earlier, when dealing with multiple files it is usually better to keep the files separate, by using in-place editing or by explicitly handling each file separately. On the other hand, it can be a pain to list all of the files on the command line, especially if there are a lot of files, or when dealing with files generated programmatically.&lt;/p&gt;
+
+&lt;p&gt;The simplest method is to read the files from standard input, pushing them onto &lt;code&gt;@ARGV&lt;/code&gt; in a &lt;code&gt;BEGIN&lt;/code&gt; block; this has the effect of tricking Perl into thinking it received all of the filenames on the command line! Assuming the common case of one filename per input line, the following will do the trick:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;FilenamesSource&amp;gt; | perl -pi.bak -e &amp;quot;BEGIN {push @ARGV,
+ &amp;lt;STDIN&amp;gt;; chomp @ARGV} s/Foo/Bar/g&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we once again use the shortcut that reading in a file in a list context (which &lt;code&gt;push&lt;/code&gt; provides) will read in the entire file. This adds the entire contents, one filename per entry, to the &lt;code&gt;@ARGV&lt;/code&gt; array, which normally contains the list of arguments to the script. To complete the trick, we &lt;code&gt;chomp&lt;/code&gt; the line endings from the filenames, because Perl normally returns the line ending characters (a carriage return and/or a line feed) when reading lines from a file. We don&amp;rsquo;t want to consider these to be part of the filenames. (On some platforms, you &lt;em&gt;could&lt;/em&gt; actually have filenames containing line ending characters, but then you&amp;rsquo;d have to make the Perl code a little more complex, and you deserve to figure that out for yourself for trying it in the first place.)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-response-response-files-span&#34;&gt;&lt;span id=&#34;response&#34;&gt;Response Files&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Another common design is to provide filenames on the command line as usual, treating filenames starting with an &lt;code&gt;@&lt;/code&gt; specially. The program should consider their contents to be lists of filenames to insert directly into the command line. For example, if the contents of the file &lt;code&gt;names.baz&lt;/code&gt; (often called a &lt;em&gt;response file&lt;/em&gt;) are:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;two
+three
+four
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then this command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -pi.bak -e &amp;quot;s/Foo/Bar/g&amp;quot; one @names.baz five
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;should work equivalently to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -pi.bak -e &amp;quot;s/Foo/Bar/g&amp;quot; one two three four five
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make this work, we once again need to do a little magic in a &lt;code&gt;BEGIN&lt;/code&gt; block. Essentially, we want to parse through the &lt;code&gt;@ARGV&lt;/code&gt; array, looking for filenames that begin with &lt;code&gt;@&lt;/code&gt;. We pass through any unmarked filenames, but for each response file found, we read in the contents of the response file and insert the new list of filenames into &lt;code&gt;@ARGV&lt;/code&gt;. Finally, we chomp the line endings, just as in the &lt;a href=&#34;#filelists&#34;&gt;previous section&lt;/a&gt;. This produces a canonical file list in &lt;code&gt;@ARGV&lt;/code&gt;, just as if we&amp;rsquo;d specified all of the files on the command line. Here&amp;rsquo;s what it looks like in action:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -pi.bak -e &amp;quot;BEGIN {@ARGV = map {s/^@// ? @{open RESP,
+ &#39;&amp;lt;&#39;, $_; [&amp;lt;RESP&amp;gt;]} : $_} @ARGV; chomp @ARGV} s/Foo/Bar/g&amp;quot;
+ &amp;lt;ResponseFileList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the same code with line breaks added so you can see what&amp;rsquo;s going on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl -pi.bak -e &amp;quot;
+        BEGIN {
+            @ARGV = map {
+                        s/^@// ? @{open RESP, &#39;&amp;lt;&#39;, $_;
+                                   [&amp;lt;RESP&amp;gt;]}
+                               : $_
+                    } @ARGV;
+            chomp @ARGV
+        }
+
+        s/Foo/Bar/g
+    &amp;quot; &amp;lt;ResponseFileList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only tricky part is the &lt;code&gt;map&lt;/code&gt; block. &lt;code&gt;map&lt;/code&gt; applies a piece of code to every element of a list, returning a list of the return values of the code; the current element is in the &lt;code&gt;$_&lt;/code&gt; special variable. The block here checks to see if it could remove a &lt;code&gt;@&lt;/code&gt; from the beginning of each filename. If so, it opens the file, reads the whole thing into an anonymous temporary array (that&amp;rsquo;s what the square brackets are there for), and then inserts that array instead of the response file&amp;rsquo;s name (that&amp;rsquo;s the odd &lt;code&gt;@{...}&lt;/code&gt; construct). If there is no &lt;code&gt;@&lt;/code&gt; at the beginning of the filename to remove, the filename goes directly into the map results. Once we&amp;rsquo;ve performed this expansion and chomped any line endings, we can then proceed with the main work, in this case our usual substitution, &lt;code&gt;s/Foo/Bar/g&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-recursing-recursing-directories-span&#34;&gt;&lt;span id=&#34;recursing&#34;&gt;Recursing Directories&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;For our final example, let&amp;rsquo;s deal with a major weakness in the way we&amp;rsquo;ve been doing things so far — we&amp;rsquo;re not recursing into directories, instead expecting all of the files we need to read to appear explicitly on the command line. To perform the recursion, we need to pull out the big guns: &lt;code&gt;File::Find&lt;/code&gt;. This Perl module provides very powerful recursion methods. It also comes standard with any recent version of the Perl interpreter. The command line is deceptively simple, because all of the brains are in the script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl cleanup.pl &amp;lt;DirectoryList&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This script will perform some basic housecleaning, marking all files readable and writeable, removing those with the extensions &lt;code&gt;.bak&lt;/code&gt;, &lt;code&gt;.$$$&lt;/code&gt;, and &lt;code&gt;.tmp&lt;/code&gt;, and cleaning up &lt;code&gt;.log&lt;/code&gt; files. For the log files, we will create a master log file (for archiving or perusal) containing the contents of all of the other logs, and then delete the logs so that they remain short over time. Here&amp;rsquo;s the script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use File::Find;
+
+die &amp;quot;All arguments must be directories!&amp;quot;
+    if grep {!-d} @ARGV;
+open MASTER, &#39;&amp;gt;&#39;, &#39;master.lgm&#39;;
+finddepth(\&amp;amp;filehandler, @ARGV);
+close MASTER;
+rename &#39;master.lgm&#39;, &#39;master.log&#39;;
+
+sub filehandler
+{
+    chmod stat(_) | 0666, $_ unless (-r and -w);
+    unlink if (/\.bak$/ or /\.tmp$/ or /\.\$\$\$$/);
+    if (/\.log$/) {
+        open LOG, &#39;&amp;lt;&#39;, $_;
+        print MASTER &amp;quot;\n\n****\n$File::Find::name\n****\n&amp;quot;;
+        print MASTER &amp;lt;LOG&amp;gt;;
+        close LOG;
+        unlink;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example shows just how powerful Perl and Perl modules can be, and at the same time just how obtuse Perl can appear to the inexperienced. In this case, the short explanation is that the &lt;code&gt;finddepth()&lt;/code&gt; function iterates through all of the program arguments (&lt;code&gt;@ARGV&lt;/code&gt;), recursing into each directory and calling the &lt;code&gt;filehandler()&lt;/code&gt; subroutine for each file. That subroutine then can examine the file and decide what to do with it. The example checks for readability and writability with &lt;code&gt;-r&lt;/code&gt; and &lt;code&gt;-w&lt;/code&gt;, fixing the file&amp;rsquo;s security settings if needed with &lt;code&gt;chmod&lt;/code&gt;. It then &lt;code&gt;unlink&lt;/code&gt;s (deletes) any file with a name ending in any of the three unwanted extensions. Finally, if the extension is &lt;code&gt;.log&lt;/code&gt;, it opens the file, writes a few header lines to the master log, copies the file into the master log, closes it, and deletes it.&lt;/p&gt;
+
+&lt;p&gt;Instead of using &lt;code&gt;finddepth()&lt;/code&gt;, which does a depth-first search of the directories and visits them from the bottom up, we could have used &lt;code&gt;find()&lt;/code&gt;, which does the same depth-first search from the top down. As a side note, the program writes the master log file with the extension &lt;code&gt;.lgm&lt;/code&gt;, then renames it at the end to have the extension &lt;code&gt;.log&lt;/code&gt;, so as to avoid the possibility of writing the master log into itself if the program is searching the current directory.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-end-span-conclusion&#34;&gt;&lt;span id=&#34;end&#34;&gt;&lt;/span&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;That&amp;rsquo;s it. Sure, there&amp;rsquo;s a lot more that you could do with these examples, including adding error checking, generating additional statistics, producing help text, etc. To learn how to do this, find a copy of &lt;em&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/pperl3/&#34;&gt;Programming Perl, 3rd Edition&lt;/a&gt;&lt;/em&gt;, by Larry Wall, Tom Christiansen, and Jon Orwant. This is the bible (or the Camel, rather) of the Perl community, and well worth the read. Good luck!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

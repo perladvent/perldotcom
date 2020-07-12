@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Drag Drop Tk on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/drag-drop-tk/</link>
+    <description>Recent content in Drag Drop Tk on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 11 Dec 2001 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/drag-drop-tk/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>A Drag-and-Drop Primer for Perl/Tk</title>
+      <link>http://localhost:1313/pub/2001/12/11/perltk.html/</link>
+      <pubDate>Tue, 11 Dec 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/12/11/perltk.html/</guid>
+      <description>
+
+&lt;p&gt;As it happens, no matter how much I write about Perl/Tk, there&amp;rsquo;s always something left unsaid. A case in point is the topic of drag and drop, which didn&amp;rsquo;t make it into our book, &lt;em&gt;Mastering Perl/Tk&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;This article describes the Perl/Tk drag-and-drop mechanism, often referred to as DND. We&amp;rsquo;ll illustrate DND operations local to a single application, where we drag items from one Canvas to another.&lt;/p&gt;
+
+&lt;p&gt;There are two basic types of DND operations, local (intra-application) and remote (inter-application). Local drops are fully supported, but there is no standard for remote drops. For this reason, this article describes only local DND operations. Note: Perl/Tk supports Sun, XDND, KDE, and Win32 remote DND protocols.&lt;/p&gt;
+
+&lt;p&gt;To write DND code you should be comfortable with these concepts:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;The drag source is the widget that we drag. In the case of a Canvas widget, we can arrange for an individual item to be the drag source.&lt;/li&gt;
+&lt;li&gt;The drop destination is the widget upon which we drop the source widget.&lt;/li&gt;
+&lt;li&gt;The DND token is a &lt;code&gt;Label&lt;/code&gt; widget that tracks the cursor as it moves from the drag source to the drop destination. We can configure the DND token with a text string or an image.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_12_11_perltk/drag.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This figure shows what we will end up with&amp;ndash;one Canvas populated by various types of objects, which we can drag around the application and drop onto another Canvas. Let&amp;rsquo;s now look at the code.&lt;/p&gt;
+
+&lt;p&gt;Here we have a rather typical Perl/Tk prologue. &lt;code&gt;Tk::DragDrop&lt;/code&gt; is required if coding a program with a drag source, while &lt;code&gt;Tk::DropSite&lt;/code&gt; is required for programs declaring a drop destination.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Tk;
+    use strict;
+    use Tk::DragDrop;
+    use Tk::DropSite;
+    use subs qw/make_bindings move_bbox move_image/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;global-variables&#34;&gt;Global variables&lt;/h3&gt;
+
+&lt;p&gt;A drag begins with a &lt;code&gt;&amp;lt;ButtonPress-1&amp;gt;&lt;/code&gt; event, where we record the ID of the specified Canvas item in the variable &lt;code&gt;$drag_id&lt;/code&gt;. &lt;code&gt;$mw&lt;/code&gt; is, of course, a reference to the program&amp;rsquo;s MainWindow.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    our (
+         $drag_id,              # Canvas item id of drag source
+         $mw,                   # Perl/Tk MainWindow reference
+    );
+
+$mw = MainWindow-&amp;gt;new(-background =&amp;gt; &#39;green&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Define the drag source&amp;ndash;a Canvas full of items. Here we declare that a &lt;code&gt;&amp;lt;B1-Motion&amp;gt;&lt;/code&gt; event over the source Canvas signals the start of a local drag operation.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;$drag_source&lt;/code&gt; is a &lt;code&gt;Tk::DragDrop&lt;/code&gt; object, sometimes called a DND token. It&amp;rsquo;s really a disguised &lt;code&gt;Label&lt;/code&gt; widget, which we can configure in the standard fashion. For our purposes, we set the &lt;code&gt;-text&lt;/code&gt; option to describe the &lt;code&gt;Canvas&lt;/code&gt; item we are dragging, rather than the default text of the source widget&amp;rsquo;s class name. But you can assign an image to the DND token if desired.&lt;/p&gt;
+
+&lt;p&gt;When performing a DND operation, notice that the DND token has a flat relief over the source, and a sunken relief over the destination.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $c_src = $mw-&amp;gt;Canvas(qw/-background yellow/)-&amp;gt;pack;
+
+    my $drag_source = $c_src-&amp;gt;DragDrop(
+        -event     =&amp;gt; &#39;&amp;lt;B1-Motion&amp;gt;&#39;,
+        -sitetypes =&amp;gt; [qw/Local/],
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Every &lt;code&gt;Canvas&lt;/code&gt; source item has a &lt;code&gt;&amp;lt;ButtonPress-1&amp;gt;&lt;/code&gt; binding associated with it. The callback bound to this event serves to record the item&amp;rsquo;s ID in the global variable &lt;code&gt;$drag_id&lt;/code&gt;, and to configure the drag &lt;code&gt;Label&lt;/code&gt;&amp;rsquo;s &lt;code&gt;-text&lt;/code&gt;/ option with the item&amp;rsquo;s ID and type.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $press = sub {
+        my ($c_src, $c_src_id, $drag_source) = @_;
+        $drag_id = $c_src_id;
+        my $type = $c_src-&amp;gt;type($drag_id);
+        $drag_source-&amp;gt;configure(-text =&amp;gt; $c_src_id . &amp;quot; = $type&amp;quot;);
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;OK, let&amp;rsquo;s populate the source Canvas with items of various types. For this demonstration, we limit the choices to ovals, rectangles, and all the GIF files in the current directory. As noted earlier, every item gets a &lt;code&gt;&amp;lt;ButtonPress-1&amp;gt;&lt;/code&gt; binding.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my ($x, $y) = (30, 30);
+    foreach (&amp;lt;*.gif&amp;gt;) {
+
+        my $id = $c_src-&amp;gt;createImage($x, $y,
+            -image =&amp;gt; $mw-&amp;gt;Photo(-file =&amp;gt; $_));
+        $x += 80;
+        $c_src-&amp;gt;bind($id, &#39;&amp;lt;ButtonPress-1&amp;gt;&#39; =&amp;gt; [$press, $id, $drag_source]);
+
+    } # forend
+
+    $x = 30;
+    $y = 80;
+
+    foreach (qw/oval rectangle/) {
+
+        my $method = &#39;create&#39; . ucfirst $_;
+        my $id = $c_src-&amp;gt;$method($x, $y, $x + 40, $y + 40, -fill =&amp;gt; &#39;orange&#39;);
+        $x += 80;
+        $c_src-&amp;gt;bind($id, &#39;&amp;lt;ButtonPress-1&amp;gt;&#39; =&amp;gt; [$press, $id, $drag_source]);
+
+    } # forend
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Define the drop-site destination&amp;ndash;another &lt;code&gt;Canvas&lt;/code&gt;. As a source &lt;code&gt;Canvas&lt;/code&gt; item is dropped here, create an identical item in the destination at the drop coordinates.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $c_dest = $mw-&amp;gt;Canvas(qw/-background cyan/)-&amp;gt;pack;
+    $c_dest-&amp;gt;DropSite(
+        -droptypes   =&amp;gt; [qw/Local/],
+        -dropcommand =&amp;gt; [\&amp;amp;move_items, $c_src, $c_dest],
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Build the obligatory Quit Button, and enter the main event loop.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $quit = $mw-&amp;gt;Button(-text =&amp;gt; &#39;Quit&#39;, -command =&amp;gt; [$mw =&amp;gt; &#39;destroy&#39;]);
+    $quit-&amp;gt;pack;
+
+    MainLoop;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These subroutines are invoked when a &lt;code&gt;Canvas&lt;/code&gt; source item is dropped on the destination &lt;code&gt;Canvas&lt;/code&gt;. Callback &amp;ldquo;&lt;code&gt;move_items&lt;/code&gt;&amp;rdquo; is invoked first, with these arguments:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;pre&gt;&lt;code&gt;$c_src  = source Canvas widget reference
+$c_dest = destination Canvas widget reference
+$sel    = selection type, here &amp;quot;XdndSelection&amp;quot;
+$dest_x = Canvas drop site X coordinate
+$dest_y = Canvas drop site Y coordinate
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The first two arguments we supplied on the &lt;code&gt;-dropcommand&lt;/code&gt; option. The remaining arguments are implicitly supplied by Perl/Tk.&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;&lt;code&gt;move_items&lt;/code&gt;&amp;rdquo; simply branches according to the item&amp;rsquo;s type, throwing an error for &lt;code&gt;Canvas&lt;/code&gt; items we are not prepared to handle. Each type handler receives the preceding arguments plus the item&amp;rsquo;s type.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub move_items {
+
+        $_ = $_[0]-&amp;gt;type($drag_id);
+        return unless defined $_;
+
+      CASE: {
+
+        /image/      and do {move_image $_, @_; last CASE};
+        /oval/       and do {move_bbox  $_, @_; last CASE};
+        /rectangle/  and do {move_bbox  $_, @_; last CASE};
+        warn &amp;quot;Unknown Canvas item type &#39;$_&#39;.&amp;quot;;
+
+      }# casend
+
+    } # end move_items
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Subroutine &amp;ldquo;&lt;code&gt;move_bbox&lt;/code&gt;&amp;rdquo; handles all &lt;code&gt;Canvas&lt;/code&gt; item types described by a bounding box. (For this demonstration, we only propagate the &lt;code&gt;-fill&lt;/code&gt; attribute from the &lt;code&gt;Canvas&lt;/code&gt; source item to the new item.) It uses the subroutine &amp;ldquo;&lt;code&gt;make_bindings&lt;/code&gt;&amp;rdquo; given below to establish local bindings on the newly created destination item, so it can be dragged about the destination Canvas.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub move_bbox {
+
+        my ($item_type, $c_src, $c_dest, $sel, $dest_x, $dest_y) = @_;
+
+        my $fill = $c_src-&amp;gt;itemcget($drag_id, -fill);
+        my $method = &#39;create&#39; . ucfirst $item_type;
+        my $id = $c_dest-&amp;gt;$method($dest_x, $dest_y,
+            $dest_x + 40, $dest_y + 40, -fill =&amp;gt; $fill,
+        );
+
+        make_bindings $c_dest, $id;
+
+    } # end move_bbox
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Subroutine &amp;ldquo;&lt;code&gt;move_image&lt;/code&gt;&amp;rdquo; handles a &lt;code&gt;Canvas&lt;/code&gt; image item type. It uses the &amp;ldquo;&lt;code&gt;make_bindings&lt;/code&gt;&amp;rdquo; subroutine just described.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub move_image {
+
+        my ($item_type, $c_src, $c_dest, $sel, $dest_x, $dest_y) = @_;
+
+        my $image = $c_src-&amp;gt;itemcget($drag_id, -image);
+        my $id = $c_dest-&amp;gt;createImage($dest_x, $dest_y, -image =&amp;gt; $image);
+
+        make_bindings $c_dest, $id;
+
+    } # end move_image
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;ldquo;&lt;code&gt;make_bindings&lt;/code&gt;&amp;rdquo; itself adds drag behavior to our newly dropped &lt;code&gt;Canvas&lt;/code&gt; items, but without using the DND mechanism. The basic idea is as follows:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;On a &lt;code&gt;&amp;lt;ButtonPress-1&amp;gt;&lt;/code&gt; event, record the &lt;code&gt;Canvas&lt;/code&gt; item&amp;rsquo;s (x,y) coordinates in instance variables of the form &lt;code&gt;&amp;quot;x&amp;quot; . $id&lt;/code&gt; and &lt;code&gt;&amp;quot;y&amp;quot; . $id&lt;/code&gt;, where &lt;code&gt;$id&lt;/code&gt; is the item&amp;rsquo;s &lt;code&gt;Canvas&lt;/code&gt; ID. This ensures that each item&amp;rsquo;s position is uniquely maintained.&lt;/li&gt;
+&lt;li&gt;On a &lt;code&gt;&amp;lt;ButtonRelease-1&amp;gt;&lt;/code&gt; event, compute an (x,y) delta from the item&amp;rsquo;s original position (stored in instance variables) and the new position, and use the &lt;code&gt;Canvas&lt;/code&gt; &amp;ldquo;&lt;code&gt;move&lt;/code&gt;&amp;rdquo; method to relocate it.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- --&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub make_bindings {
+
+        my ($c_dest, $id) = @_;
+
+        $c_dest-&amp;gt;bind($id, &#39;&amp;lt;ButtonPress-1&amp;gt;&#39; =&amp;gt; [sub {
+        my ($c, $id) = @_;
+        ($c_dest-&amp;gt;{&#39;x&#39; . $id}, $c_dest-&amp;gt;{&#39;y&#39; . $id}) =
+            ($Tk::event-&amp;gt;x, $Tk::event-&amp;gt;y);
+        }, $id]);
+
+        $c_dest-&amp;gt;bind($id, &#39;$lt;ButtonRelease-1&amp;gt;&#39; =&amp;gt; [sub {
+        my ($c, $id) = @_;
+        my($x, $y) = ($Tk::event-&amp;gt;x, $Tk::event-&amp;gt;y);
+        $c-&amp;gt;move($id, $x - $c_dest-&amp;gt;{&#39;x&#39; . $id}, $y - $c_dest-&amp;gt;{&#39;y&#39; . $id});
+        }, $id]);
+
+    } # end make_bindings
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The entire source code to this program is available &lt;a href=&#34;http://localhost:1313/media/_pub_2001_12_11_perltk/drag.pl&#34;&gt;here&lt;/a&gt;, and for more information about Perl/Tk programming, check out &lt;a href=&#34;http://www.oreilly.com/catalog/mastperltk/&#34;&gt;Mastering Perl/Tk&lt;/a&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;O&amp;rsquo;Reilly &amp;amp; Associates will soon release (January 2002) &lt;a href=&#34;http://www.oreilly.com/catalog/mastperltk/&#34;&gt;Mastering Perl/Tk&lt;/a&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;You can also look at the &lt;a href=&#34;http://oreilly.com/catalog/mastperltk/desc.html&#34;&gt;Full Description&lt;/a&gt; of the book.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;For more information, or to order the book, &lt;a href=&#34;http://www.oreilly.com/catalog/mastperltk/&#34;&gt;click here&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

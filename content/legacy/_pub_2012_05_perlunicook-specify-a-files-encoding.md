@@ -18,7 +18,7 @@
 ℞ 19: Open ﬁle with speciﬁc encoding
 ------------------------------------
 
-While [setting the default Unicode encoding for IO is sensible](/pub/2012/05/perlunicook-make-file-io-default-to-utf-8.html), sometimes the default encoding is not correct. In this case, specify the encoding for a filehandle manually in the mode option to [open](http://perldoc.perl.org/functions/open.html) or with the [binmode](http://perldoc.perl.org/functions/binmode.html) operator. Perl's IO layers will handle encoding and decoding for you. This is the normal way to deal with encoded text, not by calling low-level functions.
+While [setting the default Unicode encoding for IO is sensible](/pub/2012/05/perlunicook-make-file-io-default-to-utf-8.html), sometimes the default encoding is not correct. In this case, specify the encoding for a filehandle manually in the mode option to [open]({{</* perlfunc "open" */>}}) or with the [binmode]({{</* perlfunc "binmode" */>}}) operator. Perl's IO layers will handle encoding and decoding for you. This is the normal way to deal with encoded text, not by calling low-level functions.
 
 To specify the encoding of a filehandle opened for input:
 
@@ -40,7 +40,7 @@ To specify the encoding of a filehandle opened for output:
          # ...
          print $out_file "some text\n";
 
-More layers than just the encoding can be speciﬁed here. For example, the incantation `":raw :encoding(UTF-16LE) :crlf"` includes implicit CRLF handling. See [PerlIO](http://perldoc.perl.org/PerlIO.html) for more details.
+More layers than just the encoding can be speciﬁed here. For example, the incantation `":raw :encoding(UTF-16LE) :crlf"` includes implicit CRLF handling. See [PerlIO]({{</* perldoc "PerlIO" */>}}) for more details.
 
 Previous: [℞ 18: Make All I/O Default to UTF-8](/pub/2012/05/perlunicook-make-all-io-default-to-utf-8.html)
 

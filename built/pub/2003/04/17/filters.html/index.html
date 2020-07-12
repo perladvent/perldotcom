@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Filters in Apache 2.0 </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" Not too long ago, despite a relative dearth of free tuits, I decided that I had put off my investigation of mod_perl 2.0 for too long - it was time to really start kicking the tires and tinkering with..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2003/04/17/filters.html/" />
+<meta property="og:title" content="Filters in Apache 2.0" />
+<meta property="og:description" content=" Not too long ago, despite a relative dearth of free tuits, I decided that I had put off my investigation of mod_perl 2.0 for too long - it was time to really start kicking the tires and tinkering with...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2003-04-04T04:04:04Z" />
+<meta property="og:image" content="http://localhost:1313/images/site/avatar.png" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Filters in Apache 2.0</h1>
+              <p class="blog-post-meta">Apr 17, 2003 by
+              
+              
+                
+                
+                <a href="#author-bio-geoffrey-young">Geoffrey Young</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>Not too long ago, despite a relative dearth of free tuits, I decided that I had put off my investigation of mod_perl 2.0 for too long - it was time to really start kicking the tires and tinkering with all the new stuff I had been hearing about. What I found was that the new mod_perl API is full of interesting features, yet discovering and using them was tedious, frustrating, enlightening, and fun all at the same time. Hopefully, I can help ease some of the growing pains you are likely to encounter by experiencing the pain myself first, then sharing some of the lessons through a series of articles. Consider this and future articles to be our voyage together into the rocky but exciting new mod_perl frontier.</p>
+
+<p>One of the more interesting and practical features to come out of the Apache 2.0 redesign effort is output filters. While in Apache 2.0 there are all kinds of filters, including input and connection filters, it&rsquo;s output filters that are most interesting to me - mostly because 2.0 discussions make a point of saying that it&rsquo;s impossible (well, really, really hard) to filter output content in Apache 1.3, despite the fact that mod_perl users have been able filter content (to some degree) for years. Thus, when I began to play around with mod_perl 2.0 it seemed only logical that my first task would be to port the instructional yet useful <a href="https://metacpan.org/pod/Apache::Clean">Apache::Clean</a>, a content filter for mod_perl 1.0, over to the new architecture.</p>
+
+<p>What we will be examining here is a preliminary implementation of <code>Apache::Clean</code> using the mod_perl 2.0 API. Because mod_perl 2.0 is still being tweaked daily, if you want to follow along on your own box, then you would need the current version of mod_perl from CVS, or a recent <a href="http://cvs.apache.org/snapshots/modperl-2.0/">snapshot</a> - the latest versions shipped with Linux distributions like RedHat, or even the latest version on CPAN (1.99_08), are far too out of date for what we will be doing. The most current version of <a href="http://www.apache.org/dist/httpd/">Apache 2.0</a>, as well as <a href="http://www.cpan.org/src/README.html">Perl 5.8.0</a>, will also be helpful. Keep in mind that many of the more interesting features in mod_perl 2.0 are not entirely stable yet, so do not be surprised if things work just a bit differently six months from now.</p>
+
+<h3 id="what-are-output-filters-anyway">What Are Output Filters Anyway?</h3>
+
+<p>Go ahead, admit it. At some point, you wrote a CGI script that generated HTML with embedded Server Side Include tags. The impetus behind the idea was a simple one: You had hopes that the embedded SSI tags would save you from the extra work of, say, adding a canned footer to the bottom of your otherwise dynamic page. Sounds reasonable, right? Seeing those SSI tags left unprocessed in the resulting page must have been shocking.</p>
+
+<p>As it turns out, whether you knew it or not, in Apache-speak you were trying to filter your content, or pass the output of one process (the CGI script) into another (Apache&rsquo;s SSI engine) for subsequent processing. Content filtering is a simple idea, and one that feels natural to us as programmers. After all, Apache is supposed to be modular, and piping modular components together - <code>cat yachts.txt | wc -l</code> - is something we do on the Unix command line all the time. Wanting the same functionality in our Web server of choice seems not only logical, but almost required in the interests of efficient application programming.</p>
+
+<p>While the idea is certainly sound, the above experiment exposes a limitation of the Apache 1.3 server itself, namely that by design you cannot have more than one content handler for a given request - you can use either mod_cgi to process and CGI script, or mod_include to parse an SSI document, but not both.</p>
+
+<p>With Apache 2.0, the idea of output filters were introduced, which provide an official way to intercept and manipulate data on its way from the content handler to the browser. In the case of our SSI example, mod_include has been implemented as an output filter in Apache 2.0, giving it the ability to post-process either static files (served by the default Apache content handler) or dynamically generated scripts (such as those generated by mod_cgi, mod_perl, or mod_php). True to its goal of exposing the entire Apache API to Perl, mod_perl allows you to plug into the Apache filter API and create your own output filters in Perl, which is what we will be doing with <code>Apache::Clean</code>.</p>
+
+<h3 id="html-clean-and-apache-clean"><code>HTML::Clean</code> and <code>Apache::Clean</code></h3>
+
+<p>Let&rsquo;s take a moment to look at <code>HTML::Clean</code> before delving into <code>Apache::Clean</code>, which is basically just a mod_perl wrapper that takes <code>HTML::Clean</code> and turns it into an output filter. <code>HTML::Clean</code> is a nifty little module that reduces the size of an HTML page using a number of different but simple techniques, such as removing unnecessary white space, replacing longer HTML tags with shorter equivalents, and so on. The end result is a page that, while still valid HTML and easily rendered by a browser, is relatively compact. If reducing bandwidth is important in your environment, then using <code>HTML::Clean</code> to tidy up static pages offline is a quick and easy way to save some bytes.</p>
+
+<p>Here is a simple example of <code>HTML::Clean</code> in action.</p>
+
+<pre><code>use HTML::Clean ();
+
+use strict;
+
+my $dirty = q!&lt;strong&gt;&amp;quot;helm's alee&amp;quot;&lt;/strong&gt;!;
+
+my $h = HTML::Clean-&gt;new(\$dirty);
+
+$h-&gt;strip({ shortertags =&gt; 1, entities =&gt; 1 });
+
+print ${$h-&gt;data};
+</code></pre>
+
+<p>As you can see, the interface for <code>HTML::Clean</code> is object-oriented and fairly straightforward. Things begin by calling the <code>new()</code> constructor to create an <code>HTML::Clean</code> object. <code>new()</code> accepts either a filename to clean or a reference to a string containing some HTML. Deciding exactly which aspects of the HTML to tidy is determined in one of two ways: either using the <code>level()</code> method to set an optimization level, or by passing the <code>strip()</code> method any number of options from a rich set. In either case, <code>strip()</code> is used to actually clean the HTML. After that, calling the <code>data()</code> method returns a reference to a string containing the HTML, polished to a Perly white. In our sample code, the original HTML has been changed to</p>
+
+<pre><code>&lt;b&gt;&quot;helm's alee&quot;&lt;/b&gt;
+</code></pre>
+
+<p>which is half the size of our original string yet displayed the same way by browsers.</p>
+
+<p>Depending on the size of your site, using <code>HTML::Clean</code> can lead to a significant reduction in the number of bytes sent over the wire - for instance, the front page of the current <a href="http://perl.apache.org/"><code>mod_perl project homepage</code></a> becomes 70% of it&rsquo;s original size when scrubbed with <code>$h-&gt;level(9)</code>. However, while spending the time to tidy static HTML might make sense, the number of static pages on any given site seems to be diminishing daily. What about dynamically generated HTML?</p>
+
+<p>One way to handle dynamic HTML would be to add <code>HTML::Clean</code> routines to each dynamic component of your application, a process that really is neither scalable nor maintainable. A better solution would be to have Apache inject <code>HTML::Clean</code> processing directly into the server response wherever we wanted it, to create a pluggable module that we could configure to post-process requests to any given URI. Enter <code>Apache::Clean</code>.</p>
+
+<p><code>Apache::Clean</code> provides a basic interface into <code>HTML::Clean</code> but it works as an output filter. As briefly mentioned, <code>Apache::Clean</code> already exists for mod_perl 1.0, but over in Apache 1.3 land it was limited in that it could only post-process responses generated by mod_perl, and that only after sufficient magic. We are not going to get into how that all worked in mod_perl 1.0 - for a detailed explanation see <a href="http://www.modperlcookbook.org/chapters/15.4.pdf">Recipe 15.4</a> in the <em><a href="http://www.modperlcookbook.org/">mod_perl Developer&rsquo;s Cookbook</a></em> or the <a href="https://metacpan.org/pod/Apache::Clean">original <code>Apache::Clean</code> manpage</a>. With Apache 2.0 and the advent of output filters, we can now code <code>Apache::Clean</code> as a genuine part of Apache&rsquo;s request processing, allowing us to clean responses on their way to the browser entirely independent of who generates the content.</p>
+
+<h3 id="new-directives">New Directives</h3>
+
+<p>Here is a look at a possible configuration for Apache 2.0, one that takes output of a CGI script, post-processes it for SSI tags, then cleans it with our <code>Apache::Clean</code> output filter.</p>
+
+<pre><code>Alias /cgi-bin /usr/local/apache2/cgi-bin
+&lt;Location /cgi-bin&gt;
+  SetHandler cgi-script
+
+  SetOutputFilter INCLUDES
+  PerlOutputFilterHandler Apache::Clean
+
+  PerlSetVar CleanOption shortertags
+  PerlAddVar CleanOption whitespace
+
+  Options +ExecCGI +Includes
+&lt;/Location&gt;
+</code></pre>
+
+<p>As with Apache 1.3, mod_cgi is still enabled the same way - in our case via the <code>SetHandler cgi-script</code> directive, although this is not the only way and the familiar <code>ScriptAlias</code> directive is still supported. What is different in this <code>httpd.conf</code> snippet is the configuration of the SSI engine, mod_include. As already mentioned, mod_include was implemented as an output filter in Apache 2.0, and output filters bring with them a new directive. The <code>SetOutputFilter</code> directive activates the SSI engine - the <code>INCLUDES</code> filter - within our container. This means that requests to <code>cgi-bin/</code>, no matter who handles the actual generation of content, will be parsed by mod_include. See the <a href="http://httpd.apache.org/docs-2.0/mod/mod_include.html">mod_include documentation</a> for other possible SSI configurations and options.</p>
+
+<p>With the generic Apache bits out of the way, we can move on to the mod_perl part, which isn&rsquo;t all that complex. While the <code>PerlSetVar</code> and <code>PerlAddVar</code> directives are exactly the same as they were in mod_perl 1.0, mod_perl 2.0 introduces a new directive - <code>PerlOutputFilterHandler</code> - which specifies the Perl output filter for the request. In our sample <code>httpd.conf</code>, the <code>Apache::Clean</code> output filter will be added after mod_include, which inserts SSI processing after mod_cgi. The really cool part about filters is that everything happens without any tricks or magic - getting all these independent modules to work in harmony in creating the server response is all perfectly normal, which is a huge improvement over Apache 1.3.</p>
+
+<p>In the interests of safety, one thing that you should note about our sample configuration is that it does not include the <code>entities</code> option. Because we&rsquo;re cleaning dynamic content, reducing entity tags (such as changing <code>&amp;quot;</code> to <code>&quot;</code>) would inadvertently remove any protection against Cross Site Scripting introduced by the generating script. For more information about Cross Site Scripting and how to protect against it, a good overview is provided in <a href="/pub/2002/02/20/css.html">this <code>perl.com</code> article</a>.</p>
+
+<h3 id="introducing-mod-perl-2-0">Introducing mod_perl 2.0</h3>
+
+<p>mod_perl actually offers two different APIs for coding the Perl output filter. We are going to be using the simpler, streaming API, which hides the raw Apache API a bit. Of course, if you are feeling bold and want to manipulate the Apache bucket brigades directly, you are more than welcome, but it is a more complex process so we are not going to talk about it here. Instead, here is our new <code>Apache::Clean</code> handler, ported to mod_perl 2.0 using the streaming filter API.</p>
+
+<pre><code>package Apache::Clean;
+
+use 5.008;
+
+use Apache::Filter ();      # $f
+use Apache::RequestRec ();  # $r
+use Apache::RequestUtil (); # $r-&gt;dir_config()
+use Apache::Log ();         # $log-&gt;info()
+use APR::Table ();          # dir_config-&gt;get() and headers_out-&gt;get()
+
+use Apache::Const -compile =&gt; qw(OK DECLINED);
+
+use HTML::Clean ();
+
+use strict;
+
+sub handler {
+
+  my $f   = shift;
+
+  my $r   = $f-&gt;r;
+
+  my $log = $r-&gt;server-&gt;log;
+
+  # we only process HTML documents
+  unless ($r-&gt;content_type =~ m!text/html!i) {
+    $log-&gt;info('skipping request to ', $r-&gt;uri, ' (not an HTML document)');
+
+    return Apache::DECLINED;
+  }
+
+  my $context;
+
+  unless ($f-&gt;ctx) {
+    # these are things we only want to do once no matter how
+    # many times our filter is invoked per request
+
+    # parse the configuration options
+    my $level = $r-&gt;dir_config-&gt;get('CleanLevel') || 1;
+
+    my %options = map { $_ =&gt; 1 } $r-&gt;dir_config-&gt;get('CleanOption');
+
+    # store the configuration
+    $context = { level   =&gt; $level,
+                 options =&gt; \%options,
+                 extra   =&gt; undef };
+
+    # output filters that alter content are responsible for removing
+    # the Content-Length header, but we only need to do this once.
+    $r-&gt;headers_out-&gt;unset('Content-Length');
+  }
+
+  # retrieve the filter context, which was set up on the first invocation
+  $context ||= $f-&gt;ctx;
+
+  # now, filter the content
+  while ($f-&gt;read(my $buffer, 1024)) {
+
+    # prepend any tags leftover from the last buffer or invocation
+    $buffer = $context-&gt;{extra} . $buffer if $context-&gt;{extra};
+
+    # if our buffer ends in a split tag ('&lt;strong' for example)
+    # save processing the tag for later
+    if (($context-&gt;{extra}) = $buffer =~ m/(&lt;[^&gt;]*)$/) {
+      $buffer = substr($buffer, 0, - length($context-&gt;{extra}));
+    }
+
+    my $h = HTML::Clean-&gt;new(\$buffer);
+
+    $h-&gt;level($context-&gt;{level});
+
+    $h-&gt;strip($context-&gt;{options});
+
+    $f-&gt;print(${$h-&gt;data});
+  }
+
+  if ($f-&gt;seen_eos) {
+    # we've seen the end of the data stream
+
+    # print any leftover data
+    $f-&gt;print($context-&gt;{extra}) if $context-&gt;{extra};
+  }
+  else {
+    # there's more data to come
+
+    # store the filter context, including any leftover data
+    # in the 'extra' key
+    $f-&gt;ctx($context);
+  }
+
+  return Apache::OK;
+}
+
+1;
+</code></pre>
+
+<p>If you can dismiss the mod_perl specific bits for a moment, you will see the <code>HTML::Clean</code> logic embedded in the middle of the handler, which is not very different from the isolated code we used to illustrate <code>HTML::Clean</code> by itself. One of the things we need to do differently, however, is determine which options to pass to the <code>level()</code> and <code>options()</code> methods of <code>HTML::Clean</code>. Here, we use <code>$r-&gt;dir_config()</code> to gather whatever <code>httpd.conf</code> options we specified through our <code>PerlSetVar</code> and <code>PerlAddVar</code> configurations.</p>
+
+<pre><code>my $level = $r-&gt;dir_config-&gt;get('CleanLevel') || 1;
+
+my %options = map { $_ =&gt; 1 } $r-&gt;dir_config-&gt;get('CleanOption');
+</code></pre>
+
+<p>This use of <code>dir_config()</code> is in fact no different than how we would have coded it in mod_perl 1.0. Similarly, later methods like <code>r-&gt;content_type()</code>, <code>$r-&gt;server-&gt;log-&gt;info()</code>, and <code>$r-&gt;uri()</code> also behave the same as they did in mod_perl 1.0, which should offer some degree of comfort. For instance, the block</p>
+
+<pre><code>unless ($r-&gt;content_type =~ m!text/html!i) {
+  $log-&gt;info('skipping request to ', $r-&gt;uri, ' (not an HTML document)');
+
+  return Apache::DECLINED;
+}
+</code></pre>
+
+<p>looks almost exactly the same as it would have been in mod_perl 1.0, save the use of <code>Apache::DECLINED</code>. The new <code>Apache::Const</code> class provides access to all constants you will need in your handlers, albeit through a slightly different interface than before - when using the <code>-compile</code> option, constants are imported into the <code>Apache::</code> namespace. If you want the constants in your own namespace, mimicking the <code>OK</code> of yore, you can just <code>use Apache::Const</code> by itself without the without the <code>-compile</code> option.</p>
+
+<p>Some of the other minor differences you will notice are the addition of a bunch of <code>use</code> statements at the top of the handler. Whereas with mod_perl 1.0 just about every class was magically present when you needed it, with mod_perl 2.0 you need to be very specific about the classes you will be using in your handler, and almost nothing is available by default.</p>
+
+<p>In general, the most important class is <code>Apache::RequestRec</code>, which provides access to all the elements in the Apache C <code>request_rec</code> structure. Methods originating from the request object, <code>$r</code>, but not operating on the actual <code>request_rec</code> slots, such as <code>$r-&gt;dir_config()</code>, are defined in <code>Apache::RequestUtil</code>. This is a nice separation, and can help you think about mod_perl more in terms of access to the underlying Apache guts than just a box of black magic.</p>
+
+<p>If you recall from 1.0, <code>$r-&gt;dir_config()</code> returned an <code>Apache::Table</code> object, which corresponded to an Apache table and allowed things like headers to be stored in a case-insensitive, multi-keyed manner. In 2.0, Apache tables are accessed through the APR (Apache Portable Runtime) layer, so any API that accesses tables needs to <code>use APR::Table</code>. This includes the <code>get()</code> and <code>set()</code> methods used on tables like <code>headers_out</code> and <code>dir_config</code>.</p>
+
+<p>Besides <code>Apache::RequestRec</code>, <code>Apache::RequestUtil</code>, and <code>APR::Table</code>, our handler also needs access to the <code>Apache::Log</code> and <code>Apache::Filter</code> classes. <code>Apache::Log</code> works no differently than it did under mod_perl 1.0, while <code>Apache::Filter</code> is entirely new and will be discussed shortly.</p>
+
+<p>From experience, I can tell you that determining which module you need to <code>use</code> in order to access the functionality you require is maddening. In the old days (just weeks before this article was written) developers needed to plow through code examples in the mod_perl test suite in order to discern which modules they needed. But no more. Recently introduced was the <code>ModPerl::MethodLookup</code> package, which contains the <code>lookup_method()</code> function - just pass it the name of the method you are looking for and you will get back a list of modules likely to suit your needs. See the <a href="http://perl.apache.org/docs/2.0/api/ModPerl/MethodLookup.html"><code>MethodLookup</code> documentation</a> for more details.</p>
+
+<p>With basic housekeeping out of the way, we can focus on the guts of our output filter and the <code>Apache::Filter</code> streaming API. You will notice that the first argument passed to the <code>handler()</code> subroutine is an <code>Apache::Filter</code> object, not the typical <code>$r</code> you might have been expecting. mod_perl 2.0 has stepped up it&rsquo;s DWIM factor a bit in an attempt to make writing filters a bit more intuitive - in fact, it is possible to write an output filter without ever needing to access <code>$r</code>, so mod_perl gives you what you will primarily need. In order to access <code>$r</code> we call the (aptly named) <code>r()</code> method on our <code>$f</code>, then use <code>$r</code> as the gateway to per-request attributes, such as the MIME type of the response. Note that our filter genuinely declines to process the request if the content is not HTML. No fancy footwork, just processing like it should be.</p>
+
+<p>Beyond the typical handler initializations is where things really start to get unfamiliar, starting with the notion of filter context, or <code>$f-&gt;ctx()</code>. Unlike with mod_perl 1.0, where every handler is called only once per request, output filters can be (and generally are) called multiple times per request. There can be several reasons for this, but for our purposes it is sufficient to understand that we need to adjust our normal handler logic and compensate for some of the subtle behaviors that can arise by being called several times.</p>
+
+<p>So, the first thing we do is isolate parts of the request that only need to happen once per request. <code>$f-&gt;ctx()</code>, which stores the filter context, will return <code>undef</code> on the first request, so we can use it as an indicator of the initial invocation of our filter. Since we only really need to parse our <code>httpd.conf</code> configuration once, we use the initial invocation to get our <code>PerlSetVar</code> options and store them in a hash for later - because <code>$f-&gt;ctx()</code> can store a scalar for us, we store our hash as a reference in <code>$context</code>. We also set aside space in the hash for the <code>extra</code> element, which will become important later.</p>
+
+<p>Another thing we need to do only once per request is to remove the <code>Content-Length</code> header from the response. Apache 2.0 has taken great steps to make sure that all requests are as RFC compliant as possible, while at the same time trying to make the developer&rsquo;s life easier. As it turns out, part of this was the addition of the Content-Length filter, which calculates the length of the response and adds the <code>Content-Length</code> header if Apache deems it appropriate. If you are writing a handler that alters content to the point where the length of the response is different (which is probably true in most cases) you are responsible for removing the <code>Content-Length</code> header from the outgoing headers table. A simple call to <code>$r-&gt;headers_out-&gt;unset()</code> is all we need to accomplish this, which is again the same as it would have been in mod_perl 1.0. And don&rsquo;t worry, if the <code>Content-Length</code> is missing Apache takes other steps, such as using a chunked transfer encoding, to ensure that the request is HTTP compliant.</p>
+
+<p>That about wraps up all the processing which should only happen once per request. If you do not like seeing the informational <code>&quot;skipping...&quot;</code> message on every non-HTML filter invocation, feel free to add logic that tests against <code>$f-&gt;ctx()</code> there as well.</p>
+
+<p>Once we have taken care of one-time-only processing, we can move on to the heart of our output filter. The actual <code>Apache::Filter</code> streaming API is fairly straight forward. For the most part, we simply call <code>$f-&gt;read()</code> to read incoming data in chunks, in our case <code>1K</code> at a time. Sending the processed data down the line requires only that we call <code>$f-&gt;print()</code>. All in all, the basis of the streaming API couldn&rsquo;t be any simpler. Where it begins to get complex stems from the nature of our particular filter.</p>
+
+<p>The idea behind <code>HTML::Clean</code> is that it can, in part, make HTML more compact. However, since HTML is tag based, and those tags often come in pairs, we need to take special steps to make sure that our tags remain balanced after <code>Apache::Clean</code> has run. Because we are reading and processing data in chunks, there is the possibility that a tag might be stranded between chunks. For instance, if the HTML looked like</p>
+
+<pre><code>[1019 bytes of stuff] &lt;strong&gt;Bold!&lt;/strong&gt; [more stuff]
+</code></pre>
+
+<p>the first chunk of data that <code>Apache::Clean</code> would see is</p>
+
+<pre><code>[1019 bytes of stuff] &lt;str
+</code></pre>
+
+<p>Because <code>&lt;str</code> is not a valid HTML tag, <code>HTML::Clean</code> leaves it unaltered. When the next chunk of data is read from the filter, it comes across as</p>
+
+<pre><code>ong&gt;Bold!&lt;/strong&gt; [more stuff]
+</code></pre>
+
+<p>and <code>HTML::Clean</code> again leaves the unrecognized <code>ong&gt;</code> unprocessed. However, it does catch the closing <code>&lt;/strong&gt;</code> tag. The end result, as you can probably see now, would be</p>
+
+<pre><code>[1020 bytes of stuff] &lt;strong&gt;Bold!&lt;/b&gt; [more stuff]
+</code></pre>
+
+<p>which is definitely undesirable. Our matching regex and <code>extra</code> manipulations make certain that any dangling tags are prepended to the front of the next buffer, safeguarding against this particular problem. Of course, this kind of logic is not required of all filters. Just remember to keep in mind the complexity that operating on data in pieces adds when you implement your own filter.</p>
+
+<p>Once we are finished processing all the data from the current filter invocation we come to a critical junction - determining whether we have seen all of the data from the actual response. If our filter will not be called again for this request, <code>$f-&gt;seen_eos()</code> will return true, meaning that we have reached the end of the data stream. Because we may have leftover tag fragments stored in <code>$context-&gt;{extra}</code>, we need to send those along before exiting our filter. On the other hand, if there is more data to come, then we would need to store the current filter context so it can be used on the next invocation.</p>
+
+<h3 id="voila">Voila!</h3>
+
+<p>So there you have it, output filtering made easy with mod_perl 2.0. All in all, it is a bit different than what you might be used to with mod_perl 1.0, but it&rsquo;s not that difficult once you get your head around it. And it does allow for some pretty amazing things. For instance, not only can we now use Perl to code interesting handlers like <code>Apache::Clean</code>, but the overall filter mechanism makes it possible to use Perl to manipulate <em>any and all</em> content originating from the server - just a simple line like</p>
+
+<pre><code>PerlOutputFilterHandler My::Cool::Stuff
+</code></pre>
+
+<p>on the server level of your <code>httpd.conf</code> (such as next to the <code>DocumentRoot</code> directive) will allow you to post-process <em>every</em> request. Cool.</p>
+
+<p>Of course, that&rsquo;s not the end of the story, and what&rsquo;s left over has both positive and negative sides. What we&rsquo;ve seen here is really just scratching the surface of filters: There are still input and connection filters to talk about, as well as raw access to the Apache filtering API via bucket brigades. The downside is that constructing a filter that handles conditional <code>GET</code> requests properly isn&rsquo;t really as good as it could be due to the (current) incompleteness of the mod_perl 2.0 filtering API. However, these things aside, what we&rsquo;ve accomplished here is already pretty impressive, and I hope it gets your creativity flowing and you start tinkering with the very cool new world of mod_perl 2.0.</p>
+
+<p>If you want to try the code from this article, then it is available <a href="http://www.modperlcookbook.org/~geoff/perl.com/Apache-Clean-2.0.tar.gz">as a distribution</a> from my Web site. Other good sources of information are the (growing) <a href="http://perl.apache.org/docs/2.0/">mod_perl 2.0 docs</a>, particularly <a href="http://perl.apache.org/docs/2.0/user/handlers/filters.html">the section on filtering</a>, which has been (very) recently updated with the latest information.</p>
+
+<h3 id="stay-tuned">Stay Tuned &hellip;</h3>
+
+<p>How did I know that my code here actually worked and did what I expected it to? I wrote a test suite for <code>Clean.pm</code> using the new <code>Apache::Test</code> framework and put my code against a live Apache server under every situation I could think of. <code>Apache::Test</code> is probably the single best thing to come out of the mod_perl 2.0 redesign effort, and what I will share with you next time.</p>
+
+<h3 id="thanks">Thanks</h3>
+
+<p>Many thanks to Stas Bekman, who reviewed this article, even though it meant having to deal with both my questions, suggestions and API gripes.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/web">web</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-geoffrey-young">
+  <div class="col-sm-2">
+    
+    <a href="/authors/geoffrey-young/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/geoffrey-young/"><h3>Geoffrey Young</h3></a>
+    <p></p>
+    <h5><a href="/authors/geoffrey-young/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2003_04_17_filters.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

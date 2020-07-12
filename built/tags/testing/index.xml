@@ -1,0 +1,965 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Testing on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/testing/</link>
+    <description>Recent content in Testing on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 15 Apr 2015 03:05:00 +0000</lastBuildDate>
+    <atom:link href="/tags/testing/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Unit test your code on an in-memory database</title>
+      <link>http://localhost:1313/article/167/2015/4/15/Unit-test-your-code-on-an-in-memory-database/</link>
+      <pubDate>Wed, 15 Apr 2015 03:05:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/167/2015/4/15/Unit-test-your-code-on-an-in-memory-database/</guid>
+      <description>
+
+&lt;p&gt;Unit test scripts should be independent, stateless and free from side-effects. These ideals are not always achievable but by using tools like mock objects we can often get close. Some functionality is harder to test than others though; for example how do you test database interface code? Databases have state - even if you reset the data after you&amp;rsquo;ve tested it, there&amp;rsquo;s no guarantee the data is the same, or that other code hasn&amp;rsquo;t accessed the database during the test execution.&lt;/p&gt;
+
+&lt;p&gt;One way to deal with this is to create an in-memory database, visible only to the unit testing process and automatically deleted once the tests have completed. Fortunately it&amp;rsquo;s really easy to do this with SQLite3 and Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;dbi&#34;&gt;DBI&lt;/h3&gt;
+
+&lt;p&gt;The Perl &lt;a href=&#34;https://metacpan.org/pod/DBI&#34;&gt;DBI&lt;/a&gt; module is the de-facto way of accessing relational databases in Perl. To create an in-memory database, I can use call &lt;code&gt;connect&lt;/code&gt; specifying the SQLite driver, and the database name as &amp;ldquo;:memory:&amp;ldquo;. This returns a database handle to a new, in memory SQLite3 database.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test::More;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; DBI;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# load in-memory db&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dbh &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; DBI&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;connect(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;dbi:SQLite:dbname=:memory:&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# create tables&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $create_table_script &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {  local $/; 
+        open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $SQL, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;create_tables.sql&amp;#39;&lt;/span&gt;;
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$SQL&amp;gt;&lt;/span&gt;;
+     };  
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 
+  $dbh&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;prepare($create_table_script) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; BAIL_OUT ($dbh&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;errstr);
+$sth&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;execute &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; BAIL_OUT($sth&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;errstr);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# add unit tests here ...&lt;/span&gt;
+
+done_testing;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;From here I slurp a SQL script for creating the tables into a string and use the database handle to execute it. The &lt;code&gt;BAIL_OUT&lt;/code&gt; function is called if any of the database steps fail, ending the testing prematurely. At this point I have a brand new database with fresh tables, ready for testing.&lt;/p&gt;
+
+&lt;h3 id=&#34;dbix-class&#34;&gt;DBIx::Class&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/DBIx::Class&#34;&gt;DBIx::Class&lt;/a&gt;, the Perl ORM uses the same underlying technology as DBI, but because it creates Perl classes representing each table, I can leverage that code to make the database setup even easier than with vanilla DBI:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test::More;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; SomeApp::Schema;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# load an in-memory database and deploy the required tables&lt;/span&gt;
+SomeApp::Schema&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;connection(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;dbi:SQLite:dbname=:memory:&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;);
+SomeApp::Schema&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;load_namespaces;
+SomeApp::Schema&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;deploy;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# add unit tests here ...&lt;/span&gt;
+
+done_testing;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;m using an example app, called &lt;code&gt;SomeApp&lt;/code&gt; to demonstrate. First the &lt;code&gt;connection&lt;/code&gt; is set to the same database connection string as with the DBI example. The &lt;code&gt;load_namespaces&lt;/code&gt; method loads all of the result and resultset DBIx::Class modules in the application and &lt;code&gt;deploy&lt;/code&gt; creates them on the in-memory database. Obviously this approach requires that you&amp;rsquo;ve already created the DBIx::Class files. If you haven&amp;rsquo;t done that yet, but you have an application database with the tables in it, you can use the &lt;code&gt;dbicdump&lt;/code&gt; command from &lt;a href=&#34;https://metacpan.org/pod/DBIx::Class::Schema::Loader&#34;&gt;DBIx::Class::Schema::Loader&lt;/a&gt; to auto generate them for you.&lt;/p&gt;
+
+&lt;h3 id=&#34;not-just-for-testing&#34;&gt;Not just for testing&lt;/h3&gt;
+
+&lt;p&gt;The in-memory feature of SQLite is provided by &lt;a href=&#34;https://metacpan.org/pod/DBD::SQLite&#34;&gt;DBD::SQLite&lt;/a&gt;, the DBI driver. It&amp;rsquo;s a cool feature, and could be used for more than just unit testing. Anytime you have a need for a temporary relational datastore, consider this; it&amp;rsquo;s fast, is portable and automatically cleans itself up when the program ends.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Quickly Debug your Perl code at the command line</title>
+      <link>http://localhost:1313/article/160/2015/3/13/Quickly-Debug-your-Perl-code-at-the-command-line/</link>
+      <pubDate>Fri, 13 Mar 2015 13:34:06 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/160/2015/3/13/Quickly-Debug-your-Perl-code-at-the-command-line/</guid>
+      <description>
+
+&lt;p&gt;I remember when I first started programming in Perl, whenever something wasn&amp;rsquo;t working as I expected it to, I would write a quick script to isolate the problem and test it. I didn&amp;rsquo;t give the scripts good names; they were throwaway, and soon I had hundreds of useless Perl scripts littered all over my hard drive.&lt;/p&gt;
+
+&lt;p&gt;I rarely write scripts like that anymore. If I&amp;rsquo;m developing a module, I&amp;rsquo;ll write a unit test to bottom-out whatever problem I&amp;rsquo;m investigating - that way I&amp;rsquo;m making an investment instead of throwing code away. Most of the time however, I just write a one liner, which is a single line of Perl code typed directly into the terminal. One liners are fast to type and they hang around in your terminal history for quick iterations. So if you find yourself needing to test a particular function is doing what you think it does, or are unsure if you&amp;rsquo;re carefully-crafted regex works, write a one liner.&lt;/p&gt;
+
+&lt;h3 id=&#34;one-liner-basics&#34;&gt;One liner basics&lt;/h3&gt;
+
+&lt;p&gt;Perl has a ton of command line switches (see &lt;code&gt;perldoc perlrun&lt;/code&gt;), but I&amp;rsquo;m just going to cover the ones you&amp;rsquo;ll commonly need to debug code. The most important switch is &lt;code&gt;-e&lt;/code&gt;, for execute (or maybe &amp;ldquo;engage&amp;rdquo; :) ). The &lt;code&gt;-e&lt;/code&gt; switch takes a quoted string of Perl code and executes it. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print &amp;#34;Hello, World!\n&amp;#34;&amp;#39;&lt;/span&gt;
+Hello, World&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It&amp;rsquo;s important that you use single-quotes to quote the code for &lt;code&gt;-e&lt;/code&gt;. This usually means you can&amp;rsquo;t use single-quotes within the one liner code. If you&amp;rsquo;re using Windows cmd.exe or PowerShell, you must use double-quotes instead.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m always forgetting what Perl&amp;rsquo;s predefined special variables do, and often test them at the command line with a one liner to see what they contain. For instance do you remember what &lt;code&gt;$^O&lt;/code&gt; is?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print &amp;#34;$^O\n&amp;#34;&amp;#39;&lt;/span&gt;
+linux&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It&amp;rsquo;s the operating system name. With that cleared up, let&amp;rsquo;s see what else we can do. If you&amp;rsquo;re using a relatively new Perl (5.10.0 or higher) you can use the &lt;code&gt;-E&lt;/code&gt; switch instead of &lt;code&gt;-e&lt;/code&gt;. This turns on some of Perl&amp;rsquo;s newer features, like &lt;code&gt;say&lt;/code&gt;, which prints a string and appends a newline to it. This saves typing and makes the code cleaner:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say &amp;#34;$^O&amp;#34;&amp;#39;&lt;/span&gt;
+linux&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Pretty handy! &lt;code&gt;say&lt;/code&gt; is a nifty feature that you&amp;rsquo;ll use again and again.&lt;/p&gt;
+
+&lt;h3 id=&#34;v-is-for-version&#34;&gt;V is for version&lt;/h3&gt;
+
+&lt;p&gt;If you ever need to check which version of Perl is installed on your system, use the &lt;code&gt;-v&lt;/code&gt; switch:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;v
+
+This is perl &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;, version &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;, subversion &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; (v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.20.2&lt;/span&gt;) built &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; x86_64&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;linux
+(with &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; registered patch, see perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;V &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; more detail)
+
+Copyright &lt;span style=&#34;color:#ae81ff&#34;&gt;1987&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2015&lt;/span&gt;, Larry Wall
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Quick tip: if you need detailed information about the installed Perl version, use a capital: &lt;code&gt;-V&lt;/code&gt; instead.&lt;/p&gt;
+
+&lt;h3 id=&#34;load-modules-with-m&#34;&gt;Load modules with M&lt;/h3&gt;
+
+&lt;p&gt;Modules can be loaded at the command line too. For instance to download and print the PerlTricks.com homepage, I can use &lt;a href=&#34;https://metacpan.org/pod/HTTP::Tiny&#34;&gt;HTTP::Tiny&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MHTTP::Tiny &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say HTTP::Tiny-&amp;gt;new-&amp;gt;get(&amp;#34;http://perltricks.com&amp;#34;)-&amp;gt;{content}&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;!&lt;/span&gt;DOCTYPE html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;html lang&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;en&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;title&amp;gt;&lt;/span&gt;PerlTricks&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Perl programming news, code &lt;span style=&#34;color:#f92672&#34;&gt;and&lt;/span&gt; culture&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/title&amp;gt;&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;meta charset&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;utf-8&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+   ,,,&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you need to import functions from a module, use an equals sign followed by a comma separated list of function names. I can check if an XML file is valid XML with &lt;a href=&#34;https://metacpan.org/pod/XML::Simple&#34;&gt;XML::Simple&lt;/a&gt; and it&amp;rsquo;s &lt;code&gt;XMLin&lt;/code&gt; function just by loading the XML file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MXML::Simple&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;XMLin &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;XMLin(&amp;#34;data.xml&amp;#34;)&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If &lt;code&gt;XMLin&lt;/code&gt; doesn&amp;rsquo;t emit any warnings or exceptions, the data is probably correctly formatted.&lt;/p&gt;
+
+&lt;h3 id=&#34;turn-on-warnings-with-w&#34;&gt;Turn on warnings with w&lt;/h3&gt;
+
+&lt;p&gt;This one is pretty simple: use &lt;code&gt;-w&lt;/code&gt; to turn on warnings. This can be incredibly helpful when code is not behaving the way you think it should. Warnings can help you identify issues that would otherwise be hard to spot:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$counter = 2; $countor = 3; say $counter&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Hmm &lt;code&gt;$counter&lt;/code&gt; should be 3 shouldn&amp;rsquo;t it? Turning on warnings quickly identifies the issue:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;wE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$counter = 2; $countor = 3; say $counter&amp;#39;&lt;/span&gt;
+Name &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;main::countor&amp;#34;&lt;/span&gt; used only once: possible typo at &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e line &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;There are plenty of more subtle bugs that warnings won&amp;rsquo;t identify directly, but the fact that Perl issues a warning puts you onto the fact that something is wrong. Take this example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MTry::Tiny &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;wE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$pass; try { $pass = &amp;#34;true&amp;#34; } catch { say $_ } return $pass if $pass or die&amp;#39;&lt;/span&gt;
+Useless &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; of a variable in void context at &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e line &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+Died at &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e line &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Can you see what&amp;rsquo;s wrong here? The &lt;code&gt;catch&lt;/code&gt; block is missing a trailing semicolon. With warnings turned on, you can see that &lt;em&gt;something&lt;/em&gt; is up, but it&amp;rsquo;s not obvious what&amp;rsquo;s wrong.&lt;/p&gt;
+
+&lt;h3 id=&#34;use-i-to-include-directories&#34;&gt;Use I to include directories&lt;/h3&gt;
+
+&lt;p&gt;Sometimes you&amp;rsquo;ll be working with modules that are not installed in Perl&amp;rsquo;s standard locations. This often happens when you&amp;rsquo;re debugging an application but it&amp;rsquo;s not installed via CPAN. To demonstrate this, I&amp;rsquo;ll download my &lt;a href=&#34;https://metacpan.org/pod/WWW::curlmyip&#34;&gt;WWW::curlmyip&lt;/a&gt; module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;g WWW::curlmyip
+$~ tar xzf WWW&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;curlmyip&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.02&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tar&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;gz 
+$ cd WWW&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;curlmyip&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.02&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;WWW::curlmyip exports a function called &lt;code&gt;get_ip&lt;/code&gt; which returns your external IP address. I can use it in a one liner:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MWWW::curlmyip &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say get_ip&amp;#39;&lt;/span&gt;
+Can&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;t locate WWW&lt;span style=&#34;color:#e6db74&#34;&gt;/curlmyip.pm in @INC (you may need to install the WWW::curlmyip module) (@INC contains: /&lt;/span&gt;home&lt;span style=&#34;color:#e6db74&#34;&gt;/dfarrell/&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plenv&lt;span style=&#34;color:#e6db74&#34;&gt;/versions/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/lib/&lt;/span&gt;perl5&lt;span style=&#34;color:#e6db74&#34;&gt;/site_perl/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/x86_64-linux /&lt;/span&gt;home&lt;span style=&#34;color:#e6db74&#34;&gt;/dfarrell/&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plenv&lt;span style=&#34;color:#e6db74&#34;&gt;/versions/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/lib/&lt;/span&gt;perl5&lt;span style=&#34;color:#e6db74&#34;&gt;/site_perl/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/home/&lt;/span&gt;dfarrell&lt;span style=&#34;color:#e6db74&#34;&gt;/.plenv/&lt;/span&gt;versions&lt;span style=&#34;color:#e6db74&#34;&gt;/5.20.2/&lt;/span&gt;lib&lt;span style=&#34;color:#e6db74&#34;&gt;/perl5/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/x86_64-linux /&lt;/span&gt;home&lt;span style=&#34;color:#e6db74&#34;&gt;/dfarrell/&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plenv&lt;span style=&#34;color:#e6db74&#34;&gt;/versions/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/lib/&lt;/span&gt;perl5&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; failed&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;compilation aborted&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That didn&amp;rsquo;t work. Perl is complaining that it can&amp;rsquo;t find WWW::curlmyip. To fix this, I can include the distribution &lt;code&gt;lib&lt;/code&gt; directory that contains the module using &lt;code&gt;-I&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Ilib &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MWWW::curlmyip &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say get_ip&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;100.241.20.7&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And the &lt;code&gt;get_ip&lt;/code&gt; function now works.&lt;/p&gt;
+
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap-up&lt;/h3&gt;
+
+&lt;p&gt;If you ever need to check the one liner syntax, just run &lt;code&gt;perl -h&lt;/code&gt; to get a summary of the available options. Another good resource is the official documentation, which you can read at the terminal with &lt;code&gt;perldoc perlrun&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This article has covered the most common command line switches used for debugging code but a whole book could be written about Perl one liners. In fact, one has: &lt;a href=&#34;http://www.catonmat.net/blog/perl-one-liners-no-starch-press/&#34;&gt;Perl One-Liners&lt;/a&gt; by Peteris Krummins. In the book Peteris describes the various command line switches with example programs. It also has an excellent &amp;ldquo;how to&amp;rdquo; for running one liners on Windows.&lt;/p&gt;
+
+&lt;p&gt;Finally, Perl 6 also has excellent one liner support and the switches are mostly the same as Perl 5. If you&amp;rsquo;re interested, check out our article &lt;a href=&#34;http://perltricks.com/article/136/2014/11/20/Get-started-with-Perl-6-one-liners&#34;&gt;Get started with Perl 6 one liners&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Testing Perl 5.12.0 RC 1 with App::perlbrew</title>
+      <link>http://localhost:1313/pub/2010/03/testing-perl-5120-rc-1-with-appperlbrew.html/</link>
+      <pubDate>Tue, 30 Mar 2010 14:22:06 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/testing-perl-5120-rc-1-with-appperlbrew.html/</guid>
+      <description>&lt;p&gt;I&amp;rsquo;m working on a project with Curtis &amp;ldquo;Ovid&amp;rdquo; Poe and Adrian Howard. We use Perl 5.10.1, but because we control which version of Perl 5 we use, there&amp;rsquo;s no reason not to test with Perl 5.12.0 &amp;ndash; and if we find bugs, we can report them and get them fixed in the proper place.&lt;/p&gt;
+
+&lt;p&gt;This application has its own quirks for setup and installation. I managed to clean up some of the worst offenses as my first work on the project; it installs and passes tests on my server with Perl 5.10.1, so it should install cleanly if all of its dependencies work with Perl 5.12.&lt;/p&gt;
+
+&lt;p&gt;My first approach was to manage my own parallel installation of Perl 5 with &lt;a href=&#34;https://metacpan.org/pod/local::lib&#34;&gt;local::lib&lt;/a&gt; and a custom installation of Perl 5.12, but the manual intervention required to make all of that work was enough of a hassle that I took a tip from &lt;a href=&#34;http://chris.prather.org/&#34;&gt;Chris Prather&lt;/a&gt; and installed &lt;a href=&#34;https://metacpan.org/pod/App::perlbrew&#34;&gt;App::perlbrew&lt;/a&gt; to manage my various installations (system Perl 5.10.0 built with threading, custom Perl 5.10.1 without threads, and now Perl 5.12.0 RC1).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ cpan App::perlbrew
+    $ perlbrew init
+    $ echo &#39;source /home/chromatic/perl5/perlbrew/etc/bashrc&#39; &amp;gt;&amp;gt; ~/.bashrc
+    $ source /home/chromatic/perl5/perlbrew/etc/bashrc
+    $ perlbrew install perl-5.12.0-RC1 -as p512
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;-as p512&lt;/code&gt; option was optional; it lets me use &lt;code&gt;p512&lt;/code&gt; as a short name to refer to that particular installation when switching between versions.&lt;/p&gt;
+
+&lt;p&gt;After a while with no obvious output (which is fine), the end result is the ability to switch between parallel Perl 5 installations without them stomping on each other. They&amp;rsquo;re all installed locally in my own home directory, so I can use CPAN or &lt;a href=&#34;https://metacpan.org/pod/App::cpanminus&#34;&gt;cpanminus&lt;/a&gt; to install modules without worrying about root access or messing up the system for anyone else.&lt;/p&gt;
+
+&lt;p&gt;I had already installed &lt;a href=&#34;https://metacpan.org/pod/local::lib&#34;&gt;local::lib&lt;/a&gt;, but I&amp;rsquo;m not sure it&amp;rsquo;s necessary in this case.&lt;/p&gt;
+
+&lt;p&gt;With the changes to my &lt;em&gt;.bashrc&lt;/em&gt;, now &lt;code&gt;perl&lt;/code&gt; is a symlink. Switching my version with &lt;code&gt;perlbrew&lt;/code&gt; swaps a symlink, so every time I invoke &lt;code&gt;perl&lt;/code&gt; directly, it uses the intended version. Shebang lines remain unaffected, so anything which invokes a program directly will use a hard-coded version of Perl. Unfortunately, this includes &lt;code&gt;cpanm&lt;/code&gt;, so I took to using an alias which does &lt;code&gt;perl `which cpanm`&lt;/code&gt; as a temporary workaround. Miyagawa suggested &lt;em&gt;not&lt;/em&gt; using CPAN to install cpanminus. Instead, he recommends:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl -L http://cpanmin.us | perl - App::cpanminus
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that you&amp;rsquo;ll have to do this for every new version of Perl you install with perlbrew.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the nice part of perlbrew. I can also install Perl 5.10.1 through it (replacing my custom installation) and switch between the two with a simple command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ perlbrew switch p5101
+    $ perlbrew switch perl-5.10.1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see what you have installed with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ perlbrew installed
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For those of you curious as to the results of my experiments with 5.12.0, &lt;a href=&#34;https://metacpan.org/pod/Devel::Cover&#34;&gt;Devel::Cover&lt;/a&gt; doesn&amp;rsquo;t work correctly yet, but that&amp;rsquo;s not a requirement for this project. &lt;a href=&#34;https://metacpan.org/pod/Devel::BeginLift&#34;&gt;Devel::BeginLift&lt;/a&gt; needs a patch to build. Fortunately, that&amp;rsquo;s available in the RT queue. A manual build and test worked just fine. Other than that, a little bit of babysitting on the installation satisfied all of the dependencies.&lt;/p&gt;
+
+&lt;p&gt;If I&amp;rsquo;d had to manage the installation (and module paths and&amp;hellip;) of all of this software, I&amp;rsquo;d have spent a lot more time on the fiddly details of installing dependencies and not the interesting part. &lt;code&gt;App::perlbrew&lt;/code&gt; allowed me to concentrate on what really matters: does my software work?&lt;/p&gt;
+
+&lt;p&gt;Perl 5.12.0 will come out soon. Use &lt;code&gt;App::perlbrew&lt;/code&gt; to test code you care about with it.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>An Introduction to Quality Assurance</title>
+      <link>http://localhost:1313/pub/2005/01/13/quality_assurance.html/</link>
+      <pubDate>Thu, 13 Jan 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/01/13/quality_assurance.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;on-being-wrong&#34;&gt;On Being Wrong&lt;/h3&gt;
+
+&lt;p&gt;When I decided to study computer science, I installed Linux on my computer and bought a copy of &amp;ldquo;The C Programming Language&amp;rdquo; by Kernighan and Ritchie. I have been trying to solve software problems ever since. After much heartache, I decided that if I was to continue programming I would have to come to terms with being wrong, because I quickly discovered that being wrong is a big part of the development cycle: you code, compile, view the errors, and then code some more. I found it helpful to actually say &amp;ldquo;I am wrong&amp;rdquo; when the compiler complained, to remind myself where the fault lay. It made finding problems a lot easier when I accepted responsibility for the errors.&lt;/p&gt;
+
+&lt;h3 id=&#34;enjoy-the-ride&#34;&gt;Enjoy the Ride&lt;/h3&gt;
+
+&lt;p&gt;To deal with the frustration of constantly being wrong, I began to view programming more as a game that I enjoyed than as an epic battle, and I started looking at things from the compiler&amp;rsquo;s perspective. This view has improved my overall approach to software immensely. I was also fortunate to discover &lt;em&gt;&lt;a href=&#34;http://www.perldebugged.com/&#34;&gt;Perl Debugged&lt;/a&gt;&lt;/em&gt; by Peter Scott and Ed Wright. The authors provide a wealth of information about debugging and testing Perl scripts, but they also emphasize that the right mental attitude is often the key to a programmer&amp;rsquo;s success. Basically, they say that you should enjoy what you do.&lt;/p&gt;
+
+&lt;p&gt;Bugs come in many flavors, from syntax errors to errors of logic. Perl&amp;rsquo;s interpreter will catch most typos, especially if you &lt;code&gt;use warnings&lt;/code&gt;, but some can be tricky&amp;ndash;and errors of logic are often even harder to tease out.&lt;/p&gt;
+
+&lt;p&gt;Here is a common syntax error:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($two_plus_two = 5) {
+   print &amp;quot;two plus two is five&amp;quot;; 
+} else {
+   # I never seem to get here...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is common logical error:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;I know of software companies that let their customers find their bugs for them.&lt;/li&gt;
+&lt;li&gt;These companies are worth millions of dollars.&lt;/li&gt;
+&lt;li&gt;If I let my customers find my bugs for me, I will be worth millions of dollars.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;This particular error can lead to embarrassing code such as the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub handle_error() {
+
+print &amp;lt;&amp;lt;END;
+
+   Dear Friend,
+      We realize this may be a difficult time 
+      for you, but there has been an SQL error. 
+      Please email us for further assistance, 
+      or try entering your obituary again. 
+      Thank you. 
+
+END
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, anyone who wants to sleep easy at night will want to avoid shameful code like this, because slowly but surely, users are becoming less tolerant of buggy code. If you haven&amp;rsquo;t done so already, you will want to read through Michael G. Schwern&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Test::Tutorial&#34;&gt;Test::Tutorial&lt;/a&gt; and get started. Test-based development, combined with quality assurance, can enable a company to offer its customers a rare and valuable commodity: reliable software. In the future, the world of software may very well be divided between the companies that incorporate testing into their development cycle and those that used to be in business.&lt;/p&gt;
+
+&lt;h3 id=&#34;parts-of-a-test&#34;&gt;Parts of a Test&lt;/h3&gt;
+
+&lt;p&gt;When the compiler stops complaining, many developers are happy to declare victory and move on to the next project, but for the tester (often just the developer with his hat on backwards), things are just becoming interesting. Testers begin by breaking the program into sections, as Lydia Ash does in &lt;em&gt;&lt;a href=&#34;http://www.wiley.com/WileyCDA/WileyTitle/productCd-0471430218.html&#34;&gt;The Web Testing Companion&lt;/a&gt;&lt;/em&gt;. She notes the following five basic software functions:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Accepting input&lt;/li&gt;
+&lt;li&gt;Giving output&lt;/li&gt;
+&lt;li&gt;Saving data&lt;/li&gt;
+&lt;li&gt;Manipulating data&lt;/li&gt;
+&lt;li&gt;Removing data&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;To begin testing, start at the top of the list and work down, one section at a time. At this point in the process, you really understand why everyone always tells you to write modular code. It is much easier to work through the list if you&amp;rsquo;ve broken your program into the functions &lt;code&gt;get_input()&lt;/code&gt;, &lt;code&gt;display_members()&lt;/code&gt;, &lt;code&gt;add_member()&lt;/code&gt;, &lt;code&gt;update_info()&lt;/code&gt;, and &lt;code&gt;delete_member()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;where-to-look&#34;&gt;Where to Look&lt;/h3&gt;
+
+&lt;p&gt;When asked where to look for bugs, software testers sometimes speak of the &amp;ldquo;joints&amp;rdquo; between program components, &amp;ldquo;equivalence classes,&amp;rdquo; and &amp;ldquo;edge values.&amp;rdquo; These are the primary points of weakness in an application.&lt;/p&gt;
+
+&lt;p&gt;An example of a joint is the place where your software interacts with a third-party module. It&amp;rsquo;s important to make sure that all of the components send and receive what you think they should.&lt;/p&gt;
+
+&lt;p&gt;An equivalence class is a class of data that follows the same data path through the program. Consider a program that divides the number 50 by whatever number the user enters and either returns a positive integer or tells them why the answer is not a positive integer. You might have the following classes: negative numbers; the number zero; the numbers 1, 2, 5, 10, 25, and 50; numbers greater than 50; and non-numbers. Consider the following incomplete but well-intentioned code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub factor_of_50 {
+    my $divisor = shift;
+    my $result  = 50 / $divisor;
+
+    return $result if $result == int( $result );
+    return &amp;quot;$divisor is negative&amp;quot; if $result &amp;lt; 0;
+    return &amp;quot;$result is not an integer&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this case, good tests should start with -1, 0, 1, 49, and 51, the edge values for this program, to test the different paths through the code. Edge values define the limits of the program, values near and past the stated minimum and maximum that the program should handle. In the example above, you&amp;rsquo;d also want to enter a string of letters and punctuation to see how the program handles it. Then, compare the test results to the program&amp;rsquo;s specification, which tells you which inputs should work and what outputs the users should see.&lt;/p&gt;
+
+&lt;h3 id=&#34;specifications&#34;&gt;Specifications&lt;/h3&gt;
+
+&lt;p&gt;Any non-trivial program needs to have a specified list of what it should do. This list of requirements lays a foundation on which to build the software and against which testers can test. There must be a specification of quality from the beginning, or else there is no way to tell if the program has passed or failed a given test. Functional specifications tell you about the program&amp;rsquo;s logic, while non-functional specifications include things like the speed of the application, usability issues for a user interface, and security.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-tests&#34;&gt;Writing Tests&lt;/h3&gt;
+
+&lt;p&gt;Once you have a specification, you can make a test inventory&amp;ndash;a list of all the tests you need to write in order to prove that the software meets the specifications. Of course, you need to eliminate all the bugs that crash the program and as many more as you can find, but when do you say enough is enough?&lt;/p&gt;
+
+&lt;p&gt;In &lt;em&gt;&lt;a href=&#34;http://he-cda.wiley.com/WileyCDA/HigherEdTitle/productCd-047143020X,courseCd-CX4700.html&#34;&gt;Software Testing Fundamentals&lt;/a&gt;&lt;/em&gt;, Marnie Hutcheson describes her Most Important Tests method. This process tries to determine which tests will be most valuable to run. Essentially, it is a way to present management with the opportunity to weigh the tradeoffs between further testing and pushing the product to market sooner.&lt;/p&gt;
+
+&lt;h3 id=&#34;reporting&#34;&gt;Reporting&lt;/h3&gt;
+
+&lt;p&gt;Reporting is, of course, crucial to testing. You test, trying to get the software to fail, so that you can report the bugs you find back to the development team, so they can fix things before the software&amp;rsquo;s release. A clear, informative bug report is the only one worth writing. Here is a template for a web application&amp;rsquo;s bug report from &lt;em&gt;The Web Testing Companion&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;SERVER CONFIG
+Operating System: &amp;lt;Operating system and hardware, if applicable.&amp;gt;
+Software Build: &amp;lt;Build-number of your software.&amp;gt;
+Topology: &amp;lt;If you have multiple topologies where you test your server in-house.&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;CLIENT
+OS: &amp;lt;Operating system, service packs, and other dependent DLL versions, if applicable&amp;gt;
+Browser: &amp;lt;Browser and version&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;DESCRIPTION
+&amp;lt;Brief description of the problem&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;Repro (short for reproduction)&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&amp;lt;Very descriptive steps showing how to recreate the problem&amp;gt;&lt;/li&gt;
+&lt;li&gt; &lt;/li&gt;
+&lt;li&gt; &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Result:
+&amp;lt;Description of exactly what happens after the last repro step&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;Expected Results:
+&amp;lt;Description of what should have happened after the last repro step&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;Notes:
+&amp;lt;Add any information about when this was last verified or what this might be related to here&amp;gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h3&gt;
+
+&lt;p&gt;When all the tests have finshed, the tester turns the repro reports in to the development team and starts looking forward to the next project. If there are any bugs found, the developer is back to square one: debugging. The process has come full circle. Hopefully, after a few more iterations, everyone can go out and have a paintball war.&lt;/p&gt;
+
+&lt;p&gt;Software development and software testing require two different mindsets. Sometimes it is hard for one person to switch back and forth between them, but testing is essential to the success of any non-trivial software project in the same way that editing is essential for any non-trivial writing project. Without it, progress is ponderous, at best.&lt;/p&gt;
+
+&lt;p&gt;In conclusion, I&amp;rsquo;d like to list the nine debugging rules from David J. Agans&amp;rsquo; excellent book, &lt;em&gt;&lt;a href=&#34;http://www.debuggingrules.com/Debugging_CH1.PDF&#34;&gt;Debugging&lt;/a&gt;&lt;/em&gt;. His book clarifies these essential debugging concepts and is mandatory reading for anyone who fixes things:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Understand the system&lt;/li&gt;
+&lt;li&gt;Make it fail&lt;/li&gt;
+&lt;li&gt;Quit thinking and look&lt;/li&gt;
+&lt;li&gt;Divide and conquer&lt;/li&gt;
+&lt;li&gt;Change one thing at a time&lt;/li&gt;
+&lt;li&gt;Keep an audit trail&lt;/li&gt;
+&lt;li&gt;Check the plug&lt;/li&gt;
+&lt;li&gt;Get a fresh view&lt;/li&gt;
+&lt;li&gt;If you didn&amp;rsquo;t fix it, it isn&amp;rsquo;t fixed&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&#34;bibliography&#34;&gt;Bibliography&lt;/h3&gt;
+
+&lt;p&gt;Agans, David J. &lt;em&gt;Debugging&lt;/em&gt;, American Management Association, 2002&lt;/p&gt;
+
+&lt;p&gt;Ash, Lydia. &lt;em&gt;The Web Testing Companion&lt;/em&gt;, Wiley, 2003&lt;/p&gt;
+
+&lt;p&gt;Hutcheson, Marnie L. &lt;em&gt;Software Testing Fundamentals&lt;/em&gt;, Wiley, 2003&lt;/p&gt;
+
+&lt;p&gt;Scott, Peter J.; Wright, Ed. &lt;em&gt;Perl Debugged&lt;/em&gt;, Addison-Wesley Pub Co, 2001&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Web Testing with HTTP::Recorder</title>
+      <link>http://localhost:1313/pub/2004/06/04/recorder.html/</link>
+      <pubDate>Fri, 04 Jun 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/06/04/recorder.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;code&gt;HTTP::Recorder&lt;/code&gt; is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces &lt;code&gt;WWW::Mechanize&lt;/code&gt; scripts by default (see &lt;a href=&#34;https://metacpan.org/pod/WWW::Mechanize&#34;&gt;&lt;code&gt;WWW::Mechanize&lt;/code&gt;&lt;/a&gt; by Andy Lester), but provides functionality to use your own custom logger.&lt;/p&gt;
+
+&lt;h3 id=&#34;why-use-http-recorder&#34;&gt;Why Use &lt;code&gt;HTTP::Recorder&lt;/code&gt;?&lt;/h3&gt;
+
+&lt;p&gt;Simply speaking, &lt;code&gt;HTTP::Recorder&lt;/code&gt; removes a great deal of the tedium from writing scripts for web automation. If you&amp;rsquo;re like me, you&amp;rsquo;d rather spend your time writing code that&amp;rsquo;s interesting and challenging, rather than digging through HTML files, looking for the names of forms an fields, so that you can write your automation scripts. &lt;code&gt;HTTP::Recorder&lt;/code&gt; records what you do as you do it, so that you can focus on the things you care about.&lt;/p&gt;
+
+&lt;h4 id=&#34;automated-testing&#34;&gt;Automated Testing&lt;/h4&gt;
+
+&lt;p&gt;We all know that testing our code is good, and that writing automated tests that can be run again and again to check for regressions is even better. However, writing test scripts by hand can be tedious and prone to errors. You&amp;rsquo;re more likely to write tests if it&amp;rsquo;s easy to do so. The biggest obstacle to testing shouldn&amp;rsquo;t be the mechanics of getting the tests written — it should be figuring out what needs to be tested, and how best to test it.&lt;/p&gt;
+
+&lt;p&gt;Part of your test suite should be devoted to testing things the way the user uses them, and &lt;code&gt;HTTP::Recorder&lt;/code&gt; makes it easy to produce automation to do that, which allows you to put your energy into the parts of your code that need your attention and your expertise.&lt;/p&gt;
+
+&lt;h4 id=&#34;automate-repetitive-tasks&#34;&gt;Automate Repetitive Tasks&lt;/h4&gt;
+
+&lt;p&gt;When you think about web automation, the first thing you think of may be automated testing, but there are other uses for automation as well:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Check your bank balance.&lt;/li&gt;
+&lt;li&gt;Check airline fares.&lt;/li&gt;
+&lt;li&gt;Check movie times.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;how-to-set-it-up&#34;&gt;How to Set It Up&lt;/h3&gt;
+
+&lt;h4 id=&#34;use-it-with-a-web-proxy&#34;&gt;Use It with a Web Proxy&lt;/h4&gt;
+
+&lt;p&gt;One way to use &lt;code&gt;HTTP::Recorder&lt;/code&gt; (as recommended in the POD) is to set it as the user agent of a web proxy (see &lt;a href=&#34;https://metacpan.org/pod/HTTP::Proxy&#34;&gt;&lt;code&gt;HTTP::Proxy&lt;/code&gt;&lt;/a&gt; by Phillipe &amp;ldquo;BooK&amp;rdquo; Bruhat). Start the proxy running like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+
+    use HTTP::Proxy;
+    use HTTP::Recorder;
+
+    my $proxy = HTTP::Proxy-&amp;gt;new();
+
+    # create a new HTTP::Recorder object
+    my $agent = new HTTP::Recorder;
+
+    # set the log file (optional)
+    $agent-&amp;gt;file(&amp;quot;/tmp/myfile&amp;quot;);
+
+    # set HTTP::Recorder as the agent for the proxy
+    $proxy-&amp;gt;agent( $agent );
+
+    # start the proxy
+    $proxy-&amp;gt;start();
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, instruct your favorite web browser to use your new proxy for HTTP traffic.&lt;/p&gt;
+
+&lt;h4 id=&#34;other-ways-to-use-it&#34;&gt;Other Ways to Use It&lt;/h4&gt;
+
+&lt;p&gt;Since &lt;code&gt;HTTP::Recorder&lt;/code&gt; is a subclass of LWP::UserAgent, so you can use it in any way that you can use its parent class.&lt;/p&gt;
+
+&lt;h3 id=&#34;how-to-use-it&#34;&gt;How to Use It&lt;/h3&gt;
+
+&lt;p&gt;Once you&amp;rsquo;ve set up &lt;code&gt;HTTP::Recorder&lt;/code&gt;, just navigate to web pages, follow links, and fill in forms the way you normally do, with the web browser of your choice. &lt;code&gt;HTTP::Recorder&lt;/code&gt; will record your actions and produce a &lt;code&gt;WWW::Mechanize&lt;/code&gt; script that you can use to replay those actions.&lt;/p&gt;
+
+&lt;p&gt;The script is written to a logfile. By default, this file is &lt;code&gt;/tmp/scriptfile&lt;/code&gt;, but you can specify another pathname when you set things up. See &lt;a href=&#34;#config&#34;&gt;Configuration Options&lt;/a&gt; for information about configuring the logfile.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-control-panel-http-recorder-control-panel-span&#34;&gt;&lt;span id=&#34;control_panel&#34;&gt;&lt;code&gt;HTTP::Recorder&lt;/code&gt; Control Panel&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The &lt;code&gt;HTTP::Recorder&lt;/code&gt; control panel allows you to use to view and edit scripts as you create them. By default, you can access the control panel by using the &lt;code&gt;HTTP::Recorder&lt;/code&gt; UserAgent to access the control URL. By default, the control URL is &lt;code&gt;http://http-recorder/&lt;/code&gt;, but this address is configurable. See &lt;a href=&#34;#config&#34;&gt;Configuration Options&lt;/a&gt; for more information about setting the control URL.&lt;/p&gt;
+
+&lt;p&gt;The control panel won&amp;rsquo;t automatically refresh , but if you create &lt;code&gt;HTTP::Recorder&lt;/code&gt; with &lt;code&gt;showwindow =&amp;gt; 1&lt;/code&gt;, a JavaScript popup window will be opened and refreshed every time something is recorded.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_06_04_recorder/control.jpg&#34; width=&#34;400&#34; height=&#34;425&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Goto Page.&lt;/strong&gt; You can enter a URL in the control panel to begin a recording session. For SSL sessions, the initial URL must be entered into this field rather than into the browser.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Current Script.&lt;/strong&gt; The current script is displayed in a textfield, which you can edit as you create it. Changes you make in the control panel won&amp;rsquo;t be saved until you click the Update button.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Update.&lt;/strong&gt; Saves changes made the script via the control panel. If you prefer to edit your script as you create it, you can save your changes as you make them.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Clear.&lt;/strong&gt; Deletes the current script and clears the text field.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Reset.&lt;/strong&gt; Reverts the text field to the currently saved version of the script. Any changes you&amp;rsquo;ve made to the script won&amp;rsquo;t be applied if you haven&amp;rsquo;t clicked Update.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Download.&lt;/strong&gt; Displays a plain text version of the script, suitable for saving.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Close.&lt;/strong&gt; Closes the window (using JavaScript).&lt;/p&gt;
+
+&lt;h4 id=&#34;updating-scripts-as-they-re-recorded&#34;&gt;Updating Scripts as They&amp;rsquo;re Recorded&lt;/h4&gt;
+
+&lt;p&gt;You can record many things, and then turn the recordings into scripts later, or you can make changes and additions as you go by editing the script in the &lt;a href=&#34;http://localhost:1313/pub/2004/06/04/recorder.html?page=1#control_panel&#34;&gt;Control Panel&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;For example, if you record filling in this form and clicking the Submit button:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_06_04_recorder/form1.jpg&#34; width=&#34;271&#34; height=&#34;36&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;HTTP::Recorder&lt;/code&gt; produces the following lines of code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $agent-&amp;gt;form_name(&amp;quot;form1&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;name&amp;quot;, &amp;quot;Linda Julien&amp;quot;);
+    $agent-&amp;gt;submit_form(form_name =&amp;gt; &amp;quot;form1&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, if you&amp;rsquo;re writing automated tests, you probably don&amp;rsquo;t want to enter hard-coded values into the form. You may want to re-write these lines of code so that they&amp;rsquo;ll accept a variable for the value of the &lt;code&gt;name&lt;/code&gt; field.&lt;/p&gt;
+
+&lt;p&gt;You can change the code to look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $name = &amp;quot;Linda Julien&amp;quot;;
+
+    $agent-&amp;gt;form_name(&amp;quot;form1&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;name&amp;quot;, $name);
+    $agent-&amp;gt;submit_form(form_name =&amp;gt; &amp;quot;form1&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or even this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub fill_in_name {
+      my $name = shift;
+
+      $agent-&amp;gt;form_name(&amp;quot;form1&amp;quot;);
+      $agent-&amp;gt;field(&amp;quot;name&amp;quot;, $name);
+      $agent-&amp;gt;submit_form(form_name =&amp;gt; &amp;quot;form1&amp;quot;);
+    }
+
+    fill_in_name(&amp;quot;Linda Julien&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then click the Update button. &lt;code&gt;HTTP::Recorder&lt;/code&gt; will save your changes, and you can continue recording as before.&lt;/p&gt;
+
+&lt;p&gt;You may also want to add tests as you go, making sure that the results of submitting the form were what you expected:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_06_04_recorder/form2.jpg&#34; width=&#34;242&#34; height=&#34;69&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;You can add tests to the script like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub fill_in_name {
+      my $name = shift;
+
+      $agent-&amp;gt;form_name(&amp;quot;form1&amp;quot;);
+      $agent-&amp;gt;field(&amp;quot;name&amp;quot;, $name);
+      $agent-&amp;gt;submit_form(form_name =&amp;gt; &amp;quot;form1&amp;quot;);
+    }
+
+    my $entry = &amp;quot;Linda Julien&amp;quot;;
+    fill_in_name($entry);
+
+    $agent-&amp;gt;content =~ /You entered this name: (.*)/;
+    is ($1, $entry);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;using-http-recorder-with-ssl&#34;&gt;Using &lt;code&gt;HTTP::Recorder&lt;/code&gt; with SSL&lt;/h4&gt;
+
+&lt;p&gt;In order to do what it does, &lt;code&gt;HTTP::Recorder&lt;/code&gt; relies on the ability to see and modify the contents of requests and their resulting responses&amp;hellip;and the whole point of SSL is to make sure you can&amp;rsquo;t easily do that. &lt;code&gt;HTTP::Recorder&lt;/code&gt; works around this, however, by handling the SSL connection to the server itself, and and communicating with your browser via plain HTTP.&lt;/p&gt;
+
+&lt;p&gt;*&lt;strong&gt;Caution:&lt;/strong&gt; Keep in mind that communication between your browser and &lt;code&gt;HTTP::Recorder&lt;/code&gt; isn&amp;rsquo;t encrypted, so take care when recording sensitive information, like passwords or credit card numbers. If you&amp;rsquo;re running the Recorder as a proxy on your local machine, you have less to worry about than if you&amp;rsquo;re running it as a proxy on a remote machine. The resulting script for playback will be encrypted as usual.*&lt;/p&gt;
+
+&lt;p&gt;If you want to record SSL sessions, here&amp;rsquo;s how you do it:&lt;/p&gt;
+
+&lt;p&gt;Start at the control panel, and enter the initial URL there rather than in your browser. Then interact with the web site as you normally would. &lt;code&gt;HTTP::Recorder&lt;/code&gt; will record form submissions, following links, etc.&lt;/p&gt;
+
+&lt;h4 id=&#34;replaying-your-scripts&#34;&gt;Replaying your Scripts&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;HTTP::Recorder&lt;/code&gt; getting pages, following links, filling in fields and submitting forms, etc., but it doesn&amp;rsquo;t (at this point) generate a complete perl script. Remember that you&amp;rsquo;ll need to add standard script headers and initialize the &lt;code&gt;WWW::Mechanize&lt;/code&gt; agent, with something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+
+    use strict;
+    use warnings;
+    use WWW::Mechanize;
+    use Test::More qw(no_plan);
+
+    my $agent = WWW::Mechanize-&amp;gt;new();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-config-configuration-options-span&#34;&gt;&lt;span id=&#34;config&#34;&gt;Configuration Options&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;Output file.&lt;/strong&gt; You can change the filename for the scripts that &lt;code&gt;HTTP::Recorder&lt;/code&gt; generates with the &lt;code&gt;$recorder-&amp;gt;file([$value])&lt;/code&gt; method. The default output file is &amp;lsquo;/tmp/scriptfile&amp;rsquo;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Prefix.&lt;/strong&gt; &lt;code&gt;HTTP::Recorder&lt;/code&gt; adds parameters to link URLs and adds fields to forms. By default, its parameters begin with &amp;ldquo;rec-&amp;rdquo;, but you can change this prefix with the &lt;code&gt;$recorder-&amp;gt;prefix([$value])&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Logger.&lt;/strong&gt; The &lt;code&gt;HTTP::Recorder&lt;/code&gt; distribution includes a default logging module, which outputs &lt;code&gt;WWW::Mechanize&lt;/code&gt; scripts. You can change the logger with the &lt;code&gt;$recorder-&amp;gt;logger([$value])&lt;/code&gt; method, replacing it with a logger that:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;subclasses the standard logger to provice special functionality unique to your site&lt;/li&gt;
+&lt;li&gt;outputs an entirely different type of script&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;RT (Request Tracker) 3.1 by &lt;a href=&#34;http://www.bestpractical.com/&#34;&gt;Best Practical Solutions&lt;/a&gt; has a Query Builder that&amp;rsquo;s a good example of a page that benefits from a custom logger:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_06_04_recorder/BuildQuery.jpg&#34; width=&#34;400&#34; height=&#34;312&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This page has several Field/Operator/Value groupings. Left to its own devices, the default &lt;code&gt;HTTP::Recorder::Logger&lt;/code&gt; will record every field for which a value has been set:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $agent-&amp;gt;form_name(&amp;quot;BuildQuery&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;ActorOp&amp;quot;, &amp;quot;=&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;AndOr&amp;quot;, &amp;quot;AND&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;TimeOp&amp;quot;, &amp;quot;&amp;lt;&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;WatcherOp&amp;quot;, &amp;quot;LIKE&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;QueueOp&amp;quot;, &amp;quot;=&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;PriorityOp&amp;quot;, &amp;quot;&amp;lt;&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;LinksOp&amp;quot;, &amp;quot;=&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;idOp&amp;quot;, &amp;quot;&amp;lt;&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;AttachmentField&amp;quot;, &amp;quot;Subject&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;ActorField&amp;quot;, &amp;quot;Owner&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;PriorityField&amp;quot;, &amp;quot;Priority&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;StatusOp&amp;quot;, &amp;quot;=&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;DateField&amp;quot;, &amp;quot;Created&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;TimeField&amp;quot;, &amp;quot;TimeWorked&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;LinksField&amp;quot;, &amp;quot;HasMember&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;WatcherField&amp;quot;, &amp;quot;Requestor.EmailAddress&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;AttachmentOp&amp;quot;, &amp;quot;LIKE&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;ValueOfAttachment&amp;quot;, &amp;quot;foo&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;DateOp&amp;quot;, &amp;quot;&amp;lt;&amp;quot;);
+    $agent-&amp;gt;submit_form(form_name =&amp;gt; &amp;quot;BuildQuery&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But on this page, there&amp;rsquo;s no need to record setting the values of fields (XField) and operators (XOp) unless a value (ValueOfX) has actually been set. We can do this with a custom logger that checks for the presence of a value, and only records the value of the field and operator fields if the value field has been set:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package HTTP::Recorder::RTLogger;
+
+    use strict;
+    use warnings;
+    use HTTP::Recorder::Logger;
+    our @ISA = qw( HTTP::Recorder::Logger );
+
+    sub SetFieldsAndSubmit {
+        my $self = shift;
+        my %args = (
+            name =&amp;gt; &amp;quot;&amp;quot;,
+            number =&amp;gt; undef,
+            fields =&amp;gt; {},
+            button_name =&amp;gt; {},
+            button_value =&amp;gt; {},
+            button_number =&amp;gt; {},
+            @_
+            );
+
+    $self-&amp;gt;SetForm(name =&amp;gt; $args{name}, number =&amp;gt; $args{number});
+    my %fields = %{$args{fields}};
+    foreach my $field (sort keys %fields) {
+        if ( $args{name} eq &#39;BuildQuery&#39; &amp;amp;&amp;amp;
+         ($field =~ /(.*)Op$/ || $field =~ /(.*)Field$/) &amp;amp;&amp;amp;
+         !exists ($fields{&#39;ValueOf&#39; . $1})) {
+        next;
+        }
+        $self-&amp;gt;SetField(name =&amp;gt; $field,
+                value =&amp;gt; $args{fields}-&amp;gt;{$field});
+    }
+    $self-&amp;gt;Submit(name =&amp;gt; $args{name},
+              number =&amp;gt; $args{number},
+              button_name =&amp;gt; $args{button_name},
+              button_value =&amp;gt; $args{button_value},
+              button_number =&amp;gt; $args{button_number},
+              );
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Tell &lt;code&gt;HTTP::Recorder&lt;/code&gt; to use the custom logger like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $logger = new HTTP::Recorder::RTLogger;
+    $agent-&amp;gt;logger($logger);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And it will record a much more reasonable number of things:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $agent-&amp;gt;form_name(&amp;quot;BuildQuery&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;AndOr&amp;quot;, &amp;quot;AND&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;AttachmentField&amp;quot;, &amp;quot;Subject&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;AttachmentOp&amp;quot;, &amp;quot;LIKE&amp;quot;);
+    $agent-&amp;gt;field(&amp;quot;ValueOfAttachment&amp;quot;, &amp;quot;foo&amp;quot;);
+    $agent-&amp;gt;submit_form(form_name =&amp;gt; &amp;quot;BuildQuery&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Control panel.&lt;/strong&gt; By default, you can access the &lt;code&gt;HTTP::Recorder&lt;/code&gt; control panel by using the Recorder to get &lt;code&gt;http://http-recorder&lt;/code&gt;. You can change this URL with the &lt;code&gt;$recorder-&amp;gt;control([$value])&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;h5 id=&#34;logger-options&#34;&gt;Logger Options&lt;/h5&gt;
+
+&lt;p&gt;&lt;strong&gt;Agent name.&lt;/strong&gt; By default, &lt;code&gt;HTTP::Recorder::Logger&lt;/code&gt; outputs scripts with the agent name &lt;code&gt;$agent&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     $agent-&amp;gt;follow_link(text =&amp;gt; &amp;quot;Foo&amp;quot;, n =&amp;gt; 1);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, if you prefer a different agent name (in order to drop recorded lines into existing scripts, conform to company conventions, etc.), you can change that with the &lt;code&gt;$logger-&amp;gt;agentname([value])&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     $recorder-&amp;gt;agentname(&amp;quot;mech&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will produce the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     $mech-&amp;gt;follow_link(text =&amp;gt; &amp;quot;Foo&amp;quot;, n =&amp;gt; 1);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;how-http-recorder-works&#34;&gt;How &lt;code&gt;HTTP::Recorder&lt;/code&gt; Works&lt;/h3&gt;
+
+&lt;p&gt;The biggest challenge to writing a web recorder is knowing what the user is doing, so that it can be recorded. A proxy can watch requests and responses go by, the only thing you&amp;rsquo;ll learn is the URL that was requested and its parameters. &lt;code&gt;HTTP::Recorder&lt;/code&gt; solves this problem by rewriting HTTP responses as they come through, and adding additional information to the page&amp;rsquo;s links and forms, so that it can extract that information again when the next request comes through.&lt;/p&gt;
+
+&lt;p&gt;As an example, a page might contain a link like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;a href=&amp;quot;http://www.cpan.org/&amp;quot;&amp;gt;CPAN&amp;lt;/a&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the user follows the link, and we want to record it, we need to know all of the relevant information about the action, so that we can produce a line of code that will replay the action. This includes:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;the fact that a link was followed.&lt;/li&gt;
+&lt;li&gt;the text of the link.&lt;/li&gt;
+&lt;li&gt;the URL of the link.&lt;/li&gt;
+&lt;li&gt;the index (in case there are multiple links on the page of the same name).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code&gt;HTTP::Recorder&lt;/code&gt; overloads LWP::UserAgent&amp;rsquo;s &lt;code&gt;send_request&lt;/code&gt; method, so that it can see requests and responses as they come through, and modify them as needed.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;HTTP::Recorder&lt;/code&gt; rewrites the link so that it looks like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;&amp;lt;a href=&amp;quot;http://www.cpan.org/?rec-url=http%3A%2F%2Fwww.cpan.org%2F&amp;amp;rec-action=follow&amp;amp;rec-text=CPAN&amp;amp;rec-index=1&amp;quot;&amp;gt;CPAN&amp;lt;/a&amp;gt;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;So, with the rewritten page, if the user follows this link, the request will contain all of the information needed to record the action.&lt;/p&gt;
+
+&lt;p&gt;Forms are handled likewise, with additional fields being added to the form so that the information can be extracted later. &lt;code&gt;HTTP::Recorder&lt;/code&gt; then removes the added parameters from the resulting request, and forwards the request along in something close to its originally intended state.&lt;/p&gt;
+
+&lt;h3 id=&#34;looking-ahead&#34;&gt;Looking Ahead&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;HTTP::Recorder&lt;/code&gt; won&amp;rsquo;t record 100% of every script you need to write, and while future versions will undoubtedly have more features, they still won&amp;rsquo;t write your scripts for you. However, it will record the simple things, and it will give you example code that you can cut, paste, and modify to write the scripts that you need.&lt;/p&gt;
+
+&lt;p&gt;Some ideas for the future include:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Choosing from a list of simple tests based on the fields on the page and their current values.&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;Threaded&amp;rdquo; recording, so that multiple sessions won&amp;rsquo;t be recorded in the same file, overlapped with each other.&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;Add script header&amp;rdquo; feature.&lt;/li&gt;
+&lt;li&gt;Supporting more configuration options from the control panel.&lt;/li&gt;
+&lt;li&gt;Other loggers.&lt;/li&gt;
+&lt;li&gt;JavaScript support.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;where-to-get-http-recorder&#34;&gt;Where to Get &lt;code&gt;HTTP::Recorder&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;The latest released version of &lt;code&gt;HTTP::Recorder&lt;/code&gt; is available at &lt;a href=&#34;https://metacpan.org/pod/HTTP::Recorder&#34;&gt;CPAN&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;contributions-requests-and-bugs&#34;&gt;Contributions, Requests, and Bugs&lt;/h3&gt;
+
+&lt;p&gt;Patches, feature requests, and problem reports are welcomed at &lt;a href=&#34;http://rt.cpan.org&#34;&gt;http://rt.cpan.org&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;You can subscribe to the mailing list for users and developers of HTTP::Recorder at &lt;a href=&#34;http://lists.fsck.com/mailman/listinfo/http-recorder&#34;&gt;http://lists.fsck.com/mailman/listinfo/http-recorder&lt;/a&gt;, or by sending email to http-recorder-request@lists.fsck.com with the subject &amp;ldquo;subscribe&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;The mailing list archives can be found at &lt;a href=&#34;http://lists.fsck.com/piper-mail/http-recorder&#34;&gt;http://lists.fsck.com/piper-mail/http-recorder&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;see-also&#34;&gt;See Also&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/WWW::Mechanize&#34;&gt;&lt;code&gt;WWW::Mechanize&lt;/code&gt;&lt;/a&gt; by Andy Lester.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/HTTP::Proxy&#34;&gt;&lt;code&gt;HTTP::Proxy&lt;/code&gt;&lt;/a&gt; by Phillipe &amp;ldquo;BooK&amp;rdquo; Bruhat.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Building Testing Libraries</title>
+      <link>http://localhost:1313/pub/2004/05/07/testing.html/</link>
+      <pubDate>Fri, 07 May 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/05/07/testing.html/</guid>
+      <description>
+
+&lt;p&gt;Testing is an important step in developing any important body of work. In today&amp;rsquo;s pragmatic culture, we&amp;rsquo;re taught to test first, test often, and design with tests. The expectation is that chanting &amp;ldquo;test test test&amp;rdquo; forgives all sins. To a large extent, this is true. Testing helps us produce quality software at all scales.&lt;/p&gt;
+
+&lt;p&gt;The extreme code produced by this extreme lifestyle hides in the test suite itself. Often the ugliest code we write resides in files with a .t extension. Riddled with redundant, ghastly expressions, the test suite is the collateral damage on our road to beautiful production code.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s review some common pitfalls made when testing. Many of these testing procedures may be new to you. Serious headway has been made in recent history with the testing libraries on the CPAN.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-test-file-is-just-a-program-a-test-file-is-just-a-program-span&#34;&gt;&lt;span id=&#34;A_Test_File_is_Just_a_Program&#34;&gt;A Test File is Just a Program&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Each test file is a program, just as important as any other program you&amp;rsquo;d write that uses software being tested. It must be treated with the same care. If you plan to use &lt;code&gt;strict&lt;/code&gt; and &lt;code&gt;warnings&lt;/code&gt; in a program related to the code you&amp;rsquo;re testing, be sure to do the same in your tests.&lt;/p&gt;
+
+&lt;p&gt;Each test file should start with these three lines.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/path/to/perl
+  use strict;
+  use warnings;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you plan to run your software in a taint-checked environment, which is considered a good idea, then supply the &lt;code&gt;-T&lt;/code&gt; command-line option to the &lt;code&gt;#!&lt;/code&gt; line.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/path/to/perl -T
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will ensure that you won&amp;rsquo;t make syntactic mistakes in your test files. It will also require your software to work correctly in a restricted environment.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-be-compatible-with-test-harness-be-compatible-with-test-harness-span&#34;&gt;&lt;span id=&#34;Be_Compatible_with_Test::Harness&#34;&gt;Be Compatible with &lt;code&gt;Test::Harness&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;Test::Harness&lt;/code&gt; is a very useful Perl module for running test suites. If you are building a Perl module yourself, and using &lt;code&gt;ExtUtils::MakeMaker&lt;/code&gt; or &lt;code&gt;Module::Build&lt;/code&gt; for the build process, you&amp;rsquo;re using &lt;code&gt;Test::Harness&lt;/code&gt;. If you aren&amp;rsquo;t using any of these mechanisms, do try to be compatible with it. This will help other users and developers of your software who are used to dealing with &lt;code&gt;Test::Harness&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Compatibility comes in the form of the test file&amp;rsquo;s output. &lt;code&gt;Test::Harness&lt;/code&gt; will run your program and record its output to &lt;code&gt;STDOUT&lt;/code&gt;. Anything sent to &lt;code&gt;STDERR&lt;/code&gt; is ignored, silently passed on to the user. There are particulars about testing under the harness that should be observed. The basics are simple.&lt;/p&gt;
+
+&lt;p&gt;When a test passes, it outputs a line containing &lt;code&gt;ok $N&lt;/code&gt;, where &lt;code&gt;$N&lt;/code&gt; is the test number. When a test fails, the line contains &lt;code&gt;not ok $N&lt;/code&gt;. Test numbers are optional but recommended. Tests may be named. Anything after the number, &lt;code&gt;$N&lt;/code&gt;, is considered the test name, up to a hash (&lt;code&gt;#&lt;/code&gt;). Anything following the hash is a comment.&lt;/p&gt;
+
+&lt;p&gt;Furthermore, you are encouraged to supply a header. The header tells &lt;code&gt;Test::Harness&lt;/code&gt; how many tests you expect to run and should be the first thing you output. If you&amp;rsquo;re unsure of the number of tests, the header may be the very last thing output. Its format is also simple: &lt;code&gt;1..$M&lt;/code&gt;, where &lt;code&gt;$M&lt;/code&gt; is the total number of tests to run. The header helps the harness figure out how well your tests did.&lt;/p&gt;
+
+&lt;p&gt;Any other output should be commented on lines beginning with a hash (&lt;code&gt;#&lt;/code&gt;). Here is an example of prototypical output understood by &lt;code&gt;Test::Harness&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  1..4
+  ok 1 - use Software::Module
+  ok 2 - object isa Software::Module
+  not ok 3 - $object-&amp;gt;true() should return true
+  #     Failed test (test.t)
+  #          got: undef
+  #     expected: 1
+  ok 4 # skip Net::DNS required for this test
+  # Looks like you failed 1 tests of 4.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-use-a-testing-module-use-a-testing-module-span&#34;&gt;&lt;span id=&#34;Use_a_Testing_Module&#34;&gt;Use a Testing Module&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;A simple way to achieve &lt;code&gt;Test::Harness&lt;/code&gt; compatibility is to use a testing module from the CPAN. Many test suites over the years have reinvented the &lt;code&gt;ok()&lt;/code&gt; function, for example.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  {
+    my $N = 1;
+    sub ok($;$) {
+        my ($test, $name) = @_;
+        print &amp;quot;not &amp;quot; unless $test;
+        print &amp;quot;ok $N - $name\n&amp;quot;;
+        $N++;
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is no need to do this, however. The standard Perl distribution comes with testing modules. Two great options are &lt;code&gt;Test::Simple&lt;/code&gt; and &lt;code&gt;Test::More&lt;/code&gt;. &lt;code&gt;Test::Simple&lt;/code&gt; is a great way to get your feet wet; it implements only the &lt;code&gt;ok()&lt;/code&gt; function. &lt;code&gt;Test::More&lt;/code&gt; has more features and is recommended when you write your test suites.&lt;/p&gt;
+
+&lt;p&gt;Using &lt;code&gt;Test::More&lt;/code&gt; is very simple; many have written on the subject. This is how you would achieve the output described in the previous section.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -T
+  use strict;
+  use warnings;
+  use Test::More tests =&amp;gt; 4;
+
+  use_ok &#39;Software::Module&#39;;
+  my $object = Software::Module-&amp;gt;new;
+  isa_ok $object, &#39;Software::Module&#39;, &#39;object&#39;;
+  cmp_ok $object-&amp;gt;true, 1, &#39;$object-&amp;gt;true() should return true&#39;;
+
+  SKIP: {
+      skip 1, &amp;quot;Net::DNS required for this test&amp;quot;
+        unless eval &#39;require Net::DNS&#39;;
+
+      ok $object-&amp;gt;network(), &amp;quot;run over network&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-don-t-iterate-compare-don-t-iterate-compare-span&#34;&gt;&lt;span id=&#34;Don&#39;t_Iterate,_Compare&#34;&gt;Don&amp;rsquo;t Iterate, Compare&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve often seen tests that loop over a list and check each item to be sure the list is correct. While this approach makes you feel good, artificially adding to the number of tests you&amp;rsquo;ve written, it can be sloppy and long-winded. Here is an example.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my @fruits = qw[apples oranges grapes];
+  my @result = get_fruits();
+  foreach my $n ( 0 .. $#fruits ) {
+      is $result[$n], $fruits[$n], &amp;quot;$fruits[$n] in slot $n&amp;quot;;
+  }
+  is scalar(@result), scalar(@fruits), &amp;quot;fruits the same size&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It looks like four tests were written; the reality is that one test was written poorly. &lt;code&gt;Test::More&lt;/code&gt; has several utility functions to get the job done. In this test, &lt;code&gt;@fruits&lt;/code&gt; represents a set of non-repeatable &lt;code&gt;fruits&lt;/code&gt; I expect to get back from &lt;code&gt;get_fruits()&lt;/code&gt;. As such, I can use &lt;code&gt;eq_set()&lt;/code&gt; to test this function in one quick try.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my @fruits = qw[apples oranges grapes];
+  my @result = get_fruits();
+  ok eq_set(\@result, \@fruits), &amp;quot;got [@fruits]&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That was easy and short. But what happens when you have a deep data structure that you&amp;rsquo;re dying to test? That&amp;rsquo;s where &lt;code&gt;Test::Deep&lt;/code&gt; comes in. Downloadable from the CPAN, this module provides the &lt;code&gt;cmp_deeply()&lt;/code&gt; function. Here is a simple example.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Test::Deep;
+  my $people = [
+    {
+      name     =&amp;gt; &amp;quot;Casey West&amp;quot;,
+      employer =&amp;gt; &amp;quot;pair Networks&amp;quot;,
+    },
+    {
+      name     =&amp;gt; &amp;quot;Larry Wall&amp;quot;,
+      employer =&amp;gt; &amp;quot;The Perl Foundation&amp;quot;,
+    },
+  ];
+
+  my $result = $dude-&amp;gt;contacts-&amp;gt;retrieve_all;
+
+  cmp_deeply $result, $people, &#39;contacts match&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example scratched the surface of what &lt;code&gt;Test::Deep&lt;/code&gt; is capable of. When you&amp;rsquo;ve got to test a complex data structure, especially in a complex way, use this module. Here is a more difficult example made testable by this module. In this example, &lt;code&gt;$dude-&amp;gt;contacts-&amp;gt;retrieve_all&lt;/code&gt; returns an unordered list of contacts with various bits of information associated with each of them.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Test::Deep;
+  my $person = {
+    name     =&amp;gt; re(&amp;quot;^[\w\s]+$&amp;quot;),
+    employer =&amp;gt; ignore(),
+    age      =&amp;gt; code(sub { shift &amp;gt; 18 }),
+  };
+  my $people = array_each($person);
+  my $result = $dude-&amp;gt;contacts-&amp;gt;retrieve_all;
+
+  cmp_deeply $result, $people, &#39;contacts match&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code, using only functions exported by &lt;code&gt;Test::Deep&lt;/code&gt;, does a lot of work. Each person has a definition that should match &lt;code&gt;$person&lt;/code&gt;. Every person in the &lt;code&gt;$result&lt;/code&gt; list is a hash reference containing three elements. &lt;code&gt;name&lt;/code&gt; must match the regular expression &lt;code&gt;/^[\w\s]+$/&lt;/code&gt;, &lt;code&gt;employer&lt;/code&gt; must exist and its value is ignored, and &lt;code&gt;age&lt;/code&gt; should be over &lt;code&gt;18&lt;/code&gt; or it will fail. &lt;code&gt;array_each()&lt;/code&gt; returns an object that instructs &lt;code&gt;cmp_deeply&lt;/code&gt; that every value in a list must match the definition provided.&lt;/p&gt;
+
+&lt;p&gt;This small amount of code accomplishes quite a lot. &lt;code&gt;Test::Deep&lt;/code&gt; has saved us from wasting time and working hard to solve a difficult problem. It has made the hard things possible.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-don-t-let-pod-go-unchecked-don-t-let-pod-go-unchecked-span&#34;&gt;&lt;span id=&#34;Don&#39;t_Let_POD_go_Unchecked&#34;&gt;Don&amp;rsquo;t Let POD go Unchecked&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Documentation is just as important as code, or tests. There are several ways to care for POD in your test suite. First, it&amp;rsquo;s important to keep it well-formed. For this, we turn to &lt;code&gt;Test::Pod&lt;/code&gt;. This Perl module takes all the work out of testing POD with a useful function &lt;code&gt;all_pod_files_ok()&lt;/code&gt;. Simply create a new test program with the following contents.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Test::More;
+  plan skip_all =&amp;gt; &amp;quot;Test::Pod 1.00 required for testing POD&amp;quot;
+    unless eval &amp;quot;use Test::Pod 1.00&amp;quot;;
+  all_pod_files_ok();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yes, it really is that simple. When you run this program, it will test all the POD it finds in your &lt;em&gt;blib&lt;/em&gt; directory.&lt;/p&gt;
+
+&lt;p&gt;Another simple test we can run on the documentation is coverage analysis. What good is documentation if it doesn&amp;rsquo;t document completely? &lt;code&gt;Test::Pod::Coverage&lt;/code&gt; is the right module for the job, yet another gem that hides all the hard work from us with a simple function, &lt;code&gt;all_pod_coverage_ok()&lt;/code&gt;. Again, we&amp;rsquo;ll create a new test program.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Test::More;
+  plan skip_all =&amp;gt; &amp;quot;Test::Pod::Coverage 1.08 required for testing POD coverage&amp;quot;
+    unless eval &amp;quot;use Test::Pod::Coverage 1.08&amp;quot;;
+  all_pod_coverage_ok();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Coverage is only half of the battle. Remember, &lt;code&gt;Test::Pod::Coverage&lt;/code&gt; can&amp;rsquo;t tell you if your documentation is actually correct and thorough.&lt;/p&gt;
+
+&lt;p&gt;In both of these examples, we use the &lt;code&gt;plan&lt;/code&gt; function exported from &lt;code&gt;Test::More&lt;/code&gt; to allow us to &amp;ldquo;bail out&amp;rdquo; of our tests if the appropriate Perl module isn&amp;rsquo;t installed. This makes our POD tests optional. If you don&amp;rsquo;t want them to be optional, remove that line and be sure to list them as prerequisites for building and installing your software.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-know-what-you-re-testing-know-what-you-re-testing-span&#34;&gt;&lt;span id=&#34;Know_What_You&#39;re_Testing&#34;&gt;Know What You&amp;rsquo;re Testing&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One of the biggest testing mistakes is to assume that you know what you&amp;rsquo;re testing. Tests are designed to exercise your software. Let your test exercise the good and bad portions of your software. Make it succeed and, most importantly, make it fail. Superior test coverage digs deep into every line of code you&amp;rsquo;ve written. How do you know if your tests are amazing? Coverage analysis.&lt;/p&gt;
+
+&lt;p&gt;Code coverage isn&amp;rsquo;t something you can guess; you need good tools. Perl has a good tool: &lt;code&gt;Devel::Cover&lt;/code&gt;. This module creates a database that maps actual execution to your source code. It analyzes statements, branches, conditions, subroutines, and even POD and execution time. It then provides a total for all of these areas, as well as a total for each Perl module. It&amp;rsquo;s very simple to use, adding just a little to your &lt;code&gt;make test&lt;/code&gt; process.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;gt; cover -delete
+  &amp;gt; HARNESS_PERL_SWITCHES=-MDevel::Cover make test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first command deletes any existing coverage database. On the second line we set an environment variable for &lt;code&gt;Test::Harness&lt;/code&gt;, &lt;code&gt;HARNESS_PERL_SWITCHES&lt;/code&gt; to a Perl command-line switch that imports &lt;code&gt;Devel::Caller&lt;/code&gt;. This is all that&amp;rsquo;s required of you. Each of your test programs will now run with &lt;code&gt;Devel::Caller&lt;/code&gt; loaded and analyzing execution in the background.&lt;/p&gt;
+
+&lt;p&gt;To see your coverage database on the command line, issue one command.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;gt; cover
+  ---------------------------- ------ ------ ------ ------ ------ ------ ------
+  File                           stmt branch   cond    sub    pod   time  total
+  ---------------------------- ------ ------ ------ ------ ------ ------ ------
+  blib/lib/List/Group.pm         94.7   66.7   33.3  100.0  100.0  100.0   81.6
+  Total                          94.7   66.7   33.3  100.0  100.0  100.0   81.6
+  ---------------------------- ------ ------ ------ ------ ------ ------ ------
+
+  Writing HTML output to ~/cvs/perl/modules/List-Group/cover_db/coverage.html ...
+  done.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, I could&amp;rsquo;ve done better. But what did I fail to test? Notice that &lt;code&gt;cover&lt;/code&gt; wrote some HTML output. That is the diamond in the rough; the HTML output details everything. Each module has its own series of web pages detailing each of the coverage groups. I did particularly poorly on the conditional coverage &amp;ndash; let&amp;rsquo;s see how.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_05_07_testing/figure1.jpg&#34; width=&#34;405&#34; height=&#34;290&#34; /&gt;
+Now it&amp;rsquo;s become clear. My tests never allow either of the two statements in this condition to succeed. All of my tests make the first statement fail; the second is never executed. I need to update my tests with at least two more for &lt;code&gt;100.0&lt;/code&gt; conditional coverage. The first test will supply a non-number for the &lt;code&gt;$number&lt;/code&gt; variable. The second will supply a value for the &lt;code&gt;$group_by&lt;/code&gt; variable that doesn&amp;rsquo;t exist in the list for which &lt;code&gt;grep&lt;/code&gt; is looking.&lt;/p&gt;
+
+&lt;p&gt;Testing for coverage is a noble goal. I find this method very useful when writing tests for existing software. There are many situations you may think you&amp;rsquo;re testing well. Don&amp;rsquo;t guess; know. Coverage analysis is equally useful for new development. If you&amp;rsquo;ve adopted the &amp;ldquo;test first&amp;rdquo; method and your coverage isn&amp;rsquo;t 100 percent, something is wrong. Either your tests need help, or you&amp;rsquo;ve written more code than originally required.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-keep-test-files-organized-keep-test-files-organized-span&#34;&gt;&lt;span id=&#34;Keep_Test_Files_Organized&#34;&gt;Keep Test Files Organized&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Perl software distributions follow several widely adopted guidelines concerning tests. The rules are simple: test files should reside in a &lt;em&gt;t/&lt;/em&gt; directory, and each test file ends in a .t extension. &lt;code&gt;Test::Harness&lt;/code&gt; understands these rules and &lt;code&gt;make test&lt;/code&gt; will run every file that abides by them.&lt;/p&gt;
+
+&lt;p&gt;The filename can be anything you like. It&amp;rsquo;s a good idea to use descriptive filenames instead of just digits or numerical words. Good examples are &lt;em&gt;pod-coverage.t&lt;/em&gt;, &lt;em&gt;software-class-api.t&lt;/em&gt;, and &lt;em&gt;compile.t&lt;/em&gt;. Sometimes it&amp;rsquo;s desirable to determine the order in which your test files will be run. In these cases, prefix the filename with a number. If you want compilation tests to run first and POD tests last, name them accordingly as &lt;em&gt;00-compile.t&lt;/em&gt; and &lt;em&gt;99-pod-coverage.t&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-looking-ahead-looking-ahead-span&#34;&gt;&lt;span id=&#34;Looking_Ahead&#34;&gt;Looking Ahead&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Testing can be a tedious, difficult job. By this point, you have a number of helpful tools to make the task easier. There are many more testing modules on the CPAN that could have been covered here; I encourage you to explore them all.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

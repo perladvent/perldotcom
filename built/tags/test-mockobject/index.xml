@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Test Mockobject on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/test-mockobject/</link>
+    <description>Recent content in Test Mockobject on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 07 Apr 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/test-mockobject/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Perl Code Kata: Mocking Objects</title>
+      <link>http://localhost:1313/pub/2005/04/07/mockobject_kata.html/</link>
+      <pubDate>Thu, 07 Apr 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/04/07/mockobject_kata.html/</guid>
+      <description>
+
+&lt;p&gt;The last Perl Code Kata was on &lt;a href=&#34;https://metacpan.org/pod/DBD::Mock&#34;&gt;DBD::Mock&lt;/a&gt;, a mock DBI driver which is useful for &lt;a href=&#34;http://localhost:1313/pub/2005/02/10/database_kata.html&#34;&gt;testing Perl DBI applications&lt;/a&gt;. This Kata delves once again into the world of mock objects, this time using the more general &lt;a href=&#34;https://metacpan.org/pod/Test::MockObject&#34;&gt;Test::MockObject&lt;/a&gt; module.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-are-mock-objects&#34;&gt;What are Mock Objects?&lt;/h3&gt;
+
+&lt;p&gt;Mock objects are exactly what they sound like: &amp;ldquo;mocked&amp;rdquo; or &amp;ldquo;fake&amp;rdquo; objects. Through the power of polymorphism, it&amp;rsquo;s easy to swap one object for another object which implements the same interface. Mock objects take advantage of this fact, allowing you to substitute the &lt;em&gt;most minimally mocked implementation of an object possible&lt;/em&gt; for the real one during testing. This allows a greater degree of isolation within your tests, which is just an all around good thing.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-are-mock-objects-good-for&#34;&gt;What are Mock Objects Good For?&lt;/h3&gt;
+
+&lt;p&gt;Mock objects are primarily useful when writing unit tests. They share a certain similarity with the Null Object pattern in that they are purposefully &lt;em&gt;not&lt;/em&gt; meant to work. Mock objects take things one step further and allow you to mock certain actions or reactions that your mock object should have, so they are especially useful in scenarios usually considered &lt;em&gt;hard to test&lt;/em&gt;. Here is a short list of some scenarios in which mock objects make hard things easy.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests which depend on outside resources such as networks, databases, etc.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;If your code properly encapsulates any outside resources, then it should be possible to substitute a mocked object in its place during testing. This is especially useful when you have little control over the execution environment of your module. The previous Test Code Kata illustrated this by mocking the database itself. You need not stop with databases; you can mock any sufficiently encapsulated resource such as network connections, files, or miscellaneous external devices.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests for which dependencies require a lot of setup.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Sometimes your object will have a dependency which requires a large amount of set-up code. The more non-test code in your tests, the higher the possibility that it will contain a bug which can then corrupt your test results. Many times your code uses only a small portion of this hard-to-setup dependency as well. Mock objects can help simplify things by allowing you to create the most minimally mocked implementation of an object and its dependencies possible, thus removing the burden of the set-up code and reducing the possibility of bugs in your non-test code.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests for failures; in particular, failure edge cases.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Testing for failures can sometimes be very difficult to do, especially when the failure is not immediate, but triggered by a more subtle set of interactions. Using mock objects, it is possible to achieve exacting control over when, where, and why your object will fail. Mock objects often make this kind of testing trivial.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests with optional dependencies.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Good code should be flexible code. Many times this means that your code needs to adapt to many different situations and many different environments based on the resources available at runtime. Requiring the presence of these situations and/or environments in order to test your code can be very difficult to set up or to tear down. Just as with testing failures, it is possible to use mock objects to achieve a high degree of control over your environment and mock the situations you need to test.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;the-problem&#34;&gt;The Problem&lt;/h3&gt;
+
+&lt;p&gt;The example code for this kata illustrates as many points as possible about which mock objects are good at testing. Here is the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Site::Member;
+
+use strict;
+our $VERSION = &#39;0.01&#39;;
+
+sub new { bless { ip_address =&amp;gt; &#39;&#39; }, shift }
+
+sub ip_address { 
+    my ($self, $ip_address) = @_;
+    $self-&amp;gt;{ip_address} = $ip_address if $ip_address;
+    return $self-&amp;gt;{ip_address};
+}
+
+# ...
+
+sub city {
+    my ($self) = @_;
+    eval &amp;quot;use Geo::IP&amp;quot;;
+    if ($@) {
+        warn &amp;quot;You must have Geo::IP installed for this feature&amp;quot;;
+        return;
+    }
+    my $geo = Geo::IP-&amp;gt;open(
+                &amp;quot;/usr/local/share/GeoIP/GeoIPCity.dat&amp;quot;, 
+                Geo::IP-&amp;gt;GEOIP_STANDARD
+            ) || die &amp;quot;Could not create a Geo::IP object with City data&amp;quot;;
+    my $record = $geo-&amp;gt;record_by_addr($self-&amp;gt;ip_address());
+    return $record-&amp;gt;city();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example code comes from a fictional online community software package. Many such sites offer user homepages which can display all sorts of user information. As an optional feature, the software can use the member&amp;rsquo;s IP address along with the &lt;a href=&#34;https://metacpan.org/pod/Geo::IP&#34;&gt;Geo::IP&lt;/a&gt; module to determine the user&amp;rsquo;s city. The reason this feature is optional is that while &lt;code&gt;Geo::IP&lt;/code&gt; and the C library it uses are both free, the city data is not.&lt;/p&gt;
+
+&lt;p&gt;The use cases suggest testing for the following scenarios:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;User does not have &lt;code&gt;Geo::IP&lt;/code&gt; installed.&lt;/li&gt;
+&lt;li&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; installed but does not have the city data.&lt;/li&gt;
+&lt;li&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; and city data installed correctly.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Using &lt;code&gt;Test::MockObject&lt;/code&gt;, take thirty to forty minutes and see if you can write tests which cover all these use cases.&lt;/p&gt;
+
+&lt;h3 id=&#34;tips-tricks-and-suggestions&#34;&gt;Tips, Tricks, and Suggestions&lt;/h3&gt;
+
+&lt;p&gt;Some of the real strengths of &lt;code&gt;Test::MockObject&lt;/code&gt; lie in its adaptability and how simply it adapts. All &lt;code&gt;Test::MockObject&lt;/code&gt; sessions begin with creating an instance.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $mock = Test::MockObject-&amp;gt;new();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even just this much can be useful because a &lt;code&gt;Test::MockObject&lt;/code&gt; instance warns about all un-mocked methods called on it. I have used this &amp;ldquo;feature&amp;rdquo; to help trace calls while writing complex tests.&lt;/p&gt;
+
+&lt;p&gt;The next step is to mock some methods. The simplest approach is to use the &lt;code&gt;mock&lt;/code&gt; method. It takes a method name and a subroutine reference. Every time something calls that method on the object, your &lt;code&gt;$mock&lt;/code&gt; instance will run that sub.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$mock-&amp;gt;mock(&#39;greetings&#39; =&amp;gt; sub {
+    my ($mock, $name) = @_;
+    return &amp;quot;Hello $name&amp;quot;;
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How much simpler could it be?&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Test::MockObject&lt;/code&gt; also offers several pre-built mock method builders, such as &lt;code&gt;set_true&lt;/code&gt;, &lt;code&gt;set_false&lt;/code&gt;, and &lt;code&gt;set_always&lt;/code&gt;. These methods pretty much DWIM.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$mock-&amp;gt;set_true(&#39;foo&#39;); # the foo() method will return true
+$mock-&amp;gt;set_false(&#39;bar&#39;); # the bar() method will return false
+$mock-&amp;gt;set_always(&#39;baz&#39; =&amp;gt; 100); # the bar() method will always return 100
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s even possible for the object to mock not only the methods, but its class as well. The simplest approach is to use the &lt;code&gt;set_isa&lt;/code&gt; method to tell the &lt;code&gt;$mock&lt;/code&gt; object to pretend that it belongs to another class.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$mock-&amp;gt;set_isa(&#39;Foo::Bar&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, any code that calls this mock object&amp;rsquo;s &lt;code&gt;isa()&lt;/code&gt; method will believe that the &lt;code&gt;$mock&lt;/code&gt; is a &lt;code&gt;Foo::Bar&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;p&gt;In many cases, it is enough to substitute a &lt;code&gt;$mock&lt;/code&gt; instance for a real one and let polymorphism do the rest. Other times it is necessary to inject control into the code much earlier than this. This is where the &lt;code&gt;fake_module&lt;/code&gt; method comes in.&lt;/p&gt;
+
+&lt;p&gt;With the &lt;code&gt;fake_module&lt;/code&gt; method, &lt;code&gt;Test::MockObject&lt;/code&gt; can subvert control of an entire package such that it will intercept any calls to that package. The following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Foo::Bar&#39; =&amp;gt; (
+    &#39;import&#39; =&amp;gt; sub { die &amp;quot;Foo::Bar could not be loaded&amp;quot; }
+));
+use_ok(&#39;Foo::Bar&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;actually gives the illusion that the &lt;code&gt;Foo::Bar&lt;/code&gt; module failed to load regardless of whether the user has it installed. These kinds of edge cases can be very difficult to test, but &lt;code&gt;Test::MockObject&lt;/code&gt; simplifies them greatly.&lt;/p&gt;
+
+&lt;p&gt;But wait, that&amp;rsquo;s not all.&lt;/p&gt;
+
+&lt;p&gt;After your tests have run using your mock objects, it is possible to inspect the methods called on them and query the order of their calls. You can even inspect the arguments passed into these methods. There several methods for this, so I refer you to the POD documentation of &lt;code&gt;Test::MockObject&lt;/code&gt; for details.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-solution&#34;&gt;The Solution&lt;/h3&gt;
+
+&lt;p&gt;I designed each use case to illustrate a different capability of &lt;code&gt;Test::MockObject&lt;/code&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;User does not have Geo::IP installed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 4;
+use Test::MockObject;
+
+my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Geo::IP&#39; =&amp;gt; (
+    &#39;import&#39; =&amp;gt; sub { die &amp;quot;Could not load Geo::IP&amp;quot; },
+));
+
+use_ok(&#39;Site::Member&#39;);
+
+my $u = Site::Member-&amp;gt;new();
+isa_ok($u, &#39;Site::Member&#39;);
+
+my $warning;
+local $SIG{__WARN__} = sub { $warning = shift };
+
+ok(!defined($u-&amp;gt;city()), &#39;... this should return undef&#39;);
+like($warning, 
+        qr/^You must have Geo\:\:IP installed for this feature/, 
+        &#39;... and we should have our warning&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This use case illustrates the use of &lt;code&gt;Test::MockObject&lt;/code&gt; to mock the failure of the loading of an optional resource, which in this case is the &lt;code&gt;Geo::IP&lt;/code&gt; module.&lt;/p&gt;
+
+&lt;p&gt;The sample code attempts to load &lt;code&gt;Geo::IP&lt;/code&gt; by calling &lt;code&gt;eval &amp;quot;use Geo::IP&amp;quot;&lt;/code&gt;. Because &lt;code&gt;use&lt;/code&gt; always calls a module&amp;rsquo;s &lt;code&gt;import&lt;/code&gt; method, it is possible to exploit this and mock a &lt;code&gt;Geo::IP&lt;/code&gt; load failure. This is easy to accomplish by using the &lt;code&gt;fake_module&lt;/code&gt; method and making the &lt;code&gt;import&lt;/code&gt; method die. This then triggers the warning code in the &lt;code&gt;city&lt;/code&gt; method, which the &lt;code&gt;$SIG{__WARN__}&lt;/code&gt; handler captures into &lt;code&gt;$warning&lt;/code&gt; for a later test.&lt;/p&gt;
+
+&lt;p&gt;This is an example of a failure edge case which would be difficult to test without &lt;code&gt;Test::MockObject&lt;/code&gt; because it requires control of the Perl libraries installed. Testing this without &lt;code&gt;Test::MockObject&lt;/code&gt; would require altering the &lt;code&gt;@INC&lt;/code&gt; in subtle ways or mocking a &lt;code&gt;Geo::IP&lt;/code&gt; package of your own. &lt;code&gt;Test::MockObject&lt;/code&gt; does that for you, so why bother to re-invent a wheel if you don&amp;rsquo;t need to?&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; installed but does not have the city data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 3;
+use Test::Exception;
+use Test::MockObject;
+
+my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Geo::IP&#39; =&amp;gt; (
+    &#39;open&#39;           =&amp;gt; sub { undef },
+    &#39;GEOIP_STANDARD&#39; =&amp;gt; sub { 0 }
+));
+
+use_ok(&#39;Site::Member&#39;);
+
+my $u = Site::Member-&amp;gt;new();
+isa_ok($u, &#39;Site::Member&#39;);
+
+$u-&amp;gt;ip_address(&#39;64.40.146.219&#39;);
+
+throws_ok {
+    $u-&amp;gt;city()
+} qr/Could not create a Geo\:\:IP object/, &#39;... got the error we expected&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This next use case illustrates the use of &lt;code&gt;Test::MockObject&lt;/code&gt; to mock a dependency relationship, in particular the failure case where &lt;code&gt;Geo::IP&lt;/code&gt; cannot find the specified database file.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Geo::IP&lt;/code&gt; follows the common Perl idiom of returning &lt;code&gt;undef&lt;/code&gt; if the object constructor fails. The example code tests for this case and throws an exception if it comes up. Testing for this failure uses the &lt;code&gt;fake_module&lt;/code&gt; method again to hijack &lt;code&gt;Geo::IP&lt;/code&gt; and install a mocked version of its &lt;code&gt;open&lt;/code&gt; method (the code also fakes the &lt;code&gt;GEOIP_STANDARD&lt;/code&gt; constant here). The mocked &lt;code&gt;open&lt;/code&gt; simply returns &lt;code&gt;undef&lt;/code&gt; which will create the proper conditions to trigger the exception in the example code. The exception is then caught using the &lt;code&gt;throws_ok&lt;/code&gt; method of the &lt;a href=&#34;https://metacpan.org/pod/Test::Exception&#34;&gt;Test::Exception&lt;/a&gt; module.&lt;/p&gt;
+
+&lt;p&gt;This example illustrates that it is still possible to mock objects even if your code is not in the position to pass in a mocked instance itself. Again, to test this without using &lt;code&gt;Test::MockObject&lt;/code&gt; would require control of the outside environment (the &lt;code&gt;Geo::IP database&lt;/code&gt; file), or in some way having control over where &lt;code&gt;Geo::IP&lt;/code&gt; looks for the database file. While well-written and well-architected code would probably allow you to alter the database file path and therefore test this without using mock objects, the mock object version makes no such assumptions and therefore works the same in either case.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; and the Geo-IP city data installed correctly.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 7;
+use Test::MockObject;
+
+my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Geo::IP&#39; =&amp;gt; (
+    &#39;open&#39;           =&amp;gt; sub { $mock },
+    &#39;GEOIP_STANDARD&#39; =&amp;gt; sub { 0 }
+));
+
+my $mock_record = Test::MockObject-&amp;gt;new();
+$mock_record-&amp;gt;set_always(&#39;city&#39;, &#39;New York City&#39;);
+
+$mock-&amp;gt;set_always(&#39;record_by_addr&#39;, $mock_record);
+
+use_ok(&#39;Site::Member&#39;);
+
+my $u = Site::Member-&amp;gt;new();
+isa_ok($u, &#39;Site::Member&#39;);
+
+$u-&amp;gt;ip_address(&#39;64.40.146.219&#39;);
+
+is($u-&amp;gt;city(), &#39;New York City&#39;, &#39;... got the right city&#39;);
+
+cmp_ok($mock-&amp;gt;call_pos(&#39;record_by_addr&#39;), &#39;==&#39;, 0,
+        &#39;... our mock object was called&#39;);
+is_deeply(
+        [ $mock-&amp;gt;call_args(0) ],
+        [ $mock, &#39;64.40.146.219&#39; ],
+        &#39;... our mock was called with the right args&#39;);
+
+cmp_ok($mock_record-&amp;gt;call_pos(&#39;city&#39;), &#39;==&#39;, 0,
+        &#39;... our mock record object was called&#39;);
+is_deeply(
+        [ $mock_record-&amp;gt;call_args(0) ],
+        [ $mock_record ],
+        &#39;... our mock record was called with the right args&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This next case illustrates a success case, where &lt;code&gt;Geo::IP&lt;/code&gt; finds the database file it wants and returns the expected results.&lt;/p&gt;
+
+&lt;p&gt;Once again, the &lt;code&gt;fake_module&lt;/code&gt; method of &lt;code&gt;Test::MockObject&lt;/code&gt; mocks &lt;code&gt;Geo::IP&lt;/code&gt;&amp;rsquo;s &lt;code&gt;open&lt;/code&gt; method, this time returning the &lt;code&gt;$mock&lt;/code&gt; instance itself. The code creates another mock object, this time for the &lt;code&gt;Geo::IP::Record&lt;/code&gt; instance which &lt;code&gt;Geo::IP&lt;/code&gt;&amp;rsquo;s &lt;code&gt;record_by_addr&lt;/code&gt; returns. &lt;code&gt;Test::MockObject&lt;/code&gt;&amp;rsquo;s &lt;code&gt;set_always&lt;/code&gt; method mocks the &lt;code&gt;city&lt;/code&gt; method for the &lt;code&gt;$mock_record&lt;/code&gt; instance. After this, &lt;code&gt;Geo::IP&lt;/code&gt;&amp;rsquo;s &lt;code&gt;record_by_addr&lt;/code&gt; is mocked to return the &lt;code&gt;$mock_record&lt;/code&gt; instance. With all of these mocks in place, the tests then run. After that, inspecting the mock objects ensures that the code called the correct methods on the mocked objects in the correct order and with the correct arguments.&lt;/p&gt;
+
+&lt;p&gt;This example illustrates testing success without needing to worry about the existence of an outside dependency. &lt;code&gt;Test::MockObject&lt;/code&gt; supports taking this test one step further and providing methods for inspecting the details of the interaction between the example code and that of the mocked &lt;code&gt;Geo::IP&lt;/code&gt; module. Accomplishing this test without &lt;code&gt;Test::MockObject&lt;/code&gt; would be almost impossible given the lack of control over the &lt;code&gt;Geo::IP&lt;/code&gt; module and its internals.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Mock objects can seem complex and overly abstract at first, but once grasped they can be a simple, clean way to make hard things easy. I hope to have shown how creating simple and minimal mock object with &lt;code&gt;Test::MockObject&lt;/code&gt; can help in testing cases which might be difficult using more traditional means.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

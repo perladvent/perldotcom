@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sorting on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/sorting/</link>
+    <description>Recent content in Sorting on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 31 Aug 2011 06:00:01 -0800</lastBuildDate>
+    <atom:link href="/tags/sorting/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>What&#39;s Wrong with sort and How to Fix It</title>
+      <link>http://localhost:1313/pub/2011/08/whats-wrong-with-sort-and-how-to-fix-it.html/</link>
+      <pubDate>Wed, 31 Aug 2011 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/08/whats-wrong-with-sort-and-how-to-fix-it.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;By now, you may have read &lt;a href=&#34;http://stackoverflow.com/questions/6162484/why-does-modern-perl-avoid-utf-8-by-default/6163129#6163129&#34;&gt;Considerations on Using Unicode Properly in Modern Perl Applications&lt;/a&gt;. Still think doing things correctly is easy? Tom Christiansen demonstrates that even sorting can be trickier than you think.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;NOTE&lt;/strong&gt;: The following is an excerpt from the draft manuscript of &lt;em&gt;Programming Perl&lt;/em&gt;, 4ᵗʰ edition&lt;/p&gt;
+
+&lt;p&gt;Calling &lt;code&gt;sort&lt;/code&gt; without a comparison function is quite often the wrong thing to do, even on plain text. That&amp;rsquo;s because if you use a bare sort, you can get really strange results. It&amp;rsquo;s not just Perl either: almost all programming languages work this way, even the shell command. You might be surprised to find that with this sort of nonsense sort, ‹B› comes before ‹a› not after it, ‹é› comes before ‹ｄ›, and ‹ﬀ› comes after ‹zz›. There&amp;rsquo;s no end to such silliness, either; see the default sort tables at the end of this article to see what I mean.&lt;/p&gt;
+
+&lt;p&gt;There are situations when a bare &lt;code&gt;sort&lt;/code&gt; is appropriate, but fewer than you think. One scenario is when every string you&amp;rsquo;re sorting contains nothing but the 26 lowercase (or uppercase, but not both) Latin letters from ‹a-z›, without any whitespace or punctuation.&lt;/p&gt;
+
+&lt;p&gt;Another occasion when a simple, unadorned &lt;code&gt;sort&lt;/code&gt; is appropriate is when you have no other goal but to iterate in an order that is merely repeatable, even if that order should happen to be completely arbitrary. In other words, yes, it&amp;rsquo;s garbage, but it&amp;rsquo;s the same garbage this time as it was last time. That&amp;rsquo;s because the default &lt;code&gt;sort&lt;/code&gt; resorts to an unmediated &lt;code&gt;cmp&lt;/code&gt; operator, which has the &amp;ldquo;predictable garbage&amp;rdquo; characteristics I just mentioned.&lt;/p&gt;
+
+&lt;p&gt;The last situation is much less frequent than the first two. It requires that the things you&amp;rsquo;re sorting be special‐purpose, dedicated binary keys whose bit sequences have with excruciating care been arranged to sort in some prescribed fashion. This is also the strategy for any reasonable use of the &lt;code&gt;cmp&lt;/code&gt; operator.&lt;/p&gt;
+
+&lt;h2 id=&#34;so-what-s-wrong-with-sort-anyway&#34;&gt;&lt;strong&gt;So what&amp;rsquo;s wrong with &lt;code&gt;sort&lt;/code&gt; anyway?&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;I know, I know. I can hear everyone saying, &amp;ldquo;But it&amp;rsquo;s called &lt;code&gt;sort&lt;/code&gt;, so how could that ever be wrong?&amp;rdquo; Sure it&amp;rsquo;s called &lt;code&gt;sort&lt;/code&gt;, but you still have to know how to use it to get useful results out. &lt;strong&gt;&lt;em&gt;Probably the most surprising thing about &lt;code&gt;sort&lt;/code&gt; is that it does not by default do an alphabetic, an alphanumeric, or a numeric sort.&lt;/em&gt;&lt;/strong&gt; What it actually does is something else altogether, and that something else is of surprisingly limited usefulness.&lt;/p&gt;
+
+&lt;p&gt;Imagine you have an array of records. It does you virtually no good to write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@sorted_recs = sort @recs;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because Perl&amp;rsquo;s &lt;code&gt;cmp&lt;/code&gt; operator does only a bit comparison not an alphabetic one, it does nearly as little good to write your record sort this way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@srecs = sort {
+    $b-&amp;gt;{AGE}      &amp;lt;=&amp;gt;  $b-&amp;gt;{AGE}
+                   ||
+    $a-&amp;gt;{SURNAME}  cmp  $b-&amp;gt;{SURNAME}
+} @recs;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The problem is that that &lt;code&gt;cmp&lt;/code&gt; for the record&amp;rsquo;s &lt;code&gt;SURNAME&lt;/code&gt; field is &lt;em&gt;not&lt;/em&gt; an alphabetic comparison. It&amp;rsquo;s merely a code point comparison. That means it works like C&amp;rsquo;s &lt;code&gt;strcmp&lt;/code&gt; function or Java&amp;rsquo;s &lt;code&gt;String.compareTo&lt;/code&gt; method. Although commonly referred to as a &amp;ldquo;lexicographic&amp;rdquo; comparison, this is a gross misnomer: it&amp;rsquo;s about as far away from the way &lt;em&gt;real&lt;/em&gt; lexicographers sort dictionary entries as you can get without flipping a coin.&lt;/p&gt;
+
+&lt;p&gt;Fortunately, you don&amp;rsquo;t have to come up with your own algorithm for dictionary sorting, because Perl provides a standard class to do this for you: &lt;a href=&#34;https://metacpan.org/pod/Unicode::Collate&#34;&gt;Unicode::Collate&lt;/a&gt;. Don&amp;rsquo;t let the name throw you, because while it was first invented for Unicode, it works great on regular ASCII text, too, and does a better job at making lexicographers happy than a plain old &lt;code&gt;sort&lt;/code&gt; ever manages.&lt;/p&gt;
+
+&lt;p&gt;If you have code that purports to sort text that looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@sorted_lines = sort @lines;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then all you have to get a dictionary sort is write instead:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Unicode::Collate;
+@sorted_lines = Unicode::Collate::-&amp;gt;new-&amp;gt;sort(@lines);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For structured records, like those with ages and surnames in them, you have to be a bit fancier. One way to fix it would be to use the class&amp;rsquo;s own &lt;code&gt;cmp&lt;/code&gt; operator instead of the built‐in one.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Unicode::Collate;
+my $collator = Unicode::Collate::-&amp;gt;new();
+@srecs = sort {
+    $b-&amp;gt;{AGE}  &amp;lt;=&amp;gt;  $b-&amp;gt;{AGE}
+          ||
+    $collator-&amp;gt;cmp( $a-&amp;gt;{SURNAME}, $b-&amp;gt;{SURNAME} )
+} @recs;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, that makes a fairly expensive method call for every possible comparison. Because Perl&amp;rsquo;s adaptive merge sort algorithm usually runs in &lt;em&gt;O(n&lt;/em&gt; · log &lt;em&gt;n)&lt;/em&gt; time given &lt;em&gt;n&lt;/em&gt; items, and because each comparison requires two different computed keys, that can be a lot of duplicate effort. Our sorting class therefore provide a convenient &lt;code&gt;getSortKey&lt;/code&gt; method that calculates a special binary key which you can cache and later pass to the normal &lt;code&gt;cmp&lt;/code&gt; operator on your own. This trick lets you use &lt;code&gt;cmp&lt;/code&gt; yet get a truly alphabetic sort out of it for a change.&lt;/p&gt;
+
+&lt;p&gt;Here is a simple but sufficient example of how to do that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Unicode::Collate;
+my $collator = Unicode::Collate::-&amp;gt;new();
+
+# first calculate the magic sort key for each text field, and cache it
+for my $rec (@recs) {
+    $rec-&amp;gt;{SURNAME_key} = $collator-&amp;gt;getSortKey( $rec-&amp;gt;{SURNAME} );
+} 
+
+# now sort the records as before, but for the surname field,
+# use the cached sort key instead
+@srecs = sort {
+    $b-&amp;gt;{AGE}          &amp;lt;=&amp;gt;  $b-&amp;gt;{AGE}
+                      ||
+    $a-&amp;gt;{SURNAME_key}  cmp  $b-&amp;gt;{SURNAME_key}
+} @recs;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s what I meant about very carefully preparing a mediated sort key that contains the precomputed binary key.&lt;/p&gt;
+
+&lt;h3 id=&#34;english-card-catalogue-sorts&#34;&gt;&lt;strong&gt;English Card Catalogue Sorts&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;The simple code just demonstrated assumes you want to sort names the same way you do regular text. That isn&amp;rsquo;t a good assumption, however. Many countries, languages, institutions, and sometimes even librarians have their own notions about how a card catalogue or a phonebook ought to be sorted.&lt;/p&gt;
+
+&lt;p&gt;For example, in the English language, surnames with Scottish patronymics starting with ‹Mc› or ‹Mac›, like &lt;em&gt;MacKinley&lt;/em&gt; and &lt;em&gt;McKinley&lt;/em&gt;, not only count as completely identical synonyms for sorting purposes, they go before any other surname that begins with ‹M›, and so precede surnames like &lt;em&gt;Mables&lt;/em&gt; or &lt;em&gt;Machado&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Yes, really.&lt;/p&gt;
+
+&lt;p&gt;That means that the following names are sorted correctly &amp;ndash; for English:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Lewis, C.S.
+McKinley, Bill
+MacKinley, Ron
+Mables, Martha
+Machado, José
+Macon, Bacon
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yes, it&amp;rsquo;s true. Check out your local large English‐language bookseller or library &amp;ndash; presuming you can find one. If you do, best make sure to blow the dust off first.&lt;/p&gt;
+
+&lt;h3 id=&#34;sorting-spanish-names&#34;&gt;&lt;strong&gt;Sorting Spanish Names&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s a good thing those names follow English rules for sorting names. If this were Spanish, we would have to deal with double‐barrelled surnames, where the patronym sorts before the matronym, which in turn sorts before any given names. That means that if Señor Machado&amp;rsquo;s full name were, like the poet&amp;rsquo;s, &lt;em&gt;Antonio Cipriano José María y Francisco de Santa Ana Machado y Ruiz&lt;/em&gt;, then you would have to sort him with the other &lt;em&gt;Machados&lt;/em&gt; but then consider &lt;em&gt;Ruiz&lt;/em&gt; before &lt;em&gt;Antonio&lt;/em&gt; if there were any other &lt;em&gt;Machados&lt;/em&gt;. Similarly, the poet &lt;em&gt;Federico del Sagrado Corazón de Jesús García Lorca&lt;/em&gt; sorts before the writer &lt;em&gt;Gabriel José de la Concordia García Márquez&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, if your records are not full multifield hashes but only simple text that don&amp;rsquo;t happen to be surnames, your task is a lot simpler, since now all you have to is get the &lt;code&gt;cmp&lt;/code&gt; operator to behave sensibly. That you can do easily enough this way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Unicode::Collate;
+@sorted_text = Unicode::Collate::-&amp;gt;new-&amp;gt;sort(@text);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;sorting-text-not-binary&#34;&gt;&lt;strong&gt;Sorting Text, Not Binary&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Imagine you had this list of German‐language authors:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@germans = qw{
+    Böll
+    Born
+    Böhme
+    Bodmer
+    Brandis
+    Böttcher
+    Borchert
+    Bobrowski
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you just sorted them with an unmediated &lt;code&gt;sort&lt;/code&gt;operator, you would get this utter nonsense:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Bobrowski
+Bodmer
+Borchert
+Born
+Brandis
+Brant
+Böhme
+Böll
+Böttcher
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or maybe this equally nonsensical answer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Bobrowski
+Bodmer
+Borchert
+Born
+Böll
+Brandis
+Brant
+Böhme
+Böttcher
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or even this still completely nonsensical answer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Bobrowski
+Bodmer
+Borchert
+Born
+Böhme
+Böll
+Brandis
+Brant
+Böttcher
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The crucial point to all that is that &lt;em&gt;it&amp;rsquo;s text not binary&lt;/em&gt;, so not only can you never judge what its bit patterns hold just by eyeballing it, more importantly, it has special rules to make it sort alphabetically (some might say sanely), an ordering no naïve code‐point sort will never come even close to getting right, especially on Unicode.&lt;/p&gt;
+
+&lt;p&gt;The correct ordering is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Bobrowski
+Bodmer
+Böhme
+Böll
+Borchert
+Born
+Böttcher
+Brandis
+Brant
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that is precisely what&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Unicode::Collate;
+@sorted_germans = Unicode::Collate::-&amp;gt;new-&amp;gt;sort(@german_names);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;gives you: a correctly sorted list of those Germans&amp;rsquo; names.&lt;/p&gt;
+
+&lt;h3 id=&#34;sorting-german-names&#34;&gt;&lt;strong&gt;Sorting German Names&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Hold on, though.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Correct in what language?&lt;/strong&gt; In English, yes, the order given is now correct. But considering that these authors wrote in the German language, it is quite conceivable that you should be following the rules for ordering German names &lt;strong&gt;in German&lt;/strong&gt;, not in English. That produces this ordering:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Bobrowski
+Bodmer
+Böhme
+Böll
+Böttcher
+Borchert
+Born
+Brandis
+Brant
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How come &lt;em&gt;Böttcher&lt;/em&gt; now came before &lt;em&gt;Borchert&lt;/em&gt;? Because &lt;em&gt;Böttcher&lt;/em&gt; is supposed to be the same as &lt;em&gt;Boettcher&lt;/em&gt;. In a German phonebook or other German list of German names, things like ‹ö› and ‹oe› are considered synonyms, which is not at all how it works in English. To get the German phonebook sort, you merely have to modify your constructor this way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Unicode::Collate::Locale;
+@sorted_germans = Unicode::Collate::Locale::
+                      -&amp;gt;new(locale =&amp;gt; &amp;quot;de_phonebook&amp;quot;)
+                      -&amp;gt;sort(@german_names);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Isn&amp;rsquo;t this fun?&lt;/p&gt;
+
+&lt;p&gt;Be glad you&amp;rsquo;re not sorting names. Sorting names is hard.&lt;/p&gt;
+
+&lt;h3 id=&#34;default-sort-tables&#34;&gt;&lt;strong&gt;Default Sort Tables&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Here are most of the Latin letters, ordered using the default &lt;code&gt;sort&lt;/code&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;pre&gt;&lt;code&gt;A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j 
+k l m n o p q r s t u v w x y z ª º À Á Â Ã Ä Å Æ Ç È É Ê Ë Ì Í Î Ï Ð Ñ 
+Ò Ó Ô Õ Ö Ø Ù Ú Û Ü Ý Þ ß à á â ã ä å æ ç è é ê ë ì í î ï ð ñ ò ó ô õ ö 
+ø ù ú û ü ý þ ÿ Ā ā Ă ă Ą ą Ć ć Ĉ ĉ Ċ ċ Č č Ď ď Đ đ Ē ē Ĕ ĕ Ė ė Ę ę Ě ě 
+Ĝ ĝ Ğ ğ Ġ ġ Ģ ģ Ĥ ĥ Ħ ħ Ĩ ĩ Ī ī Ĭ ĭ Į į İ ı Ĳ ĳ Ĵ ĵ Ķ ķ ĸ Ĺ ĺ Ļ ļ Ľ ľ Ŀ 
+ŀ Ł ł Ń ń Ņ ņ Ň ň Ŋ ŋ Ō ō Ŏ ŏ Ő ő Œ œ Ŕ ŕ Ŗ ŗ Ř ř Ś ś Ŝ ŝ Ş ş Š š Ţ ţ Ť 
+ť Ŧ ŧ Ũ ũ Ū ū Ŭ ŭ Ů ů Ű ű Ų ų Ŵ ŵ Ŷ ŷ Ÿ Ź ź Ż ż Ž ž ſ ƀ Ɓ Ƃ ƃ Ƈ ƈ Ɖ Ɗ Ƌ 
+ƌ ƍ Ǝ Ə Ɛ Ƒ ƒ Ɠ Ɣ ƕ Ɩ Ɨ Ƙ ƙ ƚ ƛ Ɯ Ɲ ƞ Ƥ ƥ Ʀ ƫ Ƭ ƭ Ʈ Ư ư Ʊ Ʋ Ƴ ƴ Ƶ ƶ Ʒ Ƹ 
+ƹ ƺ ƾ ƿ Ǆ ǅ ǆ Ǉ ǈ ǉ Ǌ ǋ ǌ Ǎ ǎ Ǐ ǐ Ǒ ǒ Ǔ ǔ Ǖ ǖ Ǘ ǘ Ǚ ǚ Ǜ ǜ ǝ Ǟ ǟ Ǡ ǡ Ǣ ǣ 
+Ǥ ǥ Ǧ ǧ Ǩ ǩ Ǫ ǫ Ǭ ǭ Ǯ ǯ ǰ Ǳ ǲ ǳ Ǵ ǵ Ƿ Ǹ ǹ Ǻ ǻ Ǽ ǽ Ǿ ǿ Ȁ ȁ Ȃ ȃ Ȅ ȅ Ȇ ȇ Ȉ 
+ȉ Ȋ ȋ Ȍ ȍ Ȏ ȏ Ȑ ȑ Ȓ ȓ Ȕ ȕ Ȗ ȗ Ș ș Ț ț Ȝ ȝ Ȟ ȟ Ƞ ȡ Ȥ ȥ Ȧ ȧ Ȩ ȩ Ȫ ȫ Ȭ ȭ Ȯ 
+ȯ Ȱ ȱ Ȳ ȳ ȴ ȵ ȶ ȷ Ⱥ Ȼ ȼ Ƚ Ⱦ ɐ ɑ ɒ ɓ ɕ ɖ ɗ ɘ ə ɚ ɛ ɜ ɝ ɞ ɟ ɠ ɡ ɢ ɣ ɤ ɥ ɦ 
+ɧ ɨ ɩ ɪ ɫ ɬ ɭ ɮ ɯ ɰ ɱ ɲ ɳ ɴ ɶ ɹ ɺ ɻ ɼ ɽ ɾ ɿ ʀ ʁ ʂ ʃ ʄ ʅ ʆ ʇ ʈ ʉ ʊ ʋ ʌ ʍ 
+ʎ ʏ ʐ ʑ ʒ ʓ ʙ ʚ ʛ ʜ ʝ ʞ ʟ ʠ ʣ ʤ ʥ ʦ ʧ ʨ ʩ ʪ ʫ ˡ ˢ ˣ ᴀ ᴁ ᴂ ᴃ ᴄ ᴅ ᴆ ᴇ ᴈ ᴉ 
+ᴊ ᴋ ᴌ ᴍ ᴎ ᴏ ᴑ ᴓ ᴔ ᴘ ᴙ ᴚ ᴛ ᴜ ᴝ ᴞ ᴟ ᴠ ᴡ ᴢ ᴣ ᴬ ᴭ ᴮ ᴯ ᴰ ᴱ ᴲ ᴳ ᴴ ᴵ ᴶ ᴷ ᴸ ᴹ ᴺ 
+ᴻ ᴼ ᴾ ᴿ ᵀ ᵁ ᵂ ᵃ ᵄ ᵅ ᵆ ᵇ ᵈ ᵉ ᵊ ᵋ ᵌ ᵍ ᵎ ᵏ ᵐ ᵑ ᵒ ᵖ ᵗ ᵘ ᵙ ᵚ ᵛ ᵢ ᵣ ᵤ ᵥ ᵫ ᵬ ᵭ 
+ᵮ ᵯ ᵰ ᵱ ᵲ ᵳ ᵴ ᵵ ᵶ Ḁ ḁ Ḃ ḃ Ḅ ḅ Ḇ ḇ Ḉ ḉ Ḋ ḋ Ḍ ḍ Ḏ ḏ Ḑ ḑ Ḓ ḓ Ḕ ḕ Ḗ ḗ Ḙ ḙ Ḛ 
+ḛ Ḝ ḝ Ḟ ḟ Ḡ ḡ Ḣ ḣ Ḥ ḥ Ḧ ḧ Ḩ ḩ Ḫ ḫ Ḭ ḭ Ḯ ḯ Ḱ ḱ Ḳ ḳ Ḵ ḵ Ḷ ḷ Ḹ ḹ Ḻ ḻ Ḽ ḽ Ḿ 
+ḿ Ṁ ṁ Ṃ ṃ Ṅ ṅ Ṇ ṇ Ṉ ṉ Ṋ ṋ Ṍ ṍ Ṏ ṏ Ṑ ṑ Ṓ ṓ Ṕ ṕ Ṗ ṗ Ṙ ṙ Ṛ ṛ Ṝ ṝ Ṟ ṟ Ṡ ṡ Ṣ 
+ṣ Ṥ ṥ Ṧ ṧ Ṩ ṩ Ṫ ṫ Ṭ ṭ Ṯ ṯ Ṱ ṱ Ṳ ṳ Ṵ ṵ Ṷ ṷ Ṹ ṹ Ṻ ṻ Ṽ ṽ Ṿ ṿ Ẁ ẁ Ẃ ẃ Ẅ ẅ Ẇ 
+ẇ Ẉ ẉ Ẋ ẋ Ẍ ẍ Ẏ ẏ Ẑ ẑ Ẓ ẓ Ẕ ẕ ẖ ẗ ẘ ẙ ẚ ẛ ẞ ẟ Ạ ạ Ả ả Ấ ấ Ầ ầ Ẩ ẩ Ẫ ẫ Ậ 
+ậ Ắ ắ Ằ ằ Ẳ ẳ Ẵ ẵ Ặ ặ Ẹ ẹ Ẻ ẻ Ẽ ẽ Ế ế Ề ề Ể ể Ễ ễ Ệ ệ Ỉ ỉ Ị ị Ọ ọ Ỏ ỏ Ố 
+ố Ồ ồ Ổ ổ Ỗ ỗ Ộ ộ Ớ ớ Ờ ờ Ở ở Ỡ ỡ Ợ ợ Ụ ụ Ủ ủ Ứ ứ Ừ ừ Ử ử Ữ ữ Ự ự Ỳ ỳ Ỵ 
+ỵ Ỷ ỷ Ỹ ỹ K Å Ⅎ ⅎ Ⅰ Ⅱ Ⅲ Ⅳ Ⅴ Ⅵ Ⅶ Ⅷ Ⅸ Ⅹ Ⅺ Ⅻ Ⅼ Ⅽ Ⅾ Ⅿ ⅰ ⅱ ⅲ ⅳ ⅴ 
+ⅵ ⅶ ⅷ ⅸ ⅹ ⅺ ⅻ ⅼ ⅽ ⅾ ⅿ ﬀ ﬁ ﬂ ﬃ ﬄ ﬅ ﬆ Ａ Ｂ Ｃ Ｄ Ｅ Ｆ Ｇ Ｈ Ｉ
+Ｊ Ｋ Ｌ Ｍ Ｎ Ｏ Ｐ Ｑ Ｒ Ｓ Ｔ Ｕ Ｖ Ｗ Ｘ Ｙ Ｚ ａ ｂ ｃ ｄ ｅ ｆ ｇ ｈ ｉ
+ｊ ｋ ｌ ｍ ｎ ｏ ｐ ｑ ｒ ｓ ｔ ｕ ｖ ｗ ｘ ｙ ｚ
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;As you can see, those letters are scattered all over the place. Sure, it&amp;rsquo;s not completely random, but it&amp;rsquo;s not useful either, because it is full of arbitrary placement that makes no alphabetical sense. That&amp;rsquo;s because it is not an alphabetic sort at all. However, with the special kind of sort I&amp;rsquo;ve just shown you above, the ones that call the &lt;code&gt;sort&lt;/code&gt; method from the &lt;code&gt;Unicode::Collate&lt;/code&gt; class, you do get an alphabetic sort. Using that method, the Latin letters I just showed you now come out in alphabetical order, which is like this:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;pre&gt;&lt;code&gt;a ａ A Ａ ª ᵃ ᴬ á Á à À ă Ă ắ Ắ ằ Ằ ẵ Ẵ ẳ Ẳ â Â ấ Ấ ầ Ầ ẫ Ẫ ẩ Ẩ ǎ Ǎ å Å 
+Å ǻ Ǻ ä Ä ǟ Ǟ ã Ã ȧ Ȧ ǡ Ǡ ą Ą ā Ā ả Ả ȁ Ȁ ȃ Ȃ ạ Ạ ặ Ặ ậ Ậ ḁ Ḁ æ Æ ᴭ ǽ Ǽ 
+ǣ Ǣ ẚ ᴀ Ⱥ ᴁ ᴂ ᵆ ɐ ᵄ ɑ ᵅ ɒ b ｂ B Ｂ ᵇ ᴮ ḃ Ḃ ḅ Ḅ ḇ Ḇ ʙ ƀ ᴯ ᴃ ᵬ ɓ Ɓ ƃ Ƃ c 
+ｃ ⅽ C Ｃ Ⅽ ć Ć ĉ Ĉ č Č ċ Ċ ç Ç ḉ Ḉ ᴄ ȼ Ȼ ƈ Ƈ ɕ d ｄ ⅾ D Ｄ Ⅾ ᵈ ᴰ ď Ď ḋ 
+Ḋ ḑ Ḑ ḍ Ḍ ḓ Ḓ ḏ Ḏ đ Đ ð Ð ǳ ʣ ǲ Ǳ ǆ ǅ Ǆ ʥ ʤ ᴅ ᴆ ᵭ ɖ Ɖ ɗ Ɗ ƌ Ƌ ȡ ẟ e ｅ E 
+Ｅ ᵉ ᴱ é É è È ĕ Ĕ ê Ê ế Ế ề Ề ễ Ễ ể Ể ě Ě ë Ë ẽ Ẽ ė Ė ȩ Ȩ ḝ Ḝ ę Ę ē Ē ḗ 
+Ḗ ḕ Ḕ ẻ Ẻ ȅ Ȅ ȇ Ȇ ẹ Ẹ ệ Ệ ḙ Ḙ ḛ Ḛ ᴇ ǝ Ǝ ᴲ ə Ə ᵊ ɛ Ɛ ᵋ ɘ ɚ ɜ ᴈ ᵌ ɝ ɞ ʚ ɤ 
+f ｆ F Ｆ ḟ Ḟ ﬀ ﬃ ﬄ ﬁ ﬂ ʩ ᵮ ƒ Ƒ ⅎ Ⅎ g ｇ G Ｇ ᵍ ᴳ ǵ Ǵ ğ Ğ ĝ Ĝ ǧ Ǧ ġ Ġ ģ 
+Ģ ḡ Ḡ ɡ ɢ ǥ Ǥ ɠ Ɠ ʛ ɣ Ɣ h ｈ H Ｈ ᴴ ĥ Ĥ ȟ Ȟ ḧ Ḧ ḣ Ḣ ḩ Ḩ ḥ Ḥ ḫ Ḫ ẖ ħ Ħ ʜ 
+ƕ ɦ ɧ i ｉ ⅰ I Ｉ Ⅰ ᵢ ᴵ í Í ì Ì ĭ Ĭ î Î ǐ Ǐ ï Ï ḯ Ḯ ĩ Ĩ İ į Į ī Ī ỉ Ỉ ȉ 
+Ȉ ȋ Ȋ ị Ị ḭ Ḭ ⅱ Ⅱ ⅲ Ⅲ ĳ Ĳ ⅳ Ⅳ ⅸ Ⅸ ı ɪ ᴉ ᵎ ɨ Ɨ ɩ Ɩ j ｊ J Ｊ ᴶ ĵ Ĵ ǰ ȷ ᴊ 
+ʝ ɟ ʄ k ｋ K K Ｋ ᵏ ᴷ ḱ Ḱ ǩ Ǩ ķ Ķ ḳ Ḳ ḵ Ḵ ᴋ ƙ Ƙ ʞ l ｌ ⅼ L Ｌ Ⅼ ˡ ᴸ ĺ Ĺ 
+ľ Ľ ļ Ļ ḷ Ḷ ḹ Ḹ ḽ Ḽ ḻ Ḻ ł Ł ŀ Ŀ ǉ ǈ Ǉ ʪ ʫ ʟ ᴌ ƚ Ƚ ɫ ɬ ɭ ȴ ɮ ƛ ʎ m ｍ ⅿ M 
+Ｍ Ⅿ ᵐ ᴹ ḿ Ḿ ṁ Ṁ ṃ Ṃ ᴍ ᵯ ɱ n ｎ N Ｎ ᴺ ń Ń ǹ Ǹ ň Ň ñ Ñ ṅ Ṅ ņ Ņ ṇ Ṇ ṋ Ṋ ṉ 
+Ṉ ǌ ǋ Ǌ ɴ ᴻ ᴎ ᵰ ɲ Ɲ ƞ Ƞ ɳ ȵ ŋ Ŋ ᵑ o ｏ O Ｏ º ᵒ ᴼ ó Ó ò Ò ŏ Ŏ ô Ô ố Ố ồ 
+Ồ ỗ Ỗ ổ Ổ ǒ Ǒ ö Ö ȫ Ȫ ő Ő õ Õ ṍ Ṍ ṏ Ṏ ȭ Ȭ ȯ Ȯ ȱ Ȱ ø Ø ǿ Ǿ ǫ Ǫ ǭ Ǭ ō Ō ṓ 
+Ṓ ṑ Ṑ ỏ Ỏ ȍ Ȍ ȏ Ȏ ớ Ớ ờ Ờ ỡ Ỡ ở Ở ợ Ợ ọ Ọ ộ Ộ œ Œ ᴏ ᴑ ɶ ᴔ ᴓ p ｐ P Ｐ ᵖ 
+ᴾ ṕ Ṕ ṗ Ṗ ᴘ ᵱ ƥ Ƥ q ｑ Q Ｑ ʠ ĸ r ｒ R Ｒ ᵣ ᴿ ŕ Ŕ ř Ř ṙ Ṙ ŗ Ŗ ȑ Ȑ ȓ Ȓ ṛ 
+Ṛ ṝ Ṝ ṟ Ṟ ʀ Ʀ ᴙ ᵲ ɹ ᴚ ɺ ɻ ɼ ɽ ɾ ᵳ ɿ ʁ s ｓ S Ｓ ˢ ś Ś ṥ Ṥ ŝ Ŝ š Š ṧ Ṧ ṡ 
+Ṡ ş Ş ṣ Ṣ ṩ Ṩ ș Ș ſ ẛ ß ẞ ﬆ ﬅ ᵴ ʂ ʃ ʅ ʆ t ｔ T Ｔ ᵗ ᵀ ť Ť ẗ ṫ Ṫ ţ Ţ ṭ Ṭ 
+ț Ț ṱ Ṱ ṯ Ṯ ʨ ƾ ʦ ʧ ᴛ ŧ Ŧ Ⱦ ᵵ ƫ ƭ Ƭ ʈ Ʈ ȶ ʇ u ｕ U Ｕ ᵘ ᵤ ᵁ ú Ú ù Ù ŭ Ŭ 
+û Û ǔ Ǔ ů Ů ü Ü ǘ Ǘ ǜ Ǜ ǚ Ǚ ǖ Ǖ ű Ű ũ Ũ ṹ Ṹ ų Ų ū Ū ṻ Ṻ ủ Ủ ȕ Ȕ ȗ Ȗ ư Ư 
+ứ Ứ ừ Ừ ữ Ữ ử Ử ự Ự ụ Ụ ṳ Ṳ ṷ Ṷ ṵ Ṵ ᴜ ᴝ ᵙ ᴞ ᵫ ʉ ɥ ɯ Ɯ ᵚ ᴟ ɰ ʊ Ʊ v ｖ ⅴ V 
+Ｖ Ⅴ ᵛ ᵥ ṽ Ṽ ṿ Ṿ ⅵ Ⅵ ⅶ Ⅶ ⅷ Ⅷ ᴠ ʋ Ʋ ʌ w ｗ W Ｗ ᵂ ẃ Ẃ ẁ Ẁ ŵ Ŵ ẘ ẅ Ẅ ẇ Ẇ ẉ 
+Ẉ ᴡ ʍ x ｘ ⅹ X Ｘ Ⅹ ˣ ẍ Ẍ ẋ Ẋ ⅺ Ⅺ ⅻ Ⅻ y ｙ Y Ｙ ý Ý ỳ Ỳ ŷ Ŷ ẙ ÿ Ÿ ỹ Ỹ ẏ 
+Ẏ ȳ Ȳ ỷ Ỷ ỵ Ỵ ʏ ƴ Ƴ z ｚ Z Ｚ ź Ź ẑ Ẑ ž Ž ż Ż ẓ Ẓ ẕ Ẕ ƍ ᴢ ƶ Ƶ ᵶ ȥ Ȥ ʐ ʑ 
+ʒ Ʒ ǯ Ǯ ᴣ ƹ Ƹ ƺ ʓ ȝ Ȝ þ Þ ƿ Ƿ
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Isn&amp;rsquo;t that much nicer?&lt;/p&gt;
+
+&lt;h3 id=&#34;romani-ite-domum&#34;&gt;&lt;strong&gt;Romani Ite Domum&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;In case you&amp;rsquo;re wondering what that last row of distinctly un‐Roman Latin letters might possibly be, they&amp;rsquo;re called respectively &lt;a href=&#34;http://en.wikipedia.org/wiki/Ezh_(letter)&#34;&gt;&lt;em&gt;ezh&lt;/em&gt;&lt;/a&gt; ʒ, &lt;a href=&#34;http://en.wikipedia.org/wiki/Yogh&#34;&gt;&lt;em&gt;yogh&lt;/em&gt;&lt;/a&gt; ȝ, &lt;a href=&#34;http://en.wikipedia.org/wiki/Thorn_(letter)&#34;&gt;&lt;em&gt;thorn&lt;/em&gt;&lt;/a&gt; þ, and &lt;a href=&#34;http://en.wikipedia.org/wiki/Wynn&#34;&gt;&lt;em&gt;wynn&lt;/em&gt;&lt;/a&gt; ƿ. They had to go somewhere, so they ended up getting stuck after ‹z›&lt;/p&gt;
+
+&lt;p&gt;Some are still used in certain non‐English (but still Latin) alphabets today, such as Icelandic, and even though you probably won&amp;rsquo;t bump into them in contemporary English texts, you might see some if you&amp;rsquo;re reading the original texts of famous medieval English poems like &lt;em&gt;Beowulf&lt;/em&gt;, &lt;em&gt;Sir Gawain and the Green Knight&lt;/em&gt;, or &lt;em&gt;Brut&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The last of those, &lt;em&gt;Brut&lt;/em&gt;, was written by a fellow named &lt;em&gt;Laȝamon&lt;/em&gt;, a name whose third letter is a yogh. Famous though he was, I wouldn&amp;rsquo;t suggest changing your name to ‹Laȝamon› in his honor, as I doubt the phone company would be amused.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

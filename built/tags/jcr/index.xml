@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Jcr on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/jcr/</link>
+    <description>Recent content in Jcr on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 21 Dec 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/jcr/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Using Java Classes in Perl</title>
+      <link>http://localhost:1313/pub/2006/12/21/using-java-classes.html/</link>
+      <pubDate>Thu, 21 Dec 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/12/21/using-java-classes.html/</guid>
+      <description>
+
+&lt;p&gt;I started a new job recently to refocus my career from systems administration to web development. Part of that move meant using Java as my primary language at work and using a relatively new technology from the &lt;a href=&#34;https://www.jcp.org/en/home/index&#34;&gt;Java Community Process&lt;/a&gt; (JCP), the &lt;a href=&#34;https://jcp.org/en/jsr/detail?id=170&#34;&gt;Content Repository API for Java&lt;/a&gt; (JCR), which is a hierarchical database standard for storing content. However, not wanting to let the skills in my favorite language waste away, I&amp;rsquo;ve been toying with similar technologies at home using Perl. I decided to make a direct port of the JCR to Perl and did so by making Perl use an existing Java implementation via &lt;a href=&#34;https://metacpan.org/pod/Inline::Java&#34;&gt;Inline::Java&lt;/a&gt;. While I ran into some snags along the way, I was happily surprised to find the process of using Java classes from Perl was fabulously easy.&lt;/p&gt;
+
+&lt;h3 id=&#34;bringing-the-jcr-to-perl&#34;&gt;Bringing the JCR to Perl&lt;/h3&gt;
+
+&lt;p&gt;The key to using JCR from Perl is &lt;code&gt;Inline::Java&lt;/code&gt;. This library allows a Perl program to call Java methods with very little effort. For an introduction to Inline::Java, I suggest starting where I did, Phil Crow&amp;rsquo;s 2003 &lt;a href=&#34;http://localhost:1313/pub/2003/11/07/java.html&#34;&gt;Bringing Java into Perl&lt;/a&gt; article on &lt;a href=&#34;https://www.Perl.com&#34;&gt;Perl.com&lt;/a&gt; about Inline::Java. I also relied heavily upon the documentation for &lt;a href=&#34;https://metacpan.org/pod/Inline::Java&#34;&gt;Inline::Java&lt;/a&gt;, which is very complete, if not exhaustive.&lt;/p&gt;
+
+&lt;p&gt;To get started on using the JCR, I used the reference implementation, &lt;a href=&#34;http://jackrabbit.apache.org/jcr/index.html&#34;&gt;Jackrabbit&lt;/a&gt;. I downloaded the Jackrabbit JAR file, along with all the prerequisites, which I found on the Jackrabbit website under &lt;a href=&#34;http://jackrabbit.apache.org/jcr/getting-started-with-apache-jackrabbit.html&#34;&gt;First Hops&lt;/a&gt;. Then, I wrote a small script using &lt;code&gt;Inline::Java&lt;/code&gt; to load the Java classes from Jackrabbit, create a repository, and then quit. I was able to take the First Hop with Jackrabbit in Perl as fast or faster than in Java:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+use strict;
+use warnings;
+use Inline
+    Java =&amp;gt; &#39;STUDY&#39;,
+    STUDY =&amp;gt; [ qw(
+        org.apache.jackrabbit.core.TransientRepository
+        javax.jcr.Repository
+    ) ],
+    AUTOSTUDY =&amp;gt; 1;
+
+my $repository = org::apache::jackrabbit::core::TransientRepository-&amp;gt;new;
+my $session = $repository-&amp;gt;login;
+eval {
+    my $user = $session-&amp;gt;getUserID;
+    my $name = $repository
+        -&amp;gt;getDescriptor($javax::jcr::Repository::REP_NAME_DESC);
+    print &amp;quot;Logged in as $user to a $name repository.\n&amp;quot;;
+};
+
+if ($@) {
+    print STDERR &amp;quot;Exception: &amp;quot;, $@-&amp;gt;getMessage, &amp;quot;n&amp;quot;;
+}
+
+$session-&amp;gt;logout;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code is a direct Perl port of the first tutorial on the Jackrabbit website. To run the code, you must make sure your class path is correct. Because I initially dropped the JCR files into my working directory, I just ran these commands to get it to work:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;% export CLASSPATH=$CLASSPATH:`echo *.jar | tr &#39; &#39; &#39;:&#39;`
+% perl firsthop.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Within five minutes, I had a Perl script that could access the Jackrabbit libraries, create a repository, and login as anonymous. This answered my first question: Can I port the JCR to Perl? &lt;em&gt;Yes.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;first-snags&#34;&gt;First Snags&lt;/h3&gt;
+
+&lt;p&gt;After proceeding to the &amp;ldquo;Second Hop&amp;rdquo; in the Jackrabbit tutorial, I ran into my first snag. To create nodes and properties with Jackrabbit, you must log in using a username and password. However, the JCR uses an array of characters for the password argument. Because &lt;code&gt;Inline::Java&lt;/code&gt; helpfully translates Java string objects into Perl scalars, I could not determine a way to do so.&lt;/p&gt;
+
+&lt;p&gt;I also realized that I did not want to use lengthy Java namespaces in my Perl code. Writing out &lt;code&gt;org::apache::jackrabbit::core::TransientRepository&lt;/code&gt; or &lt;code&gt;javax::jcr::Repository&lt;/code&gt; is not a very productive use of my time and makes for odd-looking Perl code.&lt;/p&gt;
+
+&lt;p&gt;In addition, I didn&amp;rsquo;t want a library that depended on Jackrabbit. There are several other JCR implementations either already written or on the way. Day has &lt;a href=&#34;https://www.day.com/day/en/products/crx.html&#34;&gt;CRX&lt;/a&gt;, there&amp;rsquo;s another Open Source implementation named &lt;a href=&#34;http://freshmeat.sourceforge.net/projects/jeceira&#34;&gt;Jaceira&lt;/a&gt; in the works, and &lt;a href=&#34;https://docs.exoplatform.org/exo-documents/exo-jcr.site/index.html&#34;&gt;eXo&lt;/a&gt; has also created a JCR implementation, to name a few.&lt;/p&gt;
+
+&lt;p&gt;Given these difficulties and the potential for other problems that I knew would come up, it was time to build this project as a Perl module.&lt;/p&gt;
+
+&lt;h3 id=&#34;creating-the-wrappers&#34;&gt;Creating the Wrappers&lt;/h3&gt;
+
+&lt;p&gt;To create the abstraction I desired, it quickly became apparent that I needed a way to build wrappers around the stubs generated by &lt;code&gt;Inline::Java&lt;/code&gt;. Therefore, I set about writing a script that could generate a Perl package for each library in the JCR. Each wrapper package would, in addition to helping wrap special cases, clean up the Java namespace using naming conventions that are more common to Perl code (particularly my Perl code, which is similar to Conway&amp;rsquo;s conventions from &lt;a href=&#34;https://www.oreilly.com/catalog/perlbp/&#34;&gt;Perl Best Practices&lt;/a&gt;).&lt;/p&gt;
+
+&lt;h3 id=&#34;using-java-reflection&#34;&gt;Using Java Reflection&lt;/h3&gt;
+
+&lt;p&gt;I first needed to discover the classes, methods, and fields to wrap. There are more than 50 classes, interfaces, and exceptions in the JCR specification&amp;ndash;I&amp;rsquo;m too lazy to type all that. Furthermore, the JCR is currently under revision via &lt;a href=&#34;https://jcp.org/en/jsr/detail?id=283&#34;&gt;JSR 283&lt;/a&gt;, I don&amp;rsquo;t want to update the class list again later. Finally, I want my wrappers to handle each method specifically because the use of &lt;code&gt;AUTOLOAD()&lt;/code&gt; is evil (sometimes useful, but still evil).&lt;/p&gt;
+
+&lt;p&gt;I wrote a Java program to find all the classes in the JCR JAR file and write those class names out with additional information about methods, constructors, and fields. I used a &lt;a href=&#34;http://yaml.org/&#34;&gt;YAML&lt;/a&gt;-formatted file to store the information. I made heavy use of the &lt;a href=&#34;https://docs.oracle.com/javase/tutorial/reflect/index.html&#34;&gt;Java Reflection API&lt;/a&gt; to make this happen. You can see the full source of JCR package generator (&lt;em&gt;inc/JCRPackageGenerator.java&lt;/em&gt;) in the &lt;a href=&#34;https://metacpan.org/pod/Java::JCR&#34;&gt;Java::JCR&lt;/a&gt; distribution. Here&amp;rsquo;s one entry in the YAML JCR package output file (&lt;em&gt;inc/packages.yml&lt;/em&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;javax.jcr.SimpleCredentials:
+  isa:
+   - java.lang.Object
+   - javax.jcr.Credentials
+  has_constructors: 1
+  methods:
+    instance:
+      getAttributeNames: Array:java.lang.String
+      getUserID: java.lang.String
+      toString: java.lang.String
+      getPassword: Array:char
+      getAttribute: java.lang.Object
+      setAttribute: void
+      removeAttribute: void
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The information I chose to place in the YAML file is mostly the outcome of experimentation with the Perl generator script. Because I wrote a generic handler to perform the required unwrapping that can handle any set of arguments, I didn&amp;rsquo;t bother to remember them here. On the other hand, knowing the return type, recorded after each method name, is helpful to my implementation.&lt;/p&gt;
+
+&lt;h3 id=&#34;code-generation-with-perl&#34;&gt;Code Generation with Perl&lt;/h3&gt;
+
+&lt;p&gt;Next, I wrote a Perl script to load the information in the YAML file and generate the packages. You can see the full source for &lt;code&gt;inc/package-generator.pl&lt;/code&gt; as well. This script is pretty ugly. I do all the work of generating the information in Perl with embedded here-documents. A much better way to do this would be to use a templating tool like Andy Wardley&amp;rsquo;s &lt;a href=&#34;http://www.template-toolkit.org/&#34;&gt;Template Toolkit&lt;/a&gt;, which is what I&amp;rsquo;d ultimately like to do.&lt;/p&gt;
+
+&lt;p&gt;Basically, this program iterates over all the entries loaded from the YAML file and generates a package for each class. It creates a Perl package name from the Java package name and a Perl package file at the appropriate location in the distribution.&lt;/p&gt;
+
+&lt;p&gt;For example, &lt;code&gt;javax.jcr.nodetype.ItemDefinition&lt;/code&gt; gets a Perl package name of &lt;code&gt;Java::JCR::Nodetype::ItemDefinition&lt;/code&gt; and a file location of &lt;em&gt;lib/Java/JCR/Nodetype/ItemDefinition.pm&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The code injects a stock header and footer into the package file. All the real magic happens in between these.&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-static-fields&#34;&gt;Handling Static Fields&lt;/h3&gt;
+
+&lt;p&gt;The code adds static fields by modifying the symbol table so that the wrappers point to the automatically generated stubs. For example, &lt;code&gt;Java::JCR::PropertyType&lt;/code&gt; gets several entries like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;*STRING = *Java::JCR::javax::jcr::PropertyType::STRING;
+*BINARY = *Java::JCR::javax::jcr::PropertyType::BINARY;
+*LONG = *Java::JCR::javax::jcr::PropertyType::LONG;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For those who may not know, the first line makes the name &lt;code&gt;Java::JCR::PropertyType::STRING&lt;/code&gt; exactly identical to using the longer name, &lt;code&gt;Java::JCR::javax::jcr::Property::STRING&lt;/code&gt; by modifying the &lt;a href=&#34;https://perldoc.perl.org/perlmod.html#Symbol-Tables-symbol-table-stash-%25%3a%3a-%25main%3a%3a-typeglob-glob-alias&#34;&gt;symbol table&lt;/a&gt; directly.&lt;/p&gt;
+
+&lt;p&gt;OK, looking at that, you probably want to know why all the &lt;code&gt;Inline::Java&lt;/code&gt; stubs now have &lt;code&gt;Java::JCR&lt;/code&gt; on the front of them. The reason is that in the generated code, I use the &lt;code&gt;study_classes()&lt;/code&gt; routine to import the Java code and specify that the base package for the import should be &lt;code&gt;Java::JCR&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;study_classes([&#39;javax.jcr.PropertyType&#39;], &#39;Java::JCR&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Why? It&amp;rsquo;s really not that critical, but I figured that because the name of the package I was putting on CPAN was &lt;code&gt;Java::JCR&lt;/code&gt;, I really didn&amp;rsquo;t want to drop packages into an external namespace while I was at it. Because the wrappers hide all the long names, the actual length of the internal names doesn&amp;rsquo;t matter anyway.&lt;/p&gt;
+
+&lt;h3 id=&#34;dealing-with-constructors-and-methods&#34;&gt;Dealing with Constructors and Methods&lt;/h3&gt;
+
+&lt;p&gt;After fields, the code checks whether the Java class provides a constructor (that is, if it&amp;rsquo;s a class rather than an interface). As it turns out, I never actually use the code for dealing with constructors for two reasons:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Exceptions&lt;/em&gt;. For reasons I&amp;rsquo;ll explain later, I don&amp;rsquo;t generate the exception classes. Therefore, these constructors go unused.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;&lt;code&gt;SimpleCredentials&lt;/code&gt;&lt;/em&gt;. The only remaining class that has a constructor is &lt;code&gt;java.jcr.SimpleCredentials&lt;/code&gt;, which is the special case I&amp;rsquo;ve already mentioned. Therefore, I only need to cope with constructors as a special case. I&amp;rsquo;ll cover the special cases later as well.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;After the constructor, the program runs through each method and generates both the static and instance method wrappers. Here&amp;rsquo;s a typical method wrapper from &lt;code&gt;Java::JCR::Repository&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub login {
+    my $self = shift;
+    my @args = Java::JCR::Base::_process_args(@_);
+
+    my $result = eval { $self-&amp;gt;{obj}-&amp;gt;login(@args) };
+    if ($@) { my $e = Java::JCR::Exception-&amp;gt;new($@); croak $e }
+
+    return Java::JCR::Base::_process_return($result, &amp;quot;javax.jcr.Session&amp;quot;, &amp;quot;Java::JCR::Session&amp;quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;camel-case&#34;&gt;Camel Case&lt;/h3&gt;
+
+&lt;p&gt;This particular example doesn&amp;rsquo;t show it, but I also changed the camel-case Java names of every method to all lowercase with underscores, which is a much more common way of naming methods in Perl. I may add aliases using the Java names in the future, but I don&amp;rsquo;t care for Java-style naming conventions in Perl code. The most interesting part of this process was handing names that include all-caps abbreviations. That required two lines of Perl:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $perl_method_name = $method_name;
+$perl_method_name =~ s/(p{IsLu}+)/_L$1E/g;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;/(\p{IsLu}+)/&lt;/code&gt; matches any uppercase letter or string of uppercase letters. The replacement applies the &lt;code&gt;\L&lt;/code&gt; modifier to the regular expression to convert the matched snippet to all lowercase. I prepend an underscore to complete the conversion. Thus, the method named &lt;code&gt;getDescriptor&lt;/code&gt; becomes &lt;code&gt;get_descriptor&lt;/code&gt; and the method named &lt;code&gt;getNodeByUUID&lt;/code&gt; becomes &lt;code&gt;get_node_by_uuid&lt;/code&gt;. This won&amp;rsquo;t work very well, by the way, if there are any names that have abbreviations before the end (for example, if there had been a &lt;code&gt;getUUIDNode&lt;/code&gt;, which would become &lt;code&gt;get_uuidnode&lt;/code&gt;) Fortunately, this case never shows up in the JCR API.&lt;/p&gt;
+
+&lt;h3 id=&#34;method-wrappers&#34;&gt;Method Wrappers&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;Java::JCR::Base::_process_arg()&lt;/code&gt; processes the arguments passed to each method. This function looks for any of the generated wrapper objects (anything that &lt;code&gt;isa&lt;/code&gt; &lt;code&gt;Java::JCR::Base&lt;/code&gt;) in the list of arguments and unwraps the generated stub by pulling the &lt;code&gt;obj&lt;/code&gt; key out of the blessed hash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub _process_args {
+    my @args;
+    for my $arg (@_) {
+        if (UNIVERSAL::isa($arg, &#39;Java::JCR::Base&#39;)) {
+            push @args, $arg-&amp;gt;{obj};
+        }
+        else {
+            push @args, $arg;
+        }
+    }
+
+    return @args;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The wrapper then executes the wrapped method on the generated stub by passing it the unwrapped arguments (as if the wrappers weren&amp;rsquo;t there).&lt;/p&gt;
+
+&lt;p&gt;I make sure to wrap every call in an &lt;code&gt;eval&lt;/code&gt; because &lt;code&gt;Inline::Java&lt;/code&gt; passes Java exceptions as Perl exception objects. If an exception is thrown, I wrap it in a custom class named &lt;code&gt;Java::JCR::Exception&lt;/code&gt;, which I wrote by hand.&lt;/p&gt;
+
+&lt;p&gt;Finally, the code returns the result. If the return type has a wrapper, as is the case in &lt;code&gt;login()&lt;/code&gt;), I use &lt;code&gt;Java::JCR::Base::_process_return()&lt;/code&gt; to cast the class and wrap it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub _process_return {
+    my $result = shift;
+    my $java_package = shift;
+    my $perl_package = shift;
+
+    # Null is null
+    if (!defined $result) {
+        return $result;
+    }
+
+    # Process array results
+    elsif ($java_package =~ /^Array:(.*)$/) {
+        my $real_package = $1;
+        return [
+            map { bless { obj =&amp;gt; cast($real_package, $_) }, $perl_package }
+                @{ $result }
+        ];
+    }
+
+    # Process scalar results
+    else {
+        return bless {
+            obj =&amp;gt; cast($java_package, $result),
+        }, $perl_package;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This brings up two considerations: Why the custom exception class? Why do I need to cast the object? In both cases, I do this to handle minor issues in &lt;code&gt;Inline::Java&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In the case of exceptions, the generated exception objects don&amp;rsquo;t handle Perl stringification very well. Because a lot of exception handlers assume that exceptions are strings or properly stringified, this can be (and has been for me) a problem. My exception class makes sure stringification works the right way.&lt;/p&gt;
+
+&lt;p&gt;As for the cast, &lt;code&gt;Inline::Java&lt;/code&gt; works on the assumption that you want to use the class in its most specific form, but if it hasn&amp;rsquo;t studied that form, you get a generic object on which you cannot call any methods. Rather than engage the potentially costly &lt;code&gt;AUTOSTUDY&lt;/code&gt; option to make sure &lt;code&gt;Inline::Java&lt;/code&gt; studies everything and then smarten up the wrappers more, I&amp;rsquo;ve chosen to cast the objects into the expected return type. This does limit some of the flexibility.&lt;/p&gt;
+
+&lt;h3 id=&#34;loading-packages&#34;&gt;Loading Packages&lt;/h3&gt;
+
+&lt;p&gt;Other than the custom pieces, I needed some additional helpers to get the job done. I didn&amp;rsquo;t want to write out a lot of &lt;code&gt;use&lt;/code&gt; statements to use this library. As a JAPH, I like to keep things simple. Therefore, if I need to use the JCR and Jackrabbit, I just want to say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Java::JCR;
+use Java::JCR::Jackrabbit;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I included a package loader in the main package, &lt;a href=&#34;https://metacpan.org/pod/Java::JCR&#34;&gt;Java::JCR&lt;/a&gt;, that will take care of these details and then created a package for each of the subpackages in the JCR. The loader looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub import_my_packages {
+    my ($package_name, $package_file) = caller;
+    my %excludes = map { $_ =&amp;gt; 1 } @_;
+
+    my $package_dir = $package_file;
+    $package_dir =~ s/.pm$//;
+    my $package_glob = File::Spec-&amp;gt;catfile($package_dir, &#39;*.pm&#39;);
+
+    for my $package (glob $package_glob) {
+        $package =~ s/^$package_dir///;
+        $package =~ s/.pm$//;
+        $package =~ s///::/g;
+
+        next if $excludes{$package};
+
+        eval &amp;quot;use ${package_name}::$package;&amp;quot;;
+        if ($@) { carp &amp;quot;Error loading $package: $@&amp;quot; }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I make sure to call that method once the package has finished loading and pass in exclusions to keep it from loading all the subpackages. This needs further enhancement to allow for future extensions under the &lt;code&gt;Java::JCR&lt;/code&gt; namespace, so as not to load them automatically, but this is a good starting point. I built one class for each subpackage, then, that inherits from Java::JCR and then calls this method to load each of those classes.&lt;/p&gt;
+
+&lt;h3 id=&#34;connecting-to-jackrabbit&#34;&gt;Connecting to Jackrabbit&lt;/h3&gt;
+
+&lt;p&gt;Obviously, the next step was to create the code to connect to Jackrabbit. This was done in &lt;a href=&#34;https://metacpan.org/pod/Java::JCR::Jackrabbit&#34;&gt;Java::JCR::Jackrabbit&lt;/a&gt;. The initial implementation is very simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use base qw( Java::JCR::Base Java::JCR::Repository );
+
+use Inline (
+    Java =&amp;gt; &#39;STUDY&#39;,
+    STUDY =&amp;gt; [],
+);
+use Inline::Java qw( study_classes );
+
+study_classes([&#39;org.apache.jackrabbit.core.TransientRepository&#39;], &#39;Java::JCR&#39;);
+
+sub new {
+    my $class = shift;
+
+    return bless {
+        obj =&amp;gt; Java::JCR::org::apache::jackrabbit::core::TransientRepository
+                -&amp;gt;new(@_),
+    }, $class;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I extended &lt;a href=&#34;https://metacpan.org/pod/Java::JCR::Repository&#34;&gt;Java::JCR::Repository&lt;/a&gt; to add a constructor that calls the Jackrabbit constructor. Done.&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-special-cases&#34;&gt;Handling Special Cases&lt;/h3&gt;
+
+&lt;p&gt;With all that work, I still couldn&amp;rsquo;t make the second hop because I still hadn&amp;rsquo;t resolved the whole problem of passing an array of characters. However, with the infrastructure I had in place, this was now solvable.&lt;/p&gt;
+
+&lt;p&gt;I created an additional YAML configuration file named &lt;em&gt;specials.yml&lt;/em&gt;. This file contains hand-coded alternatives to use where appropriate. I then wrote an alternative for the new constructor:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;javax.jcr.SimpleCredentials:
+  new: |-
+    sub new {
+        my $class = shift;
+        my $user = shift;
+        my $password = shift;
+
+        my $charArray = Java::JCR::PerlUtils-&amp;gt;charArray($password);
+
+        return bless {
+            obj =&amp;gt; Java::JCR::javax::jcr::SimpleCredentials-&amp;gt;new($user, $charArray),
+        }, $class;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, I reran the generator script. Fortunately, I had already improved it to use any implemented method or constructor rather than generating one automatically.&lt;/p&gt;
+
+&lt;p&gt;To perform the conversion, I also needed to embed a little extra Java code. I wrote a very small Java class called &lt;code&gt;PerlUtils&lt;/code&gt; for handling the conversion:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Inline (
+    Java =&amp;gt; &amp;lt;&amp;lt;&#39;END_OF_JAVA&#39;,
+
+class PerlUtils {
+    public static char[] charArray(String str) {
+        return str.toCharArray();
+    }
+}
+
+END_OF_JAVA
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Given a string, it returns an array of characters to pass back into the &lt;code&gt;SimpleCredentials&lt;/code&gt; constructor. No other work is necessary. I could now perform the JCR second hop in Perl (&lt;em&gt;ex/secondhop.pl&lt;/em&gt;). That script attaches to a Jackrabbit repository, logs in as &amp;ldquo;username&amp;rdquo; with password &amp;ldquo;password&amp;rdquo; and then creates a node.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-handles-as-inputstreams&#34;&gt;Using Handles as InputStreams&lt;/h3&gt;
+
+&lt;p&gt;The third (and final) hop of the Jackrabbit tutorial demonstrates node import using an XML file. However, in order to perform the import shown, you must pass an &lt;code&gt;InputStream&lt;/code&gt; off to the &lt;code&gt;importXML()&lt;/code&gt; method. While &lt;code&gt;Inline::Java&lt;/code&gt; provides the ability to use Java &lt;code&gt;InputStream&lt;/code&gt;s as Perl file handles, it doesn&amp;rsquo;t provide the mapping in the opposite direction. Thus I needed another special handler and an additional set of helper methods.&lt;/p&gt;
+
+&lt;p&gt;The special code configuration looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;javax.jcr.Session:
+  import_xml: |-
+    sub import_xml {
+        my $self = shift;
+        my $path = shift;
+        my $handle = shift;
+        my $behavior = shift;
+
+        my $input_stream = Java::JCR::JavaUtils::input_stream($handle);
+
+        $self-&amp;gt;{obj}-&amp;gt;importXML($path, $input_stream, $behavior);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This calls the &lt;code&gt;input_stream()&lt;/code&gt; method, which is a Perl subroutine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub input_stream {
+    my $glob = shift;
+    my $glob_val = $$glob;
+    $glob_val =~ s/^\*//;
+    my $glob_caller = Java::JCR::GlobCaller-&amp;gt;new($glob_val);
+    return Java::JCR::GlobInputStream-&amp;gt;new($glob_caller);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, this subroutine uses two separate Java classes to provide the interface from a Perl file handle to Java &lt;code&gt;InputStream&lt;/code&gt;. The first class, &lt;code&gt;Java::JCR::GlobCaller&lt;/code&gt;, performs most of the real work using the callback features provided by &lt;code&gt;Inline::Java&lt;/code&gt;. It gets passed to the &lt;code&gt;Java::JCR::GlobInputStream&lt;/code&gt;, which calls &lt;code&gt;read()&lt;/code&gt; whenever the JCR reads from the stream:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;public int read() throws InlineJavaException, InlineJavaPerlException {
+    String ch = (String) CallPerlSub(
+            &amp;quot;Java::JCR::JavaUtils::read_one_byte&amp;quot;, new Object[] {
+                this.glob
+           });
+    return ch != null ? ch.charAt(0) : -1;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;read_one_byte()&lt;/code&gt; function is a very basic wrapper for the Perl built-in &lt;code&gt;getc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub read_one_byte {
+    my $glob = shift;
+    my $c = getc $glob;
+    return $c;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With this in place, you can now perform the &lt;a href=&#34;_ex/thirdhop.pl_&#34;&gt;third JCR hop in Perl&lt;/a&gt;. By executing this script, you will connect to a repository, log in, and then create nodes and properties from an XML file.&lt;/p&gt;
+
+&lt;h3 id=&#34;getting-ready-to-distribute&#34;&gt;Getting Ready to Distribute&lt;/h3&gt;
+
+&lt;p&gt;The implementation is now, more or less, complete. You can use &lt;code&gt;Java::JCR&lt;/code&gt; to connect to a Jackrabbit repository, log in, create nodes and properties, and import data from XML. There&amp;rsquo;s a lot left untested, but the essentials are now present. With this done, I was ready to begin getting ready for the distribution. However, because some Java libraries are requirements to use the library, the library has some special needs to build and install easily. You should be able to install it by just running:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;% cpan Java::JCR
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I needed a way to build this library. My preferred build tool is Ken Williams&amp;rsquo; &lt;a href=&#34;https://metacpan.org/pod/Module::Build&#34;&gt;Module::Build&lt;/a&gt;. It&amp;rsquo;s in common use, compatible with the CPAN installer, and cooperates well with &lt;em&gt;g-cpan.pl&lt;/em&gt;, which is a packaging tool for my favorite Linux distribution, &lt;a href=&#34;https://www.gentoo.org/&#34;&gt;Gentoo&lt;/a&gt;. Finally, it&amp;rsquo;s easy to extend.&lt;/p&gt;
+
+&lt;p&gt;When customizing &lt;code&gt;Module::Build&lt;/code&gt;, I prefer to create a custom build module rather than by placing the extension directly inline with the &lt;em&gt;Build.PL&lt;/em&gt; file. In this case, I&amp;rsquo;ve called the module &lt;a href=&#34;https://metacpan.org/pod/Java::JCR::Build&#34;&gt;Java::JCR::Build&lt;/a&gt;. I placed it inside a directory named &lt;em&gt;inc/&lt;/em&gt; with the rest of the tools I built for generating the package.&lt;/p&gt;
+
+&lt;p&gt;After creating the basic module that extends &lt;code&gt;Module::Build&lt;/code&gt;, I added a custom action to fetch the JAR files called &lt;code&gt;get_jars&lt;/code&gt;. I also added the code to execute this action on build by extending the &lt;code&gt;code&lt;/code&gt; ACTION:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub ACTION_get_jars {
+    my $self = shift;
+
+    eval &amp;quot;require LWP::UserAgent&amp;quot;
+        or die &amp;quot;Failed to load LWP::UserAgent: $@&amp;quot;;
+
+    my $mirror_dir
+        = File::Spec-&amp;gt;catdir($self-&amp;gt;blib, &#39;lib&#39;, &#39;Java&#39;, &#39;JCR&#39;);
+    mkpath( $mirror_dir, 1);
+
+    my $ua = LWP::UserAgent-&amp;gt;new;
+
+    print &amp;quot;Checking for needed jar files...n&amp;quot;;
+    while (my ($file, $url) = each %jars) {
+        my $path = File::Spec-&amp;gt;catfile($mirror_dir, $file);
+        $self-&amp;gt;add_to_cleanup($path);
+
+        next if -f $path;
+
+        my $response = $ua-&amp;gt;mirror($url, $path);
+        if ($response-&amp;gt;is_success) {
+            print &amp;quot;Mirroring $url to $file.n&amp;quot;;
+        }
+
+        elsif ($response-&amp;gt;is_error) {
+            die &amp;quot;An error occurred fetching $url to $file: &amp;quot;,
+                $response-&amp;gt;status_line, &amp;quot;n&amp;quot;;
+        }
+    }
+}
+
+sub ACTION_code {
+    my $self = shift;
+
+    $self-&amp;gt;ACTION_get_jars;
+    $self-&amp;gt;SUPER::ACTION_code;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I use Gisle Aas&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/LWP::UserAgent&#34;&gt;LWP::UserAgent&lt;/a&gt; to fetch the JAR files from the public Maven repositories and drop them into the build library folder, &lt;em&gt;blib&lt;/em&gt;. &lt;code&gt;Module::Build&lt;/code&gt; will take care of the rest by copying those JAR files to the appropriate location during the install process.&lt;/p&gt;
+
+&lt;p&gt;I also needed some code in &lt;code&gt;Java::JCR&lt;/code&gt; to set the &lt;code&gt;CLASSPATH&lt;/code&gt; correctly ahead of time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $classpath;
+BEGIN {
+    my @classpath;
+    my $this_path = $INC{&#39;Java/JCR.pm&#39;};
+    $this_path =~ s/.pm$//;
+    my $jar_glob = File::Spec-&amp;gt;catfile($this_path, &amp;quot;*.jar&amp;quot;);
+    for my $jar_file (glob $jar_glob) {
+        push @classpath, $jar_file;
+    }
+    $classpath = join &#39;:&#39;, @classpath, ($ENV{&#39;CLASSPATH&#39;} || &#39;&#39;);
+    $ENV{&#39;CLASSPATH&#39;} = $classpath;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This bit of code asks Perl for the path to the location of this library, which I assume is the installed location of the JAR files. Then, I find each file ending with &lt;em&gt;.jar&lt;/em&gt; in that directory and put them into the &lt;code&gt;CLASSPATH&lt;/code&gt;. Unfortunately, my code assumes a Unix environment when it uses the colon as the path separator. A future revision could make sure that this works on other systems as well, but because I use only Unix-based operating systems, my motivation is lacking.&lt;/p&gt;
+
+&lt;p&gt;With all that, you can now deploy this by downloading the tarball and running:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;% perl Build.PL
+% ./Build
+% ./Build test
+% ./Build install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It works!&lt;/p&gt;
+
+&lt;h3 id=&#34;testing&#34;&gt;Testing&lt;/h3&gt;
+
+&lt;p&gt;I haven&amp;rsquo;t mentioned this yet, but during the whole process of building this library, I also built a series of test cases. You can find these in the &lt;em&gt;t/&lt;/em&gt; directory of the distribution. The first few tests are actually just variations on the Jackrabbit tutorial, as well as a test to make sure the POD documentation contains no errors (every module author should use this test; you can just copy and paste it into any project).&lt;/p&gt;
+
+&lt;h3 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h3&gt;
+
+&lt;p&gt;I love Perl. This port from Java to Perl was easier than I would have thought possible. I wanted to share my success in the hopes of spurring on others. Kudos go to Ken Williams and Patrick LeBoutillier and the others that have assisted them to build the tools that made this possible.&lt;/p&gt;
+
+&lt;p&gt;Cheers.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

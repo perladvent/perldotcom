@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Router Xs on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/router-xs/</link>
+    <description>Recent content in Router Xs on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 28 Jan 2018 21:50:37 +0000</lastBuildDate>
+    <atom:link href="/tags/router-xs/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>When Perl isn&#39;t fast enough</title>
+      <link>http://localhost:1313/article/when-perl-isn-t-fast-enough/</link>
+      <pubDate>Sun, 28 Jan 2018 21:50:37 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/when-perl-isn-t-fast-enough/</guid>
+      <description>
+
+&lt;p&gt;Last year at $work we held a web application &amp;ldquo;bake off&amp;rdquo; competition, in order to find a suitable technology stack for serving some important pages on our website, as fast as possible. Our developers were allowed to compete individually or in a team, and they could use any programming language they wanted.&lt;/p&gt;
+
+&lt;p&gt;The existing solution was based on Perl&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Catalyst&#34;&gt;Catalyst&lt;/a&gt; framework using &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;Template::Toolkit&lt;/a&gt;, and the code had become utterly bloated, to the point at which it took several hundred ms to serve the pages. The issue wasn&amp;rsquo;t with the technology per se: a vanilla Catalyst application can serve responses in under 10ms, the problem was that the application code was shared among several different teams, and as each team added various features and functions, performance degraded.&lt;/p&gt;
+
+&lt;p&gt;The overall aim then, was to see what we could do if we &amp;ldquo;burned it down&amp;rdquo; and started again. The bake off generated a lot of buzz: we were given carte blanche to spend as much time as needed working on it, and it was a lot of fun. We had entries in Python, Go, Java, Haskell, Lua, Node, Elixir and of course, Perl.&lt;/p&gt;
+
+&lt;h1 id=&#34;round-1&#34;&gt;Round 1&lt;/h1&gt;
+
+&lt;p&gt;The goal of the first round was to develop a web application that would respond to certain GET requests by serving a particular template. Much of the template was static, but there was some dynamic logic to it.&lt;/p&gt;
+
+&lt;p&gt;My team built a solution on top of &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt;. We created thin request and response classes in &lt;a href=&#34;https://metacpan.org/pod/Moo&#34;&gt;Moo&lt;/a&gt;, a router coded in C (&lt;a href=&#34;https://metacpan.org/pod/Router::XS&#34;&gt;Router::XS&lt;/a&gt;), and used &lt;a href=&#34;https://metacpan.org/pod/Text::XSlate&#34;&gt;Text::XSlate&lt;/a&gt; for the template. The solution kicked ass - it was able to serve over 10,000 requests per second, and we placed second overall, losing out only to a Java entry.&lt;/p&gt;
+
+&lt;h1 id=&#34;round-2&#34;&gt;Round 2&lt;/h1&gt;
+
+&lt;p&gt;In round 2 things got trickier: our solutions would be required to make several requests to other internal services, in order to formulate the response. Additionally, our solutions would be judged for a &amp;ldquo;joy&amp;rdquo; factor: &lt;em&gt;would developers love working with this stack?&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To satisfy the &amp;ldquo;joy&amp;rdquo; factor, we merged our code with another team&amp;rsquo;s entry, based on &lt;a href=&#34;https://metacpan.org/pod/Kelp&#34;&gt;Kelp&lt;/a&gt;. That gave us a real web framework to develop with, as opposed to the threadbare classes we had developed in round 1.&lt;/p&gt;
+
+&lt;p&gt;The requirement to make several requests to other services hurt us though. The kicker was, we had to make the requests concurrently &lt;em&gt;and&lt;/em&gt; compute concurrently on the responses. This was because the data needed for one request was coming from two separate data stores that could be fetched and processed and rendered concurrently. In other words, we needed threading.&lt;/p&gt;
+
+&lt;p&gt;Perl can do asynchronous programming with modules like &lt;a href=&#34;https://metacpan.org/pod/IO::Async&#34;&gt;IO::Async&lt;/a&gt; or &lt;a href=&#34;https://metacpan.org/pod/Coro&#34;&gt;Coro&lt;/a&gt;, but it&amp;rsquo;s single threaded. You &lt;em&gt;can&lt;/em&gt; compile Perl with &lt;a href=&#34;https://perldoc.perl.org/threads.html&#34;&gt;threads&lt;/a&gt;, which provide multi-threaded computing. They were developed back in the day by Microsoft to enable &lt;a href=&#34;https://perl.apache.org/&#34;&gt;mod_perl&lt;/a&gt; to run on Windows, in lieu of &lt;code&gt;fork()&lt;/code&gt;. Perl&amp;rsquo;s threads work by cloning the Perl interpreter&amp;rsquo;s internal data structures, and passing around a thread context variable to tell Perl which thread is requesting what data. These have predictable drawbacks: they require more system resources because of the cloned data, and each thread runs &lt;em&gt;slower&lt;/em&gt; than a single threaded Perl because of all the thread context checks.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s inability to multi-thread efficiently forced us to stay single-threaded and it really burnt us: the best performing Java and Go entries&amp;rsquo; throughput were within 3% of each other, but our solution was 50% slower.&lt;/p&gt;
+
+&lt;h1 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Perl is such a versatile language: from the terminal, to scripting and application programming, it excels in many areas. We were able to develop a lightning-fast application that competed with, and bested several high performance language competitors. Ultimately though, $work decided to use Go as for this solution we needed a highly scalable, performant stack.&lt;/p&gt;
+
+&lt;p&gt;Perl 6 might be a viable alternative soon. The latest 6.c &lt;a href=&#34;https://perl6.org/downloads/&#34;&gt;release&lt;/a&gt; includes a hybrid (M:N) threading model via a scheduler which comes into play when using &lt;a href=&#34;https://docs.perl6.org/language/concurrency&#34;&gt;higher level constructs&lt;/a&gt;. To bypass the scheduler and get more control, it has a &lt;a href=&#34;https://docs.perl6.org/type/Thread&#34;&gt;Thread&lt;/a&gt; class, for which each instance maps 1:1 with an OS thread. I suspect it is too slow to compete right now, but I will be watching future Perl 6 benchmarks with interest.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+Cover image from &lt;a href=&#34;http://www.psdgraphics.com/psd/rocket-icon-psd/&#34;&gt;psdgraphics.com&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

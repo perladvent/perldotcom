@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Improving mod_perl Sites&#39; Performance: Part 1 </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" In the next series of articles, we are going to talk about mod_perl performance issues. We will try to look at as many aspects of the mod_perl driven service as possible: hardware, software, Perl coding and finally the mod_perl..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2002/05/29/mod_perl-opt.html/" />
+<meta property="og:title" content="Improving mod_perl Sites&#39; Performance: Part 1" />
+<meta property="og:description" content=" In the next series of articles, we are going to talk about mod_perl performance issues. We will try to look at as many aspects of the mod_perl driven service as possible: hardware, software, Perl coding and finally the mod_perl...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2002-05-05T05:05:05Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2002_05_29_mod_perl-opt/111-achieve_closure.gif" />
+<meta property="og:article:tag" content="mod-perl-optimizing" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Improving mod_perl Sites&#39; Performance: Part 1</h1>
+              <p class="blog-post-meta">May 29, 2002 by
+              
+              
+                
+                
+                <a href="#author-bio-stas-bekman">Stas Bekman</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>In the next series of articles, we are going to talk about mod_perl performance issues. We will try to look at as many aspects of the mod_perl driven service as possible: hardware, software, Perl coding and finally the mod_perl specific aspects.</p>
+
+<h3 id="span-id-the-big-picture-the-big-picture-span"><span id="the_big_picture">The Big Picture</span></h3>
+
+<p>To make the user&rsquo;s Web browsing experience as painless as possible, every effort must be made to wring the last drop of performance from the server. There are many factors that affect Web site usability, but speed is one of the most important. This applies to any Web server, not just Apache, so it is important that you understand it.</p>
+
+<p>How do we measure the speed of a server? Since the user (and not the computer) is the one that interacts with the Web site, one good speed measurement is the time elapsed between the moment when one clicks on a link or presses a <em>Submit</em> button to the moment when the resulting page is fully rendered.</p>
+
+<p>The requests and replies are broken into packets. A request may be made up of several packets; a reply may be many thousands. Each packet has to make its way from one machine to another, perhaps passing through many interconnection nodes. We must measure the time starting from when the first packet of the request leaves our user&rsquo;s machine to when the last packet of the reply arrives back there.</p>
+
+<p>A Web server is only one of the entities the packets see along their way. If we follow them from browser to server and back again, then they may travel by different routes through many different entities. Before they are processed by your server, the packets might have to go through proxy (accelerator) servers and, if the request contains more than one packet, packets might arrive to the server by different routes with different arrival times. Therefore, it&rsquo;s possible that some packets that arrive earlier will have to wait for other packets before they could be reassembled into a chunk of the request message that will be then read by the server. Then the whole process is repeated in reverse.</p>
+
+<p>You could work hard to fine-tune your Web server&rsquo;s performance, but a slow Network Interface Card (NIC) or a slow network connection from your server might defeat it all. That&rsquo;s why it&rsquo;s important to think about the big picture and to be aware of possible bottlenecks between the server and the Web.</p>
+
+<p>Of course, there is little that you can do if the user has a slow connection. You might tune your scripts and Web server to process incoming requests quickly, so you will need only a small number of working servers, but you might find that the server processes are all busy waiting for slow clients to accept their responses.</p>
+
+<p>But there are techniques to cope with this. For example, you can deliver the response compressed. If you are delivering a pure text respond, then gzip compression will sometimes reduce the size of the respond by 10 times.</p>
+
+<p>You should analyze all the involved components when you try to create the best service for your users, and not the Web server or the code that the Web server executes. A Web service is like a car: If one of the parts or mechanisms is broken, then the car may not operate smoothly and it can even stop dead if pushed too far without fixing it.</p>
+
+<p>Let me stress it again: If you want to be successful in the Web service business, then you should start worrying about the client&rsquo;s browsing experience and <strong>not only</strong> how good your code benchmarks are.</p>
+
+<h3 id="span-id-operating-system-and-hardware-analysis-operating-system-and-hardware-analysis-span"><span id="operating_system_and_hardware_analysis">Operating System and Hardware Analysis</span></h3>
+
+<table>
+<colgroup>
+<col width="100%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td></td>
+</tr>
+<tr class="even">
+<td><p>Previously in the Series</p>
+<p><a href="http://perl.com/pub/2002/05/22/mod_perl-isp.html">Finding a mod_perl ISP... or Becoming One</a><br />
+<br />
+<a href="http://perl.com/pub/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br />
+<br />
+<a href="http://perl.com/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
+<br />
+<a href="/pub/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
+<br />
+<a href="/pub/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br />
+<br />
+<a href="/pub/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
+<br />
+<a href="/pub/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
+</tr>
+<tr class="odd">
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<p>Before you start to optimize server configuration and learn to write more-efficient code, you need to consider the demands that will be placed on the hardware and the operating System. There is no point in investing a lot of time and money in configuration tuning and code optimizing, only to find that your server&rsquo;s performance is poor because you did not choose a suitable platform in the first place.</p>
+
+<p>Because hardware platforms and operating systems are developing rapidly (even while you are reading this article), the following advisory discussion must be in general terms, without mentioning specific vendors names.</p>
+
+<h3 id="span-id-choosing-the-right-operating-system-choosing-the-right-operating-system-span"><span id="choosing_the_right_operating_system">Choosing the Right Operating System</span></h3>
+
+<p>I will try to talk about what characteristics and features you should be looking for to support a mod_perl enabled Apache server, then when you know what you want from your OS, you can go out and find it. Visit the Web sites of the operating systems you are interested in. You can gauge user&rsquo;s opinions by searching the relevant discussions in newsgroup and mailing list archives. Deja - <a href="http://deja.com">http://deja.com</a> and eGroups - <a href="http://egroups.com">http://egroups.com</a> are good examples. I will leave this fan research to you. But probably the best shot will be to ask mod_perl users, as they know the best.</p>
+
+<h4 id="span-id-stability-and-robustness-requirements-stability-and-robustness-requirements-span"><span id="stability_and_robustness_requirements">Stability and Robustness Requirements</span></h4>
+
+<p>Probably the most important features in an OS are stability and robustness. You are in the Internet business. You do not keep normal 9 a.m. to 5 p.m. working hours like conventional businesses. You are open 24 hours a day. You cannot afford to be off-line, because your customers will shop at another service (unless you have a monopoly &hellip;). If the OS of your choice crashes every day, then first conduct a little investigation. There might be a simple reason that you can fix. There are OSs that won&rsquo;t work unless you reboot them twice a day. You don&rsquo;t want to use this type of OS, no matter how good the OS&rsquo; vendor sales department is. Do not follow flushy advertisements; follow developers&rsquo; advice instead.</p>
+
+<p>Generally, people who have used the OS for some time can tell you a lot about its stability. Ask them. Try to find people who are doing similar things to what you are planning to do, they may even be using the same software. There are often compatibility issues to resolve. You may need to become familiar with patching and compiling your OS.</p>
+
+<h4 id="span-id-good-memory-management-importance-good-memory-management-importance-span"><span id="good_memory_management_importance">Good Memory-Management Importance</span></h4>
+
+<p>You want an OS with a good memory-management implementation. Some OSs are well-known as memory hogs. The same code can use twice as much memory on one OS compared to another. If the size of the mod_perl process is 10Mb and you have tens of these running, then it definitely adds up!</p>
+
+<h4 id="span-id-say-no-to-memory-leaks-say-no-to-memory-leaks-span"><span id="say_no_to_memory_leaks">Say No to Memory Leaks</span></h4>
+
+<p>Some OSs and/or their libraries (e.g. C runtime libraries) suffer from memory leaks. A leak is when some process requests a chunk of memory for temporary storage, but then does not subsequently release it. The chunk of memory is not then available for any purpose until the process that requested it dies. You cannot afford such leaks. A single mod_perl process sometimes serves thousands of requests before it terminates. So if a leak occurs on each request, then the memory demands could become huge. Of course, your code can be the cause of the memory leaks as well, but it&rsquo;s easy to detect and solve. Certainly, we can reduce the number of requests to be served during the process&rsquo; life, but that can degrade performance.</p>
+
+<h4 id="span-id-memory-sharing-capabilities-is-a-must-memory-sharing-capabilities-is-a-must-span"><span id="memory_sharing_capabilities_is_a_must">Memory-Sharing Capabilities Is a Must</span></h4>
+
+<p>You want an OS with good memory-sharing capabilities. If you preload the Perl modules and scripts at server startup, then they are shared between the spawned children (at least for a part of a process&rsquo; life - memory pages can become ``dirty&rdquo; and cease to be shared). This feature can reduce memory consumption a lot!</p>
+
+<p>And, of course, you don&rsquo;t want an OS that doesn&rsquo;t have memory-sharing capabilities.</p>
+
+<h4 id="span-id-the-real-cost-of-support-the-real-cost-of-support-span"><span id="the_real_cost_of_support">The Real Cost of Support</span></h4>
+
+<p>If you are in a big business, then you probably do not mind paying another $1,000 for some fancy OS with bundled support. But if your resources are low, then you will look for cheaper and free OSs. Free does not mean bad, it can be quite the opposite. Free OSs can have the best support you can find. Some do.</p>
+
+<p>It is easy to understand - most of the people are not rich and will try to use a cheaper or free OS first if it does the work for them. Since it really fits their needs, many people keep using it and eventually know it well enough to be able to provide support for others in trouble. Why would they do this for free? One reason is for the spirit of the first days of the Internet, when there was no commercial Internet and people helped each other, because someone helped them in first place. I was there, I was touched by that spirit and I&rsquo;m keen to keep that spirit alive.</p>
+
+<p>But, let&rsquo;s get back to the real world. We are living in material world, and our bosses pay us to keep the systems running. So if you feel that you cannot provide the support yourself and you do not trust the available free resources, then you must pay for an OS backed by a company, and blame them for any problem. Your boss wants to be able to sue someone if the project has a problem caused by the external product that is being used in the project. If you buy a product and the company selling it claims support, then you have someone to sue or at least to put the blame on.</p>
+
+<p>If we go with open source and it fails we do not have someone to sue &hellip; wrong &ndash; in the past several years, many companies have realized how good the open-source products are and started to provide an official support for these products. So your boss cannot just dismiss your suggestion of using an open-source operating system. You can get a paid support just like with any other commercial OS vendor.</p>
+
+<p>Also remember that the less money you spend on OS and software, the more you will be able to spend on faster and stronger hardware. Of course, for some companies money is a nonissue, but there are many companies for which it is a <strong>big</strong> issue.</p>
+
+<h4 id="span-id-ouch-discontinued-products-ouch-discontinued-products-span"><span id="ouch..._discontinued_products">Ouch &hellip; Discontinued Products</span></h4>
+
+<p>The OSs in this hazard group tend to be developed by a single company or organization.</p>
+
+<p>You might find yourself in a position where you have invested a lot of time and money into developing some proprietary software that is bundled with the OS you chose (say writing a mod_perl handler that takes advantage of some proprietary features of the OS and that will not run on any other OS). Things are under control, the performance is great and you sing with happiness on your way to work. Then, one day, the company that supplies your beloved OS goes bankrupt (not unlikely nowadays), or they produce a newer incompatible version and they will not support the old one (happens all the time). You are stuck with their early masterpiece, no support and no source code! What are you going to do? Invest more money into porting the software to another OS &hellip;</p>
+
+<p>Free and open-source OSs are probably less susceptible to this kind of problem. Development is usually distributed between many companies and developers. So if a person who developed an important part of the kernel lost interest in continuing, then someone else will pick the falling flag and carry on. Of course, if tomorrow some better project shows up, then developers might migrate there and finally drop the development. But in practice, people are often given support on older versions and helped to migrate to current versions. Development tends to be more incremental than revolutionary, so upgrades are less traumatic, and there is usually plenty of notice of the forthcoming changes so that you have time to plan for them.</p>
+
+<p>Of course, with open-source OSs you can have the source code! So you can always have a go yourself, but do not under-estimate the amounts of work involved. There are many, many man-years of work in an OS.</p>
+
+<h4 id="span-id-keeping-up-with-os-releases-keeping-up-with-os-releases-span"><span id="keeping_up_with_os_releases">Keeping Up with OS Releases</span></h4>
+
+<p>Actively developed OSs generally try to keep pace with the latest technology developments, and continually optimize the kernel and other parts of the OS to become better and faster. Nowadays, Internet and networking in general are the hottest topics for system developers. Sometimes a simple OS upgrade to the latest stable version can save you an expensive hardware upgrade. Also, remember that when you buy new hardware, chances are that the latest software will make the most of it.</p>
+
+<p>If a new product supports an old one by virtue of backward compatibility with previous products of the same family, then you might not reap all the benefits of the new product&rsquo;s features. Perhaps you get almost the same functionality for much less money if you were to buy an older model of the same product.</p>
+
+<h3 id="span-id-choosing-the-right-hardware-choosing-the-right-hardware-span"><span id="choosing_the_right_hardware">Choosing the Right Hardware</span></h3>
+
+<p>Sometimes the most expensive machine is not the one that provides the best performance. Your demands on the platform hardware are based on many aspects and affect many components. Let&rsquo;s discuss some of them.</p>
+
+<p>In the discussion I use terms that may be unfamiliar to you:</p>
+
+<ul>
+<li><strong>Cluster</strong>: a group of machines connected together to perform one big or many small computational tasks in a reasonable time. Clustering can also be used to provide &lsquo;fail-over,&rsquo; where if one machine fails, then its processes are transferred to another without interruption of service. And you may be able to take one of the machines down for maintenance (or an upgrade) and keep your service running &ndash; the main server will simply not dispatch the requests to the machine that was taken down.</li>
+<li><strong>Load balancing</strong>: users are given the name of one of your machines but perhaps it cannot stand the heavy load. You can use a clustering approach to distribute the load over a number of machines. The central server, which users access initially when they type the name of your service, works as a dispatcher. It just redirects requests to other machines. Sometimes the central server also collects the results and returns them to the users. You can get the advantages of clustering, too.</li>
+<li><strong>Network Interface Card</strong> (NIC): a hardware component that allows you to connect your machine to the network. It performs packets sending and receiving, newer cards can encrypt and decrypt packets and perform digital signing and verifying of the such. These are coming in different speeds categories varying from 10Mbps to 10Gbps and faster. The most used type of the NIC card is the one that implements the Ethernet networking protocol.</li>
+<li><strong>Random Access Memory</strong> (RAM): It&rsquo;s the memory that you have in your computer. (Comes in units of 8Mb, 16Mb, 64Mb, 256Mb, etc.)</li>
+<li><strong>Redundant Array of Inexpensive Disks</strong> (RAID): an array of physical disks, usually treated by the operating system as one single disk, and often forced to appear that way by the hardware. The reason for using RAID is often simply to achieve a high data transfer rate, but it may also be to get adequate disk capacity or high reliability. Redundancy means that the system is capable of continued operation even if a disk fails. There are various types of RAID array and several different approaches to implementing them. Some systems provide protection against failure of more than one drive and some (`hot-swappable&rsquo;) systems allow a drive to be replaced without even stopping the OS.</li>
+</ul>
+
+<h4 id="span-id-machine-strength-demands-according-to-expected-site-traffic-machine-strength-demands-according-to-expected-site-traffic-span"><span id="machine_strength_demands_according_to_expected_site_traffic">Machine Strength Demands According to Expected Site Traffic</span></h4>
+
+<p>If you are building a fan site and you want to amaze your friends with a mod_perl guest book, then any old 486 machine could do it. If you are in a serious business, then it is important to build a scalable server. If your service is successful and becomes popular, then the traffic could double every few days, and you should be ready to add more resources to meet demand. While we can define the Web server scalability more precisely, the important thing is to make sure that you can add more power to your <code>webserver(s)</code> without investing much additional money in software development (you will need a little software effort to connect your servers, if you add more of them). This means that you should choose hardware and OSs that can talk to other machines and become a part of a cluster.</p>
+
+<p>On the other hand, if you prepare for a lot of traffic and buy a monster to do the work for you, then what happens if your service doesn&rsquo;t prove to be as successful as you thought? Then you&rsquo;ve spent too much money, and meanwhile faster processors and other hardware components have been released; so you lose.</p>
+
+<p>Wisdom and prophecy, that&rsquo;s all it takes :)</p>
+
+<h4 id="span-id-single-strong-machine-vs-many-weaker-machines-single-strong-machine-vs-many-weaker-machines-span"><span id="single_strong_machine_vs._many_weaker_machines">Single Strong Machine vs. Many Weaker Machines</span></h4>
+
+<p>Let&rsquo;s start with a claim that a 4-year-old processor is still powerful and can be put to a good use. Now let&rsquo;s say that for a given amount of money you can probably buy either one new very strong machine or about 10 older but very cheap machines. I claim that with 10 old machines connected into a cluster and by deploying load balancing you will be able to serve about five times more requests than with one single new machine.</p>
+
+<p>Why is that? Because generally the performance improvement on a new machine is marginal while the price is much higher. Ten machines will do faster disk I/O than one single machine, even if the new disk is quite a bit faster. Yes, you have more administration overhead, but there is a chance you will have it anyway, for in a short time the new machine you have just bought might not stand the load. Then you will have to purchase more equipment and think about how to implement load balancing and Web server file system distribution anyway.</p>
+
+<p>Why I am so convinced? Look at the busiest services on the Internet: search engines, Web/e-mail servers and the like &ndash; most of them use a clustering approach. You may not always notice it, because they hide the real implementation details behind proxy servers.</p>
+
+<h4 id="span-id-getting-fast-internet-connection-getting-fast-internet-connection-span"><span id="getting_fast_internet_connection">Getting Fast Internet Connection</span></h4>
+
+<p>You have the best hardware you can get, but the service is still crawling. Make sure you have a fast Internet connection. Not as fast as your ISP claims it to be, but fast as it should be. The ISP might have a good connection to the Internet, but put many clients on the same line. If these are heavy clients, then your traffic will have to share the same line and your throughput will suffer. Think about a dedicated connection and make sure it is truly dedicated. Don&rsquo;t trust the ISP, check it!</p>
+
+<p>The idea of having a connection to <strong>the Internet</strong> is a little misleading. Many Web hosting and co-location companies have large amounts of bandwidth, but still have poor connectivity. The public exchanges, such as MAE-East and MAE-West, frequently become overloaded, yet many ISPs depend on these exchanges.</p>
+
+<p>Private peering means that providers can exchange traffic much quicker.</p>
+
+<p>Also, if your Web site is of global interest, check that the ISP has good global connectivity. If the Web site is going to be visited mostly by people in a certain country or region, then your server should probably be located there.</p>
+
+<p>Bad connectivity can directly influence your machine&rsquo;s performance. Here is a story one of the developers told on the mod_perl mailing list:</p>
+
+<blockquote>
+<p>What relationship has 10 percent packet loss on one upstream provider got to do with machine memory ?</p>
+
+<p>Yes &hellip; a lot. For a nightmare week, the box was located downstream of a provider who was struggling with some serious bandwidth problems of his own &hellip; people were connecting to the site via this link, and packet loss was such that retransmits and TCP stalls were keeping httpd heavies around for much longer than normal &hellip; instead of blasting out the data at high or even modem speeds, they would be stuck at 1k/sec or stalled out &hellip; people would press stop and refresh, httpds would take 300 seconds to timeout on writes to no-one &hellip; it was a nightmare. Those problems didn&rsquo;t go away till I moved the box to a place closer to some decent backbones.</p>
+
+<p>Note that with a proxy, this only keeps a lightweight httpd tied up, assuming the page is small enough to fit in the buffers. If you are a busy Internet site, then you always have some slow clients. This is a difficult thing to simulate in benchmark testing, though.</p>
+</blockquote>
+
+<h4 id="span-id-tuning-i-o-performance-tuning-i-o-performance-span"><span id="tuning_i/o_performance">Tuning I/O Performance</span></h4>
+
+<p>If your service is I/O bound (does a lot of read/write operations to disk), then you need a very fast disk, especially if the you need a relational database, which are the main I/O stream creators. So you should not spend the money on video card and monitor! A cheap card and a 14-inch monochrome monitor are perfectly adequate for a Web server; you will probably access it by <code>telnet</code> or <code>ssh</code> most of the time. Look for disks with the best price/performance ratio. Of course, ask around and avoid disks that have a reputation for head-crashes and other disasters.</p>
+
+<p>You must think about RAID or similar systems if you have an enormous data set to serve (what is an enormous data set nowadays? Gigabytes, terabytes?) or you expect a really big Web traffic.</p>
+
+<p>OK, you have a fast disk, what&rsquo;s next? You need a fast disk controller. There may be one embedded on your computer&rsquo;s motherboard. If the controller is not fast enough, then you should buy a faster one. Don&rsquo;t forget that it may be necessary to disable the original controller.</p>
+
+<h4 id="span-id-how-much-memory-is-enough-how-much-memory-is-enough-span"><span id="how_much_memory_is_enough">How Much Memory Is Enough?</span></h4>
+
+<p>How much RAM do you need? Nowadays, chances are that you will hear: ``Memory is cheap, the more you buy the better.&rdquo; But how much is enough? The answer is pretty straightforward: <em>you do not want your machine to swap</em>. When the CPU needs to write something into memory, but memory is already full, it takes the least frequently used memory pages and swaps them out to disk. This means you have to bear the time penalty of writing the data to disk. If another process then references some of the data that happens to be on one of the pages that has just been swapped out, then the CPU swaps it back in again, probably swapping out some other data that will be needed very shortly by some other process. Carried to the extreme, the CPU and disk start to <em>thrash</em> hopelessly in circles, without getting any real work done. The less RAM there is, the more often this scenario arises. Worse, you can exhaust swap space as well, and then your troubles really start.</p>
+
+<p>How do you make a decision? You know the highest rate at which your server expects to serve pages and how long it takes on average to serve one. Now you can calculate how many server processes you need. If you know the maximum size your servers can grow to, then you know how much memory you need. If your OS supports memory sharing, then you can make best use of this feature by preloading the modules and scripts at server startup, and so you will need less memory than you have calculated.</p>
+
+<p>Do not forget that other essential system processes need memory as well, so you should plan not only for the Web server, but also take into account the other players. Remember that requests can be queued, so you can afford to let your client wait for a few moments until a server is available to serve it. Most of the time your server will not have the maximum load, but you should be ready to bear the peaks. You need to reserve at least 20 percent of free memory for peak situations. Many sites have crashed a few moments after a big scoop about them was posted and an unexpected number of requests suddenly came in. (Like Slashdot effect.) If you are about to announce something cool, then be aware of the possible consequences.</p>
+
+<h4 id="span-id-getting-a-faulttolerant-cpu-getting-a-fault-tolerant-cpu-span"><span id="getting_a_faulttolerant_cpu">Getting a Fault-Tolerant CPU</span></h4>
+
+<p>Make sure that the CPU is operating within its specifications. Many boxes are shipped with incorrect settings for CPU clock speed, power supply voltage, etc. Sometimes a cooling fan is not fitted. It may be ineffective because a cable assembly fouls the fan blades. Like faulty RAM, an overheating processor can cause all kinds of strange and unpredictable things to happen. Some CPUs are known to have bugs that can be serious in certain circumstances. Try not to get one of them.</p>
+
+<table>
+<colgroup>
+<col width="100%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td></td>
+</tr>
+<tr class="even">
+<td><p>Previously in the Series</p>
+<p><a href="http://perl.com/pub/2002/05/22/mod_perl-isp.html">Finding a mod_perl ISP... or Becoming One</a><br />
+<br />
+<a href="http://perl.com/pub/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br />
+<br />
+<a href="http://perl.com/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
+<br />
+<a href="/pub/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
+<br />
+<a href="/pub/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br />
+<br />
+<a href="/pub/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
+<br />
+<a href="/pub/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
+</tr>
+<tr class="odd">
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<h4 id="span-id-detecting-and-avoiding-bottlenecks-detecting-and-avoiding-bottlenecks-span"><span id="detecting_and_avoiding_bottlenecks">Detecting and Avoiding Bottlenecks</span></h4>
+
+<p>You might use the most expensive components, but still get bad performance. Why? Let me introduce an annoying word: bottleneck.</p>
+
+<p>A machine is an aggregate of many components. Almost any one of them may become a bottleneck.</p>
+
+<p>If you have a fast processor but a small amount of RAM, then the RAM will probably be the bottleneck. The processor will be under-utilized, usually it will be waiting for the kernel to swap the memory pages in and out, because memory is too small to hold the busiest pages.</p>
+
+<p>If you have a lot of memory, a fast processor, a fast disk, but a slow disk controller, then the disk controller will be the bottleneck. The performance will still be bad, and you will have wasted money.</p>
+
+<p>A slow NIC can cause a bottleneck as well and make the whole service run slow. This is a most important component, since Web servers are much more often network-bound than they are disk-bound (i.e. having more network traffic than disk utilization)</p>
+
+<h4 id="span-id-solving-hardware-requirement-conflicts-solving-hardware-requirement-conflicts-span"><span id="solving_hardware_requirement_conflicts">Solving Hardware Requirement Conflicts</span></h4>
+
+<p>It may happen that the combination of software components that you find yourself using gives rise to conflicting requirements for the optimization of tuning parameters. If you can separate the components onto different machines, then you may find that this approach (a kind of clustering) solves the problem, at much less cost than buying faster hardware, because you can tune the machines individually to suit the tasks they should perform.</p>
+
+<p>For example, if you need to run a relational database engine and mod_perl server, then it can be wise to put the two on different machines, since while RDBMS need a very fast disk, mod_perl processes need lots of memory. So by placing the two on different machines it&rsquo;s easy to optimize each machine at separate and satisfy the each software components requirements in the best way.</p>
+
+<hr />
+
+<h1 id="span-id-references-references-span"><span id="references">References</span></h1>
+
+<ul>
+<li>The mod_perl site&rsquo;s URL: <a href="http://perl.apache.org">http://perl.apache.org</a></li>
+<li>For more information about RAID see the Disk-HOWTO, Module-HOWTO and Parallel-Processing-HOWTO available from the Linux Documentation Project and its mirrors (<a href="http://www.linuxdoc.org/docs.html#howto">http://www.linuxdoc.org/docs.html#howto</a>)</li>
+<li>For more information about clusters and high availability setups, see:</li>
+</ul>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/web">web</a></div>
+                
+                  <div class="tag"><a href="/tags/mod-perl-optimizing">mod-perl-optimizing</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-stas-bekman">
+  <div class="col-sm-2">
+    
+    <a href="/authors/stas-bekman/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/stas-bekman/"><h3>Stas Bekman</h3></a>
+    <p></p>
+    <h5><a href="/authors/stas-bekman/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2002_05_29_mod_perl-opt.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

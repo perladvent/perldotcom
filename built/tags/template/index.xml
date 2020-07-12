@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Template on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/template/</link>
+    <description>Recent content in Template on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 01 Feb 2007 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/template/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Advanced HTML::Template: Widgets</title>
+      <link>http://localhost:1313/pub/2007/02/02/htmltemplate-widgets.html/</link>
+      <pubDate>Thu, 01 Feb 2007 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2007/02/02/htmltemplate-widgets.html/</guid>
+      <description>
+
+&lt;p&gt;My previous article, looked at &lt;a href=&#34;http://localhost:1313/pub/2006/11/30/html-template-filters.html&#34;&gt;extending &lt;code&gt;HTML::Template&lt;/code&gt; through custom tags and filters&lt;/a&gt;. This article looks at ways to manage large, more complex pages, by bundling &lt;a href=&#34;https://metacpan.org/pod/HTML::Template&#34;&gt;HTML::Template&lt;/a&gt; into something like GUI &amp;ldquo;widgets&amp;rdquo; (or &amp;ldquo;controls&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;Imagine you have a basic page layout following the standard setup, with a header, a lefthand navbar, and the main body in the bottom right. The header and navbar are the same for all pages of the site, but of course the main body differs from page to page:&lt;/p&gt;
+
+&lt;p&gt;Header
+Navbar
+Body&lt;/p&gt;
+
+&lt;p&gt;Naturally, you don&amp;rsquo;t want to repeat the information for the header and the navbar explicitly on each page. Furthermore, if the HTML for the navbar changes, you don&amp;rsquo;t want to have to modify each and every page. The &lt;code&gt;&amp;lt;TMPL_INCLUDE&amp;gt;&lt;/code&gt; tag can help in this situation.&lt;/p&gt;
+
+&lt;p&gt;Create separate files for header and navbar, then include them in the template for each page (by convention, I use the filename extension &lt;em&gt;.tpf&lt;/em&gt; for page *f*ragments, to distinguish them from full-page templates: &lt;em&gt;.tpl&lt;/em&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=navbar.tpf&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;
+        &amp;lt;!-- Body goes here! --&amp;gt;
+        ...
+      &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now &lt;code&gt;HTML::Template&lt;/code&gt; will include the page fragments for the header and navbar in the page when it evaluates the template. Changes to either of the fragments will affect the entire site immediately.&lt;/p&gt;
+
+&lt;p&gt;(For simplicity of presentation, I am going to use the old familiar &lt;code&gt;&amp;lt;table&amp;gt;&lt;/code&gt; method to fix the layout&amp;ndash;this article is about &lt;code&gt;HTML::Template&lt;/code&gt;, not CSS positioning!)&lt;/p&gt;
+
+&lt;p&gt;Note that both the header and the navbar may include other &lt;code&gt;HTML::Template&lt;/code&gt; tags, such as &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt;: file fragment inclusion occurs &lt;em&gt;before&lt;/em&gt; tag substitution. If you need dynamic content in either header or navbar, all you need to do is set the value of the corresponding parameter using the &lt;code&gt;param()&lt;/code&gt; function before evaluating the template.&lt;/p&gt;
+
+&lt;h3 id=&#34;better-encapsulation-through-widgets&#34;&gt;Better Encapsulation through Widgets&lt;/h3&gt;
+
+&lt;p&gt;If there are only a few dynamic parameters in header and navbar, you can simply assign values to them together with the parameters required by the main body of the page. However, if the header and navbar themselves become sufficiently complicated, you probably don&amp;rsquo;t want to repeat their parameter-setting logic with the actual Perl code managing the main business logic for each page of our site. Instead, you can control them through an API.&lt;/p&gt;
+
+&lt;p&gt;To establish a Perl API for a page fragment, hide the entire template handling, including parameter setting and template substitution, in a subroutine. The subroutine takes several parameters and returns a string containing the fully expanded HTML code corresponding to the page fragment. You can then include this string in the current page through a simple &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tag.&lt;/p&gt;
+
+&lt;p&gt;As an example, consider a navbar that contains the username of the currently logged-in user.&lt;/p&gt;
+
+&lt;p&gt;Here is the page-fragment template for the navbar:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Current User: &amp;lt;TMPL_VAR NAME=login&amp;gt;
+&amp;lt;br /&amp;gt;
+&amp;lt;ul&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page1.html&amp;quot;&amp;gt;Page 1&amp;lt;/a&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page2.html&amp;quot;&amp;gt;Page 2&amp;lt;/a&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page3.html&amp;quot;&amp;gt;Page 3&amp;lt;/a&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For this example, the corresponding subroutine is very simple. It&amp;rsquo;s easy to imagine a situation where the navbar requires some complex logic that you are glad to hide behind a function call&amp;ndash;for instance, when the selection of links depends on the permissions (found through a DB call) of the logged-in user.&lt;/p&gt;
+
+&lt;p&gt;Demonstrating the principle is straightforward; find the template fragment, set the required parameter, and render the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub navbar {
+  my ( $login ) = shift;
+
+  my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;navbar.tpf&#39; );
+  $tpl-&amp;gt;param( login =&amp;gt; $login );
+  return $tpl-&amp;gt;output();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The master-page template then includes the navbar string using a &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tag. (Note the header inclusion through a &lt;code&gt;&amp;lt;TMPL_INCLUDE&amp;gt;&lt;/code&gt; tag.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=navbar&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;
+        &amp;lt;!-- Body goes here! --&amp;gt;
+        ...
+      &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach provides pretty good encapsulation: the code calling the &lt;code&gt;navbar()&lt;/code&gt; routine does not need to know anything about its implementation&amp;ndash;in fact, the subroutine can be in a separate module entirely. It is not far-fetched to imagine a shared module for all reusable page fragments used on the site.&lt;/p&gt;
+
+&lt;h3 id=&#34;building-pages-inside-out&#34;&gt;Building Pages Inside Out&lt;/h3&gt;
+
+&lt;p&gt;This development model still uses a separate, top-level template file for each page. All shared parts of the page are then included in this master template.&lt;/p&gt;
+
+&lt;p&gt;The widget approach can go a step further to do away entirely with the notion of having a separate master template for each page, by turning even the &lt;em&gt;main body&lt;/em&gt; of the page into a widget or a collection of widgets. At this point, there may be only a single top-level template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=navbar&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=mainbody&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A central Perl &amp;ldquo;controller&amp;rdquo; component dispatches page requests to the appropriate main-body widget (assuming you specify destination pages through a request parameter called &lt;code&gt;action&lt;/code&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use CGI;
+use HTML::Template;
+
+my $q = CGI-&amp;gt;new;
+my $action = $q-&amp;gt;param( &#39;action&#39; );
+
+# Dispatch to the desired main function
+my $body_string = &#39;&#39;;
+if(    $action eq &#39;act1&#39; ) { $body_string = act1( $q ); }
+elsif( $action eq &#39;act2&#39; ) { $body_string = act2( $q ); }
+elsif( $action eq &#39;act3&#39; ) { $body_string = act3( $q ); }
+
+# Pull the current user from the query object and pass to the navbar
+my $navbar_string = navbar( $q-&amp;gt;param( &#39;login&#39; ) );
+
+# Set the rendered navbar and mainbody in the master template
+my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;tmpl3.tpl&#39; );
+$tpl-&amp;gt;param( mainbody =&amp;gt; $body_string );
+$tpl-&amp;gt;param( navbar   =&amp;gt; $navbar_string );
+
+print $q-&amp;gt;header(), $tpl-&amp;gt;output;
+
+sub navbar { ... }
+
+sub act1{ ... }
+sub act2{ ... }
+sub act3{ ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;a-drop-down-widget&#34;&gt;A Drop-down Widget&lt;/h3&gt;
+
+&lt;p&gt;At this point, you may ask why you still need a template for the page fragment at all. Well, you don&amp;rsquo;t&amp;ndash;unless you find it convenient, of course.&lt;/p&gt;
+
+&lt;p&gt;There are two reasons to use a template: as a more suitable method of generating HTML than having to program a whole bunch of &lt;code&gt;print&lt;/code&gt; statements, and to ensure separation of presentation from behavior. By encapsulating the nitty-gritty of HTML generation behind an API, you achieve the latter. How you go about the former depends entirely on the context. If you need to generate a lot of straight up HTML, with lots of &lt;code&gt;&amp;lt;table&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt;, and &lt;code&gt;&amp;lt;form&amp;gt;&lt;/code&gt; tags, a template fragment makes perfect sense. But if it is actually easier to program the &lt;code&gt;print&lt;/code&gt; statements yourself, there is nothing wrong with that&amp;ndash;by encapsulating the HTML generation in a subroutine, you still achieve separation of presentation and main control flow and business logic.&lt;/p&gt;
+
+&lt;p&gt;As a classic example for something that is hard to express as a template, consider a drop-down menu with a default that has to be set programmatically. Attempting to do this using a template leads to a mess of template loops and conditionals. However, doing it in a widget subroutine is clean and easy, in particular if you use the appropriate functions from the standard &lt;code&gt;CGI&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub color_select {
+  my ( $default_color ) = @_;
+
+  my @colors = qw( red green blue yellow cyan magenta );
+
+  return popup_menu( &#39;color_select&#39;, \@colors, $default_color );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Include the string returned by this subroutine in a page template using &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tags as discussed previously.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;This concludes a brief overview of some useful techniques for using &lt;code&gt;HTML::Template&lt;/code&gt; that go beyond straight up variable replacement. I hope you enjoyed the trip.&lt;/p&gt;
+
+&lt;p&gt;There remains the question of when all of this is useful and suitable. To me, the beauty of &lt;code&gt;HTML::Template&lt;/code&gt; is its utter simplicity. There isn&amp;rsquo;t much in the way of creature comforts or &amp;ldquo;framework&amp;rdquo; features (such as forms processing or automated request dispatch). On the other hand, there is virtually &lt;em&gt;no&lt;/em&gt; overhead: it&amp;rsquo;s possible to understand the basic ideas of &lt;code&gt;HTML::Template&lt;/code&gt; in five minutes or fewer, and it&amp;rsquo;s easy to add to any simple CGI script. You don&amp;rsquo;t need to design the project around the framework (as is often the case with more powerful but inevitably more complex toolsets). In fact, &lt;code&gt;HTML::Template&lt;/code&gt; is so trivial to use that I use it in any CGI script that produces more than, say, 10 to 15 lines of HTML output. It&amp;rsquo;s just convenient.&lt;/p&gt;
+
+&lt;p&gt;Filters and &amp;ldquo;widgets&amp;rdquo; as described in this series are easy ways to add some convenience features that are missing from &lt;code&gt;HTML::Template&lt;/code&gt;. By bundling some repetitive code segments into a custom tag or a widget, you can keep both the code and template cleaner and simpler while at the same time continuing to enjoy the low overhead of &lt;code&gt;HTML::Template&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;However, there is only so much lipstick you can put on a pig. When you find ourselves building extensive libraries of custom tags or specific widgets, maybe you want to look more deeply into one of the existing frameworks for Perl web development, such as &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;the Template Toolkit&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, as long as you are happy with &lt;code&gt;HTML::Template&lt;/code&gt; and it works for you, there is no reason to change. It works for me&amp;ndash;and very well indeed.&lt;/p&gt;
+
+&lt;h4 id=&#34;sidebar-three-hidden-gems&#34;&gt;Sidebar: Three Hidden Gems&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;HTML::Template&lt;/code&gt; has several useful and often overlooked minor features and options, (despite being clearly documented in POD). I want to point out three of the ones that are most commonly useful&amp;ndash;all of which, by default, are (unfortunately, I think) turned &lt;em&gt;off&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h5 id=&#34;permit-unused-parameters&#34;&gt;Permit Unused Parameters&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, die_on_bad_params =&amp;gt; 0 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;HTML::Template will die when it encounters an unused parameter in the template. In other words, if you set a parameter with &lt;code&gt;$tpl-&amp;gt;param()&lt;/code&gt;, but there is no corresponding &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; in the template, template processing will fail by default. Setting the option &lt;code&gt;die_on_bad_params&lt;/code&gt; to &lt;code&gt;0&lt;/code&gt; disables this behavior.&lt;/p&gt;
+
+&lt;h5 id=&#34;make-global-variables-visible-in-loops&#34;&gt;Make Global Variables Visible In Loops&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, global_vars =&amp;gt; 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default, template loops open up a new scope, which makes all template parameters from outside the loop invisible within the loop. In particular, code like this will (by default) not work as expected:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Verbosity level: &amp;lt;TMPL_VAR NAME=isVerbose&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;TMPL_LOOP NAME=rows&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=rowitem&amp;gt;
+    &amp;lt;TMPL_IF NAME=isVerbose&amp;gt;
+      ... &amp;lt;!-- print additional, &#39;verbose&#39; info --&amp;gt;
+    &amp;lt;/TMPL_IF&amp;gt;
+&amp;lt;/TMPL_LOOP&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;verbose&lt;/code&gt; parameter, defined &lt;em&gt;outside&lt;/em&gt; the loop scope will by default &lt;em&gt;not&lt;/em&gt; be visible within the loop. Change this by setting the option &lt;code&gt;global_vars&lt;/code&gt; to &lt;code&gt;1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h5 id=&#34;special-loop-variables&#34;&gt;Special Loop Variables&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, loop_context_vars =&amp;gt; 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, enable a very useful little feature by setting &lt;code&gt;loop_context_vars&lt;/code&gt; to &lt;code&gt;1&lt;/code&gt;. This defines several Boolean variables within each loop; they take on the appropriate value for each row:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;__first__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__inner__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__last__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__odd__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__even__&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There is also an integer variable &lt;code&gt;__counter__&lt;/code&gt;, which is incremented for each row. Note that &lt;code&gt;__counter__&lt;/code&gt; starts at &lt;code&gt;1&lt;/code&gt;, in contrast to Perl arrays!&lt;/p&gt;
+
+&lt;p&gt;These variables are extremely useful in a variety of ways. For example, they make it easy to give every other row in a table a different background color to improve legibility. Together with filters (as described in my previous article), this allows for rather elegant template code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+  &amp;lt;style type=&amp;quot;text/css&amp;quot;&amp;gt;
+    .odd  { background-color: yellow }
+    .even { background-color: cyan }
+  &amp;lt;/style&amp;gt;
+&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+  &amp;lt;table&amp;gt;
+  &amp;lt;TMPL_LOOP NAME=rows&amp;gt;
+    &amp;lt;CSTM_ROW EVEN=even ODD=odd&amp;gt;
+      &amp;lt;td&amp;gt; &amp;lt;TMPL_VAR NAME=__counter__&amp;gt; Cell contents... &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+  &amp;lt;/TMPL_LOOP&amp;gt;
+  &amp;lt;/table&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The appropriate filter for the new custom tag is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cstmrow_filter {
+  my $text_ref = shift;
+  $$text_ref =~ s/&amp;lt;CSTM_ROW\s+EVEN=(.+)\s+ODD=(.*)\s*&amp;gt;
+                 /&amp;lt;TMPL_IF NAME=__odd__&amp;gt;
+                    &amp;lt;tr class=&amp;quot;$1&amp;quot;&amp;gt;
+                  &amp;lt;TMPL_ELSE&amp;gt;
+                    &amp;lt;tr class=&amp;quot;$2&amp;quot;&amp;gt;
+                  &amp;lt;\/TMPL_IF&amp;gt;
+                 /gx;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that, as implemented, the &lt;code&gt;EVEN&lt;/code&gt; attribute must precede the &lt;code&gt;ODD&lt;/code&gt; attribute in the &lt;code&gt;&amp;lt;CSTM_ROW&amp;gt;&lt;/code&gt; tag.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>The e-smith Server and Gateway: a Perl Case Study</title>
+      <link>http://localhost:1313/pub/2001/02/esmith.html/</link>
+      <pubDate>Tue, 20 Feb 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/02/esmith.html/</guid>
+      <description>
+
+&lt;p&gt;The e-smith server and gateway system is a Linux distribution designed for small to medium enterprises. It&amp;rsquo;s intended to simplify the process of setting up Internet and file-sharing services and can be administered by a non-technical user with no prior Linux experience.&lt;/p&gt;
+
+&lt;p&gt;We chose Perl as the main development language for the e-smith server and gateway because of its widespread popularity (making it easier to recruit developers) and it&amp;rsquo;s well suited to e-smith&amp;rsquo;s blend of system administration, templating and Web-application development.&lt;/p&gt;
+
+&lt;p&gt;Of course, the system isn&amp;rsquo;t just Perl. Other parts of the system include the base operating system (based on Red Hat 7.0), a customized installer using Red Hat&amp;rsquo;s Anaconda (which is written in Python), and a range of applications including mail and Web servers, file sharing, and Web-based e-mail using IMP (which is written in PHP). However, despite the modifications and quick hacks we&amp;rsquo;ve made in other languages, the bulk of development performed by the e-smith team is in Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-aen16-the-e-smith-manager-a-perl-cgi-application-span&#34;&gt;&lt;span id=&#34;aen16&#34;&gt;The E-Smith Manager: a Perl CGI Application&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Administration of an e-smith server and gateway system is performed primarily via a Web interface called the &amp;ldquo;e-smith manager.&amp;rdquo; This is essentially a collection of CGI programs that display system information and allow the administrator to modify it as necessary.&lt;/p&gt;
+
+&lt;p&gt;This allows system owners with no previous knowledge of Linux to administer their systems easily without the need to understand the arcana of the command line, text configuration files, and so on.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_02_esmith/perl-article-manager.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The manager interface is based on the &lt;code&gt;CGI&lt;/code&gt; module that comes standard with the Perl distribution. However, a module &lt;code&gt;esmith::cgi&lt;/code&gt; has been written to provide further abstractions of common tasks such as:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;generating page headers and footers&lt;/li&gt;
+&lt;li&gt;generating commonly used widgets&lt;/li&gt;
+&lt;li&gt;generating status report pages&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;It is likely that this module will be further extended in the next version to provide more abstract ways of building &amp;ldquo;wizard&amp;rdquo; style interfaces, so that developers don&amp;rsquo;t have to copy and paste huge swathes of code calling the &lt;code&gt;CGI&lt;/code&gt; module directly.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Creating Data Output Files Using the Template Toolkit</title>
+      <link>http://localhost:1313/pub/2001/01/tt2.html/</link>
+      <pubDate>Tue, 23 Jan 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/01/tt2.html/</guid>
+      <description>
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Table of Contents&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;•&lt;a href=&#34;#a%20more%20complex%20example&#34;&gt;A more complex example&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+•&lt;a href=&#34;#producing%20xml&#34;&gt;Producing XML&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+•&lt;a href=&#34;#multiple%20formats&#34;&gt;Multiple Formats&lt;/a&gt;&lt;br /&gt;
+&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&#34;span-id-introducing-the-template-toolkit-introducing-the-template-toolkit-span&#34;&gt;&lt;span id=&#34;introducing the template toolkit&#34;&gt;Introducing the Template Toolkit&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There are a number of Perl modules that are universally recognised as The Right Thing To Use for certain tasks. If you accessed a database without using DBI, pulled data from the WWW without using on of the LWP modules or parsed XML without using XML::Parser or one of its subclasses then you&amp;rsquo;d run the risk of being shunned by polite Perl society.&lt;/p&gt;
+
+&lt;p&gt;I believe that the year 2000 saw the emergence of another &amp;lsquo;must have&amp;rsquo; Perl module - the Template Toolkit. I don&amp;rsquo;t think I&amp;rsquo;m alone in this belief as the Template Toolkit won the &amp;lsquo;Best New Module&amp;rsquo; award at the Perl Conference last summer. Version 2.0 of the Template Toolkit (known as TT2 to its friends) was recently released to the CPAN.&lt;/p&gt;
+
+&lt;p&gt;TT2 was designed and written by Andy Wardley &amp;lt;&lt;a href=&#34;mailto:abw@cre.canon.co.uk&#34;&gt;abw@cre.canon.co.uk&lt;/a&gt;&amp;gt;. It was born out of Andy&amp;rsquo;s previous templating module, Text::Metatext, in best Fred Brooks &amp;lsquo;plan to throw one away&amp;rsquo; manner; and aims to be the most useful (or, at least, the most &lt;em&gt;used&lt;/em&gt;) Perl templating system.&lt;/p&gt;
+
+&lt;p&gt;TT2 provides a way to take a file of fixed boilerplate text (the template) and embed variable data within it. One obvious use of this is in the creation of dynamic web pages and this is where a lot of the attention that TT2 has received has been focussed. In this article, I hope to demonstrate that TT2 is just as useful in non-web applications.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-using-the-template-toolkit-using-the-template-toolkit-span&#34;&gt;&lt;span id=&#34;using the template toolkit&#34;&gt;Using the Template Toolkit&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at how we&amp;rsquo;d use TT2 to process a simple data file. TT2 is an object oriented Perl module. Having downloaded it from CPAN and installed it in the usual manner, using it in your program is as easy as putting the lines&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Template;
+
+    my $tt = Template-&amp;gt;new;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;in your code. The constructor function, &lt;code&gt;new&lt;/code&gt;, takes a number of optional parameters which are documented in the copious manual pages that come with the module, but for the purposes of this article we&amp;rsquo;ll keep things as simple as possible.&lt;/p&gt;
+
+&lt;p&gt;To process the template, you would call the &lt;code&gt;process&lt;/code&gt; method like this&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $tt-&amp;gt;process(&#39;my_template&#39;, \%data)
+      || die $tt-&amp;gt;error;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We pass two parameters to &lt;code&gt;process&lt;/code&gt;, the first is the name of the file containing the template to process (in this case, my_template) and the second is a reference to a hash which contains the data items that you want to use in the template. If processing the template gives any kind of error, the program will die with a (hopefully) useful error message.&lt;/p&gt;
+
+&lt;p&gt;So what kinds of things can go in &lt;code&gt;%data&lt;/code&gt;? The answer is just about anything. Here&amp;rsquo;s an example showing data about English Premier League football teams.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @teams = ({ name =&amp;gt; &#39;Man Utd&#39;,
+                   played =&amp;gt; 16,
+                   won =&amp;gt; 12,
+                   drawn =&amp;gt; 3,
+                   lost =&amp;gt; 1 },
+                 { name =&amp;gt; &#39;Bradford&#39;,
+                   played =&amp;gt; 16,
+                   won =&amp;gt; 2,
+                   drawn =&amp;gt; 5,
+                   lost =&amp;gt; 9 });
+
+    my %data = ( name =&amp;gt; &#39;English Premier League&#39;,
+                 season =&amp;gt; &#39;2000/01&#39;,
+                 teams =&amp;gt; \@teams );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates three data items which can be accessed within the template, called &lt;code&gt;name&lt;/code&gt;, &lt;code&gt;season&lt;/code&gt; and &lt;code&gt;teams&lt;/code&gt;. Notice that &lt;code&gt;teams&lt;/code&gt; is a complex data structure.&lt;/p&gt;
+
+&lt;p&gt;Here is a template that we might use to process this data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    League Standings
+
+    League Name: [% name %]
+    Season     : [% season %]
+
+    Teams:
+    [% FOREACH team = teams -%]
+    [% team.name %] [% team.played -%] 
+     [% team.won %] [% team.drawn %] [% team.lost %]
+    [% END %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running this template with this data gives us the following output&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    League Standings
+
+    League Name: English Premier League
+    Season     : 2000/01
+
+    Teams:
+    Man Utd 16 12 3 1
+    Bradford 16 2 5 9
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Hopefully the syntax of the template is simple enough to follow. There are a few points to note.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Template processing directives are written using a simple language which is not Perl.&lt;/li&gt;
+&lt;li&gt;The keys of the &lt;code&gt;%data&lt;/code&gt; have become the names of the data variables within the template.&lt;/li&gt;
+&lt;li&gt;Template processing directives are surrounded by &lt;code&gt;[%&lt;/code&gt; and &lt;code&gt;%]&lt;/code&gt; sequences.&lt;/li&gt;
+&lt;li&gt;If these tags are replaced with &lt;code&gt;[%-&lt;/code&gt; &lt;code&gt;-%]&lt;/code&gt; then the preceding or following linefeed is suppressed.&lt;/li&gt;
+&lt;li&gt;In the &lt;code&gt;FOREACH&lt;/code&gt; loop, each element of the &lt;code&gt;teams&lt;/code&gt; list was assigned, in turn, to the temporary variable &lt;code&gt;team&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Each item assigned to the &lt;code&gt;team&lt;/code&gt; variable is a Perl hash. Individual values within the hash are accessed using a dot notation.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;It&amp;rsquo;s probably the first and last of these points which are the most important. The first point emphasises the separation of the data acquisition logic from the presentation logic. The person creating the presentation template doesn&amp;rsquo;t need to know Perl, they only need to know the data items which will be passed into the template.&lt;/p&gt;
+
+&lt;p&gt;The last point demonstrates the way that TT2 protects the template designer from the implementation of the data structures. The data objects passed to the template processor can be scalars, arrays, hashes, objects or even subroutines. The template processor will just interpret your data correctly and Do The Right Thing to return the correct value to you. In this example each team was a hash, but in a larger system each team might be an object, in which case &lt;code&gt;name&lt;/code&gt;, &lt;code&gt;played&lt;/code&gt;, etc. would be accessor methods to the underlying object attributes. No changes would be required to the template as the template processor would realise that it needed to call methods rather than access hash values.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-more-complex-example-a-more-complex-example-span&#34;&gt;&lt;span id=&#34;a more complex example&#34;&gt;A more complex example&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Stats about the English Football League are usually presented in a slightly more complex format that the one we used above. A full set of stats will show the number of games that a team has won, lost or drawn, the number of goals scored for and against the team and the number of points that the team therefore has. Teams gain three points for a win and one point for a draw. When teams have the same number of points they are separated by the goal difference, that is the number of goals the team has scored minus the number of team scored against them. To complicate things even further, the games won, drawn and lost and the goals for and against are often split between home and away games.&lt;/p&gt;
+
+&lt;p&gt;Therefore if you have a data source which lists the team name togther with the games won, drawn and lost and the goals for and against split into home and away (a total of eleven data items) you can calculate all of the other items (goal difference, points awarded and even position in the league). Let&amp;rsquo;s take such a file, but we&amp;rsquo;ll only look at the top three teams. It will look something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Man Utd,7,1,0,26,4,5,2,1,15,6
+  Arsenal,7,1,0,17,4,2,3,3,7,9
+  Leicester,4,3,1,10,8,4,2,2,7,4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A simple script to read this data into an array of hashes will look something like this (I&amp;rsquo;ve simplified the names of the data columns - w, d, and l are games won, drawn and lost and f and a are goals scored for and against; h and a at the front of a data item name indicates whether it&amp;rsquo;s a home or away statistic):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my @cols = qw(name hw hd hl hf ha aw ad al af aa);
+
+  my @teams;
+  while (&amp;lt;&amp;gt;) {
+    chomp;
+
+    my %team;
+
+    @team{@cols} = split /,/;
+
+    push @teams, \%team;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can then go thru the teams again and calculate all of the derived data items:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  foreach (@teams) {
+    $_-&amp;gt;{w} = $_-&amp;gt;{hw} + $_-&amp;gt;{aw};
+    $_-&amp;gt;{d} = $_-&amp;gt;{hd} + $_-&amp;gt;{ad};
+    $_-&amp;gt;{l} = $_-&amp;gt;{hl} + $_-&amp;gt;{al};
+
+    $_-&amp;gt;{pl} = $_-&amp;gt;{w} + $_-&amp;gt;{d} + $_-&amp;gt;{l};
+
+
+    $_-&amp;gt;{f} = $_-&amp;gt;{hf} + $_-&amp;gt;{af};
+    $_-&amp;gt;{a} = $_-&amp;gt;{ha} + $_-&amp;gt;{aa};
+
+    $_-&amp;gt;{gd} = $_-&amp;gt;{f} - $_-&amp;gt;{a};
+
+    $_-&amp;gt;{pt} = (3 * $_-&amp;gt;{w}) + $_-&amp;gt;{d};
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then produce a list sorted in descending order:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  @teams 
+    = sort { $b-&amp;gt;{pt} &amp;lt;=&amp;gt; $b-&amp;gt;{pt}
+             || $b-&amp;gt;{gd} &amp;lt;=&amp;gt; $a-&amp;gt;{gd} } @teams;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And finally add the league position data item:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $teams[$_]-&amp;gt;{pos} = $_ + 1 
+    foreach 0 .. $#teams;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Having pulled all of our data into an internal data structure we can start to produce output using out templates. A template to create a CSV file containing the data split between home and away stats would look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [% FOREACH team = teams -%]
+  [% team.pos %],[% team.name %],[% team.pl %],[% team.hw %],
+  [%- team.hd %],[% team.hl %],[% team.hf %],[% team.ha %],
+  [%- team.aw %],[% team.ad %],[% team.al %],[% team.af %],
+  [%- team.aa %],[% team.gd %],[% team.pt %]
+  [%- END %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And processing it like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $tt-&amp;gt;process(&#39;split.tt&#39;, { teams =&amp;gt; \@teams }, &#39;split.csv&#39;)
+    || die $tt-&amp;gt;error;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;produces the following output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  1,Man Utd,16,7,1,0,26,4,5,2,1,15,6,31,39
+  2,Arsenal,16,7,1,0,17,4,2,3,3,7,9,11,31
+  3,Leicester,16,4,3,1,10,8,4,2,2,7,4,5,29
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that we&amp;rsquo;ve introduced the third parameter to &lt;code&gt;process&lt;/code&gt;. If this parameter is missing then the TT2 sends its output to &lt;code&gt;STDOUT&lt;/code&gt;. If this parameter is a scalar then it is taken as the name of a file to write the output to. This parameter can also be (amongst other things) a filehandle or a reference to an object which is assumed to implement a &lt;code&gt;print&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;If we weren&amp;rsquo;t interested in the split between home and away games, then we could use a simpler template like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [% FOREACH team = teams -%]
+  [% team.pos %],[% team.name %],[% team.pl %],[% team.w %],
+  [%- team.d %],[% team.l %],[% team.f %],[% team.a %],
+  [%- team.aa %],[% team.gd %],[% team.pt %]
+  [% END -%]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which would produce output like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  1,Man Utd,16,12,3,1,41,10,6,31,39
+  2,Arsenal,16,9,4,3,24,13,9,11,31
+  3,Leicester,16,8,5,3,17,12,4,5,29
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-producing-xml-producing-xml-span&#34;&gt;&lt;span id=&#34;producing xml&#34;&gt;Producing XML&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This is starting to show some of the power and flexibility of TT2, but you may be thinking that you could just as easily produce this output with a &lt;code&gt;foreach&lt;/code&gt; loop and a couple of &lt;code&gt;print&lt;/code&gt; statements in your code. This is, of course, true; but that&amp;rsquo;s because I&amp;rsquo;ve chosen a deliberately simple example to explain the concepts. What if we wanted to produce an XML file containing the data? And what if (as I mentioned earlier) the league data was held in an object? The code would then look even easier as most of the code we&amp;rsquo;ve written earlier would be hidden away in &lt;code&gt;FootballLeague.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use FootballLeague;
+  use Template;
+
+  my $league = FootballLeague-&amp;gt;new(name =&amp;gt; &#39;English Premier&#39;);
+
+  my $tt = Template-&amp;gt;new;
+
+  $tt-&amp;gt;process(&#39;league_xml.tt&#39;, { league =&amp;gt; $league })
+    || die $tt-&amp;gt;error;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And the template in &lt;code&gt;league_xml.tt&lt;/code&gt; would look something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;?xml version=&amp;quot;1.0&amp;quot;?&amp;gt;
+  &amp;lt;!DOCTYPE LEAGUE SYSTEM &amp;quot;league.dtd&amp;quot;&amp;gt;
+
+  &amp;lt;league name=&amp;quot;[% league.name %]&amp;quot; season=&amp;quot;[% league.season %]&amp;quot;&amp;gt;
+  [% FOREACH team = league.teams -%]
+    &amp;lt;team name=&amp;quot;[% team.name %]&amp;quot;
+          pos=&amp;quot;[% team.pos %]&amp;quot;
+          played=&amp;quot;[% team.pl %]&amp;quot;
+          goal_diff=&amp;quot;[% team.gd %]&amp;quot;
+          points=&amp;quot;[% team.pt %]&amp;quot;&amp;gt;
+       &amp;lt;stats type=&amp;quot;home&amp;quot;&amp;gt;
+              win=&amp;quot;[% team.hw %]&amp;quot;
+              draw=&amp;quot;[%- team.hd %]&amp;quot;
+              lose=&amp;quot;[% team.hl %]&amp;quot;
+              for=&amp;quot;[% team.hf %]&amp;quot;
+              against=&amp;quot;[% team.ha %]&amp;quot; /&amp;gt;
+       &amp;lt;stats type=&amp;quot;away&amp;quot;&amp;gt;
+              win=&amp;quot;[% team.aw %]&amp;quot;
+              draw=&amp;quot;[%- team.ad %]&amp;quot;
+              lose=&amp;quot;[% team.al %]&amp;quot;
+              for=&amp;quot;[% team.af %]&amp;quot;
+              against=&amp;quot;[% team.aa %]&amp;quot; /&amp;gt;
+    &amp;lt;/team&amp;gt;
+  [% END -%]
+  &amp;lt;/league&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that as we&amp;rsquo;ve passed the whole object into &lt;code&gt;process&lt;/code&gt; then we need to put an extra level of indirection on our template variables - everything is now a component of the &lt;code&gt;league&lt;/code&gt; variable. Other than that, everything in the template is very similar to what we&amp;rsquo;ve used before. Presumably now &lt;code&gt;team.name&lt;/code&gt; calls an accessor function rather than carrying out a hash lookup, but all of this is transparent to our template designer.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-multiple-formats-multiple-formats-span&#34;&gt;&lt;span id=&#34;multiple formats&#34;&gt;Multiple Formats&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;As a final example, let&amp;rsquo;s suppose that we need to create out football league tables in a number of formats. Perhaps we are passing this data on to other people and they can&amp;rsquo;t all use the same format. Some of our users need CSV files and others need XML. Some require data split between home and away matches and other just want the totals. In total, then, we&amp;rsquo;ll need four different templates, but the good news is that they can use the same data object. All the script needs to do is to establish which template is required and process it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use FootballLeague;
+  use Template;
+
+  my ($name, $type, $stats) = @_;
+
+  my $league = FootballLeague-&amp;gt;new(name =&amp;gt; $name);
+
+  my $tt = Template-&amp;gt;new;
+
+  $tt-&amp;gt;process(&amp;quot;league_${type}_$stats.tt&amp;quot;, 
+               { league =&amp;gt; $league }
+               &amp;quot;league_$stats.$type&amp;quot;)
+    || die $tt-&amp;gt;error;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For example, calling this script as&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  league.pl &#39;English Premier&#39; xml split
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will process a template called &lt;code&gt;league_xml_split.tt&lt;/code&gt; and put the results in a file called &lt;code&gt;league_split.xml&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This starts to show the true strength of the Template Toolkit. If we later wanted to add another file format - perhaps we wanted to create a league table HTML page or even a LaTeX document - then we would just need to create the appropriate template and name it according to our existing naming convention. We would need to make no changes to the code.&lt;/p&gt;
+
+&lt;p&gt;I hope you can now see why the Template Toolkit is fast becoming an essential part of many people&amp;rsquo;s Perl installation.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

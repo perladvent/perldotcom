@@ -1,0 +1,642 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Jouke Visser on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/jouke-visser/</link>
+    <description>Recent content in Jouke Visser on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 15 Jul 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/jouke-visser/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Accessible Software</title>
+      <link>http://localhost:1313/pub/2004/07/14/accessibility.html/</link>
+      <pubDate>Thu, 15 Jul 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/07/14/accessibility.html/</guid>
+      <description>
+
+&lt;p&gt;Last year Perl.com published an &lt;a href=&#34;http://localhost:1313/pub/2003/08/28/pvoice.html&#34;&gt;article about pVoice&lt;/a&gt;. You learned what pVoice is, why it was built, and where it was supposed to go. Maybe you wanted to do something for disabled people yourself, by writing something like a mail client, a simple game like memory, or an instant-messaging client, but you didn&amp;rsquo;t implement it because you felt it was too much work. In that case there&amp;rsquo;s news for you.&lt;/p&gt;
+
+&lt;p&gt;Part of pVoice was a set of modules that was actually the engine for the user interface. A few months ago I pulled those modules from the pVoice project and made them into a CPAN distribution. This distribution is called AAC::Pvoice. And no, they have nothing to do with Apple&amp;rsquo;s digital audio format. They&amp;rsquo;re all about Augmentative and Alternative Communication. Although, I like to think that the &amp;ldquo;C&amp;rdquo; stands for &amp;ldquo;Computing,&amp;rdquo; which makes it into a better description of what those modules are for.&lt;/p&gt;
+
+&lt;p&gt;You can use the AAC::Pvoice modules to create GUI applications for people who have difficulty using conventional input devices like a mouse or a keyboard. Instead, those people can use your applications using only one or two keystrokes, mouse buttons, or switches on a wheelchair. You can also enhance the use of a conventional mouse or touch screen by highlighting objects on the screen as the mouse cursor hovers over them. AAC::Pvoice does not only handle the input for you, but it also provides an accessible graphical user interface.&lt;/p&gt;
+
+&lt;p&gt;Think of the possibilities: there are so many modules on CPAN that in conjunction with AAC::Pvoice can result in simple, accessible applications. For example, a module like Games::Battleship allows you to create a battleship game, AAC::Pvoice allows you to create the GUI and takes care of the input for you, so with very little effort you can create a game accessible for people who can&amp;rsquo;t play regular games that need full control over a mouse and/or keyboard.&lt;/p&gt;
+
+&lt;p&gt;This article will explain how to use the AAC::Pvoice modules step by step. It&amp;rsquo;s up to you what kind of functionality will go into the application you build.&lt;/p&gt;
+
+&lt;p&gt;The API of the AAC::Pvoice modules is still subject to changes, but you can trust me when I tell you that the behavior of existing methods won&amp;rsquo;t change too much, because I don&amp;rsquo;t like to go over my own code over and over again to adjust it to a new version of an API.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-concept&#34;&gt;The Concept&lt;/h3&gt;
+
+&lt;p&gt;The graphical user interface of AAC::Pvoice is based upon wxPerl classes, so it won&amp;rsquo;t hurt if you already know a bit about wxPerl. But since the modules handle most of the GUI for you, as you can see below, it&amp;rsquo;s much simpler to write AAC::Pvoice applications than using plain wxPerl.&lt;/p&gt;
+
+&lt;p&gt;Basically an AAC::Pvoice-based application consists of three entities: a Panel, a Row and a Button. A panel is a subclass of a Wx::Panel, on which one or more rows, or in fact any other Wx::Window subclass, can be placed. A row is also a subclass of a Wx::Panel, but a row can contain multiple Wx::BitmapButton objects. Those Wx::BitmapButtons however are created from a data structure you feed to the row&amp;rsquo;s constructor. These buttons don&amp;rsquo;t respond to mouse clicks on them like you&amp;rsquo;re used to, but will be invoked when the user generates a &amp;lsquo;Select&amp;rsquo; event, unless of course you use a normal mouse to control the GUI. The &amp;lsquo;Select&amp;rsquo; event will be discussed later.&lt;/p&gt;
+
+&lt;p&gt;There is a special class called AAC::Pvoice::Input. You normally won&amp;rsquo;t call any of this class&amp;rsquo; methods directly. Instead, it&amp;rsquo;s called from the AAC::Pvoice::Panel. The Input class checks for &amp;lsquo;normal&amp;rsquo; mouse, mouse buttons, keyboard or parallel port input (depending on the selected device) and calls whatever the Panel defined it to do when a &amp;lsquo;Next&amp;rsquo; or &amp;lsquo;Select&amp;rsquo; event occurs. If only one switch is used, that switch will only generate a &amp;lsquo;Select&amp;rsquo; event, and a &amp;lsquo;Next&amp;rsquo; event will automatically happen every n milliseconds, depending on your settings. To understand what those events are, you need to understand how the so called &amp;lsquo;row/column scanning&amp;rsquo; mechanism works. Since we&amp;rsquo;ve got multiple rows of buttons, and we have only two switches to indicate what we want to do, we can&amp;rsquo;t move the mouse cursor over the screen. Instead, we&amp;rsquo;ll use one switch to indicate &amp;lsquo;go to next row&amp;rsquo; and one to indicate &amp;lsquo;select this row&amp;rsquo;. When we&amp;rsquo;ve selected a row, again we need the same two switches to indicate &amp;lsquo;go to next button in this row&amp;rsquo; and &amp;lsquo;select this button&amp;rsquo;.&lt;/p&gt;
+
+&lt;p&gt;As you will see in the demo application below, you don&amp;rsquo;t have to worry about row/column scanning when you&amp;rsquo;re creating your application. The AAC::Pvoice::Panel takes care of that. You only have to define what your script will do when a certain button is invoked.&lt;/p&gt;
+
+&lt;h3 id=&#34;creating-a-demo&#34;&gt;Creating a Demo&lt;/h3&gt;
+
+&lt;p&gt;To demonstrate how you can use AAC::Pvoice to create your own pVoice-like applications, I&amp;rsquo;ll show you how to build a simple demo application. This application will use the Microsoft Agent (using the Win32::MSAgent module) to move the Merlin character over the screen and let it pronounce a phrase. It&amp;rsquo;s a very simple, silly example, but then again, it&amp;rsquo;s only to demonstrate how the AAC::Pvoice modules work. You&amp;rsquo;ll see how easy it is.&lt;/p&gt;
+
+&lt;p&gt;First of all, because an AAC::Pvoice based application is actually a wxPerl-based application, we have to start with a standard wxPerl framework, where we define the application and the frame, and start a main loop. This can be something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use strict;
+use warnings;
+
+# Create a wxApp object and start the mainloop
+my $obj = pMerlin-&amp;gt;new();
+$obj-&amp;gt;MainLoop;
+
+#----------------------------------------------------------------------
+# the pMerlin package implements the Wx::App subclass
+package pMerlin;
+use Wx;
+use base &#39;Wx::App&#39;;
+
+sub OnInit
+{
+    my $self = shift;
+    # Set an AppName and VendorName
+    $self-&amp;gt;SetAppName(&#39;Fun With Merlin&#39;);
+    $self-&amp;gt;SetVendorName(&amp;quot;pVoice Applications - Jouke Visser&amp;quot;);
+
+    # Create a frame and show it
+    my $frame = pMerlinFrame-&amp;gt;new( undef, -1, &#39;pMerlin&#39;);
+    $frame-&amp;gt;Show(1);
+}
+
+#----------------------------------------------------------------------
+# the pMerlinFrame package implements the Wx::Frame subclass
+package pMerlinFrame;
+use Wx qw(:everything);
+use AAC::Pvoice;
+use base &#39;Wx::Frame&#39;;
+
+sub new
+{
+    my $class = shift;
+    # Call the superclass&#39; constructor
+    my $self = $class-&amp;gt;SUPER::new(@_);
+
+    # Set the white background colour
+    $self-&amp;gt;SetBackgroundColour(wxWHITE);
+
+    return $self;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So far, nothing special. I only used a few calls that aren&amp;rsquo;t really necessary for a default wxPerl script: I&amp;rsquo;m setting the AppName, VendorName, and I&amp;rsquo;m telling the frame to have a white background. The reason for setting the AppName and VendorName will be explained later.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-aac-pvoice&#34;&gt;Using AAC::Pvoice&lt;/h3&gt;
+
+&lt;p&gt;Like I said, so far everything looks normal, if you&amp;rsquo;re used to wxPerl programming. But in fact this is where the actual work begins. We now need to add some code to the new() subroutine of pMerlinFrame. The first thing we need to do now is to maximize the pMerlinFrame we just defined and get the dimensions of that maximized state. We need to do this to pass the correct width and height of the frame to the AAC::Pvoice::Panel we want to create. We can define a margin around the AAC::Pvoice::Panel, which looks nicer, but it&amp;rsquo;s not necessary. In this example I&amp;rsquo;m using a margin of 50 pixels on each side of the panel.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Get the dimensions of the maximized window
+$self-&amp;gt;Show(1);
+$self-&amp;gt;Maximize(1);
+my ($width, $height) = ($self-&amp;gt;GetClientSize-&amp;gt;GetWidth,
+                        $self-&amp;gt;GetClientSize-&amp;gt;GetHeight);
+$self-&amp;gt;Show(0);
+
+# define the margin
+my $margin = 50;
+
+# define the itemspacing
+my $itemspacing = 4;
+
+# And create a pVoice panel
+$self-&amp;gt;{panel} = AAC::Pvoice::Panel-&amp;gt;new(
+                         $self,              # parent
+                         -1,                 # id
+                         [$margin, $margin], # position
+                         [$width-2*$margin, $height-2*$margin],
+                                             # size
+                         wxNO_3D,            # style
+                         1,                  # hide textrow
+                         $itemspacing,       # spacing between items
+                         3);                 # selectionborderwidth
+# The grey background for the panel
+my $panelbackground = Wx::Colour-&amp;gt;new(220,220,220);
+$self-&amp;gt;{panel}-&amp;gt;BackgroundColour($panelbackground);
+
+# A title at the top of the panel
+$self-&amp;gt;{panel}-&amp;gt;AddTitle(&amp;quot;Fun with Merlin&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see I&amp;rsquo;ve also defined a background colour for the panel and a title on top of it. Let&amp;rsquo;s take a closer look at the parameters of the AAC::Pvoice::Panel constructor. The first parameters look exactly like those used for Wx::Panel. The AAC::Pvoice::Panel, however, needs three new parameters. The first indicates if we should hide the (default) text row (a Wx::TextCtrl) at the bottom of the panel. For an application like pVoice, where you create phrases, this text row is of course needed. For our demo we don&amp;rsquo;t need a text row. Furthermore, we need to define the spacing between items on the panel. Effectively this is the spacing between the rows, since those will be placed directly upon this panel. Finally we need to define the width of the border around a selected row or item. It&amp;rsquo;s a good idea to make this value lower than the item spacing, otherwise the border will not be fully visible.&lt;/p&gt;
+
+&lt;p&gt;The next step is to create the bitmaps we want to display. For this purpose we can use AAC::Pvoice::Bitmap. This class provides an easy way to create a bitmap of a certain size, put a caption underneath it, and has some other useful features. Before we create the bitmaps, we calculate the maximum X and Y size they can use by dividing the useable X and Y size of the panel by the number of buttons per row and the number of rows respectively. I&amp;rsquo;ll also subtract twice the item spacing used in the application because otherwise the buttons will be a little bit too large.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# The maximum dimensions of a button
+my $maxX = int(($self-&amp;gt;{panel}-&amp;gt;xsize)/4)-2*$itemspacing;
+my $maxY = int(($self-&amp;gt;{panel}-&amp;gt;ysize)/3)-2*$itemspacing; 
+
+# Define the bitmaps. 
+# The parameters are the filename, maxX and maxY size and the caption
+my $leftbutton     = AAC::Pvoice::Bitmap-&amp;gt;new(&#39;img/left.png&#39;,
+                                              $maxX, $maxY, &#39;left&#39;);
+my $rightbutton    = AAC::Pvoice::Bitmap-&amp;gt;new(&#39;img/right.png&#39;,
+                                              $maxX, $maxY, &#39;right&#39;);
+my $upbutton       = AAC::Pvoice::Bitmap-&amp;gt;new(&#39;img/up.png&#39;,
+                                              $maxX, $maxY, &#39;up&#39;);
+my $downbutton     = AAC::Pvoice::Bitmap-&amp;gt;new(&#39;img/down.png&#39;,
+                                              $maxX, $maxY, &#39;down&#39;);
+my $questionbutton = AAC::Pvoice::Bitmap-&amp;gt;new(&#39;img/question.png&#39;,
+                                              $maxX, $maxY, &#39;question&#39;);
+my $rowselbutton   = AAC::Pvoice::Bitmap-&amp;gt;new(&#39;img/rowsel.png&#39;,
+                                              $maxX, $maxY, &#39;rowsel&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now that we&amp;rsquo;ve got those bitmaps, we can create the AAC::Pvoice::Rows that will use those bitmaps, and know what coderefs to invoke when the user selects one of the buttons. We don&amp;rsquo;t need to create individual Wx::BitmapButtons. The AAC::Pvoice::Row takes care of that, and attaches the correct actions to the BitmapButtons in such a way that they can be invoked using any of the available input methods.&lt;/p&gt;
+
+&lt;p&gt;Before define the rows, we create a listref for every button, containing the button ID, the bitmap and the callback. These listrefs we put in another list of lists. That LoL defines the whole panel, and every list inside it defines the layout of each every row. Let&amp;rsquo;s see how we achieve this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Define the buttons on the pVoice rows
+#               the id,      the bitmap,     the callback
+my $left     = [Wx::NewId(), $leftbutton,    sub {$self-&amp;gt;MoveLeft}];
+my $right    = [Wx::NewId(), $rightbutton,   sub {$self-&amp;gt;MoveRight}];
+my $up       = [Wx::NewId(), $upbutton,      sub {$self-&amp;gt;MoveUp}];
+my $down     = [Wx::NewId(), $downbutton,    sub {$self-&amp;gt;MoveDown}];
+my $question = [Wx::NewId(), $questionbutton,sub {$self-&amp;gt;Speak}];
+my $rowsel   = [Wx::NewId(), $rowselbutton,
+                sub {$self-&amp;gt;{panel}-&amp;gt;ToRowSelection}];
+
+# The definition of the screenlayout
+my $content = [ [ $rowsel,    undef,    $up,       undef  ],
+                [ $rowsel,    $left,    $question, $right ],
+                [ $rowsel,    undef,    $down,     undef  ] ];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see that the callbacks actually invoke some methods of pMerlinFrame that I haven&amp;rsquo;t discussed yet. That&amp;rsquo;s because they have nothing to do with the AAC::Pvoice modules themselves. I&amp;rsquo;m trying to keep this demo as simple as possible. At the bottom of this article you&amp;rsquo;ll find a link to a zip file that contains the complete source and images used in this demo.&lt;/p&gt;
+
+&lt;p&gt;The final step in creating the panel is creating the rows based upon our data structure, and then add those rows to the panel. After that there is a magic method called &amp;lsquo;Finalize&amp;rsquo; we need to call on the panel, and the panel is done. First the code, then an explanation:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Add the buttons to the rows and the rows to the panel
+foreach my $row (@$content)
+{
+  $self-&amp;gt;{panel}-&amp;gt;Append(AAC::Pvoice::Row-&amp;gt;new(
+                                 $self-&amp;gt;{panel},     # parent
+                                 scalar(@$row),      # max
+                                 $row,               # items
+                                 wxDefaultPosition,  # pos
+                                 wxDefaultSize,      # size
+                                 $maxX,              # X-size
+                                 $maxY,              # Y-size
+                                 $itemspacing,       # spacing
+                                 $panelbackground)); # background
+}
+# Finish the panel
+$self-&amp;gt;{panel}-&amp;gt;Finalize();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The constructor of a row has a few unusual parameters. The first parameter is the parent, like almost every wxPerl class needs to know the parent window. The second parameter however, is the maximum number of items in a row. The row will add empty Wx::BitmapButtons to the end of a row if the third parameter (the items we want to put on the row) contains less items than the defined maximum. This ensures an even sized row. In our case we have rows with 4 items each, including some undefined items, so passing scalar($@row) is enough here.&lt;/p&gt;
+
+&lt;p&gt;The $row parameter contains the list of items we want to have in our row. We also have to pass the $maxX, $maxY and $itemspacing to this row, since it has to use the correct spacing between the buttons, and the empty buttons it needs to create (for the undef values in the row) need to have the correct size. The final parameter, $panelbackground, is the background color for this row, which we define to be the same as the panel background to let it look like there&amp;rsquo;s no difference between the rows and the panel.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_07_14_accessibility/pmerlin.jpg&#34; width=&#34;450&#34; height=&#34;393&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The final thing we have to do is to define how the user can use the application. Are we going to use keystrokes, mouse buttons, the Adremo wheelchair, or normal mouse input? We can define this by setting the registry-key Device to respectively keys, icon, adremo, or mouse. This needs to be set before the AAC::Pvoice::Panel is created. I usually set this in the OnInit method of my Wx::App subclass like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Set the device we use to &#39;icon&#39; (left and right mouse buttons)
+# other possibilities are &#39;keys&#39; (keystrokes, where the space 
+#                           and enter key are the default keys)
+#                         &#39;adremo&#39; (electrical wheelchair) and
+#                         &#39;mouse&#39; (normal mouse, touch screen, etc.)
+my $config = Wx::ConfigBase::Get;
+my $Device = $config-&amp;gt;Read(&#39;Device&#39;, &#39;icon&#39;);
+$config-&amp;gt;Write(&#39;Device&#39;,   $Device);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we do this after we define the AppName and the VendorName, the key will appear under HKEY_CURRENT_USER\Software\&amp;lt;VendorName&amp;gt;\&amp;lt;AppName&amp;gt;\Device. There are more possible keys to define, like Buttons (either 1 or 2, defining the number of switches). You can find more information on this in the documentation of AAC::Pvoice::Input.&lt;/p&gt;
+
+&lt;p&gt;This is all there is to it. We now have a simple demo of an application that almost everyone is able to use. The screenshot you see on this page is the result of these simple pieces of code. As you could see, the API is extremely simple, so you can concentrate on the actual functionality you want to put in your application.&lt;/p&gt;
+
+&lt;h3 id=&#34;platform-issues&#34;&gt;Platform Issues&lt;/h3&gt;
+
+&lt;p&gt;The AAC::Pvoice modules can be installed on Windows as well as on Linux. However, it doesn&amp;rsquo;t look too well on Linux. If someone is interested in making the modules work correctly on Linux: patches are welcome! I would also like to see someone trying to port everything to OS X. wxPerl runs on a lot of different platforms, but in the AAC::Pvoice modules I&amp;rsquo;ve used some Win32-specific options that may have some workarounds for other platforms. I just haven&amp;rsquo;t had the opportunity to make it work on those.&lt;/p&gt;
+
+&lt;p&gt;Hopefully this short article inspires you to build something for people who can&amp;rsquo;t quite accomplish everything you can. After all, this is what programming should really be about &amp;ndash; making useful applications for people who can&amp;rsquo;t build it themselves.&lt;/p&gt;
+
+&lt;p&gt;You can download the &lt;a href=&#34;http://localhost:1313/media/_pub_2004_07_14_accessibility/pmerlin.zip&#34;&gt;zipfile containing the complete script and images here&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Using Perl to Enable the Disabled</title>
+      <link>http://localhost:1313/pub/2003/08/28/pvoice.html/</link>
+      <pubDate>Sat, 23 Aug 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/08/28/pvoice.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;We use Perl for all kinds of things. Web development, data munging, system administration, even bioinformatics; most of us have used Perl for one of these situations. A few people use Perl for building end-user applications with graphical user interfaces (GUIs). And as far as I know, only two people in this world use Perl to make life easier for the disabled: &lt;a href=&#34;http://localhost:1313/pub/2001/08/27/bjornstad.html&#34;&gt;Jon Bjornstad&lt;/a&gt; and I. Some people think the way we use Perl is something special, but my story will show you that I just did what any other father, capable of writing software, would do for his child.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;the-past&#34;&gt;The Past&lt;/h3&gt;
+
+&lt;p&gt;In 1995 my eldest daughter, Krista, was born. She came way too early, after a pregnancy of only 27.5 weeks. That premature birth resulted in numerous complications during the first three months of her life. Luckily she survived, but getting pneumonia three times when you can&amp;rsquo;t even breath on your own causes serious asphyxiation, which in turn resulted in severe brain damage. A few months after she left the hospital it became clear that the brain damage had caused a spastic quadriplegia.&lt;/p&gt;
+
+&lt;p&gt;As Krista grew older, it became more and more clear what she could, and couldn&amp;rsquo;t do. Being a spastic means you can&amp;rsquo;t move the muscles in your body the way you want them to. Some people can&amp;rsquo;t walk, but can do everything else. In Krista&amp;rsquo;s case, she can&amp;rsquo;t walk, she can&amp;rsquo;t sit, she can&amp;rsquo;t use her hands to grab anything, even keeping her head up is difficult. Speaking is using the muscles in your mouth and throat, so you can imagine that speaking is almost out of the question for her.&lt;/p&gt;
+
+&lt;p&gt;By the end of the year 2000, Krista went to a special school in Rotterdam. But going to school without being able to speak or without being able to write down what you want to say is hard, not only for the teacher, but also for the student. We had to find a way to let Krista communicate.&lt;/p&gt;
+
+&lt;p&gt;Together with Krista&amp;rsquo;s speech pathologist and orthopedist we started looking for devices she could use to communicate with the outside world. These devices should enable her to choose between symbols, so a word or a sentence could be pronounced. A number of devices were tested, but all of them either required some action with her hands or feet that she wasn&amp;rsquo;t able to perform, or gave her too little choices of words.&lt;/p&gt;
+
+&lt;p&gt;Then we looked into available communications software, so she could use an adapted input device (in her case a headrest with built-in switches) to control an application. Indeed there was software available that could have been used, but the best match was a program that automatically scanned through symbols on her screen and when the desired symbol was highlighted, she had to move her head to select it. Timing was the issue here. If moving your head to the left or right is really hard to do anyway, it&amp;rsquo;s hardly possible to take that action at the desired moment.&lt;/p&gt;
+
+&lt;h3 id=&#34;pvoice&#34;&gt;pVoice&lt;/h3&gt;
+
+&lt;p&gt;We had to do something. There was no suitable device or software application available. I thought it through and suggested I could try to write a simple application myself. It would be based on the idea of the best match we had found (the automatic scanning software), but this software would have no automatic scanning. Instead, moving to the right with your head would mean &amp;ldquo;Go to the next item,&amp;rdquo; and moving to the left would mean &amp;ldquo;Select the highlighted item.&amp;rdquo; That would mean that she would need a lot of time to get to the desired word, but it&amp;rsquo;s better to be slow than not able to select the right words at all.&lt;/p&gt;
+
+&lt;p&gt;The symbols would have to be put in categories, so there would be some logic in the vocabulary she&amp;rsquo;d have on her PC. She started out with categories like &amp;ldquo;Family,&amp;rdquo; containing photos of some members of the family, &amp;ldquo;School,&amp;rdquo; containing several activities at school, and &amp;ldquo;Care,&amp;rdquo; which contained things like &amp;ldquo;going to the bathroom,&amp;rdquo; &amp;ldquo;taking a shower,&amp;rdquo; and other phrases like that.&lt;/p&gt;
+
+&lt;p&gt;By the end of January 2001 I started programming. In Perl. Maybe Perl isn&amp;rsquo;t the most logical choice for writing GUI applications for disabled people, but Perl is my language of choice. And it turned out to be very suitable for this job! Using Tk I quickly set up a nice looking interface. Win32::Sound (and on Linux the Play command) enabled me to &amp;ldquo;pronounce&amp;rdquo; the prerecorded words. Within two weeks time I had a first version of pVoice, as I called this application (and since everyone asks me what the &amp;lsquo;p&amp;rsquo; stands for: &amp;lsquo;p&amp;rsquo; is for Perl). Krista started trying the application and was delighted. Finally she had a way to say what was on her mind!&lt;/p&gt;
+
+&lt;p&gt;Of course in the very beginning she didn&amp;rsquo;t have much of a vocabulary. The primary idea was to let her learn how to use it. But every week or two we added more symbols or photos and extended her vocabulary.&lt;/p&gt;
+
+&lt;p&gt;By the end of April 2001 I posted the code of this first pVoice version on &lt;a href=&#34;http://www.perlmonks.org/index.pl?node_id=75757&#34;&gt;PerlMonks&lt;/a&gt; and set up a web page for people to download it if they could use it. The response was overwhelming. Everyone loved the idea and suggestions to improve the code or to add features came rolling in. Krista&amp;rsquo;s therapists were also enthusiastic and asked for new features too.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately the original pVoice was nothing more than a quick hack to get things going. It was not designed to add all the features people were asking for. So I decided I had to rewrite the whole thing.&lt;/p&gt;
+
+&lt;p&gt;This time it had to be a well-designed application. I wanted to use wxPerl for the GUI instead of the (in my eyes) ugly Motif look of Tk, I wanted to use a speech synthesizer instead of prerecorded .wav files, and most importantly, I wanted to make it easier to use. The original application was not easy to install and modifying the vocabulary was based on the idea you knew your way around in the operating system of your choice: you had to put files in the right directories yourself and modify text files by hand. For programmers this is an easy task, but for end users this turns out to be quite difficult.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2003_08_28_pvoice/ptypescreenshot1.gif&#34; alt=&#34;pType Screenshot&#34; width=&#34;308&#34; height=&#34;231&#34; /&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;It took me until the summer of 2002 before I started working on the next pVoice release. For almost a year I hadn&amp;rsquo;t worked on it at all because of some things that happened in my personal life. Since Krista was learning to read and write and had no way of expressing what she could write herself, I decided not to start with rewriting pVoice immediately, but with building pType.&lt;/p&gt;
+
+&lt;p&gt;pType would allow her to select single letters on her screen to form words in a text entry field at the bottom of her screen and &amp;ndash; if desired &amp;ndash; to pronounce that for her. pType was my tryout for what pVoice 2.0 would come to be: it used wxPerl, Microsoft Agent for speech synthesis, and was more user-friendly. In October 2002, pType was ready and I could finally start working on pVoice 2.0. While copying and pasting lots of the code I wrote for pType, I set up pVoice to be as modular as possible. I also tried to make the design extensible, so I would be able to add features in the future &amp;ndash; even features I hadn&amp;rsquo;t already thought of.&lt;/p&gt;
+
+&lt;p&gt;In March this year it finally was time to release pVoice 2.0. It was easy to install: it was compiled into a standalone executable using PerlApp and by using InnoSetup I created a nice looking installer for it. The application looked more attractive because I used wxPerl, which gives your application the look-and-feel of the operating system it runs on. It was user friendly because the user didn&amp;rsquo;t have to modify any files to use the application: all modifications and additions to the vocabulary could be done within the application using easy-to-understand dialog windows. I was quite satisfied with the result, although I already knew I had some features to add in future releases.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-present&#34;&gt;The Present&lt;/h3&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2003_08_28_pvoice/pvoice-anigif.gif&#34; alt=&#34;pVoice animation&#34; width=&#34;300&#34; height=&#34;218&#34; /&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;At this moment, rewriting the online help file is the last step before I can release pVoice 2.1. That version will have support for all Microsoft SAPI 4 compatible speech engines, better internationalization support, the possibility to have an unlimited depth of categories within categories (until pVoice 2.0 you had only one level of categories with words and sentences), the possibility to define the number of rows and columns with images yourself, and numerous small improvements. Almost all of these improvements and feature additions are suggested by people who tried pVoice 2.0 themselves. And that&amp;rsquo;s great news, because it means that people who need this kind of software are discovering Open Source alternatives for the extremely expensive commercial applications.&lt;/p&gt;
+
+&lt;p&gt;Many people have asked me how many users pVoice has. That&amp;rsquo;s a question I can&amp;rsquo;t answer. How do you measure the use of Open Source software? Since Jan. 1, 2003, approximately 400 people have downloaded pVoice. On the other hand, the mailing lists have some 50 subscribers. How many people are actually using pVoice then? I couldn&amp;rsquo;t say.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-future&#34;&gt;The Future&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m hoping to achieve an increase in the number of users in the next 12 months. The Perl Foundation (TPF) has offered me one of its grants, to be used for promotion of pVoice. With the money I&amp;rsquo;ll be travelling to OSCON next year and hope to speak there about pVoice. While I&amp;rsquo;m in Portland I&amp;rsquo;ll try to get other speaking engagements in the area to try to convince people that they don&amp;rsquo;t always need to spend so much money on commercial software for disabled people, but that there are alternatives like SueCenter and pVoice. Shortly after I heard about the TPF grant, I also heard that I&amp;rsquo;ll be receiving a large donation from someone (who wishes to remain anonymous), that I can also use for promotion of pVoice or for other purposes like costs I might have to add features to pVoice.&lt;/p&gt;
+
+&lt;p&gt;Still, a lot can be improved on pVoice itself. I want to make it more useful for people with other disabilities than my daughter&amp;rsquo;s, I would like to have more translations of the program (currently I have Dutch and English, and helpful people offered to translate it into German, Spanish, French, and Swedish already), I want to support more Text To Speech technologies than Microsoft&amp;rsquo;s Speech API (like Festival), and I would like to find the time to make the pVoice platform independent again, because currently it only runs on Windows. I hope to write other pVoice- like programs like pHouse, which will be based upon efforts of the &lt;a href=&#34;http://www.misterhouse.com&#34;&gt;MisterHouse&lt;/a&gt; project, to be able to control appliances in and around the house, but the main thing I need for that is time. And with a full-time job, time is limited.&lt;/p&gt;
+
+&lt;p&gt;Maybe, after reading all of this, you&amp;rsquo;ll think, &amp;ldquo;How can I help?&amp;rdquo;. Well, there are several things you could do. First of all, if you know anyone who works with disabled people, tell them about pVoice. Apart from SueCenter, pVoice is the only Open Source project I know of in this area. Lots of people who need this kind of software can&amp;rsquo;t get their insurance to pay for the software and would have to pay a lot of money. With pVoice they have a free alternative.&lt;/p&gt;
+
+&lt;p&gt;Of course, you could also help with the development. Since pVoice is not tied to any specific natural language, you could help by translating pVoice into your native tongue. Since the time I can spend on pVoice is limited, it would be nice to have more developers on pVoice in general. More information on pVoice is available from the &lt;a href=&#34;http://www.pvoice.org&#34;&gt;web site&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>wxPerl: Another GUI for Perl</title>
+      <link>http://localhost:1313/pub/2001/09/12/wxtutorial1.html/</link>
+      <pubDate>Wed, 12 Sep 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/09/12/wxtutorial1.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-wxperl-wxperl-span&#34;&gt;&lt;span id=&#34;wxperl&#34;&gt;wxPerl?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you don&amp;rsquo;t just use Perl for creating CGI scripts, you&amp;rsquo;ll probably have to create some kind of front-end for your applications sooner or later. You might use the Curses library, but if you want a nice GUI, you will probably use Tk. It&amp;rsquo;s certainly the most stable, best documented and widest used GUI that&amp;rsquo;s available for Perl. However, more and more people are using other GUIs, such as Gtk and Win32::GUI. The main reason for this is probably that Tk does not have the slickest interface that exactly matches the environment that people use. Tk has a motif-like interface, while Gnome users will want the Gtk look-and-feel, and Windows users will want the Windows look-and-feel. Of course, Tk looks more like Windows when you use it on a Win32 machine and looks more like Gtk when you run it under Gnome, but still it is a different interface.&lt;/p&gt;
+
+&lt;p&gt;Recently, I discovered another GUI for Perl. No, not the unmaintained Qt and FWTK modules, but &lt;a href=&#34;http://www.wxperl.it&#34;&gt;wxPerl&lt;/a&gt;, which is being developed by Mattia Barbon. wxPerl is the Perl binding for wxWindows (&lt;a href=&#34;http://www.wxwindows.org&#34;&gt;http://www.wxwindows.org&lt;/a&gt;), which is a cross-platform GUI library for C++. When I say cross-platform, I indeed mean cross-platform: There is wxWindows for Windows, Gtk, Motif and Macintosh. wxWindows has been developed since 1992 with version 2 (the current version) being developed since 1997. It&amp;rsquo;s not a GUI that has been ported from a certain platform where it had its roots: wx stands for Windows and X &amp;ndash; it has been designed to be cross-platform. Also it has been around for a while so it has had the chance to become a stable product.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-wxperl-approach-the-wxperl-approach-span&#34;&gt;&lt;span id=&#34;the wxperl approach&#34;&gt;The wxPerl approach&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;wxPerl has a very rich set of standard widgets (called ``controls&amp;rdquo; in Wx-terms), ranging from simple buttons to complex HTML windows and Font dialogs. This makes it a good GUI to create full-featured applications. All needed controls are available ``off the shelf,&amp;rdquo; and if there is still a complex control you want to create yourself, then you can do so with little effort. This is a particularly big difference from, for example, Tk, where it is a real pain to define new widgets.&lt;/p&gt;
+
+&lt;p&gt;Programming wxPerl is different. It&amp;rsquo;s not better or worse than the Tk or Gtk interfaces, but it&amp;rsquo;s a totally different approach. The main reason for this is the source of the library, which is a C++ library. It is less Perlish - but it&amp;rsquo;s more OO.&lt;/p&gt;
+
+&lt;p&gt;When you want to create a new wxPerl application you start creating a new class that inherits from &lt;code&gt;Wx::App&lt;/code&gt;. This subclass has to have at least one method called &lt;code&gt;OnInit&lt;/code&gt; which defines the windows (called ``Frames&amp;rdquo; in Wx-terms) the application uses. If you want a default window, you use the default classes. If you want to add controls to a window, you subclass a default windowclass and add the controls to it.&lt;/p&gt;
+
+&lt;p&gt;This is a much more object-oriented approach than Tk and Gtk use. But unfortunately it lacks the named parameter approach Tk uses, which makes Tk look more Perlish.&lt;/p&gt;
+
+&lt;p&gt;Currently, there is one big disadvantage to wxPerl: It is very poorly documented. That is to say: wxWindows has lots of documentation. And if you try hard enough, then you can use that documentation for wxPerl. That takes quite a bit of effort, though. But after reading this first wxPerl tutorial you might become interested and find your own way into wxPerl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-hello-world-hello-world-span&#34;&gt;&lt;span id=&#34;hello world!&#34;&gt;Hello World!&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Like every tutorial, this tutorial has its own ``Hello World!&amp;rdquo; application to get started and create the first application. Examine this script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   =1= #!/usr/bin/perl -w
+   =2= use strict;
+   =3= use Wx;
+   =4=
+   =5= ###########################################################
+   =6= #
+   =7= # Define our HelloWorld class that extends Wx::App
+   =8= #
+   =9= package HelloWorld;
+  =10=
+  =11= use base qw(Wx::App);   # Inherit from Wx::App
+  =12=
+  =13= sub OnInit
+  =14= # Every application has its own OnInit method that will
+  =15= # be called when the constructor is called.
+  =16= {
+  =17=    my $self = shift;
+  =18=    my $frame = Wx::Frame-&amp;gt;new( undef,         # Parent window
+  =19=                                -1,            # Window id
+  =20=                                &#39;Hello World&#39;, # Title
+  =21=                                [1,1],         # position X, Y
+  =22=                                [200, 150]     # size X, Y
+  =23=                              );
+  =24=   $self-&amp;gt;SetTopWindow($frame);    # Define the toplevel window
+  =25=   $frame-&amp;gt;Show(1);                # Show the frame
+  =26= }
+  =27=
+  =28= ###########################################################
+  =29= #
+  =30= # The main program
+  =31= #
+  =32= package main;
+  =33=
+  =34= my $wxobj = HelloWorld-&amp;gt;new(); # New HelloWorld application
+  =35= $wxobj-&amp;gt;MainLoop;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Like every well-written Perl application, this one also begins with &lt;code&gt;-w&lt;/code&gt; and &lt;code&gt;use strict&lt;/code&gt;. After that we &lt;code&gt;use Wx&lt;/code&gt;, the main wxPerl module. On line 9 we start our package HelloWorld, which inherits (line 11) from &lt;code&gt;Wx::App&lt;/code&gt;, like all wxPerl applications. This new application now needs to have an &lt;code&gt;OnInit&lt;/code&gt; method that defines the Frames (line 18) and defines which of the Frames is the TopWindow (line 24). Finally, we call the &lt;code&gt;Show&lt;/code&gt; method (line 25), which makes the created &lt;code&gt;$frame&lt;/code&gt; visible.&lt;/p&gt;
+
+&lt;p&gt;The frame is created using a few parameters. The first is the parent window. If we were creating two frames, then the second one could be appointed as a child of the first by using &lt;code&gt;$frame&lt;/code&gt; as the first parameter of the constructor of the second frame. But in our example we have only one window, so the parent window is &lt;code&gt;undef&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;At this moment we don&amp;rsquo;t care about the second parameter (the window id, -1 means the default value), but the third and fourth are more interesting. They define the position on the screen and the size respectively. These parameters are passed as array references, and could also be the predefined &lt;code&gt;wxDefaultPosition&lt;/code&gt; and &lt;code&gt;wxDefaultSize&lt;/code&gt; respectively.&lt;/p&gt;
+
+&lt;p&gt;After defining the HelloWorld package, we have to create the main program by defining the main package (line 32). This package creates a new Wx object (line 34) out of our defined HelloWorld package and then calls the &lt;code&gt;MainLoop&lt;/code&gt; method on it (line 35).&lt;/p&gt;
+
+&lt;p&gt;The MainLoop is the only thing that resembles to the Tk and Gtk GUIs. The whole approach of defining a new subclass of &lt;code&gt;Wx::App&lt;/code&gt; is totally different.&lt;/p&gt;
+
+&lt;p&gt;When you execute this first example, it will look like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_09_12_wxtutorial1/helloworld.gif&#34; alt=&#34;Hello World&#34; width=&#34;200&#34; height=&#34;150&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-fill-the-empty-window-fill-the-empty-window-span&#34;&gt;&lt;span id=&#34;fill the empty window.&#34;&gt;Fill the empty window.&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So this was a simple example that creates an empty window with a title named ``Hello World!&amp;rdquo; Not really exciting, huh? Now we want to see more controls in the window. Let&amp;rsquo;s see how we can add a useless button that does nothing and a piece of text on the screen.&lt;/p&gt;
+
+&lt;p&gt;We need to have a bit of background information on how wxPerl applications (and wxWindows applications) work in general, before we can create something inside the window. As you saw in the previous example, to create an application, we need to subclass &lt;code&gt;Wx::App&lt;/code&gt;. To create our own contents &lt;strong&gt;in&lt;/strong&gt; a frame, we first need to subclass &lt;code&gt;Wx::Frame&lt;/code&gt; and create an instance of that subclassed frame in the OnInit method of the newly created subclass of &lt;code&gt;Wx::App&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;To put controls in our subclassed frame, you first have to create a Panel inside that frame, since controls can only be placed on an instance of &lt;code&gt;Wx::Panel&lt;/code&gt;. To be able to access and modify properties of the Panel and other things that you want to put inside a Frame, you will have make those items objects of the Frame.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s a lot of (potentially) confusing information. Let&amp;rsquo;s take this example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   =1= #!/usr/bin/perl -w
+   =2= use strict;
+   =3= use Wx;
+   =4=
+   =5= ###########################################################
+   =6= #
+   =7= # Extend the Frame class to our needs
+   =8= #
+   =9= package MyFrame;
+  =10=
+  =11= use base qw(Wx::Frame); # Inherit from Wx::Frame
+  =12=
+  =13= sub new
+  =14= {
+  =15=     my $class = shift;
+  =16=     my $self = $class-&amp;gt;SUPER::new(@_); # call the superclass&#39; constructor
+  =17=
+  =18=     # Then define a Panel to put the button on
+  =19=     my $panel = Wx::Panel-&amp;gt;new( $self,  # parent
+  =20=                                 -1      # id
+  =21=                               );
+  =22=     $self-&amp;gt;{txt} = Wx::StaticText-&amp;gt;new( $panel,             # parent
+  =23=                                         1,                  # id
+  =24=                                         &amp;quot;A buttonexample.&amp;quot;, # label
+  =25=                                         [50, 15]            # position
+  =26=                                        );
+  =27=     $self-&amp;gt;{btn} = Wx::Button-&amp;gt;new(     $panel,             # parent
+  =28=                                         1,                  # id
+  =29=                                         &amp;quot;&amp;gt;&amp;gt;&amp;gt; Press me &amp;lt;&amp;lt;&amp;lt;&amp;quot;, # label
+  =30=                                         [50,50]             # position
+  =31=                                        );
+  =32=     return $self;
+  =33= }
+  =34=
+  =35= ###########################################################
+  =36= #
+  =37= # Define our ButtonApp class that extends Wx::App
+  =38= #
+  =39= package ButtonApp;
+  =40=
+  =41= use base qw(Wx::App);   # Inherit from Wx::App
+  =42=
+  =43= sub OnInit
+  =44= {
+  =45=     my $self = shift;
+  =46=     my $frame = MyFrame-&amp;gt;new(    undef,         # Parent window
+  =47=                                  -1,            # Window id
+  =48=                                  &#39;Button example&#39;, # Title
+  =49=                                  [1,1],         # position X, Y
+  =50=                                  [200, 150]     # size X, Y
+  =51=                                );
+  =52=     $self-&amp;gt;SetTopWindow($frame);    # Define the toplevel window
+  =53=     $frame-&amp;gt;Show(1);                # Show the frame
+  =54= }
+  =55=
+  =56= ###########################################################
+  =57= #
+  =58= # The main program
+  =59= #
+  =60= package main;
+  =61=
+  =62= my $wxobj = ButtonApp-&amp;gt;new(); # New ButtonApp application
+  =63= $wxobj-&amp;gt;MainLoop;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see here that again we define a subclass of &lt;code&gt;Wx::App&lt;/code&gt; called ButtonApp (line 39). Only this time the created frame is not a &lt;code&gt;Wx::Frame&lt;/code&gt; instance, but a &lt;code&gt;MyFrame&lt;/code&gt; instance. This &lt;code&gt;MyFrame&lt;/code&gt; is a new subclass of &lt;code&gt;Wx::Frame&lt;/code&gt; that we define in line 9.&lt;/p&gt;
+
+&lt;p&gt;Basically we only have to override the &lt;code&gt;new&lt;/code&gt; constructor of &lt;code&gt;Wx::Frame&lt;/code&gt;. We want to extend the &lt;code&gt;Wx::Frame&lt;/code&gt; class, so our constructor first calls its &lt;code&gt;SUPER&lt;/code&gt;class&amp;rsquo; constructor, and defines its extensions after that. Our extensions consist of a new &lt;code&gt;Panel&lt;/code&gt; (line 19), which has a &lt;code&gt;StaticText&lt;/code&gt; (line 22) and a &lt;code&gt;Button&lt;/code&gt; (line 27) on it. Just like the original &lt;code&gt;Wx::Frame&lt;/code&gt; class would do, our constructor also returns &lt;code&gt;$self&lt;/code&gt; (line 32), which finishes the definition of &lt;code&gt;MyFrame&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;As you can see, we&amp;rsquo;ve defined the &lt;code&gt;Button&lt;/code&gt; and the &lt;code&gt;StaticText&lt;/code&gt; objects as attributes of &lt;code&gt;MyFrame&lt;/code&gt;. This is not strictly neccesary now, but if we want to add some interaction to this script, which we will do in the next example, we want to access those objects. Since they&amp;rsquo;re now stored as attributes of &lt;code&gt;MyFrame&lt;/code&gt; we can access the &lt;code&gt;Button&lt;/code&gt; and &lt;code&gt;StaticText&lt;/code&gt; everywhere we have access to the &lt;code&gt;MyFrame&lt;/code&gt; object. So it&amp;rsquo;s just a matter of style that it&amp;rsquo;s stored this way here, because we don&amp;rsquo;t actually do anything with it in this example.&lt;/p&gt;
+
+&lt;p&gt;When you execute this example it will look like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_09_12_wxtutorial1/button.gif&#34; alt=&#34;Button example&#34; width=&#34;200&#34; height=&#34;150&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-adding-interaction-adding-interaction-span&#34;&gt;&lt;span id=&#34;adding interaction&#34;&gt;Adding interaction&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;But what does it do? Err &amp;hellip; it does nothing - yet. But a GUI application without interaction is useless. So we&amp;rsquo;re going to implement some interaction. I already explained in the previous example: If you want to change the properties of the defined objects, then you will have to define them as attributes of the Frame object. That way you can always access any attribute of the object, be it a StaticText, a Button or a Menu.&lt;/p&gt;
+
+&lt;p&gt;Consider the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   =1= #!/usr/bin/perl -w
+   =2= use strict;
+   =3= use Wx;
+   =4=
+   =5= ###########################################################
+   =6= #
+   =7= # Extend the Frame class to our needs
+   =8= #
+   =9= package MyFrame;
+  =10=
+  =11= use Wx::Event qw( EVT_BUTTON );
+  =12=
+  =13= use base qw/Wx::Frame/; # Inherit from Wx::Frame
+  =14=
+  =15= sub new
+  =16= {
+  =17=  my $class = shift;
+  =18=
+  =19=  my $self = $class-&amp;gt;SUPER::new(@_);  # call the superclass&#39; constructor
+  =20=
+  =21=     # Then define a Panel to put the button on
+  =22=  my $panel = Wx::Panel-&amp;gt;new( $self,  # parent
+  =23=                              -1      # id
+  =24=                            );
+  =25=
+  =26=  $self-&amp;gt;{txt} = Wx::StaticText-&amp;gt;new( $panel,             # parent
+  =27=                                      1,                  # id
+  =28=                                      &amp;quot;A buttonexample.&amp;quot;, # label
+  =29=                                      [50, 15]            # position
+  =30=                                     );
+  =31=
+  =32=  my $BTNID = 1;  # store the id of the button in $BTNID
+  =33=
+  =34=  $self-&amp;gt;{btn} = Wx::Button-&amp;gt;new(     $panel,             # parent
+  =35=                                      $BTNID,             # ButtonID
+  =36=                                      &amp;quot;&amp;gt;&amp;gt;&amp;gt; Press me &amp;lt;&amp;lt;&amp;lt;&amp;quot;, # label
+  =37=                                      [50,50]             # position
+  =38=                                     );
+  =39=
+  =40=  EVT_BUTTON( $self,          # Object to bind to
+  =41=              $BTNID,         # ButtonID
+  =42=              \&amp;amp;ButtonClicked # Subroutine to execute
+  =43=             );
+  =44=
+  =45=  return $self;
+  =46= }
+  =47=
+  =48= sub ButtonClicked
+  =49= {
+  =50=  my( $self, $event ) = @_;
+  =51=  # Change the contents of $self-&amp;gt;{txt}
+  =52=  $self-&amp;gt;{txt}-&amp;gt;SetLabel(&amp;quot;The button was clicked!&amp;quot;);
+  =53= }
+  =54=
+  =55= ###########################################################
+  =56= #
+  =57= # Define our ButtonApp2 class that extends Wx::App
+  =58= #
+  =59= package ButtonApp2;
+  =60=
+  =61= use base qw(Wx::App);   # Inherit from Wx::App
+  =62=
+  =63= sub OnInit
+  =64= {
+  =65=     my $self = shift;
+  =66=     my $frame = MyFrame-&amp;gt;new(   undef,         # Parent window
+  =67=                                 -1,            # Window id
+  =68=                                 &#39;Button interaction example&#39;, # Title
+  =69=                                 [1,1],         # position X, Y
+  =70=                                 [200, 150]     # size X, Y
+  =71=                                );
+  =72=     $self-&amp;gt;SetTopWindow($frame);    # Define the toplevel window
+  =73=     $frame-&amp;gt;Show(1);                # Show the frame
+  =74= }
+  =75=
+  =76= ###########################################################
+  =77= #
+  =78= # The main program
+  =79= #
+  =80= package main;
+  =81=
+  =82= my $wxobj = ButtonApp2-&amp;gt;new(); # New ButtonApp application
+  =83= $wxobj-&amp;gt;MainLoop;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example is basically the same as the previous one, but the main difference here is the addition of some interaction. In the previous example, nothing happened when you tried to click the button. This time clicking the button will alter the text of the &lt;code&gt;StaticText&lt;/code&gt; object. Let&amp;rsquo;s see what has been changed in the code:&lt;/p&gt;
+
+&lt;p&gt;First of all, we use &lt;code&gt;Wx::Event&lt;/code&gt; and import &lt;code&gt;EVT_BUTTON&lt;/code&gt;. &lt;code&gt;EVT_BUTTON&lt;/code&gt; is the event handling subroutine for button-events. There are many more event handlers available, but we only need this one now.&lt;/p&gt;
+
+&lt;p&gt;On line 31 I&amp;rsquo;m introducing a variable to hold the button id called &lt;code&gt;$BTNID&lt;/code&gt;. I could still have used the hard-coded &lt;code&gt;1&lt;/code&gt; I used in the previous example, but by using this variable it will be clearer to see where I&amp;rsquo;m referring to it. For example, it&amp;rsquo;s needed for the &lt;code&gt;EVT_BUTTON&lt;/code&gt; we call at line 40. This is where we define what to do when the button is clicked. It takes the &lt;code&gt;$self&lt;/code&gt; object, the &lt;code&gt;$BTNID&lt;/code&gt; and a subroutine reference as parameters. On line 48 we define that subroutine.&lt;/p&gt;
+
+&lt;p&gt;An event callback in wxPerl always takes two parameters: the first is the object to which it belongs (which caused the event to happen) and the second is the event object itself. In our case we don&amp;rsquo;t need that second parameter, but we do need the first, because we want to change the text of the &lt;code&gt;StaticText&lt;/code&gt; object. This is the place where we see the use of defining the &lt;code&gt;StaticText&lt;/code&gt; object as attribute of the &lt;code&gt;MyFrame&lt;/code&gt; object. We can now simply call the &lt;code&gt;SetLabel&lt;/code&gt; method on that attribute (line 52).&lt;/p&gt;
+
+&lt;p&gt;Before we press the button, the window will look like the one in the previous example. After we press the button, the application window will look like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_09_12_wxtutorial1/button2.gif&#34; alt=&#34;Button interaction&#34; width=&#34;200&#34; height=&#34;150&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve shown a bit of the way wxPerl works. More precisely, I&amp;rsquo;ve shown how you can work with wxPerl. It&amp;rsquo;s obvious that this is a different approach from other GUIs. I admit that at first I myself thought this was an unnatural way of programming Perl, not to mention programming Perl GUIs. But having done some exercises, I get the feeling this is in fact a more natural approach than Tk or Gtk use. Of course, it all comes down to a matter of taste. And there&amp;rsquo;s no accounting for taste.&lt;/p&gt;
+
+&lt;p&gt;In the next wxPerl tutorial, I will show you how to create menus, show some more event handling and I&amp;rsquo;ll even add some more advanced controls. But the goal will be the same: to show you the hidden beauties of wxPerl!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Yet Another Perl Conference Europe 2001</title>
+      <link>http://localhost:1313/pub/2001/08/13/yapc-europe.html/</link>
+      <pubDate>Mon, 13 Aug 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/08/13/yapc-europe.html/</guid>
+      <description>&lt;p&gt;Last year Europe had its first Yet Another Perl Conference. Leon Brocard, Jon Peterson and Greg McCarroll did a marvellous job organizing this grassroots conference - themed &amp;ldquo;The Art of Perl&amp;rdquo; - from scratch within two months. For the first time Europe had its chance meeting people like Nat Torkington, Tom Christiansen, Kevin Lenzo, brian d foy and Michael Schwern. Even before this conference started, a few people from the Netherlands got together and talked about the possibilities of organizing the next YAPC::Europe in Amsterdam.&lt;/p&gt;
+
+&lt;p&gt;And so they did. Only this time, they had a whole year to organize it and they chose &amp;ldquo;Security&amp;rdquo; as the theme for the conference. Hardly any of The Big Names from the USA were coming to the conference this time, but a lot of European speakers were. And that should be considered a Good Thing - since of course there is a lot of Perl Talent in Europe!&lt;/p&gt;
+
+&lt;p&gt;The first day was filled with tutorials, whereas the second and third day were filled with one track containing security-related talks and two others with more general Perl talks. Three complete simultaneous tracks, all stuffed with lots of very interesting talks covering many facets of Perl - it was very hard to pick the talk you wanted to attend each time! Apart from the conference itself, there were quite a lot of Birds of a Feather meetings too (like CPANTS, PerlMonks, P5P, Concurrency and a Pub Crawl), which made the evenings also very entertaining.&lt;/p&gt;
+
+&lt;p&gt;The whole conference went extremely well. That&amp;rsquo;s not just my opinion, which may be coloured because I was one of the organizers, but everyone agreed on that. Of course minor, things did not go as planned. For example, the renovation that was going on in the venue disturbed some talks, but everyone agreed that in general, things went extremely smoothly. Thanks to the wireless crew from &lt;a href=&#34;http://www.hal2001.org/&#34;&gt;HAL2001&lt;/a&gt; everyone in the whole building had wireless access to the Internet. Many people said that the wireless access was even better than it was at TPC. Besides that, the computer lab offered 10 and 100mb regular ethernet access for laptops and had 30 desktop PCs ready to run.&lt;/p&gt;
+
+&lt;p&gt;And then there was the catering. There were free lunches for everyone, along with free coffee, tea and snacks on Thursday and Friday afternoon. We all got a good value for our money.&lt;/p&gt;
+
+&lt;p&gt;Thursday was Tutorial Day. I was session chair of the tutorials in &lt;code&gt;$room[2]&lt;/code&gt;, which got its name because the room was at the third floor and the Dutch call that the second. The tutorials in &lt;code&gt;$room[2]&lt;/code&gt; were about GUI programming with Perl. First there was a 3 hour tutorial about using Tk for existing applications by Mark Overmeer and after lunch, a 3 hour tutorial about Gtk by Redvers Davies. In other rooms tutorials like &lt;code&gt;Parse::RecDescent&lt;/code&gt; (by Abigail) and Object Oriented Programming (by Johan Vromans) were given.&lt;/p&gt;
+
+&lt;p&gt;The welcome speech on Friday was given by Kevin Lenzo. He explained a bit about the merger between YAS, PerlMongers and PerlMonks and told us not to worry because basically nothing would change for us. After that, Daniel Karrenberg -one of the pioneers of the Internet in Europe - gave his keynote speech. He talked about the time from the early days of RIPE NCC until today.&lt;/p&gt;
+
+&lt;p&gt;The rest of the day was filled with lots of interesting talks. For example, Artur &amp;ldquo;Sky&amp;rdquo; Bergman talked about POE, Robin Houston gave a talk about Mutagenic Modules, Schwern convinced the audience of the need for CPANTS and there were two sessions of lightning talks.&lt;/p&gt;
+
+&lt;p&gt;On Friday afternoon, Brian &amp;ldquo;Ingy&amp;rdquo; Ingerson explained all about his Inline module. Of course he started with &lt;code&gt;Inline::C&lt;/code&gt;, talked about the other possibilities like Java, Python, C++ and the like, and could even announce &lt;code&gt;Inline::Javascript&lt;/code&gt; by Claes Jacobsson that had just been finished. Things were really getting funny when he explained how he created a C interpreter, where you can use a kind of &lt;code&gt;Inline::Perl&lt;/code&gt; which in turn uses &lt;code&gt;Inline::C&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;He also mentioned the hilarious &lt;code&gt;Inline::PERL&lt;/code&gt; by John McNamara (which has now been released under the &lt;code&gt;Acme::&lt;/code&gt; namespace on CPAN) and explained why this itself is not a bad idea at all, since you are able to use &lt;code&gt;Inline::Perl&lt;/code&gt; with a version number. That would, for example, allow you to use Perl 5 code in Perl 6&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Saturday morning started with a second keynote speech by Hugh Daniel about &amp;ldquo;The Current Tragedy of Common Free &amp;amp; Open Source Quality&amp;rdquo;. I was too busy preparing my own talk about &lt;a href=&#34;http://jouke.perlmonk.org/&#34;&gt;pVoice&lt;/a&gt; later that morning in the Iterative Software room (named after the sponsor) to attend that speech, but everyone agreed that it was a very good one.&lt;/p&gt;
+
+&lt;p&gt;That afternoon General M. Schwern ordered us all to be as strict and disciplined as possible in his talk about &amp;ldquo;Bondage and Discipline, or Strict beyond &lt;code&gt;strict.pm&lt;/code&gt;&amp;rdquo;. It was a pity Schwern&amp;rsquo;s voice hadn&amp;rsquo;t had the military training that was needed to keep shouting at us all.&lt;/p&gt;
+
+&lt;p&gt;The last talk that was given in the O&amp;rsquo;Reilly room (again named after the sponsor) was given by Jan-Pieter Cornet and Antony Antony, which showed us all the security bloopers we had all made during the conference. It turned out that during the whole conference they had sniffed the network using &lt;code&gt;dsniff&lt;/code&gt; and analyzed the logs with a quickly hacked Perl script. The results were astonishing. More than half of the attendees had sent unencrypted passwords over the network, most of them not even good enough to be run through &lt;code&gt;cracklib&lt;/code&gt;. All kinds of insecure protocols were used like Telnet, POP3, FTP and the like. The end of the story was that people who were going to attend the &amp;ldquo;Hackers at Large&amp;rdquo; conference the next week were strongly advised to use secure protocols and better passwords. The Perl community is probably friendly enough not to attack fellow Perlhackers, but don&amp;rsquo;t be too sure that the audience of Hackers At Large will be so friendly&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;After Kevin Lenzo and yours faithfully thanked everyone who had helped organizing and running the conference, Greg McCarroll led an auction where items that were generously donated by several sponsors were sold using the Dutch Auctioning system. That system means that you start at a high price and let the the price fall at a certain speed until someone says &amp;ldquo;stop&amp;rdquo;. The price at the moment the person said &amp;ldquo;stop&amp;rdquo; is the price he or she has to pay. It worked very well, and was supported by a small Gtk application that Redvers Davies had written.&lt;/p&gt;
+
+&lt;p&gt;Not only books were auctioned this time, but also a few London.pm specific items - signed photos of Buffy and Willow, and the right to decide at what date the London.pm meetings are to be held - were auctioned. Dave Cross, writer of Data Munging with Perl, came with a very special item for the auction. The item is best described as&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;A module from Damian Conway that he will dedicate to you and which you can influence the purpose/topic of if you can come up with something sufficiently Damian-esque.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;That particular item was sold for $200, and the whole auction raised more than 9000 Dutch guilders, some $4000, which will firstly be used to pay all left over costs of the conference. The remainder will be spent on a Perl advocacy project in the Netherlands and on startup costs of next years&amp;rsquo; YAPC, which will either be in Munich or Paris. Both cities have Perl Monger groups who want to organize it, and YAS will have to make a decision based on the proposals they submit.
+The second edition of Yet Another Perl Conference in Europe was a great success. No complaints were heard and everyone was enthusiastic. That&amp;rsquo;s not due to the merit of the organizing committee, but merely the merit of the attendees and speakers. May the next conference be just as successful!&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Return to &lt;a href=&#34;http://perl.com&#34;&gt;Perl.com&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

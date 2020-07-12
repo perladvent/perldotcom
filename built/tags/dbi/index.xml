@@ -1,0 +1,913 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Dbi on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/dbi/</link>
+    <description>Recent content in Dbi on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 23 Oct 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/dbi/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Database Programming with Perl</title>
+      <link>http://localhost:1313/pub/2003/10/23/databases.html/</link>
+      <pubDate>Thu, 23 Oct 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/10/23/databases.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-an-embarrassing-confession-an-embarrassing-confession-span&#34;&gt;&lt;span id=&#34;an_embarrassing_confession&#34;&gt;An Embarrassing Confession&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;d like to think that I&amp;rsquo;m a reasonably decent Perl programmer now. I&amp;rsquo;d like to think that I have a good grasp of how to solve relatively common problems in Perl. But, you know, it hasn&amp;rsquo;t always been this way. Oh no.&lt;/p&gt;
+
+&lt;p&gt;A long, long time ago, when I was a tiny little programmer, I worked as a trainee Perl coder and systems administrator for a large database company. Naturally, at a database company, a lot of what we had to do was talking to databases in Perl. As a fresh-faced programmer, the only way I knew to interface with databases was through a command-line SQL client.&lt;/p&gt;
+
+&lt;p&gt;I won&amp;rsquo;t embarrass the company in question by giving away the name of the database, so let&amp;rsquo;s call this SQL client &lt;code&gt;sqlstar&lt;/code&gt;. Very soon I was writing horrendous Perl programs that did things like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @rows = `sqlstar $database &amp;quot;select * from $table&amp;quot;`;
+    for (@rows) {
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, things got terribly confused when we had complex &lt;code&gt;where&lt;/code&gt; clauses, and needed to escape metacharacters, and &amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @rows = `sqlstar $database &amp;quot;select * from $table where
+        $row LIKE \&amp;quot;%pattern%\&amp;quot;&amp;quot;`;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code rapidly got ugly, error-prone, and dangerously unsafe. If someone had decided to search for a value with a double quote in it, I don&amp;rsquo;t know where we&amp;rsquo;d have been. But for the most part it worked, so nobody really worried about it.&lt;/p&gt;
+
+&lt;p&gt;Looking back on programs like that makes me cringe today. Of course, a better solution is obvious &amp;ndash; but only once someone tells you about it. And if nobody tells you about it, you could end up writing horrible code like this until someone does tell you or you get fired.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-obvious-solution-the-obvious-solution-span&#34;&gt;&lt;span id=&#34;the_obvious_solution&#34;&gt;The Obvious Solution&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So in case anyone hasn&amp;rsquo;t told you yet: there&amp;rsquo;s a better way. The better way is called the &lt;a href=&#34;http://dbi.perl.org/&#34;&gt;DBI&lt;/a&gt;, the DataBase Interface module. It was initially written between 1992 and 1994, long before I was messing about with &lt;code&gt;sqlstar&lt;/code&gt; &amp;ndash; so I really have no excuse.&lt;/p&gt;
+
+&lt;p&gt;You see, there were many problems with my code. Not only was it ugly, susceptible to shell breakage, conceptually wrong, and inefficient, but it tied my code to the particular database engine we were using. Now, given we were a database company, it&amp;rsquo;s unlikely that we&amp;rsquo;d ever be using a different database at anytime, but the principle of the thing remains.&lt;/p&gt;
+
+&lt;p&gt;Historically, Perl had several different ways to talk to databases; back in the days of Perl 4, the best way to communicate with a database &amp;ndash; even better than my horrible command-line utility hack &amp;ndash; was to use one of the specially compiled Perl binaries that included functions for driving a database. For instance, there was one called &lt;code&gt;oraperl&lt;/code&gt;, which allowed you to write code like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$lda = &amp;amp;ora_login(&amp;quot;master&amp;quot;, $user, $pass);
+$csr = &amp;amp;ora_open($lda, &amp;quot;select * from $table&amp;quot;);
+while (@data = &amp;amp;ora_fetch($csr)) {
+    # ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is obviously a bit of an improvement over the code I was writing &amp;ndash; it&amp;rsquo;s a lot more robust, it allows you to do error checking on several different levels, and it saves you a lot of hassle parsing the output of the command-line tool. It&amp;rsquo;s also more efficient, since everything stays inside the one Perl process, which again reduces the number of &amp;ldquo;moving parts&amp;rdquo; and things that can go wrong.&lt;/p&gt;
+
+&lt;p&gt;So these things were a good solution for Perl 4, but along came Perl 5 and plug-in modules, and suddenly people found a way to solve one of the big problems with these compiled-in database libraries.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ve just seen an example of &lt;code&gt;oraperl&lt;/code&gt;, which works great if you&amp;rsquo;re using Oracle &amp;ndash; and, of course, the version of Oracle your Perl was compiled for. If you decide to move your program to Informix, you don&amp;rsquo;t have much option than to rewrite all your database code; this isn&amp;rsquo;t very practical, especially if you want to write code that can be deployed to third parties.&lt;/p&gt;
+
+&lt;p&gt;The Perl 5 solution was Tim Bunce&amp;rsquo;s DBI. As well as providing a handy set of functions for all kinds of database access, DBI provides an abstraction layer between the Perl code and the underlying database, allowing you to switch database implementations really easily.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a little conceptual diagram of how the DBI does its stuff:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://dbi.perl.org/images/dbiarch.gif&#34; alt=&#34;&#34; /&gt;
+Your Perl program talks to the DBI, and the DBI talks to whichever Database Driver (DBD) is right for your backend database. This means that to use the DBI, you need to have four things:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;A C compiler to compile the XS code for DBI and the DBD drivers.&lt;/li&gt;
+&lt;li&gt;A copy of the &lt;code&gt;DBI&lt;/code&gt; module compiled and installed.&lt;/li&gt;
+&lt;li&gt;A copy of the relevant client libraries and header files for the database you want to talk to. For instance, on my Debian system, to talk to mysql, I install the &lt;code&gt;libmysqlclient10-dev&lt;/code&gt; package.&lt;/li&gt;
+&lt;li&gt;The relevant DBD library compiled and installed &amp;ndash; for example, &lt;code&gt;DBD::MySQL&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Once that&amp;rsquo;s all up and working, we can start writing some database code using the DBI.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-using-the-dbi-using-the-dbi-span&#34;&gt;&lt;span id=&#34;using_the_dbi&#34;&gt;Using the DBI&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;To connect to a database with the DBI, we need to first construct a string that identifies the database we want to connect to; this is called a data source name, or DSN. Let&amp;rsquo;s assume we&amp;rsquo;re going to be working with a MySQL database called &amp;ldquo;phonebill.&amp;rdquo; (Simply because that&amp;rsquo;s what I was working with yesterday.) The DSN for this is made up of three parts, joined by colons: first, &lt;code&gt;dbi&lt;/code&gt;, since that&amp;rsquo;s what we&amp;rsquo;re using to get our data; &lt;code&gt;mysql&lt;/code&gt;, since that&amp;rsquo;s the name of the driver we want to use to get it; and &lt;code&gt;phonebill&lt;/code&gt;, since that&amp;rsquo;s the database we&amp;rsquo;re getting it from.&lt;/p&gt;
+
+&lt;p&gt;So, to connect to a database with the DBI, we&amp;rsquo;d write something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use DBI;
+my $dbh = DBI-&amp;gt;connect(&amp;quot;dbi:mysql:phonebill&amp;quot;, $user, $password);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In a lot of cases, you can do without the username and password if you&amp;rsquo;re connecting as a local user. However, for a serious application, you&amp;rsquo;ll probably want to create a specific user or prompt for a password.&lt;/p&gt;
+
+&lt;p&gt;Now we have connected to the database, DBI returns us a database handle, which is typically stored into a variable called &lt;code&gt;$dbh&lt;/code&gt;. (Of course, if you&amp;rsquo;re connecting to multiple different databases, you may prefer to give it a name that identifies it to a particular database.) Now we have a database handle, and we can use it to make queries.&lt;/p&gt;
+
+&lt;p&gt;Making a query in the DBI takes place in three stages. First, you &lt;strong&gt;prepare&lt;/strong&gt; some SQL; then you &lt;strong&gt;execute&lt;/strong&gt; the query; finally, you &lt;strong&gt;get&lt;/strong&gt; the results. Let&amp;rsquo;s do that now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;SQL);
+   select recipient, calldate, calltime, duration
+   from call 
+   where duration &amp;gt; 60
+   order by duration desc
+SQL
+
+$sth-&amp;gt;execute;
+
+my %calls;
+while (my @row = $sth-&amp;gt;fetchrow_array()) {
+   my ($recipient, $calldate, $calltime, $duration) = @row;
+   $calls{$recipient} += $duration;
+   print &amp;quot;Called $recipient on $calldate\n&amp;quot;;
+}
+
+# Now do something with the total times here.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Why, you might think, do we have to go through these three stages just to make an SQL query? Isn&amp;rsquo;t Perl supposed to make things easy? Well it does, but it makes different things easy to what you&amp;rsquo;re expecting. For instance, suppose you&amp;rsquo;re inserting a lot of rows into a table. This is precisely the sort of thing you don&amp;rsquo;t want to do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;![CDATA[
+while (my $data = &amp;lt;FILE&amp;gt;) {
+    my ($recipient, $date, $time, $duration) = split /:/, $data;
+    # DON&#39;T DO THIS
+    my $sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;SQL);
+INSERT INTO call (recipient, calldate, calltime, duration)
+VALUES (&amp;quot;$recipient&amp;quot;, &amp;quot;$date&amp;quot;, &amp;quot;$time&amp;quot;, &amp;quot;$duration&amp;quot;);
+SQL
+    # NO REALLY, DON&#39;T DO THIS
+
+    $sth-&amp;gt;execute;
+}
+]]&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are two reasons why this is BAD, BAD, BAD. The first, of course, is that the moment someone comes along with a double-quote in the file, we&amp;rsquo;re in big trouble. In fact, the moment someone comes along with &lt;code&gt;&amp;quot;; DROP DATABASE;&lt;/code&gt; in the table, we&amp;rsquo;re out of a job.&lt;/p&gt;
+
+&lt;p&gt;The second is that it&amp;rsquo;s really inefficient to set up a statement, execute it, tear it down, set up a statement, execute it, tear it down, and round we go again.&lt;/p&gt;
+
+&lt;p&gt;The reason for the disconnect between preparing a statement and executing it is to enable us to use the same statement multiple times with slightly different values; we do this by using what DBI calls &amp;ldquo;bind parameters&amp;rdquo; &amp;ndash; portions of the SQL that will be replaced later. For instance, the right way to do our mass inserts would be something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;SQL);
+INSERT INTO call (recipient, calldate, calltime, duration)
+VALUES (?, ?, ?, ?)
+SQL
+
+while (my $data = &amp;lt;FILE&amp;gt;) {
+    my ($recipient, $date, $time, $duration) = split /:/, $data;
+    $sth-&amp;gt;execute($recipient, $date, $time, $duration);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Isn&amp;rsquo;t that just so much &lt;em&gt;neater&lt;/em&gt;? We&amp;rsquo;ve hoisted the statement outside the loop, so it only gets prepared once &amp;ndash; much more efficient. We specify the parameters we want bound to the SQL using question marks, and we pass in the values to the &lt;code&gt;execute&lt;/code&gt; call.&lt;/p&gt;
+
+&lt;p&gt;As an additional bonus, when &lt;code&gt;execute&lt;/code&gt; substitutes in the bind values to the SQL, it calls the database handle&amp;rsquo;s &lt;code&gt;quote&lt;/code&gt; method on each one; this is a database-specific method, which escapes any nasty characters like quotes and semicolons in the input, and makes our code safe against the &lt;code&gt;&amp;quot;;drop database&lt;/code&gt; attack.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-making-things-easier-making-things-easier-span&#34;&gt;&lt;span id=&#34;making_things_easier&#34;&gt;Making Things Easier&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;But in many cases, the prepare-execute-fetch process &lt;strong&gt;is&lt;/strong&gt; a pain in the neck. Thankfully, DBI provides some easier ways to perform SQL statements; it has some canned methods that do prepare, execute, and fetch in one go.&lt;/p&gt;
+
+&lt;p&gt;The first of these is &lt;code&gt;do&lt;/code&gt;, which executes a statement when you don&amp;rsquo;t care about the return value, when you&amp;rsquo;re not trying to get results back, such as a &lt;code&gt;DELETE&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Ignore short calls.
+$dbh-&amp;gt;do(&amp;quot;delete from calls where duration &amp;lt; 5&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For &lt;code&gt;SELECT&lt;/code&gt; statements, there are a variety of methods that can help out. Perhaps the easiest to use is &lt;code&gt;selectall_arrayref&lt;/code&gt;. This returns the results of the &lt;code&gt;SELECT&lt;/code&gt; as an array of arrays:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $results = $dbh-&amp;gt;selectall_arrayref(&amp;lt;&amp;lt;SQL);
+   select recipient, calldate, calltime, $duration 
+   from call  
+   where duration &amp;gt; 60 
+   order by duration desc 
+SQL
+
+for my $row (@$results) {
+   my ($recipient, $calldate, $calltime, $duration) = @$row;
+   ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are many other DBI tricks, too many to go into here; for more information check out the &lt;a href=&#34;https://metacpan.org/pod/DBI&#34;&gt;DBI documentation page&lt;/a&gt;, or the &lt;a href=&#34;http://dbi.perl.org/&#34;&gt;DBI home page&lt;/a&gt;; there&amp;rsquo;s also &lt;a href=&#34;http://www.oreilly.com/catalog/perldbi/&#34;&gt;Programming the Perl DBI&lt;/a&gt;, which was co-authored by the creator of DBI.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-where-to-from-here-where-to-from-here-span&#34;&gt;&lt;span id=&#34;where_to_from_here&#34;&gt;Where to from Here?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;These days, I actually don&amp;rsquo;t write very much SQL; there are many more Perlish abstraction layers on top of SQL, such as Tony Bowden&amp;rsquo;s &lt;a href=&#34;http://localhost:1313/pub/2002/11/27/classdbi.html&#34;&gt;&lt;code&gt;Class::DBI&lt;/code&gt;&lt;/a&gt;, the &lt;a href=&#34;http://localhost:1313/pub/2001/02/dbix.html&#34;&gt;&lt;code&gt;DBIx::RecordSet&lt;/code&gt;&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/DBIx::SearchBuilder&#34;&gt;&lt;code&gt;DBIx::SearchBuilder&lt;/code&gt;&lt;/a&gt; and many more.&lt;/p&gt;
+
+&lt;p&gt;Additionally, there are some very interesting things going on in the world of database servers &amp;ndash; &lt;a href=&#34;http://www.hwaci.com/sw/sqlite/&#34;&gt;SQLite&lt;/a&gt; is a very fast embedded SQL engine which doesn&amp;rsquo;t require an external server process, and there are Perl bindings to that in the form of &lt;code&gt;DBD::SQLite&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll look at some more of these techniques at a later date, but hopefully this should be enough to get you started using relational databases in Perl &amp;hellip; and of course, the most important lesson of this article: don&amp;rsquo;t worry if you look back at your code after five years and cringe &amp;ndash; so do I!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>DBI is OK</title>
+      <link>http://localhost:1313/pub/2001/03/dbiokay.html/</link>
+      <pubDate>Tue, 20 Mar 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/03/dbiokay.html/</guid>
+      <description>
+
+&lt;h2 id=&#34;dbi-is-ok&#34;&gt;DBI is OK&lt;/h2&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Table of Contents&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;•&lt;a href=&#34;#is%20table%20mutation%20a%20big%20problem&#34;&gt;Is Table Mutation a Big Problem?&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+•&lt;a href=&#34;#making%20queries%20easier&#34;&gt;Making Queries Easier&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+•&lt;a href=&#34;#placeholders&#34;&gt;Placeholders&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+•&lt;a href=&#34;#binding%20columns&#34;&gt;Binding Columns&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+•&lt;a href=&#34;#modules%20built%20on%20dbi&#34;&gt;Modules Built on DBI&lt;/a&gt;&lt;br /&gt;
+&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;A &lt;a href=&#34;http://localhost:1313/pub/2001/02/dbix.html&#34;&gt;recent article&lt;/a&gt; on Perl.com recommended that most Perl programs use the DBIx::Recordset module as the standard database interface. The examples cast an unfavorable light on DBI (which DBIx::Recordset uses internally). While choosing an interface involves trade-offs, the venerable DBI module, used properly, is a fine choice. This response attempts to clear up some misconceptions and to demonstrate a few features that make DBI, by itself, powerful and attractive.&lt;/p&gt;
+
+&lt;p&gt;Since its inception in 1992, DBI has matured into a powerful and flexible module. It runs well on many platforms, includes drivers for most popular database systems and even supports flat files and virtual databases. Its popularity means it is well-tested and well-supported, and its modular design provides a consistent interface across the supported backends.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-is-table-mutation-a-big-problem-is-table-mutation-a-big-problem-span&#34;&gt;&lt;span id=&#34;is table mutation a big problem&#34;&gt;Is Table Mutation a Big Problem?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The previous article described an occurrence called ``table mutation,&amp;rdquo; where the structure of a table changes. Mr. Brannon says that the DBI does not handle this gracefully. One type of mutation is field reordering. For example, a table named &amp;lsquo;user&amp;rsquo; may originally be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        name    char(25)
+        email   char(25)
+        phone   char(11)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At some point, the developers will discover that the &amp;lsquo;name&amp;rsquo; field is a poor primary key. If a second ``John Smith&amp;rdquo; registers, the indexing scheme will fail. To ensure uniqueness, the coders could add an &amp;lsquo;id&amp;rsquo; field using an auto-incremented integer or a globally unique identifier built into the database. The updated table might resemble:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        id      bigint
+        name    char(25)
+        email   char(25)
+        phone   char(11)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Mr. Brannon contends that all code that generates a SQL statement that resolves to &amp;lsquo;SELECT * FROM user&amp;rsquo; will break with this change. He is correct. Any database request that assumes, but does not specify, the order of results is susceptible.&lt;/p&gt;
+
+&lt;p&gt;The situation is not as bad as it seems. First, DBI&amp;rsquo;s &lt;code&gt;fetchrow_hashref()&lt;/code&gt; method returns results keyed on field names. Provided the existing field names do not change, code using this approach will continue to work. Unfortunately, this is less efficient than other fetching methods.&lt;/p&gt;
+
+&lt;p&gt;More importantly, explicitly specifying the desired fields leads to clearer and more secure code. It is easier to understand the purpose of code that selects the &amp;lsquo;name&amp;rsquo; and &amp;lsquo;email&amp;rsquo; fields from the &amp;lsquo;user&amp;rsquo; table above than code that assumes an order of results that may change between databases. This can also improve performance by eliminating unnecessary data from a request. (The less work the database must do, the better. Why retrieve fields that won&amp;rsquo;t be used?)&lt;/p&gt;
+
+&lt;p&gt;From a pragmatic approach, the example program will need to change when the &amp;lsquo;id&amp;rsquo; field is added. The accessor code must use the new indexing approach. Whether the accessors continue to function in the face of this change is irrelevant &amp;ndash; someone must update the code!&lt;/p&gt;
+
+&lt;p&gt;The same arguments apply to destructive mutations, where someone deletes a field from a table. While less likely than adding a field, this can occur during prototyping. (Anyone who deletes a field in a production system will need an approved change plan, an extremely good excuse or a recent CV.) A change of this magnitude represents a change in business rules or program internals. Any system that can handle this reliably, without programmer intervention, is a candidate for Turing testing. It is false laziness to assume otherwise.&lt;/p&gt;
+
+&lt;p&gt;Various classes of programs will handle this differently. My preference is to die immediately, noisily alerting the maintainer. Other applications and problem domains might prefer to insert or to store potentially tainted data for cleansing later. It&amp;rsquo;s even possible to store metadata as the first row of a table or to examine the table structure before inserting data.&lt;/p&gt;
+
+&lt;p&gt;Given the hopefully rare occurrence of these mutations and the wide range of options in handling them, the DBI does not enforce one solution over another. Contrary to the explanation in the prior article, this is not a failing of the DBI. (See a November 2000 PerlMonks discussion at &lt;a href=&#34;http://www.perlmonks.org/index.pl?node_id=43748&#34;&gt;http://www.perlmonks.org/index.pl?node_id=43748&lt;/a&gt; for more detail.)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-making-queries-easier-making-queries-easier-span&#34;&gt;&lt;span id=&#34;making queries easier&#34;&gt;Making Queries Easier&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Another of Mr. Brannon&amp;rsquo;s disappointments with the DBI is that it provides no generalized mechanism to generate SQL statements automatically. This allows savvy users to write intricate queries by hand, while database neophytes can use modules to create their statements for them. The rest of us can choose between these approaches.&lt;/p&gt;
+
+&lt;p&gt;SQL statements are plain text, easily manipulated with Perl. An example from the previous article created an INSERT statement with multiple fields and a hash containing insertable data. Where the example was tedious and hard to maintain, a bit of editing makes it general and powerful enough to become a wrapper function. Luckily, the source hash keys correspond to the destination database fields. It takes only a few lines of code and two clever idioms to produce a sane and generalized function to insert data into a table.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $table = &#39;uregisternew&#39;;
+        my @fields = qw( country firstname lastname userid password address1 city 
+                state province zippostal email phone favorites remaddr gender income 
+                dob occupation age );
+
+        my $fields = join(&#39;, &#39;, @fields);
+        my $values = join(&#39;, &#39;, map { $dbh-&amp;gt;quote($_) } @formdata{@fields});
+        $sql = &amp;quot;INSERT into $table ($fields) values ($values)&amp;quot;;
+
+        $sth = $dbh-&amp;gt;prepare($sql);
+        $sth-&amp;gt;execute();
+        $sth-&amp;gt;finish();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;ll assume that %formdata has been declared and contains data already. We&amp;rsquo;ve already created a database handle, stored in $dbh, and it has the RaiseError attribute set. The first two lines declare the database table to use and the fields into which to insert data. These could just as well come from function arguments.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;join()&lt;/code&gt; lines transforms lists of fields and values into string snippets used in the SQL statement. The map block simply runs each value through the DBI&amp;rsquo;s &lt;code&gt;quote()&lt;/code&gt; method, quoting special characters appropriately. Don&amp;rsquo;t quote the fields, as they&amp;rsquo;ll be treated as literals and will be returned directly. (Be sure to check the DBD module for your chosen database for other notes regarding &lt;code&gt;quote().)&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;The only tricky construct is &lt;code&gt;@formdata{@fields}&lt;/code&gt;. This odd fellow is known as a hash slice. Just as you can access a single value with a scalar ($formdata{$key}), you can access a list of values with a list of keys. Not only does this reduce the code that builds $values, using the same list in @fields ensures that the field names and the values appear in the same order.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-placeholders-placeholders-span&#34;&gt;&lt;span id=&#34;placeholders&#34;&gt;Placeholders&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;A relational database must parse each new statement, preparing the query. (This occurs when a program calls the &lt;code&gt;prepare()&lt;/code&gt; method). High-end systems often run a query analyzer to choose the most efficient path. Because many queries are repeated, some databases cache prepared queries.&lt;/p&gt;
+
+&lt;p&gt;DBI can take advantage of this with placeholders (also known as &amp;lsquo;bind values&amp;rsquo;). This is especially handy when inserting multiple rows. Instead of interpolating each new row into a unique statement and forcing the database to prepare a new statement each time, adding placeholders to an INSERT statement allows us to prepare the statement once, looping around the &lt;code&gt;execute()&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $fields = join(&#39;, &#39;, @fields);
+        my $places = join(&#39;, &#39;, (&#39;?&#39;) x @fields);
+        $sql = &amp;quot;INSERT into $table ($fields) values ($places)&amp;quot;;
+
+        $sth = $dbh-&amp;gt;prepare($sql);
+        $sth-&amp;gt;execute(@formdata{@fields});
+
+        $sth-&amp;gt;finish();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Given @fields containing &amp;lsquo;name&amp;rsquo;, &amp;lsquo;phone&amp;rsquo;, and &amp;lsquo;email&amp;rsquo;, the generated statement will be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        INSERT into users (name, phone, email) values (?, ?, ?)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each time we call &lt;code&gt;execute()&lt;/code&gt; on the statement handle, we need to pass the appropriate values in the correct order. Again, a hash slice comes in handy. Note that DBI automatically quotes values with this technique.&lt;/p&gt;
+
+&lt;p&gt;This example only inserts one row, but it could easily be adapted to loop over a data source, repeatedly calling execute(). While it takes slightly more code than interpolating values into a statement and calling do(), the code is much more robust. Additionally, preparing the statement only once confers a substantial performance benefit. Best of all, it&amp;rsquo;s not limited to INSERT statements. Consult the DBI documentation for more details.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-binding-columns-binding-columns-span&#34;&gt;&lt;span id=&#34;binding columns&#34;&gt;Binding Columns&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In a similar vein, the DBI also supports a supremely useful feature called &amp;lsquo;binding columns.&amp;rsquo; Instead of returning a list of row elements, the DBI stores the values in bound scalars. This is very fast, as it avoids copying returned values, and can simplify code greatly. From the programmer&amp;rsquo;s side, it resembles placeholders, but it is a function of the DBI, not the underlying database.&lt;/p&gt;
+
+&lt;p&gt;Binding columns is best illustrated by an example. Here, we loop through all rows of the user table, displaying names and e-mail addresses:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $sql = &amp;quot;SELECT name, email FROM users&amp;quot;;
+        my $sth = $dbh-&amp;gt;prepare($sql);
+        $sth-&amp;gt;execute();
+
+        my ($name, $email);
+        $sth-&amp;gt;bind_columns(\$name, \$email);
+
+        while ($sth-&amp;gt;fetch()) {
+                print &amp;quot;$name &amp;lt;$email&amp;gt;\n&amp;quot;;
+        }
+        $sth-&amp;gt;finish();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With each call to fetch(), $name and $email will be updated with the appropriate values for the current row. This code does have the flaw of depending on field ordering hardcoded in the SQL statement. Instead of giving up on this flexibility and speed, we&amp;rsquo;ll use the list-based approach with a hash slice:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $table = &#39;users&#39;;
+        my @fields = qw( name email );
+        my %results;
+
+        my $fields = join(&#39;, &#39;, @fields);
+
+        my $sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT $fields FROM $table&amp;quot;);
+        $sth-&amp;gt;execute();
+
+        @results{@fields} = ();
+        $sth-&amp;gt;bind_columns(map { \$results{$_} } @fields);
+
+        while ($sth-&amp;gt;fetch()) {
+                print &amp;quot;$results{name} &amp;lt;$results{email}&amp;gt;\n&amp;quot;;
+        }
+        $sth-&amp;gt;finish();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It only takes two lines of magic to bind hash values to the result set. After declaring the hash, we slice %results with @fields to initialize the keys we&amp;rsquo;ll use. Their initial value (undef) doesn&amp;rsquo;t matter, as it is only necessary that they exist. The map block in the &lt;code&gt;bind_columns()&lt;/code&gt; call creates a reference to the hash value associated with each key in @fields. (This is the only required step of the example, but the value initialization in the previous line makes it more clear.)&lt;/p&gt;
+
+&lt;p&gt;If we only display names and addresses, this is no improvement over binding simple lexicals. The real power comes with more complicated tasks. This technique may be used in a function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        sub bind_hash {
+                my ($table, @fields) = @_;
+
+                my $sql = &#39;SELECT &#39; . join(&#39;, &#39;, @fields) . &amp;quot; FROM $table&amp;quot;;
+                my $sth = $dbh-&amp;gt;prepare($sql);
+                $sth-&amp;gt;execute();
+
+                my %results;
+                @results{@fields} = ();
+                $sth-&amp;gt;bind_columns(map { \$results{$_} } @fields);
+                return (\%results, sub { $sth-&amp;gt;fetch() });
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Calling code could resemble:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my ($res, $fetch) = bind_hash(&#39;users&#39;, qw( name email ));
+        while ($fetch-&amp;gt;()) {
+                print &amp;quot;$res-&amp;gt;{name} &amp;gt;$res-&amp;gt;{email}&amp;gt;\n&amp;quot;;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Other options include passing in references to populate or returning an object that has a &lt;code&gt;fetch()&lt;/code&gt; method of its own.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-modules-built-on-dbi-modules-built-on-dbi-span&#34;&gt;&lt;span id=&#34;modules built on dbi&#34;&gt;Modules Built on DBI&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The decision to use one module over another depends on many factors. For certain classes of applications, the nuts and bolts of the underlying database structure is less important than ease of use or rapid development. Some coders may prefer a higher level of abstraction to hide tedious details for simple requirements. The drawbacks are lessened flexibility and slower access.&lt;/p&gt;
+
+&lt;p&gt;It is up to the programmer to analyze each situation, choosing the appropriate approach. Perl itself encourages this. As mentioned above, DBI does not enforce any behavior of SQL statement generation or data retrieval. When the techniques presented here are too onerous and using a module such as Tangram or DBIx::Recordset makes the job easier and more enjoyable, do not be afraid to use them. Conversely, a bit of planning ahead and abstraction can provide the flexibility needed for many other applications. There is no single best solution, but Perl and the CPAN provide many workable options, including the DBI.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;chromatic is the author of &lt;a href=&#34;http://onyxneon.com/books/modern_perl/&#34;&gt;Modern Perl&lt;/a&gt;. In his spare time, he has been working on &lt;a href=&#34;http://trendshare.org/how-to-invest/&#34;&gt;helping novices understand stocks and investing&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>DBIx::Recordset VS DBI</title>
+      <link>http://localhost:1313/pub/2001/02/dbix.html/</link>
+      <pubDate>Tue, 27 Feb 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/02/dbix.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;#problems%20using%20dbi%20at%20applicationlevel&#34;&gt;Problems Using DBI at Application-Level&lt;/a&gt;
+-   &lt;a href=&#34;#intolerance%20to%20table%20and%20data%20mutation&#34;&gt;Intolerance to Table and Data Mutation&lt;/a&gt;
+-   &lt;a href=&#34;#errorprone%20and%20tedious%20query%20construction&#34;&gt;Error-Prone and Tedious Query Construction&lt;/a&gt;
+-   &lt;a href=&#34;#manual%20and%20complex%20mapping%20of%20database%20data%20to%20perl%20data%20structures&#34;&gt;Manual and Complex Mapping of Database Data to Perl Data Structures&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;#succint%20cgisql%20interaction%20(database%20control%20via%20cgi%20oneliners)&#34;&gt;Succint CGI-SQL Interaction (Database Control via ``CGI One-Liners&amp;rdquo;)&lt;/a&gt;
+-   &lt;a href=&#34;#control%20and%20monitoring%20of%20table%20access&#34;&gt;Control and Monitoring of Table Access&lt;/a&gt;
+-   &lt;a href=&#34;#scalability&#34;&gt;Scalability&lt;/a&gt;
+-   &lt;a href=&#34;#form%20data%20variations&#34;&gt;Form Data Variations&lt;/a&gt;
+-   &lt;a href=&#34;#table%20splits&#34;&gt;Table Splits&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;#sample%20code&#34;&gt;Sample Code&lt;/a&gt;
+-   &lt;a href=&#34;#dbix::recordset%20version%20of%20code&#34;&gt;DBIx::Recordset Version of Code&lt;/a&gt;
+-   &lt;a href=&#34;#dbi%20version%20of%20code&#34;&gt;DBI Version of Code&lt;/a&gt;
+-   &lt;a href=&#34;#empirical%20results&#34;&gt;Empirical Results&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;#conclusion&#34;&gt;Conclusion&lt;/a&gt;
+&lt;a href=&#34;#acknowledgements&#34;&gt;Acknowledgements&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;Writing this article was pure hell. No, actually, writing most of it was quite fun - it was just when I had to write the functional equivalent of my DBIx::Recordset code in DBI that I began to sweat profusely. It was only when I had finished writing the mountain of DBI code to do the same thing as my molehill of DBIx::Recordset that I could heave a sigh of relief. Since starting to use DBIx::Recordset, I have been loath to work on projects where the required database API was DBI. While it may seem like a play on words, it is crucial to understand that DBI is the standard database interface for Perl but it should not be the interface for most Perl applications requiring database functionality.&lt;/p&gt;
+
+&lt;p&gt;The key way to determine whether a particular module/library is matched to the level of a task is to count the number of lines of ``prep code&amp;rdquo; you must write before you can do what you want. In other words, can the complex operations and data of your domain be dealt with in a unitary fashion by this module? In the case of DBI, we can say that it has made the tasks of connection, statement preparation, and data fetching tractable by reducing them to single calls to the DBI API. However, real-life applications have much larger and more practical complex units and it is in these respects that the DBI API falls short. To me, it comes as no surprise that DBI, a module whose only design intent was to present a uniform API to the wide variety of available databases, would lack such high-level functionality. But it does surprise me to no end that hoards of Perl programmers, some of whom may have had a software engineering course at some point in their careers, would make such errant judgment. Thus the fault lies with the judgment of the programmers, not DBI.&lt;/p&gt;
+
+&lt;p&gt;In most cases the gap between DBI&amp;rsquo;s API and Perl applications has been bridged by indiscriminately mixing generic application-level functionality with the specifics of the current application. This makes it difficult to reuse the generic routines in another part of the application or in an altogether different application. Another maladaptive way that the DBI API has been extended for application-level databasing is by developing a collection of generic application-level tools but not publishing them. Thus, as larger scale tools are built from two camps using differing generic application-level APIs, amends for discrepancies in calling conventions must be duct-taped between the code bodies. The final way to misuse DBI in an application is to use it directly.&lt;/p&gt;
+
+&lt;p&gt;However, an unsung module, publicly available on CPAN that bridges the gap between DBI and application-level programming robustly and conveniently is DBIx::Recordset. It is built on top of DBI and is so well-matched to the level at which database-driven applications are conceived that in most cases one sentence in an application design specification equates to one line of DBIx::Recordset.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-problems-using-dbi-at-applicationlevel-problems-using-dbi-at-application-level-span&#34;&gt;&lt;span id=&#34;problems using dbi at applicationlevel&#34;&gt;Problems Using DBI at Application-Level&lt;/span&gt;&lt;/h3&gt;
+
+&lt;h4 id=&#34;span-id-intolerance-to-table-and-data-mutation-intolerance-to-table-and-data-mutation-span&#34;&gt;&lt;span id=&#34;intolerance to table and data mutation&#34;&gt;Intolerance to Table and Data Mutation&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Table mutation - the addition, deletion or rearrangement of fields from a table or data mutation - the addition, removal or rearrangement of portions of the input sources intended for database commission, can break a large number of calls to the DBI API. This is due to the fact that most routines expect and return arrays or array references and thus fail when the expected arrays shrink or grow. For example, the following DBI code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $dbh-&amp;gt;do(&amp;quot;INSERT INTO students (id,name) VALUES (1,$name)&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;would break once fields were removed from the table students. However, the equivalent DBIx::Recordset code&lt;a href=&#34;#1&#34;&gt;(1)&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; DBIx::Recordset-&amp;gt;Insert({%dsn,&#39;!Table&#39;=&amp;gt;&#39;students&#39;,%dbdata});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;would work regardless of constructive or destructive mutations of the students table or %dbdata. If there are fewer field-value pairs in %dbdata than in the table, then the insert will be performed with the corresponding fields. If there are irrelevant fields in %dbdata, then the extra fields are by default silently ignored.&lt;/p&gt;
+
+&lt;p&gt;Now, the import of this intolerance for DBI usage is that changes in either the tables or the input data require changes in the source. For some, such rigidity is of merit because it forces both the source and target of database commission to be made explicitly manifest within the source code. However, for other Perl programmers, such rigidity is nothing more than an imposition on their highly cultivated sense of Laziness.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-errorprone-and-tedious-query-construction-error-prone-and-tedious-query-construction-span&#34;&gt;&lt;span id=&#34;errorprone and tedious query construction&#34;&gt;Error-Prone and Tedious Query Construction&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;A query string is presented to the DBI API in placeholder or literal notation. An example of DBI placeholder usage is shown below:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $sql=&#39;insert into uregisternew
+        (country, firstname, lastname, userid, password, address1, city,
+        state, province, zippostal, email, phone, favorites, remaddr,
+        gender, income, dob, occupation, age)
+        values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)&#39;;
+
+ my @data=($formdata{country}, $formdata{firstname}, $formdata{lastname},
+        $formdata{email}, $formdata{password}, $formdata{address},
+        $formdata{city},  $formdata{state},  $formdata{province},
+        $formdata{zippostal}, $formdata{email}, $formdata{phone},
+        $formdata{favorites}, $formdata{remaddr}, $formdata{gender},
+        $formdata{income}, $formdata{date}, $formdata{occupation},
+ $formdata{age});
+
+        $sth2 = $dbh-&amp;gt;prepare($sql);
+        $sth2-&amp;gt;execute(@data);
+        $sth2-&amp;gt;finish();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a slightly modified version of a minefield I had to tiptoe through during a recent contract I was on. This code has several accidents waiting to happen. For one you must pray that the number of question-mark placeholders is the same as the number of fields you are inserting. Secondly, you must manually insure that the field names in the insert statement correspond with the data array in both position and number.&lt;/p&gt;
+
+&lt;p&gt;If one were developing the same query using DBI&amp;rsquo;s literal notation, one would have the same issues and would in addition devote more lines of code to manually quoting the data and embedding it in the query string.&lt;/p&gt;
+
+&lt;p&gt;In contrast, DBIx::Recordset&amp;rsquo;s &lt;code&gt;Insert()&lt;/code&gt; function takes a hash in which the keys are database field names and the values are the values to be inserted. Using such a data structure eliminates the correspondence difficulties mentioned above. Also, DBIx::Recordset generates the placeholder notation when it calls the DBI API.&lt;/p&gt;
+
+&lt;p&gt;Thus, with no loss of functionality&lt;a href=&#34;#2&#34;&gt;(2)&lt;/a&gt;, the entire body of code above could be written as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; DBIx::Recordset-&amp;gt;Insert({%dsn,%formdata});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In fact, the DBI code is not equivalent to the DBIx::Recordset code because connection and database operations are always separate calls to the DBI API. The additional work required to use DBI has been omitted for brevity.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-manual-and-complex-mapping-of-database-data-to-perl-data-structures-manual-and-complex-mapping-of-database-data-to-perl-data-structures-span&#34;&gt;&lt;span id=&#34;manual and complex mapping of database data to perl data structures&#34;&gt;Manual and Complex Mapping of Database Data to Perl Data Structures&lt;/span&gt;&lt;/h4&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;operation&lt;/td&gt;
+&lt;td&gt;DBI&lt;/td&gt;
+&lt;td&gt;DBIx::Recordset&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Single row fetch&lt;/td&gt;
+&lt;td&gt;&lt;pre&gt;&lt;code&gt;selectrow_array
+selectrow_arrayref&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td&gt;&lt;pre&gt;&lt;code&gt;$set[0]&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Multiple row fetch&lt;/td&gt;
+&lt;td&gt;&lt;pre&gt;&lt;code&gt;fetchall_arrayref  
+selectall_arrayref 
+fetchrow_array     
+fetchrow_arrayref  
+fetchrow_hashref&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td&gt;&lt;pre&gt;&lt;code&gt; for $row (@set) {...}
+       OR    
+while ($href=$set-&amp;gt;Next())&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;In DBI, database record retrieval is manual, complex and in most cases intolerant to table mutation. By manual, we mean that performing the query does not automatically map the query results onto any native Perl data structures. By complex, we mean that DBI can return the data in a multiplicity of ways: array, array reference and hash reference.&lt;/p&gt;
+
+&lt;p&gt;In DBIx::Recordset, however, retrieval of selected recordsets can be &lt;a href=&#34;#3&#34;&gt;(3)&lt;/a&gt; automatic, simple and field-mutation tolerant. By automatic, we mean that requesting the records leads to an automatic tie of the result set to a hash.&lt;a href=&#34;#4&#34;&gt;(4)&lt;/a&gt; No functions need be called for this transfer to take place. The retrieval process is simple because the only way to receive results is via a hash reference. Because DBIx::Recordset returns a hash, fields are referred to by name as opposed to position. This strategy is robust to all table mutations.&lt;/p&gt;
+
+&lt;p&gt;Having seen DBIx::Recordset&amp;rsquo;s solution to some of the more troublesome aspects of DBI use, we now move on to explore the wealth of application-level benefits that DBIx::Recordset offers in the following areas:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Succinct CGI to SQL transfer&lt;/li&gt;
+&lt;li&gt;Control and monitoring of table access&lt;/li&gt;
+&lt;li&gt;Scalability&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;As impressive as these topics may sound, DBIx::Recordset is designed to achieve each of them in one line of Perl&lt;img src=&#34;#5&#34; alt=&#34;(5)&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-succint-cgisql-interaction-database-control-via-cgi-oneliners-succint-cgi-sql-interaction-database-control-via-cgi-one-liners-span&#34;&gt;&lt;span id=&#34;succint cgisql interaction (database control via cgi oneliners)&#34;&gt;Succint CGI-SQL Interaction (Database Control via ``CGI One-Liners&amp;rdquo;)&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Assuming that the keys in the query string match the field names in the target database table, DBIx::Recordset can shuttle form data from a query string into a database in one line of Perl code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; DBIx::Recordset-&amp;gt;Insert({%formdata,%dsn});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;One line of DBIx::Recordset can also drive recordset retrieval via form data as well as iterate through the results:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; # here we: SELECT * FROM sales and automatically tie
+ # the selected records to @result
+
+ *result = DBIx::Recordset-&amp;gt;Search({
+        %dsn,&#39;!Table&#39;=&amp;gt;&#39;sales&#39;,%formdata
+        });
+
+ # here we iterate across our results...
+ map { 
+  printf (&amp;quot;&amp;lt;TR&amp;gt;Sucker # %d purchased item # %s on %s&amp;lt;/TR&amp;gt;&amp;quot;, 
+        $_-&amp;gt;{customer_id}, $_-&amp;gt;{item_id}, $_-&amp;gt;{purchase_date}) 
+ } @result;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The above code is automatically quoted and requires no tiresome connect, prepare and execute ritual.&lt;/p&gt;
+
+&lt;p&gt;DBIx::Recordset also has helper functions which create the HTML for ``previous-next-first-last&amp;rdquo; navigation of recordsets:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $nav_html = $::result -&amp;gt; PrevNextForm ({
+        -first =&amp;gt; &#39;First&#39;,  -prev =&amp;gt; &#39;&amp;lt;&amp;lt;Back&#39;, 
+        -next  =&amp;gt; &#39;Next&amp;gt;&amp;gt;&#39;, -last =&amp;gt; &#39;Last&#39;,
+                -goto  =&amp;gt; &#39;Goto #&#39;}, 
+        \%formdata);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this case, we use the scalar aspect of the typeglob, which provides object-oriented access to the methods of the created recordset.&lt;/p&gt;
+
+&lt;p&gt;A final CGI nicety has to do with the fact that browsers send empty form fields as empty strings. While in some cases you may want this empty string to propagate into the database as a SQL null, it is also sometimes desirable to have empty form fields ignored. It is possible to specify which behavior you prefer through the DBIx::Recordset &amp;lsquo;!IgnoreEmpty&amp;rsquo; hash field of the &lt;code&gt;Insert()&lt;/code&gt; and &lt;code&gt;Update()&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-control-and-monitoring-of-table-access-control-and-monitoring-of-table-access-span&#34;&gt;&lt;span id=&#34;control and monitoring of table access&#34;&gt;Control and Monitoring of Table Access&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;A database handle in DBI is a carte blanche to add, retrieve, or remove anything from a database that one can do with a console interface to the database with the same login. The problem with this is that the semantics and volatility of an application&amp;rsquo;s database code is not self-consistent but instead varies as a function of database permission alteration.&lt;a href=&#34;#6&#34;&gt;(6)&lt;/a&gt; Au contraire, a DBIx::Recordset handle is much more structured. A handle is created and configured with a number of attributes: table write modes, accessible tables, and the method of logging database usage to name a few.&lt;/p&gt;
+
+&lt;p&gt;The first form of much-needed table access control that DBIx::Recordset offers is specification of the manners in which a particular database connection will be allowed to alter database tables. By the use of a binary-valued string, one specifies the subset of write operations (specifically none/insert/update/delete/clear) that are allowable. Such facilities are often needed when defining access levels to a database for various parties. For example, it is conceivable for a corporate intranet database to give insert access to sales employees, update access to customer service, delete access to processing and complete access to technical support. To implement such constraints in plain DBI would yield a confusing maelstrom of if-thens and 2-3 suicide attempts. With DBIx::Recordset, one simply creates a properly configured connection for each corporate intranet sector.&lt;/p&gt;
+
+&lt;p&gt;Tangential to the issue of write permission is the issue of which tables can be accessed at all. Control of table access is simply one more key-value pair to the connection setup hash. Finally to monitor the use of database handles, one only need setup a debug file for each handle.&lt;/p&gt;
+
+&lt;p&gt;Thus, assuming the package company::database has a hash %write_mode which contains the write modes for the intranet, a hash %log_file with the log files for each handle, and a hash %table_access which contains the tables for each member of the intranet, one would specify the tables and their mode of access and usage logs for the entire intranet as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{ 
+  package company::database; 
+
+  for (keys %write_mode) {
+
+  *{$handle{$_}} = 
+        DBIx::Recordset-&amp;gt;Setup({%dsn, 
+        &#39;!Writemode&#39; =&amp;gt; $write_mode{$_}, 
+        &#39;!Tables&#39;    =&amp;gt; $table_access{$_}
+        });
+
+   DBIx::Recordset-&amp;gt;Debug({
+                &#39;!Level&#39; =&amp;gt; 4,
+                &#39;!File&#39;  =&amp;gt; $log_file{$_},
+                &#39;!Mode&#39;  =&amp;gt; &#39;&amp;gt;&#39;
+                });
+   }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-scalability-scalability-span&#34;&gt;&lt;span id=&#34;scalability&#34;&gt;Scalability&lt;/span&gt;&lt;/h4&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Operation&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;Code changes needed (DBI)&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;Code changes (DBIx::Recordset)&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Adding or removing form elements from a webpage but still having the database code commit the generated query string properly.&lt;/td&gt;
+&lt;td&gt;For each change of the form (and hence the query string), the database code would have to be modified.&lt;/td&gt;
+&lt;td&gt;None&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Taking an un-normalized main table and splitting it into a number of &amp;ldquo;satellite&amp;rdquo; tables with foreign keys in the main table to reference the satellite tables.&lt;/td&gt;
+&lt;td&gt;For each table split, additional terms would have to added to the WHERE or JOIN clause.&lt;/td&gt;
+&lt;td&gt;None&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Regardless of how well one plans a project, prototyping and early development are often evolutionary processes. Significant development time can be saved if database-processing routines remain invariant in the face of HTML and database re-design. It is in this regard that DBIx::Recordset dwarfs DBI, making it far more viable during the prototyping phases of a project. Having already shown DBIx::Recordset&amp;rsquo;s scalability in the face of table mutations, this section will demonstrate DBIx::Recordset&amp;rsquo;s scalability in the face of form data variations as well as database table splits.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-form-data-variations-form-data-variations-span&#34;&gt;&lt;span id=&#34;form data variations&#34;&gt;Form Data Variations&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Let&amp;rsquo;s assume you were developing a user registration form that submitted it&amp;rsquo;s form data to db-commit.cgi for insertion into a database:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+use CGI (:standard);
+$formdata{$_} = param{$_} for param();
+if ($#(DBIx::Recordset-&amp;gt;Search(
+ { %dsn,
+  &#39;!Table&#39;  =&amp;gt; user_registration,
+  &#39;username&#39; =&amp;gt; $formdata{username}
+ })) &amp;gt;= 0) {
+ &amp;amp;username_taken_error;
+} else {
+ DBIx::Recordset-&amp;gt;Insert(
+ { %dsn,
+  &#39;!Table&#39;  =&amp;gt; user_registration,
+  %formdata
+ }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now assume that you decided to add a new field called AGE to a table and a corresponding form. Under DBI, the insert query would have to be modified to account for the change. Because DBIx::Recordset takes a hash reference for its inserts, no code modification is required. Now of course, I can hear the DBI users squawking: ``I can develop a library that converts form data to hashes and turns this into query strings.&amp;rdquo; And of course my hot retort is: ``But don&amp;rsquo;t you see this is a homegrown, non-standard &lt;a href=&#34;#7&#34;&gt;(7)&lt;/a&gt;API that will have to be duct-taped to other people&amp;rsquo;s homegrown, non-standard solutions?&amp;rdquo;&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-table-splits-table-splits-span&#34;&gt;&lt;span id=&#34;table splits&#34;&gt;Table Splits&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;For another example of DBIx::Recordset&amp;rsquo;s flexibility to architecture changes, consider the case where a table is split, perhaps for reasons of normalization. Thus, in the core table where you once explicitly coded a user&amp;rsquo;s name into a field user_name you now have a foreign key titled user_name_id which points to a table called user_name which has a field titled id. Assume that you also later decided to do the same sort of normalization for other fields such as age-bracket or salary-bracket. With plain DBI, each time that a query was supposed to retrieve all fields from each of the associated tables, the query would have to be rewritten to accommodate the splitting of the main table. With DBIx::Recordset, no query would have to be rewritten because the tables were described in a format recognizable by DBIx::Recordset&amp;rsquo;s database meta-analysis.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-sample-code-sample-code-span&#34;&gt;&lt;span id=&#34;sample code&#34;&gt;Sample Code&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;On a recent contract I had to copy a user registration table (named uregister) to a new table (called uregisternew) which had all of the fields of the old table plus a few new fields designed to store profile information on the users.&lt;/p&gt;
+
+&lt;p&gt;The key thing to note about the DBIx::Recordset version of this code is that it is highly definitional: very little database mechanics clutters the main logic of the code, allowing one to focus on recordset migration from one table to another.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-dbix-recordset-version-of-code-dbix-recordset-version-of-code-span&#34;&gt;&lt;span id=&#34;dbix::recordset version of code&#34;&gt;DBIx::Recordset Version of Code&lt;/span&gt;&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt; #!/usr/bin/perl
+
+ =head1
+
+ uregisternew is a table with all the fields of uregister plus a few
+ profile fields (ie, salary bracket, occupation, age) which contain a
+ positive integer which serves as index into the array for that
+ particular profile field.
+
+ The purpose of this script is to copy over the same fields and
+ generate a valid array index for the new profile fields.
+
+ =cut
+
+ use Angryman::Database;
+ use Angryman::User;
+ use DBIx::Recordset;
+ use Math::Random;
+ use strict;
+
+ $::table{in}  = &#39;uregister&#39;;
+ $::table{out} = &#39;uregisternew&#39;;
+
+
+ # connect to database and SELECT * FROM uregister
+ *::uregister = DBIx::Recordset-&amp;gt;Search ({            
+        %Angryman::Database::DBIx::Recordset::Connect, 
+        &#39;!Table&#39; =&amp;gt; $::table{in}  
+        });
+
+
+ # because we will re-use the target table many times, we separate the 
+ # connection and insert steps with this recordset
+ *::uregisternew = DBIx::Recordset-&amp;gt;Setup({  
+        %Angryman::Database::DBIx::Recordset::Connect, 
+        &#39;!Table&#39; =&amp;gt; $::table{out} 
+        });
+
+
+ # iterate through the recordsets from the old table:
+ for my $uregister (@::uregister) {
+     &amp;amp;randomize_user_profile;
+     # INSERT 
+        # the old table data into the new table and
+        # the computed hash of profile data
+    $::uregisternew-&amp;gt;Insert({%{$uregister},%::profile});
+ }
+
+ # Angryman::User::Profile is a hash in which each key is a reference 
+ # to an array of profile choices. For example:
+ # $Angryman::User::Profile{gender} = [ &#39;male&#39;, &#39;female&#39; ];
+ # $Angryman::User::Profile{age} = [&#39;under 14&#39;, &#39;14-19&#39;, &#39;20-25&#39;, ... ];
+ # Because we don&#39;t have the actual data for the people in uregister,
+ # we randomly assign user profile data over a normal distribution.
+ # when copying it to uregisternew.
+ sub randomize_user_profile {
+    for (keys %Angryman::User::Profile) {
+        my @tmp=@{$Angryman::User::Profile{$_}};
+        $::profile{$_} = random_uniform_integer(1,0,$#tmp);
+        $::profile{dob}=&#39;1969-05-11&#39;;
+    }
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-dbi-version-of-code-dbi-version-of-code-span&#34;&gt;&lt;span id=&#34;dbi version of code&#34;&gt;DBI Version of Code&lt;/span&gt;&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt; #!/usr/bin/perl
+
+
+ =head1
+ uregisternew is a table with all the fields of uregister plus a few
+ profile fields (ie, salary bracket, occupation, age) which contain
+ a positive integer which serves as index into the array for that
+ particular profile field.
+
+
+ The purpose of this script is to copy over the same fields and
+ generate a valid array index for the new profile fields.
+
+
+ This file is twice as long as the DBIx::Recordset version and it 
+ easily took me 5 times longer to write.
+ =cut 
+
+
+ use Angryman::Database;
+ use Angryman::User;
+ use DBI;
+ use Math::Random;
+ use strict;
+
+
+ $::table{in}  = &#39;uregister&#39;;
+ $::table{out} = &#39;uregisternew&#39;;
+
+
+ # connect to database and SELECT * FROM uregister
+ my $dbh = DBI-&amp;gt;connect($Angryman::Database::DSN, 
+                        $Angryman::Database::Username, 
+                        $Angryman::Database::Password);
+ my $sth = $dbh-&amp;gt;prepare(&#39;SELECT * FROM uregister&#39;);
+ my $ret = $sth-&amp;gt;execute;
+
+
+ &amp;amp;determine_target_database_field_order;
+
+
+ # because we will re-use the target table many times, we separate the 
+ # connection and insert steps with this recordset
+
+
+ # iterate through the recordsets from the old table:
+ while ($::uregister = $sth-&amp;gt;fetchrow_hashref) {
+
+
+     &amp;amp;randomize_user_profile;
+     &amp;amp;fiddle_with_my_data_to_get_it_to_work_with_the_DBI_API();
+
+
+     # INSERT 
+         # the old table data into the new table and
+         # the computed hash of profile data
+     my $sql = &amp;quot;INSERT into $::table{out}($::sql_field_term) values($::INSERT_TERM)&amp;quot;;
+     $dbh-&amp;gt;do($sql);
+ }
+
+
+ # Angryman::User::Profile is a hash in which each key is a reference 
+ # to an array of profile choices. For example:
+ # $Angryman::User::Profile{gender} = [ &#39;male&#39;, &#39;female&#39; ];
+ # $Angryman::User::Profile{age} = [&#39;under 14&#39;, &#39;14-19&#39;, &#39;20-25&#39;,  ];
+ # Because we don&#39;t have the actual data for the people in uregister,
+ # we randomly assign user profile data over a normal distribution.
+ # when copying it to uregisternew.
+ sub randomize_user_profile {
+     for (keys %Angryman::User::Profile) {
+         my @tmp=@{$Angryman::User::Profile{$_}};
+         $::profile{$_} = random_uniform_integer(1,0,$#tmp);
+     }
+
+
+     $::profile{dob}=&#39;&#39;;
+ }
+
+
+ # Hmm, I cant just give DBI my data and have it figure out the order
+ # of the database fields... So here he we go getting the field
+ # order dynamically so this code doesnt break with the least little
+ # switch of field position.
+ sub determine_target_database_field_order {
+
+
+     my $order_sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT * FROM $::table{out} LIMIT 1&amp;quot;);
+     $order_sth-&amp;gt;execute;
+
+
+ # In DBIx::Recordset, I would just say $handle-&amp;gt;Names()... but here we 
+ # must iterate through the fields manually and get their names.
+
+
+     for (my $i = 0; $i &amp;lt; $order_sth-&amp;gt;{NUM_OF_FIELDS}; $i++) {
+         push @::order_data, $order_sth-&amp;gt;{NAME}-&amp;gt;[$i];
+     }
+
+
+     $::sql_field_term = join &#39;,&#39;,  @::order_data;
+
+
+ }
+
+
+ # As ubiquitous as hashes are in Perl, the DBI API does not
+ # offer a way to commit hashes to disk.
+ sub fiddle_with_my_data_to_get_it_to_work_with_the_DBI_API {
+
+
+     my @output_data;
+     for (@::order_data) {
+         push @output_data, $dbh-&amp;gt;quote
+             (
+              defined($::uregister-&amp;gt;{$_}) 
+              ? $::uregister-&amp;gt;{$_} 
+              : $::profile{$_}
+              );
+    }
+
+
+    $::INSERT_TERM=join &#39;,&#39;, @output_data;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-empirical-results-empirical-results-span&#34;&gt;&lt;span id=&#34;empirical results&#34;&gt;Empirical Results&lt;/span&gt;&lt;/h4&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;DBI&lt;/th&gt;
+&lt;th&gt;DBIx::Recordset&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;1.4 seconds (1,2)&lt;/td&gt;
+&lt;td&gt;3.7 seconds (3,4)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The average, minimum, and maximum number of seconds required to execute the sample code under DBI and DBIx::Recordset. The code was run on a database of 250 users.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;DBI accelerated past the ODBC API for database interface because it was simpler and more portable. Because DBIx::Recordset is built on top of DBI, it maintains these advantages and improves upon DBI&amp;rsquo;s simplicity. Because it also adds much-needed application-level features to DBI, it is a clear choice for database driven Perl applications.&lt;/p&gt;
+
+&lt;p&gt;A strong contender for an improvement of DBI is the recent effort by Simon Matthews to simplify DBI use via a Template Toolkit plugin. Many of the advantages of DBIx::Recordset are available to the DBI plugin either intrinsically or due to the context in which it was developed. For example, DBIx::Recordset allows filtering of recordsets through the !Filter key to its database processing functions. The plugin did not have to provide filtering because there are several generic, widely useful filters (e.g., HTML, date, etc.) already available for Template Toolkit. However, Matthew&amp;rsquo;s DBI plugin uses the same level of abstraction as DBI. This shortcoming, along with the plug-in&amp;rsquo;s lack of application-level databasing conveniences, lands the plugin in the same functional boat as DBI with only nicer syntax to pad the same troublesome ride.&lt;/p&gt;
+
+&lt;p&gt;That being said, DBI is preferable to DBIx::Recordset when speed is of utmost importance. DBI&amp;rsquo;s speed advantage is due to several factors &lt;a href=&#34;#8&#34;&gt;(8)&lt;/a&gt;. First DBIx::Recordset is built on the DBI API and thus one has the overhead of at least one additional function call per application-level database command. Secondly, it takes time for DBIx::Recordset to decode its compact input algebra and produce well-formed SQL.&lt;/p&gt;
+
+&lt;p&gt;All theory aside, my experience and the timing results show that you don&amp;rsquo;t lose more than a second or two when you reach for DBIx::Recordset instead of DBI. Such a slowdown is acceptable in light of what DBIx::Recordset offers over DBI: speed of development, power of expression and availability of standard and necessary application-level functionality.&lt;/p&gt;
+
+&lt;p&gt;Even if time constraints do lead one to decide that DBIx::Recordset is inappropriate for a finished product because it is slightly slower than DBI, it can prove especially handy during early prototyping or when one is solving a complex problem and wants to focus on the flow of recordsets as opposed to the mechanics of managing this flow.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-acknowledgements-acknowledgements-span&#34;&gt;&lt;span id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;I would like to thank Gerald Richter (&lt;a href=&#34;mailto:richter@ecos.de&#34;&gt;richter@ecos.de&lt;/a&gt;) for authoring DBIx::Recordset, commenting on an early version of this manuscript as well as providing me and others with free help on his great tool.&lt;/p&gt;
+
+&lt;h4 id=&#34;footnotes&#34;&gt;Footnotes&lt;/h4&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;span id=&#34;1&#34;&gt;Actually, the DBI code is not equivalent to the DBIx::Recordset code because connection and database operations are always separate calls to the DBI API. The additional work required to use DBI has been omitted for brevity.&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;2&#34;&gt;The DBIx::Recordset code is also more accurate because it uses database metadata to determine which data to quote, while DBI uses string-based heuristics.&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;3&#34;&gt;DBIx::Recordset can be automatic and simple, but, you can also operate in a more manual mode to afford yourself time/space efficiency on the same order as DBI.&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;4&#34;&gt;More precisely, each row in the recordset is an anonymous hash which is referred to by one element of an array whose name is determined by the typeglob bound during the call to the Search() function.&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;5&#34;&gt;I can&amp;rsquo;t wait to see the next generation of obfuscated Perl now that major database operations only take one line!&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;6&#34;&gt;Be this alteration done by friend or foe.&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;7&#34;&gt;Now admittedly, the transfer of a CGI query string into a hash is non-standard as well, but, most high-end web application frameworks for Perl (e.g. HTML::Embperl and HTML::Mason) provide this transfer automatically as part of their application-level API to web site development.&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;8&#34;&gt;Maybe that&amp;rsquo;s why there&amp;rsquo;s a cheetah on the front of the DBI book&lt;/span&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

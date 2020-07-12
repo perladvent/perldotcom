@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Lexing and Parsing Continued </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Many practical programming problems require you to parse data. Ron Savage continues his demonstration of Marpa and other tools and techniques for lexing and parsing data. Put down the regexps; get it right this time."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2013/01/lexing-and-parsing-continued.html/" />
+<meta property="og:title" content="Lexing and Parsing Continued" />
+<meta property="og:description" content="Many practical programming problems require you to parse data. Ron Savage continues his demonstration of Marpa and other tools and techniques for lexing and parsing data. Put down the regexps; get it right this time.">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2013-01-01T01:01:01Z" />
+<meta property="og:image" content="http://localhost:1313/images/author/ron-savage.jpg" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Lexing and Parsing Continued</h1>
+              <p class="blog-post-meta">Jan 31, 2013 by
+              
+              
+                
+                
+                <a href="#author-bio-ron-savage">Ron Savage</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>This article is the second part of a series which started with <a href="/pub/2012/10/an-overview-of-lexing-and-parsing.html">An Overview of Lexing and Parsing</a>. That article aimed to discuss lexing and parsing in general terms, while trying to minimize the amount on how to actually use Marpa::R2 to do the work. In the end, however, it did have quite a few specifics. This article has yet more detail with regard to working with both a lexer and a parser. BTW, Marpa&rsquo;s blog</p>
+
+<p>(For more information, see the Marpa blog or download the example files for this article.)</p>
+
+<h3 id="brief-recap-the-two-grammars">Brief Recap: The Two Grammars</h3>
+
+<p>Article 1 defined the first sub-grammar as the one which identifies tokens and the second sub-grammar as the one which specifies which combinations of tokens are legal within the target language. As I use these terms, the lexer implements the first sub-grammar and the parser implements the second.</p>
+
+<h3 id="some-context">Some Context</h3>
+
+<p>Consider this image:</p>
+
+<p><img src="http://savage.net.au/Ron/html/graphviz2.marpa/teamwork.svg" alt="" /></p>
+
+<p>It&rsquo;s actually a copy of the image of a manual page for <a href="https://metacpan.org/pod/Graph::Easy">Graph::Easy</a>. Note: My module <a href="https://metacpan.org/pod/Graph::Easy::Marpa">Graph::Easy::Marpa</a> is a complete re-write of <code>Graph::Easy</code>. After I offered to take over maintenance of the latter, I found the code so complex I literally couldn&rsquo;t understand any of it.</p>
+
+<p>There are three ways (of interest to us) to specify the contents of this image:</p>
+
+<ul>
+<li>As a Perl program using the <a href="https://metacpan.org/pod/GraphViz2">GraphViz2</a> module</li>
+<li>As a Graphviz DOT file written in a little language</li>
+<li>As a DOT file</li>
+</ul>
+
+<p>This article is about using <code>GraphViz2::Marpa</code> to parse DOT files.</p>
+
+<p>Of course the Graphviz package itself provides a set of programs which parse DOT files in order to render them into many different formats. Why then would someone write a new parser for DOT? One reason is to practice your Marpa skills. Another is, perhaps, to write an on-line editor for Graphviz files.</p>
+
+<p>Alternately you might provide add-on services to the Graphviz package. For instance, some users might want to find all clusters of nodes, where a cluster is a set of nodes connected to each other, but not connected to any nodes outside the cluster. Yet other uses might want to find all paths of a given length emanating from a given node.</p>
+
+<p>I myself have written algorithms which provide these last two features. See the module <a href="https://metacpan.org/pod/GraphViz2::Marpa::PathUtils">GraphViz2::Marpa::PathUtils</a> and the <a href="http://savage.net.au/Perl-modules/html/graphviz2.pathutils/index.html">PathUtils demo page</a>.</p>
+
+<p>But back to using <code>Marpa::R2</code> from within <code>GraphViz2::Marpa</code>.</p>
+
+<h2 id="scripts-for-testing">Scripts for Testing</h2>
+
+<p>The code being developed obviously needs to be tested thoroughly, because any such little language has many ways to get things right and a horrendously large number of ways to get things slightly wrong, or worse. Luckily, because graphs specified in DOT can be very brief, it&rsquo;s a simple matter to make up many samples. Further, other more complex samples can be copied from the Graphviz distro&rsquo;s <em>graphs/directed/</em> and <em>graphs/undirected/</em> directories.</p>
+
+<p>The <code>GraphViz2::Marpa</code> distro I developed includes with 86 <em>data/*.gv</em> (input) files and the 79 corresponding <em>data/*.lex</em>, <em>data/*.parse</em>, <em>data/*.rend</em>, and <em>html/*.svg</em> (output) files. The missing files are due to deliberate errors in the input files, so they do not have output files. The distribution also includes obvious scripts such as <em>lex.pl</em> (lex a file), <em>parse.pl</em> (parse a lexed file), rend.pl (render a parsed file back into DOT), and one named vaguely after the package, <em>g2m.pl</em>, which runs the lexer and the parser.</p>
+
+<p>Why a rend.pl? If the code <em>can&rsquo;t</em> reconstruct the input DOT file, something got lost in translation&hellip;.</p>
+
+<p>The distribution also includes scripts which operate on a set of files.</p>
+
+<ul>
+<li><em>data/*.gv</em> -&gt; <em>dot2lex.pl</em> -&gt; runs <em>lex.pl</em> once per file -&gt; <em>data/*.lex</em> (CSV files).</li>
+<li><em>data/*.lex</em> -&gt; <em>lex2parse.pl</em> -&gt; runs <em>parse.pl</em> once per file -&gt; <em>data/*.parse</em> (CSV files).</li>
+<li><em>data/*.parse</em> -&gt; <em>parse2rend.pl</em> -&gt; runs <em>rend.pl</em> once per file -&gt; <em>data/*.rend</em> (dot files).</li>
+<li><em>data/*.rend</em> -&gt; <em>rend2svg.pl</em> -&gt; <em>html/*.svg</em>.</li>
+</ul>
+
+<p>Finally, <em>generate.demo.pl</em> creates <a href="http://savage.net.au/Perl-modules/html/graphviz2.marpa/">the GraphViz2 Marpa demo page</a>.</p>
+
+<p>Normal users will use <em>g2m.pl</em> exclusively. The other scripts help developers with testing. See the <a href="http://savage.net.au/Perl-modules/html/GraphViz2/Marpa.html#Scripts">GraphViz2 Marpa scripts documentation</a> for more information.</p>
+
+<h3 id="some-modules">Some Modules</h3>
+
+<p><a href="https://metacpan.org/pod/GraphViz2:Marpa::Lexer::DFA">GraphViz2::Marpa::Lexer::DFA</a> is a wrapper around <a href="https://metacpan.org/pod/Set::FA::Element">Set::FA::Element</a>. It has various tasks to do:</p>
+
+<ul>
+<li>Process the State Transition Table (STT)</li>
+<li>Transform the STT from the input form (spreadsheet/CSV file) into what Set::FA::Element expects</li>
+<li>Set up the logger</li>
+<li>Provide the code for all the functions which handle enter-state and exit-state events</li>
+<li>Run the DFA</li>
+<li>Check the result of that run</li>
+</ul>
+
+<p>Here is some sample data which ships with <code>GraphViz2::Marpa</code>, formatted for maximum clarity:</p>
+
+<ul>
+<li>A DOT file, <em>data/27.gv</em>, which is input to the lexer:</li>
+<li>A token file, <em>data/27.lex</em>, which is output from the lexer:</li>
+</ul>
+
+<p>You can see the details on <a href="http://savage.net.au/Perl-modules/html/graphviz2.marpa/">the GraphViz2 Marpa demo page</a>.</p>
+
+<h2 id="some-notes-on-the-stt">Some Notes on the STT</h2>
+
+<p>Firstly, note that the code allows whole-line comments (matching <code>m!^(?:#|//)!</code>. These lines are discarded when the input file is read, and so do not appear in the STT.</p>
+
+<h3 id="working-with-an-incomplete-bnf">Working With An Incomplete BNF</h3>
+
+<p>Suppose you&rsquo;ve gone to all of the work to find or create a BNF (<a href="http://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form">Backus-Naur Form</a>) grammar for your input language. You might encounter the situation where you can use BNF to specify your language in general, but not precisely in every situation. DOT is one offender.</p>
+
+<p>DOT IDs can be surrounded by double-quotes, and in some case <em>must</em> be surrounded by double-quotes. To be more specific, if we regard an attribute declaration to be of the form <code>key=value</code>, <em>both</em> the key and the value can be embedded in double-quotes, and sometimes the value <em>must</em> be.</p>
+
+<p>Even worse, IDs can be attributes. For instance, you might want your font color to be green. That appears to be simple, but note: attributes <em>must</em> be attached to some component of the graph, something like <code>node_27_1 [fontcolor = green]</code>.</p>
+
+<p>Here&rsquo;s the pain. In DOT, the <em>thing</em> to which the attribute belongs <em>may be omitted</em> as implied. That is, the name of the thing&rsquo;s owner is <em>optional</em>. For instance, you might want a graph which is six inches square. Here&rsquo;s how you can specify that requirement:</p>
+
+<ul>
+<li><code>graph [size = &quot;6,6&quot;]</code></li>
+<li><code>[size = &quot;6,6&quot;]</code></li>
+<li><code>size = &quot;6,6&quot;</code></li>
+</ul>
+
+<p>But wait, there&rsquo;s more! The <em>value</em> of the attribute can be omitted, if it&rsquo;s true. Hence the distro, and the demo page, have a set of tests, called <em>data/42.*.gv</em>, which test that feature of the code. Grrrr.</p>
+
+<p>All this means is that when the terminator of the attribute declaration (in the input stream) is detected, and we switch states from <code>within-attribute</code> to <code>after-attribute</code>, the code which emits output from the lexer has to have some knowledge of what the hell is going on, so that it can pretend it received the first of these three forms even if it received the second or third form. It <em>must</em> output <code>graph</code> (the graph as a whole) as the owner of the attribute in question.</p>
+
+<p>As you&rsquo;ve seen, any attribute declaration can contain a set of attribute <code>key=value</code> pairs as in <code>node_27_2 [ color = green fontcolor = red ]</code>.</p>
+
+<p>You can&rsquo;t solve this with regexps, unless you have amazing superpowers and don&rsquo;t care if anyone else can maintain your code. Instead, be prepared to add code in two places:</p>
+
+<ul>
+<li>At switch of state</li>
+<li>After all input has been parsed</li>
+</ul>
+
+<h3 id="understanding-the-state-transition-table">Understanding the State Transition Table</h3>
+
+<p>I included this diagram in the first article:</p>
+
+<pre><code>             DOT's Grammar
+                  |
+                  V
+        ---------------------
+        |                   |
+     strict                 |
+        |                   |
+        ---------------------
+                  |
+                  V
+        ---------------------
+        |                   |
+     digraph     or       graph
+        |                   |
+        ---------------------
+                  |
+                  V
+        ---------------------
+        |                   |
+       $id                  |
+        |                   |
+        ---------------------
+                  |
+                  V
+                {...}
+</code></pre>
+
+<p>A dot file starts with an optional <code>strict</code>, followed by either <code>graph</code> or <code>digraph</code>. (Here <code>di</code> stands for directed, meaning edges between nodes have arrowheads on them. Yes, there are many attributes which can be attached to edges. See <a href="http://www.graphviz.org/content/attrs">http://www.graphviz.org/content/attrs</a> and look for an <code>E</code> (edge) in the second column of the table of attribute names).</p>
+
+<p>The <code>/(di|)graph/</code> is in turn followed by an optional ID.</p>
+
+<h4 id="line-one">Line One</h4>
+
+<p>From the first non-heading line of the STT, you can see how I ended up with:</p>
+
+<ul>
+<li>A start state flag =&gt; <code>Yes</code></li>
+<li>An accept flag =&gt; <code>''</code></li>
+<li>A state name =&gt; <code>initial</code></li>
+<li>An event =&gt; <code>strict</code></li>
+<li>A next state =&gt; <code>graph</code></li>
+<li>An entry function =&gt; <code>''</code></li>
+<li>An exit function =&gt; <code>save_prefix</code></li>
+<li>A regexp =&gt; <code>(?:&quot;[^&quot;]*&quot;|&lt;\s*&lt;.*?</code>\s*&gt;|[a-zA-Z_][a-zA-Z_0-9]*|-?(?:\.[0-9]+|[0-9]+(?:\.[0-9])*))&gt;</li>
+<li>An interpretation =&gt; <code>ID</code></li>
+</ul>
+
+<h4 id="line-two">Line Two</h4>
+
+<p>The event in the second line, <code>/(?:graph|digraph)/</code>, indicates what to do if the <code>strict</code> is absent from the input stream.</p>
+
+<p>To clarify this point, recall that the DFA matches entries in the Event column one at a time, from the first listed against the name of the state&ndash;here, <code>/(?:strict)/</code>&ndash;down to the last for the given state&ndash;here, <code>/(?:\s+)/</code>. The first regexp to match wins, in that the first regexp to match will triggersthe <em>exit</em> state logic and that its entry in the Next column specifies the next state to enter, which in turn specifies the (next) state&rsquo;s <em>entry</em> function to call, if any.</p>
+
+<p>If <code>strict</code> is not at the head of the input stream, and it can definitely be absent, as is seen in the above diagram, this regexp&ndash;<code>/(?:graph|digraph)/</code>&ndash;is the next one tested by the DFA&rsquo;s logic.</p>
+
+<h4 id="line-three">Line Three</h4>
+
+<p>The hard-to-read regexp <code>\/\*.*\*\/</code> says to skip C-language-style multi-line (<code>/* ... */</code>) comments. The skip takes place because the Next state is <code>initial</code>, the current state. In other words, discard any text at the head of the input stream which this regexp will gobble.</p>
+
+<p>Why does it get discarded? That&rsquo;s the way <code>Set::FA::Element</code> operates. Looping <em>within</em> a state does <em>not</em> trigger the exit-state and enter-state functions, and so there is no opportunity to stockpile the matched text. That&rsquo;s good in this case. There&rsquo;s no reason to save it, because it&rsquo;s a comment.</p>
+
+<p>Think about the implications for a moment. Once the code has discarded a comment (or anything else), you can never recreate the verbatim input stream from the stockpiled text. Hence you should only discard something once you fully understand the consequences. If you&rsquo;re parsing code to execute it (whatever that means), fine. If you&rsquo;re writing a pretty printer or indenter, you cannot discard comments.</p>
+
+<p>Lastly, we can say this regexp is used often, meaning we accept such comments at many places in the input stream.</p>
+
+<h4 id="line-four">Line Four</h4>
+
+<p>The regexp <code>\s+</code> says to skip spaces (in front of or between interesting tokens). As with the previous line, we skip to the very same state.</p>
+
+<p>This state has four regexps attached to it.</p>
+
+<h3 id="more-states">More States</h3>
+
+<p>Re-examining the STT shows two introductory states, for input with and without a (leading) <code>strict</code>. I&rsquo;ve called these states by the arbitrary names <code>initial</code> and <code>graph</code>.</p>
+
+<p>If the initial <code>strict</code> is present, state <code>initial</code> handles it (in the exit function) and jumps to state <code>graph</code> to handle what comes next. If, however, <code>strict</code> is absent, state <code>initial</code> still handles the input, but then jumps to state <code>graph_id</code>.</p>
+
+<p>A (repeated) word of warning about <code>Set::FA::Element</code>. A loop <em>within</em> a state does <em>not</em> trigger the exit-state and enter-state functions. Sometimes this can actually be rather unfortunate. You can see elsewhere in the STT where I have had to use pairs of almost-identically named states (such as <code>statement_list_1</code> and <code>statement_list_2</code>), and designed the logic to rock the STT back and forth between them, just to allow the state machine to gobble up certain input sequences. You may have to use this technique yourself. Be aware of it.</p>
+
+<p>Proceeding in this fashion, driven by the BNF of the input language, eventually you can construct the whole STT. Each time a new enter-state or exit-state function is needed, write the code, then run a small demo to test it. There is no substitute for that testing.</p>
+
+<h4 id="the-graph-state">The <code>graph</code> State</h4>
+
+<p>You reach this state simply by the absence of a leading <code>strict</code> in the input stream. Apart from not bothering to cater for comments (as did the <code>initial</code> state), this state is really the same as the <code>initial</code> state.</p>
+
+<p>A few paragraphs back I warned about a feature designed into Set::FA::Element, looping within a state. That fact is why the <code>graph</code> state exists. If the <code>initial</code> state could have looped to itself upon detecting <code>strict</code>, <em>and</em> executed the exit or entry functions, there would be no need for the <code>graph</code> state.</p>
+
+<h4 id="the-graph-id-state">The <code>graph_id</code> State</h4>
+
+<p>Next, look for an optional graph id, at the current head of the input stream (because anything which matched previously is gone).</p>
+
+<p>Here&rsquo;s the first use of a formula: Cell H2 contains <code>(?:&quot;[^&quot;]*&quot;|&lt;[^&gt;]*&gt;|[a-zA-Z_][a-zA-Z_0-9]*|-?(?:\.[0-9]+|[0-9]+(?:\.[0-9])*))</code>. This accepts a double-quoted ID, or an ID quoted with <code>&lt;</code> and <code>&gt;</code>, or an alphanumeric (but not starting with a digit) ID, or a number.</p>
+
+<p>When the code sees such a token, it jumps to the <code>open_brace</code> state, meaning the very next non-whitespace character had better (barring comments) be a <code>{</code>, or there&rsquo;s an error, so the code will die. Otherwise, it accepts <code>{</code> without an ID and jumps to the <code>statement_list_1</code> state, or discards comments and spaces by looping within the <code>graph_id</code> state.</p>
+
+<h4 id="the-remaining-states">The Remaining States</h4>
+
+<p>What follows in the STT gets complex, but in reality is more of the same. Several things should be clear by now:</p>
+
+<ul>
+<li>The development of the STT is iterative</li>
+<li>You need lots of tiny but different test data files, to test these steps</li>
+<li>You need quite a lot of patience, which, unfortunately, can&rsquo;t be downloaded from the internet&hellip;</li>
+</ul>
+
+<h2 id="lexer-actions-callbacks">Lexer Actions (Callbacks)</h2>
+
+<p>Matching something with a DFA only makes sense if you can capture the matched text for processing. Hence the use of state-exit and state-entry callback functions. In these functions, you must decide what text to output for each recognized input token.</p>
+
+<p>To help with this, I use a method called <code>items()</code>, accessed in each function via <code>$myself</code>. This method manages an stack (array) of items of type <code>Set::Array</code>. Each element in this array is a hashref:</p>
+
+<pre><code>    {
+        count =&gt; $integer, # 1 .. N.
+        name  =&gt; '',       # Unused.
+        type  =&gt; $string,  # The type of the token.
+        value =&gt; $value,   # The value from the input stream.
+    }
+</code></pre>
+
+<p>Whenever a token is recognized, push a new item onto the stack. The value of the <code>type</code> string is the result of the DFA&rsquo;s work identifying the token. This identification process uses the first of the two sub-grammars mentioned in the first article.</p>
+
+<h3 id="a-long-exit-state-function">A long Exit-state Function</h3>
+
+<p>The <code>save_prefix</code> function looks like:</p>
+
+<pre><code>    # Warning: This is a function (i.e. not a method).
+
+    sub save_prefix
+    {
+        my($dfa)   = @_;
+        my($match) = trim($dfa -&gt; match);
+
+        # Upon each call, $match will be 1 of:
+        # * strict.
+        # * digraph.
+        # * graph.
+
+        # Note: Because this is a function, $myself is a global alias to $self.
+
+        $myself -&gt; log(debug =&gt; &quot;save_prefix($match)&quot;);
+
+        # Input     =&gt; Output (a new item, i.e. a hashref):
+        # o strict  =&gt; {name =&gt; strict,  value =&gt; yes}.
+        # o digraph =&gt; {name =&gt; digraph, value =&gt; yes}.
+        # o graph   =&gt; {name =&gt; digraph, value =&gt; no}.
+
+        if ($match eq 'strict')
+        {
+            $myself -&gt; new_item($match, 'yes');
+        }
+        else
+        {
+            # If the first token is '(di)graph' (i.e. there was no 'strict'),
+            # jam a 'strict' into the output stream.
+
+            if ($myself -&gt; items -&gt; length == 0) # Output stream is empty.
+            {
+                $myself -&gt; new_item('strict', 'no');
+            }
+
+            $myself -&gt; new_item('digraph', $match eq 'digraph' ? 'yes' : 'no');
+        }
+
+    } # End of save_prefix.
+</code></pre>
+
+<h3 id="a-tiny-exit-state-function">A tiny Exit-state Function</h3>
+
+<p>Here&rsquo;s one of the shorter exit functions, attached in the STT to the <code>open_brace</code> and <code>start_statement</code> states:</p>
+
+<pre><code>    sub start_statements
+    {
+        my($dfa) = @_;
+
+        $myself -&gt; new_item('open_brace', $myself -&gt; increment_brace_count);
+
+    } # End of start_statements.
+</code></pre>
+
+<p>The code to push a new item onto the stack is just:</p>
+
+<pre><code>    sub new_item
+    {
+        my($self, $type, $value) = @_;
+
+        $self -&gt; items -&gt; push
+            ({
+                count =&gt; $self -&gt; increment_item_count,
+                name  =&gt; '',
+                type  =&gt; $type,
+                value =&gt; $value,
+             });
+
+    } # End of new_item.
+</code></pre>
+
+<h2 id="using-marpa-in-the-lexer">Using Marpa in the Lexer</h2>
+
+<p>Yes, you can use Marpa in the lexer, as discussed in the first article. I prefer to use a spreadsheet full of regexps&ndash;but enough of the lexer. It&rsquo;s time to discuss the parser.</p>
+
+<h2 id="the-parser-s-structure">The Parser&rsquo;s Structure</h2>
+
+<p>The parser incorporates the second sub-grammar and uses <code>Marpa::R2</code> to validate the output from the lexer against this grammar. The parser&rsquo;s structure is very similar to that of the lexer:</p>
+
+<ul>
+<li>Initialize using the parameters to <code>new()</code></li>
+<li>Declare the grammar</li>
+<li>Run Marpa</li>
+<li>Save the output</li>
+</ul>
+
+<h2 id="marpa-actions-callbacks">Marpa Actions (Callbacks)</h2>
+
+<p>As with the lexer, the parser works via callbacks, which are functions named within the grammar and called by <code>Marpa::R2</code> whenever the input sequence of lexed items matches some component of the grammar. Consider these four <em>rule descriptors</em> in the grammar declared in <code>GraphViz2::Marpa::Parser</code>&rsquo;s <code>grammar()</code> method:</p>
+
+<pre><code>    [
+    ...
+    {   # Prolog stuff.
+        lhs =&gt; 'prolog_definition',
+        rhs =&gt; [qw/strict_definition digraph_definition graph_id_definition/],
+    },
+    {
+        lhs    =&gt; 'strict_definition',
+        rhs    =&gt; [qw/strict/],
+        action =&gt; 'strict', # &lt;== Callback.
+    },
+    {
+        lhs    =&gt; 'digraph_definition',
+        rhs    =&gt; [qw/digraph/],
+        action =&gt; 'digraph', # &lt;== Callback.
+    },
+    {
+        lhs    =&gt; 'graph_id_definition',
+        rhs    =&gt; [qw/graph_id/],
+        action =&gt; 'graph_id', # &lt;== Callback. See sub graph_id() just below.
+    },
+    ...
+    ]
+</code></pre>
+
+<p>In each case the <code>lhs</code> is a name I&rsquo;ve chosen so that I can refer to each rule descriptor in other rule descriptors. That&rsquo;s how I chain rules together to make a tree structure. (See the <em>Chains and Trees</em> section of the previous article.)</p>
+
+<p>This grammar fragment expects the input stream of items from the lexer to consist (at the start of the stream, actually) of three components: a strict thingy, a digraph thingy, and a graph_id thingy. Because I wrote the lexer, I can ensure that this is exactly what the lexer produces.</p>
+
+<p>To emphasise, the grammar says that these the items are the only things it will accept at this point in the input stream, and that only if they are in the given order, and that they must literally consist of the three tokens (see <code>rhs</code>): <em>strict</em>, <em>digraph</em> and <em>graph_id</em>.</p>
+
+<p>These latter three come from the <em>type</em> key in the array of hashrefs built by the lexer. The three corresponding <em>value</em> keys in those hashrefs are <code>yes</code> or <code>no</code> for <em>strict</em>, <code>yes</code> or <code>no</code> for <em>digraph</em>, and an id or the empty string for <em>graph_id</em>.</p>
+
+<p>As with the lexer, when in incoming token (<em>type</em>) matches expectations, <code>Marpa::R2</code> triggers a call to an <em>action</em>, here called (for clarity) the same as the <code>rhs</code>.</p>
+
+<p>Consider one of those functions:</p>
+
+<pre><code>    sub graph_id
+    {
+        my($stash, $t1, undef, $t2)  = @_;
+
+        $myself -&gt; new_item('graph_id', $t1);
+
+        return $t1;
+
+    } # End of graph_id.
+</code></pre>
+
+<p>The parameter list is courtesy of how <code>Marpa::R2</code> manages callbacks. <code>$t1</code> is the incoming graph id. In <em>data/27.gv</em> (shown earlier), that is <code>graph_27</code>.</p>
+
+<p>Marpa does not supply the string <code>graph_id</code> to this function, because there&rsquo;s no need. I designed the grammar such that this function is only called when the value of the incoming <em>type</em> is <code>graph_id</code>, so I know precisely under what circumstances this function was called. That&rsquo;s why I could hard-code the string <code>graph_id</code> in the body of the <code>graph_id()</code> function.</p>
+
+<h2 id="the-grammar-in-practice">The Grammar in Practice</h2>
+
+<p>Now you might be thinking: Just a second! That code seems to be doing no more than copying the input token to the output stream. Well, you&rsquo;re right, sort of.</p>
+
+<p>True understanding comes when you realize that Marpa calls that code only at the appropriate point precisely because the <em>type</em> <code>graph_id</code> and its <em>value</em> <code>graph_27</code> were at exactly the right place in the input stream. By that I mean that the location of the pair:</p>
+
+<pre><code>    (type =&gt; value)
+    ('graph_id' =&gt; 'graph_27')
+</code></pre>
+
+<p>in the input stream was exactly where it had to be to satisfy the grammar initialized by <code>Marpa::R2::Grammar</code>. If it had not been there, Marpa would have thrown an exception, which we would recognize as a syntax error&ndash;a syntax error in the input stream fed into the <em>lexer</em>, but which Marpa picked up by testing that input stream against the grammar declared in the <em>parser</em>. The role of the lexer as an intermediary is to simplify the logic of the code as a whole with a divide-and-conquer strategy.</p>
+
+<p>In other words, it&rsquo;s no accident that that function gets called at a particular point in time during the parser&rsquo;s processing of its input stream.</p>
+
+<p>Consider another problem which arises as you build up the set of <em>rule descriptors</em> within the grammar.</p>
+
+<h2 id="trees-have-leaves">Trees Have Leaves</h2>
+
+<p>The first article discussed chains and trees (see the <code>prolog_definition</code> mentioned earlier in this article). Briefly, each <em>rule descriptor</em> must be chained to other <em>rule descriptors</em>.</p>
+
+<p>The astute reader will have already seen a problem: How do you define the meanings of the leaves of this tree when the chain of definitions must end at each leaf?</p>
+
+<p>Here&rsquo;s part of the <em>data/27.lex</em> input file:</p>
+
+<pre><code>    &quot;type&quot;,&quot;value&quot;
+    strict          , &quot;no&quot;
+    digraph         , &quot;yes&quot;
+    graph_id        , &quot;graph_27&quot;
+    start_scope     , &quot;1&quot;
+    node_id         , &quot;node_27_1&quot;
+    open_bracket    , &quot;[&quot;
+    attribute_id    , &quot;color&quot;
+    equals          , &quot;=&quot;
+    attribute_value , &quot;red&quot;
+    attribute_id    , &quot;fontcolor&quot;
+    equals          , &quot;=&quot;
+    attribute_value , &quot;green&quot;
+    close_bracket   , &quot;]&quot;
+    ...
+</code></pre>
+
+<p>The corresponding rules descriptors look like:</p>
+
+<pre><code>    [
+    ...
+    {
+        lhs =&gt; 'attribute_statement',
+        rhs =&gt; [qw/attribute_key has attribute_val/],
+    },
+    {
+        lhs    =&gt; 'attribute_key',
+        rhs    =&gt; [qw/attribute_id/], # &lt;=== This is a terminal.
+        min    =&gt; 1,
+        action =&gt; 'attribute_id',
+    },
+    {
+        lhs    =&gt; 'has',
+        rhs    =&gt; [qw/equals/],
+        min    =&gt; 1,
+    },
+    {
+        lhs    =&gt; 'attribute_val',
+        rhs    =&gt; [qw/attribute_value/], # &lt;=== And so is this.
+        min    =&gt; 1,
+        action =&gt; 'attribute_value',
+    },
+    ...
+    ]
+</code></pre>
+
+<p>The items marked as terminals (standard parsing terminology) have no further definitions, so <code>attribute_key</code> and <code>attribute_val</code> are leaves in the tree of <em>rule descriptors</em>. What does that mean? The terminals <code>attribute_id</code> and <code>attribute_value</code> must appear literally in the input stream.</p>
+
+<p>Switching between <code>attribute_key</code> and <code>attribute_id</code> is a requirement of Marpa to avoid ambiguity in the statement of the grammar. Likewise for <code>attribute_val</code> and <code>attribute_value</code>.</p>
+
+<p>The <code>min</code> makes the attributes mandatory. Not in the sense that nodes and edges <em>must</em> have attributes, they don&rsquo;t, but in the sense that if the input stream has an <code>attribute_id</code> token, then it <em>must</em> have an <code>attribute_value</code> token and vice versa.</p>
+
+<p>Remember the earlier section &ldquo;Working With An Incomplete BNF&rdquo;? If the original <em>*.gv</em> file used one of:</p>
+
+<pre><code>    size = &quot;6,6&quot;
+    [size = &quot;6,6&quot;]
+    graph [size = &quot;6,6&quot;]
+</code></pre>
+
+<p>&hellip; then the one chosen really represents the graph attribute:</p>
+
+<pre><code>    graph [size = &quot;6,6&quot;]
+</code></pre>
+
+<p>To make this work, the lexer must force the output to be:</p>
+
+<pre><code>    &quot;type&quot;,&quot;value&quot;
+    ...
+    class_id        , &quot;graph&quot;
+    open_bracket    , &quot;[&quot;
+    attribute_id    , &quot;size&quot;
+    equals          , &quot;=&quot;
+    attribute_value , &quot;6,6&quot;
+    close_bracket   , &quot;]&quot;
+</code></pre>
+
+<p>This matches the requirements, in that both <code>attribute_id</code> and <code>attribute_value</code> are present, is their (so to speak) owner, the object itself, which is identified by the <em>type</em> <code>class_id</code>.</p>
+
+<p>All of this should reinforce the point that the design of the lexer is intimately tied to the design of the parser. By taking decisions like this in the lexer you can standardize its output and simplify the work that the parser needs to don.</p>
+
+<h2 id="where-to-go-from-here">Where to go from here</h2>
+
+<p>The recently released Perl module <a href="https://metacpan.org/pod/MarpaX::Simple::Rules">MarpaX::Simple::Rules</a> takes a BNF and generates the corresponding grammar in the format expected by <code>Marpa::R2</code>.</p>
+
+<p>Jeffrey Kegler (author of Marpa) <a href="http://jeffreykegler.github.com/Ocean-of-Awareness-blog/individual/2012/06/the-useful-the-playful-the-easy-the-hard-and-the-beautiful.html%3E">has blogged about MarpaX::Simple::Rules</a>.</p>
+
+<p>This is a very interesting development, because it automates the laborious process of converting a BNF into a set of Marpa&rsquo;s <em>rule descriptors</em>. Consequently, it makes sense for anyone contemplating using <code>Marpa::R2</code> to investigate how appropriate it would be to do so via <code>MarpaX::Simple::Rules</code>.</p>
+
+<h2 id="wrapping-up-and-winding-down">Wrapping Up and Winding Down</h2>
+
+<p>You&rsquo;ve seen samples of lexer output and some parts of the grammar which both define the second sub-grammar of what to expect and what should match precisely the input from that lexer. If they don&rsquo;t match, it is in fact the parser which issues the dread syntax error message, because only it (not the lexer) knows which combinations of input tokens are acceptable.</p>
+
+<p>Just like in the lexer, callback functions stockpile items which have passed Marpa::R2&rsquo;s attempt to match up input tokens with rule descriptors. This technique records exactly which rules fired in which order. After Marpa::R2 has run to completion, you have a stack of items whose elements are a (lexed and) parsed version of the original file. Your job is then to output that stack to a file, or await the caller of the parser to ask for the stack as an array reference. From there, the world.</p>
+
+<p>For more details, consult <a href="http://savage.net.au/Ron/html/writing.graph.easy.marpa.html%3E">my July 2011 article on Marpa::R2</a>.</p>
+
+<h2 id="the-lexer-and-the-state-transition-table-revisited">The Lexer and the State Transition Table - Revisited</h2>
+
+<p>The complexity of the STT in <code>GraphViz2::Marpa</code> justifies the decision to split the lexer and the parser into separate modules. Clearly that will not always be the case. Given a sufficiently simple grammar, the lexer phase may be redundant. Consider this test data file, <em>data/sample.1.ged</em>, from <a href="https://metacpan.org/pod/Genealogy::Gedcom">Genealogy::Gedcom</a>:</p>
+
+<pre><code>    0 HEAD
+    1 SOUR Genealogy::Gedcom
+    2 NAME Genealogy::Gedcom::Reader
+    2 VERS V 1.00
+    2 CORP Ron Savage
+    3 ADDR Box 3055
+    4 STAE Vic
+    4 POST 3163
+    4 CTRY Australia
+    3 EMAIL ron@savage.net.au
+    3 WWW http://savage.net.au
+    2 DATA
+    3 COPR Copyright 2011, Ron Savage
+    1 NOTE
+    2 CONT This file is based on test data in Paul Johnson's Gedcom.pm
+    2 CONT Gedcom.pm is Copyright 1999-2009, Paul Johnson (paul@pjcj.net)
+    2 CONT Version 1.16 - 24th April 2009
+    2 CONT
+    2 CONT Ron's modules under the Genealogy::Gedcom namespace are free
+    2 CONT
+    2 CONT The latest versions of these modules are available from
+    2 CONT my homepage http://savage.net.au and http://metacpan.org
+    1 GEDC
+    2 VERS 5.5.1-5
+    2 FORM LINEAGE-LINKED
+    1 DATE 10-08-2011
+    1 CHAR ANSEL
+    1 SUBM @SUBM1@
+    0 TRLR
+</code></pre>
+
+<p>Each line matches <code>/^(\d+)\s([A-Z]{3,4})\s(.+)$/</code>: an integer, a keyword, and a string. In this case I&rsquo;d skip the lexer, and have the parser tokenize the input. So, horses for courses. (GEDCOM defines genealogical data; see <a href="http://wiki.webtrees.net/File:Ged551-5.pdf%3E">the GEDCOM definition</a> for more details).</p>
+
+<h2 id="sample-output">Sample Output</h2>
+
+<p>I&rsquo;ve provided several links of sample output for your perusal.</p>
+
+<ul>
+<li><a href="http://savage.net.au/Perl-modules/html/graphviz2/">GraphViz2 (non-Marpa)</a></li>
+<li><a href="http://savage.net.au/Perl-modules/html/graphviz2.marpa/">GraphViz2::Marpa</a></li>
+<li><a href="http://savage.net.au/Perl-modules/html/graphviz2.pathutils/">GraphViz2::Marpa::PathUtils</a></li>
+<li><a href="http://savage.net.au/Perl-modules/html/graph.easy.marpa/">Graph::Easy::Marpa</a></li>
+</ul>
+
+<p>Happy lexing and parsing!</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-ron-savage">
+  <div class="col-sm-2">
+    
+    <a href="/authors/ron-savage/"><div class="circle-avatar" style="background-image:url(/images/author/ron-savage.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/ron-savage/"><h3>Ron Savage</h3></a>
+    <p></p>
+    <h5><a href="/authors/ron-savage/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2013_01_lexing-and-parsing-continued.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

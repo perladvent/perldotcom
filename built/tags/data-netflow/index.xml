@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Data Netflow on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/data-netflow/</link>
+    <description>Recent content in Data Netflow on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 26 Oct 2017 19:56:37 +0000</lastBuildDate>
+    <atom:link href="/tags/data-netflow/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Monitoring my phone&#39;s internet activity with DD-WRT and Perl</title>
+      <link>http://localhost:1313/article/monitoring-my-phone-s-internet-activity-with-netflows-and-perl/</link>
+      <pubDate>Thu, 26 Oct 2017 19:56:37 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/monitoring-my-phone-s-internet-activity-with-netflows-and-perl/</guid>
+      <description>
+
+&lt;p&gt;I&amp;rsquo;ve had a cracked phone screen for years, but recently as the glass started falling out, I decided it was time to upgrade. I bought a Samsung &lt;a href=&#34;https://www.samsung.com/us/explore/galaxy-s8/&#34;&gt;Galaxy S8&lt;/a&gt;, and was surprised to see &amp;ldquo;Unusual traffic from your computer network&amp;rdquo; &lt;a href=&#34;https://support.google.com/websearch/answer/86640?hl=en&#34;&gt;messages&lt;/a&gt; when searching via Google. This peaked my curiosity, so I decided to monitor the phone&amp;rsquo;s Internet traffic to see &lt;em&gt;who&lt;/em&gt; it was communicating with.&lt;/p&gt;
+
+&lt;h3 id=&#34;router-setup&#34;&gt;Router Setup&lt;/h3&gt;
+
+&lt;p&gt;I run &lt;a href=&#34;http://www.dd-wrt.com/site/index&#34;&gt;DD-WRT&lt;/a&gt; Linux on my home WiFi router. DD-WRT can run an &lt;a href=&#34;https://www.dd-wrt.com/wiki/index.php/Network_traffic_analysis_with_netflow_and_ntop&#34;&gt;Rflow service&lt;/a&gt; where it posts &lt;a href=&#34;https://en.wikipedia.org/wiki/NetFlow&#34;&gt;NetFlow&lt;/a&gt; traffic data to another computer on the network via UDP. I enabled the service, and configured it to post to my laptop&amp;rsquo;s IP address and the default port, 2055.&lt;/p&gt;
+
+&lt;h3 id=&#34;monitoring&#34;&gt;Monitoring&lt;/h3&gt;
+
+&lt;p&gt;I installed &lt;a href=&#34;https://www.ntop.org/&#34;&gt;ntop&lt;/a&gt; and setup a virtual interface pointing at the UDP socket, and lo! it quickly started displaying the NetFlow data. The problem was I couldn&amp;rsquo;t figure out how to filter out data that wasn&amp;rsquo;t from my phone (the various pcap filter expressions I tried did not work). Also it irked me to rely on a software program to do something as simple as parsing data from a UDP socket.&lt;/p&gt;
+
+&lt;p&gt;Luckily I speak &lt;a href=&#34;https://en.wikipedia.org/wiki/Perl&#34;&gt;chainsaw&lt;/a&gt;, and whipped up this script to do the job:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IO::Socket::INET;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Netflow;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; IO::Socket::INET&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(
+  LocalPort &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2055&lt;/span&gt;,
+  Proto     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;udp&amp;#39;&lt;/span&gt;
+);
+
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $logfile, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;gt;&amp;gt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;galaxy-s8.log&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($sender, $datagram);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; ($sender &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $sock&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;recv($datagram, &lt;span style=&#34;color:#ae81ff&#34;&gt;0xFFFF&lt;/span&gt;))
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($sender_port, $sender_addr) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack_sockaddr_in($sender);
+  $sender_addr &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; inet_ntoa($sender_addr);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($headers, $records) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Data::Netflow::decode($datagram, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) ;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $r (@$records) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{SrcAddr} &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;192.168.1.139&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{DstAddr} &lt;span style=&#34;color:#f92672&#34;&gt;ne&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;192.168.1.1&amp;#39;&lt;/span&gt;) {
+      printf $logfile &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%s,%d,%d,%d,%d\n&amp;#34;&lt;/span&gt;, $r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{DstAddr}, $r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{DstPort}, $r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{Packets}, $r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{Octets}, time;
+    }
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The script opens a UDP socket on port 2055 and reads datagrams from it. It uses &lt;a href=&#34;https://metacpan.org/pod/Data::Netflow&#34;&gt;Data::Netflow&lt;/a&gt; to parse the datagrams from the socket. The &lt;code&gt;decode&lt;/code&gt; function accepts a datagram and returns a hashref of header data, and an arrayref of NetFlow &lt;a href=&#34;https://en.wikipedia.org/wiki/NetFlow#NetFlow_Record&#34;&gt;records&lt;/a&gt;. Each record is a hashref and strangely by default its keys are stringified numbers (&amp;ldquo;1&amp;rdquo; through &amp;ldquo;20&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;However if the second argument passed to &lt;code&gt;decode&lt;/code&gt; is true, then the record hashrefs use field names instead of numbers. Each record contains data like the source and destination IP addresses and ports, the number of packets sent, total number of bytes in the packets and so on. If the record&amp;rsquo;s source IP address match my phone&amp;rsquo;s network address, the script prints the pertinent information to a logfile.&lt;/p&gt;
+
+&lt;p&gt;I disabled mobile data on my phone, and ran this script for 24 hours.&lt;/p&gt;
+
+&lt;h3 id=&#34;results&#34;&gt;Results&lt;/h3&gt;
+
+&lt;p&gt;I used &lt;a href=&#34;https://metacpan.org/pod/Net::Whois::IP&#34;&gt;Net::Whois::IP&lt;/a&gt; to lookup the organization for each IP address. Here&amp;rsquo;s the top ten Organizations by the number of packets sent:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Fastly (SKYCA-3) =&amp;gt; 1243
+OPENX TECHNOLOGIES, INC. (OPENX) =&amp;gt; 989
+Saferoute Incorporated (SAFER-1) =&amp;gt; 553
+Servers.com, Inc. (SERVE-105) =&amp;gt; 13
+Integral Ad Science, Inc. (ASML-5) =&amp;gt; 36
+Facebook =&amp;gt; 724
+Google LLC (GOOGL-2) =&amp;gt; 794
+Amazon.com, Inc. (AMAZO-4) =&amp;gt; 2000
+Search Guide Inc (SG-63) =&amp;gt; 140
+Chaos Computer Club e.V =&amp;gt; 224
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And by the number of bytes sent:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Amazon Technologies Inc. (AT-88-Z) =&amp;gt; 1218193
+Amazon.com, Inc. (AMAZO-48) =&amp;gt; 9230
+Google LLC (GOGL) =&amp;gt; 40239218
+VLAN927 =&amp;gt; 2005
+ADFORM-NET =&amp;gt; 3041
+ANS Communications, Inc (ANS) =&amp;gt; 1880
+Wal-Mart Stores, Inc. (WALMAR) =&amp;gt; 1573
+INAP-NYM-QUANTCAST-26423 =&amp;gt; 4822
+Web.com, Inc. (WEBCO-24) =&amp;gt; 4232
+CERFnet (CERF) =&amp;gt; 361
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It seems to me to be mostly web browsing / marketing data. The &lt;a href=&#34;https://www.ccc.de/en/club&#34;&gt;Chaos Computer Club&lt;/a&gt; entry is from using &lt;a href=&#34;https://guardianproject.info/apps/orfox/&#34;&gt;Orfox&lt;/a&gt; (a Tor browser). Although honestly, if something malicious was using AWS, I&amp;rsquo;m not sure how I could tell. Perhaps looking at the distribution and frequency of packets sent and correlating it with a journal of my phone activity might be a way to identify suspicious traffic.&lt;/p&gt;
+
+&lt;p&gt;In the meantime, Google has stopped warning me about unusual activity, and I haven&amp;rsquo;t cracked the screen yet, so I suppose I&amp;rsquo;ll keep using this phone for now.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.dd-wrt.com/site/index&#34;&gt;DD-WRT&lt;/a&gt; is a Linux distribution for routers&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Data::Netflow&#34;&gt;Data::Netflow&lt;/a&gt; is a Perl module that can encode/decode Netflow data versions 5 and 9 (DD-WRT produces version 5).&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::Whois::IP&#34;&gt;Net::Whois::IP&lt;/a&gt; is a Perl module for running &lt;a href=&#34;https://en.wikipedia.org/wiki/WHOIS&#34;&gt;WHOIS&lt;/a&gt; queries, it parses the response into a Perl data structure although it doesn&amp;rsquo;t normalize the keys.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Data Structures on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-data-structures/</link>
+    <description>Recent content in Perl Data Structures on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 02 Nov 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-data-structures/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Hash Crash Course</title>
+      <link>http://localhost:1313/pub/2006/11/02/all-about-hashes.html/</link>
+      <pubDate>Thu, 02 Nov 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/11/02/all-about-hashes.html/</guid>
+      <description>
+
+&lt;p&gt;When I teach about hashes, I do what most Perl tutors and tutorials do: I introduce the hash as a &amp;ldquo;dictionary&amp;rdquo;: a mapping between one thing and another. The classic example, for instance, is to have a set of English words mapped to French words:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    %french = (
+        apple  =&amp;gt; &amp;quot;pomme&amp;quot;,
+        pear   =&amp;gt; &amp;quot;poivre&amp;quot;,
+        orange =&amp;gt; &amp;quot;Leon Brocard&amp;quot;
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yet the more I look at my code&amp;ndash;and more often, the more I look at how to tidy up other people&amp;rsquo;s code&amp;ndash;I realize that this is perhaps the least common use of a hash. Much more often, I use hashes in particular idioms which have very little in common with this concept of a mapping. It&amp;rsquo;s interesting to consider the ways that programmers &lt;em&gt;actually&lt;/em&gt; use hashes in Perl code.&lt;/p&gt;
+
+&lt;h3 id=&#34;counting&#34;&gt;Counting&lt;/h3&gt;
+
+&lt;p&gt;Many of the uses of hashes are to &amp;ldquo;answer questions about lists.&amp;rdquo; When you have an array or list of values and you need to ask about its properties, you will often find yourself using a hash. Start simply by counting the number of particular elements in a list. Here&amp;rsquo;s the naïve approach:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $count = 0;
+    for (@list) {
+        $count++ if $_ eq &amp;quot;apple&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can smarten this up with the use of the &lt;code&gt;grep&lt;/code&gt; function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $count = grep $_ eq &amp;quot;apple&amp;quot;, @list;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; but when you need the number of pears in the list, then you have to do the same again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $count_apples = grep $_ eq &amp;quot;apple&amp;quot;, @list;
+    $count_pears  = grep $_ eq &amp;quot;pear&amp;quot;,  @list;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now there are two passes over the list, and the situation isn&amp;rsquo;t going to get any prettier from here. What you want is basically a histogram of the data, and you can get that with a hash:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my %histogram;
+    $histogram{$_}++ for @list;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This hash associates each individual item with its count, and it only traverses the list once.&lt;/p&gt;
+
+&lt;p&gt;In a recent case, I was looking at a list of tags associated with various photographs. To lay out the data for display, it was useful to know how many different tags there are in the list. I could get that simply from the number of keys in the histogram:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $unique = keys %histogram;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I could also delete the duplicates and end up with a list of the unique tags:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @unique = keys %histogram;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, I could show the five most popular tags from the list:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @popular = 
+        (sort { $histogram{$b} &amp;lt;=&amp;gt; $histogram{$b} } @unique)[0..4];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This sorts the list of unique tags based on their popularity in the original list, and pulls out the top five.&lt;/p&gt;
+
+&lt;h3 id=&#34;uniqueness&#34;&gt;Uniqueness&lt;/h3&gt;
+
+&lt;p&gt;Another idiom to get the unique elements from a list is a variation on the &amp;ldquo;counting things&amp;rdquo; idiom; but this time you don&amp;rsquo;t care how many of each item there is, just that there&amp;rsquo;s at least one. This allows you to say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (@list) { $unique{$_} = 1 }
+    @unique = keys %unique;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which reduces to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    %unique = map { $_ =&amp;gt; 1 } @list;
+    @unique = keys %unique;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can take this a stage further with a slightly non-standard idiom to do the whole thing in one operation:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @unique = keys %{{ map { $_ =&amp;gt; 1 } @list }};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;keys&lt;/code&gt; requires a hash, so this funny-looking line creates an anonymous hash (&lt;code&gt;{ map ... @list }&lt;/code&gt;) and then turns it into a real hash (&lt;code&gt;%{ $hash_ref }&lt;/code&gt;) to feed it to &lt;code&gt;keys&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The advantage of this trick is that you can use a variation of it to work with lists which include objects as well as ordinary scalars. Here&amp;rsquo;s an example of the problem:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @tags;
+    push @tags, Memories::Tag-&amp;gt;retrieve_random for 1..10;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This should get ten random &lt;code&gt;Memories::Tag&lt;/code&gt; objects. However, some of them might be the same, and, assuming that you want to see the unique ones:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    %unique = map { $_ =&amp;gt; 1 } @tags;
+    @unique = keys %unique;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unfortunately, if you then try to do anything with the tags, it all goes horribly wrong:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    print $unique[0]-&amp;gt;name;
+
+    # Can&#39;t locate object method &amp;quot;test&amp;quot; via package &amp;quot;Memories::Tag(0x1801380)&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What&amp;rsquo;s happened is that hash keys can only be strings; once you put the object into a hash as the key, then it&amp;rsquo;s not an object any more. Perl turns it into a string. There&amp;rsquo;s no (easy) way to get the strings back into an object. What you need is some kind of data structure to map these broken strings into the original objects. Thankfully, there is one in the form of the hash itself! So the code becomes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    %unique = map { $_ =&amp;gt; $_ } @tags;
+    @unique = values %unique;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, map the object&amp;ndash;which Perl will smash into a string&amp;ndash;with another copy of the object, which will retain its object-ness. Then instead of getting the strings out of the hash, which are useless to us, you get the objects.&lt;/p&gt;
+
+&lt;p&gt;Of course, this doesn&amp;rsquo;t quite work, because even if &lt;code&gt;retrieve_random&lt;/code&gt; retrieves the same tag name twice, it will return two different objects with the same data. (That&amp;rsquo;s true unless the underlying database abstraction layer uses caching, which is another good use for a hash.)&lt;/p&gt;
+
+&lt;p&gt;The solution is to make the list unique based on a property of the tag, such as its name. This time, the code is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    %unique = map { $_-&amp;gt;name =&amp;gt; $_ } @tags;
+    @unique = values %unique;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Okay, now you have a list of objects which you&amp;rsquo;ve retrieved randomly, but which have unique names. The only problem is that you retrieved ten of them to start with, and then whittled the list down to get rid of duplicates. What if you actually wanted 10?&lt;/p&gt;
+
+&lt;p&gt;The solution is to keep track of ones that you&amp;rsquo;ve already seen, so that you don&amp;rsquo;t create any duplicates in the first place. The question &amp;ldquo;Have I seen this before?&amp;rdquo; is easy to answer using another hash-based idiom:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @tags;
+    my %seen;
+    while (@tags &amp;lt; 10) {
+        my $candidate = Memories::Tag-&amp;gt;retrieve_random;
+        next if $seen{$candidate-&amp;gt;name}++;
+        push @tags, $candidate;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once again you&amp;rsquo;re collecting unique values by putting them into a hash. Suppose that the first candidate tag that comes along is &lt;code&gt;japan&lt;/code&gt;. At this point the hash is empty, and so &lt;code&gt;$seen{japan}&lt;/code&gt; is zero. Because it&amp;rsquo;s zero, the code continues through the loop with &lt;code&gt;next&lt;/code&gt;, but still increments the hash value. Now &lt;code&gt;$seen{japan}&lt;/code&gt; stands at 1, and the tag goes into the list. If &lt;code&gt;japan&lt;/code&gt; comes past again, &lt;code&gt;$seen{japan}&lt;/code&gt; will be positive so the &lt;code&gt;next&lt;/code&gt; code will activate, and the tag will not go into the list again. (Don&amp;rsquo;t try this if you have fewer than 10 distinct tags, of course!)&lt;/p&gt;
+
+&lt;h3 id=&#34;caching&#34;&gt;Caching&lt;/h3&gt;
+
+&lt;p&gt;A special case of &amp;ldquo;have I seen this before?&amp;rdquo; comes when you want to create a cache: if I have seen this before, what was the answer I saw last time? Here&amp;rsquo;s how to do that.&lt;/p&gt;
+
+&lt;p&gt;I mentioned that the underlying database abstraction layer in the tags example might cache look-ups and return the same object if you requested the same tag multiple times:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my %cache;
+
+    sub retrieve {
+        my ($self, $id) = @_;
+        return $cache{$id} if exists $cache{$id};
+        return $cache{$id} = $self-&amp;gt;_hard_retrieve($id);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This checks to see if it has seen the &lt;code&gt;$id&lt;/code&gt; before; if so have, return the value from the hash. If not, work out what the value should be, then store it in the hash for next time, then return the whole lot.&lt;/p&gt;
+
+&lt;p&gt;Of course, for heavy-duty applications like a database abstraction layer, you need to do a little more work, such as pruning the cache to make sure it doesn&amp;rsquo;t get out of date or get so full of data that it eats all your memory. The &lt;a href=&#34;https://metacpan.org/pod/Cache::Cache&#34;&gt;Cache::Cache&lt;/a&gt; suite of modules from CPAN takes care of all of this for you, and the core &lt;a href=&#34;https://metacpan.org/pod/Memoize&#34;&gt;Memoize&lt;/a&gt; module adds this kind of caching to a function without you specifically having to write the cache-getting and -setting code.&lt;/p&gt;
+
+&lt;h3 id=&#34;searching&#34;&gt;Searching&lt;/h3&gt;
+
+&lt;p&gt;Finally, you can use hashes for searching.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve done any computer science, you&amp;rsquo;ll probably know about a couple of common searching algorithms. (Even if you haven&amp;rsquo;t, they&amp;rsquo;re so common that you&amp;rsquo;ve probably reinvented them without knowing it.) One is linear search, where you start at the beginning of a list and work your way toward the end, looking for the target item:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $index;
+    for $index (0..@chambers) {
+        last if $chambers[$index] == $bullet;
+    }
+    print &amp;quot;Found at index $index&amp;quot; if $index &amp;lt; @chambers;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another is binary search, where you start in the middle of a sorted list, and work out whether you should go higher or lower than the current element, like players in some demented version of &lt;em&gt;Card Sharks&lt;/em&gt;. This is basically the way to look up names in a phone book&amp;ndash;it&amp;rsquo;s faster, but a bit more complicated to implement:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @names = qw(Able Baker Charlie Dog ...);
+    my $index;
+
+    my $target = &amp;quot;Roger&amp;quot;;
+
+    sub search {
+        my ($lower, $upper) = (0, $#names);
+        while ($lower &amp;lt;= $upper) {
+            my $index = ($lower + $upper) / 2;
+            if ($names[$index] lt $target) {
+                $lower = $index + 1;
+            } elsif ($names[$index] gt $target) {
+                $upper = $index--1;
+            } else { return $index }
+        }
+        # Not found!
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This starts in the middle, at &amp;ldquo;Mike&amp;rdquo;. &amp;ldquo;Go higher!&amp;rdquo; shouts the crowd, so it goes half-way between there and the end, to &amp;ldquo;Tare&amp;rdquo;. Then it needs to go lower, so looks half-way between &amp;ldquo;Mike&amp;rdquo; and &amp;ldquo;Tare&amp;rdquo; and gets to &amp;ldquo;Peter&amp;rdquo;. Now it needs to go higher again, between &amp;ldquo;Peter&amp;rdquo; and &amp;ldquo;Tare&amp;rdquo;, and finds &amp;ldquo;Roger&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;That takes four comparisons, which is not bad. Can you do it any better? How about&amp;hellip; oh, none?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my %search = map { $names[$_] =&amp;gt; $_ } 0..$#names;
+    print $names{&amp;quot;Roger&amp;quot;};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I&amp;rsquo;m cheating somewhat here because setting up the hash requires iterating over the whole array, but once you&amp;rsquo;ve done that, the searches are basically free.&lt;/p&gt;
+
+&lt;p&gt;Of course, if you need to look up an array index by its contents, then maybe you&amp;rsquo;re doing something wrong in the first place, and should have used a hash to start with. Consider, for instance, in a configuration file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    force-v3-sigs
+    escape-from-lines
+    lock-once
+    load-extension rndlinux
+    keyserver wwwkeys.eu.pgp.net
+    keyserver the.earth.li
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Yes, that&amp;rsquo;s from GnuPG.) Each line has a key and optionally a value, but you can have multiple values for each key. At the end of the day, you might want to look through and say &amp;ldquo;tell me all the keyservers&amp;rdquo;&amp;ndash;but not just the keyservers, you want to read the whole config in and be able to say that about any key. That&amp;rsquo;s a search problem, and a tricky one. Here&amp;rsquo;s one solution:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    while (&amp;lt;&amp;gt;) {
+        chomp;
+        my ($key, $value) = split /\s+/, $_, 2;
+        push @config, [$key, $value];
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you have to say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @keyservers = map { $_-&amp;gt;[1] } grep { $_-&amp;gt;[0] eq &amp;quot;keyserver&amp;quot; } @config;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is actually a linear search in disguise. (&lt;code&gt;grep&lt;/code&gt; does a linear search for you.)&lt;/p&gt;
+
+&lt;p&gt;With hashes, the issue is much simpler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    while (&amp;lt;&amp;gt;) {
+        chomp;
+        my ($key, $value) = split /\s+/, $_, 2;
+        push @{$config{$key}}, $value;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This treats every key as a separate array reference, and pushes values into that array. Now to retrieve the list of keyservers, just look up the array inside the hash:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @keyservers = @{$config{&amp;quot;keyservers&amp;quot;}};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This process is very remniscient of the final pattern&amp;ndash;using a hash as a portable symbol table.&lt;/p&gt;
+
+&lt;h3 id=&#34;dispatch-tables&#34;&gt;Dispatch Tables&lt;/h3&gt;
+
+&lt;p&gt;Instead of having the configuration reader create a bunch of arrays&amp;ndash;&lt;code&gt;@keyservers&lt;/code&gt;, &lt;code&gt;@load_extension&lt;/code&gt; and so on&amp;ndash;I created a hash which held the arrays so as to look them up indirectly but more efficiently. In effect, instead of using the Perl symbol table, you can use a hash as a portable symbol table.&lt;/p&gt;
+
+&lt;p&gt;Suppose you have a script that does several related things: it manages your to-do list by adding, editing, listing, and deleting to-do items:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % todo add &amp;quot;Email Samuel about photos&amp;quot;
+    Todo item 129 created
+    % todo done 129
+    Item 129 marked as done
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You might expect the script to look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $command = shift @ARGV;
+    if    ($command eq &amp;quot;add&amp;quot;)  { add(@ARGV)  }
+    elsif ($command eq &amp;quot;list&amp;quot;) { list(@ARGV) }
+    elsif ($command eq &amp;quot;done&amp;quot;) { done(@ARGV) }
+    elsif ($command eq &amp;quot;edit&amp;quot;) { edit(@ARGV) }
+    ...
+    else { die &amp;quot;Unknown command: $command&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That is quite tedious; you need to edit the program in several places every time you add a new command. You &lt;em&gt;could&lt;/em&gt; use symbolic references&amp;ndash;that is, tell Perl to call a function named &lt;code&gt;$command&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $command = shift @ARGV;
+    sub AUTOLOAD { die &amp;quot;Unknown command: $AUTOLOAD&amp;quot; }
+    no strict &#39;refs&#39;;
+    &amp;amp;{$command}(@ARGV);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But that&amp;rsquo;s somewhat crazy. It allows the user to get at any subroutine in the main package, which you may not want, and to keep any error checking you have to assume that &lt;em&gt;any&lt;/em&gt; undefined subroutine call comes from the command line.&lt;/p&gt;
+
+&lt;p&gt;The middle way is to copy the commands into a hash, mapped to a function reference:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    %commands = (
+        add  =&amp;gt; \&amp;amp;add,
+        list =&amp;gt; \&amp;amp;list,
+        edit =&amp;gt; \&amp;amp;edit,
+        done =&amp;gt; \&amp;amp;done,
+    );
+    my $command = shift @ARGV;
+    if (!exists $commands{$command}) { die &amp;quot;Unknown command: $command&amp;quot; }
+    $commands{$command}-&amp;gt;(@ARGV);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This keeps &lt;code&gt;strict&lt;/code&gt; happy, it&amp;rsquo;s safe in the way it restricts what subroutines users can call, and it allows for error checking that doesn&amp;rsquo;t mess everything else up. Mark Jason Dominus&amp;rsquo; &lt;em&gt;Higher Order Perl&lt;/em&gt; shows how you can define commands at runtime if you use dispatch tables, something you can&amp;rsquo;t do if you hard-code your dispatch.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve explored some of the most common hash-based patterns: using hashes for counting, uniqueness, searching, and dispatch&amp;ndash;rather a lot more than just mapping from one thing to another. Of course, that is what a hash does at one level, but the uses of such a data structure are a lot more diverse than just that.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s how you improve your Perl programming&amp;ndash;you take elements of the language which ostensibly do one thing, and you find that they&amp;rsquo;re great for more complicated uses as well. Maybe after these ideas you&amp;rsquo;ll be able to find a few more hash idioms of your own!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

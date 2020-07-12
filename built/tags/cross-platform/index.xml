@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Cross Platform on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/cross-platform/</link>
+    <description>Recent content in Cross Platform on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 14 Apr 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/cross-platform/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Building Good CPAN Modules</title>
+      <link>http://localhost:1313/pub/2005/04/14/cpan_guidelines.html/</link>
+      <pubDate>Thu, 14 Apr 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/04/14/cpan_guidelines.html/</guid>
+      <description>
+
+&lt;p&gt;When you are planning to release a module to CPAN, one of your first tasks is figure out what OS, Perl version(s), and other environments you will and will not support. Often, the answers will come from what you can and cannot support, based on the features you want to provide and the modules and libraries you have used.&lt;/p&gt;
+
+&lt;p&gt;Many CPAN modules, however, unintentionally limit the places where they can work. There are several steps you can take to remove those limitations. Often, these steps are very simple changes that can actually enhance your module&amp;rsquo;s functionality and maintainability.&lt;/p&gt;
+
+&lt;h3 id=&#34;it-runs-on-my-machine&#34;&gt;It Runs On My Machine&lt;/h3&gt;
+
+&lt;p&gt;You have the latest PowerBook, update from CPAN every day, and run the latest Perl version. The people using your module are not. Remember, just because an application or OS is older than your grandmother doesn&amp;rsquo;t mean that it isn&amp;rsquo;t useful anymore. Code doesn&amp;rsquo;t spontaneously develop bugs over time, nor does it collect cruft that makes it run slower. Some vitally important applications have run untouched for 30+ years in languages that were deprecated when you were in diapers. These applications keep the lights on and keep track of all the money in the world, for example, and they typically run on very old computers.&lt;/p&gt;
+
+&lt;p&gt;Companies want to keep using their older systems because these systems work and they want to use Perl because Perl works everywhere. If you can leverage CPAN, you already have 90 percent of every Perl application written.&lt;/p&gt;
+
+&lt;h4 id=&#34;when-in-rome&#34;&gt;When in Rome&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.cpan.org/ports/index.html&#34;&gt;Perl runs on at least 93 different operating systems&lt;/a&gt;. In addition, there are &lt;a href=&#34;http://ftp.funet.fi/pub/CPAN/src/&#34;&gt;18 different productionized Perl 5 versions&lt;/a&gt; floating around out there (not counting the development branches and build options). &lt;code&gt;93 x 18 = 1674&lt;/code&gt;. That means your module could run on one of well over 1500 different OS/Perl version environments. Add in threading, Unicode, and other options, and there is simply no way you can test your poor module in all of the places it will end up!&lt;/p&gt;
+
+&lt;p&gt;Luckily, Perl also provides (many of) the answers.&lt;/p&gt;
+
+&lt;h5 id=&#34;defining-your-needs&#34;&gt;Defining Your Needs&lt;/h5&gt;
+
+&lt;p&gt;If you know that your module simply will not run in a certain environment, you should set up prerequisites. These allow you to provide a level of safety for your users. Prerequisites include:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;OSes that your module will not run under&lt;/p&gt;
+
+&lt;p&gt;Check &lt;code&gt;$^O&lt;/code&gt; and &lt;code&gt;%Config&lt;/code&gt; for this. &lt;code&gt;$^O&lt;/code&gt; will tell you the name of the operating system. Sometimes, this isn&amp;rsquo;t specific enough, so you can check &lt;code&gt;%Config&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Config;
+
+if ( $Config{ osname } ne &#39;solaris&#39; || $Config{ osver } &amp;lt; 2.9 )
+{
+    die &amp;quot;This module needs Solaris 2.9 or higher to run.\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s usually better to limit yourself to a specific set of OSes that you know to be good. As your module&amp;rsquo;s popularity grows, users will let you know if it works elsewhere.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Perl versions/features&lt;/p&gt;
+
+&lt;p&gt;Check &lt;code&gt;$]&lt;/code&gt; and &lt;code&gt;%INC&lt;/code&gt; for this. &lt;code&gt;$]&lt;/code&gt; holds the Perl version and &lt;code&gt;%INC&lt;/code&gt; contains a list of loaded Perl modules so far. (See the &lt;a href=&#34;http://localhost:1313/pub/2005/04/14/cpan_guidelines.html?page=2#threading&#34;&gt;Threading section&lt;/a&gt; for an example.) If your module simply cannot be run in Perl before a certain version, make sure you have a &lt;code&gt;use 5.00#&lt;/code&gt; (where &lt;code&gt;#&lt;/code&gt; is the version you need) within your module. Additionally, &lt;a href=&#34;https://metacpan.org/pod/Module::Build&#34;&gt;Module::Build&lt;/a&gt; allows you to specify a minimum Perl version in the &lt;code&gt;requires&lt;/code&gt; option for the constructor.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Modules/libraries&lt;/p&gt;
+
+&lt;p&gt;In &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker&#34;&gt;ExtUtils::MakeMaker&lt;/a&gt;, you can specify a &lt;code&gt;PREREQ_PM&lt;/code&gt; in your call to &lt;code&gt;WriteMakefile()&lt;/code&gt; to indicate that your module needs other modules to run. That can include version numbers, both the minimum and maximum acceptable. &lt;code&gt;Module::Build&lt;/code&gt; has a similar feature with the &lt;code&gt;requires&lt;/code&gt; option to the constructor.&lt;/p&gt;
+
+&lt;p&gt;If you depend on external, non-Perl libraries, you should see if they exist before continuing onwards. Like everything else, CPAN has a solution: &lt;a href=&#34;https://metacpan.org/pod/App::Info&#34;&gt;App::Info&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use App::Info::HTTPD::Apache;
+
+my $app = App::Info::HTTPD::Apache-&amp;gt;new;
+
+unless ( $app-&amp;gt;installed ) {
+    die &amp;quot;Apache isn&#39;t installed!\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&#34;operating-system&#34;&gt;Operating System&lt;/h5&gt;
+
+&lt;p&gt;What OS your module happens to land on is both less and more of an issue than most people realize. Most of us have had to work in both Unix-land and Windows-land, so we know of pitfalls with directory separators and hard-coding outside executables. However, there are other problems that only arise when your module lands in a place like VMS.&lt;/p&gt;
+
+&lt;p&gt;The VMS filesystem, for example, has the idea of a volume in a fully qualified filename. VMS also handles file permissions and file versioning very differently than the standard Unix/Win32/Mac model. An excellent example of how to handle these differences is the core module &lt;a href=&#34;https://metacpan.org/pod/File::Spec&#34;&gt;File::Spec&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Because this is an issue most authors have had to face at some point, there is a standard &lt;code&gt;perlpod&lt;/code&gt; called, fittingly, &lt;a href=&#34;https://perldoc.perl.org/perlport.html&#34;&gt;&lt;code&gt;perlport&lt;/code&gt;&lt;/a&gt;. If you follow what&amp;rsquo;s in there, you will be just fine.&lt;/p&gt;
+
+&lt;h5 id=&#34;perl-version&#34;&gt;Perl Version&lt;/h5&gt;
+
+&lt;p&gt;It&amp;rsquo;s been over ten years since the release of Perl 5.0.0, and Perl has changed a lot in that time. Most installations, however, are not the latest and greatest version. The main reason is &amp;ldquo;&lt;em&gt;If it ain&amp;rsquo;t broke, don&amp;rsquo;t fix it&lt;/em&gt;.&amp;rdquo; There is no such thing as a &lt;em&gt;safe upgrade&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Most applications have no need for the latest features and will never trip most of the bugs or security holes. They just aren&amp;rsquo;t that complex. If you restrict your module to features only found in 5.8, or even 5.6, you will ignore a large number of potential users.&lt;/p&gt;
+
+&lt;h5 id=&#34;security-improvements&#34;&gt;Security Improvements&lt;/h5&gt;
+
+&lt;p&gt;Most security fixes are transparent to the programmer. If the algorithms behind Perl hashes improve, you won&amp;rsquo;t see it. If a new release fixes a hole in &lt;code&gt;suidperl&lt;/code&gt;, your module won&amp;rsquo;t care.&lt;/p&gt;
+
+&lt;p&gt;Sometimes, however, a security fix is a new feature whose usage will (and should) become the accepted norm: for example, the three-arg form of &lt;code&gt;open()&lt;/code&gt; of 5.6. In these cases, I use &lt;code&gt;string-eval&lt;/code&gt; to try to use the new feature and default to the old feature if it doesn&amp;rsquo;t work. (Checking &lt;code&gt;$]&lt;/code&gt; here isn&amp;rsquo;t helpful because if your Perl version is pre-5.6, it will still try to compile the three-arg form and complain.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;eval q{
+    open( INFILE, &amp;quot;&amp;gt;&amp;quot;, $filename )
+          or die &amp;quot;Cannot open &#39;$filename&#39; for writing: $!\n&amp;quot;;
+}; if ( $@ ) {
+    # Check to see if it&#39;s a compile error
+    if ( $@ =~ /Too many arguments for open/ ) {
+        open( INFILE, &amp;quot;&amp;gt; $filename&amp;quot; )
+            or die &amp;quot;Cannot open &#39;$filename&#39; for writing: $!\n&amp;quot;;
+    }
+    else {
+        # Otherwise, rethrow the error
+        die $@;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5 id=&#34;bug-fixes&#34;&gt;Bug Fixes&lt;/h5&gt;
+
+&lt;p&gt;Like security fixes, most bug fixes are transparent to the programmer. Most of us didn&amp;rsquo;t notice that the hashing algorithm was less than optimal in 5.8.0 and had several improvements in 5.8.1. I know I didn&amp;rsquo;t. In general, these will not affect you at all.&lt;/p&gt;
+
+&lt;p&gt;Unlike security fixes, if your module breaks on a bug in a prior version of Perl, there&amp;rsquo;s probably not much you can do other than require the version where the bug fix occurred.&lt;/p&gt;
+
+&lt;h5 id=&#34;new-features&#34;&gt;New Features&lt;/h5&gt;
+
+&lt;p&gt;Everyone knows about &lt;code&gt;use warnings;&lt;/code&gt; and &lt;code&gt;our&lt;/code&gt; appearing in 5.6.0. You may, however, not know about the smaller changes. A good example is sorting.&lt;/p&gt;
+
+&lt;p&gt;5.8.0 changed sorting to be stable. This means that if the two items compare equally, the resulting list will preserve their original order. Prior versions of Perl made no such guarantee. This means that code like this may not do what you expect:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @input = qw( abcd abce efgh );
+my @output = sort {
+    substr( $a, 0, 3 ) cmp substr( $b, 0, 3 )
+} @input;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you depend on the fact that &lt;code&gt;@output&lt;/code&gt; will contain &lt;code&gt;qw( abcd abce efgh )&lt;/code&gt;, your module may be run into problems on versions prior to 5.8.0. &lt;code&gt;@output&lt;/code&gt; could contain &lt;code&gt;qw( abce abcd efgh)&lt;/code&gt; because the sorting function considers &lt;code&gt;abcd&lt;/code&gt; and &lt;code&gt;abce&lt;/code&gt; identical.&lt;/p&gt;
+
+&lt;h5 id=&#34;gotchas-with-os-and-perl-versions&#34;&gt;Gotchas With OS and Perl Versions&lt;/h5&gt;
+
+&lt;p&gt;Your module may be pristine when it comes to OS or Perl versions. Is the rest of your distribution? Your tests may betray a dependency that you weren&amp;rsquo;t aware of.&lt;/p&gt;
+
+&lt;p&gt;For example, 5.6.0 added lexically scoped warnings. Instead of using the &lt;code&gt;-w&lt;/code&gt; flag to the Perl executable, you can now say &lt;code&gt;use warnings&lt;/code&gt;. Because enabling warnings is generally a good thing, this is a very common header for test files written by conscientious programmers using Perl 5.6.0+:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use strict;
+use warnings;
+
+use Test::More tests =&amp;gt; 42;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, even if your module runs with Perls older than 5.6.0, your tests won&amp;rsquo;t! This means your distribution will not install through CPAN or CPANPLUS. For administrators who install modules this way and who have better things to do that debug a module&amp;rsquo;s tests, they won&amp;rsquo;t install it.&lt;/p&gt;
+
+&lt;h4 id=&#34;major-new-features&#34;&gt;Major New Features&lt;/h4&gt;
+
+&lt;p&gt;Some new features are so large that they change the name of the game. These include Unicode and threading. Unicode has had support, in one form or another, in every version of Perl 5. That support has slowly moved from modules (such as &lt;a href=&#34;https://metacpan.org/pod/Unicode::String&#34;&gt;Unicode::String&lt;/a&gt;) to the Perl core itself.&lt;/p&gt;
+
+&lt;h5 id=&#34;threading&#34;&gt;Threading&lt;/h5&gt;
+
+&lt;p&gt;In 5.8.0, Perl&amp;rsquo;s threading model changed from the 5.005 model (which never worked very well) to ithreads (which do). Additionally, multi-core processors are coming to the smaller servers. More and more, developers using 5.8+ choose to write threaded applications.&lt;/p&gt;
+
+&lt;p&gt;This means that your module might have to play in a threaded playground, which is a weird place indeed to process-oriented folks. Now, Perl&amp;rsquo;s threading model is unshared by default, which means that global variables are safe from clobbering each other. This is different from the standard threading model, like Java&amp;rsquo;s, which shares all variables by default. Because of this decision, most modules will run under threads with little to no changes.&lt;/p&gt;
+
+&lt;p&gt;The main issue you will need to resolve is what happens with your stateful variables. These are the variables that persist and keep a value in between invocations of a subroutine, yet need coordination across threads. A good example is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+    my $counter;
+    sub next_value ( return ++$counter; }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you depend on this counter being coordinated across every invocation of the &lt;code&gt;next_value()&lt;/code&gt; subroutine, you need to take three steps.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Sharing&lt;/p&gt;
+
+&lt;p&gt;Because Perl doesn&amp;rsquo;t share your variables for you, you must explicitly share &lt;code&gt;$counter&lt;/code&gt; to make sure that it is correctly updated across threads.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Locking&lt;/p&gt;
+
+&lt;p&gt;Because a context-switch between threads can happen at any time, you need to lock &lt;code&gt;$counter&lt;/code&gt; within the &lt;code&gt;next_value()&lt;/code&gt; subroutine.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Version safety&lt;/p&gt;
+
+&lt;p&gt;Also, because ithreads is an optional 5.8.0+ feature and the &lt;code&gt;lock()&lt;/code&gt; subroutine is undefined before 5.6.0+, you may want to do some version checks.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+    my $counter = 0;
+    if ( $] &amp;gt;= 5.008 &amp;amp;&amp;amp; exists $INC{&#39;threads.pm&#39;} ) {
+        require threads::shared;
+        import threads::shared qw(share);
+        share( $counter );
+    }
+    else {
+        *lock = sub (*) {}
+    }
+
+    sub next_value {
+        lock( $counter );
+        $counter++;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The best description that I&amp;rsquo;ve seen of what you need to do to port your application to a threaded works successfully is &amp;ldquo;&lt;a href=&#34;http://localhost:1313/pub/2002/06/11/threads.html&#34;&gt;Where Wizards Fear to Tread&lt;/a&gt;&amp;rdquo; on Perl 5.8 threads.&lt;/p&gt;
+
+&lt;h5 id=&#34;unicode&#34;&gt;Unicode&lt;/h5&gt;
+
+&lt;p&gt;Although Unicode had some support prior to 5.8.0, a major feature in 5.8.0 was the near-seamless handling of Unicode within Perl itself. Prior that that, developers had to use Unicode::String and other modules. This means that you should look to handling strings as gingerly as possible if you consider support for Unicode on Perls prior to 5.8.0 as important. Luckily, most major modules already do this for you without you having to worry about it.&lt;/p&gt;
+
+&lt;p&gt;Discussing how to handle Unicode cleanly is an article in itself. Please see &lt;a href=&#34;https://perldoc.perl.org/perlunicode.html&#34;&gt;&lt;code&gt;perlunicode&lt;/code&gt;&lt;/a&gt; and &lt;a href=&#34;https://perldoc.perl.org/perluniintro.html&#34;&gt;&lt;code&gt;perluniintro&lt;/code&gt;&lt;/a&gt; for more information.&lt;/p&gt;
+
+&lt;h4 id=&#34;playing-nicely-with-others&#34;&gt;Playing Nicely with Others&lt;/h4&gt;
+
+&lt;p&gt;If you&amp;rsquo;re like me, you heard &amp;ldquo;Doesn&amp;rsquo;t play well with others&amp;rdquo; a lot in kindergarten. While that&amp;rsquo;s an admirable trait for a hacker, it&amp;rsquo;s not something to praise in any modules that production systems depend upon. There are several common items to look out for when trying to play nicely with others.&lt;/p&gt;
+
+&lt;h5 id=&#34;persistent-environments&#34;&gt;Persistent Environments&lt;/h5&gt;
+
+&lt;p&gt;Persistent environments, like &lt;code&gt;mod_perl&lt;/code&gt; and FastCGI, are a fact of life. They make the WWW work. They are also a very different beast than a basic script that runs, does its thing, and ends. Basically, a persistent environment, such as &lt;code&gt;mod_perl&lt;/code&gt;, does a few things.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Persistent interpreter&lt;/p&gt;
+
+&lt;p&gt;Launching the Perl executable is expensive, relatively speaking. In an environment such as a web application, every request is a separate invocation of a Perl script. Persistence keeps a Perl interpreter around in memory between invocations, reducing the startup overhead dramatically.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Forked children&lt;/p&gt;
+
+&lt;p&gt;In order to handle multiple requests at once, persistent environments tend to provide the capability for forked child processes, each with its own interpreter. Normally, this requires a copy of each module in every child&amp;rsquo;s memory area.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Shared memory&lt;/p&gt;
+
+&lt;p&gt;Nearly every request will use the same modules (CGI, DBI, etc). Instead of loading them every time, persistent environments load them into shared memory that each of the child processes can access. This can save a lot of memory that would otherwise be required to load DBI once for every child. This allows the same machine to create many more children to handle many more requests simultaneously on the same machine.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Caching needs a special mention. Because most persistent environments load most of the code into shared memory before forking off children, it makes sense to load as much code that won&amp;rsquo;t change as possible before forking. (If the code does change, the child process receives a fresh copy of the modified memory space, reducing the benefit of shared memory.) This means that modules need to be able to pre-load what they need on demand. This is why CGI, which normally defers loading anything as much as possible, provides the &lt;code&gt;:all&lt;/code&gt; option to load everything at once.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;mod_perl&lt;/code&gt; folks have an excellent set of documentation as to what&amp;rsquo;s different about persistent environments, why you should care, and what you need to do for your module to work right.&lt;/p&gt;
+
+&lt;h5 id=&#34;overloading&#34;&gt;Overloading&lt;/h5&gt;
+
+&lt;p&gt;It&amp;rsquo;s very easy to create an overloaded class that cannot work with other overloaded classes. For example, if I&amp;rsquo;m using Overload::Num1 and Overload::Num2, I would expect &lt;code&gt;$num1 + $num2&lt;/code&gt; to DWIM. Unfortunately, with most overloaded classes written as below, they won&amp;rsquo;t. (For more information as to how this code works, please read &lt;a href=&#34;https://perldoc.perl.org/overload.html&#34;&gt;&lt;code&gt;overload&lt;/code&gt;&lt;/a&gt;, or the excellent article &amp;ldquo;&lt;a href=&#34;http://localhost:1313/pub/2003/07/22/overloading.html&#34;&gt;Overloading&lt;/a&gt;.&amp;ldquo;)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub add {
+    my ($l, $r, $inv) = @_;
+    ($l, $r) = ($r, $l) if $inv;
+
+    $l = ref $l ? $l-&amp;gt;numify : $l;
+    $r = ref $r ? $r-&amp;gt;numify : $r;
+
+    return $l + $r;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Overload::Num1 uses the &lt;code&gt;numify()&lt;/code&gt; method to retrieve the number associated with the class. Overload::Num2 uses the &lt;code&gt;get_number()&lt;/code&gt; method. If I tried to use the two classes together, I would receive an error that looks something like &lt;em&gt;Can&amp;rsquo;t locate object method &amp;ldquo;numify&amp;rdquo; via package &amp;ldquo;Overload::Num2&amp;rdquo;&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The solution is very simple&amp;ndash;don&amp;rsquo;t define an &lt;code&gt;add()&lt;/code&gt; method. Define a &lt;code&gt;numify&lt;/code&gt; (&lt;code&gt;0+&lt;/code&gt;) method, set fallback to true, and walk away. You don&amp;rsquo;t need to define a method for each option. You only need to do so if you have to do something special as part of doing that operation. For example, complex numbers have to add the rational and complex parts separately.&lt;/p&gt;
+
+&lt;p&gt;If you absolutely have to define &lt;code&gt;add()&lt;/code&gt;, though, use something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub add {
+    my ($l, $r, $inv) = @_;
+    ($l, $r) = ($r, $l) if $inv;
+
+    my $pkg = ref($l) || ref($r);
+
+    # This is to explicitly call the appropriate numify() method
+    $l = do {
+        my $s = overload::Method( $l, &#39;0+&#39; );
+        $s ? $s-&amp;gt;($l) : $l
+    };
+
+    $r = do {
+        my $s = overload::Method( $r, &#39;0+&#39; );
+        $s ? $s-&amp;gt;($r) : $r
+    };
+
+    return $pkg-&amp;gt;new( $l + $r );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This way, each overloaded class can handle things its way. The assumption, you&amp;rsquo;ll notice, is to bless the return value into the class whose &lt;code&gt;add()&lt;/code&gt; the caller called. This is acceptable; someone called its method, so &lt;em&gt;someone&lt;/em&gt; thought it was top dog! (If you have an &lt;code&gt;add&lt;/code&gt; method, no &lt;code&gt;numify&lt;/code&gt; method, and fallback activated, you will enter an infinite loop because &lt;code&gt;numify&lt;/code&gt; falls back to &lt;code&gt;$x + 0&lt;/code&gt;.)&lt;/p&gt;
+
+&lt;h5 id=&#34;finding-out-what-something-is&#34;&gt;Finding Out What Something Is&lt;/h5&gt;
+
+&lt;p&gt;At some point, your module needs to accept some data from somewhere. If you&amp;rsquo;re like me, you want your module to DWIM based on what data it has received. Eventually, you want to know &amp;ldquo;Is it a scalar, arrayref, or hashref?&amp;rdquo; (Yes, I know there are seven different types in Perl.) There are many, many ways to do this. Some even work.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;ref()&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;ref()&lt;/code&gt; is the time-honored way to dispatch based on datatype, resulting in code that looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $is_hash = ref( $data ) eq &#39;HASH&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The problem is that &lt;code&gt;ref( $data )&lt;/code&gt; will return the class name of &lt;code&gt;$data&lt;/code&gt; if it&amp;rsquo;s an object. If someone has defined a class named &lt;code&gt;HASH&lt;/code&gt; (don&amp;rsquo;t do that!) that uses blessed array references, this will also break spectacularly.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;isa()&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;isa()&lt;/code&gt; will tell you whether a reference inherits from a class. The various datatypes are actually class-like. Some people suggest writing code like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $is_hash = UNIVERSAL::isa( $data, &#39;HASH&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will work whether or not &lt;code&gt;$data&lt;/code&gt; is blessed. Again, though, if someone is mean enough to call a class &lt;code&gt;HASH&lt;/code&gt; and bless an arrayref into it, you&amp;rsquo;ll have trouble. Worse, this technique may break polymorphism spectacularly if &lt;code&gt;$data&lt;/code&gt; is an object with an overloaded &lt;code&gt;isa()&lt;/code&gt; method.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;eval&lt;/code&gt; blocks&lt;/p&gt;
+
+&lt;p&gt;Just try the data as a hashref and see if it succeeds.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $is_hash = eval { %{$data}; 1 };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This avoids the primary issue of the two options listed above, but this may unexpectedly succeed in the case of overloaded objects. If &lt;code&gt;$data&lt;/code&gt; is a Number::Fraction, you will mistakenly use &lt;code&gt;$data&lt;/code&gt; as a hash because Number::Fraction uses blessed hashes for objects, even though the intent is to use them as scalars.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Assume that objects are special&lt;/p&gt;
+
+&lt;p&gt;By using &lt;a href=&#34;https://metacpan.org/pod/Scalar::Util&#34;&gt;Scalar::Util&lt;/a&gt;&amp;rsquo;s &lt;code&gt;blessed()&lt;/code&gt; and &lt;code&gt;reftype()&lt;/code&gt; functions, you can determine if a given scalar is a blessed reference or what type of reference it really is. If you want to find out if something is a hash reference, but you want to avoid the pitfalls listed above, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $is_hash = ( !blessed( $data ) &amp;amp;&amp;amp; ref $data eq &#39;HASH&#39; );
+# or
+my $is_hash = reftype( $data ) eq &#39;HASH&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Nearly every use of overloading is to make an object behave as a scalar, as in Number::Fraction and similar classes. Using this technique allows you to respect the client&amp;rsquo;s wishes more easily. You will still miss a few possibilities, such as (the somewhat eccentric) &lt;a href=&#34;https://metacpan.org/pod/Object::MultiType&#34;&gt;Object::MultiType&lt;/a&gt; (an excellent example of what you &lt;em&gt;can&lt;/em&gt; do in Perl, if you put your mind to it).&lt;/p&gt;
+
+&lt;p&gt;My personal preference is to let &lt;code&gt;$data&lt;/code&gt; tell &lt;em&gt;you&lt;/em&gt; what it can do.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Object representations&lt;/p&gt;
+
+&lt;p&gt;Not all objects are blessed hashrefs. I like to represent my objects as arrayrefs, and other people use Inside-Out objects which are references to undef that work with hidden data. This means that my overloaded numbers are arrays, but I want you to treat them as scalars. Unless you ask &lt;code&gt;$data&lt;/code&gt; how it wants you to treat it, how will you handle it correctly?&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Overloading accessors&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://perldoc.perl.org/overload.html&#34;&gt;&lt;code&gt;overload&lt;/code&gt;&lt;/a&gt; allows you to overload the accessor operators, such as &lt;code&gt;@{}&lt;/code&gt; and &lt;code&gt;%{}&lt;/code&gt;. This means that one can theoretically bless an array reference and provide the ability to access it as a hash reference. Object::MultiType is an example of this. It is a hashref that provides array-like access.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, the CPAN module that would do this doesn&amp;rsquo;t exist, yet.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&#34;letting-others-do-your-dirty-work&#34;&gt;Letting Others Do Your Dirty Work&lt;/h4&gt;
+
+&lt;p&gt;The modules that you and I use on a daily basis are, in general, as OS-portable, version-independent, and polite as possible. This means that the more your module depends upon other modules to do the dirty work, the less you have to worry about it. Modules like File::Spec and Scalar::Util exist to help you out. Other modules like &lt;a href=&#34;https://metacpan.org/pod/XML::Parser&#34;&gt;XML::Parser&lt;/a&gt; will do their jobs, but also handle things like any Unicode you encounter so that you don&amp;rsquo;t have to.&lt;/p&gt;
+
+&lt;p&gt;That said, you still have to be careful with whom your young module fraternizes with. Every module you add as a dependency is another module that can restrict where your module can live. If one of your module&amp;rsquo;s dependencies is Windows-only, such as anything from the Win32 namespace, then your module is now Windows-only. If one of your dependencies has a bug, then you also have that bug. Fortunately, there are a few ways to bypass these problems.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Buggy dependencies&lt;/p&gt;
+
+&lt;p&gt;Generally, module authors fix bugs relatively quickly, especially if you&amp;rsquo;ve provided a test file that demonstrates the bug and a patch that makes those tests pass. Once your module&amp;rsquo;s dependency has a new version released, you can release a new version that requires the version with the bug fix.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;OS-specific dependencies&lt;/p&gt;
+
+&lt;p&gt;The first option is to accept it. If no one on Atari MiNT cares, then why should you? Alternatively, you can encapsulate the OS-dependent module and find another module that provides the same features on the OS you&amp;rsquo;re trying to support. File::Spec is an excellent example of how to encapsulate OS-specific behavior behind a common API.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There&amp;rsquo;s a lot to keep in mind when writing a module for CPAN: OS and Perl versions, Unicode, threading, persistence&amp;ndash;it can be very overwhelming at times. With a few simple steps and a willingness to let your users tell you what they need, you&amp;rsquo;ll be the toast of the town.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

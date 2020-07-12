@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Improving mod_perl Sites&#39; Performance: Part 8 </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" In this article we continue talking about how to optimize your site for performance without touching code, buying new hardware or telling casts. A few simple httpd.conf configuration changes can improve the performance tremendously. Choosing MinSpareServers, MaxSpareServers and StartServers..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2003/03/04/mod_perl.html/" />
+<meta property="og:title" content="Improving mod_perl Sites&#39; Performance: Part 8" />
+<meta property="og:description" content=" In this article we continue talking about how to optimize your site for performance without touching code, buying new hardware or telling casts. A few simple httpd.conf configuration changes can improve the performance tremendously. Choosing MinSpareServers, MaxSpareServers and StartServers...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2003-03-03T03:03:03Z" />
+<meta property="og:image" content="http://localhost:1313/images/site/avatar.png" />
+<meta property="og:article:tag" content="mod-perl-apache-performance" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Improving mod_perl Sites&#39; Performance: Part 8</h1>
+              <p class="blog-post-meta">Mar 4, 2003 by
+              
+              
+                
+                
+                <a href="#author-bio-stas-bekman">Stas Bekman</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>In this article we continue talking about how to optimize your site for performance without touching code, buying new hardware or telling casts. A few simple <em>httpd.conf</em> configuration changes can improve the performance tremendously.</p>
+
+<h3 id="span-id-choosing-minspareservers-maxspareservers-and-startservers-choosing-minspareservers-maxspareservers-and-startservers-span"><span id="choosing_minspareservers,_maxspareservers_and_startservers">Choosing MinSpareServers, MaxSpareServers and StartServers</span></h3>
+
+<p>With mod_perl enabled, it might take as much as 20 seconds from the time you start the server until it is ready to serve incoming requests. This delay depends on the OS, the number of preloaded modules and the process load of the machine. It&rsquo;s best to set <a href="#item_startservers"><code>StartServers</code></a> and <a href="#item_minspareservers"><code>MinSpareServers</code></a> to high numbers, so that if you get a high load just after the server has been restarted, the fresh servers will be ready to serve requests immediately. With mod_perl, it&rsquo;s usually a good idea to raise all three variables higher than normal.</p>
+
+<p>In order to maximize the benefits of mod_perl, you don&rsquo;t want to kill servers when they are idle, rather you want them to stay up and available to handle new requests immediately. I think an ideal configuration is to set <a href="#item_minspareservers"><code>MinSpareServers</code></a> and <a href="#item_maxspareservers"><code>MaxSpareServers</code></a> to similar values, maybe even the same. Having the <a href="#item_maxspareservers"><code>MaxSpareServers</code></a> close to <a href="#item_maxclients"><code>MaxClients</code></a> will completely use all of your resources (if <a href="#item_maxclients"><code>MaxClients</code></a> has been chosen to take the full advantage of the resources), but it&rsquo;ll make sure that at any given moment your system will be capable of responding to requests with the maximum speed (assuming that number of concurrent requests is not higher than <a href="#item_maxclients"><code>MaxClients</code></a>).</p>
+
+<p>Let&rsquo;s try some numbers. For a heavily loaded Web site and a dedicated machine, I would think of (note 400Mb is just for example):</p>
+
+<pre><code>  Available to webserver RAM:   400Mb
+  Child's memory size bounded:  10Mb
+  MaxClients:                   400/10 = 40 (larger with mem sharing)
+  StartServers:                 20
+  MinSpareServers:              20
+  MaxSpareServers:              35
+</code></pre>
+
+<p>However, if I want to use the server for many other tasks, but make it capable of handling a high load, I&rsquo;d try:</p>
+
+<pre><code>  Available to webserver RAM:   400Mb
+  Child's memory size bounded:  10Mb
+  MaxClients:                   400/10 = 40
+  StartServers:                 5
+  MinSpareServers:              5
+  MaxSpareServers:              10
+</code></pre>
+
+<p>These numbers are taken off the top of my head, and shouldn&rsquo;t be used as a rule, but rather as examples to show you some possible scenarios. Use this information with caution.</p>
+
+<h3 id="span-id-summary-of-benchmarking-to-tune-all-5-parameters-summary-of-benchmarking-to-tune-all-5-parameters-span"><span id="summary_of_benchmarking_to_tune_all_5_parameters">Summary of Benchmarking to Tune All 5 Parameters</span></h3>
+
+<p>OK, we&rsquo;ve run various benchmarks &ndash; let&rsquo;s summarize the conclusions:</p>
+
+<ul>
+<li><strong><span id="item_maxrequestsperchild">MaxRequestsPerChild</span></strong>
+If your scripts are clean and don&rsquo;t leak memory, then set this variable to a number as large as possible (10000?). If you use <code>Apache::SizeLimit</code>, then you can set this parameter to 0 (treated as infinity). You will want this parameter to be smaller if your code becomes gradually more unshared over the process&rsquo; life. As well as this, <code>Apache::GTopLimit</code> can help, with its shared memory limitation feature.</li>
+<li><strong><span id="item_startservers">StartServers</span></strong>
+If you keep a small number of servers active most of the time, then keep this number low. Keep it low especially if <a href="#item_maxspareservers"><code>MaxSpareServers</code></a> is also low, as if there is no load, Apache will kill its children before they have been utilized at all. If your service is heavily loaded, then make this number close to <a href="#item_maxclients"><code>MaxClients</code></a>, and keep <a href="#item_maxspareservers"><code>MaxSpareServers</code></a> equal to <a href="#item_maxclients"><code>MaxClients</code></a>.</li>
+<li><strong><span id="item_minspareservers">MinSpareServers</span></strong>
+If your server performs other work besides Web serving, then make this low so the memory of unused children will be freed when the load is light. If your server&rsquo;s load varies (you get loads in bursts) and you want fast response for all clients at any time, then you will want to make it high, so that new children will be respawned in advance and are waiting to handle bursts of requests.</li>
+<li><strong><span id="item_maxspareservers">MaxSpareServers</span></strong>
+The logic is the same as for <a href="#item_minspareservers"><code>MinSpareServers</code></a> - low if you need the machine for other tasks, high if it&rsquo;s a dedicated Web host and you want a minimal delay between the request and the response.</li>
+
+<li><p><strong><span id="item_maxclients">MaxClients</span></strong>
+Not too low, so you don&rsquo;t get into a situation where clients are waiting for the server to start serving them (they might wait, but not for very long). However, do not set it too high. With a high MaxClients, if you get a high load, then the server will try to serve all requests immediately. Your CPU will have a hard time keeping up, and if the child size * number of running children is larger than the total available RAM, then your server will start swapping. This will slow down everything, which in turn will make things even slower, until eventually your machine will die. It&rsquo;s important that you take pains to ensure that swapping does not normally happen. Swap space is an emergency pool, not a resource to be used routinely. If you are low on memory and you badly need it, then buy it. Memory is cheap.</p>
+
+<p>But based on the test I conducted above, even if you have plenty of memory like I have (1Gb), increasing <a href="#item_maxclients"><code>MaxClients</code></a> sometimes will give you no improvement in performance. The more clients are running, the more CPU time will be required, the less CPU time slices each process will receive. The response latency (the time to respond to a request) will grow, so you won&rsquo;t see the expected improvement. The best approach is to find the minimum requirement for your kind of service and the maximum capability of your machine. Then start at the minimum and test as I did, successively raising this parameter until you find the region on the curve of the graph of latency and/or throughput against MaxClients where the improvement starts to diminish. Stop there and use it. When you make the measurements on a production server you will have the ability to tune them more precisely, since you will see the real numbers.</p>
+
+<p>Don&rsquo;t forget that if you add more scripts, or even just modify the existing ones, then the processes will grow in size as you compile in more code. When you do this, your parameters probably will need to be recalculated.</p></li>
+</ul>
+
+<h3 id="span-id-keepalive-keepalive-span"><span id="keepalive">KeepAlive</span></h3>
+
+<p>If your mod_perl server&rsquo;s <em>httpd.conf</em> includes the following directives:</p>
+
+<pre><code>  KeepAlive On
+  MaxKeepAliveRequests 100
+  KeepAliveTimeout 15
+</code></pre>
+
+<p>you have a real performance penalty, since after completing the processing for each request, the process will wait for <code>KeepAliveTimeout</code> seconds before closing the connection and will therefore not be serving other requests during this time. With this configuration, you will need many more concurrent processes on a server with high traffic.</p>
+
+<p>If you use some server status reporting tools, then you will see the process in <em>K</em> status when it&rsquo;s in <code>KeepAlive</code> status.</p>
+
+<p>The chances are that you don&rsquo;t want this feature enabled. Set it Off with:</p>
+
+<pre><code>  KeepAlive Off
+</code></pre>
+
+<p>The other two directives don&rsquo;t matter if <code>KeepAlive</code> is <code>Off</code>.</p>
+
+<p>You might want to consider enabling this option if the client&rsquo;s browser needs to request more than one object from your server for a single HTML page. If this is the situation, then by setting <code>KeepAlive</code> <code>On</code> you will save the HTTP connection overhead for all requests but the first one for each page.</p>
+
+<p>For example: If you have a page with 10 ad banners, which is not uncommon today, then your server will work more effectively if a single process serves them all during a single connection. However, your client will see a slightly slower response, since banners will be brought one at a time and not concurrently as is the case if each <code>IMG</code> tag opens a separate connection.</p>
+
+<p>Since keepalive connections will not incur the additional three-way TCP handshake, turning it on will be kinder to the network.</p>
+
+<p>SSL connections benefit the most from <code>KeepAlive</code> in cases where you haven&rsquo;t configured the server to cache session ids.</p>
+
+<p>You have probably followed the usual advice to send all the requests for static objects to a plain Apache server. Since most pages include more than one unique static image, you should keep the default <code>KeepAlive</code> setting of the non-mod_perl server, i.e. keep it <code>On</code>. It will probably be a good idea also to reduce the timeout a little.</p>
+
+<p>One option would be for the proxy/accelerator to keep the connection open to the client but make individual connections to the server, read the response, buffer it for sending to the client and close the server connection. Obviously, you would make new connections to the server as required by the client&rsquo;s requests.</p>
+
+<p>Also, you should know that <code>KeepAlive</code> requests only work with responses that contain a <code>Content-Length</code> header. To send this header do:</p>
+
+<pre><code>  $r-&gt;header_out('Content-Length', $length);
+</code></pre>
+
+<h3 id="span-id-perlsetupenv-off-perlsetupenv-off-span"><span id="perlsetupenv_off">PerlSetupEnv Off</span></h3>
+
+<p><code>PerlSetupEnv Off</code> is another optimization you might consider. This directive requires mod_perl 1.25 or later.</p>
+
+<p><em>mod_perl</em> fiddles with the environment to make it appear as if the script were being called under the CGI protocol. For example, the <code>$ENV{QUERY_STRING}</code> environment variable is initialized with the contents of <em>Apache::args()</em>, and the value returned by <em>Apache::server_hostname()</em> is put into <code>$ENV{SERVER_NAME}</code>.</p>
+
+<p>But <code>%ENV</code> population is expensive. Those who have moved to the Perl Apache API no longer need this extra <code>%ENV</code> population, and can gain by turning it <strong>Off</strong>. Scripts using the <code>CGI.pm</code> module require <code>PerlSetupEnv On</code> because that module relies on a properly populated CGI environment table.</p>
+
+<p>By default it is &ldquo;On.&rdquo;</p>
+
+<p>Note that you can still set environment variables. For example, when you use the following configuration:</p>
+
+<pre><code>  PerlSetupEnv Off
+  PerlModule Apache::RegistryNG
+  &lt;Location /perl&gt;
+    PerlSetupEnv On
+    PerlSetEnv TEST hi
+    SetHandler perl-script
+    PerlHandler Apache::RegistryNG
+    Options +ExecCGI
+  &lt;/Location&gt;
+</code></pre>
+
+<p>and issue a request (for example <a href="http://localhost/perl/setupenvoff.pl)">http://localhost/perl/setupenvoff.pl)</a> for this script:</p>
+
+<pre><code>  setupenvoff.pl
+  --------------
+  use Data::Dumper;
+  my $r = Apache-&gt;request();
+  $r-&gt;send_http_header('text/plain');
+  print Dumper(\%ENV);
+</code></pre>
+
+<p>you should see something like this:</p>
+
+<pre><code>  $VAR1 = {
+            'GATEWAY_INTERFACE' =&gt; 'CGI-Perl/1.1',
+            'MOD_PERL' =&gt; 'mod_perl/1.25',
+            'PATH' =&gt; '/usr/lib/perl5/5.00503:... snipped ...',
+            'TEST' =&gt; 'hi'
+          };
+</code></pre>
+
+<p>Notice that we have got the value of the environment variable <em>TEST</em>.</p>
+
+<h3 id="span-id-reducing-the-number-of-stat-calls-made-by-apache-reducing-the-number-of-stat-calls-made-by-apache-span"><span id="reducing_the_number_of_stat()_calls_made_by_apache">Reducing the Number of <code>stat()</code> Calls Made by Apache</span></h3>
+
+<p>If you watch the system calls that your server makes (using <em>truss</em> or <em>strace</em>) while processing a request, then you will notice that a few <code>stat()</code> calls are made. For example, when I fetch <a href="http://localhost/perl-status">http://localhost/perl-status</a> and I have my DocRoot set to <em>/home/httpd/docs</em> I see:</p>
+
+<pre><code>  [snip]
+  stat(&quot;/home/httpd/docs/perl-status&quot;, 0xbffff8cc) = -1
+                      ENOENT (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;, {st_mode=S_IFDIR|0755,
+                                 st_size=1024, ...}) = 0
+  [snip]
+</code></pre>
+
+<p>If you have some dynamic content and your virtual relative URI is something like <em>/news/perl/mod_perl/summary</em> (i.e., there is no such directory on the web server, the path components are only used for requesting a specific report), then this will generate <code>five(!)</code> <code>stat()</code> calls, before the <code>DocumentRoot</code> is found. You will see something like this:</p>
+
+<pre><code>  stat(&quot;/home/httpd/docs/news/perl/mod_perl/summary&quot;, 0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&quot;/home/httpd/docs/news/perl/mod_perl&quot;,         0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&quot;/home/httpd/docs/news/perl&quot;,                  0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&quot;/home/httpd/docs/news&quot;,                       0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;,
+                      {st_mode=S_IFDIR|0755, st_size=1024, ...})  =  0
+</code></pre>
+
+<p>How expensive are those calls? Let&rsquo;s use the <code>Time::HiRes</code> module to find out.</p>
+
+<pre><code>  stat_call_sample.pl
+  -------------------
+  use Time::HiRes qw(gettimeofday tv_interval);
+  my $calls = 1_000_000;
+
+  my $start_time = [ gettimeofday ];
+
+  stat &quot;/app&quot; for 1..$calls;
+
+  my $end_time = [ gettimeofday ];
+
+  my $elapsed = tv_interval($start_time,$end_time) / $calls;
+
+  print &quot;The average execution time: $elapsed seconds\n&quot;;
+</code></pre>
+
+<p>This script takes a time sample at the beginning, then does 1,000,000 <code>stat()</code> calls to a nonexisting file, samples the time at the end and prints the average time it took to make a single <code>stat()</code> call. I&rsquo;m sampling a million stats, so I&rsquo;d get a correct average result.</p>
+
+<p>Before we actually run the script, one should distinguish between two different situations. When the server is idle, the time between the first and the last system call will be much shorter than the same time measured on the loaded system. That is because on the idle system, a process can use CPU very often, and on the loaded system lots of processes compete over it and each process has to wait for a longer time to get the same amount of CPU time.</p>
+
+<p>So first we run the above code on the unloaded system:</p>
+
+<pre><code>  % perl stat_call_sample.pl
+  The average execution time: 4.209645e-06 seconds
+</code></pre>
+
+<p>So it takes about 4 microseconds to execute a <code>stat()</code> call. Now let&rsquo;s start a CPU intensive process in one console. The following code keeps the CPU busy all the time.</p>
+
+<pre><code>  % perl -e '1**1 while 1'
+</code></pre>
+
+<p>And now run the <em>stat_call_sample.pl</em> script in the other console.</p>
+
+<pre><code>  % perl stat_call_sample.pl
+  The average execution time: 8.777301e-06 seconds
+</code></pre>
+
+<p>You can see that the average time has more than doubled (about 8 microseconds). And this is obvious, since there were two processes competing for the CPU. Now if we run 4 occurrences of the above code:</p>
+
+<pre><code>  % perl -e '1**1 while 1' &amp;
+  % perl -e '1**1 while 1' &amp;
+  % perl -e '1**1 while 1' &amp;
+  % perl -e '1**1 while 1' &amp;
+</code></pre>
+
+<p>And when running our script in parallel with these processes, we get:</p>
+
+<pre><code>  % perl stat_call_sample.pl
+  2.0853558e-05 seconds
+</code></pre>
+
+<p>about 20 microseconds. So the average <code>stat()</code> system call is five times longer now. Now, if you have 50 mod_perl processes that keep the CPU busy all the time, the <code>stat()</code> call will be 50 times slower and it&rsquo;ll take 0.2 milliseconds to complete a series of call. If you have five redundant calls as in the strace example above, then they add up to 1 millisecond. If you have more processes constantly consuming CPU, then this time adds up. Now multiply this time by the number of processes that you have and you get a few seconds lost. As usual, for some services, this loss is insignificant, while for others a very significant one.</p>
+
+<p>So why does Apache make all these redundant <code>stat()</code> calls? You can blame the default installed <code>TransHandler</code> for this inefficiency. Of course, you could supply your own, which will be smart enough not to look for this virtual path and immediately return <code>OK</code>. But in cases where you have a virtual host that serves only dynamically generated documents, you can override the default <code>PerlTransHandler</code> with this one:</p>
+
+<pre><code>  &lt;VirtualHost 10.10.10.10:80&gt;
+    ...
+    PerlTransHandler  Apache::OK
+    ...
+  &lt;/VirtualHost&gt;
+</code></pre>
+
+<p>As you see it affects only this specific virtual host.</p>
+
+<p>This has the effect of short circuiting the normal <code>TransHandler</code> processing of trying to find a filesystem component that matches the given URI &ndash; no more &lsquo;stat&rsquo;s!</p>
+
+<p>Watching your server under strace/truss can often reveal more performance hits than trying to optimize the code itself!</p>
+
+<p>For example, unless configured correctly, Apache might look for the <em>.htaccess</em> file in many places, even if you don&rsquo;t have one, and make many unnecessary <code>open()</code> calls.</p>
+
+<p>Let&rsquo;s start with this simple configuration. We will try to reduce the number of irrelevant system calls.</p>
+
+<pre><code>  DocumentRoot &quot;/home/httpd/docs&quot;
+  &lt;Location /app/test&gt;
+    SetHandler perl-script
+    PerlHandler Apache::MyApp
+  &lt;/Location&gt;
+</code></pre>
+
+<p>The above configuration allows us to make a request to <em>/app/test</em> and the Perl <code>handler()</code> defined in <code>Apache::MyApp</code> will be executed. Notice that in the test setup there is no file to be executed (like in <code>Apache::Registry</code>). There is no <em>.htaccess</em> file as well.</p>
+
+<p>This is a typical generated trace.</p>
+
+<pre><code>  stat(&quot;/home/httpd/docs/app/test&quot;, 0xbffff8fc) = -1 ENOENT
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs/app&quot;,      0xbffff8fc) = -1 ENOENT
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;,
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
+  open(&quot;/.htaccess&quot;, O_RDONLY)                 = -1 ENOENT
+        (No such file or directory)
+  open(&quot;/home/.htaccess&quot;, O_RDONLY)            = -1 ENOENT
+        (No such file or directory)
+  open(&quot;/home/httpd/.htaccess&quot;, O_RDONLY)      = -1 ENOENT
+        (No such file or directory)
+  open(&quot;/home/httpd/docs/.htaccess&quot;, O_RDONLY) = -1 ENOENT
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs/test&quot;, 0xbffff774)    = -1 ENOENT
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;,
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
+</code></pre>
+
+<p>Now we modify the <code>&lt;Directory&gt;</code> entry and add AllowOverride None, which among other things disables <em>.htaccess</em> files and will not try to open them.</p>
+
+<pre><code>  &lt;Directory /&gt;
+    AllowOverride None
+  &lt;/Directory&gt;
+</code></pre>
+
+<p>We see that the four <code>open()</code> calls for <em>.htaccess</em> have gone:</p>
+
+<pre><code>  stat(&quot;/home/httpd/docs/app/test&quot;, 0xbffff8fc) = -1 ENOENT
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs/app&quot;,      0xbffff8fc) = -1 ENOENT
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;,
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
+  stat(&quot;/home/httpd/docs/test&quot;, 0xbffff774)    = -1 ENOENT
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;,
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
+</code></pre>
+
+<p>Let&rsquo;s try to shortcut the <em>app</em> location with:</p>
+
+<pre><code>  Alias /app /
+</code></pre>
+
+<p>Which makes Apache to look for the file in the <em>/</em> directory and not under <em>/home/httpd/docs/app</em>. Let&rsquo;s run it:</p>
+
+<pre><code>  stat(&quot;//test&quot;, 0xbffff8fc) = -1 ENOENT (No such file or directory)
+</code></pre>
+
+<p>Wow, we&rsquo;ve got only one stat call left!</p>
+
+<p>Let&rsquo;s remove the last <code>Alias</code> setting and use:</p>
+
+<pre><code>    PerlTransHandler  Apache::OK
+</code></pre>
+
+<p>as explained above. When we issue the request, we see no <code>stat()</code> calls. But this is possible only if you serve only dynamically generated documents, i.e. no CGI scripts. Otherwise, you will have to write your own <em>PerlTransHandler</em> to handle requests as desired.</p>
+
+<p>For example, this <em>PerlTransHandler</em> will not lookup the file on the filesystem if the URI starts with <em>/app</em>, but will use the default <em>PerlTransHandler</em> otherwise:</p>
+
+<pre><code>  PerlTransHandler 'sub { return shift-&gt;uri() =~ m|^/app| \
+                        ? Apache::OK : Apache::DECLINED;}'
+</code></pre>
+
+<p>Let&rsquo;s see the same configuration using the <code>&lt;Perl&gt;</code> section and a dedicated package:</p>
+
+<pre><code>  &lt;Perl&gt;
+    package My::Trans;
+    use Apache::Constants qw(:common);
+    sub handler{
+       my $r = shift;
+       return OK if $r-&gt;uri() =~ m|^/app|;
+       return DECLINED;
+    }
+
+    package Apache::ReadConfig;
+    $PerlTransHandler = &quot;My::Trans&quot;;
+  &lt;/Perl&gt;
+</code></pre>
+
+<p>As you see we have defined the <code>My::Trans</code> package and implemented the <code>handler()</code> function. Then we have assigned this handler to the <code>PerlTransHandler</code>.</p>
+
+<p>Of course you can move the code in the module into an external file, (e.g. <em>My/Trans.pm</em>) and configure the <code>PerlTransHandler</code> with</p>
+
+<pre><code>  PerlTransHandler My::Trans
+</code></pre>
+
+<p>in the normal way (no <code>&lt;Perl&gt;</code> section required).</p>
+
+<hr />
+
+<h1 id="span-id-references-references-span"><span id="references">References</span></h1>
+
+<ul>
+<li>The mod_perl site&rsquo;s URL: <a href="http://perl.apache.org/">http://perl.apache.org/</a></li>
+<li><a href="https://metacpan.org/pod/Time::HiRes">Time::HiRes</a></li>
+</ul>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/web">web</a></div>
+                
+                  <div class="tag"><a href="/tags/mod-perl-apache-performance">mod-perl-apache-performance</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-stas-bekman">
+  <div class="col-sm-2">
+    
+    <a href="/authors/stas-bekman/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/stas-bekman/"><h3>Stas Bekman</h3></a>
+    <p></p>
+    <h5><a href="/authors/stas-bekman/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2003_03_04_mod_perl.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

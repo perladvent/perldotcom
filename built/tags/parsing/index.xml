@@ -1,0 +1,750 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Parsing on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/parsing/</link>
+    <description>Recent content in Parsing on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 27 Oct 2019 12:07:00 +0000</lastBuildDate>
+    <atom:link href="/tags/parsing/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>My Perl Wishlist: Invariant Sigils (Part 1)</title>
+      <link>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</link>
+      <pubDate>Sun, 27 Oct 2019 12:07:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</guid>
+      <description>
+
+&lt;p&gt;Pop quiz!  Q: What was my mistake in this line?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is %HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;A: I had the answer right, but I messed up the sigil on &lt;code&gt;HASH&lt;/code&gt;.  It
+should be:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is $HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;#  ^ $, not %&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Unfortunately, on Perl v5.20+, both statements work the same way!  I
+didn&amp;rsquo;t catch the problem until I shipped this code and
+&lt;a href=&#34;http://matrix.cpantesters.org/?dist=vars-i+1.08-TRIAL&#34;&gt;cpantesters&lt;/a&gt;
+showed me my mistake.  It was an easy fix, but it reminded me that Perl&amp;rsquo;s
+&lt;a href=&#34;http://modernperlbooks.com/books/modern_perl/chapter_03.html#variablenamesandsigils&#34;&gt;variant sigils&lt;/a&gt;
+can trip up programmers at any level.  If I could change one thing about
+Perl 5, I would change to invariant sigils.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-current-situation&#34;&gt;The current situation&lt;/h2&gt;
+
+&lt;p&gt;In Perl, the sigil tells you
+&lt;a href=&#34;https://perldoc.perl.org/perlintro.html#Perl-variable-types&#34;&gt;how many things to expect&lt;/a&gt;.
+Scalars such as &lt;code&gt;$foo&lt;/code&gt; are single values.  Any single value in an array
+&lt;code&gt;@foo&lt;/code&gt; or hash &lt;code&gt;%foo&lt;/code&gt;, since it is only one thing,
+&lt;a href=&#34;https://perldoc.perl.org/perldata.html#Variable-names&#34;&gt;also uses &lt;code&gt;$&lt;/code&gt;&lt;/a&gt;,
+so &lt;code&gt;$foo&lt;/code&gt;, &lt;code&gt;@foo&lt;/code&gt;, and &lt;code&gt;%foo&lt;/code&gt; could all refer to different pieces of the
+same variable &amp;mdash; or to different variables.
+This technique of &amp;ldquo;variant sigils&amp;rdquo; works, but confuses
+new Perl users and tripped up yours truly.  To know what you
+are accessing in an array or hash, you have to look at both the sigil
+and the brackets.  As a reminder:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: the first element of array &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0, 1]&lt;/code&gt;: the list &lt;code&gt;($z[0], $z[1])&lt;/code&gt; of two elements from &lt;code&gt;@z&lt;/code&gt; (an &amp;ldquo;array slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt; of two elements from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0, 1]&lt;/code&gt;: the list &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt; of keys and two values from array &lt;code&gt;@z&lt;/code&gt; (a &amp;ldquo;hash slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt; of keys and values from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;make-the-sigils-part-of-the-name&#34;&gt;Make the sigils part of the name&lt;/h2&gt;
+
+&lt;p&gt;To save myself from repeating my errors, I&amp;rsquo;d like the sigil to be part of a
+variable&amp;rsquo;s name.  This is not a new idea; scalars work this way in Perl, bash,
+and &lt;a href=&#34;https://docs.perl6.org/language/101-basics#sigil_and_identifier&#34;&gt;Raku&lt;/a&gt;
+(&lt;a href=&#34;https://github.com/perl6/problem-solving/blob/master/solutions/language/Path-to-Raku.md&#34;&gt;formerly Perl 6&lt;/a&gt;).
+That would make the above table look like:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: the first element of &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Simpler!  Any reference to &lt;code&gt;@z&lt;/code&gt; would always be doing &lt;em&gt;something&lt;/em&gt; with
+the array named &lt;code&gt;@z&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;but-what-about-slices&#34;&gt;But what about slices?&lt;/h2&gt;
+
+&lt;p&gt;Slices such as &lt;code&gt;@z[0,1]&lt;/code&gt; and &lt;code&gt;%z{qw(hello there)}&lt;/code&gt; return multiple
+values from an array or hash.  If sigils &lt;code&gt;@&lt;/code&gt; and &lt;code&gt;%&lt;/code&gt; are no longer
+available for slicing, we need an alternative.
+The Perl family currently provides two models: postfix dereferencing
+(&amp;ldquo;postderef&amp;rdquo;) syntax and postfix adverbs.&lt;/p&gt;
+
+&lt;p&gt;Perl v5.20+ support
+&lt;a href=&#34;https://www.effectiveperlprogramming.com/2014/09/use-postfix-dereferencing/&#34;&gt;postderef&lt;/a&gt;,
+which gives us one option.  Postderef separates the name from the slice:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Valid Perl v5.20+&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{a};      &lt;span style=&#34;color:#75715e&#34;&gt;# Scalar, element at index &amp;#34;a&amp;#34; of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;%{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the key &amp;#34;a&amp;#34; and the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The type of slice comes after the reference, instead of as a sigil
+before the reference.  With non-references, that idea would give us slice
+syntax such as &lt;code&gt;@array@[1,2,3]&lt;/code&gt; or &lt;code&gt;%hash%{a}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Raku gives us another option: &amp;ldquo;adverbs&amp;rdquo; such as
+&lt;a href=&#34;https://docs.perl6.org/language/subscripts#:kv&#34;&gt;&lt;code&gt;:kv&lt;/code&gt;&lt;/a&gt;.  For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl6&#34; data-lang=&#34;perl6&#34;&gt;# Valid Raku
+%hash{&amp;#34;a&amp;#34;}          # Single value, element at index &amp;#34;a&amp;#34; of %hash
+%hash{&amp;#34;a&amp;#34;}:v;       # The same --- just the value
+%hash{&amp;#34;a&amp;#34;}:kv;      # The list including key &amp;#34;a&amp;#34; and the value of the &amp;#34;a&amp;#34; element of %hash&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The adverb (e.g., &lt;code&gt;:kv&lt;/code&gt;) goes in postfix position, immediately
+after the brackets or braces.  Following this model,
+slices would look like &lt;code&gt;@array[1,2,3]:l&lt;/code&gt; or &lt;code&gt;%hash{a}:kv&lt;/code&gt;.  (For clarity,
+I propose &lt;code&gt;:l&lt;/code&gt;, as in &lt;strong&gt;l&lt;/strong&gt;ist, instead of Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt;.  Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt; can return
+a scalar or a list.)&lt;/p&gt;
+
+&lt;p&gt;So, the choices I see are (postderef-inspired / Raku-inspired):&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;What you want&lt;/th&gt;
+&lt;th&gt;No subscript&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; access&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; access&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Scalar&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: a single value from an array&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of values&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: an array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z@[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:l&lt;/code&gt;: the list currently written &lt;code&gt;($z[0], $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z@{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:l&lt;/code&gt;: the list currently written &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of key/value pairs&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: a hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z%[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:kv&lt;/code&gt;: the list currently written &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z%{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:kv&lt;/code&gt;: the list currently written &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;you-can-t-always-get-what-you-want&#34;&gt;You can&amp;rsquo;t always get what you want&lt;/h2&gt;
+
+&lt;p&gt;I prefer the adverb syntax.  It is easy to read, and it draws on
+all the expertise that has gone into the design of Raku.
+However, my preference has to be implementable.
+I&amp;rsquo;m not convinced that it is without major surgery.&lt;/p&gt;
+
+&lt;p&gt;The Perl parser decides how to interpret what is inside the brackets
+depending on the context provided by the slice.
+The parser interprets the &lt;code&gt;...&lt;/code&gt; in &lt;code&gt;@foo[...]&lt;/code&gt; as
+a list (&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L1143-L1148&#34;&gt;ref&lt;/a&gt;).
+In &lt;code&gt;$foo[...]&lt;/code&gt;, the parser sees the &lt;code&gt;...&lt;/code&gt; as a scalar expression
+(&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L958-L960&#34;&gt;ref&lt;/a&gt;).
+For any slice syntax, the Perl parser needs to know the desired
+type of result while parsing the subscript expression.  The adverb form,
+unfortunately, leaves the parser guessing until after the subscript
+is parsed.&lt;/p&gt;
+
+&lt;p&gt;You can, in fact, hack the Perl parser to save the subscript
+until it sees a postfix adverb.  The parser can then apply the correct
+context.  I wrote a
+&lt;a href=&#34;https://github.com/Perl/perl5/compare/9786385e68f7f14df6f4dd0f04d2c72c0d9a2511...cxw42:3cd904788536b445c9c3abe9b469e1b569942051&#34;&gt;proof-of-concept&lt;/a&gt;
+for &lt;code&gt;@arr[expr]:v&lt;/code&gt;.  It doesn&amp;rsquo;t execute any code, but it does parse
+a postfix-adverb slice without crashing!  However, while writing that code,
+I ran across a surprise: new syntax isn&amp;rsquo;t tied to a &lt;code&gt;use v5.xx&lt;/code&gt;
+directive.&lt;/p&gt;
+
+&lt;p&gt;It turns out the Perl parser lets code written against any Perl version
+use the latest syntax.  Both of the following command lines work on Perl v5.30:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ perl -Mstrict -Mwarnings -E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#                           ^ -E: use all the latest features
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;$ perl -Mstrict -Mwarnings -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#75715e&#34;&gt;# (!!!)
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;#                           ^ -e: not the latest features&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The second command line does not &lt;code&gt;use v5.30&lt;/code&gt;, so you can&amp;rsquo;t use &lt;code&gt;say&lt;/code&gt;
+(introduced in v5.10).  However, you can use postderef (from v5.20)!&lt;/p&gt;
+
+&lt;p&gt;Because the parser lets old programs use new syntax, any proposed addition
+to Perl&amp;rsquo;s syntax has to be meaningless in all previous Perl versions.
+A postfix adverb fails this test.  For example, the following is a valid
+Perl program:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;kv&lt;/span&gt; { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kv&amp;#34;&lt;/span&gt; }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @arr &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ? @arr[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]:kv;
+        &lt;span style=&#34;color:#75715e&#34;&gt;# ^^^^^^^^^^^^ valid Perl 5 syntax, but not a slice :(&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;My preferred slice syntax could change the meaning of existing programs,
+so it looks like I can&amp;rsquo;t get my first choice.&lt;/p&gt;
+
+&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+
+&lt;p&gt;This is not the end of the story!  In Part 2, I will dig deeper into
+Perl&amp;rsquo;s parser and tokenizer.  I will share some surprises I discovered
+while investigating postderef.  I will then describe a possible path
+to invariant sigils and the simplicity they can provide.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl 6 Grammars, Part 1</title>
+      <link>http://localhost:1313/article/perl-6-grammers-part-1/</link>
+      <pubDate>Tue, 13 Feb 2018 15:22:36 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/perl-6-grammers-part-1/</guid>
+      <description>
+
+&lt;p&gt;The Perl 6 language has builtin support of &lt;a href=&#34;https://docs.perl6.org/language/grammars&#34;&gt;&lt;em&gt;grammars&lt;/em&gt;&lt;/a&gt;. You may consider grammars as a combination of the well known regular expressions and utilities such as &lt;code&gt;yacc&lt;/code&gt; or &lt;code&gt;bison&lt;/code&gt;, or more sophisticated grammar tools such as ANTLR. All that—both lexer, parser, and also semantic processing—which are often separate parts of compilers, is built-in and available out of the box with a &lt;a href=&#34;http://rakudo.org/how-to-get-rakudo/&#34;&gt;fresh Perl 6 installation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;To feel the power of grammars, it is enough to say that Perl 6’s own grammar is &lt;a href=&#34;https://perl6.online/2018/01/01/the-start-of-the-grammar/&#34;&gt;written in Perl 6&lt;/a&gt; as a huge grammar class &lt;a href=&#34;https://github.com/rakudo/rakudo/blob/master/src/Perl6/Grammar.nqp&#34;&gt;Perl6::Grammar&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;In this article, I will go through a few examples to illustrate the basics of grammars. All the required language constructions will be explained as we go.&lt;/p&gt;
+
+&lt;h3 id=&#34;parsing-numbers&#34;&gt;Parsing numbers&lt;/h3&gt;
+
+&lt;p&gt;Parsing numbers seems to be a simple task until you start thinking about different formats that the user can use, including negative numbers, floating-point numbers, numbers in scientific notation, special forms of numbers such as C‘s long long integers.&lt;/p&gt;
+
+&lt;p&gt;Let us start with the simplest form: a number as a sequence of digits. For example, 1, 42, 123, or 1000. A grammar in Perl 6 is a special kind of classes with its own keywords. The first rule of the grammar must (by default) be called &lt;code&gt;TOP&lt;/code&gt;, and here is the complete program that parses our first set of numbers:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;grammar N {
+    token TOP {
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digit&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+    }
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;42&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;123&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $n {
+    say N&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;parse($n) ?? &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;OK $n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!!&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;NOT OK $n&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;When the &lt;code&gt;parse&lt;/code&gt; method of the &lt;code&gt;N&lt;/code&gt; grammar is called, Perl tries to match the given string against the &lt;code&gt;TOP&lt;/code&gt; method. In our case, this is a &lt;code&gt;token&lt;/code&gt;, which means that the string cannot contain any optional spaces between the parts of the token. &lt;code&gt;TOP&lt;/code&gt; is only successful when it consumes the whole string, so there is no need to use explicit anchors &lt;code&gt;^&lt;/code&gt; and &lt;code&gt;$&lt;/code&gt; to tie the edges of the token.&lt;/p&gt;
+
+&lt;p&gt;As with regexes, tokens and rules can include other tokens, rules, or regexes referred by their names. In our first example, the &lt;code&gt;TOP&lt;/code&gt; token needs the &lt;code&gt;digit&lt;/code&gt; built-in method that matches digits. The &lt;code&gt;+&lt;/code&gt; quantifier is the same quantifier as in standard Perl 5 regular expressions: it allows one or more repetitions of the previous atom.&lt;/p&gt;
+
+&lt;p&gt;Our simple grammar can parse only unsigned integers so far. Any negative number cannot be parsed:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;OK 1
+OK 42
+OK 123
+OK 1000
+NOT OK -3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let us update the grammar and introduce the token for the optional sign, which can be either &lt;code&gt;+&lt;/code&gt; or &lt;code&gt;-&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl6&#34; data-lang=&#34;perl6&#34;&gt;grammar N {
+    token TOP {
+        [&amp;#39;+&amp;#39; | &amp;#39;-&amp;#39;]?
+        &amp;lt;digit&amp;gt;+
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here, the square brackets group together the two alternatives: &lt;code&gt;&#39;+&#39; | &#39;-&#39;&lt;/code&gt; . The &lt;code&gt;?&lt;/code&gt; quantifier requires that there is only one such character, or there are none. In Perl 6, square brackets only create a group but do not capture its content. Also notice, that both &lt;code&gt;+&lt;/code&gt; and &lt;code&gt;-&lt;/code&gt; are quoted, because Perl 6 treats any non-alphanumeric character as a special character unless it is quoted or escaped with &lt;code&gt;\&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The next step is to add support for the floating point. An ad hoc solution can be creating a character class that includes both numbers and the &lt;code&gt;&#39;.&#39;&lt;/code&gt;  character, but that would be completely wrong, as, for example, strings with two dots such as &lt;code&gt;3..14&lt;/code&gt; pass this filter. So, do it differently:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;grammar N {
+    token TOP {
+        [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;+&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-&amp;#39;&lt;/span&gt;]?
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digit&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+        [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digit&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;]?
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This grammar now allows an optional part consisting of the period and another sequence of digits and works well when the number is either an integer or contains an explicit fractional part, for example, &lt;code&gt;3.14&lt;/code&gt;. It fails for those numbers where one of the parts is missing: &lt;code&gt;3.&lt;/code&gt; or &lt;code&gt;.14&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;An attempt to make the parts optional by using quantifiers makes the grammar difficult to read and error-prone. For instance, the following token matches all the above numbers but also a single &lt;code&gt;.&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;grammar N {
+    token TOP {
+        [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;+&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-&amp;#39;&lt;/span&gt;]?
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digit&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;
+        [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digit&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;]?
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It’s time to introduce more tokens. Factor out the sequence of digits to a separate token and list all the variants explicitly:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;grammar N {
+    token TOP {
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;sign&amp;gt;&lt;/span&gt;?
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;value&amp;gt;&lt;/span&gt;
+    }
+    token sign {
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;+&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-&amp;#39;&lt;/span&gt;
+    }
+    token digits {
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digit&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+    }
+    token value {
+        &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt;
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;value&lt;/code&gt; token encapsulates the variants: it contains four alternative representations of accepted numbers. Vertical bars separate them. For the sake of unification, it is allowed to add an additional bar before the first alternative, so that all of them are emphasized with a simple ASCII art.&lt;/p&gt;
+
+&lt;p&gt;This current grammar is already smart enough to reject a single period:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;OK 1
+OK 42
+OK 123
+OK 1000
+OK -3
+OK 3.14
+OK 3.
+OK .14
+NOT OK .
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The last step is to support numbers in scientific notation. Adding another alternative is an easy candidate for this task:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;grammar N {
+    token TOP {
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;sign&amp;gt;&lt;/span&gt;?
+        [
+            &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;value&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;exp&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;sign&amp;gt;&lt;/span&gt;? &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt;
+            &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;value&amp;gt;&lt;/span&gt;
+        ]
+    }
+    token sign {
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;+&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-&amp;#39;&lt;/span&gt;
+    }
+    token exp {
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;e&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;E&amp;#39;&lt;/span&gt;
+    }
+    token digits {
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digit&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+    }
+    token value {
+        &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digits&amp;gt;&lt;/span&gt;
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Test the grammar with the following cases:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;42&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;123&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;
+     &lt;span style=&#34;color:#ae81ff&#34;&gt;3.14&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;.14&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+     &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3.14&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;.14&lt;/span&gt;
+     &lt;span style=&#34;color:#ae81ff&#34;&gt;10E2&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10e2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;10e2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.2e3&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10e-3&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;10e-3&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;10.2e-33&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $n {
+    say N&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;parse($n) ?? &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;OK $n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!!&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;NOT OK $n&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All works fine. But wait, in Perl, underscores are also allowed in numbers! Having a proper grammar, adding support for this is easy; only the &lt;code&gt;digits&lt;/code&gt; token should be modified:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;token digits {
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digit&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;_&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;digit&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;]?
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Strings that do not follow the rules are still ignored:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;OK 100_000
+NOT OK _1
+NOT OK 1_
+NOT OK 1__0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;With a few simple steps, we made a grammar that understands numbers in different formats. As an exercise, you can add support for prefixes &lt;code&gt;0x&lt;/code&gt;, &lt;code&gt;0b&lt;/code&gt;, &lt;code&gt;0o&lt;/code&gt; (hex, binary and octal) and suffixes (as in &lt;code&gt;1000L&lt;/code&gt; in C). Grammars were only used to check the validity of the number format, and their power does not end there. In Perl 6, you can add &lt;em&gt;actions&lt;/em&gt; to the grammar; these are code blocks that are executed if the corresponding rule or token has successfully matched. But that&amp;rsquo;s a story for another day.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Lexing Your Data</title>
+      <link>http://localhost:1313/pub/2006/01/05/parsing.html/</link>
+      <pubDate>Thu, 05 Jan 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/01/05/parsing.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;s-shooting-yourself-in-the-foot-head-g&#34;&gt;&lt;code&gt;s/(?&amp;lt;!SHOOTING YOURSELF IN THE )FOOT/HEAD/g&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;Most of us have tried at one time or another to use regular expressions to do things we shouldn&amp;rsquo;t: parsing HTML, obfuscating code, washing dishes, etc. This is what the technical term &amp;ldquo;showing off&amp;rdquo; means. I&amp;rsquo;ve done it too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$html =~ s{
+             (&amp;lt;a\s(?:[^&amp;gt;](?!href))*href\s*)
+             (&amp;amp;(&amp;amp;[^;]+;)?(?:.(?!\3))+(?:\3)?)
+             ([^&amp;gt;]+&amp;gt;)
+          }
+          {$1 . decode_entities($2) .  $4}gsexi;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I was strutting like a peacock when I wrote that, followed quickly by eating crow when I ran it. I never did get that working right. I&amp;rsquo;m still not sure what I was trying to do. That regular expression forced me to learn how to use &lt;a href=&#34;https://metacpan.org/pod/HTML::TokeParser&#34;&gt;&lt;code&gt;HTML::TokeParser&lt;/code&gt;&lt;/a&gt;. More importantly, that was the regular expression that taught me how difficult regular expressions can be.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-problem-with-regular-expressions&#34;&gt;The Problem with Regular Expressions&lt;/h4&gt;
+
+&lt;p&gt;Look at that regex again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; /(&amp;lt;a\s(?:[^&amp;gt;](?!href))*href\s*)(&amp;amp;(&amp;amp;[^;]+;)?(?:.(?!\3))+(?:\3)?)([^&amp;gt;]+&amp;gt;)/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Do you know that matches? Exactly? Are you &lt;em&gt;sure&lt;/em&gt;? Even if it works, how easily can you modify it? If you don&amp;rsquo;t know what it was trying to do (and to be fair, don&amp;rsquo;t forget it&amp;rsquo;s broken), how long did you spend trying to figure it out? When&amp;rsquo;s the last time a single line of code gave you such fits?&lt;/p&gt;
+
+&lt;p&gt;The problem, of course, is that this regular expression is trying to do far more work than a single line of code is likely to do. When facing with a regular expression like that, there are a few things I like to do.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Document it carefully.&lt;/li&gt;
+&lt;li&gt;Use the &lt;code&gt;/x&lt;/code&gt; switch so I can expand it over several lines.&lt;/li&gt;
+&lt;li&gt;Possibly, encapsulate it in a subroutine.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Sometimes, though, there&amp;rsquo;s a fourth option: &lt;em&gt;lexing&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;lexing&#34;&gt;Lexing&lt;/h4&gt;
+
+&lt;p&gt;When developing code, we typically take a problem and break it down into a series of smaller problems that are easier to solve. Regular expressions are code and you can break them down into a series of smaller problems that are easier to solve. One technique is to use lexing to facilitate this.&lt;/p&gt;
+
+&lt;p&gt;Lexing is the act of breaking data down into discrete tokens and assigning meaning to those tokens. There&amp;rsquo;s a bit of fudging in that statement, but it pretty much covers the basics.&lt;/p&gt;
+
+&lt;p&gt;Parsing typically follows lexing to convert the tokens into something more useful. Parsing is frequently the domain of some tool that applies a well-defined grammar to the lexed tokens.&lt;/p&gt;
+
+&lt;p&gt;Sometimes well-defined grammars are not practical for extracting and reporting information. There might not be a grammar available for a company&amp;rsquo;s ad-hoc log file format. Other times you might find it easier to process the tokens manually then to spend the time writing a grammar. Still other times you might only care about part of the data you&amp;rsquo;ve lexed, not all of it. All three of these reasons apply to some problems.&lt;/p&gt;
+
+&lt;h4 id=&#34;parsing-sql&#34;&gt;Parsing SQL&lt;/h4&gt;
+
+&lt;p&gt;Recently, on Perlmonks (&lt;a href=&#34;http://perlmonks.org/index.pl?node_id=472684&#34;&gt;parse a query string&lt;/a&gt;), someone had some SQL to parse:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;select the_date as &amp;quot;date&amp;quot;,
+round(months_between(first_date,second_date),0) months_old
+,product,extract(year from the_date) year
+,case
+  when a=b then &#39;c&#39;
+  else &#39;d&#39;
+  end tough_one
+from ...
+where ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The poster needed the alias for each column from that SQL. In this case, the aliases are &lt;code&gt;date&lt;/code&gt;, &lt;code&gt;months_old&lt;/code&gt;, &lt;code&gt;product&lt;/code&gt;, &lt;code&gt;year&lt;/code&gt;, and &lt;code&gt;tough_one&lt;/code&gt;. Of course, this was only one example. There&amp;rsquo;s actually plenty of generated SQL, all with subtle variations on the column aliases, so this is not a trivial task. What&amp;rsquo;s interesting about this, though, is that we don&amp;rsquo;t give a fig about anything except the column aliases. The rest of the text is merely there to help us find those aliases.&lt;/p&gt;
+
+&lt;p&gt;Your first thought might be to parse this with &lt;a href=&#34;https://metacpan.org/pod/SQL::Statement&#34;&gt;&lt;code&gt;SQL::Statement&lt;/code&gt;&lt;/a&gt;. As it turns out, this module does not handle &lt;code&gt;CASE&lt;/code&gt; statements. Thus, you must figure out how to patch &lt;code&gt;SQL::Statement&lt;/code&gt;, submit said patch, and hope it gets accepted and released in a timely fashion. (Note that &lt;code&gt;SQL::Statement&lt;/code&gt; uses &lt;a href=&#34;https://metacpan.org/pod/SQL::Parser&#34;&gt;&lt;code&gt;SQL::Parser&lt;/code&gt;&lt;/a&gt;, so the latter is also not an option.)&lt;/p&gt;
+
+&lt;p&gt;Second, many of us have worked in environments where we have problems to solve in production &lt;em&gt;now&lt;/em&gt;, but we still have to wait three weeks to get the necessary modules installed, if we can get them approved at all.&lt;/p&gt;
+
+&lt;p&gt;The most important reason, though, is even if &lt;code&gt;SQL::Statement&lt;/code&gt; could handle this problem, this would be an awfully short article if you used it instead of a lexer.&lt;/p&gt;
+
+&lt;h4 id=&#34;lexing-basics&#34;&gt;Lexing Basics&lt;/h4&gt;
+
+&lt;p&gt;As mentioned earlier, lexing is essentially the task of analyzing data and breaking it down into a series of easy-to-use tokens. While the data may be in other forms, usually this means analyzing strings. To give a trivial example, consider the expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;x = (3 + 2) / y
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When lexed, you might get a series of tokens, such as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @tokens = (
+  [ OP  =&amp;gt; &#39;x&#39; ],
+  [ OP  =&amp;gt; &#39;=&#39; ],
+  [ OP  =&amp;gt; &#39;(&#39; ],
+  [ INT =&amp;gt; &#39;3&#39; ],
+  [ VAR =&amp;gt; &#39;+&#39; ],
+  [ INT =&amp;gt; &#39;2&#39; ],
+  [ OP  =&amp;gt; &#39;)&#39; ],
+  [ OP  =&amp;gt; &#39;/&#39; ],
+  [ VAR =&amp;gt; &#39;y&#39; ],
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With a proper grammar, you could then read this series of tokens and take actions based upon their values, perhaps to build a simple language interpreter or translate this code into another programming language. Even without a grammar, you can find these tokens useful.&lt;/p&gt;
+
+&lt;h4 id=&#34;identifying-tokens&#34;&gt;Identifying Tokens&lt;/h4&gt;
+
+&lt;p&gt;The first step in building a lexer is identifying the tokens you wish to parse. Look again at the SQL.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;select the_date as &amp;quot;date&amp;quot;,
+round(months_between(first_date,second_date),0) months_old
+,product,extract(year from the_date) year
+,case
+  when a=b then &#39;c&#39;
+    else &#39;d&#39;
+  end tough_one
+from ...
+where ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s nothing really to care about anything after the &lt;code&gt;from&lt;/code&gt; keyword. In looking at this closer, everything you do care about is immediately prior to a comma or the &lt;code&gt;from&lt;/code&gt; keyword. However, splitting on commas isn&amp;rsquo;t enough, as there are some commas embedded in function parentheses.&lt;/p&gt;
+
+&lt;p&gt;The first thing to do is to identify the various things you can match with simple regular expressions.&lt;/p&gt;
+
+&lt;p&gt;These &amp;ldquo;things&amp;rdquo; appear to be parentheses, commas, operators, keywords, and random text. A first pass at it might look something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $lparen  = qr/\(/;
+my $rparen  = qr/\)/;
+my $keyword = qr/(?i:select|from|as)/; # this is all this problem needs
+my $comma   = qr/,/;
+my $text    = qr/(?:\w+|&#39;\w+&#39;|&amp;quot;\w+&amp;quot;)/;
+my $op      = qr{[-=+*/&amp;lt;&amp;gt;]};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The text matching is somewhat naive and you might want &lt;a href=&#34;https://metacpan.org/pod/Regexp::Common&#34;&gt;&lt;code&gt;Regexp::Common&lt;/code&gt;&lt;/a&gt; for some of the regular expressions, but keep this simple for now.&lt;/p&gt;
+
+&lt;p&gt;The operators are a bit more involved. Assume that some SQL might have math statements embedded in them.&lt;/p&gt;
+
+&lt;p&gt;Now create the actual lexer. One way to do this is to make your own. It might look something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub lexer {
+    my $sql = shift;
+    return sub {
+        LEXER: {
+            return [&#39;KEYWORD&#39;, $1] if $sql =~ /\G ($keyword) /gcx;
+            return [&#39;COMMA&#39;,   &#39;&#39;] if $sql =~ /\G ($comma)   /gcx;
+            return [&#39;OP&#39;,      $1] if $sql =~ /\G ($op)      /gcx;
+            return [&#39;PAREN&#39;,    1] if $sql =~ /\G $lparen    /gcx;
+            return [&#39;PAREN&#39;,   -1] if $sql =~ /\G $rparen    /gcx;
+            return [&#39;TEXT&#39;,    $1] if $sql =~ /\G ($text)    /gcx;
+            redo LEXER             if $sql =~ /\G \s+        /gcx;
+        }
+    };
+}
+
+my $lexer = lexer($sql);
+
+while (defined (my $token = $lexer-&amp;gt;())) {
+    # do something with the token
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Without going into the detail of how that works, it&amp;rsquo;s fair to say that this is not the best solution. By looking at &lt;a href=&#34;http://perlmonks.org/index.pl?node_id=472701&#34;&gt;the original Perlmonks post&lt;/a&gt;, you should find that you need to make two passes through the data to extract what you want. I&amp;rsquo;ve left the explanation an exercise for the reader.&lt;/p&gt;
+
+&lt;p&gt;To make this simpler, use the &lt;a href=&#34;https://metacpan.org/pod/HOP::Lexer&#34;&gt;&lt;code&gt;HOP::Lexer&lt;/code&gt;&lt;/a&gt; module from the CPAN. This module, described by Mark Jason Dominus in his book &lt;em&gt;Higher Order Perl&lt;/em&gt;, makes creating lexers a rather trivial task and makes them a bit more powerful than the example. Here&amp;rsquo;s the new code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use HOP::Lexer &#39;make_lexer&#39;;
+my @sql   = $sql;
+my $lexer = make_lexer(
+    sub { shift @sql },
+    [ &#39;KEYWORD&#39;, qr/(?i:select|from|as)/          ],
+    [ &#39;COMMA&#39;,   qr/,/                            ],
+    [ &#39;OP&#39;,      qr{[-=+*/]}                      ],
+    [ &#39;PAREN&#39;,   qr/\(/,      sub { [shift,  1] } ],
+    [ &#39;PAREN&#39;,   qr/\)/,      sub { [shift, -1] } ],
+    [ &#39;TEXT&#39;,    qr/(?:\w+|&#39;\w+&#39;|&amp;quot;\w+&amp;quot;)/, \&amp;amp;text  ],
+    [ &#39;SPACE&#39;,   qr/\s*/,     sub {}              ],
+);
+
+sub text {
+    my ($label, $value) = @_;
+    $value =~ s/^[&amp;quot;&#39;]//;
+    $value =~ s/[&amp;quot;&#39;]$//;
+    return [ $label, $value ];
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This certainly doesn&amp;rsquo;t look any easier to read, but bear with me.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;make_lexer&lt;/code&gt; subroutine takes as its first argument an iterator, which returns the text to match on every call. In this case, you only have one snippet of text to match, so merely shift it off of an array. If you were reading lines from a log file, the iterator would be quite handy.&lt;/p&gt;
+
+&lt;p&gt;After the first argument comes a series of array references. Each reference takes two mandatory and one optional argument(s):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[ $label, $pattern, $optional_subroutine ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;$label&lt;/code&gt; is the name of the token. The pattern should match whatever the label identifies. The third argument, a subroutine reference, takes as arguments the label and the &lt;em&gt;text&lt;/em&gt; the label matched, and returns whatever you wish for a token.&lt;/p&gt;
+
+&lt;p&gt;Consider how you typically use the &lt;code&gt;make_lexer&lt;/code&gt; subroutine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[ &#39;KEYWORD&#39;, qr/(?i:select|from|as)/ ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here&amp;rsquo;s an example of how to transform the data before making the token:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[ &#39;TEXT&#39;, qr/(?:\w+|&#39;\w+&#39;|&amp;quot;\w+&amp;quot;)/, \&amp;amp;text  ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As mentioned previously, the regular expression might be naive, but leave that for now and focus on the &lt;code&gt;&amp;amp;text&lt;/code&gt; subroutine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub text {
+    my ($label, $value) = @_;
+    $value =~ s/^[&amp;quot;&#39;]//;
+    $value =~ s/[&amp;quot;&#39;]$//;
+    return [ $label, $value ];
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This says, &amp;ldquo;Take the label and the value, strip leading and trailing quotes from the value and return them in an array reference.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;To strip the white space you don&amp;rsquo;t care about, simply return nothing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; &#39;SPACE&#39;, qr/\s*/, sub {} ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now that you have your lexer, put it to work. Remember that column aliases are the &lt;code&gt;TEXT&lt;/code&gt; not in parentheses, but immediately prior to commas or the &lt;code&gt;from&lt;/code&gt; keyword. How do we know if you&amp;rsquo;re inside of parentheses? Cheat a little bit:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[ &#39;PAREN&#39;, qr/\(/, sub { [shift,  1] } ],
+[ &#39;PAREN&#39;, qr/\)/, sub { [shift, -1] } ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With that, you can add a one whenever you get to an opening parenthesis and subtract it when you get to a closing one. Whenever the result is zero, you know that you&amp;rsquo;re outside of parentheses.&lt;/p&gt;
+
+&lt;p&gt;To get the tokens, call the &lt;code&gt;$lexer&lt;/code&gt; iterator repeatedly.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;while ( defined (my $token = $lexer-&amp;gt;() ) { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The tokens look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[  &#39;KEYWORD&#39;,      &#39;select&#39; ]
+[  &#39;TEXT&#39;,       &#39;the_date&#39; ]
+[  &#39;KEYWORD&#39;,          &#39;as&#39; ]
+[  &#39;TEXT&#39;,           &#39;date&#39; ]
+[  &#39;COMMA&#39;,             &#39;,&#39; ]
+[  &#39;TEXT&#39;,          &#39;round&#39; ]
+[  &#39;PAREN&#39;,               1 ]
+[  &#39;TEXT&#39;, &#39;months_between&#39; ]
+[  &#39;PAREN&#39;,               1 ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And so on.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s how to process the tokens:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 1:  my $inside_parens = 0;
+ 2:  while ( defined (my $token = $lexer-&amp;gt;()) ) {
+ 3:      my ($label, $value) = @$token;
+ 4:      $inside_parens += $value if &#39;PAREN&#39; eq $label;
+ 5:      next if $inside_parens || &#39;TEXT&#39; ne $label;
+ 6:      if (defined (my $next = $lexer-&amp;gt;(&#39;peek&#39;))) {
+ 7:          my ($next_label, $next_value) = @$next;
+ 8:          if (&#39;COMMA&#39; eq $next_label) {
+ 9:              print &amp;quot;$value\n&amp;quot;;
+10:          }
+11:          elsif (&#39;KEYWORD&#39; eq $next_label &amp;amp;&amp;amp; &#39;from&#39; eq $next_value) {
+12:              print &amp;quot;$value\n&amp;quot;;
+13:              last; # we&#39;re done
+14:          }
+15:      }
+16:  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is pretty straightforward, but there are some tricky bits. Each token is a two-element array reference, so line 3 makes the label and value fairly explicit. Lines 4 and 5 use the &amp;ldquo;cheat&amp;rdquo; for handling parentheses. Line 5 also skips anything that isn&amp;rsquo;t text and therefore cannot be a column alias.&lt;/p&gt;
+
+&lt;p&gt;Line 6 is a bit odd. In &lt;code&gt;HOP::Lexer&lt;/code&gt;, passing the string &lt;code&gt;peek&lt;/code&gt; to the lexer will return the next token without actually advancing the &lt;code&gt;$lexer&lt;/code&gt; iterator. From there, it&amp;rsquo;s straightforward logic to find out if the value is a column alias that matches the criteria.&lt;/p&gt;
+
+&lt;p&gt;Putting all of this together makes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+
+use strict;
+use warnings;
+use HOP::Lexer &#39;make_lexer&#39;;
+
+my $sql = &amp;lt;&amp;lt;END_SQL;
+select the_date as &amp;quot;date&amp;quot;,
+round(months_between(first_date,second_date),0) months_old
+,product,extract(year from the_date) year
+,case
+  when a=b then &#39;c&#39;
+    else &#39;d&#39;
+      end tough_one
+      from XXX
+END_SQL
+
+my @sql   = $sql;
+my $lexer = make_lexer(
+    sub { shift @sql },
+    [ &#39;KEYWORD&#39;, qr/(?i:select|from|as)/          ],
+    [ &#39;COMMA&#39;,   qr/,/                            ],
+    [ &#39;OP&#39;,      qr{[-=+*/]}                      ],
+    [ &#39;PAREN&#39;,   qr/\(/,      sub { [shift,  1] } ],
+    [ &#39;PAREN&#39;,   qr/\)/,      sub { [shift, -1] } ],
+    [ &#39;TEXT&#39;,    qr/(?:\w+|&#39;\w+&#39;|&amp;quot;\w+&amp;quot;)/, \&amp;amp;text  ],
+    [ &#39;SPACE&#39;,   qr/\s*/,     sub {}              ],
+);
+
+sub text {
+    my ( $label, $value ) = @_;
+    $value =~ s/^[&amp;quot;&#39;]//;
+    $value =~ s/[&amp;quot;&#39;]$//;
+    return [ $label, $value ];
+}
+
+my $inside_parens = 0;
+while ( defined ( my $token = $lexer-&amp;gt;() ) ) {
+    my ( $label, $value ) = @$token;
+    $inside_parens += $value if &#39;PAREN&#39; eq $label;
+    next if $inside_parens || &#39;TEXT&#39; ne $label;
+    if ( defined ( my $next = $lexer-&amp;gt;(&#39;peek&#39;) ) ) {
+        my ( $next_label, $next_value ) = @$next;
+        if ( &#39;COMMA&#39; eq $next_label ) {
+            print &amp;quot;$value\n&amp;quot;;
+        }
+        elsif ( &#39;KEYWORD&#39; eq $next_label &amp;amp;&amp;amp; &#39;from&#39; eq $next_value ) {
+            print &amp;quot;$value\n&amp;quot;;
+            last; # we&#39;re done
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That prints out the column aliases:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;date
+months_old
+product
+year
+tough_one
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So are you done? No, probably not. What you really need now are many other examples of the SQL generated in the first problem statement. Maybe the &lt;code&gt;&amp;amp;text&lt;/code&gt; subroutine is naive. Maybe there are other operators you forgot. Maybe there are floating-point numbers embedded in the SQL. When you have to lex data by hand, fine-tuning the lexer to match your actual data can take a few tries.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s also important to note that precedence is very important here. &lt;code&gt;&amp;amp;make_lexer&lt;/code&gt; evaluates each array reference passed in the order it receives them. If you passed the &lt;code&gt;TEXT&lt;/code&gt; array reference before the &lt;code&gt;KEYWORD&lt;/code&gt; array reference, the &lt;code&gt;TEXT&lt;/code&gt; regular expression would match keywords before the &lt;code&gt;KEYWORD&lt;/code&gt; could, thus generating spurious results.&lt;/p&gt;
+
+&lt;p&gt;Happy lexing!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

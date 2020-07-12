@@ -53,7 +53,7 @@ One scenario where the eval approach would be needed instead of do would be if t
 
 Using do does not replace the inherent risks associated with executing code stored in a separate file - this is a cool trick, not a recommended solution.
 
-The official Perl documentation, Perldoc has more information on both [do](http://perldoc.perl.org/functions/do.html) and [eval](http://perldoc.perl.org/functions/eval.html).
+The official Perl documentation, Perldoc has more information on both [do]({{</* perlfunc "do" */>}}) and [eval]({{</* perlfunc "eval" */>}}).
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> A Test::MockObject Illustrated Example </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Perl&#39;s Test::MockObject CPAN module helps you test troublesome interfaces. Learn how it works!"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2002/07/10/tmo.html/" />
+<meta property="og:title" content="A Test::MockObject Illustrated Example" />
+<meta property="og:description" content="Perl&#39;s Test::MockObject CPAN module helps you test troublesome interfaces. Learn how it works!">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2002-07-07T07:07:07Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2002_07_10_tmo/111-mockobject.gif" />
+<meta property="og:article:tag" content="oo-testing" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">A Test::MockObject Illustrated Example</h1>
+              <p class="blog-post-meta">Jul 10, 2002 by
+              
+              
+                
+                
+                <a href="#author-bio-chromatic">chromatic</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>People like to find excuses to avoid writing tests for their code. One of the most common goes something like, &ldquo;It&rsquo;s not feasible to test this, because it relies on external objects&rdquo; - CGI code, code using the <code>Apache</code> request object, TCP/IP servers, and so on.</p>
+
+<p>The <code>Test::MockObject</code> module makes it much easier to isolate code that uses such objects. For example, if your code uses a CGI object, then you <strong>could</strong> fiddle with query strings and faked <code>STDIN</code>, trying to persuade <code>CGI.pm</code> to produce testable values. It&rsquo;s easier to use <code>Test::MockObject</code> to create an object that looks and behaves like a CGI object &ndash; but that is completely under your control.</p>
+
+<p>This comes in handy in large software projects, where objects encapsulate tremendous amounts of hidden behavior. If your application follows good design principles by hiding complexity behind well-defined interfaces, then you can replace nearly any component with its interface equivalent. (The internals, of course, are free to change. That&rsquo;s why this is possible.) Often, it&rsquo;s sufficient just to accept certain arguments and to return specific values.</p>
+
+<p>Using a mock object, you can test whether the code in question uses a particular interface correctly. It&rsquo;s possible to do this by hand, but <code>Test::MockObject</code> has several utility methods to add fake methods and verify calls. It integrates with <code>Test::Builder</code>, so it works correctly with <code>Test::Simple</code>, <code>Test::More</code>, and their cousins.</p>
+
+<h2 id="span-id-the-background-you-need-to-know-the-background-you-need-to-know-span"><span id="the_background_you_need_to_know">The Background You Need to Know</span></h2>
+
+<p>I assume that you are already familiar with <code>Test::More</code>. Perhaps you&rsquo;ve read <code>Test::Tutorial</code>, which comes with the <code>Test::Simple</code> distribution. You may also have read <a href="/pub/2001/12/04/testing.html">my earlier introduction</a> to the subject. If not, then you may wish to do so. (My roommate tried it out of order and hurt his head. If you fare any better, then the Perl QA group is interested in your natural talent!)</p>
+
+<p>My example comes from the unit tests for the <a href="http://everydevel.com/">Everything Engine</a>. I chose it for two reasons. First, it&rsquo;s a project near and dear to my heart. Second, it needs more users, testers and developers. More importantly, it&rsquo;s where I came up with the ideas that led to <code>Test::MockObject</code>.</p>
+
+<p>My colleague on the Engine, Darrick Brown, devised a clever technique he dubbed Form Objects. These are used to bind menu choices to nodes. (Everything in Everything is a node. It&rsquo;s the base unit of data and behavior.) Form objects control the creation of HTML widgets, verify submitted data and ultimately update nodes. They all inherit strongly from <code>Everything::FormObject</code> and operate on node objects, so they&rsquo;re an ideal candidate for mock objects.</p>
+
+<h3 id="span-id-mock-objects-mock-objects-span"><span id="mock_objects">Mock Objects</span></h3>
+
+<p>This article focuses on white-box unit testing with mock objects. &ldquo;White box&rdquo; testing means that you&rsquo;re allowed and encouraged to look at the internals of the thing being tested. This is scarily possible, with Perl. By contrast, &ldquo;black box&rdquo; testing happens when you cannot know the internal details: you just know allowed inputs and the expected outputs. (If you don&rsquo;t know that, then you can&rsquo;t do much testing.)</p>
+
+<p>Unit testing, of course, is testing individual components of the program in isolation, as far as possible. This is different from integration testing, which exercises the program as a whole, and acceptance testing, which explores the desired end-user behavior of the program. No type of testing is better or worse than any other. Done properly, they are complementary: Unit tests are capable of exploring internal behaviors that are difficult to prove with acceptance tests; integration tests demonstrate the interoperability between different components that unit tests usually cannot guarantee.</p>
+
+<p>The points of a mock object is to isolate the units being tested from their dependencies, and to give testers more complete control over the testing environments. This follows from standard programming principles: If you can fake the interfaces your unit relies on, then you can control and monitor its behavior.</p>
+
+<p>Perl makes this particularly easy.</p>
+
+<h1 id="span-id-the-example-the-example-span"><span id="the_example">The Example</span></h1>
+
+<p>I&rsquo;m writing a test for <code>Everything::HTML::FormObject::AuthorMenu</code>. This class represents an HTML select box used to set the author of a node. It has two methods. <code>genObject()</code> produces the HTML necessary for the select widget. It is called when the Engine builds a page to display to the user. The other method, <code>cgiVerify()</code>, is called when receiving data from a user submission. It checks to see whether the requested author exists and has write access to the node.</p>
+
+<h2 id="span-id-looking-inside-looking-inside-span"><span id="looking_inside">Looking Inside</span></h2>
+
+<p>The module begins rather simply:</p>
+
+<pre><code>        use strict;
+        use Everything;
+        use Everything::HTML;
+        use Everything::HTML::FormObject;
+
+        use vars qw(@ISA);
+        @ISA = (&quot;Everything::HTML::FormObject&quot;);
+</code></pre>
+
+<p>Testing this is all very easy. I&rsquo;d like to make sure that the module continues to load all of these modules, so I need some way to catch their use. (Don&rsquo;t laugh &ndash; I&rsquo;ve forgotten to load important modules before, causing really tricky errors. It&rsquo;s better to be precise. Now you can laugh.) Because <code>use</code> calls <code>import()</code> behind the scenes, if I can install my own <code>import()</code> before AuthorMenu is compiled, then I can test that these modules are actually used. As a side benefit, doing so prevents these other classes from loading, making it easier to mock them. The test starts:</p>
+
+<pre><code>        package Everything::HTML::FormObject::AuthorMenu;
+        use vars qw( $DB );
+
+        package main;
+
+        use Test::More 'no_plan';
+</code></pre>
+
+<p>Because I&rsquo;m faking the other packages, anything the true modules would normally import will not be imported. The only thing that really matters at this point is the <code>$DB</code> object, exported from the Everything package. (I&rsquo;m cheating a little bit. I know I&rsquo;ll use it later, and I know where it&rsquo;s defined and how it&rsquo;s used. At this point, I should probably say, ``The module will fail to compile unless I fake it here,&rdquo; and leave it at that.)</p>
+
+<p>Because I&rsquo;m not ready to implement <code>$DB</code>, I just switch to the package to be tested and declare it as a global variable. When the package is compiled, it&rsquo;s already there, so it&rsquo;ll compile successfully. Then I return to the main package so I don&rsquo;t accidentally clobber anything important and use the testing module.</p>
+
+<pre><code>        my @imports;
+        for ( 'Everything', 'Everything::HTML',
+                'Everything::HTML::FormObject') {
+                no strict 'refs';
+                *{ $_ . '::import' } = sub {
+                        push @imports, $_[0];
+                };
+                (my $modpath = $_) =~ s!::!/!g;
+                $INC{ $modpath . '.pm' } = 1;
+        }
+</code></pre>
+
+<p>Here&rsquo;s where it starts to get tricky. Because I want to ensure that these three modules are loaded correctly, I have to make Perl think they&rsquo;re already loaded. <code>%INC</code> comes to the rescue. When you <code>use()</code> or <code>require()</code> a module successfully, Perl adds an entry to <code>%INC</code> with the module pathname, relative to one of the directories in <code>@INC</code>. That way, if you <code>use()</code> or <code>require()</code> the module again, then Perl knows that it&rsquo;s already been loaded.</p>
+
+<p>As mentioned before, my preferred way to check that a module is loaded is to trap all calls to <code>import()</code>. That&rsquo;s why I install fake import subroutines. They simply save the name of the package by which they&rsquo;re identified. The tests are simple to write:</p>
+
+<pre><code>        use_ok( 'Everything::HTML::FormObject::AuthorMenu' );
+
+        is( $imports[0], 'Everything', 'Module should use 
+            Everything' );
+        is( $imports[1], 'Everything::HTML',
+                'Module should use Everything::HTML' );
+        is( $imports[2], 'Everything::HTML::FormObject',
+                'Module should use 
+                     Everything::HTML::FormObject' );
+</code></pre>
+
+<p>Because <code>use_ok()</code> fires at runtime, it&rsquo;s safe not to wrap this whole section in a BEGIN block. (If you&rsquo;re curious about this, see what <em>perlfunc</em> has to say about <code>use()</code> and its equivalent.)</p>
+
+<p>That works, but it&rsquo;s a little messy and uses some tricks that might scare (or at least confuse) the average Perl hacker. One of the goals of the Test::* modules is to do away with the ``evil black magic&rdquo; you&rsquo;d normally have to use. So, now I show you a more excellent way.</p>
+
+<h2 id="span-id-making-that-last-bit-easier-making-that-last-bit-easier-span"><span id="making_that_last_bit_easier">Making That Last Bit Easier</span></h2>
+
+<p>Having found myself writing that code way too often (at least twice), I added it to <code>Test::MockObject</code>. Using the module, the corresponding loop is now:</p>
+
+<pre><code>        my @imports;
+        for ( 'Everything', 'Everything::HTML',
+                'Everything::HTML::FormObject') {
+                Test::MockObject-&gt;fake_module(
+                        $_,
+                        import =&gt; sub { push @imports,
+                              $_[0] }
+                );
+        }
+</code></pre>
+
+<p>Behind the scenes, the module does exactly what the loop did. The nice thing is that you don&rsquo;t have to remember how to fake that a module is loaded or how to test <code>import()</code>. It&rsquo;s already done and it&rsquo;s nicely encapsulated in a module. (I inadvertently drove this point home to myself when writing this section. It turns out that version 0.04 of <code>Test::MockObject</code> populated <code>%ENV</code> instead of <code>%INC</code>. I make that typo often. This time, it was in both the module and the test. Get at least version 0.08, as this article has led to bug fixes and new conveniences. :)</p>
+
+<p>This isn&rsquo;t the most important feature of <code>Test::MockObject</code>, though. It&rsquo;s just a convenient addition. At some point, it should probably be spun off into <code>Test::MockPackage</code> or <code>Test::MockModule</code>. (Want to contribute?)</p>
+
+<h2 id="span-id-testing-an-actual-method-testing-an-actual-method-span"><span id="testing_an_actual_method">Testing an Actual Method</span></h2>
+
+<p>Once the module is loaded and ready, I like to test my methods in the order in which they appear. This helps to keep the test suite and the module somewhat synchronized. The first method is <code>genObject()</code>. It&rsquo;s fairly simple:</p>
+
+<pre><code>        my $this = shift @_;
+        my ($query, $bindNode, $field, $name, $default) =
+                getParamArray(
+                &quot;query, bindNode, field, name, 
+                     default&quot;, @_);
+
+        $name ||= $field;
+
+        my $html = $this-&gt;SUPER::genObject(
+                $query, $bindNode, $field, $name) . 
+                     &quot;\n&quot;;
+
+        if(ref $bindNode)
+        {
+                my $author = $DB-&gt;getNode($$bindNode{$field});
+                if($author &amp;&amp; $author-&gt;isOfType('user'))
+                {
+                        $default ||= $$author{title};
+                }
+                elsif($author)
+                {
+                        $default ||= &quot;&quot;;
+                }
+        }
+
+        $html .= $query-&gt;textfield(-name =&gt; $name, 
+                -default =&gt; $default,
+                -size =&gt; 15, -maxlength =&gt; 255,
+                -override =&gt; 1) . &quot;\n&quot;;
+
+        return $html;
+</code></pre>
+
+<p>I can see several spots that need tests. First, I want to make sure that <code>getParamArray()</code> is called with the proper arguments. (This function makes it possible to pass parameters by position or in <code>name =&gt; value</code> pair style, similar to <a href="https://metacpan.org/pod/Sub::NamedParams">Sub::NamedParams</a>.) Next, I&rsquo;ll test that <code>SUPER::genObject()</code> is called correctly, with the proper values. (This call looks odder than it is, due to the way the Engine handles node inheritance. For a good time, read <code>Everything::Node::AUTOLOAD()</code>, or take up bowling.) After that, there&rsquo;s the conditional statement. I&rsquo;ll have to call the function at least three times to test the branches effectively. The function ends with a <code>textfield()</code> call I want to test, and has a return value where I can check some other things. It&rsquo;s not as complex as it looks.</p>
+
+<p>One of the side benefits of testing is that you&rsquo;ll start to write smaller and smaller functions. This is especially evident if you write tests before you write code to pass them. Besides being easier to read and debug, this tends to produce code that&rsquo;s more flexible and much more powerful.</p>
+
+<p>Having identified several things to test, I next write test names. These are short descriptions of the intent of the tests. When confronted with a piece of existing code, I usually try to figure out what kinds of things can break, and what the important behavior really is. With experience, you can look at a piece of well-written code and figure it out intuitively. There&rsquo;s room to be explicit when you&rsquo;re just starting, though.</p>
+
+<pre><code>        # genObject() should call getParamArray()
+        # ... passing a string of desired parameters
+        # ... and its arguments, minus the object
+        # ... should call SUPER::genObject()
+        # ... passing the important parameters
+        # ... and should call textfield()
+        # ... with the important parameters
+        # ... returning its and its parents results
+        # ... if node is bound, should call getNode()
+        # ... on bound node field
+        # ... checking for an author node
+        # ... and setting the default to the author name
+        # ... or nothing, if it is not an author node
+</code></pre>
+
+<p>That&rsquo;s a pretty good rough draft. Going through the list reveals the need to make at least two more passes through the code. Getting this in the right order takes a little work, but once you know how to set up the mocking conditions correctly, it&rsquo;s really fast and easy. The best way I&rsquo;ve found to handle this is just to jump right in.</p>
+
+<pre><code>        can_ok( 'Everything::HTML::FormObject::AuthorMenu', 
+            'genObject' );
+</code></pre>
+
+<p>First, I want to make sure this method exists. Why? It&rsquo;s part of the ``Do the simplest thing that could possibly work&rdquo; principle. Whenever I add a method, I first check to see whether it exists. It sounds too stupid to have any use, but this is a thing that <strong>could</strong> possibly break. First, I&rsquo;ve been known to misspell method names occasionally. This&rsquo;ll catch that immediately. Second, it gives me a place to start and a test that passes with little work. That&rsquo;s a nice psychological boost that moves me on to the next test. I&rsquo;ve kept this habit when writing tests for existing code.</p>
+
+<p>Next, I want to test the call to <code>getParamArray()</code>. Since it&rsquo;s not a method, I can&rsquo;t use a mock object. I&rsquo;ll have to mock it sideways. Though the function comes from <code>Everything.pm</code>, it would normally be exported into this package. I&rsquo;ll use a variant of the <code>import()</code>-mockery earlier:</p>
+
+<pre><code>        my ($gpa, @gpa);
+        $mock-&gt;fake_module( $package,
+            getParamArray =&gt; sub { push @gpa, \@_; return $gpa }
+        );
+</code></pre>
+
+<p>I can count the elements of <code>@gpa</code> to see whether it was called, and pull the arguments out of the array. <code>$gpa</code> allows me to control the output. The test itself is easy to write:</p>
+
+<pre><code>        my $result = genObject();
+        is( @gpa, 1, 'genObject() should call getParamArray' );
+</code></pre>
+
+<p>OK, it&rsquo;s a little easier to write than it should have been. If you&rsquo;re paying attention, then you should wonder why the <code>genObject()</code> call works, as I&rsquo;m still in the main package and the method is in the class. I&rsquo;ve just added a variable with the tested package name, as well as an <code>AUTOLOAD()</code> function. I&rsquo;m already tired of typing the big long package name:</p>
+
+<pre><code>        # near the start
+        use vars qw( $AUTOLOAD );
+        my $package = 'Everything::HTML::FormObject::AuthorMenu';
+
+        ...
+
+        # way down at the end
+        sub AUTOLOAD {
+                my ($subname) = $AUTOLOAD =~ /([^:]+)$/;
+                if (my $sub = UNIVERSAL::can( $package,
+                     $subname )) {
+                        $sub-&gt;( @_ );
+                } else {
+                        warn &quot;Cannot call &lt;$subname&gt; 
+                             in ($package)\n&quot;;
+                }
+        }
+</code></pre>
+
+<p>With all of that infrastructure in place, it&rsquo;s a little disappointing to realize that the test dies. Since I&rsquo;m calling the method as a function, there&rsquo;s no object on which to call <code>SUPER::genObject()</code>. This is easily solved. Remember that $mock (a mock object) was created earlier? Here&rsquo;s one bit of Perl&rsquo;s magic that drives some OO purists crazy, but makes it oh-so-easy to test. <em>A method call is a function call with a special first argument.</em> If <code>$this</code>, inside <code>genObject()</code>, can do everything that an <code>Everything::HTML::FormObject::AuthorMenu</code> object can do, then it&rsquo;ll just work. Hooray for polymorphism!</p>
+
+<p>To make the <code>SUPER::genObject()</code> call pass, that call will also have to be mocked. The method resolves to <code>Everything::HTML::FormObject::genObject()</code>, so I&rsquo;ll add a function of the appropriate name and package. (This test code is starting to look familiar. Again, <code>Test::MockModule</code>, anyone?)</p>
+
+<pre><code>        my @go;
+        $mock-&gt;fake_module( 'Everything::HTML::FormObject',
+            genObject =&gt; sub { push @go, \@_; 
+                 return 'some html' }
+        );
+</code></pre>
+
+<p>Now I modify the <code>genObject()</code> call, passing in my mock object:</p>
+
+<pre><code>        my $result = genObject( $mock );
+</code></pre>
+
+<p>I get further before things fail. Since there&rsquo;s nothing passed in for the <code>$query</code> variable to hold, the <code>textfield()</code> call fails. Now I can finally use my mock object to good effect. First, I&rsquo;m going to change what <code>getParamArray()</code> returns, using <code>$package</code> again to save on typing:</p>
+
+<pre><code>        my (%gpa, @gpa);
+        $mock-&gt;fake_module( $package,
+            getParamArray =&gt; sub { push @gpa, \@_; return 
+            @gpa{qw( q bn f n d )}}
+        );
+</code></pre>
+
+<p>Since AuthorMenu expects to receive its arguments in order, I&rsquo;ll create a hash where I can store them. I might use more descriptive key names, but they seem to make sense now. Next, I&rsquo;ll make sure that &lsquo;q&rsquo; returns something controllable. In this case, that means that it supports the <code>textfield()</code> method and returns something sane:</p>
+
+<pre><code>        $mock-&gt;set_always( 'textfield', 'more html' );
+        $gpa{q} = $mock;
+</code></pre>
+
+<p>I could create a new mock object for this, but since there&rsquo;s no name collision yet, it&rsquo;s not a big priority. Whether you do this is a matter of personal style.</p>
+
+<p>For now, <code>genObject()</code> does not die, and all tests pass. Whew. Next up, I test to see whether the first argument to <code>getParamArray()</code> is correct.</p>
+
+<pre><code>        is( $gpa[0][0], 'query, bindNode, field, name, default',
+            '... requesting the appropriate arguments' );
+</code></pre>
+
+<p>It is, so I&rsquo;ll make sure that it passes along the rest of the method arguments, minus the object itself:</p>
+
+<pre><code>        like( join(' ', @{ $gpa[0] }), qr/1 2 3$/,
+                '... with the method arguments' );
+        unlike( join(' ', @{ $gpa[0] }), qr/$mock/,
+                '... but not the object itself' );
+</code></pre>
+
+<p>Only the first of these fails, and that&rsquo;s because I&rsquo;m not passing any other arguments to the method call. I&rsquo;ll modify it:</p>
+
+<pre><code>        my $result = genObject( $mock, 1, 2, 3 );
+</code></pre>
+
+<p>This gives me nine tests that pass. I&rsquo;m also following the test names fairly closely. (In between writing those and actually writing this code, a couple of days passed. Their similarities make me think I&rsquo;m on the right track.)</p>
+
+<p>Since the next piece of the code tries to load a bound node and I&rsquo;m not passing one in, I&rsquo;ll test to see that <code>getNode()</code> is <strong>not</strong> called. Since the call is on the <code>$DB</code> object, I&rsquo;ll set it to the mock object. I&rsquo;ll also use the <code>called()</code> method to make sure that nothing happens. For that to happen, I need to mock <code>getNode()</code>. The code to implement all of this is pretty simple. (Note that it must go in various places):</p>
+
+<pre><code>        $Everything::HTML::FormObject::AuthorMenu::DB = $mock;
+        $mock-&gt;set_series( 'getNode', 0, 1, 2 );
+
+        # genObject() calls skipped in this example...
+
+        ok( ! $mock-&gt;called( 'getNode' ),
+                '... should not fetch bound node without one' );
+</code></pre>
+
+<p>Two things bear more explanation. First, since I don&rsquo;t really know what I want <code>getNode()</code> to return, I&rsquo;ll give it a dummy series. (I&rsquo;m pretty sure I&rsquo;ll be using <code>set_series()</code> on it, because I&rsquo;ve done tests like this before. I can&rsquo;t explain it much beyond intuitive experience.) Second, I&rsquo;m negating the return value of <code>called()</code> so it will fit with <code>ok()</code>. This can be a little hard to see, sometimes.</p>
+
+<p>The last few tests of the first pass all revolve around the <code>textfield()</code> call. I&rsquo;ve already mocked it, so now I&rsquo;ll see whether it was called with the correct arguments:</p>
+
+<pre><code>        my ($method, $args) = $mock-&gt;next_call();
+        shift @$args;
+        my %args = @$args;
+
+        is( $method, 'textfield', '... and should create 
+             a text field' );
+        is( join(' ', sort keys %args ),
+        join(' ', sort qw( -name -default -size 
+             -maxlength -override )), '... passing the 
+             essential arguments' );
+</code></pre>
+
+<p>Several bits here stick out. The <code>next_call()</code> method iterates through the call stack of mocked methods, in order. It doesn&rsquo;t track every method called, just the ones you&rsquo;ve added through one of <code>Test::MockObject</code>&rsquo;s helper methods. <code>next_call()</code> returns the name of the method (in scalar context) or the name of the method an an anonymous array containing the arguments (in list context).</p>
+
+<p>Since I want to check the arguments passed to <code>textfield()</code>, I call it in list context. Because the arguments are passed as key =&gt; value pairs, the most natural comparison seems to be as a hash. I use the join-sort idiom quite often, as I&rsquo;ve never quite been comfortable with the list comparison functions of <code>Test::More</code>. This test would probably be much simpler if I used them.</p>
+
+<p>I explicitly sort both arrays just so a hardcoded list order won&rsquo;t cause unnecessary test failures. (This has bitten me when writing code that ought to work on EBCDIC machines, not just ASCII ones. Of course, if you get Everything up and going on a mainframe, then this is probably the least of your concerns.)</p>
+
+<p>Finally, I test to see whether the returned data is created properly:</p>
+
+<pre><code>        is( $result, &quot;some html\nmore html\n&quot;,
+            '... returning the parent object plus the 
+             new textfield html' );
+</code></pre>
+
+<p>So far, all 13 of the tests succeed. At this point, I started my second pass through the method, but noticed that I hadn&rsquo;t yet tested that <code>$name</code> would get its default value from <code>$field</code>. I&rsquo;ll add &lsquo;field&rsquo; to %gpa before the first pass:</p>
+
+<pre><code>        $gpa{f} = 'field';
+</code></pre>
+
+<p>This test ought to go before the final test in this pass, so I add it there, too. This finishes the first pass:</p>
+
+<pre><code>        is( $args{-name}, 'field',
+                '... and widget name should default 
+                to field name' );
+</code></pre>
+
+<p>For the second pass, I will test what happens when I provide a node to which to bind the form object. In an unmocked Everything, this node comes as an argument to the function. In the tests, I <strong>must</strong> return them from the mocked getParamArray(), so that&rsquo;s where I will start. I also set the &lsquo;field&rsquo; value in the mock object to a sentinel value I&rsquo;ll check for later. Since the value of <code>$field</code> will be &lsquo;field,&rsquo; it works out nicely. (There&rsquo;s room to be much more creative on these names, especially if you&rsquo;re trying to sneak the name of a friend into your software.)</p>
+
+<pre><code>        $gpa{bn} = $mock;
+        $mock-&gt;{field} = 'bound node';
+</code></pre>
+
+<p>Because <code>getNode()</code> has a series set on it and hasn&rsquo;t been called before, it will return 0. That means that <code>isOfType()</code> won&rsquo;t be called on the author object, and the default choice won&rsquo;t be modified from its undefined value. These tests are fairly easy:</p>
+
+<pre><code>        genObject( $mock );
+
+        ($method, $args) = $mock-&gt;next_call();
+        isnt( $method, 'isOfType',
+        '... not checking bound node type if it is not found' );
+
+        shift @$args;
+        %args = @$args;
+        is( $args{-default}, undef, '... and not modifying 
+             default selection' );
+</code></pre>
+
+<p>As before, <code>next_call()</code> comes in handy. Since I already know that <code>textarea()</code> will be the first (and last, for this pass) method called, I can make sure that <code>isOfType()</code> was <strong>not</strong> called.</p>
+
+<p>Two tests follow. One ensures that the code checks the node&rsquo;s type. The other makes sure that the default value becomes a blank string if the type is incorrect. To make this work, I had to modify the existing <code>getNode()</code> series to return two instances of <code>$mock</code>.</p>
+
+<pre><code>        $mock-&gt;{title} = 'bound title';
+        $mock-&gt;set_series( 'isOfType', 0, 1 );
+
+        genObject( $mock );
+
+        ($method, $args) = $mock-&gt;next_call( 2 );
+        is( $method, 'isOfType', '... if bound node 
+            is found, should check type' );
+        is( $args-&gt;[1], 'user', '... (the user type)' );
+
+        ($method, $args) = $mock-&gt;next_call();
+        shift @$args;
+        %args = @$args;
+        is( $args{-default}, '',
+            '... setting default to blank string 
+                 if it is not a user' );
+</code></pre>
+
+<p>The only new idea here is of passing an argument to <code>next_call()</code>. I know <code>getNode()</code> is the first mocked method, so I can safely skip it. These tests all pass. The final testable condition is where the bound node exists and is a &lsquo;user&rsquo; type node. The <code>set_series()</code> call in the last test block makes <code>isOfType()</code> return true for this pass:</p>
+
+<pre><code>        genObject( $mock );
+        ($method, $args) = $mock-&gt;next_call( 3 );
+        shift @$args;
+        %args = @$args;
+        is( $args{-default}, 'bound title', '... but using 
+             node title if it is' );
+</code></pre>
+
+<p>I now have 22 successful tests. My original test name plan had 14 tests, but that number generally grows as I see more logic branches. I could add more tests, making sure that default values are not overwritten, and that the essential (hardcoded) attributes of the <code>textfield()</code> are set, but I&rsquo;m reasonably confident in the tests as they stand. If something breaks, then I&rsquo;ll add a test to catch the bug before I fix it, but what&rsquo;s left is simple enough; I doubt it will break. (Writing that is a good way to have to eat my words later.)</p>
+
+<h2 id="span-id-testing-another-method-a-less-detailed-example-testing-another-method-a-less-detailed-example-span"><span id="testing_another_method_(a_less_detailed_example)">Testing Another Method (A Less Detailed Example)</span></h2>
+
+<p>One method remains for this form Object: <code>cgiVerify()</code>. When the Engine processes input from submitted Form Object forms, it must rebuild the objects. Then, it checks the input against allowed values for the widgets. This method does just that. Its code is slightly longer, and reads:</p>
+
+<pre><code>        my ($this, $query, $name, $USER) = @_;
+
+        my $bindNode = $this-&gt;getBindNode($query, $name);
+        my $author = $query-&gt;param($name);
+        my $result = {};
+
+        if($author)
+        {
+                my $AUTHOR = $DB-&gt;getNode($author, 'user');
+
+                if($AUTHOR)
+                {
+                        # We have an author!!  Set the CGI param 
+                        # so that the
+                        # inherited cgiUpdate() will just do 
+                        # what it needs to!
+                        $query-&gt;param($name, $$AUTHOR{node_id});
+                }
+                else
+                {
+                        $$result{failed} = &quot;User '$author' 
+                             does not exist!&quot;;
+                }
+        }
+
+        if($bindNode)
+        {
+                $$result{node} = $bindNode-&gt;getId();
+                $$result{failed} = &quot;You do not have permission&quot;
+                        unless($bindNode-&gt;hasAccess($USER, 'w'));
+        }
+
+        return $result;
+</code></pre>
+
+<p>Rather than describing the writing of the tests (and my steps and missteps therein), I&rsquo;ll just comment on the tests themselves.</p>
+
+<pre><code>        my $qmock = Test::MockObject-&gt;new();
+        $mock-&gt;set_series( 'getBindNode', 0, 0, 0, 
+             $mock, $mock );
+        $qmock-&gt;set_series( 'param', 0, 'author', 'author' );
+</code></pre>
+
+<p>Because of the way this method handles things, it&rsquo;s clearer to create another mock object to pass in as <code>$query</code>. I&rsquo;m also setting up the two main series used for the several passes through this method. While writing the tests, I kept adding new values to these series. This is what remained at the end. This approach makes more sense to me than setting each mock before each pass, but it&rsquo;s a matter of style, and either way will work.</p>
+
+<pre><code>        $result = cgiVerify( $mock, $qmock, 'boundname' );
+
+        ($method, $args) = $mock-&gt;next_call();
+        is( $method, 'getBindNode', 'cgiVerify() should get 
+             bound node' );
+        is( join(' ', @$args), &quot;$mock $qmock boundname&quot;,
+                '... with query object and query 
+                     parameter name' );
+</code></pre>
+
+<p>Here&rsquo;s the reason I used separate mock objects: to tell them apart as arguments in the <code>getBindNode()</code> call.</p>
+
+<pre><code>        ($method, $args) = $qmock-&gt;next_call();
+        is( $method, 'param', '... fetching parameter' );
+        is( $args-&gt;[1], 'boundname', '... by name' );
+
+        isa_ok( $result, 'HASH', '... and should return a data 
+             structure which' );
+</code></pre>
+
+<p>The weird test name here is another of my little idioms. <code>isa_ok()</code> adds &lsquo;isa (reference type)&rsquo; to the end of its test names, and I want them to be as clear as possible when they&rsquo;re displayed.</p>
+
+<pre><code>        $mock-&gt;set_series( 'getNode', 0, { node_id =&gt; 
+             'node_id' } );
+        $result = cgiVerify( $mock, $qmock, 'boundname' );
+
+        ($method, $args) = $mock-&gt;next_call( 2 );
+        is( $method, 'getNode', '... fetching the node, if an 
+             author is found' );
+        is( join(' ', @$args), &quot;$mock author user&quot;,
+                '... with the author, for the user type' );
+
+        is( $result-&gt;{failed}, &quot;User 'author' does not exist!&quot;,
+                '... setting a failure message on failure' );
+</code></pre>
+
+<p>I like the approach of joining the arguments in a string and doing an <code>is()</code> or a <code>like()</code> call on them. The benefit of <code>like()</code> is that you can ignore the <code>$self</code> passed as the first argument, because it&rsquo;s the mock object. I used <code>is()</code> here to make it more explicit what I&rsquo;m expecting.</p>
+
+<pre><code>        $qmock-&gt;clear();
+        $result = cgiVerify( $mock, $qmock, 'boundname' );
+        ($method, $args) = $qmock-&gt;next_call( 2 );
+        is( $method, 'param', '... setting parameters, 
+             on success' );
+        is( join(' ', @$args), &quot;$qmock boundname node_id&quot;,
+             '... with the name and node id' );
+        is( $result-&gt;{failed}, undef, 
+             '... and no failure message' );
+</code></pre>
+
+<p>This bit of code gave me trouble until I added the <code>clear()</code> call. It&rsquo;s worth remembering that a mock object&rsquo;s stack of mocked calls persists through passes. I had forgotten that, and was using the first <code>param()</code> call instead of the second. Oops.</p>
+
+<p>Another thing worth noting is that I pass &lsquo;undef&rsquo; as the expected result to <code>is()</code>. Conveniently, <code>Test::More</code> silently does the right thing.</p>
+
+<pre><code>        $mock-&gt;set_always( 'getId', 'id' );
+        $mock-&gt;set_series( 'hasAccess', 0, 1 );
+        $result = cgiVerify( $mock, $qmock, 
+             'boundname', 'user' );
+</code></pre>
+
+<p>Here, I exercise the method&rsquo;s final clause. These tests are more complex than the code being tested! Sometimes, it works out that way.</p>
+
+<pre><code>        $mock-&gt;called_pos_ok( -2 , 'getId',
+                '... should get bound node id, if it exists' );
+        is( $result-&gt;{node}, 'id',
+                '... setting it in the resulting node field' );
+
+        $mock-&gt;called_pos_ok( -1, 'hasAccess', 
+             '... checking node access ');
+        is( $mock-&gt;call_args_string( -1, ' ' ), 
+             &quot;$mock user w&quot;, 
+             '... for user with write permission' );
+</code></pre>
+
+<p>I&rsquo;ve moved away from the <code>next_call()</code> approach to the older <code>Test::MockObject</code> behavior of using positions in the call stack. I&rsquo;m still not quite pleased with the names of these methods, but the negative subscripts are handy. (Maybe I need to add <code>prev_call()</code>). All I have to do is remember that <code>hasAccess()</code> is called last, and that <code>getId()</code> should be called as the second-to-last method.</p>
+
+<p>The other new method here is <code>call_args_string()</code>, which simply joins the arguments at the specified call position together. It saves a bit of typing, most of which is offset by the long method name.</p>
+
+<pre><code>        is( $result-&gt;{failed}, 'You do not have permission',
+                '... setting a failure message if user lacks 
+                 write permission' );
+
+        $result = cgiVerify( $mock, $qmock, 'boundname', 'user' );
+        is( $result-&gt;{failed}, undef, '... and none if the user 
+             has it' );
+</code></pre>
+
+<p>These final two tests demonstrate how, at the end of a long series of tests, the available options are whittled down. By the final couple of passes, I&rsquo;m generally testing only one thing at a time. That always seems mathematically poetic, to me, as if I&rsquo;m refining with Newton&rsquo;s method.</p>
+
+<h2 id="span-id-conclusion-conclusion-span"><span id="conclusion">Conclusion</span></h2>
+
+<p>This whole exercise has produced 39 tests. My next step is to update the test plan with this information.</p>
+
+<pre><code>        # way back at the top
+        use Test::More tests =&gt; 39;
+</code></pre>
+
+<p>This makes it easier to see whether too many or too few tests were run. I get better results about failures and successes this way, too. As it turns out, writing the tests for <code>cgiVerify()</code> took about 20 minutes, give or take some laundry-related distractions. That seems about right for 17 tests on code I haven&rsquo;t read in several months &ndash; about one a minute, when you know what you&rsquo;re doing.</p>
+
+<p>It&rsquo;s worth noting the features of this module that lead me to consider mock objects. Mostly, the process of fetching and building nodes is complex enough that I didn&rsquo;t really want to hook up a fake database, just so I could go through all of the code paths required to test that an author is really an author. If the code had gone through some simple mathematical or textual manipulations, then I would probably have used black-box testing. Code that relies on a database abstraction layer (as does Everything) generally makes me reach for <code>Test::MockObject</code>, however.</p>
+
+<p>For more information on what the module can do, please see its documentation. The current stable version is 0.08, though 0.09 will probably have been released by the time this article is stable.</p>
+
+<p><em>chromatic is the author of <a href="http://onyxneon.com/books/modern_perl/">Modern Perl</a>. In his spare time, he has been working on <a href="http://trendshare.org/how-to-invest/">helping novices understand stocks and investing</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/tooling">tooling</a></div>
+                
+                  <div class="tag"><a href="/tags/oo-testing">oo-testing</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-chromatic">
+  <div class="col-sm-2">
+    
+    <a href="/authors/chromatic/"><div class="circle-avatar" style="background-image:url(/images/author/chromatic.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/chromatic/"><h3>chromatic</h3></a>
+    <p></p>
+    <h5><a href="/authors/chromatic/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2002_07_10_tmo.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

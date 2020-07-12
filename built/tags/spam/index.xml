@@ -1,0 +1,961 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Spam on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/spam/</link>
+    <description>Recent content in Spam on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 17 Jul 2001 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/spam/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Mail Filtering with Mail::Audit</title>
+      <link>http://localhost:1313/pub/2001/07/17/mailfiltering.html/</link>
+      <pubDate>Tue, 17 Jul 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/07/17/mailfiltering.html/</guid>
+      <description>
+
+&lt;p&gt;Let&amp;rsquo;s face it. &lt;em&gt;procmail&lt;/em&gt; is horrid. But for most of us, it&amp;rsquo;s the only sensible way to handle mail filtering. I used to tolerate &lt;em&gt;procmail&lt;/em&gt;, with its grotesque syntax and its less-than-helpful error messages, because it was the only way I knew to separate out my mail. One day, however, I decided that I&amp;rsquo;d been told &amp;ldquo;delivery failed, couldn&amp;rsquo;t get lock&amp;rdquo; or similar garbage for the very last time, and decided to sit down and write a &lt;em&gt;procmail&lt;/em&gt; replacement.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s when it dawned on me that what I really disliked about &lt;em&gt;procmail&lt;/em&gt; was the recipe format. I didn&amp;rsquo;t want to handle my mail with a collection of colons, zeroes, and single-letter commands that made &lt;code&gt;sendmail.cf&lt;/code&gt; look like a Shakespearean sonnet; I wanted to program my mail routing in a nice, high-level language. Something like Perl, for instance.&lt;/p&gt;
+
+&lt;p&gt;The result is the astonishingly simple Mail::Audit module. In this article, we&amp;rsquo;ll examine what we can do with Mail::Audit and how we can use it to create mail filters. We&amp;rsquo;ll also look at the News::Gateway module for turning mailing lists into newsgroups and back again.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-is-it&#34;&gt;What Is It?&lt;/h3&gt;
+
+&lt;p&gt;Mail::Audit itself isn&amp;rsquo;t a mail filter - it&amp;rsquo;s a toolkit that makes it very easy for you to build mail filters. You write a program that describes what should happen to your mail, and this replaces your &lt;em&gt;procmail&lt;/em&gt; command in your &lt;code&gt;.forward&lt;/code&gt; or &lt;code&gt;.qmail&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;p&gt;Mail::Audit provides the functionality for extracting mail headers, bouncing, accepting, rejecting, forwarding, and filtering incoming mail.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-very-simple-mail-filter&#34;&gt;A Very Simple Mail Filter&lt;/h3&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the simplest filter program we can make with Mail::Audit.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Mail::Audit;
+    my $incoming = Mail::Audit-&amp;gt;new;
+    $incoming-&amp;gt;reject;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you save this as &lt;code&gt;~/bin/chuckmail&lt;/code&gt;, then you can put the following in a &lt;code&gt;.forward&lt;/code&gt; file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    |~/bin/chuckmail
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or in a &lt;code&gt;.qmail&lt;/code&gt; file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    preline ~/bin/chuckmail
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Every mail message you receive will now pass through this program. The mail comes into the program via standard input, and the &lt;code&gt;new()&lt;/code&gt; method takes it from there and turns it into a Mail::Audit object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $incoming = Mail::Audit-&amp;gt;new;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, we bounce it as undeliverable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $incoming-&amp;gt;reject;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We could even get fancy, and supply a reason with the bounce:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$incoming-&amp;gt;reject(&amp;lt;&amp;lt;EOF);
+    The local user was silly enough to leave chuckmail as his
+    mail filter.  Too bad you can&#39;t mail him to let him know.
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This reason will be relayed back to the sender as part of the bounce message.&lt;/p&gt;
+
+&lt;h3 id=&#34;separating-mail-into-folders&#34;&gt;Separating Mail Into Folders&lt;/h3&gt;
+
+&lt;p&gt;The one thing most people use &lt;em&gt;procmail&lt;/em&gt; for is to separate mail out into several mail folders. Here&amp;rsquo;s an example of how we&amp;rsquo;d do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Mail::Audit;
+    my $item = Mail::Audit-&amp;gt;new;
+
+    if ($item-&amp;gt;from =~ /perl5-porters/) {
+        $item-&amp;gt;accept(&amp;quot;/home/simon/mail/p5p&amp;quot;)
+    }
+
+    $item-&amp;gt;accept;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now any mail with &lt;code&gt;perl5-porters&lt;/code&gt; in the &lt;code&gt;From:&lt;/code&gt; line will be added to the file &lt;code&gt;mail/p5p&lt;/code&gt; under my home directory. Any other mail will be accepted into my inbox as normal.&lt;/p&gt;
+
+&lt;p&gt;Two things to note here:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Once the mail has been filed to &lt;code&gt;mail/p5p&lt;/code&gt; via &lt;code&gt;accept()&lt;/code&gt;, it leaves the program. Game over, end of story. The same goes for the other methods such as &lt;code&gt;reject()&lt;/code&gt;, &lt;code&gt;pipe()&lt;/code&gt;, and &lt;code&gt;bounce()&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;The last line in the program should probably be an &lt;code&gt;accept()&lt;/code&gt; call; mail that reaches the end of the program without being deposited in a mailbox or rejected will be silently ignored. (This may change to an implicit &lt;code&gt;accept()&lt;/code&gt; in a later version, to be more &lt;em&gt;procmail&lt;/em&gt;-like.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve got a few mailing lists or people you want to filter, you could do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Mail::Audit;
+  my $item    = Mail::Audit-&amp;gt;new;
+  my $maildir = &amp;quot;/home/simon/mail/&amp;quot;;
+
+  my %lists = (
+      perl5-porters    =&amp;gt; &amp;quot;p5p&amp;quot;,
+      helixcode        =&amp;gt; &amp;quot;gnome&amp;quot;,
+      uclinux          =&amp;gt; &amp;quot;uclinux&amp;quot;,
+      &#39;infobot\.org&#39;   =&amp;gt; &amp;quot;infobot&amp;quot;,
+      &#39;@dion\.ne\.jp&#39;  =&amp;gt; &amp;quot;yamachan&amp;quot;
+  );
+
+  for my $pattern (keys %lists) {
+      $item-&amp;gt;accept($maildir.$lists{$pattern})
+          if $item-&amp;gt;from =~ /$pattern/ 
+             or $item-&amp;gt;to =~ /$pattern/;
+  }
+
+  $item-&amp;gt;accept;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This time, we perform a regular expression match to see if either the &lt;code&gt;From:&lt;/code&gt; line or the &lt;code&gt;To:&lt;/code&gt; line match any of the patterns in our hash keys, and if they do, direct the mail to the corresponding folder. Since we&amp;rsquo;re using ordinary Perl regular expressions, we can do this sort of thing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &#39;\bxxx.*\.com$&#39;  =&amp;gt; &amp;quot;spam&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(And you&amp;rsquo;d be surprised at quite how much junk mail that one traps.)&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s another simple but remarkably effective spamtrap recipe:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $item-&amp;gt;accept(&amp;quot;questionable&amp;quot;)
+      if $item-&amp;gt;from !~ /simon/i and $item-&amp;gt;cc !~ /simon/i;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We check the &lt;code&gt;From:&lt;/code&gt; and &lt;code&gt;CC:&lt;/code&gt; headers for my name, and if it&amp;rsquo;s not in either - the mail probably isn&amp;rsquo;t to me. This one only makes sense after we&amp;rsquo;ve filtered out mailing list messages, which could validly be sent from a subscriber to a generic list address.&lt;/p&gt;
+
+&lt;h3 id=&#34;mail-and-news&#34;&gt;Mail and News&lt;/h3&gt;
+
+&lt;p&gt;I much prefer reading mailing lists as newsgroups; while a good mail client like &lt;em&gt;mutt&lt;/em&gt; can display mail as threaded discussions, I personally prefer navigating in a newsreader. So, how do we gate mailing lists to newsgroups and back? Russ Allbery&amp;rsquo;s News::Gateway module helps do just that - it provides a program called &lt;em&gt;listgate&lt;/em&gt; which takes an incoming mailing list message, reformats it as a valid news article, and then posts it to the news server. We can plug this into our mail filter quite easily; assuming we&amp;rsquo;ve got the group &lt;code&gt;lists.p5p&lt;/code&gt; set up on the local news server and we&amp;rsquo;ve configured listgate appropriately, we can just say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $item-&amp;gt;pipe(&amp;quot;listgate p5p&amp;quot;) if $item-&amp;gt;from =~ /perl5-porters/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Again, if we&amp;rsquo;ve got multiple groups, we can use a hash to correlate patterns to groups as we did with mailing lists above.&lt;/p&gt;
+
+&lt;p&gt;So much for getting incoming mail to news - what about getting posted articles back into the mailing list? The key to this is in the newsgroup moderation system - when you post to a moderated newsgroup, the article is mailed to a moderator for approval. If we set the moderator of &lt;code&gt;lists.p5p&lt;/code&gt; to the list address, we can get our outgoing posts sent to the list. In &lt;code&gt;/usr/news/etc/moderators&lt;/code&gt;, you&amp;rsquo;d say&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    lists.p5p:  perl5-porters@perl.org
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Very easy. The only problem is that it doesn&amp;rsquo;t work. Mail messages and news articles have a slightly different format, and some mailing list managers will reject mail messages that look like news articles. So we need to send our message through a clean-up phase first. Instead of sending it to &lt;code&gt;perl5-porters@perl.org&lt;/code&gt;, we&amp;rsquo;ll instead send it to &lt;code&gt;news-outgoing@localhost&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    lists.*:    news-outgoing@localhost
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Mail arriving at that account needs to go through another Perl program to clean up and dispatch the outgoing article, and that looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use News::Gateway;
+    my $gw=News::Gateway-&amp;gt;new(0);
+    $gw-&amp;gt;modules( &#39;newstomail&#39;, &#39;headers&#39;);
+    $gw-&amp;gt;config_line(&amp;quot;newstomail /home/simon/bin/news2mail.h&amp;quot;);
+    $gw-&amp;gt;config_line(&amp;quot;header newsgroups drop&amp;quot;);
+    $gw-&amp;gt;config_line(&amp;quot;header organisation drop&amp;quot;);
+    $gw-&amp;gt;config_line(&amp;quot;header nntp-posting-host drop&amp;quot;);
+    $gw-&amp;gt;read(*STDIN) or die $!;
+    $gw-&amp;gt;apply();
+    $gw-&amp;gt;mail();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This reads an article from standard input, drops the &lt;code&gt;Newsgroups&lt;/code&gt;, &lt;code&gt;Organisation&lt;/code&gt;, and &lt;code&gt;NNTP-Posting-Host&lt;/code&gt; headers, reformats it as a mail message using the configuration file &lt;code&gt;/home/simon/bin/news2mail.h&lt;/code&gt; to find the address, and then sends it. That config file is just a list of newsgroups and the addresses they belong to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    lists.p5p perl5-porters@perl.org
+    lists.tlug tlug@tlug.gr.jp
+    lists.advocacy advocacy@perl.org
+    lists.linux-kernel linux-kernel@vger.rutgers.edu
+    lists.perl-friends perl-friends@perlsupport.com
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So here&amp;rsquo;s the recipe for filtering news to mail and back again:&lt;/p&gt;
+
+&lt;p&gt;• Incoming messages&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;will be trapped by a rule in your mail filter, and be piped to &lt;code&gt;listgate&lt;/code&gt; via a line like&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $item-&amp;gt;pipe(&amp;quot;listgate p5p&amp;quot;)
+        if $item-&amp;gt;from =~ /perl5-porters/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;listgate&lt;/code&gt; will then post them to your news server, to the group &lt;code&gt;lists.p5p&lt;/code&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;• Outgoing articles&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;will be sent to the moderator address, &lt;code&gt;news-outgoing@localhost&lt;/code&gt; for cleanup. The cleanup program will drop unnecessary headers, reformat as a mail message, and then look at the configuration file to determine where to send them on. They&amp;rsquo;ll be sent to the mailing list, and sometime later will be returned to you by mail, to appear in the newsgroup as above.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&#34;a-complete-filter&#34;&gt;A Complete Filter&lt;/h3&gt;
+
+&lt;p&gt;Here, to show off exactly what I do with Mail::Audit, is a suitably anonymized and annotated version of the filter I currently use to process my incoming mail.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use Mail::Audit;
+    $folder = &amp;quot;/home/simon/mail/&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Anything that actually reaches me is going to be logged so that I can &lt;code&gt;tail -f&lt;/code&gt; a summary of incoming mail to one of my terminals.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    open (LOG, &amp;quot;&amp;gt;/home/simon/.audit_log&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Read in the new mail message, and extract the important headers from it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $item = Mail::Audit-&amp;gt;new;
+    my $from = $item-&amp;gt;from();
+    study $from;
+    my $to = $item-&amp;gt;to();
+    my $cc = $item-&amp;gt;cc();
+    my $subject = $item-&amp;gt;subject();
+    chomp($from, $to, $subject);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If I&amp;rsquo;m likely to be at the office, I appreciate a copy of all mail I receive, in case there&amp;rsquo;s something I need to deal with immediately. So I need &lt;em&gt;time-controlled&lt;/em&gt; filtering. Try doing this with &lt;em&gt;procmail&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my ($hour, $wday) = (localtime)[2,6];
+    if ($wday !=0 and $wday !=6         # Not Saturday/Sunday
+        and $hour &amp;gt; 9 and $hour &amp;lt; 18) { # Between 9am and 6pm
+        print LOG &amp;quot;$subject: $from: Bouncing to work\n&amp;quot;;
+        $item-&amp;gt;resend(&#39;simon@theoffice.com&#39;);
+        # resend is the only action
+        # which doesn&#39;t end the program.
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;One of my users didn&amp;rsquo;t have their own email address for a while, so they had their friends send mail to me instead. Now they have their own address, so the mail is bounced across to them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $item-&amp;gt;bounce(&#39;ei@somewhere.com&#39;) if $subject =~ /^For Ei:/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I maintain two FAQs: the perl5-porters FAQ and the Tokyo high speed connectivity FAQ. The mail comes to different email addresses, but it all ends up at my box. They need to go in separate folders.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $item-&amp;gt;accept(&amp;quot;$folder/p5p-faq&amp;quot;)   if $to=~ /p5p-faq/;
+    $item-&amp;gt;accept(&amp;quot;$folder/tokyo-faq&amp;quot;) if $to=~ /faq/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I get some mail in Greek which needs to be processed with &lt;code&gt;metamail&lt;/code&gt; to sort out the character sets. The pipe method squirts the mail to a separate program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $item-&amp;gt;pipe(&amp;quot;metamail -B -x &amp;gt; $folder/greek&amp;quot;)
+                if $from =~/hri\.org$/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some people I definitely want to hear from, so they get accepted at this stage to save time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (qw(goodguy dormouse locust)) {
+        if ($from =~ /$_/) {
+            print LOG &amp;quot;$from:$subject:Exception, 
+                accepting into inbox\n&amp;quot;;
+            $item-&amp;gt;accept;
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some people I very definitely do not want to hear from:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (qw(badguy nasty enemy)) {
+        if ($from =~ /$_/) {
+            print LOG &amp;quot;$from:$subject:Dumped\n&amp;quot;;
+            $item-&amp;gt;reject(&amp;quot;Go away! Stop emailing me!&amp;quot;);
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some people or mailing lists I currently just don&amp;rsquo;t have time for, so they get silently ignored:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (qw(freshmeat.net microsoft news\@myhost cron)) {
+        if ($from =~ /$_/) {
+            print LOG &amp;quot;$from:$subject:Ignored\n&amp;quot;;
+            $item-&amp;gt;ignore;
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some mailing lists I want to stay as lists:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my %lists = (
+        &amp;quot;pound.perl.org&amp;quot;  =&amp;gt; &amp;quot;purl&amp;quot;,
+        &amp;quot;helixcode&amp;quot;       =&amp;gt; &amp;quot;gnome&amp;quot;,
+        &amp;quot;uclinux&amp;quot;         =&amp;gt; &amp;quot;uclinux&amp;quot;,
+        &amp;quot;infobot&amp;quot;         =&amp;gt; &amp;quot;infobot&amp;quot;,
+        &amp;quot;european-&amp;quot;       =&amp;gt; &amp;quot;yapc&amp;quot;,
+        &amp;quot;tpm\@otherside&amp;quot;  =&amp;gt; &amp;quot;tpm&amp;quot;,
+        &amp;quot;hellenic&amp;quot;        =&amp;gt; &amp;quot;greeknews&amp;quot;,
+    );
+    for my $what (keys %lists) {
+        next unless $from =~ /$what/i or 
+            $to =~ /$what/i or $cc =~/$what/i;
+        my $where = $lists{$what};
+        print LOG &amp;quot;$from:$subject:List, 
+            accepting to folder $where\n&amp;quot;;
+        $item-&amp;gt;accept($folder.$where);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And some I want to pipe to &lt;code&gt;listgate&lt;/code&gt; as newsgroups:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my %gated = (
+        &amp;quot;tlug&amp;quot;    =&amp;gt; &amp;quot;tlug&amp;quot;,
+        &amp;quot;advocacy&amp;quot;    =&amp;gt; &amp;quot;advocacy&amp;quot;,
+        &amp;quot;security-sig&amp;quot;    =&amp;gt; &amp;quot;security&amp;quot;,
+        &amp;quot;iss.net&amp;quot; =&amp;gt; &amp;quot;security&amp;quot;,
+        &amp;quot;securityfocus&amp;quot;   =&amp;gt; &amp;quot;security&amp;quot;,
+        &amp;quot;perl5-porters&amp;quot;   =&amp;gt; &amp;quot;p5p&amp;quot;,
+        &amp;quot;linux-kernel&amp;quot;    =&amp;gt; &amp;quot;linux-kernel&amp;quot;,
+        &amp;quot;perlsupport&amp;quot; =&amp;gt; &amp;quot;perl-friends&amp;quot;,
+    );
+
+    for my $what (keys %gated) {
+        next unless $from =~ /$what/i or 
+            $to =~ /$what/i or $cc =~/$what/i;
+        my $where=$gated{$what};
+        print LOG &amp;quot;$from:$subject:Gated to lists.$where\n&amp;quot;;
+        $item-&amp;gt;pipe(&amp;quot;/usr/local/bin/listgate $where&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some spammers just don&amp;rsquo;t give up, so we actually reject their messages. We do this based on subject, which is a bit risky but seems to work:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (&amp;quot;Invest&amp;quot;, &amp;quot;nude asian&amp;quot;))  {
+        $item-&amp;gt;reject(&amp;quot;No! Go away!&amp;quot;)
+                if $subject=~/\b$_\b/;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Before we let the article in to the inbox, there&amp;rsquo;s a long list of patterns at the end of the program which match known spam senders. We check the incoming mail against this list, and save it for analysis and reporting:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    while (&amp;lt;DATA&amp;gt;) {
+        chomp;
+        next unless $from =~ /$_/i or $to =~ /$_/i;
+        print LOG &amp;quot;$from:$subject:Spam?\n&amp;quot;;
+        $item-&amp;gt;accept($folder.&amp;quot;spam&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now our final check for mail which doesn&amp;rsquo;t appear to be for us:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if ($item-&amp;gt;from !~ /simon/i and $item-&amp;gt;cc !~ /simon/i) {
+        print LOG &amp;quot;$from:$subject:Badly addressed mail\n&amp;quot;;
+        $item-&amp;gt;accept(&amp;quot;questionable&amp;quot;)
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, we let the mail in:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    print LOG &amp;quot;INCOMING MAIL:$from:$subject:
+            Accepting to inbox\n&amp;quot;;
+    $item-&amp;gt;accept();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;caveats&#34;&gt;Caveats&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m perfectly happy to trust Mail::Audit with all my incoming email. For a while it was running alongside &lt;em&gt;procmail&lt;/em&gt;, but now it rules the roost. However, there are some things which you do need to take care about if you want to run it yourself.&lt;/p&gt;
+
+&lt;p&gt;Mail::Audit has been tested on &lt;code&gt;qmail&lt;/code&gt; and &lt;code&gt;postfix&lt;/code&gt; - it should work fine on other MTAs (Message Transfer Agents), so long as they believe that &lt;code&gt;exit 100&lt;/code&gt;; means reject. If they don&amp;rsquo;t, you can override the &lt;code&gt;reject&lt;/code&gt; method like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $item = Mail::Audit-&amp;gt;new(
+            reject =&amp;gt; sub { exit 67; }
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It also assumes that the default mailbox is &lt;code&gt;/var/spool/mail/name&lt;/code&gt; where &lt;code&gt;name&lt;/code&gt; is user ID of the current user. If this isn&amp;rsquo;t the case, (I believe &lt;code&gt;mh&lt;/code&gt; doesn&amp;rsquo;t work like this) say &lt;code&gt;accept(&amp;quot;Mailbox&amp;quot;)&lt;/code&gt; or override &lt;code&gt;accept&lt;/code&gt; with a subroutine of your own.&lt;/p&gt;
+
+&lt;p&gt;Finally, Mail::Audit isn&amp;rsquo;t sophisticated. It&amp;rsquo;s little other than a wrapper around Mail::Internet. While it&amp;rsquo;s probably perfectly fine for most filters you want to write, don&amp;rsquo;t expect it to do everything for you.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Mail::Audit and News::Gateway are both available from CPAN; together they allow you to very easily construct mail filters and newsgroup gateways in Perl. It&amp;rsquo;s a great way to filter your mail with Perl, and an excellent replacement for moldy old &lt;em&gt;procmail&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Copyright The Perl Journal. Reprinted with permission from CPM Media LLC. All rights reserved.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>My Life With Spam: Part 3</title>
+      <link>http://localhost:1313/pub/2000/03/spam3.html/</link>
+      <pubDate>Wed, 15 Mar 2000 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2000/03/spam3.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-how-i-caught-the-spam-and-what-i-how-i-caught-the-spam-and-what-i-did-with-it-when-i-caught-it-span&#34;&gt;&lt;span id=&#34;How_I_Caught_the_Spam_and_What_I&#34;&gt;How I Caught the Spam and What I Did With it When I Caught it&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This article is the third in a series; you may want to read &lt;a href=&#34;http://www.plover.com/~mjd/perl/lp/Spam.html&#34;&gt;Part 1&lt;/a&gt; and &lt;a href=&#34;http://localhost:1313/pub/2000/02/spamfilter.html&#34;&gt;Part 2&lt;/a&gt; if you haven&amp;rsquo;t yet. Here&amp;rsquo;s a short summary to refresh your memory:&lt;/p&gt;
+
+&lt;p&gt;I get a lot of spam mail, and I don&amp;rsquo;t like that. I used to get upset every time I read my mail and had to throw out a bunch of spam, so I decided to put some effort into writing a program that would filter my email and discard spam automatically. Then my blood pressure would stay low.&lt;/p&gt;
+
+&lt;p&gt;I decided that it was most important that nothing be thrown away for good, because I knew that no filter was perfect, and I was afraid that important business mail from a client might be silently discarded and I would lose my job. I also decided I wasn&amp;rsquo;t smart enough to filter on the actual content of messages&amp;mdash;the touchstone example is that if someone sends me a letter &lt;em&gt;complaining&lt;/em&gt; about spam, and they say ``Gosh, these Green Card Lottery messages are driving me crazy!&amp;rdquo; I don&amp;rsquo;t want to reject the message just because it mentions green card lotteries. I couldn&amp;rsquo;t figure out how to avoid that, so I resolved that I would filter on header lines only.&lt;/p&gt;
+
+&lt;p&gt;My main strategy is to maintain a blacklist of `bad domains&amp;rsquo; that send a lot of spam, such as &lt;code&gt;eastmail.com&lt;/code&gt;. Mail from these domains is presumed to be spam. Mail from anyone I don&amp;rsquo;t know in one of these domains is returned to the sender, with an apology, requesting them to re-send the message to a different address. Mail to that address is forwarded directly into my mailbox, and also into a program that adds their `From&amp;rsquo; address to the list of `people I know&amp;rsquo;, so that next time they send me mail, it gets through the filter. The `people I know&amp;rsquo; list is called a `whitelist&amp;rsquo;, and it&amp;rsquo;s just a DBM file. The code is very simple. After reading the message and parsing the header, as I described in Part 1, I look to see if the subject contains a secret password. If so, I add the message senders to my whitelist. Senders can also get on the whitelist by sending a message to a special address; this address invokes the program with a command-line argument that automatically enables whitelisting. The code looks something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        if ($ARGV{Mode} eq &#39;Whitelist&#39;
+         || $H{Subject} =~ /$PASSWORD/) {
+          foreach $s (senders()) {
+            $db{lc $s} = time;
+          }
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-drawbacks-of-this-approach-drawbacks-of-this-approach-span&#34;&gt;&lt;span id=&#34;Drawbacks_of_This_Approach&#34;&gt;Drawbacks of This Approach&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;People occasionally ask what would happen if the spammers added the special whitelisting address to their mailing lists. This has never happened, but if they did, I would deal with it easily enough; I&amp;rsquo;d just change the address. Nobody ever needs to send more than one message to the whitelisting address, because once you&amp;rsquo;re on the whitelist, you&amp;rsquo;re on forever. So I wouldn&amp;rsquo;t be inconveniencing anyone by changing this address.&lt;/p&gt;
+
+&lt;p&gt;Of course, in the meantime, the spammer is still on the whitelist, and even if they don&amp;rsquo;t add the whitelist address to their address list, they might get the apology back in the mail and just add themselves to the whitelist. This has only happened a few times since I first started in late 1996&amp;mdash;most spammers don&amp;rsquo;t provide valid return addresses, and those that do don&amp;rsquo;t read the replies to their mail.&lt;/p&gt;
+
+&lt;p&gt;For the couple of dedicated spammers who &lt;em&gt;did&lt;/em&gt; try to add themselves to my whitelist, I have a special super-blacklist called the `losers list&amp;rsquo;. The filter rejects mail from losers no matter what address it comes to. It returns the message to the sender, with a note that says&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        Hello.  I am an automatic reply.
+
+        Your message is not welcome at this address.
+        The recipient is not interested in hearing what
+        you have to say.  Your mail being returned unread.
+
+        Please do not send mail to this address in the future.
+
+                Sincerely,
+
+                The answering machine.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This has a side benefit: If I get really sick of someone I can add them to my loser list even if they&amp;rsquo;re not a spammer. It would probably be more mature to just have the filter throw away the message, rather than returning a note that says `I am ingoring you&amp;rsquo;, but I&amp;rsquo;m a spiteful guy.&lt;/p&gt;
+
+&lt;p&gt;So the logic in the filter program looks something like this:&lt;/p&gt;
+
+&lt;p&gt;if the message is from a loser&lt;br /&gt;
+send it back with an `I am ignoring you&amp;rsquo; note&lt;/p&gt;
+
+&lt;p&gt;else if the message is from someone on the whitelist&lt;br /&gt;
+accept it&lt;/p&gt;
+
+&lt;p&gt;else if the message is from someone in a blacklisted domain&lt;br /&gt;
+send it back with instructions about how to get whitelisted&lt;/p&gt;
+
+&lt;p&gt;else&lt;br /&gt;
+accept it&lt;/p&gt;
+
+&lt;p&gt;The first two tests, for loserhood or whitelisting, are fast. The filter program keeps one big DBM file for both lists. The keys are `From:&amp;rsquo; addresses, and the value is &lt;code&gt;loser&lt;/code&gt; if the user is a loser, and the date of whitelisting if they user is on the whitelist. I keep the dates as an ASCII-formatted number of seconds since 1970, so the actual code looks something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        if ($DB{$from} eq &#39;loser&#39;) {
+          # they are a loser; reject mail
+        } elsif ($DB{$from} &amp;gt; 0) {
+          # they are on the whitelist; accept
+        } elsif (domain_is_bad()) {
+          # reject
+        } else { 
+          # accept
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;domain_is_bad()&lt;/code&gt; takes longer, because it does many pattern matches. I discussed it in &lt;a href=&#34;http://localhost:1313/pub/2000/02/spamfilter.html&#34;&gt;Part 2.&lt;/a&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-a-few-more-heuristics-a-few-more-heuristics-span&#34;&gt;&lt;span id=&#34;A_Few_More_Heuristics&#34;&gt;A Few More Heuristics&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;Checking the &lt;code&gt;From:&lt;/code&gt;, &lt;code&gt;Reply-To:&lt;/code&gt;, and &lt;code&gt;Received:&lt;/code&gt; lines for the presence of domains that are `bad&amp;rsquo; is the main part of the program. But there are a few extra miscellaneous rules I&amp;rsquo;ve put in that have worked really well. The function &lt;code&gt;misc_bad_header&lt;/code&gt; checks these rules, returning true if it sees something bad, and false otherwise. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  return &#39;Addressed To: &amp;quot;you&amp;quot; or &amp;quot;friend&amp;quot;&#39; 
+    if $H{To} =~ /(you|friend)/i;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This line looks at the &lt;code&gt;To:&lt;/code&gt; line; if it&amp;rsquo;s addressed to &lt;code&gt;you&lt;/code&gt; or to &lt;code&gt;friend&lt;/code&gt;, it&amp;rsquo;s bad. &lt;code&gt;Friend@public.com&lt;/code&gt; was particularly common in Spam for a while. The string returned by &lt;code&gt;misc_bad_header&lt;/code&gt; is eventually entered in the log file as the reason for rejection.&lt;/p&gt;
+
+&lt;p&gt;At the end of the previous article, I asked what was wrong with the following &lt;code&gt;Received:&lt;/code&gt; line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        Received: from login_2961.sayme2.net (mail.sayme2.net[103.12.210.92])
+          by sayme2.net (8.8.5/8.7.3) with SMTP id XAA02040
+          for creditc@aoI.net;  Thu, 28 August 1997 15:51:23 -0700 (EDT)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;People found all sorts of things wrong that hadn&amp;rsquo;t occurred to me! For example, underscores are not allowed in domain names, so the name &lt;code&gt;login_2961.sayme2.net&lt;/code&gt; is illegal. However, many hosts do have illegal characters in their names, so this is probably not a good reason to reject the message.&lt;/p&gt;
+
+&lt;p&gt;Some people pointed out that the &lt;code&gt;Received:&lt;/code&gt; line contains the dubious host name &lt;code&gt;aoI.net&lt;/code&gt;, perhaps in hopes of fooling me into thinking that it actually said &lt;code&gt;aol.net&lt;/code&gt;. Of course, they don&amp;rsquo;t look similar to the computer at all.&lt;/p&gt;
+
+&lt;p&gt;Jan-Pieter Cornet pointed out that the date is in the wrong format: It&amp;rsquo;s illegal to spell out &lt;code&gt;August&lt;/code&gt;. It would be interesting to correlate the incidence of this sort of error with the incidence of Spam, but I haven&amp;rsquo;t done the analysis.&lt;/p&gt;
+
+&lt;p&gt;For me, the really interesting thing about this line is the time zone. &lt;code&gt;EDT&lt;/code&gt; usually stands for `Eastern Daylight Time&amp;rsquo;, and the -0700 means that it&amp;rsquo;s the time zone seven hours behind Universal Coordinated Time. Guess what? EDT is &lt;em&gt;four&lt;/em&gt; hours behind UTC, not seven. Similarly, &lt;code&gt;EST&lt;/code&gt; is `Eastern Standard Time&amp;rsquo;, which is -0500. When messages like this started to show up, I added these lines to &lt;code&gt;misc_bad_header()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  return &#39;Mangled time zone&#39; if $H{Received} =~ /-0600 \(EST\)/
+           || $H{Received} =~ /-0[57]00 \(EDT\)/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I don&amp;rsquo;t know what caused the errors in the first place, but for a long time they were extremely reliable spam detectors. Neither one has come by in almost a year though, which is a shame; I miss them.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-yet-more-heuristics-yet-more-heuristics-span&#34;&gt;&lt;span id=&#34;Yet_More_Heuristics&#34;&gt;Yet More Heuristics&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;Here are some good ones:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          return &#39;X-PMFLAGS header&#39; if exists $H{&#39;X-PMFLAGS&#39;};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I don&amp;rsquo;t know what an &lt;code&gt;X-PMFLAGS&lt;/code&gt; line is, but it only seems to appear in spam.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          return &#39;Message was handled by bulk.mail&#39; 
+            if $H{Received} =~ /bulk.mail/i ;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s a bulk mailing program called &lt;code&gt;bulk_mailer&lt;/code&gt; that identifies itself in the &lt;code&gt;Received:&lt;/code&gt; line.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          return &#39;Subject contains &amp;quot;ad&amp;quot;/&amp;quot;adv&amp;quot;&#39;
+            if $H{Subject} =~ /\badv?\b/i;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some spammers actually put a string like &lt;code&gt;ADV:&lt;/code&gt; into the subject line of their message. Of course, the law of evolution by natural selection says that this trait will be selected against, and the next generation of spammers won&amp;rsquo;t do it as much. In the meantime, it works well.&lt;/p&gt;
+
+&lt;p&gt;The next one is obvious:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          return &#39;Subject: line contains $$$ &#39;
+            if $H{Subject} =~ /\${3}/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next one isn&amp;rsquo;t so obvious:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          return &#39;Username is all digits&#39;
+            if $H{From} =~ /^\d+\@/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You&amp;rsquo;d be surprised at how often this comes up. Spammers seem to be moving away from it, though; now I&amp;rsquo;m more likely to get spam mail from an address like &lt;code&gt;23gfgd4@iperbole.bologna.it&lt;/code&gt;. I&amp;rsquo;d like to add a heuristic to throw away messages from unlikely-sounding usernames, but I don&amp;rsquo;t feel confident that I will be able to identify them reliably.&lt;/p&gt;
+
+&lt;p&gt;Finally, here&amp;rsquo;s a big heuristic that works well: Make a list of `bad&amp;rsquo; words, and reject any message that includes any of the `bad&amp;rsquo; words in any of the X-headers:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          my $pat = join &#39;|&#39;, @bad_words;
+          foreach $h (keys %H) {
+            next unless $h =~ /^X-/;
+            return &amp;quot;Header `$h&#39; contains bad word $1&amp;quot;
+              if $H{$h} =~ /($pat)/io;
+          }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What words are `bad&amp;rsquo;? Oh, the usual naughtiness. `Cyberpromo&amp;rsquo; heads the list. (Am I allowed to say that on a public web site?) `stealth&amp;rsquo; is a good one.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s a trick here that you might not have seen before. You have a bunch of patterns, in this case the items in &lt;code&gt;@bad_words&lt;/code&gt;, and a bunch of strings, in this case the values of &lt;code&gt;%H&lt;/code&gt;, and you want to see if any of the strings match any of the patterns. The obvious technique is to use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        foreach $string (values %H) { 
+          foreach $pattern (@bad_words) {
+            if ($string =~ /$pattern/) {
+              return &amp;quot;String $string matches pattern $pattern&amp;quot;
+            }
+          }
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a mistake. Why? Because a regex ie like a little computer program: It must to be compiled, and then it can be executed and given an input, which is the string that you want to match against it. Compiling a regex is relatively slow, but you only need to do it once, and then you can give it many strings and see if any of them match, without recompiling.&lt;/p&gt;
+
+&lt;p&gt;Perl normally compiles your regexes at the same time as it compiles the rest of your program. But if the regexes change at run time, it can&amp;rsquo;t do that. Instead, it compiles each one just as it is about to be used. If there are 42 strings in the string list, each regex gets compiled 42 times.&lt;/p&gt;
+
+&lt;p&gt;Just reversing the order of the &lt;code&gt;foreach&lt;/code&gt; loops speeds this up by a factor of 18, because each pattern is compiled only once, and then used for all the strings:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        foreach $pattern (@bad_words) {
+          foreach $string (values %H) { 
+            if ($string =~ /$pattern/) {
+              return &amp;quot;String $string matches pattern $pattern&amp;quot;
+            }
+          }
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(I ran a simple test with 16 strings and nine patterns. If there were more patterns, the speedup would be greater.)&lt;/p&gt;
+
+&lt;p&gt;If &lt;code&gt;misc_bad_header()&lt;/code&gt; is called only once, then compiling each pattern once is the best you can do. But if the loop just above is run twice, then all the patterns have to be compiled again the second time around; this is wasteful.&lt;/p&gt;
+
+&lt;p&gt;The solution is to construct &lt;em&gt;one&lt;/em&gt; pattern that never varies at all, and compile it exactly once. We can construct one pattern by joining the real patterns together with &lt;code&gt;|&lt;/code&gt;s in between. That&amp;rsquo;s what&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          my $pat = join &#39;|&#39;, @bad_words;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;does; it takes a &lt;code&gt;@bad_words&lt;/code&gt; list that looks like &lt;code&gt;(&#39;cyberpromo&#39;, &#39;stealth&#39;, ...)&lt;/code&gt; and turns it into a pattern that looks like &lt;code&gt;cyberpromo|stealth|...&lt;/code&gt;. Then we match against this pattern:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;         return &amp;quot;Header `$h&#39; contains bad word $1&amp;quot;
+           if $H{$h} =~ /($pat)/io;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;/o&lt;/code&gt; modifier tells Perl that even though &lt;code&gt;$pat&lt;/code&gt; looks like a variable, we&amp;rsquo;re really using it as a constant. We promise perl that &lt;code&gt;$pat&lt;/code&gt; will never change, and in return, Perl compiles the regex once, the first time it is needed, and never compiles it again.&lt;/p&gt;
+
+&lt;p&gt;In this program, this clever hack is probably not worth doing, because the filter program gets invoked once to handle one mail message, calls &lt;code&gt;misc_bad_headers()&lt;/code&gt; exactly once, and then exits. If I were doing it over, I would have left out the trick&amp;mdash;it comes under the heading of `premature optimization&amp;rsquo;, and premature optimization is the root of all evil. But the trick can be useful in other contexts.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-heuristics-that-didn-t-work-heuristics-that-didn-t-work-span&#34;&gt;&lt;span id=&#34;Heuristics_that_Didn_t_Work&#34;&gt;Heuristics that Didn&amp;rsquo;t Work&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;I got tired of getting mail titled &lt;code&gt;RE: BIOTECH BARGAIN!&lt;/code&gt; and &lt;code&gt;**LET YOUR COMPUTER MAKE MONEY WHILE YOU SLEEP!**&lt;/code&gt;, so I thought I&amp;rsquo;d try putting in a filter to reject mail whose &lt;code&gt;Subject:&lt;/code&gt; line was in all capitals:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;             my $s = $H{Subject};
+             # subject contains no lowercase letters
+             return &#39;Subject: all capitals&#39; if $s !~ /[a-z]/ ;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The very next email message I received was titled &lt;code&gt;FYI&lt;/code&gt;. It was from my brother-in-law. The spam filter rejected it. I commented out the `all capitals&amp;rsquo; test.&lt;/p&gt;
+
+&lt;p&gt;A few months later, I was ready for more abuse. I tried this::&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;             $s = tr/A-Za-z//cd;
+             return &#39;Subject: all capitals&#39; if $s !~ /[a-z]/ ;
+               &amp;amp;&amp;amp; length($s) &amp;gt; 6;  # and at least six capitals
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This removes non-letters from the subject, then rejects the message if the subject is all capitals and is at least seven letters long. Soon after I tried this, I got mail from one of my clients titled &lt;code&gt;URGENT FIX!!!&lt;/code&gt;. That was the end of that experiment.&lt;/p&gt;
+
+&lt;p&gt;The all-capitals subject line does not hold the record for the biggest spam filtering failure. That honor goes to this line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        return &#39;no To: line&#39; if $H{To} eq &#39;&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This seemed fairly innoccuous, and still does&amp;mdash;In fact, I&amp;rsquo;m still using it. Last November, when I was away in London, I received a bulk mail that fell afoul of this test and was sent to the spam file. All spam goes into a file so that I can glance over it later, just in case it turns out to be something important. The subject lines are logged separately. Usually I glance over the subject line log (which is short) looking for messages that might be interesting; if I see any, I go look in the spam file to see if it really is interesting.&lt;/p&gt;
+
+&lt;p&gt;When I got back from London, I glanced over the subject log, and saw that&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        Subject: A message from VA Linux Systems (Mostly in English)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;had been rejected because there was no &lt;code&gt;To:&lt;/code&gt; line. I peeked at the message in the spam file, but I didn&amp;rsquo;t look at it closely, because I had a ton of unanswered mail to get to. I forgot about it until a couple of months later when I ran into Chris DiBona at a conference. ``Did you get the letter?&amp;rdquo; he asked.&lt;/p&gt;
+
+&lt;p&gt;``What letter?&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;My spam filter had discarded VA Linux&amp;rsquo;s extremely lucrative IPO announcement.&lt;/p&gt;
+
+&lt;p&gt;Oops.&lt;/p&gt;
+
+&lt;p&gt;Why haven&amp;rsquo;t I taken out the &lt;code&gt;To:&lt;/code&gt; line rule? Because it worked! It was supposed to detect bulk mail, and that&amp;rsquo;s just what it did do. The moral here is that there&amp;rsquo;s some bulk mail that you actually want to receive.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-notes-from-last-time-notes-from-last-time-span&#34;&gt;&lt;span id=&#34;Notes_From_Last_Time&#34;&gt;Notes From Last Time&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;I got a lot of interesting mail about the last article in this series. Several people wrote to me to suggest a different filtering strategy: Simply throw away mail unless one of your own addresses is in the &lt;code&gt;To:&lt;/code&gt; line.&lt;/p&gt;
+
+&lt;p&gt;A lot of people wrote in about this, so it must work well for some people, but it won&amp;rsquo;t work for me. As I mentioned in &lt;a href=&#34;http://www.plover.com/~mjd/perl/lp/Spam.html&#34;&gt;Part 1&lt;/a&gt;, I had considered this back in 1996. I decided that it would probably result in a lot of false positives, where non-spam mail was discarded. (For example, the IPO mail would still have been rejected under this regime.) And then I went through my archive of spam and discovered that about 20% of it actually &lt;em&gt;was&lt;/em&gt; addressed to me, so I would have a 20% false negative rate also, where spam would get through to me because it was addressed to me. With the system I do use, the false positive rate is well below 10%, and the false negative rate is much lower.&lt;/p&gt;
+
+&lt;p&gt;Someone also wrote to suggest that whenever I got spam, I could send an automatic complaint letter to the relevant ISP, demanding revocation of the sender&amp;rsquo;s account.&lt;/p&gt;
+
+&lt;p&gt;This is a perfectly terrible idea, for several reasons. Most obviously, most spam I get these days has a fake return address anyway, and complaining to the owners of &lt;code&gt;hapless.com&lt;/code&gt; isn&amp;rsquo;t going to accomplish anything if the mail wasn&amp;rsquo;t actually sent from &lt;code&gt;hapless.com&lt;/code&gt;, except to harass the hapless owners. So it&amp;rsquo;s at best useless and at worst a serious nuisance to people who are already trying to deal with a huge number of bogus bounced messages.&lt;/p&gt;
+
+&lt;p&gt;But the real reason I hate this idea so much is that it makes even a small false positive rate into a disaster. I can&amp;rsquo;t reliably identify all the non-spam messages I get; even with three layers of backup, I still lost out on the VA Linux IPO because I thought it was spam. But I can live with that; I knew when I set up the filter that I might one day miss something important because of it. I made an informed decision to take that risk.&lt;/p&gt;
+
+&lt;p&gt;But my correspondents, the people who write to me, did not make an informed decision. They are stuck with my policy whether they like it or not, and I owe it to them to inconvenience them as little as possible. A legitimate person who sends me mail and falls afoul of the spam filter has to send their message to me again, and even though they only have to do it once, it&amp;rsquo;s inconvenient and annoying. That inconvenience and annoyance to innocent people who have never done anything wrong other than to try to communicate with me is the biggest problem with the whole filtering strategy.&lt;/p&gt;
+
+&lt;p&gt;But if inconveniencing my correspondent by forcing them to re-send a message is a selfish thing to do, how much more selfish is it to inconvenience them by mailing their ISP to demand that their account be shut down? I can apologize to someone for making them send a second message. How could I apologize for demanding that their internet access be revoked? I just don&amp;rsquo;t have that much gall.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-notes-from-next-time-notes-from-next-time-span&#34;&gt;&lt;span id=&#34;Notes_From_Next_Time&#34;&gt;Notes From Next Time&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;Coming next month, the last article in this series: Why I got 85 spam messages last Wednesday, why I&amp;rsquo;m not happy with filtering, and what I&amp;rsquo;m doing about it. This involves, of all things, a hack to the Apache web server.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>My Life With Spam</title>
+      <link>http://localhost:1313/pub/2000/02/spamfilter.html/</link>
+      <pubDate>Wed, 09 Feb 2000 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2000/02/spamfilter.html/</guid>
+      <description>
+
+&lt;p&gt;or&lt;/p&gt;
+
+&lt;p&gt;I wrote Part 1 of this series back in October 1999 for the LinuxPlanet web site, but the editors decided not to publish the rest of the series. Since then, many people have asked for the continuation. This article is Part 2.&lt;/p&gt;
+
+&lt;p&gt;Part 1 of the series discussed my early experiences with the spam problem, first on Usenet and then in my e-mail box. I talked about how to set up a mail filter program and how to have it parse incoming messages. I discussed splitting up the header into logical lines and why this is necessary. For the details and the Perl code, you can read &lt;a href=&#34;http://www.plover.com/~mjd/perl/lp/Spam.html&#34;&gt;the original article&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I also talked about my filtering philosophy, which is to blacklist the domains that send me a lot of spam, and reject mail from those domains.&lt;/p&gt;
+
+&lt;h1 id=&#34;span-id-domain-pattern-matching-domain-pattern-matching-span&#34;&gt;&lt;span id=&#34;Domain_Pattern_Matching&#34;&gt;Domain Pattern Matching&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;One way to handle domains might have been to take the &lt;code&gt;To:&lt;/code&gt; address in the message and strip off the host name. However, this is impossible because a host name &lt;em&gt;is&lt;/em&gt; a domain. &lt;code&gt;perl.com&lt;/code&gt; is both a host name and a domain; &lt;code&gt;www.perl.com&lt;/code&gt; is both a host name and a domain, and so is &lt;code&gt;chocolaty-goodness.www.perl.com&lt;/code&gt;. In practice, though, it&amp;rsquo;s easy to use a simple heuristic:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Split the host name into components.&lt;/li&gt;
+&lt;li&gt;If the last component is &lt;code&gt;com&lt;/code&gt;, &lt;code&gt;edu&lt;/code&gt;, &lt;code&gt;gov&lt;/code&gt;, &lt;code&gt;net&lt;/code&gt;, or &lt;code&gt;org&lt;/code&gt;, then the domain name is the last two components.&lt;/li&gt;
+&lt;li&gt;Otherwise, the domain name is the last three components&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The theory is that if the final component is not a generic top-level domain like &lt;code&gt;com&lt;/code&gt;, it is probably a two-letter country code. Most countries imitate the generic space at the second level of their domain. For example, the United Kingdom has &lt;code&gt;ac.uk&lt;/code&gt;, &lt;code&gt;co.uk&lt;/code&gt;, and &lt;code&gt;org.uk&lt;/code&gt; corresponding to &lt;code&gt;edu&lt;/code&gt;, &lt;code&gt;com&lt;/code&gt;, and &lt;code&gt;org&lt;/code&gt;, so when I get mail from &lt;code&gt;someone@thelonious.new.ox.ac.uk&lt;/code&gt;, I want to recognize the domain as &lt;code&gt;ox.ac.uk&lt;/code&gt; (Oxford University), not &lt;code&gt;ac.uk&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, this is a heuristic, which is a fancy way of saying that it doesn&amp;rsquo;t work. Many top-level domains aren&amp;rsquo;t divided up at the third level the way I assumed. For example, the &lt;code&gt;to&lt;/code&gt; domain has no organization at all, the same as the &lt;code&gt;com&lt;/code&gt; domain. If I get mail from &lt;code&gt;hot.spama.to&lt;/code&gt;, my program will blacklist that domain only, not realizing that it&amp;rsquo;s part of the larger &lt;code&gt;spama.to&lt;/code&gt; domain owned by the same people. So far, however, this has never come up.&lt;/p&gt;
+
+&lt;p&gt;And I didn&amp;rsquo;t include &lt;code&gt;mil&lt;/code&gt; in my list of exceptions. However, I&amp;rsquo;ve never gotten spam from a &lt;code&gt;mil&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Eventually the domain registration folks will introduce a batch of new generic top-level domains, such as &lt;code&gt;.firm&lt;/code&gt; and &lt;code&gt;.web&lt;/code&gt;. But they&amp;rsquo;ve been getting ready for it since 1996; they&amp;rsquo;re still working up to it; and I might grow old and die waiting for it to happen. (See &lt;a href=&#34;http://www.gtld-mou.org/&#34;&gt;http://www.gtld-mou.org/&lt;/a&gt; for more information.)&lt;/p&gt;
+
+&lt;p&gt;For all its problems, this method has worked just fine for a long time because hardly any of the problems ever actually come up. There&amp;rsquo;s a moral here: The world is full of terrifically over-engineered software. Sometimes you can waste a lot of time trying to find the perfect solution to a problem that only needs to be partially solved. Or as my friends at MIT used to say, ``Good enough for government work!&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the code for extracting the domain:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 1    my ($user, $site) = $s =~ /(.*)@(.*)/;
+ 2    next unless $site;
+ 3    my @components =  split(/\./, $site);
+ 4    my $n_comp = ($components[-1] =~ /^edu|com|net|org|gov$/) ? 2 : 3;
+ 5    my $domain = lc(join &#39;.&#39;, @components[-$n_comp .. -1]);
+ 6    $domain =~ s/^\.//;  # Remove leading . if there is one.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The sender&amp;rsquo;s address is in &lt;code&gt;$s&lt;/code&gt;. I extract the site name from the address with a simple pattern match, which is also a wonderful example of the &amp;ldquo;good enough&amp;rdquo; principle. Messages appear in the &lt;code&gt;comp.lang.perl.misc&lt;/code&gt; newsgroup every week asking for a pattern that matches an e-mail address. The senders get a lot of very long complicated answers, or are told that it can&amp;rsquo;t be done. And yet there it is. Sure, it doesn&amp;rsquo;t work. Of course, if you get mail addressed to ``@&amp;ldquo;@plover.com, it&amp;rsquo;s going to barf. Of course, if you get source-routed mail with an address like &amp;lt;@send.here.first:joe@send.here.afterwards,&amp;gt; it isn&amp;rsquo;t going to work.&lt;/p&gt;
+
+&lt;p&gt;But guess what? Those things never happen. A production mail server has to deal with these sorts of fussy details, but if my program fails to reject some message as spam because it made an overly simple assumption about the format of the mail addresses, there&amp;rsquo;s no harm done.&lt;/p&gt;
+
+&lt;p&gt;On line 2, we skip immediately to the next address if there&amp;rsquo;s no site name, since it now appears that this wasn&amp;rsquo;t an address at all. Line 3 breaks the site name up into components; &lt;code&gt;thelonious.new.ox.ac.uk&lt;/code&gt; is broken into &lt;code&gt;thelonious&lt;/code&gt;, &lt;code&gt;new&lt;/code&gt;, &lt;code&gt;ox&lt;/code&gt;, &lt;code&gt;ac&lt;/code&gt;, and &lt;code&gt;uk&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Line 4 is the nasty heuristic: It peeks at the last component, in this case &lt;code&gt;uk&lt;/code&gt;, and if it&amp;rsquo;s one of the magic five (&lt;code&gt;edu&lt;/code&gt;, &lt;code&gt;com&lt;/code&gt;, &lt;code&gt;net&lt;/code&gt;, &lt;code&gt;org&lt;/code&gt;, or &lt;code&gt;gov&lt;/code&gt;), it sets &lt;code&gt;$n_comp&lt;/code&gt; to 2; otherwise to 3. &lt;code&gt;$n_comp&lt;/code&gt; is going to be the number of components that are part of the domain, so the domain of &lt;code&gt;saul.cis.upenn.edu&lt;/code&gt; is &lt;code&gt;upenn.edu&lt;/code&gt;, and the domain of &lt;code&gt;thelonious.new.ox.ac.uk&lt;/code&gt; is &lt;code&gt;ox.ac.uk&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;To get the last component, we subscript the component array &lt;code&gt;@components&lt;/code&gt; with &lt;code&gt;-1&lt;/code&gt;. &lt;code&gt;-1&lt;/code&gt; as an array subscript means to get the last element of the array. Similarly, -2 means to get the next-to-last element. In this case, the last component is &lt;code&gt;uk&lt;/code&gt;, which doesn&amp;rsquo;t match the pattern, so &lt;code&gt;$n_comp&lt;/code&gt; is 3.&lt;/p&gt;
+
+&lt;p&gt;On line 5, &lt;code&gt;-$n_comp .. -1&lt;/code&gt; is really &lt;code&gt;-3 .. -1&lt;/code&gt;, which is the list &lt;code&gt;-3, -2, -1&lt;/code&gt;. We use a Perl feature called a &amp;ldquo;list slice&amp;rdquo; to extract just the elements -3, -2, and -1 from the &lt;code&gt;@components&lt;/code&gt; array. The syntax&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        @components[(some list)]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;invokes this feature. The list is taken to be a list of subscripts, and the elements of &lt;code&gt;@components&lt;/code&gt; with those subscripts are extracted, in order. This is why you can write&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        ($year, $month, $day) = (localtime)[5,4,3];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to extract the year, month, and day from &lt;code&gt;localtime&lt;/code&gt;, in that order&amp;ndash;it&amp;rsquo;s almost the same feature. Here we&amp;rsquo;re extracting elements -3 (the third-to-last), -2 (the second-to-last), and -1 (the last) and joining them together again. If &lt;code&gt;$n_comp&lt;/code&gt; had been 2, we would have gotten elements -2 and -1 only.&lt;/p&gt;
+
+&lt;p&gt;Finally, line 6 takes care of a common case in which the heuristic doesn&amp;rsquo;t work. If we get mail from &lt;code&gt;alcatel.at&lt;/code&gt;, and try to select the last three components, we&amp;rsquo;ll get one undefined component&amp;ndash;because there were really only two there&amp;ndash;and the result of the join will be &lt;code&gt;.alcatel.at&lt;/code&gt;, with a bogus null component on the front. Line 6 looks to see if there&amp;rsquo;s an extra period on the front of the domain, and if so, it chops it off.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-now-that-you-have-it-what-do-yo-now-that-you-have-it-what-do-you-do-with-it-span&#34;&gt;&lt;span id=&#34;Now_That_You_Have_it_What_Do_Yo&#34;&gt;Now That You Have it, What Do You Do With it?&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;I&amp;rsquo;ve extracted the domain name. The obvious thing to do is to have a big hash with every bad domain in it, and to look this domain up in the hash to see if it&amp;rsquo;s there. Looking things up in a hash is very fast.&lt;/p&gt;
+
+&lt;p&gt;However, that&amp;rsquo;s not what I decided to do. Instead, I have a huge file with a &lt;em&gt;regex&lt;/em&gt; in it for every bad domain, and I take the domain in question and match it against all the patterns in the file. That&amp;rsquo;s a lot slower. A &lt;em&gt;lot&lt;/em&gt; slower. Instead of looking up the domain instantaneously, it takes 0.24 seconds to match the patterns.&lt;/p&gt;
+
+&lt;p&gt;Some people might see that and complain that it was taking a thousand times as long as it should. And maybe that&amp;rsquo;s true. But the patterns are more flexible, and what&amp;rsquo;s a quarter of a second more or less? The mail filter handled 2,211 messages in the month of January. At 0.24 seconds each, the pattern matching is costing me less than 9 minutes per month.&lt;/p&gt;
+
+&lt;p&gt;So much for the downside. What&amp;rsquo;s the upside? I get to use patterns. That&amp;rsquo;s a big upside.&lt;/p&gt;
+
+&lt;p&gt;I have a pattern in my pattern file that rejects any mail from anyone who claims that their domain is all digits, such as 12345.com. That would have been impossible with a hash. I have a pattern that rejects mail from anyone with &amp;ldquo;casino&amp;rdquo; in their domain. That took care of spam from Planetrockcasino.com and Romancasino.com before I had ever heard of those places. Remember that I only do the pattern matching on the domain, so if someone sent me mail from &lt;code&gt;casino.ox.ac.uk&lt;/code&gt;, it would get through.&lt;/p&gt;
+
+&lt;p&gt;The regexes actually do have a potential problem: The patterns are in the file, one pattern per line. Suppose I&amp;rsquo;m adding patterns to the file and I leave a blank line by mistake. Then some mail arrives. The filter extracts the domain name of the sender and starts working through the pattern file. 0.24 seconds later, it gets to the blank line.&lt;/p&gt;
+
+&lt;p&gt;What happens when you match a string against the empty pattern? It matches, that&amp;rsquo;s what. Every string matches the empty pattern. Since the patterns are assumed to describe mail that I &lt;em&gt;don&amp;rsquo;t&lt;/em&gt; want to receive, the letter is rejected. So is the next letter. So is every letter. Whoops.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s tempting to say that I should just check for blank patterns and skip them if they&amp;rsquo;re there, but that won&amp;rsquo;t protect me against a line that has only a period and nothing else&amp;ndash;that will also match any string.&lt;/p&gt;
+
+&lt;p&gt;Instead, here&amp;rsquo;s what I&amp;rsquo;ve done:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $MATCHLESS = &amp;quot;qjdhqhd1!&amp;amp;@^#^*&amp;amp;!@#&amp;quot;;
+
+        if ($MATCHLESS =~ /$badsite_pat/i) {
+          &amp;amp;defer(&amp;quot;The bad site pattern matched `$MATCHLESS&#39;, 
+                  so I assume it would match anything.  Deferring...\n&amp;quot;);
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since the patterns are designed to identify bad domain names, none of them should match &lt;code&gt;qjdhqhd1!&amp;amp;@^#^*&amp;amp;!@#&lt;/code&gt;. If a pattern &lt;em&gt;does&lt;/em&gt; match that string, it probably also matches a whole lot of other stuff that it shouldn&amp;rsquo;t. In that case, the program assumes that the pattern file is corrupt, and defers the delivery. This means that it tells &lt;code&gt;qmail&lt;/code&gt; that it isn&amp;rsquo;t prepared to deliver the mail at the present time, and that &lt;code&gt;qmail&lt;/code&gt; should try again later on. &lt;code&gt;qmail&lt;/code&gt; will keep trying until it gets through or until five days have elapsed, at which point it gives up and bounces the message back to the sender. Chances are that I&amp;rsquo;ll notice that I&amp;rsquo;m not getting any mail sometime before five days have elapsed, look in the filter log file, and fix the pattern file. As &lt;code&gt;qmail&lt;/code&gt; retries delivery, the deferred messages will eventually arrive.&lt;/p&gt;
+
+&lt;p&gt;Deferring a message is easy when your mailer is &lt;code&gt;qmail&lt;/code&gt;. Here&amp;rsquo;s the &lt;code&gt;defer&lt;/code&gt; subroutine in its entirety:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        sub defer {
+          my $msg = shift;
+          carp $msg;
+          exit 111;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When &lt;code&gt;qmail&lt;/code&gt; sees the 111 exit status from the filter program, it interprets it as a request to defer delivery. (Similarly, 100 tells &lt;code&gt;qmail&lt;/code&gt; that there was a permanent failure and it should bounce the message back to the sender immediately. The normal status of 0 means that delivery was successful.)&lt;/p&gt;
+
+&lt;p&gt;I would still be in trouble if I installed &lt;code&gt;com&lt;/code&gt; as a pattern in the pattern file, because it matches more domains than it should, but the &lt;code&gt;MATCHLESS&lt;/code&gt; test doesn&amp;rsquo;t catch it. But unlike the blank line problem, it&amp;rsquo;s never come up, so I&amp;rsquo;ve decided to deal with it when it arises.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-c-received-lines-received-lines-span&#34;&gt;&lt;span id=&#34;C_Received_Lines&#34;&gt;&amp;lsquo;Received:&amp;rsquo; Lines&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;In addition to filtering the &lt;code&gt;From:&lt;/code&gt;, &lt;code&gt;Reply-To:&lt;/code&gt;, and envelope sender addresses, I also look through the list of forwarding hosts for bad domains. The &lt;code&gt;From:&lt;/code&gt; and &lt;code&gt;Reply-To:&lt;/code&gt; headers are easy to forge: The sender can put whatever they want in those fields and spammers usually do. But the &lt;code&gt;Received:&lt;/code&gt; fields are a little different. When computer A sends a message to computer B, the &lt;em&gt;receiving&lt;/em&gt; computer B adds a &lt;code&gt;Received:&lt;/code&gt; header to the message, recording who it is, when it received the message, and from whom. If the message travels through several computers, there will be several received lines, with the earliest one at the bottom of the header and the later ones added above it. Here&amp;rsquo;s a typical set of &lt;code&gt;Received:&lt;/code&gt; lines:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;1   Received: (qmail 7131 invoked by uid 119); 22 Feb 1999 22:01:59 -0000
+
+2   Received: (qmail 7124 invoked by uid 119); 22 Feb 1999 22:01:58 -0000
+
+3   Received: (qmail 7119 invoked from network); 22 Feb 1999 22:01:53 -0000
+
+4   Received: from renoir.op.net (root@209.152.193.4)
+
+5   by plover.com with SMTP; 22 Feb 1999 22:01:53 -0000
+
+6   Received: from pisarro.op.net (root@pisarro.op.net [209.152.193.22]) 
+    by renoir.op.net (o1/$Revision:1.18 $) with ESMTP id RAA24909 
+    for &amp;lt;mjd@mail.op.net&amp;gt;; Mon, 22 Feb 1999 17:01:48 -0500 (EST)
+
+7   Received: from linc.cis.upenn.edu (LINC.CIS.UPENN.EDU [158.130.12.3])
+    by pisarro.op.net 
+   (o2/$Revision: 1.1 $) with ESMTP id RAA12310 for 
+   &amp;lt;mjd@op.net&amp;gt;; Mon, 22 Feb 1999 17:01:45 -0500(EST)
+
+8   Received: from saul.cis.upenn.edu (SAUL.CIS.UPENN.EDU [158.130.12.4])
+
+9   by linc.cis.upenn.edu (8.8.5/8.8.5) with ESMTP id QAA15020
+
+10  for &amp;lt;mjd@op.net&amp;gt;; Mon, 22 Feb 1999 16:56:20 -0500 (EST)
+
+11  Received: from mail.cucs.org (root@cucs-a252.cucs.org [207.25.43.252])
+
+12  by saul.cis.upenn.edu (8.8.5/8.8.5) with ESMTP id QAA09203
+13  for &amp;lt;mjd@saul.cis.upenn.edu&amp;gt;; Mon, 22 Feb 1999 16:56:19 -0500 (EST)
+
+14  Received: from localhost.cucs.org ([192.168.1.223])
+
+15  by mail.cucs.org (8.8.5/8.8.5) with SMTP id QAA06332
+
+16  for &amp;lt;mjd@saul.cis.upenn.edu&amp;gt;; Mon, 22 Feb 1999 16:54:11 -0500
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is from a message that someone sent to &lt;code&gt;mjd@saul.cis.upenn.edu&lt;/code&gt;, an old address of mine. Apparently the sender&amp;rsquo;s mail client, in &lt;code&gt;localhost.cucs.org&lt;/code&gt;, initially passed the message to the organization&amp;rsquo;s mail server, &lt;code&gt;mail.cucs.org&lt;/code&gt;. The mail server then added the lines 14-16 to the message header.&lt;/p&gt;
+
+&lt;p&gt;The mail server then delivered the message to &lt;code&gt;saul.cis.upenn.edu&lt;/code&gt; over the Internet. &lt;code&gt;saul&lt;/code&gt; added lines 11-13. Notice that the time on line 13 is 128 seconds after the time on line 13. This might mean that the message sat on &lt;code&gt;mail.cucs.org&lt;/code&gt; for 128 seconds before it was delivered to &lt;code&gt;saul&lt;/code&gt;, or it might mean that the two computers&amp;rsquo; clocks are not properly synchronized.&lt;/p&gt;
+
+&lt;p&gt;When the mail arrived on &lt;code&gt;saul&lt;/code&gt;, the mailer there discovered that I have a &lt;code&gt;.forward&lt;/code&gt; file there directing delivery to &lt;code&gt;mjd@op.net&lt;/code&gt;. &lt;code&gt;saul&lt;/code&gt; needed to forward the message to &lt;code&gt;mjd@op.net&lt;/code&gt;. However, most machines in the University of Pennsylvania CIS department do not deliver Internet mail themselves. Instead, they forward all mail to a departmental mail hub, &lt;code&gt;linc&lt;/code&gt;, which takes care of delivering all the mail outside the organization. Lines 8-10 were added by &lt;code&gt;linc&lt;/code&gt; when the mail was delivered to it by &lt;code&gt;saul&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;linc&lt;/code&gt; looked up &lt;code&gt;op.net&lt;/code&gt; in the domain name service and discovered that the machine &lt;code&gt;pisarro.op.net&lt;/code&gt; was receiving mail for the &lt;code&gt;op.net&lt;/code&gt; domain. Line 7 was added by &lt;code&gt;pisarro&lt;/code&gt; when it received the mail from &lt;code&gt;linc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I don&amp;rsquo;t know why &lt;code&gt;pisarro&lt;/code&gt; then delivered the message to &lt;code&gt;renoir&lt;/code&gt;, but we know that it did, because line 6 says so.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;qmail&lt;/code&gt; on &lt;code&gt;plover.com&lt;/code&gt; added lines 4-5 when the mail was delivered from &lt;code&gt;renoir&lt;/code&gt;. Then the final three lines, 1-3, were added by &lt;code&gt;qmail&lt;/code&gt; for various local deliveries to &lt;code&gt;mjd&lt;/code&gt;, then &lt;code&gt;mjd-filter&lt;/code&gt; (which runs my spam filter), and finally, &lt;code&gt;mjd-filter-deliver&lt;/code&gt;, which is the address that actually leads to my mailbox.&lt;/p&gt;
+
+&lt;p&gt;What can we learn from all this? The &lt;code&gt;Received:&lt;/code&gt; lines have a record of every computer that the message passed through on its way to being delivered. And unlike the &lt;code&gt;From:&lt;/code&gt; and &lt;code&gt;Reply-To:&lt;/code&gt; lines, it really does record where the message has been.&lt;/p&gt;
+
+&lt;p&gt;Suppose the original sender, at &lt;code&gt;localhost.cucs.org&lt;/code&gt; had wanted to disguise the message&amp;rsquo;s origin. Let&amp;rsquo;s call him Bob. Bob cannot prevent &lt;code&gt;cucs.org&lt;/code&gt; from being mentioned in the message header. Why? Because there it is in line 11. Line 11 was put there by &lt;code&gt;saul.cis.upenn.edu&lt;/code&gt;, not by Bob, who has no control over computers in the &lt;code&gt;upenn.edu&lt;/code&gt; domain.&lt;/p&gt;
+
+&lt;p&gt;Bob can try to confuse the issue by &lt;em&gt;adding&lt;/em&gt; spurious &lt;code&gt;Received:&lt;/code&gt; lines, but he can&amp;rsquo;t prevent the other computers from adding the correct ones.&lt;/p&gt;
+
+&lt;p&gt;Now, when spammers send spam, they often forge the &lt;code&gt;From:&lt;/code&gt; and the &lt;code&gt;Reply-To:&lt;/code&gt; lines so that people don&amp;rsquo;t know who they are and can&amp;rsquo;t come and kill them. But they can&amp;rsquo;t forge the &lt;code&gt;Received:&lt;/code&gt; lines because it&amp;rsquo;s another computer that puts those in. So when we&amp;rsquo;re searching for domains to check against the list of bad domain patterns, we should look through the &lt;code&gt;Received:&lt;/code&gt; lines too.&lt;/p&gt;
+
+&lt;p&gt;The difficulty with that is that there&amp;rsquo;s no standard for what a &lt;code&gt;Received:&lt;/code&gt; line should look like or what should be in it, and every different mailer does its own thing. You can see this in the example above. We need a way to go over the &lt;code&gt;Received:&lt;/code&gt; lines and look for things that might be domains. This is just the sort of thing that Perl regexes were designed for.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;1  sub forwarders { 2    return @forwarders if @forwarders; 3    4     @forwarders =  5  grep { /[A-Za-z]/ } ($H{&#39;Received&#39;} =~ m/(?:[\w-]+\.)+[\w-]+/g); 6  7   @forwarders = grep      { !/(\bplover\.com|\bcis\.upenn\.edu|\bpobox\.com|\bop\.net)$/i }     @forwarders; 8  9   foreach $r (@forwarders) { 10    $r{lc $r} = 1; 11     } 12  13   @forwarders = keys %r; 14  15   return @forwarders; 16     }&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;The message header has already been parsed and placed into the &lt;code&gt;%H&lt;/code&gt; hash. &lt;code&gt;$H{Received}&lt;/code&gt; contains the concatenation of all the &lt;code&gt;Received&lt;/code&gt; lines in the whole message. The purpose of the &lt;code&gt;forwarders()&lt;/code&gt; function is to examine &lt;code&gt;$H{Received}&lt;/code&gt;, extract all the domain names it can find, and place them in the array &lt;code&gt;@forwarders&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Lines 4-5 are the heart of this process. Let&amp;rsquo;s look a little more closely.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $H{&#39;Received&#39;} =~ m/(?:[\w-]+\.)+[\w-]+/g
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This does a pattern match in the &lt;code&gt;Received:&lt;/code&gt; lines. &lt;code&gt;[\w-]&lt;/code&gt; looks for a single letter, digit, underscore, or hyphen, while &lt;code&gt;[\w-]+&lt;/code&gt; looks for a sequence of such characters, such as &lt;code&gt;saul&lt;/code&gt; or &lt;code&gt;apple-gunkies&lt;/code&gt;. This is a domain component. &lt;code&gt;[\w-]+\.&lt;/code&gt; looks for a domain component followed by a period, like &lt;code&gt;saul.&lt;/code&gt; or &lt;code&gt;apple-gunkies.&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Ignore the &lt;code&gt;?:&lt;/code&gt; for the time being. Without it, the pattern is &lt;code&gt;([\w-]+\.)+[\w-]+&lt;/code&gt;, which means a domain component followed by a period, then another domain component followed by another period, and so on, and ending with a domain component and no period. So this is a pattern that will match something that looks like a domain.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;/g&lt;/code&gt; modifier on the match instructs Perl to find &lt;em&gt;all&lt;/em&gt; matching substrings and to return a list of them. Perl will look through the &lt;code&gt;Received:&lt;/code&gt; headers, pulling out all the things that look like domains, making them into a list, and returning the list of domains.&lt;/p&gt;
+
+&lt;p&gt;Another example of this feature:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$s = &amp;quot;Timmy is 7 years old and he lives at 350 Beacon St. 
+Boston, MA 02134&amp;quot; @numbers = ($s =~ m/\d+/g);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now &lt;code&gt;@numbers&lt;/code&gt; contains (7, 350, 02134).&lt;/p&gt;
+
+&lt;p&gt;I still haven&amp;rsquo;t explained that &lt;code&gt;?:&lt;/code&gt;. I have to confess to a lie. Perl only returns the list of matching substrings if the pattern contains no parentheses. If the pattern contains parentheses, the parentheses cause part of the string to be captured into the special &lt;code&gt;$1&lt;/code&gt; variable, and the match returns a list of the &lt;code&gt;$1&lt;/code&gt;s instead of a list of the entire matching substrings. If I&amp;rsquo;d done&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;quot;saul.cis.upenn.edu plover.com&amp;quot; =~ m/([\w-]+\.)+[\w-]+/g
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;instead, I would have gotten the list &lt;code&gt;(&amp;quot;saul.cis.upenn.&amp;quot;,    &amp;quot;plover.&amp;quot;)&lt;/code&gt;, which are the &lt;code&gt;$1&lt;/code&gt;&amp;rsquo;s, because the &lt;code&gt;com&lt;/code&gt; parts match the final &lt;code&gt;[\w-]+&lt;/code&gt;, which is not in parentheses. The &lt;code&gt;?:&lt;/code&gt; in the real pattern is nothing more than a switch to tell Perl not to use &lt;code&gt;$1&lt;/code&gt;; . Since &lt;code&gt;$1&lt;/code&gt; isn&amp;rsquo;t being used, we get the default behavior, and the match returns a list of everything that matched.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  4   @forwarders = 
+  5   grep { /[A-Za-z]/ } ($H{&#39;Received&#39;} =~ m/(?:[\w-]+\.)+[\w-]+/g);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The pattern match generates a list of things that might be domains. The list initially looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  renoir.op.net 209.152.193.4
+  plover.com
+  pisarro.op.net pisarro.op.net 209.152.193.22 renoir.op.net 1.18 mail.op.net
+  linc.cis.upenn.edu LINC.CIS.UPENN.EDU 158.130.12.3 pisarro.op.net 1.1 op.net
+  saul.cis.upenn.edu SAUL.CIS.UPENN.EDU 158.130.12.4
+  linc.cis.upenn.edu 8.8.5 8.8.5
+  op.net
+  mail.cucs.org cucs-a252.cucs.org 207.25.43.252
+  saul.cis.upenn.edu 8.8.5 8.8.5
+  saul.cis.upenn.edu
+  localhost.cucs.org 192.168.1.223
+  mail.cucs.org 8.8.5 8.8.5
+  saul.cis.upenn.edu
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, it contains a lot of junk. Most notably, it contains several occurrences of &lt;code&gt;8.8.5&lt;/code&gt;, because the &lt;code&gt;upenn.edu&lt;/code&gt; mailer was Sendmail version 8.8.5. There are also some IP addresses that we won&amp;rsquo;t be able to filter, and some other things that look like version numbers. The &lt;code&gt;grep&lt;/code&gt; filters this list of items and passes through only those that contain at least one letter, discarding the entirely numeric ones.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;@forwarders&lt;/code&gt; is now&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  renoir.op.net
+  plover.com
+  pisarro.op.net pisarro.op.net renoir.op.net mail.op.net
+  linc.cis.upenn.edu LINC.CIS.UPENN.EDU pisarro.op.net op.net
+  saul.cis.upenn.edu SAUL.CIS.UPENN.EDU
+  linc.cis.upenn.edu
+  op.net
+  mail.cucs.org cucs-a252.cucs.org
+  saul.cis.upenn.edu
+  saul.cis.upenn.edu
+  localhost.cucs.org
+  mail.cucs.org
+  saul.cis.upenn.edu
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The rest of the function is just a little bit of cleanup. Line 7 discards several domain names that aren&amp;rsquo;t worth looking at because they appear so often:&lt;/p&gt;
+
+&lt;p&gt;``&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;7  @forwarders = grep { !/(\bplover\.com|\bcis\.upenn\.edu|\bpobox\.com|\bop\.net)$/i }
+   @forwarders;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Plover.com is my domain, and it&amp;rsquo;s going to appear in all my mail, so there&amp;rsquo;s no point in checking it. I worked at the University of Pennsylvania for four and a half years, and I get a lot of mail forwarded from there, so there&amp;rsquo;s no point in checking &lt;code&gt;cis.upenn.edu&lt;/code&gt; domains either. Similarly, I subscribe to the Pobox.com lifetime e-mail forwarding service, and I get a lot of mail forwarded through there. &lt;code&gt;op.net&lt;/code&gt; is my ISP domain name, which handles mail for me when Plover is down. Line 7 discards all these domains from the &lt;code&gt;@forwarders&lt;/code&gt; list, leaving only the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;       mail.cucs.org cucs-a252.cucs.org
+       localhost.cucs.org
+       mail.cucs.org
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Lines 9-13 now discard duplicate items, using a common Perl idiom:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 9     foreach $r (@forwarders) {
+ 10       $r{lc $r} = 1;
+ 11     }
+ 12
+ 13     @forwarders = keys %r;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We use the remaining items as keys in a hash. Since a hash can&amp;rsquo;t have the same key twice, the duplicate &lt;code&gt;mail.cucs.org&lt;/code&gt; has no effect on the hash, which ends up with the keys, &lt;code&gt;mail.cucs.org&lt;/code&gt;, &lt;code&gt;cucs-a252.cucs.org&lt;/code&gt; and &lt;code&gt;localhost.cucs.org&lt;/code&gt;. The values associated with these keys are each &amp;ldquo;1,&amp;rdquo; which doesn&amp;rsquo;t matter. When we ask Perl for a list of keys on line 13, we get each key exactly once.&lt;/p&gt;
+
+&lt;p&gt;Finally, line 15 returns the list of forwarders to whomever needed it.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s one little thing I didn&amp;rsquo;t discuss:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  2       return @forwarders if @forwarders;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first thing the function does is check to see if it&amp;rsquo;s already processed the &lt;code&gt;Received:&lt;/code&gt; lines and the computer &lt;code&gt;@forwarders&lt;/code&gt;. If so, it returns the list without computing it over again. That way I can just call &lt;code&gt;forwarders()&lt;/code&gt; anywhere in my program that I need a list of forwarders, without worrying that I might be doing the same work more than once; the &lt;code&gt;forwarders()&lt;/code&gt; function guarantees to return immediately after the first time I call it.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-more-to-come-more-to-come-span&#34;&gt;&lt;span id=&#34;More_to_Come&#34;&gt;More to Come&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;Because of the long delay, I&amp;rsquo;ll repeat the quiz from the first article: What&amp;rsquo;s wrong with this header line?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Received: from login_2961.sayme2.net (mail.sayme2.net[103.12.210.92])
+by sayme2.net (8.8.5/8.7.3) with SMTP id XAA02040
+for creditc@aoI.net;  Thu, 28 August 1997 15:51:23 -0700 (EDT)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The story&amp;rsquo;s not over. In the next article, I&amp;rsquo;ll talk about some other rules I used to filter the spam; one of them would have thrown out messages when it saw a line like the one above. Another one throws out mail when there&amp;rsquo;s no &lt;code&gt;To:&lt;/code&gt; line in the message&amp;ndash;a likely sign of bulk mail.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll also tell a cautionary tale of how I might have lost a lot of money because my system worked too well, and how I found out that sometimes, you &lt;em&gt;want&lt;/em&gt; to get unsolicited bulk mail.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

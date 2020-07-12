@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Writing your own XS functions </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Write functions that execute at the speed of C"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/writing-your-own-xs-functions/" />
+<meta property="og:title" content="Writing your own XS functions" />
+<meta property="og:description" content="Write functions that execute at the speed of C">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2018-01-01T01:01:01Z" />
+<meta property="og:image" content="http://localhost:1313/images/author/david-farrell.jpg" />
+<meta property="og:article:tag" content="xs" />
+<meta property="og:article:tag" content="stdint.h" />
+<meta property="og:article:tag" content="perlapi" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Writing your own XS functions</h1>
+              <p class="blog-post-meta">Jan 12, 2018 by
+              
+              
+                
+                
+                <a href="#author-bio-david-farrell">David Farrell</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>In <a href="/article/getting-started-with-xs/">part one</a>, we learned the basic components of XS, and integrated
+two C functions into Perl. This chapter is going to show you how to define xsubs
+that accept multiple parameters, and define your own logic, instead of using XS
+as a Foreign Function Interface to a C library.</p>
+
+<p>You&rsquo;ll need the files from <a href="/article/getting-started-with-xs/">part one</a> to execute the code in this article.</p>
+
+<h3 id="module-code">Module Code</h3>
+
+<p>As before, we&rsquo;ll define the module code to load our XS. This is all that&rsquo;s
+required:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">package</span> XS::Tutorial::Two;
+<span style="color:#66d9ef">require</span> XSLoader;
+
+XSLoader::load();
+<span style="color:#ae81ff">1</span>;</code></pre></div>
+<p>That should be saved as <code>lib/XS/Tutorial/Two.pm</code>.</p>
+
+<h3 id="xs-code">XS Code</h3>
+
+<p>The top of the XS file will look similar to the previous chapter:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#define PERL_NO_GET_CONTEXT </span><span style="color:#75715e">// we&#39;ll define thread context if necessary (faster)
+</span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;EXTERN.h&#34;         // globals/constant import locations</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;perl.h&#34;           // Perl symbols, structures and constants definition</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;XSUB.h&#34;           // xsubpp functions and macros</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;stdint.h&#34;         // portable integer types</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+MODULE <span style="color:#f92672">=</span> XS<span style="color:#f92672">::</span>Tutorial<span style="color:#f92672">::</span>Two  PACKAGE <span style="color:#f92672">=</span> XS<span style="color:#f92672">::</span>Tutorial<span style="color:#f92672">::</span>Two
+PROTOTYPES: ENABLE</code></pre></div>
+<p>Remember to append any XS code after the <code>PROTOTYPES</code> line. This should be saved
+as <code>lib/XS/Tutorial/Two.xs</code>.</p>
+
+<h3 id="adding-numbers">Adding numbers</h3>
+
+<p>Here&rsquo;s a simple declaration of an xsub that adds two integers:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">int</span>
+<span style="color:#a6e22e">add_ints</span> (addend1, addend2)
+  <span style="color:#66d9ef">int</span> addend1
+  <span style="color:#66d9ef">int</span> addend2
+  CODE:
+    RETVAL <span style="color:#f92672">=</span> addend1 <span style="color:#f92672">+</span> addend2;
+  OUTPUT:
+    RETVAL</code></pre></div>
+<p>This declares an xsub called <code>add_ints</code> which accepts two integers and whose
+return type is <code>int</code>. Note the <a href="https://stackoverflow.com/questions/1630631/alternative-kr-c-syntax-for-function-declaration-versus-prototypes">K&amp;R</a> style of the function definition. This can also be written as:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">add_ints (<span style="color:#66d9ef">int</span> addend1, <span style="color:#66d9ef">int</span> addend2)</code></pre></div>
+<p>But you rarely see it done that way in the wild. I don&rsquo;t know if that&rsquo;s a cargo
+cult thing or there are edge cases to the xsub compiler that I&rsquo;m not aware of.
+Just to be safe, I&rsquo;ll keep doing it the way everyone else does (the cult
+persists!).</p>
+
+<p>Whereas <a href="/article/getting-started-with-xs/">before</a> we were essentially mapping C functions like <code>srand</code> to Perl,
+here we&rsquo;re declaring our own logic: <code>add_ints</code> isn&rsquo;t imported from anywhere,
+we&rsquo;re declaring it as a new function.</p>
+
+<p>Since <code>add_ints</code> is a new function, we need to define the logic of it, and
+that&rsquo;s where the <code>CODE</code> section comes in. Here we can write C code which
+forms the body of the function. In this example, I add the two subroutine
+parameters together and assign the result to <code>RETVAL</code>.</p>
+
+<p><a href="https://perldoc.perl.org/perlxs.html#The-RETVAL-Variable">RETVAL</a> (&ldquo;RETurn VALue&rdquo;) is a special variable that is declared by the xsub processor
+(xsubpp). The <code>OUTPUT</code> section accepts the return variable for the xsub, placing
+it on the stack, so that calling code will receive it.</p>
+
+<h3 id="adding-more-than-two-numbers">Adding more than two numbers</h3>
+
+<p>Adding two numbers is all well and good, but lists are the lingua franca of
+Perl. Let&rsquo;s update the <code>add_ints</code> xsub to accept n values:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">int32_t
+<span style="color:#a6e22e">add_ints</span> (...)
+  CODE:
+    uint32_t i;
+    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> items; i<span style="color:#f92672">++</span>) {
+      <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>SvOK(ST(i)) <span style="color:#f92672">||</span> <span style="color:#f92672">!</span>SvIOK(ST(i)))
+        croak(<span style="color:#e6db74">&#34;requires a list of integers&#34;</span>);
+
+      RETVAL <span style="color:#f92672">+=</span> SvIVX(ST(i));
+    }
+  OUTPUT:
+    RETVAL</code></pre></div>
+<p>First off, notice I&rsquo;ve updated the return value. One issue with using <code>int</code> in
+C is it may be a different size on different machine architectures. <code>int32_t</code>
+is from the <code>stdint.h</code> library, and guaranteed to be a 32 bit signed integer.</p>
+
+<p>I&rsquo;ve replaced the function parameters with <code>...</code> which indicates the function
+accepts a variable number of arguments, just like in C. In the <code>CODE</code> section,
+I declare a <code>uint32_t</code> integer called <code>i</code> (<code>uint32_t</code> is a 32 bit unsigned
+integer).</p>
+
+<p>The <code>for</code> loop uses the special variable <code>items</code> (the number of arguments passed
+to the function) to iterate over the arguments. The <code>if</code> statement calls
+the macro <code>ST</code> to access the stack variable at position <code>i</code>. This is used to
+check that the scalar is defined (<code>SvOK</code>) and that it is an integer (<code>SvIOK</code>).
+If either test fails, the code calls <code>croak</code> to throw a fatal exception.</p>
+
+<p>Otherwise the integer value is extracted from the scalar (<code>SvIVX</code>) and added
+to <code>RETVAL</code>. If all of these C macros look strange to you, don&rsquo;t worry, they are
+weird! They are part of the Perl C API, and they&rsquo;re documented in <a href="https://perldoc.perl.org/perlapi.html">perlapi</a>.</p>
+
+<h3 id="edge-cases">Edge cases</h3>
+
+<p>It&rsquo;s probably a good time to write some tests for this function, here&rsquo;s a
+start:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Test::More;
+
+<span style="color:#66d9ef">BEGIN</span> { use_ok <span style="color:#e6db74">&#39;XS::Tutorial::Two&#39;</span> }
+
+cmp_ok XS::Tutorial::Two::add_ints(<span style="color:#ae81ff">7</span>,<span style="color:#ae81ff">3</span>), <span style="color:#e6db74">&#39;==&#39;</span>, <span style="color:#ae81ff">10</span>;
+cmp_ok XS::Tutorial::Two::add_ints(<span style="color:#ae81ff">1500</span>, <span style="color:#ae81ff">21000</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1000</span>), <span style="color:#e6db74">&#39;==&#39;</span>, <span style="color:#ae81ff">21500</span>;
+
+done_testing;</code></pre></div>
+<p>I saved that file as <code>t/two.t</code>, and run it by building the distribution with
+<code>make</code>:</p>
+
+<pre><code>perl Makefile.PL &amp;&amp; make &amp;&amp; make test
+</code></pre>
+
+<p>Do you know what the return value would be if <code>add_ints</code> was called with no
+arguments? Maybe <code>undef</code>, since if there are no arguments, the for loop will
+not have any iterations. Here&rsquo;s a test for that condition:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">ok <span style="color:#f92672">!</span>defined XS::Tutorial::Two::add_ints(), <span style="color:#e6db74">&#39;empty list returns undef&#39;</span>;</code></pre></div>
+<p>Re-building and running the tests with:</p>
+
+<pre><code>make clean &amp;&amp; perl Makefile.PL &amp;&amp;  make &amp;&amp; make test
+</code></pre>
+
+<p>That test fails, because the return value is zero! This is a quirk of C:
+uninitialized integers can be zero. Let&rsquo;s fix the xsub to return <code>undef</code> when
+it doesn&rsquo;t receive any arguments:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">SV <span style="color:#f92672">*</span>
+<span style="color:#a6e22e">add_ints</span> (...)
+  PPCODE:
+    uint32_t i;
+    int32_t total <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">if</span> (items <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+      <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> items; i<span style="color:#f92672">++</span>) {
+        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>SvOK(ST(i)) <span style="color:#f92672">||</span> <span style="color:#f92672">!</span>SvIOK(ST(i)))
+          croak(<span style="color:#e6db74">&#34;requires a list of integers&#34;</span>);
+
+        total <span style="color:#f92672">+=</span> SvIVX(ST(i));
+      }
+      PUSHs(sv_2mortal(newSViv(total)));
+    }
+    <span style="color:#66d9ef">else</span> {
+      PUSHs(sv_newmortal());
+    }</code></pre></div>
+<p>Woah, quite a few changes! First I&rsquo;ve changed the return type to <code>SV *</code>, from
+<code>int32_t</code>. The reason for this will become clear in a moment.  The <code>CODE</code> section
+is now called <code>PPCODE</code>, which tells xsubpp that we will be managing the return
+value of xsub ourselves, hence the <code>OUTPUT</code> section is gone.</p>
+
+<p>I&rsquo;ve declared a new variable called <code>total</code> to capture the running total of the
+arguments as they&rsquo;re added. If we received at least one argument, total is copied
+into a new scalar integer value (<code>newSViv</code>), its reference count is corrected
+(<code>sv_2mortal</code>) and it is pushed onto the stack pointer (<code>PUSHs</code>).</p>
+
+<p>Otherwise a new <code>undef</code> scalar is declared with <code>sv_newmortal</code> and that is pushed
+onto the stack pointer instead. So in both cases we&rsquo;re returning an <code>SV</code>. And as
+we&rsquo;re returning a Perl type instead of a C type (<code>int32_t</code>) there is no need for
+xsubpp to cast our return value into a Perl scalar, we&rsquo;re already doing it.</p>
+
+<h3 id="wrap-up">Wrap up</h3>
+
+<p>This tutorial has covered some critical skills for writing xsubs: how to accept
+multiple parameters, how to write your own logic, and how to manage the stack
+pointer. If you grok all of these, and the content of <a href="/article/getting-started-with-xs/">part one</a>
+you have enough to get started writing your own XS code.</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+<li>This documentation and code is on CPAN (<a href="https://metacpan.org/pod/XS::Tutorial">XS::Tutorial</a>)</li>
+<li><a href="https://perldoc.perl.org/perlxs.html">perlxs</a> defines the keywords recognized by <a href="https://perldoc.perl.org/xsubpp.html">xsubpp</a></li>
+<li><a href="https://perldoc.perl.org/perlapi.html">perlapi</a> lists the C macros used to interact with Perl data structures (and the interpreter)</li>
+<li>The <a href="http://pubs.opengroup.org/onlinepubs/009695399/basedefs/stdint.h.html">stdint.h</a> C library provides sets of portable integer types</li>
+</ul>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/tutorials">tutorials</a></div>
+                
+                  <div class="tag"><a href="/tags/xs">xs</a></div>
+                
+                  <div class="tag"><a href="/tags/stdint.h">stdint.h</a></div>
+                
+                  <div class="tag"><a href="/tags/perlapi">perlapi</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-david-farrell">
+  <div class="col-sm-2">
+    
+    <a href="/authors/david-farrell/"><div class="circle-avatar" style="background-image:url(/images/author/david-farrell.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/david-farrell/"><h3>David Farrell</h3></a>
+    <p>David is the editor of Perl.com. An organizer of the <a href="http://www.meetup.com/The-New-York-Perl-Meetup-Group/">New York Perl Meetup</a>, he works for ZipRecruiter as a software developer, and sometimes <a href="https://twitter.com/perltricks">tweets</a> about Perl and Open Source.</p>
+    <h5><a href="/authors/david-farrell/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/writing-your-own-xs-functions.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

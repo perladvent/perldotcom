@@ -1,0 +1,1130 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Geoffrey Young on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/geoffrey-young/</link>
+    <description>Recent content in Geoffrey Young on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 08 Jul 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/geoffrey-young/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Integrating mod_perl with Apache 2.1 Authentication</title>
+      <link>http://localhost:1313/pub/2003/07/08/mod_perl.html/</link>
+      <pubDate>Tue, 08 Jul 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/07/08/mod_perl.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;scratching-your-own-itch&#34;&gt;Scratching Your Own Itch&lt;/h3&gt;
+
+&lt;p&gt;Some time ago I became intrigued with &lt;a href=&#34;ftp://ftp.isi.edu/in-notes/rfc2617.txt&#34;&gt;Digest authentication&lt;/a&gt;, which uses the same general mechanism as the familiar Basic authentication scheme but offers significantly more password security without requiring an SSL connection. At the time it was really just an academic interest—while some browsers supported Digest authentication, many of the more popular ones did not. Furthermore, even though the standard Apache distribution came with modules to support both Basic and Digest authentication, Apache (and thus mod_perl) only offered an API for interacting with Basic authentication. If you wanted to use Digest authentication, flat files were the only password storage medium available. With both of these restrictions, it seemed impractical to deploy Digest authentication in all but the most limited circumstances.&lt;/p&gt;
+
+&lt;p&gt;Fast forward two years. Practically all mainstream browsers now support Digest authentication, and my interest spawned what is now &lt;a href=&#34;https://metacpan.org/pod/Apache::AuthDigest&#34;&gt;Apache::AuthDigest&lt;/a&gt;, a module that gives mod_perl 1.0 developers an API for Digest authentication that is very similar to the Basic API that mod_perl natively supports. The one lingering problem is probably not surprising—Microsoft Internet Explorer. As it turns out, using the Digest scheme with MSIE requires a fully RFC-compliant Digest implementation, and Apache::AuthDigest was patterned after Apache 1.3&amp;rsquo;s &lt;code&gt;mod_digest.c&lt;/code&gt;, which is sufficient for most browsers but not MSIE.&lt;/p&gt;
+
+&lt;p&gt;In my mind, opening up Digest authentication through mod_perl still needed work to be truly useful, namely full RFC compliance to support MSIE. Wading through RFCs is not how I like to spend my spare time, so I started searching for a shortcut. Because Apache 2.0 did away with &lt;code&gt;mod_digest.c&lt;/code&gt; and replaced it with the fully compliant &lt;code&gt;mod_auth_digest.c&lt;/code&gt;, I was convinced that there was something in Apache 2.0 I could use to make my life easier. In Apache 2.1, the development version of the next generation Apache server, I found what I was looking for.&lt;/p&gt;
+
+&lt;p&gt;In this article, we&amp;rsquo;re going to examine a mod_perl module that provides Perl support for the new authentication provider hooks in Apache 2.1. These authentication providers make writing Basic authentication handlers easier than it has been in the past. At the same time, the new provider mechanism opens up Digest authentication to the masses, making the Digest scheme a real possibility for filling your dynamic authentication needs. While the material is somewhat dense, the techniques we will be looking at are some of the most interesting and powerful in the mod_perl arsenal. Buckle up.&lt;/p&gt;
+
+&lt;p&gt;To follow along with &lt;a href=&#34;http://www.modperlcookbook.org/~geoff/perl.com/Apache-AuthenHook-2.00_01.tar.gz&#34;&gt;the code&lt;/a&gt; in this article, you will need at least mod_perl version 1.99_10, which is currently only available from CVS. You will also need &lt;a href=&#34;http://httpd.apache.org/dev/&#34;&gt;Apache 2.1&lt;/a&gt;, which is also only available from CVS. Instructions for obtaining the sources for both can be found &lt;a href=&#34;http://perl.apache.org/docs/2.0/user/install/install.html#Getting_Bleeding_Edge_CVS_Sources&#34;&gt;here&lt;/a&gt;. When compiling Apache, keep in mind that the code presented here only works under the &lt;a href=&#34;http://httpd.apache.org/docs-2.0/mpm.html&#34;&gt;prefork MPM&lt;/a&gt; — making it thread-safe is the next step in the adventure.&lt;/p&gt;
+
+&lt;h3 id=&#34;authentication-basics&#34;&gt;Authentication Basics&lt;/h3&gt;
+
+&lt;p&gt;Because there is lots of material to cover, we&amp;rsquo;ll skip over the requisite introductory discussion of HTTP authentication, the Apache request cycle, and other materials that probably already familiar and skip right to the mod_perl authentication API. In both mod_perl 1.0 and mod_perl 2.0, the &lt;code&gt;PerlAuthenHandler&lt;/code&gt; represents Perl access to the Apache authentication phase, where incoming user credentials are traditionally matched to those stored within the application. A simple &lt;code&gt;PerlAuthenHandler&lt;/code&gt; in mod_perl 2.0 might look like the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package My::BasicHandler;
+
+use Apache::RequestRec ();
+use Apache::Access ();
+
+use Apache::Const -compile =&amp;gt; qw(OK DECLINED HTTP_UNAUTHORIZED);
+
+use strict;
+
+sub handler {
+  my $r = shift;
+
+  # get the client-supplied credentials
+  my ($status, $password) = $r-&amp;gt;get_basic_auth_pw;
+
+  # only continue if Apache says everything is OK
+  return $status unless $status == Apache::OK;
+
+  # user1/basic1 is ok
+  if ($r-&amp;gt;user eq &#39;user1&#39; &amp;amp;&amp;amp; $password eq &#39;basic1&#39;) {
+    return Apache::OK;
+  }
+
+  # user2 is denied outright
+  if ($r-&amp;gt;user eq &#39;user2&#39;) {
+    $r-&amp;gt;note_basic_auth_failure;
+    return Apache::HTTP_UNAUTHORIZED;
+  }
+
+  # all others are passed along to the Apache default
+  # handler, which reads from the AuthUserFile
+  return Apache::DECLINED;
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Although simple and impractical, this handler illustrates the API nicely. The process begins with a call to &lt;code&gt;get_basic_auth_pw()&lt;/code&gt;, which does a few things behind the scenes. If a suitable Basic Authorization header is found, &lt;code&gt;get_basic_auth_pw()&lt;/code&gt; will parse and decode the header, populate the user slot of the request record, and return &lt;code&gt;OK&lt;/code&gt; along with the user-supplied password in clear text. Any value other than &lt;code&gt;OK&lt;/code&gt; should be immediately propagated back to Apache, which effectively terminates the current request.&lt;/p&gt;
+
+&lt;p&gt;The next step in the process is where the real authentication logic resides. Our handler is responsible for digging out the username from &lt;code&gt;$r-&amp;gt;user()&lt;/code&gt; and applying some criteria for determining whether the user-supplied credentials are acceptable. If they are, the handler simply returns &lt;code&gt;OK&lt;/code&gt; and the request is allowed to proceed. If they are not, the handler has a decision to make: either call &lt;code&gt;note_basic_auth_failure()&lt;/code&gt; and return &lt;code&gt;HTTP_UNAUTHORIZED&lt;/code&gt; (which is the same as the old &lt;code&gt;AUTH_REQUIRED&lt;/code&gt;) to indicate failure, or return &lt;code&gt;DECLINED&lt;/code&gt; to pass authentication control to the next authentication handler.&lt;/p&gt;
+
+&lt;p&gt;For the most part, the mod_perl API is identical to the API Apache offers to C module developers. The benefit that mod_perl adds is the ability to easily extend authentication beyond Apache&amp;rsquo;s default flat-file mechanism to the areas where Perl support is strong, such as relational databases or LDAP. However, despite the versatility and strength programming the authentication phase offered, I never liked the look and feel of the API. While in some respects the process is dictated by the nuances of &lt;a href=&#34;ftp://ftp.isi.edu/in-notes/rfc2617.txt&#34;&gt;RFC 2617&lt;/a&gt; and the HTTP protocol itself, the interface always struck me as somewhat inconsistent and difficult for new users to grasp. Additionally, as already mentioned, the API covers only Basic authentication, which is a real drawback as more and more browsers support the Digest scheme.&lt;/p&gt;
+
+&lt;p&gt;Apparently I wasn&amp;rsquo;t alone in some of these feelings. Apache 2.1 has taken steps to improve the overall process for module developers. The result is a new, streamlined API that focuses on a new concept: authentication providers.&lt;/p&gt;
+
+&lt;h3 id=&#34;authentication-providers-in-apache-2-1&#34;&gt;Authentication Providers in Apache 2.1&lt;/h3&gt;
+
+&lt;p&gt;While in Apache 2.0 module writers were responsible for a large portion of the authentication logic—calling routines to parse and set authentication headers, digging out the user from the request record, and so on — the new authentication mechanism in Apache 2.1 delegates all HTTP and RFC logic out to two standard modules. &lt;code&gt;mod_auth_basic&lt;/code&gt; handles Basic authentication and is enabled in the default Apache build. The standard &lt;code&gt;mod_auth_digest&lt;/code&gt;, not enabled by default, handles the very complex world of Digest authentication. Regardless of the authentication scheme you choose to support, these modules are responsible for the details of parsing and interpreting the incoming request headers, as well as generating properly formatted response headers.&lt;/p&gt;
+
+&lt;p&gt;Of course, managing authentication on an HTTP level is only part of the story. What &lt;code&gt;mod_auth_basic&lt;/code&gt; and &lt;code&gt;mod_auth_digest&lt;/code&gt; leave behind is the job of digging out the server-side credentials and matching them to their incoming counterpart. Enter authentication providers.&lt;/p&gt;
+
+&lt;p&gt;Authentication providers are modules that supply server-side credential services to &lt;code&gt;mod_auth_basic&lt;/code&gt; or &lt;code&gt;mod_auth_digest&lt;/code&gt;. For instance, the default &lt;code&gt;mod_authn_file&lt;/code&gt; digs the username and password out of the flat file specified by the &lt;code&gt;AuthUserFile&lt;/code&gt; directive, similar to the default mechanism in Apache 1.3 and 2.0. An Apache 2.1 configuration that explicitly provides the same flat file behavior as Apache 2.0 would look similar to the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Location /protected&amp;gt;
+  Require valid-user
+  AuthType Basic
+  AuthName realm1
+
+  AuthBasicProvider file
+
+  AuthUserFile realm1
+&amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The new part of this configuration is the &lt;code&gt;AuthBasicProvider&lt;/code&gt; directive, which is implemented by &lt;code&gt;mod_auth_basic&lt;/code&gt; and used to specify the provider responsible for managing server-side credentials. There is also a corresponding &lt;code&gt;AuthDigestProvider&lt;/code&gt; directive if you have &lt;code&gt;mod_auth_digest&lt;/code&gt; installed.&lt;/p&gt;
+
+&lt;p&gt;While it could seem as though Apache 2.1 is merely adding another directive to achieve essentially the same results, the shift to authentication providers adds significant value for module developers: a new API that is far simpler than before. Skipping ahead to the punch line, programming with new Perl API for Basic authentication, which follows the Apache API almost exactly, would look similar to the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package My::BasicProvider;
+
+use Apache::Const -compile =&amp;gt; qw(OK DECLINED HTTP_UNAUTHORIZED);
+
+use strict;
+
+sub handler {
+  my ($r, $user, $password) = @_;
+
+  # user1/basic1 is ok
+  if ($user eq &#39;user1&#39; &amp;amp;&amp;amp; $password eq &#39;basic1&#39;) {
+    return Apache::OK;
+  }
+
+  # user2 is denied outright
+  if ($user eq &#39;user2&#39;) {
+    return Apache::HTTP_UNAUTHORIZED;
+  }
+
+  # all others are passed along to the next provider
+  return Apache::DECLINED;
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, not only are the incoming username and password supplied in the argument list, removing the need for &lt;code&gt;get_basic_auth_pw()&lt;/code&gt; and its associated checks, but gone is the need to call &lt;code&gt;note_basic_auth_failure()&lt;/code&gt; before returning &lt;code&gt;HTTP_UNAUTHORIZED&lt;/code&gt;. In essence, all that module writers need to be concerned with is validating the user credentials against whatever back-end datastore they choose. All in all, the API is a definite improvement. To add even more excitement, the API for Digest authentication looks almost exactly the same (but more on that later).&lt;/p&gt;
+
+&lt;p&gt;Because the new authentication provider approach represents a significant change in the way Apache handles authentication internally, it is not part of the stable Apache 2.0 tree and is instead being tested in the development tree. Unfortunately, until the provider mechanism is backported to Apache 2.0, or an official Apache 2.2 release, it is unlikely that authentication providers will be supported by core mod_perl 2.0. However, this does not mean that mod_perl developers are out of luck—by coupling mod_perl&amp;rsquo;s native directive handler API with a bit of XS, we can open up the new Apache provider API to Perl with ease. The &lt;a href=&#34;https://metacpan.org/pod/Apache::AuthenHook&#34;&gt;Apache::AuthenHook&lt;/a&gt; module does exactly that.&lt;/p&gt;
+
+&lt;h3 id=&#34;introducing-apache-authenhook&#34;&gt;Introducing Apache::AuthenHook&lt;/h3&gt;
+
+&lt;p&gt;Over in the Apache C API, authentication providers have a few jobs to do: they must register themselves by name as a provider while supplying a callback interface for the schemes they wish to support (Basic, Digest, or both). In order to open up the provider API to Perl modules our gateway module Apache::AuthenHook will need to accomplish these tasks as well. Both of these are accomplished at the same time through a call to the official Apache API function &lt;code&gt;ap_register_provider&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Usually, mod_perl provides direct access to the Apache C API for us. For instance, a Perl call to &lt;code&gt;$r-&amp;gt;get_basic_auth_pw()&lt;/code&gt; is proxied off to &lt;code&gt;ap_get_basic_auth_pw&lt;/code&gt;—but in this case &lt;code&gt;ap_register_provider&lt;/code&gt; only exists in Apache 2.1 and, thus, is not supported by mod_perl 2.0. Therefore, part of what Apache::AuthenHook needs to do is open up this API to Perl. One of the great things about mod_perl is the ease at which it allows itself to be extended even beyond its own core functionality. Opening up the Apache API past what mod_perl allows is relatively easy with a dash of XS.&lt;/p&gt;
+
+&lt;p&gt;Our module opens with &lt;code&gt;AuthenHook.xs&lt;/code&gt;, which is used to expose &lt;code&gt;ap_register_provider&lt;/code&gt; through the Perl function &lt;code&gt;Apache::AuthenHook::register_provider()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#include &amp;quot;EXTERN.h&amp;quot;
+#include &amp;quot;perl.h&amp;quot;
+#include &amp;quot;XSUB.h&amp;quot;
+
+#include &amp;quot;mod_perl.h&amp;quot;
+#include &amp;quot;ap_provider.h&amp;quot;
+#include &amp;quot;mod_auth.h&amp;quot;
+
+...
+
+static const authn_provider authn_AAH_provider =
+{
+  &amp;amp;check_password,
+  &amp;amp;get_realm_hash,
+};
+
+MODULE = Apache::AuthenHook    PACKAGE = Apache::AuthenHook
+
+PROTOTYPES: DISABLE
+
+void
+register_provider(provider)
+  SV *provider
+
+  CODE:
+
+    ap_register_provider(modperl_global_get_pconf(),
+                         AUTHN_PROVIDER_GROUP,
+                         SvPV_nolen(newSVsv(provider)), &amp;quot;0&amp;quot;,
+                         &amp;amp;authn_AAH_provider);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s start at the top. Any XS module you write will include the first three header files, while any mod_perl XS extension will require at least &lt;code&gt;#include &amp;quot;mod_perl.h&amp;quot;&lt;/code&gt;. The remaining two included header files are specific to what we are trying to accomplish—&lt;code&gt;ap_provider.h&lt;/code&gt; defines the &lt;code&gt;ap_register_provider&lt;/code&gt; function, while &lt;code&gt;mod_auth.h&lt;/code&gt; defines the &lt;code&gt;AUTHN_PROVIDER_GROUP&lt;/code&gt; constant we will be using, as well as the &lt;code&gt;authn_provider&lt;/code&gt; struct that holds our callbacks.&lt;/p&gt;
+
+&lt;p&gt;Skipping down a bit, we can see our implementation of &lt;code&gt;Apache::AuthenHook::register_provider()&lt;/code&gt;. The &lt;code&gt;MODULE&lt;/code&gt; and &lt;code&gt;PACKAGE&lt;/code&gt; declarations place &lt;code&gt;register_provider()&lt;/code&gt; into the &lt;code&gt;Apache::AuthenHook&lt;/code&gt; package. Following that is the definition of the &lt;code&gt;register_provider()&lt;/code&gt; function itself.&lt;/p&gt;
+
+&lt;p&gt;As you can see, &lt;code&gt;register_provider()&lt;/code&gt; accepts a single argument, a Perl scalar representing the name of the provider to register, making its usage something akin to the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Apache::AuthenHook::register_provider(&#39;My::BasicProvider&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The user-supplied name is then used in the call to &lt;code&gt;ap_register_provider&lt;/code&gt; from the Apache C API to register &lt;code&gt;My::BasicProvider&lt;/code&gt; as an authentication provider.&lt;/p&gt;
+
+&lt;p&gt;The twist in the process is that our implementation of &lt;code&gt;ap_register_provider&lt;/code&gt; registers Apache::AuthenHook&amp;rsquo;s callbacks (the &lt;code&gt;check_password&lt;/code&gt; and &lt;code&gt;get_realm_hash&lt;/code&gt; routines not shown here) for each Perl provider. In essence, this means that Apache::AuthenHook will be acting as go-between for Perl providers. Much in the same way that mod_perl proper is called by Apache for each phase and dispatches to different &lt;code&gt;Perl*Handlers&lt;/code&gt;, Apache::AuthenHook will be called by Apache&amp;rsquo;s authentication modules and dispatch to the appropriate Perl provider at runtime.&lt;/p&gt;
+
+&lt;p&gt;If this boggles your mind a bit, not to worry, it is only being presented to give you a feel for the bigger picture and show how easy it is to open up closed parts of the Apache C API with mod_perl and just a few lines of XS. However, the fun part of Apache::AuthenHook (and the part that you are more likely to use in your own mod_perl modules) is handled over in Perl space.&lt;/p&gt;
+
+&lt;h4 id=&#34;setting-the-stage&#34;&gt;Setting the Stage&lt;/h4&gt;
+
+&lt;p&gt;Now that we have the ability to call &lt;code&gt;ap_register_provider&lt;/code&gt;, we need to link that into the Apache configuration process somehow. What we do not want to do is replace current &lt;code&gt;PerlAuthenHandler&lt;/code&gt; functionality, since that directive is for inserting authentication handler logic in place of Apache&amp;rsquo;s defaults. In our case, we need the default modules to run so they can call our Perl providers. Instead, we want to make it possible for Perl modules to register themselves as authentication providers. While we could have Perl providers call our new &lt;code&gt;register_provider()&lt;/code&gt; function directly, Apache::AuthenHook chose to make the process transparent, using mod_perl&amp;rsquo;s directive handler API to call &lt;code&gt;register_provider()&lt;/code&gt; silently as &lt;code&gt;httpd.conf&lt;/code&gt; is parsed.&lt;/p&gt;
+
+&lt;p&gt;Apache::AuthenHook makes sneaky use of directive handlers to extend the default Apache &lt;code&gt;AuthBasicProvider&lt;/code&gt; and &lt;code&gt;AuthDigestProvider&lt;/code&gt; directives so they register Perl providers on-the-fly. The net result is that Perl providers will be fully registered and configured via standard Apache directives, similar to the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;AuthBasicProvider My::BasicProvider file
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At configuration time, Apache::AuthenHook will intercept &lt;code&gt;AuthBasicProvider&lt;/code&gt; and register My::BasicProvider. At request time, &lt;code&gt;mod_auth_basic&lt;/code&gt; will attempt to authenticate the user, first using My::BasicProvider, followed by the default file provider if My::BasicProvider declines the request.&lt;/p&gt;
+
+&lt;p&gt;A nice side effect to this is that through our implementation we will be giving mod_perl developers a feature they have never had before—the ability to interlace Perl handlers and C handlers within the same phase.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;AuthDigestProvider My::DigestProvider file My::OtherDigestProvider
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Exciting, no? Let&amp;rsquo;s take a look at &lt;code&gt;AuthenHook.pm&lt;/code&gt; and see how the directive handler API works in mod_perl 2.0.&lt;/p&gt;
+
+&lt;h3 id=&#34;directive-handlers-with-mod-perl&#34;&gt;Directive Handlers with mod_perl&lt;/h3&gt;
+
+&lt;p&gt;Directive handlers are a very powerful but little used feature of mod_perl. For the most part, their lack of use probably stems from the complex and intimidating API in mod_perl 1.0. However, in mod_perl 2.0, the API is much simpler and should lend itself to adoption by a larger audience.&lt;/p&gt;
+
+&lt;p&gt;The directive handler API allows mod_perl modules to define their own custom configuration directives that are understood by Apache, For example, enabling modules to make use of configuration variables like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Foo &amp;quot;bar&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;in &lt;code&gt;httpd.conf&lt;/code&gt; requires only a few relatively simple settings you can code directly in Perl.&lt;/p&gt;
+
+&lt;p&gt;While using directive handlers simply to replace &lt;code&gt;PerlSetVar&lt;/code&gt; behavior might seem a bit flashy, the techniques used by Apache::AuthenHook are some of the most powerful mod_perl has to offer.&lt;/p&gt;
+
+&lt;p&gt;As previously mentioned, we will be extending the new &lt;code&gt;AuthBasicProvider&lt;/code&gt; and &lt;code&gt;AuthDigestProvider&lt;/code&gt; directives to apply to Perl providers as well, silently registering each provider as the directive itself is parsed. To do this, we redefine these core directives, manipulate their configuration data, then disappear and allow Apache to handle the directives as if we were never there.&lt;/p&gt;
+
+&lt;p&gt;The code responsible for this is in &lt;code&gt;AuthenHook.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Apache::AuthenHook;
+
+use 5.008;
+
+use DynaLoader ();
+
+use mod_perl 1.99_10;     # DECLINE_CMD and $parms-&amp;gt;info support
+use Apache::CmdParms ();  # $parms-&amp;gt;info
+
+use Apache::Const -compile =&amp;gt; qw(OK DECLINE_CMD OR_AUTHCFG RAW_ARGS);
+
+use strict;
+
+our @ISA     = qw(DynaLoader);
+our $VERSION = &#39;2.00_01&#39;;
+
+__PACKAGE__-&amp;gt;bootstrap($VERSION);
+
+our @APACHE_MODULE_COMMANDS = (
+  { name         =&amp;gt; &#39;AuthDigestProvider&#39;,
+    errmsg       =&amp;gt; &#39;specify the auth providers for a directory or location&#39;,
+    args_how     =&amp;gt; Apache::RAW_ARGS,
+    req_override =&amp;gt; Apache::OR_AUTHCFG,
+    cmd_data     =&amp;gt; &#39;digest&#39; },
+
+  { name         =&amp;gt; &#39;AuthBasicProvider&#39;,
+    errmsg       =&amp;gt; &#39;specify the auth providers for a directory or location&#39;,
+    args_how     =&amp;gt; Apache::RAW_ARGS,
+    req_override =&amp;gt; Apache::OR_AUTHCFG,
+    func         =&amp;gt; &#39;AuthDigestProvider&#39;,
+    cmd_data     =&amp;gt; &#39;basic&#39; },
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At the top of our module we import a few required items, some that are new and some that should already be familiar. DynaLoader and the &lt;code&gt;bootstrap()&lt;/code&gt; method are required to pull in the &lt;code&gt;register_provider()&lt;/code&gt; function from our XS implementation and, unlike with mod_perl 1.0, have nothing to do with the actual directive handler implementation. The Apache::CmdParms class provides the &lt;code&gt;info()&lt;/code&gt; method we will be illustrating shortly, while Apache::Const gives us access to the constants we will need throughout the process.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;@APACHE_MODULE_COMMANDS&lt;/code&gt; array is where the real interface for directive handlers begins. &lt;code&gt;@APACHE_MODULE_COMMANDS&lt;/code&gt; holds an array of hashes, each of which defines the behavior of an Apache directive. Let&amp;rsquo;s focus on the first directive our handler implements, &lt;code&gt;AuthDigestProvider&lt;/code&gt;, forgetting for the moment that mod_auth_digest also defines this directive.&lt;/p&gt;
+
+&lt;p&gt;While it should be obvious that the &lt;code&gt;name&lt;/code&gt; key specifies the name of the directive, it is not so obvious that it also specifies the default Perl subroutine to call when Apache encounters &lt;code&gt;AuthDigestProvider&lt;/code&gt; while parsing &lt;code&gt;httpd.conf&lt;/code&gt;. Later on, we will need to implement the &lt;code&gt;AuthDigestProvider()&lt;/code&gt; subroutine, which will contain the logic for all the activities we want to perform when Apache sees the &lt;code&gt;AuthDigestProvider&lt;/code&gt; directive.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;args_how&lt;/code&gt; and &lt;code&gt;req_override&lt;/code&gt; are fields that tell Apache specifically how the directive is supposed to behave in the configuration. &lt;code&gt;req_override&lt;/code&gt; defines how our directive will interact with the core &lt;a href=&#34;http://httpd.apache.org/docs-2.0/mod/core.html#allowoverride&#34;&gt;&lt;code&gt;AllowOverride&lt;/code&gt;&lt;/a&gt; directive, in our case allowing &lt;code&gt;AuthDigestProvider&lt;/code&gt; in &lt;code&gt;.htaccess&lt;/code&gt; files only on directories governed by &lt;code&gt;AllowOverride AuthConfig&lt;/code&gt;. Similarly, &lt;code&gt;args_how&lt;/code&gt; defines how Apache should interact with our &lt;code&gt;AuthDigestProvider()&lt;/code&gt; subroutine when it sees our directive in &lt;code&gt;httpd.conf&lt;/code&gt;. In the case of &lt;code&gt;RAW_ARGS&lt;/code&gt;, it means that Apache will pass our callback whatever follows the directive as a single string. Other possible values for both of these keys can be found in the documentation pointed to at the end of this article.&lt;/p&gt;
+
+&lt;p&gt;The final important key in our first hash is the &lt;code&gt;cmd_data&lt;/code&gt; key, in which we can store a string of our choosing. This will become important in a moment.&lt;/p&gt;
+
+&lt;p&gt;The second hash in &lt;code&gt;@APACHE_MODULE_COMMANDS&lt;/code&gt; defines the behavior of the &lt;code&gt;AuthBasicProvider&lt;/code&gt; directive, which for the most part is identical to &lt;code&gt;AuthDigestProvider&lt;/code&gt;. The differences are important, however, and begin with the addition of the &lt;code&gt;func&lt;/code&gt; key. Although the default Perl subroutine callback for handling directives is the same as the name of the directive, the &lt;code&gt;func&lt;/code&gt; key allows us to point to a different subroutine instead. Here we will be reusing &lt;code&gt;AuthDigestProvider()&lt;/code&gt; to process both directives. How will we know which directive is actually being parsed? The &lt;code&gt;cmd_data&lt;/code&gt; slot will contain &lt;code&gt;digest&lt;/code&gt; when processing &lt;code&gt;AuthDigestProvider&lt;/code&gt; and &lt;code&gt;basic&lt;/code&gt; when processing &lt;code&gt;AuthBasicProvider&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;At this point, we have defined what our directives will look like and how they will interact with Apache in &lt;code&gt;httpd.conf&lt;/code&gt;. What we have not shown is the logic that sits behind our directives. As we mentioned, both of our directives will be calling the Perl subroutine &lt;code&gt;AuthDigestProvider&lt;/code&gt;, defined in &lt;code&gt;AuthenHook.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub AuthDigestProvider {
+  my ($cfg, $parms, $args) = @_;
+
+  my @providers = split &#39; &#39;, $args;
+
+  foreach my $provider (@providers) {
+
+    # if the provider looks like a Perl handler...
+    if ($provider =~ m/::/) {
+
+      # save the config for later
+      push @{$cfg-&amp;gt;{$parms-&amp;gt;info}}, $provider;
+
+      # and register the handler as an authentication provider
+      register_provider($provider);
+    }
+  }
+
+  # pass the directive back to Apache &amp;quot;unprocessed&amp;quot;
+  return Apache::DECLINE_CMD;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first argument passed to our directive handler callback, &lt;code&gt;$cfg&lt;/code&gt;, represents the configuration object for our module, which we can populate with whatever data we choose and access again at request time. The second argument is an Apache::CmdParms object, which we will use to dig out the string we specified in the &lt;code&gt;cmd_data&lt;/code&gt; slot of our configuration hash using the &lt;code&gt;info()&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;While the first two arguments are standard and will be there for any directive handler you write, the third argument can vary somewhat. Because we specified &lt;code&gt;RAW_ARGS&lt;/code&gt; as our &lt;code&gt;args_how&lt;/code&gt; setting in the configuration hash, &lt;code&gt;$args&lt;/code&gt; contains everything on the &lt;code&gt;httpd.conf&lt;/code&gt; line following our directive. The standard &lt;code&gt;Auth*Provider&lt;/code&gt; directives we are overriding can take more than one argument, so we split on whitespace and break apart the configuration into an array of providers, each of which we then process separately.&lt;/p&gt;
+
+&lt;p&gt;Each provider is examined using a cursory check to see whether the specified provider is a Perl provider. If the provider meets our criteria, we call the &lt;code&gt;register_provider()&lt;/code&gt; function defined in &lt;code&gt;AuthenHook.xs&lt;/code&gt; and keep track of the provider by storing it in our &lt;code&gt;$cfg&lt;/code&gt; configuration object.&lt;/p&gt;
+
+&lt;p&gt;The final part of our callback brings the entire process together. The constant &lt;code&gt;DECLINE_CMD&lt;/code&gt; has special meaning to Apache. Just as you might return &lt;code&gt;DECLINED&lt;/code&gt; from a &lt;code&gt;PerlTransHandler&lt;/code&gt; to trick Apache into thinking no translation took place, returning &lt;code&gt;DECLINE_CMD&lt;/code&gt; from a directive handler tricks Apache into thinking that the directive was unprocessed. So, after our &lt;code&gt;AuthDigestProvider()&lt;/code&gt; subroutine runs, Apache will continue along until it finds &lt;code&gt;mod_auth_digest&lt;/code&gt;, which will then process the directive as though we were never there.&lt;/p&gt;
+
+&lt;p&gt;The one final piece of &lt;code&gt;AuthenHook.pm&lt;/code&gt; that we need to discuss is directive merging. In order to deal properly with situations when directives meet, such as when &lt;code&gt;AuthBasicProvider&lt;/code&gt; is specified in both an &lt;code&gt;.htaccess&lt;/code&gt; file as well as the &lt;code&gt;&amp;lt;Location&amp;gt;&lt;/code&gt; that governs the URI, we need to define &lt;code&gt;DIR_CREATE()&lt;/code&gt; and &lt;code&gt;DIR_MERGE()&lt;/code&gt; subroutines.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;DIR_CREATE()&lt;/code&gt; is called at various times in the configuration process, including when &lt;code&gt;&amp;lt;Location&amp;gt;&lt;/code&gt; and related directives are parsed at configuration time, as well as whenever an &lt;code&gt;.htaccess&lt;/code&gt; file enters the request cycle. This is where we create the &lt;code&gt;$cfg&lt;/code&gt; object our callback uses to store configuration data. While it is not required, &lt;code&gt;DIR_CREATE()&lt;/code&gt; is a good place to initialize fields in the object as well, which prevents accidentally dereferencing nonexistent references.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub DIR_CREATE {
+  return bless { digest =&amp;gt; [],
+                 basic  =&amp;gt; [], }, shift;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;DIR_MERGE&lt;/code&gt;, generally called at request time, defines how we handle places where directives collide. The following code is standard for allowing the current configuration (&lt;code&gt;%$base&lt;/code&gt;) to inherit only missing parameters from higher configurations (&lt;code&gt;%$add&lt;/code&gt;), which is the behavior you are most likely to want.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub DIR_MERGE {
+  my ($base, $add) = @_;
+
+  my %new = (%$add, %$base);
+
+  return bless \%new, ref($base);
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Thus ends &lt;code&gt;AuthenHook.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The final result is pretty amazing. By secretly intercepting the &lt;code&gt;AuthDigestProvider&lt;/code&gt; directive before &lt;code&gt;mod_auth_digest&lt;/code&gt; has the chance to process it, we have provided an interface that makes the presence of Apache::AuthenHook all but undetectable. To enable the new provider mechanism for mod_perl developers, all that is required is to load Apache::AuthenHook using the new &lt;code&gt;PerlLoadModule&lt;/code&gt; directive&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PerlLoadModule Apache::AuthenHook
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and their Perl providers will be magically inserted into the authentication phase at the appropriate time.&lt;/p&gt;
+
+&lt;h3 id=&#34;taking-a-step-back&#34;&gt;Taking a Step Back&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s recap what we have accomplished so far. &lt;code&gt;AuthenHook.pm&lt;/code&gt; redefines &lt;code&gt;AuthDigestProvider&lt;/code&gt; and &lt;code&gt;AuthBasicProvider&lt;/code&gt; so that any Perl providers listed in the configuration are automagically registered and inserted into the authentication process. At request time, one of the default Apache authentication handlers will call on the configured providers to supply server-side credentials. All registered Perl providers really point to the callbacks in &lt;code&gt;AuthenHook.xs&lt;/code&gt; which have the arduous task of proxying the request for server-side credentials to the proper Perl provider. All in all, Apache::AuthenHook covers lots of ground, even if the gory details of what happens over in XS land have been left out.&lt;/p&gt;
+
+&lt;p&gt;As we mentioned earlier, Apache::AuthenHook not only the ability to write authentication providers in Perl, but it also follows the Apache API very closely. While diving deep into the XS code that Apache::AuthenHook uses to implement the &lt;code&gt;check_password&lt;/code&gt; and &lt;code&gt;get_realm_hash&lt;/code&gt; callbacks is far beyond the scope of this article, you may find it interesting that the callback signature for &lt;code&gt;check_password&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;static authn_status check_password(request_rec *r, const char *user,
+                                   const char *password)
+{
+  ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is practically identical to what Apache::AuthenHook passes on to Perl providers supporting the Basic authentication scheme.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub handler {
+  my ($r, $user, $password) = @_;
+
+  ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you recall, we started investigating the Apache 2.1 provider mechanism as a way to combine the security of the Digest authentication scheme with the strength of Perl. The signature for the Digest authentication callback, &lt;code&gt;get_realm_hash&lt;/code&gt;, is only slightly different than &lt;code&gt;check_password&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;static authn_status get_realm_hash(request_rec *r, const char *user,
+                                   const char *realm, char **rethash)
+{
+  ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How does this translate into a Perl API? It is surprisingly simple. As it turns out, the name &lt;code&gt;check_password&lt;/code&gt; is significant—for Basic authentication, the provider is expected to take steps to see if the incoming username and password match the username and password stored on the server back-end. For Digest authentication, as the name &lt;code&gt;get_realm_hash&lt;/code&gt; might suggest, all a provider is responsible for is retrieving the hash for a user at a given realm. &lt;code&gt;mod_auth_digest&lt;/code&gt; does all the heavy lifting.&lt;/p&gt;
+
+&lt;h3 id=&#34;digest-authentication-for-the-people&#34;&gt;Digest Authentication for the People&lt;/h3&gt;
+
+&lt;p&gt;While we didn&amp;rsquo;t take the time to explain how Basic authentication over HTTP actually works, briefly explaining Digest authentication is probably worth the time, if only to allow you to appreciate the elegance of the new provider mechanism.&lt;/p&gt;
+
+&lt;p&gt;When a request comes in for a resource protected by Digest authentication, the server begins the process by returning a &lt;code&gt;WWW-Authenticate&lt;/code&gt; header that contains the authentication scheme, realm, a server generated nonce, and various other bits of information. A fully RFC-compliant &lt;code&gt;WWW-Authenticate&lt;/code&gt; header might look like the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;WWW-Authenticate: Digest realm=&amp;quot;realm1&amp;quot;,
+nonce=&amp;quot;Q9equ9C+AwA=195acc80cf91ce99828b8437707cafce78b11621&amp;quot;,
+algorithm=MD5, qop=&amp;quot;auth&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On the client side, the username and password are entered by the end user based on the authentication realm sent from the server. Unlike Basic authentication, in which the client transmits the user&amp;rsquo;s password practically in the clear, Digest authentication never exposes the password over the wire. Instead, both the client and server handle the user&amp;rsquo;s credentials with care. For the client, this means rolling up the user credentials, along with other parts of the request such as the server-generated nonce and request URI, into a single MD5 hash, which is then sent back to the server via the &lt;code&gt;Authorization&lt;/code&gt; header.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Authorization: Digest username=&amp;quot;user1&amp;quot;, realm=&amp;quot;realm1&amp;quot;,
+qop=&amp;quot;auth&amp;quot;, algorithm=&amp;quot;MD5&amp;quot;, uri=&amp;quot;/index.html&amp;quot;,
+nonce=&amp;quot;Q9equ9C+AwA=195acc80cf91ce99828b8437707cafce78b11621&amp;quot;,
+nc=00000001, cnonce=&amp;quot;3e4b161902b931710ae04262c31d9307&amp;quot;,
+response=&amp;quot;49fac556a5b13f35a4c5f05c97723b32&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The server, of course, needs to have its own copy of the user credentials around for comparison. Now, because the client and server have had (at various points in time) access to the same dataset—the user-supplied username and password, as well as the request URI, authentication realm, and other information shared in the HTTP headers—both ought to be able to generate the same MD5 hash. If the hash generated by the server does not match the one sent by the client in the &lt;code&gt;Authorization&lt;/code&gt; header, the difference can be attributed to the one piece of information not mutually agreed upon through the HTTP request: the password.&lt;/p&gt;
+
+&lt;p&gt;As you can see from the headers involved, there is quite a lot of information to process and interpret with the Digest authentication scheme. However, if you recall, one of the benefits of the new provider mechanism is that &lt;code&gt;mod_auth_digest&lt;/code&gt; takes care of all the intimate details of the scheme internally, relieving you from the burden of understanding it at all.&lt;/p&gt;
+
+&lt;p&gt;All a Digest provider is required to do is match the incoming user and realm to a suitable digest, stored in the medium of its choosing, and return it. With the hash in hand, &lt;code&gt;mod_auth_digest&lt;/code&gt; will do all the subsequent manipulations and decide whether the hash the provider supplied is indeed sufficient to allow the user to continue on its journey to the resource it is after.&lt;/p&gt;
+
+&lt;p&gt;With that background behind us, we can proceed with a sample Perl Digest provider.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package My::DigestProvider;
+
+use Apache::Log;
+
+use Apache::Const -compile =&amp;gt; qw(OK DECLINED HTTP_UNAUTHORIZED);
+
+use strict;
+
+sub handler {
+  my ($r, $user, $realm, $hash) = @_;
+
+  # user1 at realm1 is found - pass to mod_auth_digest
+  if ($user eq &#39;user1&#39; &amp;amp;&amp;amp; $realm eq &#39;realm1&#39;) {
+    $$hash = &#39;eee52b97527306e9e8c4613b7fa800eb&#39;;
+    return Apache::OK;
+  }
+
+  # user2 is denied outright
+  if ($user eq &#39;user2&#39; &amp;amp;&amp;amp; $realm eq &#39;realm1&#39;) {
+    return Apache::HTTP_UNAUTHORIZED;
+  }
+
+  # all others are passed along to the next provider
+  return Apache::DECLINED;
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note the only slight difference between the interface for Digest authentication as compared to Basic authentication. Because the authentication realm is an essential part of the Digest scheme, it is passed to our &lt;code&gt;handler()&lt;/code&gt; subroutine in addition to the request record, &lt;code&gt;$r&lt;/code&gt;, and username we received with the Basic scheme.&lt;/p&gt;
+
+&lt;p&gt;Knowing the username and authentication realm, our provider can choose whatever method it desires to retrieve the MD5 hash associated with the user. Returning the hash for comparison by &lt;code&gt;mod_auth_digest&lt;/code&gt; is simply a matter of populating the scalar referenced by &lt;code&gt;$hash&lt;/code&gt; and returning &lt;code&gt;OK&lt;/code&gt;. While using references in this way may feel a bit strange, it follows the same pattern as the official Apache C API, so I guess that makes it ok.&lt;/p&gt;
+
+&lt;p&gt;If the user cannot be found, the provider can choose to return &lt;code&gt;HTTP_UNAUTHORIZED&lt;/code&gt; and deny access to the user, or return &lt;code&gt;DECLINED&lt;/code&gt; to pass authority for the user to the next provider. Remember, unlike with the Perl handlers for all the other phases of the request, you can intermix Perl providers with C providers, sandwiching the default file provider with Perl providers of your own choosing.&lt;/p&gt;
+
+&lt;p&gt;The one question that remains is how to generate a suitable MD5 digest to pass back to &lt;code&gt;mod_auth_digest&lt;/code&gt;. For the default file provider, the return digest is typically generated using the &lt;code&gt;htdigest&lt;/code&gt; binary that comes with the Apache installation. However, a Perl one-liner that can be used to generate a suitable MD5 digest for Perl providers would look similar to the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -MDigest::MD5 -e&#39;print Digest::MD5::md5_hex(&amp;quot;user:realm:password&amp;quot;)&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That is all there is to it. No hash checking, no header manipulations, no back flips or somersaults. Simply dig out the user credentials and pass them along. At last, Digest authentication for the (Perl) people.&lt;/p&gt;
+
+&lt;h3 id=&#34;don-t-forget-the-tests&#34;&gt;Don&amp;rsquo;t Forget the Tests!&lt;/h3&gt;
+
+&lt;p&gt;Of course, no module would be complete without a test suite, and the &lt;a href=&#34;https://metacpan.org/pod/Apache::Test&#34;&gt;Apache-Test&lt;/a&gt; framework introduced &lt;a href=&#34;http://localhost:1313/pub/2003/05/22/testing.html&#34;&gt;last time&lt;/a&gt; gives us all the tools we need to write a complete set of tests.&lt;/p&gt;
+
+&lt;p&gt;For the most part, the tests for Apache::AuthenHook are not that different from those presented before. LWP supports Digest authentication natively, so all our test scripts really need to do is make a request to a protected URI and let LWP do all the work. Here is a snippet from one of the tests.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;plan tests =&amp;gt; 10, (have_lwp &amp;amp;&amp;amp;
+                   have_module(&#39;mod_auth_digest&#39;));
+
+my $url = &#39;/digest/index.html&#39;;
+
+$response = GET $url, username =&amp;gt; &#39;user1&#39;, password =&amp;gt; &#39;digest1&#39;;
+ok $response-&amp;gt;code == 200;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When we plan the tests, we first check for the existence of &lt;code&gt;mod_auth_digest&lt;/code&gt;—both &lt;code&gt;mod_auth_basic&lt;/code&gt; and &lt;code&gt;mod_auth_digest&lt;/code&gt; can be enabled or disabled for any given installation, so we need to check for them where appropriate. Passing the username and password credentials is pretty straightforward, using the &lt;code&gt;username&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt; keys after the URL when formatting the request.&lt;/p&gt;
+
+&lt;p&gt;Actually, while the &lt;code&gt;username&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt; keys have special meaning, you can use the same technique to send any arbitrary headers in the request.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# fetch the Last-Modified header from one response...
+my $last_modified = $response-&amp;gt;header(&#39;Last-Modified&#39;);
+
+# and use it in the next request
+$response = GET $uri, &#39;If-Modified-Since&#39; =&amp;gt; $last_modified;
+ok ($response-&amp;gt;code == HTTP_NOT_MODIFIED);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s something to note just in case you need that functionality sometime later in your testing life.&lt;/p&gt;
+
+&lt;p&gt;One final note about our tests will apply to anyone writing a mod_perl XS extension. Instead of using &lt;code&gt;extra.conf.in&lt;/code&gt; to configure Apache, we used &lt;code&gt;extra.last.conf.in&lt;/code&gt;. The difference between the two is that &lt;code&gt;extra.last.conf.in&lt;/code&gt; is guaranteed to be loaded the last in the configuration order—if our &lt;code&gt;PerlLoadModule&lt;/code&gt; directive is processed before mod_perl gets the chance to add the proper &lt;code&gt;blib&lt;/code&gt; entries, nothing will work, so ensuring our configuration is loaded after everything else is in place is important.&lt;/p&gt;
+
+&lt;h3 id=&#34;whew&#34;&gt;Whew&lt;/h3&gt;
+
+&lt;p&gt;mod_perl is truly exciting. With surprisingly little work, we have managed to open an entire new world within Apache 2.1 to the Perl masses. I know of no other blend of technologies that allow for such remarkable flexibility beyond what each individually brings to the table. Hopefully, this article has not only introduced you to new Apache and authentication concepts, but has also brought to light ways in which you can leverage mod_perl that you never thought of before.&lt;/p&gt;
+
+&lt;h3 id=&#34;more-information&#34;&gt;More Information&lt;/h3&gt;
+
+&lt;p&gt;I apologize if this article is a little on the heavy side, teasing you with only cursory introductions to cool concepts while leaving out the finer details. So, if you want to explore these concepts in more detail, I leave you with the following required reading.&lt;/p&gt;
+
+&lt;p&gt;A nice overall introduction to the new provider mechanism can be found in &lt;a href=&#34;http://www.serverwatch.com/tutorials/article.php/2202671&#34;&gt;Safer Apache Driving with AAA&lt;/a&gt;. The mechanics of Basic authentication can be found in lots of places, but decent explanations of Digest authentication are harder to find. Both are covered to some level of detail in &lt;a href=&#34;http://www.modperlcookbook.org/chapters/ch13.pdf&#34;&gt;Chapter 13&lt;/a&gt; of the &lt;a href=&#34;http://modperlcookbook.org/&#34;&gt;&lt;em&gt;mod_perl Developer&amp;rsquo;s Cookbook&lt;/em&gt;&lt;/a&gt;, which is freely available online. Recipe 13.8 in particular includes the code that became the splinter in my mind and eventually this article.&lt;/p&gt;
+
+&lt;p&gt;A more detailed explanation of directive handlers in mod_perl 2.0 can be found in the &lt;a href=&#34;http://perl.apache.org/docs/2.0/user/config/custom.html&#34;&gt;mod_perl 2.0 documentation&lt;/a&gt;. Although covering only mod_perl 1.0 directive handlers, whose implementation is very different, &lt;a href=&#34;http://modperl.com:9000/book/chapters/ch8.html&#34;&gt;Chapter 8&lt;/a&gt; in &lt;a href=&#34;http://www.modperl.com/&#34;&gt;&lt;em&gt;Writing Apache Modules with Perl and C&lt;/em&gt;&lt;/a&gt; and &lt;a href=&#34;http://www.modperlcookbook.org/chapters/ch07.pdf&#34;&gt;Recipes 7.8 through 7.11&lt;/a&gt; in the &lt;em&gt;mod_perl Developer&amp;rsquo;s Cookbook&lt;/em&gt; provide excellent explanations of concepts that are universal to both platforms, and are essential reading if you plan on using directive handlers yourself. If you are curious about the intricate details of directive merging, Chapter 21 in &lt;a href=&#34;http://www.oreilly.com/catalog/apache3/&#34;&gt;Apache: the Definitive Guide&lt;/a&gt; presents probably the most comprehensive explanation available.&lt;/p&gt;
+
+&lt;p&gt;Finally, if you are interested in the gory details of the XS that really drives Apache::AuthenHook, there is no better single point of reference than &lt;a href=&#34;http://www.manning.com/jenness/&#34;&gt;&lt;em&gt;Extending and Embedding Perl&lt;/em&gt;&lt;/a&gt;, which was my best friend while writing this module and absolutely deserves a place on your bookshelf.&lt;/p&gt;
+
+&lt;h3 id=&#34;thanks&#34;&gt;Thanks&lt;/h3&gt;
+
+&lt;p&gt;Many thanks to Stas Bekman and Philippe Chiasson for their feedback and review of the several patches to mod_perl core that were required for the code in this article, as well as to Jörg Walter, who was kind enough to take the time to review this article and give valuable feedback.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Testing mod_perl 2.0</title>
+      <link>http://localhost:1313/pub/2003/05/22/testing.html/</link>
+      <pubDate>Thu, 22 May 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/05/22/testing.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/pub/2003/04/17/filters.html&#34;&gt;Last time&lt;/a&gt;, we looked at writing a simple Apache output filter - &lt;code&gt;Apache::Clean&lt;/code&gt; - using the mod_perl 2.0 API. How did I know that the filter I presented really worked? I wrote a test suite for it, one that exercised &lt;a href=&#34;http://www.modperlcookbook.org/~geoff/perl.com/Apache-Clean-2.0.tar.gz&#34;&gt;the code&lt;/a&gt; against a live Apache server using the &lt;code&gt;Apache-Test&lt;/code&gt; testing framework.&lt;/p&gt;
+
+&lt;p&gt;Writing a series of tests that executes against a live Apache server has become much simpler since the advent of &lt;code&gt;Apache-Test&lt;/code&gt;. Although &lt;code&gt;Apache-Test&lt;/code&gt;, as part of the &lt;a href=&#34;http://httpd.apache.org/test/&#34;&gt;Apache HTTP Test Project&lt;/a&gt;, is generic enough to be used with virtually any version of Apache (with or without mod_perl enabled), it comes bundled with mod_perl 2.0, making it the tool of choice for writing tests for your mod_perl 2.0 modules.&lt;/p&gt;
+
+&lt;h3 id=&#34;testing-testing-1-2-3&#34;&gt;Testing, Testing, 1, 2, 3&lt;/h3&gt;
+
+&lt;p&gt;There are many advantages to writing tests. For instance, maintaining the test suite as I coded &lt;code&gt;Apache::Clean&lt;/code&gt; allowed me to test each functional unit as I implemented it, which made development easier. The individual tests also allowed me to be fairly certain that the module would behave as expected once distributed. As an added bonus, tests offer additional end-user documentation in the form of test scripts, supporting libraries and configuration files, available to anyone who wants to snoop around the distribution a bit. All in all, having a test suite increases the value of your code exponentially, while at the same time making your life easier.&lt;/p&gt;
+
+&lt;p&gt;Of course, these benefits come from having &lt;em&gt;any&lt;/em&gt; testing environment, and are not limited to just &lt;code&gt;Apache-Test&lt;/code&gt;. The particular advantage that &lt;code&gt;Apache-Test&lt;/code&gt; brings to the table is the ease at which it puts a whole, pristine, and isolated Apache server at your disposal, allowing you to test and exercise your code in a live environment with a minimum of effort. No more &lt;code&gt;Apache::FakeRequest&lt;/code&gt;, no more &lt;code&gt;httpd.conf&lt;/code&gt; configurations strewn across development environments or corrupted with proof-of-concept handlers that keep you busy following non-bugs for half a day. No more mess, no more tears.&lt;/p&gt;
+
+&lt;p&gt;If you have ever used tools like &lt;code&gt;Test.pm&lt;/code&gt; or &lt;code&gt;Test::More&lt;/code&gt; as the basis for testing your modules, then you already know most of what using &lt;code&gt;Apache-Test&lt;/code&gt; is going to look like. In fact, &lt;code&gt;Apache-Test&lt;/code&gt; uses &lt;code&gt;Test.pm&lt;/code&gt; under the hood, so the layout and syntax are similar. If you have never written a test before, (and shame on you) then &lt;a href=&#34;http://localhost:1313/pub/2001/12/04/testing.html&#34;&gt;An Introduction to Testing&lt;/a&gt; provides a nice overview of testing with Perl. For the most part, though, &lt;code&gt;Apache-Test&lt;/code&gt; is really simple enough that you should be able to follow along here without any trouble or previous knowledge.&lt;/p&gt;
+
+&lt;p&gt;Leveraging the &lt;code&gt;Apache-Test&lt;/code&gt; framework requires only a few steps - generating the test harness, configuring Apache to your specific needs, and writing the tests - each of which is relatively straightforward.&lt;/p&gt;
+
+&lt;h3 id=&#34;generating-the-test-harness&#34;&gt;Generating the Test Harness&lt;/h3&gt;
+
+&lt;p&gt;The first step to using &lt;code&gt;Apache-Test&lt;/code&gt; is to tweak the &lt;code&gt;Makefile.PL&lt;/code&gt; for your module. If you don&amp;rsquo;t yet have a &lt;code&gt;Makefile.PL&lt;/code&gt;, or are not familiar with how to generate one, then don&amp;rsquo;t worry - all that is required is a simple call to &lt;code&gt;h2xs&lt;/code&gt;, which provides us with a standard platform both for distributing our module and deploying the &lt;code&gt;Apache-Test&lt;/code&gt; infrastructure.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ h2xs -AXPn Apache::Clean
+Defaulting to backward compatibility with perl 5.9.0
+If you intend this module to be compatible with earlier perl versions, then please
+specify a minimum perl version with the -b option.
+
+Writing Apache/Clean/Clean.pm
+Writing Apache/Clean/Makefile.PL
+Writing Apache/Clean/README
+Writing Apache/Clean/t/1.t
+Writing Apache/Clean/Changes
+Writing Apache/Clean/MANIFEST
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;h2xs&lt;/code&gt; generates the necessary structure for our module, namely the &lt;code&gt;Clean.pm&lt;/code&gt; template and the &lt;code&gt;Makefile.PL&lt;/code&gt;, as well as the &lt;code&gt;t/&lt;/code&gt; subdirectory where our tests and supporting files will eventually live. You can take some extra steps and shuffle the distribution around a bit (such as removing &lt;code&gt;t/1.t&lt;/code&gt; and putting everything into &lt;code&gt;Apache-Clean/&lt;/code&gt; instead of &lt;code&gt;Apache/Clean/&lt;/code&gt;) but it is not required. Once you have the module layout sorted out and have replaced the generated &lt;code&gt;Clean.pm&lt;/code&gt; stub with &lt;a href=&#34;http://localhost:1313/pub/2003/04/17/filters.html&#34;&gt;the actual &lt;code&gt;Clean.pm&lt;/code&gt; filter&lt;/a&gt; from before, it&amp;rsquo;s time to start preparing the basic test harness.&lt;/p&gt;
+
+&lt;p&gt;To begin, we need to modify the &lt;code&gt;Makefile.PL&lt;/code&gt; significantly. The end result should look something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!perl
+
+use 5.008;
+
+use Apache2 ();
+use ModPerl::MM ();
+use Apache::TestMM qw(test clean);
+use Apache::TestRunPerl ();
+
+# configure tests based on incoming arguments
+Apache::TestMM::filter_args();
+
+# provide the test harness
+Apache::TestRunPerl-&amp;gt;generate_script();
+
+# now, write out the Makefile
+ModPerl::MM::WriteMakefile(
+  NAME      =&amp;gt; &#39;Apache::Clean&#39;,
+  VERSION   =&amp;gt; &#39;2.0&#39;,
+  PREREQ_PM =&amp;gt; { HTML::Clean      =&amp;gt; 0.8,
+                 mod_perl         =&amp;gt; 1.9909, },
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s take a moment to analyze our nonstandard &lt;code&gt;Makefile.PL&lt;/code&gt;. We begin by importing a few new mod_perl 2.0 libraries. The first is &lt;code&gt;Apache2.pm&lt;/code&gt;. In order to peacefully co-exist with mod_perl 1.0 installations, mod_perl 2.0 gives you the option of installing mod_perl relative to &lt;code&gt;Apache2/&lt;/code&gt; in your &lt;code&gt;@INC&lt;/code&gt;, as to avoid collisions with 1.0 modules of the same name. For instance, the mod_perl 2.0 &lt;code&gt;Apache::Filter&lt;/code&gt; we used to write our output filter interface would be installed as &lt;code&gt;Apache2/Apache/Filter.pm&lt;/code&gt;. Of course, ordinary calls that &lt;code&gt;require()&lt;/code&gt; or &lt;code&gt;use()&lt;/code&gt; &lt;code&gt;Apache::Filter&lt;/code&gt; in mod_perl 2.0 code would fail to find the correct version (if one was found at all), since it was installed in a nonstandard place. &lt;code&gt;Apache2.pm&lt;/code&gt; extends &lt;code&gt;@INC&lt;/code&gt; to include any (existing) &lt;code&gt;Apache2/&lt;/code&gt; directories so that &lt;code&gt;use()&lt;/code&gt; and related statements work as intended. In our case, we need to &lt;code&gt;use() Apache2&lt;/code&gt; in order to ensure that, no matter how the end-user configured his mod_perl 2.0 installation, we can find the rest of the libraries we need.&lt;/p&gt;
+
+&lt;p&gt;Secure in the knowledge that our &lt;code&gt;Makefile.PL&lt;/code&gt; will be able to find all our other mod_perl 2.0 packages (wherever they live), we can proceed. &lt;code&gt;ModPerl::MM&lt;/code&gt; provides the &lt;code&gt;WriteMakefile()&lt;/code&gt; function, which is similar to the &lt;code&gt;ExtUtils::MakeMaker&lt;/code&gt; function of the same name and takes the same options. The reason that you will want to use the &lt;code&gt;WriteMakefile()&lt;/code&gt; from &lt;code&gt;ModPerl::MM&lt;/code&gt; is that, through means highly magical, all of your mod_perl-specific needs are satisfied. For instance, your module will be installed relative to &lt;code&gt;Apache/&lt;/code&gt; or &lt;code&gt;Apache2/&lt;/code&gt;, depending on how mod_perl itself is installed. Other nice features are automatic inclusion of mod_perl&amp;rsquo;s &lt;code&gt;typemap&lt;/code&gt; and the header files required for XS-based modules, as well as magical cross-platform compatibility for Win32 compilation, which has been troublesome in the past.&lt;/p&gt;
+
+&lt;p&gt;Keep in mind that neither &lt;code&gt;Apache2.pm&lt;/code&gt; nor &lt;code&gt;ModPerl::MM&lt;/code&gt; are required in order to use &lt;code&gt;Apache-Test&lt;/code&gt; - both are packages specific to mod_perl 2.0 and any handlers you may write for this version (as will be touched on later, &lt;code&gt;Apache-Test&lt;/code&gt; can be used for mod_perl 1.0 based modules as well, or even Apache 1.3 or 2.0 modules independent of mod_perl, for that matter). The next package, &lt;code&gt;Apache::TestMM&lt;/code&gt;, is where the real interface for &lt;code&gt;Apache-Test&lt;/code&gt; begins.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Apache::TestMM&lt;/code&gt;, contains the functions we will need to configure the test harness. The first thing we do is import the &lt;code&gt;test()&lt;/code&gt; and &lt;code&gt;clean()&lt;/code&gt; functions, which generate their respective &lt;code&gt;Makefile&lt;/code&gt; targets so that we can run (and re-run) our tests. After that, we call the &lt;code&gt;filter_args()&lt;/code&gt; function. This allows us to configure various parts of our tests on the command line using different options, which will be discussed later.&lt;/p&gt;
+
+&lt;p&gt;The final part of our configuration uses the &lt;code&gt;generate_script()&lt;/code&gt; method from the &lt;code&gt;Apache::TestRunPerl&lt;/code&gt; class, which writes out the script responsible for running our tests, &lt;code&gt;t/TEST&lt;/code&gt;. It is &lt;code&gt;t/TEST&lt;/code&gt; that will be invoked when a user issues &lt;code&gt;make test&lt;/code&gt;, although the script can be called directly as well. While &lt;code&gt;t/TEST&lt;/code&gt; can end up containing lots of information, if you crack it open, then you would see that the engine that really drives the test suite is rather simple.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Apache::TestRunPerl ();
+Apache::TestRunPerl-&amp;gt;new-&amp;gt;run(@ARGV);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Believe it or not, the single call to &lt;code&gt;run()&lt;/code&gt; does all intricate work of starting, configuring, and stopping Apache, as well as running the individual tests we (still) have yet to define.&lt;/p&gt;
+
+&lt;p&gt;Despite the long explanations, the net result of our activity thus far has been a few modifications to a typical &lt;code&gt;Makefile.PL&lt;/code&gt; so that it reflects the needs of both our mod_perl 2.0 module and our forthcoming use of the &lt;code&gt;Apache-Test&lt;/code&gt; infrastructure. Next, we need to configure Apache for the tests specific to the functionality in our handler.&lt;/p&gt;
+
+&lt;h3 id=&#34;configuring-apache&#34;&gt;Configuring Apache&lt;/h3&gt;
+
+&lt;p&gt;Ordinarily, there are many things you need to stuff into &lt;code&gt;httpd.conf&lt;/code&gt; in order to get the server responding to requests, only some of which are related to the content the server will provide. The &lt;code&gt;Apache-Test&lt;/code&gt; framework provides a minimal Apache configuration, such as default &lt;code&gt;DocumentRoot&lt;/code&gt;, &lt;code&gt;ErrorLog&lt;/code&gt;, &lt;code&gt;Listen&lt;/code&gt;, and other settings required for normal operation of the server. In fact, with no intervention on your part, &lt;code&gt;Apache-Test&lt;/code&gt; provides a configuration that enables you to successfully request &lt;code&gt;/index.html&lt;/code&gt; from the server. Chances are, though, that you will need something above a basic configuration in order to test your module appropriately.&lt;/p&gt;
+
+&lt;p&gt;To add additional settings to the defaults, we create the file &lt;code&gt;t/conf/extra.conf.in&lt;/code&gt;, adding any required directories along the way. If &lt;code&gt;Apache-Test&lt;/code&gt; sees &lt;code&gt;extra.conf.in&lt;/code&gt;, then it would pull the file into its default configuration using an &lt;code&gt;Include&lt;/code&gt; directive (after some manipulations we will discuss shortly). This provides a nice way of adding only the configuration data you require for your tests, and saves you from the need to worry about the mundane aspects of running the server.&lt;/p&gt;
+
+&lt;p&gt;One of the first aspects of &lt;code&gt;Apache::Clean&lt;/code&gt; we should test is whether it can clean up a simple, static HTML file. So, we begin our &lt;code&gt;extra.conf.in&lt;/code&gt; with the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PerlSwitches -w
+
+Alias /level @DocumentRoot@
+&amp;lt;Location /level&amp;gt;
+  PerlOutputFilterHandler Apache::Clean
+  PerlSetVar CleanLevel 2
+&amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This activates our output filter for requests to &lt;code&gt;/level&lt;/code&gt;. Note the introduction of a new directive, &lt;code&gt;PerlSwitches&lt;/code&gt;, which allows you to pass command line switches to the embedded perl interpreter. Here, we use it to enable warnings, similar to the way that &lt;code&gt;PerlWarn&lt;/code&gt; worked in mod_perl 1.0. &lt;code&gt;PerlSwitches&lt;/code&gt; can actually take any perl command line switch, which makes it a fairly useful and flexible tool. For example, we could use the &lt;code&gt;-I&lt;/code&gt; switch to extend &lt;code&gt;@INC&lt;/code&gt; in place of adding &lt;code&gt;use lib&lt;/code&gt; statements to a &lt;code&gt;startup.pl&lt;/code&gt;, or use &lt;code&gt;-T&lt;/code&gt; to enable taint mode in place of the former &lt;code&gt;PerlTaintMode&lt;/code&gt; directive, which is not part of mod_perl 2.0.&lt;/p&gt;
+
+&lt;p&gt;Next, we come to the familiar &lt;code&gt;Alias&lt;/code&gt; directive, albeit with a twist. As previously mentioned, &lt;code&gt;Apache-Test&lt;/code&gt; configures several defaults, including &lt;code&gt;DocumentRoot&lt;/code&gt; and &lt;code&gt;ServerRoot&lt;/code&gt;. One of the nice features of &lt;code&gt;Apache-Test&lt;/code&gt; is that it keeps track of its defaults for you and provides some helpful variable expansions. In my particular case, the &lt;code&gt;@DocumentRoot@&lt;/code&gt; variable in the &lt;code&gt;Alias&lt;/code&gt; directive is replaced with the value of the default &lt;code&gt;DocumentRoot&lt;/code&gt; that &lt;code&gt;Apache-Test&lt;/code&gt; calculated for my build. The real configuration ends up looking like&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Alias /level /src/perl.com/Apache-Clean-2.0/t/htdocs
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;when the tests are run. This is handy, especially when you take into consideration that your tests may run on different platforms.&lt;/p&gt;
+
+&lt;p&gt;The rest of the configuration closely resembles our example from last time - using the &lt;code&gt;PerlOutputFilterHandler&lt;/code&gt; to specify &lt;code&gt;Apache::Clean&lt;/code&gt; as our output filter, and &lt;code&gt;PerlSetVar&lt;/code&gt; to specify the specific &lt;code&gt;HTML::Clean&lt;/code&gt; level. The only thing missing before we have prepared our module enough to run our first test is some testable content in &lt;code&gt;DocumentRoot&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;As you can see from the &lt;code&gt;@DocumentRoot@&lt;/code&gt; expansion in the previous example, &lt;code&gt;DocumentRoot&lt;/code&gt; resolves to &lt;code&gt;ServerRoot/t/htdocs/&lt;/code&gt;, so that is one place where we can put any documents we are interested in retrieving for our tests. So, we create &lt;code&gt;t/htdocs/index.html&lt;/code&gt; and place some useful content in it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;i    &amp;gt;&amp;lt;strong&amp;gt;&amp;amp;quot;This is a test&amp;amp;quot;&amp;lt;/strong&amp;gt;&amp;lt;/i   &amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our &lt;code&gt;index.html&lt;/code&gt; contains a number of different elements that &lt;code&gt;HTML::Clean&lt;/code&gt; can tidy, making it useful for testing various configurations of &lt;code&gt;Apache::Clean&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now we have all the Apache configuration that is required: some custom configuration directives in &lt;code&gt;t/conf/extra.conf.in&lt;/code&gt; and some useful content in &lt;code&gt;t/htdocs/index.html&lt;/code&gt;. All that is left to do is write the tests.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-the-tests&#34;&gt;Writing the Tests&lt;/h3&gt;
+
+&lt;p&gt;The Apache configuration we have created thus far provides a way to test &lt;code&gt;Apache::Clean&lt;/code&gt; through &lt;code&gt;/level/index.html&lt;/code&gt;. The result of this request should be that the default Apache content handler serves up &lt;code&gt;index.html&lt;/code&gt;, applying our &lt;code&gt;PerlOutputFilterHandler&lt;/code&gt; to the file before it is sent over the wire. Given the configured &lt;code&gt;PerlSetVar CleanLevel 2&lt;/code&gt; we would expect the end results of the request to be&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;i&amp;gt;&amp;lt;b&amp;gt;&amp;amp;quot;This is a test&amp;amp;quot;&amp;lt;/b&amp;gt;&amp;lt;/i&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;where tags are shortened and whitespace removed but the &lt;code&gt;&amp;amp;quot;&lt;/code&gt; entity is left untouched. Well, maybe this is not what &lt;em&gt;you&lt;/em&gt; would have expected, but cracking open the code for &lt;code&gt;HTML::Clean&lt;/code&gt; reveals that &lt;code&gt;level(2)&lt;/code&gt; includes the &lt;code&gt;whitespace&lt;/code&gt; and &lt;code&gt;shortertags&lt;/code&gt; options, but not the &lt;code&gt;entities&lt;/code&gt; option. This brings us to the larger issue of test design and the possibility that flawed expectations can mask true bugs - when a test fails, is the bug in the test or in the code? - but that is a discussion for another time.&lt;/p&gt;
+
+&lt;p&gt;Given our configuration and expected results, we can craft a test that requests &lt;code&gt;/level/index.html&lt;/code&gt;, isolates the content from the server response, then tests the content against our expectations. The file &lt;code&gt;t/01level.t&lt;/code&gt; shown here does exactly that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use strict;
+use warnings FATAL =&amp;gt; &#39;all&#39;;
+
+use Apache::Test qw(plan ok have_lwp);
+use Apache::TestRequest qw(GET);
+use Apache::TestUtil qw(t_cmp);
+
+plan tests =&amp;gt; 1, have_lwp;
+
+my $response = GET &#39;/level/index.html&#39;;
+chomp(my $content = $response-&amp;gt;content);
+
+ok ($content eq q!&amp;lt;i&amp;gt;&amp;lt;b&amp;gt;&amp;amp;quot;This is a test&amp;amp;quot;&amp;lt;/b&amp;gt;&amp;lt;/i&amp;gt;!);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;t/01level.t&lt;/code&gt; illustrates a few of the things that will be common to most of the tests you will write. First, we do some bookkeeping and plan the number of tests that will be attempted using the &lt;code&gt;plan()&lt;/code&gt; function from &lt;code&gt;Apache::Test&lt;/code&gt; - in our case just one. The final, optional argument to &lt;code&gt;plan()&lt;/code&gt; uses the &lt;code&gt;have_lwp()&lt;/code&gt; function to check for the availability of the modules from the &lt;code&gt;libwww-perl&lt;/code&gt; distribution. If &lt;code&gt;have_lwp()&lt;/code&gt; returns true, then we know we can take advantage of the &lt;code&gt;LWP&lt;/code&gt; shortcuts &lt;code&gt;Apache::TestRequest&lt;/code&gt; provides. If &lt;code&gt;have_lwp()&lt;/code&gt; returns false, then no tests are planned and the entire test is skipped at runtime.&lt;/p&gt;
+
+&lt;p&gt;After planning our test, we use the shortcut function &lt;code&gt;GET()&lt;/code&gt; from &lt;code&gt;Apache::TestRequest&lt;/code&gt; to issue a request to &lt;code&gt;/level/index.html&lt;/code&gt;. &lt;code&gt;GET()&lt;/code&gt; returns an &lt;code&gt;HTTP::Response&lt;/code&gt; object, so if you are familiar with the &lt;code&gt;LWP&lt;/code&gt; suite of modules you should feel right at home with what follows. Using the object in &lt;code&gt;$response&lt;/code&gt; we isolate the server response using the &lt;code&gt;content()&lt;/code&gt; method and compare it against our expected string. The comparison uses a call to &lt;code&gt;ok()&lt;/code&gt;, which will report success if the two strings are equivalent.&lt;/p&gt;
+
+&lt;p&gt;Keep in mind that even though this example explicitly imported the &lt;code&gt;plan()&lt;/code&gt;, &lt;code&gt;ok()&lt;/code&gt;, &lt;code&gt;have_lwp()&lt;/code&gt;, and &lt;code&gt;GET()&lt;/code&gt; functions into our test script, that was just to illustrate the origins of the different parts of the test - each of these functions, along with just about all the others you may want, are exported by default. So, the typical test script will usually just call&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Apache::Test;
+use Apache::TestRequest;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and go from there.&lt;/p&gt;
+
+&lt;p&gt;That is all there is to writing the test. In its simplest form, using &lt;code&gt;Apache-Test&lt;/code&gt; involves pretty much the same steps as when writing tests using other Perl testing tools: &lt;code&gt;plan()&lt;/code&gt; the number of tests in the script, do some stuff, and call &lt;code&gt;ok()&lt;/code&gt; for each test you &lt;code&gt;plan()&lt;/code&gt;. &lt;code&gt;Apache-Test&lt;/code&gt; and its utility classes merely offer shortcuts that make writing tests against a running Apache server idiomatic.&lt;/p&gt;
+
+&lt;h3 id=&#34;running-the-tests&#34;&gt;Running the Tests&lt;/h3&gt;
+
+&lt;p&gt;With all the preparation behind us - generating and customizing the &lt;code&gt;Makefile.PL&lt;/code&gt;, configuring Apache with &lt;code&gt;extra.conf.in&lt;/code&gt;, writing &lt;code&gt;index.html&lt;/code&gt; and &lt;code&gt;01level.t&lt;/code&gt; - we have all the pieces in place and can (finally) run our test.&lt;/p&gt;
+
+&lt;p&gt;There are a few different ways we can run the tests in a distribution, but all require that we go through the standard build steps first.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl Makefile.PL -apxs /usr/local/apache2/bin/apxs
+Checking if your kit is complete ...
+Looks good
+Writing Makefile for Apache::Clean
+
+$ make
+cp Clean.pm blib/lib/Apache2/Apache/Clean.pm
+Manifying blib/man3/Apache::Clean.3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Makefile.PL&lt;/code&gt; starts the process by generating the &lt;code&gt;t/TEST&lt;/code&gt; script via the call to &lt;code&gt;Apache::TestRunPerl-&amp;gt;generate_script()&lt;/code&gt;. The additional argument we pass, &lt;code&gt;-apxs&lt;/code&gt;, is trapped by &lt;code&gt;Apache::TestMM::filter_args()&lt;/code&gt; and is used to specify the Apache installation we want to test our code against. Here, I use &lt;code&gt;-apxs&lt;/code&gt; to specify the location of the &lt;code&gt;apxs&lt;/code&gt; binary in my local Apache DSO installation - for static builds you will want to use &lt;code&gt;-httpd&lt;/code&gt; to point to the &lt;code&gt;httpd&lt;/code&gt; binary instead. By the time &lt;code&gt;Makefile.PL&lt;/code&gt; exits, we have our test harness and know where our server lives.&lt;/p&gt;
+
+&lt;p&gt;Running &lt;code&gt;make&lt;/code&gt; creates our build directory, &lt;code&gt;blib/&lt;/code&gt;, and installs &lt;code&gt;Clean.pm&lt;/code&gt; locally so we can use it in our tests. Note that &lt;code&gt;ModPerl::MM&lt;/code&gt; installed &lt;code&gt;Clean.pm&lt;/code&gt; relative to &lt;code&gt;Apache2&lt;/code&gt;, magically following the path of my current mod_perl 2.0 installation.&lt;/p&gt;
+
+&lt;p&gt;At this point, we can run our tests. Issuing &lt;code&gt;make test&lt;/code&gt; will run all the tests in &lt;code&gt;t/&lt;/code&gt;, as you might expect. However, we can run our tests individually as well, which is particularly useful when debugging. To run a specific test we call &lt;code&gt;t/TEST&lt;/code&gt; directly and give it the name of the test we are interested in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ t/TEST t/01level.t
+*** setting ulimit to allow core files
+ulimit -c unlimited; t/TEST &#39;t/01level.t&#39;
+/usr/local/apache2/bin/httpd  -d /src/perl.com/Apache-Clean-2.0/t 
+    -f /src/perl.com/Apache-Clean-2.0/t/conf/httpd.conf 
+    -DAPACHE2 -DPERL_USEITHREADS
+using Apache/2.1.0-dev (prefork MPM)
+
+waiting for server to start: ..
+waiting for server to start: ok (waited 1 secs)
+server localhost:8529 started
+01level....ok                                                                
+All tests successful.
+Files=1, Tests=1,  4 wallclock secs ( 3.15 cusr +  0.13 csys =  3.28 CPU)
+*** server localhost:8529 shutdown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, the server was started, our test was run, the server was shutdown, and a report was generated - all with what is really minimal work on our part. Major kudos to the &lt;code&gt;Apache-Test&lt;/code&gt; developers for making the development of live tests as easy as they are.&lt;/p&gt;
+
+&lt;h3 id=&#34;beyond-the-basics&#34;&gt;Beyond the Basics&lt;/h3&gt;
+
+&lt;p&gt;What we have talked about so far is just the basics, and the framework is full of a number of different options designed to make writing and debugging tests easier. One of these is the &lt;code&gt;Apache::TestUtil&lt;/code&gt; package, which provides a number of utility functions you can use in your tests. Probably the most helpful of these is &lt;code&gt;t_cmp()&lt;/code&gt;, a simple equality testing function that also provides additional information when you run tests in verbose mode. For instance, after adding &lt;code&gt;use Apache::TestUtil;&lt;/code&gt; to our &lt;code&gt;01level.t&lt;/code&gt; test, we can alter the call to &lt;code&gt;ok()&lt;/code&gt; to look like&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ok t_cmp(q!&amp;lt;i&amp;gt;&amp;lt;b&amp;gt;&amp;amp;quot;This is a test&amp;amp;quot;&amp;lt;/b&amp;gt;&amp;lt;/i&amp;gt;!, $content);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the result would include expected and received notices (in addition to standard verbose output)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ t/TEST t/01level.t -v
+[lines snipped]
+01level....1..1
+# Running under perl version 5.009 for linux
+# Current time local: Mon May  5 11:04:09 2003
+# Current time GMT:   Mon May  5 15:04:09 2003
+# Using Test.pm version 1.24
+# expected: &amp;lt;i&amp;gt;&amp;lt;b&amp;gt;&amp;amp;quot;This is a test&amp;amp;quot;&amp;lt;/b&amp;gt;&amp;lt;/i&amp;gt;
+# received: &amp;lt;i&amp;gt;&amp;lt;b&amp;gt;&amp;amp;quot;This is a test&amp;amp;quot;&amp;lt;/b&amp;gt;&amp;lt;/i&amp;gt;
+ok 1
+ok
+All tests successful.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which is particularly helpful when debugging problems reported by end users of your code. See the &lt;code&gt;Apache::TestUtil&lt;/code&gt; manpage for a long list of helper functions, as well as the &lt;code&gt;README&lt;/code&gt; in the &lt;code&gt;Apache-Test&lt;/code&gt; distribution for additional command line options over and above &lt;code&gt;-v&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, &lt;code&gt;01level.t&lt;/code&gt; only tests one aspect of our &lt;code&gt;Clean.pm&lt;/code&gt; output filter, and there is much more functionality in the filter that we might want verify. So, let&amp;rsquo;s take a quick look at some of the other tests that accompany the &lt;code&gt;Apache::Clean&lt;/code&gt; distribution.&lt;/p&gt;
+
+&lt;p&gt;One of the features of &lt;code&gt;Apache::Clean&lt;/code&gt; is that it automatically declines processing non-HTML documents. The logic for this was defined in just a few lines at the start of our filter.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# we only process HTML documents
+unless ($r-&amp;gt;content_type =~ m!text/html!i) {
+  $log-&amp;gt;info(&#39;skipping request to &#39;, $r-&amp;gt;uri, &#39; (not an HTML document)&#39;);
+
+  return Apache::DECLINED;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A good test for this code would be verifying that content from a plain-text document does indeed pass through our filter unaltered, even if it has HTML tags that &lt;code&gt;HTML::Clean&lt;/code&gt; would ordinary manipulate. Our test suite includes a file &lt;code&gt;t/htdocs/index.txt&lt;/code&gt; whose content is identical to the &lt;code&gt;index.html&lt;/code&gt; file we created earlier. Remembering that we already have an Apache configuration for &lt;code&gt;/level&lt;/code&gt; that inserts our filter into the request cycle, we can use a request for &lt;code&gt;/level/index.txt&lt;/code&gt; to test the decline logic.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Apache::Test;
+use Apache::TestRequest;
+
+plan tests =&amp;gt; 1, have_lwp;
+
+my $response = GET &#39;/level/index.txt&#39;;
+chomp(my $content = $response-&amp;gt;content);
+
+ok ($content eq q!&amp;lt;i&amp;gt;&amp;lt;strong&amp;gt;&amp;amp;quot;This is a test&amp;amp;quot;&amp;lt;/strong&amp;gt;&amp;lt;/i&amp;gt;!);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It may be obvious, but if you think about what we are really testing here it is not that the content is unaltered - that is just what we use to measure the success of our test. The real test is against the criterion that determines whether the filter acts on the content. If we wanted to be really thorough, then we could add&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;AddDefaultCharset On
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to our &lt;code&gt;extra.conf.in&lt;/code&gt; to test the &lt;code&gt;Content-Type&lt;/code&gt; logic against headers that look like &lt;code&gt;text/html; charset=iso-8859-1&lt;/code&gt; instead of just &lt;code&gt;text/html&lt;/code&gt;. I actually have had more than one person comment that using a regular expression for testing the &lt;code&gt;Content-Type&lt;/code&gt; is excessive - adding the &lt;code&gt;AddDefaultCharset On&lt;/code&gt; directive shows that the regex logic can handle more runtime environments than a simple &lt;code&gt;$r-&amp;gt;content_type eq &#39;text/html&#39;&lt;/code&gt; check. Oh, the bugs you will find, fix, and defend when you start writing tests.&lt;/p&gt;
+
+&lt;h3 id=&#34;more-and-more-tests&#34;&gt;More and More Tests&lt;/h3&gt;
+
+&lt;p&gt;What other aspects of the filter can we put to the test? If you recall from our discussion of output filters last time, one of the responsibilities of filters that alter content is to remove the generated &lt;code&gt;Content-Length&lt;/code&gt; header from the server response. The relevant code for this in our filter was as follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# output filters that alter content are responsible for removing
+# the Content-Length header, but we only need to do this once.
+$r-&amp;gt;headers_out-&amp;gt;unset(&#39;Content-Length&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is the test for this bit of logic, which checks that the &lt;code&gt;Content-Length&lt;/code&gt; header is indeed present for plain documents, but removed by our filter for HTML documents. Again, we will be using the existing &lt;code&gt;/level&lt;/code&gt; URI to request both &lt;code&gt;index.txt&lt;/code&gt; and &lt;code&gt;index.html&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Apache::Test;
+use Apache::TestRequest;
+
+plan tests =&amp;gt; 2, have_lwp;
+
+my $response = GET &#39;/level/index.txt&#39;;
+ok ($response-&amp;gt;content_length == 58);
+
+$response = GET &#39;/level/index.html&#39;;
+ok (! $response-&amp;gt;content_length);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note the use of the &lt;code&gt;content_length()&lt;/code&gt; method on our &lt;code&gt;HTTP::Response&lt;/code&gt; object to retrieve the &lt;code&gt;Content-Length&lt;/code&gt; of the server response. Remember that you have all the methods from that class to choose from in your tests.&lt;/p&gt;
+
+&lt;p&gt;The final test we will take a look at is the example we used previous time to illustrate our filter does indeed co-exist with both mod_include and mod_cgi. As it turns out, the example was taken right from the test suite (always a good place from which to draw examples). Here is the &lt;code&gt;extra.conf.in&lt;/code&gt; snippet.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Alias /cgi-bin @ServerRoot@/cgi-bin
+&amp;lt;Location /cgi-bin&amp;gt;
+  SetHandler cgi-script
+
+  SetOutputFilter INCLUDES
+  PerlOutputFilterHandler Apache::Clean
+
+  PerlSetVar CleanOption shortertags
+  PerlAddVar CleanOption whitespace
+  Options +ExecCGI +Includes
+&amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The nature of our test requires that both mod_include and a suitable CGI platform (either mod_cgi or mod_cgid) be available to Apache - without both of these, our tests are doomed to failure, so we need a way to test whether these modules are available to the server before planning the individual tests. Also required are some CGI scripts, the location of which is specified by expanding &lt;code&gt;@ServerRoot@&lt;/code&gt;. To include these scripts, we could just create a &lt;code&gt;t/cgi-bin/&lt;/code&gt; directory and place the relevant files in it. However, any CGI scripts we create would probably include a platform-specific shebang line like &lt;code&gt;#!/usr/bin/perl&lt;/code&gt;. A better solution is to generate the scripts on-the-fly, specifying a shebang line that matches the version of Perl we are using to build and test the module.&lt;/p&gt;
+
+&lt;p&gt;Despite the extra work required, the test script used for this test is only a bit more complex than others we have seen so far.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Apache::Test;
+use Apache::TestRequest;
+use Apache::TestUtil qw(t_write_perl_script);
+
+use File::Spec::Functions qw(catfile);
+
+plan tests =&amp;gt; 4, (have_lwp &amp;amp;&amp;amp; 
+                  have_cgi &amp;amp;&amp;amp;
+                  have_module(&#39;include&#39;));
+
+my @lines = &amp;lt;DATA&amp;gt;;
+t_write_perl_script(catfile(qw(cgi-bin plain.cgi)), @lines[0,2]);
+t_write_perl_script(catfile(qw(cgi-bin include.cgi)), @lines[1,2]);
+
+my $response = GET &#39;/cgi-bin/plain.cgi&#39;;
+chomp(my $content = $response-&amp;gt;content);
+
+ok ($content eq q!&amp;lt;strong&amp;gt;/cgi-bin/plain.cgi&amp;lt;/strong&amp;gt;!);
+ok ($response-&amp;gt;content_type =~ m!text/plain!);
+
+$response = GET &#39;/cgi-bin/include.cgi&#39;;
+chomp($content = $response-&amp;gt;content);
+
+ok ($content eq q!&amp;lt;b&amp;gt;/cgi-bin/include.cgi&amp;lt;/b&amp;gt;!);
+ok ($response-&amp;gt;content_type =~ m!text/html!);
+
+__END__
+print &amp;quot;Content-Type: text/plain\n\n&amp;quot;;
+print &amp;quot;Content-Type: text/html\n\n&amp;quot;;
+print &#39;&amp;lt;strong&amp;gt;&amp;lt;!--#echo var=&amp;quot;DOCUMENT_URI&amp;quot; --&amp;gt;&amp;lt;/strong&amp;gt;&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first thing to note is that we have joined the familiar call to &lt;code&gt;have_lwp()&lt;/code&gt; with additional calls to &lt;code&gt;have_cgi()&lt;/code&gt; and &lt;code&gt;have_module()&lt;/code&gt;. The &lt;code&gt;Apache::Test&lt;/code&gt; package comes with a number of handy shortcuts for querying the server for information. &lt;code&gt;have_cgi()&lt;/code&gt; returns true if either mod_cgi or mod_cgid are installed. &lt;code&gt;have_module()&lt;/code&gt; is more generic and can be used to test for either Apache C modules or Perl modules - for instance, &lt;code&gt;have_module(&#39;Template&#39;)&lt;/code&gt; could be used to check whether the &lt;a href=&#34;http://template-toolkit.org/&#34;&gt;&lt;code&gt;Template Toolkit&lt;/code&gt;&lt;/a&gt; is installed.&lt;/p&gt;
+
+&lt;p&gt;For generation of the CGI scripts, we use the &lt;code&gt;t_write_perl_script()&lt;/code&gt; function from the &lt;code&gt;Apache::TestUtil&lt;/code&gt; package. &lt;code&gt;t_write_perl_script()&lt;/code&gt; takes two arguments, the first of which is the name of the file to generate, relative to the &lt;code&gt;t/&lt;/code&gt; directory in the distribution. If the file includes a path, any necessary directories are automatically created. In the interests of portability, we use &lt;code&gt;catfile()&lt;/code&gt; from the &lt;code&gt;File::Spec::Functions&lt;/code&gt; package to join the file with the directory. In general, you will want to keep &lt;code&gt;File::Spec&lt;/code&gt; and its associated classes in mind when writing your tests - you never know when somebody is going to try and run them on Win32 or VMS. The second argument to &lt;code&gt;t_write_perl_script()&lt;/code&gt; is a list of lines to append to the file after the (calculated) shebang line.&lt;/p&gt;
+
+&lt;p&gt;Although &lt;code&gt;t_write_perl_script()&lt;/code&gt; cleans up any generated files and directories when the test completes, if we were to intercept &lt;code&gt;include.cgi&lt;/code&gt; before removal it would look similar to something we would have written ourselves.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/src/bleedperl/bin/perl
+# WARNING: this file is generated, do not edit
+# 01: /src/bleedperl/lib/site_perl/5.9.0/i686-linux-thread-multi/
+      Apache/TestUtil.pm:129
+# 02: 06mod_cgi.t:18
+print &amp;quot;Content-Type: text/html\n\n&amp;quot;;
+print &#39;&amp;lt;strong&amp;gt;&amp;lt;!--#echo var=&amp;quot;DOCUMENT_URI&amp;quot; --&amp;gt;&amp;lt;/strong&amp;gt;&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you probably have guessed by now, just as we ran tests against scripts in the (generated) &lt;code&gt;t/cgi-bin/&lt;/code&gt; directory, we can add other directories to &lt;code&gt;t/&lt;/code&gt; for other kinds of tests. For instance, we can create &lt;code&gt;t/perl-bin/&lt;/code&gt; to hold standard &lt;code&gt;ModPerl::Registry&lt;/code&gt; scripts (remember, you don&amp;rsquo;t need to generate a shebang line for those). We can even create &lt;code&gt;t/My/&lt;/code&gt; to hold a custom &lt;code&gt;My::ContentGenerator&lt;/code&gt; handler, which can be used just like any other Perl module during Apache&amp;rsquo;s runtime. All in all, you can simulate practically any production environment imaginable.&lt;/p&gt;
+
+&lt;h3 id=&#34;but-wait-there-s-more&#34;&gt;But Wait, There&amp;rsquo;s More!&lt;/h3&gt;
+
+&lt;p&gt;The tests presented here should be enough to get you started writing tests for your own modules, but they are only part of the story. If you are interested in seeing some of the other tests written to support this article, the &lt;a href=&#34;http://www.modperlcookbook.org/~geoff/perl.com/Apache-Clean-2.0.tar.gz&#34;&gt;&lt;code&gt;Apache::Clean&lt;/code&gt; distribution&lt;/a&gt; is full of all kinds of different tests and test approaches, including some that integrate custom handlers as well as one that tests the POD syntax for the module. In fact, you will find 26 different tests in 12 test files there, free for the taking.&lt;/p&gt;
+
+&lt;p&gt;Stuck using mod_perl 1.0? One of the best things about &lt;code&gt;Apache-Test&lt;/code&gt; is that it is flexible and intelligent enough to be used for mod_perl 1.0 handlers as well. In fact, the &lt;a href=&#34;https://metacpan.org/pod/Apache::Test&#34;&gt;recent release&lt;/a&gt; of &lt;code&gt;Apache-Test&lt;/code&gt; as a CPAN module outside of the mod_perl 2.0 distribution makes it even easier for all mod_perl developers to take advantage of the framework. For the most part, the instructions in this article should be enough to get you going writing tests for 1.0-based modules - the only changes specific to 1.0 modules rest in the &lt;code&gt;Makefile.PL&lt;/code&gt;. I took the time to whip up a version of &lt;code&gt;Apache::Clean&lt;/code&gt; for mod_perl 1.0 that parallels the functionality in these articles, which you can find &lt;a href=&#34;http://www.modperlcookbook.org/~geoff/perl.com/Apache-Clean-2.0.tar.gz&#34;&gt;next to&lt;/a&gt; the 2.0 version. The 1.0 distribution runs against the exact same &lt;code&gt;*.t&lt;/code&gt; files (where applicable) and includes a sample 1.0 &lt;code&gt;Makefile.PL&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Personally, I don&amp;rsquo;t know how I ever got along without &lt;code&gt;Apache-Test&lt;/code&gt;, and I&amp;rsquo;m sure that once you start using it you will feel the same. Secretly, I&amp;rsquo;m hoping that &lt;code&gt;Apache-Test&lt;/code&gt; becomes so popular that end-users start wrapping their bug reports up in little, self-contained, &lt;code&gt;Apache-Test&lt;/code&gt;-based tarballs so anyone can reproduce the problem.&lt;/p&gt;
+
+&lt;h3 id=&#34;more-information&#34;&gt;More Information&lt;/h3&gt;
+
+&lt;p&gt;This article was derived from Recipe 7.7 in the &lt;a href=&#34;http://www.modperlcookbook.org/&#34;&gt;&lt;em&gt;mod_perl Developer&amp;rsquo;s Cookbook&lt;/em&gt;&lt;/a&gt;, adjusted to accommodate both mod_perl 2.0 and changes in the overall &lt;code&gt;Apache-Test&lt;/code&gt; interface that have happened since publication. Despite these differences, the recipe is useful for its additional descriptions and coverage of features not discussed here. You can read Recipe 7.7, as well as &lt;a href=&#34;http://www.modperlcookbook.org/chapters/ch07.pdf&#34;&gt;the rest of Chapter 7&lt;/a&gt; from the book&amp;rsquo;s &lt;a href=&#34;http://www.modperlcookbook.org/&#34;&gt;website&lt;/a&gt;. Also, in addition to the &lt;a href=&#34;https://metacpan.org/pod/Apache::Test&#34;&gt;&lt;code&gt;Apache-Test&lt;/code&gt;&lt;/a&gt; manpage and the &lt;a href=&#34;https://metacpan.org/pod/Apache::Test&#34;&gt;&lt;code&gt;README&lt;/code&gt;&lt;/a&gt; there is also the &lt;code&gt;Apache-Test&lt;/code&gt; tutorial on the &lt;a href=&#34;http://perl.apache.org/docs/general/testing/testing.html&#34;&gt;mod_perl Project website&lt;/a&gt;, all of which are valuable sources of information.&lt;/p&gt;
+
+&lt;h3 id=&#34;thanks&#34;&gt;Thanks&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;Apache-Test&lt;/code&gt; project is the result of the tireless efforts of many, many developers - far too many to name individually here. However, there has has been a recent surge of activity as &lt;code&gt;Apache-Test&lt;/code&gt; made its way to CPAN, especially in making it more platform aware and solving a few back compatibility problems with the old &lt;code&gt;Apache::test&lt;/code&gt; that ships with mod_perl 1.0. Special thanks are due to Stas Bekman, David Wheeler, and Randy Kobes for helping to polish &lt;code&gt;Apache-Test&lt;/code&gt; on Win32 and Mac OS X without requiring major changes to the API.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Filters in Apache 2.0</title>
+      <link>http://localhost:1313/pub/2003/04/17/filters.html/</link>
+      <pubDate>Thu, 17 Apr 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/04/17/filters.html/</guid>
+      <description>
+
+&lt;p&gt;Not too long ago, despite a relative dearth of free tuits, I decided that I had put off my investigation of mod_perl 2.0 for too long - it was time to really start kicking the tires and tinkering with all the new stuff I had been hearing about. What I found was that the new mod_perl API is full of interesting features, yet discovering and using them was tedious, frustrating, enlightening, and fun all at the same time. Hopefully, I can help ease some of the growing pains you are likely to encounter by experiencing the pain myself first, then sharing some of the lessons through a series of articles. Consider this and future articles to be our voyage together into the rocky but exciting new mod_perl frontier.&lt;/p&gt;
+
+&lt;p&gt;One of the more interesting and practical features to come out of the Apache 2.0 redesign effort is output filters. While in Apache 2.0 there are all kinds of filters, including input and connection filters, it&amp;rsquo;s output filters that are most interesting to me - mostly because 2.0 discussions make a point of saying that it&amp;rsquo;s impossible (well, really, really hard) to filter output content in Apache 1.3, despite the fact that mod_perl users have been able filter content (to some degree) for years. Thus, when I began to play around with mod_perl 2.0 it seemed only logical that my first task would be to port the instructional yet useful &lt;a href=&#34;https://metacpan.org/pod/Apache::Clean&#34;&gt;Apache::Clean&lt;/a&gt;, a content filter for mod_perl 1.0, over to the new architecture.&lt;/p&gt;
+
+&lt;p&gt;What we will be examining here is a preliminary implementation of &lt;code&gt;Apache::Clean&lt;/code&gt; using the mod_perl 2.0 API. Because mod_perl 2.0 is still being tweaked daily, if you want to follow along on your own box, then you would need the current version of mod_perl from CVS, or a recent &lt;a href=&#34;http://cvs.apache.org/snapshots/modperl-2.0/&#34;&gt;snapshot&lt;/a&gt; - the latest versions shipped with Linux distributions like RedHat, or even the latest version on CPAN (1.99_08), are far too out of date for what we will be doing. The most current version of &lt;a href=&#34;http://www.apache.org/dist/httpd/&#34;&gt;Apache 2.0&lt;/a&gt;, as well as &lt;a href=&#34;http://www.cpan.org/src/README.html&#34;&gt;Perl 5.8.0&lt;/a&gt;, will also be helpful. Keep in mind that many of the more interesting features in mod_perl 2.0 are not entirely stable yet, so do not be surprised if things work just a bit differently six months from now.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-are-output-filters-anyway&#34;&gt;What Are Output Filters Anyway?&lt;/h3&gt;
+
+&lt;p&gt;Go ahead, admit it. At some point, you wrote a CGI script that generated HTML with embedded Server Side Include tags. The impetus behind the idea was a simple one: You had hopes that the embedded SSI tags would save you from the extra work of, say, adding a canned footer to the bottom of your otherwise dynamic page. Sounds reasonable, right? Seeing those SSI tags left unprocessed in the resulting page must have been shocking.&lt;/p&gt;
+
+&lt;p&gt;As it turns out, whether you knew it or not, in Apache-speak you were trying to filter your content, or pass the output of one process (the CGI script) into another (Apache&amp;rsquo;s SSI engine) for subsequent processing. Content filtering is a simple idea, and one that feels natural to us as programmers. After all, Apache is supposed to be modular, and piping modular components together - &lt;code&gt;cat yachts.txt | wc -l&lt;/code&gt; - is something we do on the Unix command line all the time. Wanting the same functionality in our Web server of choice seems not only logical, but almost required in the interests of efficient application programming.&lt;/p&gt;
+
+&lt;p&gt;While the idea is certainly sound, the above experiment exposes a limitation of the Apache 1.3 server itself, namely that by design you cannot have more than one content handler for a given request - you can use either mod_cgi to process and CGI script, or mod_include to parse an SSI document, but not both.&lt;/p&gt;
+
+&lt;p&gt;With Apache 2.0, the idea of output filters were introduced, which provide an official way to intercept and manipulate data on its way from the content handler to the browser. In the case of our SSI example, mod_include has been implemented as an output filter in Apache 2.0, giving it the ability to post-process either static files (served by the default Apache content handler) or dynamically generated scripts (such as those generated by mod_cgi, mod_perl, or mod_php). True to its goal of exposing the entire Apache API to Perl, mod_perl allows you to plug into the Apache filter API and create your own output filters in Perl, which is what we will be doing with &lt;code&gt;Apache::Clean&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;html-clean-and-apache-clean&#34;&gt;&lt;code&gt;HTML::Clean&lt;/code&gt; and &lt;code&gt;Apache::Clean&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s take a moment to look at &lt;code&gt;HTML::Clean&lt;/code&gt; before delving into &lt;code&gt;Apache::Clean&lt;/code&gt;, which is basically just a mod_perl wrapper that takes &lt;code&gt;HTML::Clean&lt;/code&gt; and turns it into an output filter. &lt;code&gt;HTML::Clean&lt;/code&gt; is a nifty little module that reduces the size of an HTML page using a number of different but simple techniques, such as removing unnecessary white space, replacing longer HTML tags with shorter equivalents, and so on. The end result is a page that, while still valid HTML and easily rendered by a browser, is relatively compact. If reducing bandwidth is important in your environment, then using &lt;code&gt;HTML::Clean&lt;/code&gt; to tidy up static pages offline is a quick and easy way to save some bytes.&lt;/p&gt;
+
+&lt;p&gt;Here is a simple example of &lt;code&gt;HTML::Clean&lt;/code&gt; in action.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use HTML::Clean ();
+
+use strict;
+
+my $dirty = q!&amp;lt;strong&amp;gt;&amp;amp;quot;helm&#39;s alee&amp;amp;quot;&amp;lt;/strong&amp;gt;!;
+
+my $h = HTML::Clean-&amp;gt;new(\$dirty);
+
+$h-&amp;gt;strip({ shortertags =&amp;gt; 1, entities =&amp;gt; 1 });
+
+print ${$h-&amp;gt;data};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, the interface for &lt;code&gt;HTML::Clean&lt;/code&gt; is object-oriented and fairly straightforward. Things begin by calling the &lt;code&gt;new()&lt;/code&gt; constructor to create an &lt;code&gt;HTML::Clean&lt;/code&gt; object. &lt;code&gt;new()&lt;/code&gt; accepts either a filename to clean or a reference to a string containing some HTML. Deciding exactly which aspects of the HTML to tidy is determined in one of two ways: either using the &lt;code&gt;level()&lt;/code&gt; method to set an optimization level, or by passing the &lt;code&gt;strip()&lt;/code&gt; method any number of options from a rich set. In either case, &lt;code&gt;strip()&lt;/code&gt; is used to actually clean the HTML. After that, calling the &lt;code&gt;data()&lt;/code&gt; method returns a reference to a string containing the HTML, polished to a Perly white. In our sample code, the original HTML has been changed to&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;b&amp;gt;&amp;quot;helm&#39;s alee&amp;quot;&amp;lt;/b&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which is half the size of our original string yet displayed the same way by browsers.&lt;/p&gt;
+
+&lt;p&gt;Depending on the size of your site, using &lt;code&gt;HTML::Clean&lt;/code&gt; can lead to a significant reduction in the number of bytes sent over the wire - for instance, the front page of the current &lt;a href=&#34;http://perl.apache.org/&#34;&gt;&lt;code&gt;mod_perl project homepage&lt;/code&gt;&lt;/a&gt; becomes 70% of it&amp;rsquo;s original size when scrubbed with &lt;code&gt;$h-&amp;gt;level(9)&lt;/code&gt;. However, while spending the time to tidy static HTML might make sense, the number of static pages on any given site seems to be diminishing daily. What about dynamically generated HTML?&lt;/p&gt;
+
+&lt;p&gt;One way to handle dynamic HTML would be to add &lt;code&gt;HTML::Clean&lt;/code&gt; routines to each dynamic component of your application, a process that really is neither scalable nor maintainable. A better solution would be to have Apache inject &lt;code&gt;HTML::Clean&lt;/code&gt; processing directly into the server response wherever we wanted it, to create a pluggable module that we could configure to post-process requests to any given URI. Enter &lt;code&gt;Apache::Clean&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Apache::Clean&lt;/code&gt; provides a basic interface into &lt;code&gt;HTML::Clean&lt;/code&gt; but it works as an output filter. As briefly mentioned, &lt;code&gt;Apache::Clean&lt;/code&gt; already exists for mod_perl 1.0, but over in Apache 1.3 land it was limited in that it could only post-process responses generated by mod_perl, and that only after sufficient magic. We are not going to get into how that all worked in mod_perl 1.0 - for a detailed explanation see &lt;a href=&#34;http://www.modperlcookbook.org/chapters/15.4.pdf&#34;&gt;Recipe 15.4&lt;/a&gt; in the &lt;em&gt;&lt;a href=&#34;http://www.modperlcookbook.org/&#34;&gt;mod_perl Developer&amp;rsquo;s Cookbook&lt;/a&gt;&lt;/em&gt; or the &lt;a href=&#34;https://metacpan.org/pod/Apache::Clean&#34;&gt;original &lt;code&gt;Apache::Clean&lt;/code&gt; manpage&lt;/a&gt;. With Apache 2.0 and the advent of output filters, we can now code &lt;code&gt;Apache::Clean&lt;/code&gt; as a genuine part of Apache&amp;rsquo;s request processing, allowing us to clean responses on their way to the browser entirely independent of who generates the content.&lt;/p&gt;
+
+&lt;h3 id=&#34;new-directives&#34;&gt;New Directives&lt;/h3&gt;
+
+&lt;p&gt;Here is a look at a possible configuration for Apache 2.0, one that takes output of a CGI script, post-processes it for SSI tags, then cleans it with our &lt;code&gt;Apache::Clean&lt;/code&gt; output filter.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Alias /cgi-bin /usr/local/apache2/cgi-bin
+&amp;lt;Location /cgi-bin&amp;gt;
+  SetHandler cgi-script
+
+  SetOutputFilter INCLUDES
+  PerlOutputFilterHandler Apache::Clean
+
+  PerlSetVar CleanOption shortertags
+  PerlAddVar CleanOption whitespace
+
+  Options +ExecCGI +Includes
+&amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As with Apache 1.3, mod_cgi is still enabled the same way - in our case via the &lt;code&gt;SetHandler cgi-script&lt;/code&gt; directive, although this is not the only way and the familiar &lt;code&gt;ScriptAlias&lt;/code&gt; directive is still supported. What is different in this &lt;code&gt;httpd.conf&lt;/code&gt; snippet is the configuration of the SSI engine, mod_include. As already mentioned, mod_include was implemented as an output filter in Apache 2.0, and output filters bring with them a new directive. The &lt;code&gt;SetOutputFilter&lt;/code&gt; directive activates the SSI engine - the &lt;code&gt;INCLUDES&lt;/code&gt; filter - within our container. This means that requests to &lt;code&gt;cgi-bin/&lt;/code&gt;, no matter who handles the actual generation of content, will be parsed by mod_include. See the &lt;a href=&#34;http://httpd.apache.org/docs-2.0/mod/mod_include.html&#34;&gt;mod_include documentation&lt;/a&gt; for other possible SSI configurations and options.&lt;/p&gt;
+
+&lt;p&gt;With the generic Apache bits out of the way, we can move on to the mod_perl part, which isn&amp;rsquo;t all that complex. While the &lt;code&gt;PerlSetVar&lt;/code&gt; and &lt;code&gt;PerlAddVar&lt;/code&gt; directives are exactly the same as they were in mod_perl 1.0, mod_perl 2.0 introduces a new directive - &lt;code&gt;PerlOutputFilterHandler&lt;/code&gt; - which specifies the Perl output filter for the request. In our sample &lt;code&gt;httpd.conf&lt;/code&gt;, the &lt;code&gt;Apache::Clean&lt;/code&gt; output filter will be added after mod_include, which inserts SSI processing after mod_cgi. The really cool part about filters is that everything happens without any tricks or magic - getting all these independent modules to work in harmony in creating the server response is all perfectly normal, which is a huge improvement over Apache 1.3.&lt;/p&gt;
+
+&lt;p&gt;In the interests of safety, one thing that you should note about our sample configuration is that it does not include the &lt;code&gt;entities&lt;/code&gt; option. Because we&amp;rsquo;re cleaning dynamic content, reducing entity tags (such as changing &lt;code&gt;&amp;amp;quot;&lt;/code&gt; to &lt;code&gt;&amp;quot;&lt;/code&gt;) would inadvertently remove any protection against Cross Site Scripting introduced by the generating script. For more information about Cross Site Scripting and how to protect against it, a good overview is provided in &lt;a href=&#34;http://localhost:1313/pub/2002/02/20/css.html&#34;&gt;this &lt;code&gt;perl.com&lt;/code&gt; article&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;introducing-mod-perl-2-0&#34;&gt;Introducing mod_perl 2.0&lt;/h3&gt;
+
+&lt;p&gt;mod_perl actually offers two different APIs for coding the Perl output filter. We are going to be using the simpler, streaming API, which hides the raw Apache API a bit. Of course, if you are feeling bold and want to manipulate the Apache bucket brigades directly, you are more than welcome, but it is a more complex process so we are not going to talk about it here. Instead, here is our new &lt;code&gt;Apache::Clean&lt;/code&gt; handler, ported to mod_perl 2.0 using the streaming filter API.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Apache::Clean;
+
+use 5.008;
+
+use Apache::Filter ();      # $f
+use Apache::RequestRec ();  # $r
+use Apache::RequestUtil (); # $r-&amp;gt;dir_config()
+use Apache::Log ();         # $log-&amp;gt;info()
+use APR::Table ();          # dir_config-&amp;gt;get() and headers_out-&amp;gt;get()
+
+use Apache::Const -compile =&amp;gt; qw(OK DECLINED);
+
+use HTML::Clean ();
+
+use strict;
+
+sub handler {
+
+  my $f   = shift;
+
+  my $r   = $f-&amp;gt;r;
+
+  my $log = $r-&amp;gt;server-&amp;gt;log;
+
+  # we only process HTML documents
+  unless ($r-&amp;gt;content_type =~ m!text/html!i) {
+    $log-&amp;gt;info(&#39;skipping request to &#39;, $r-&amp;gt;uri, &#39; (not an HTML document)&#39;);
+
+    return Apache::DECLINED;
+  }
+
+  my $context;
+
+  unless ($f-&amp;gt;ctx) {
+    # these are things we only want to do once no matter how
+    # many times our filter is invoked per request
+
+    # parse the configuration options
+    my $level = $r-&amp;gt;dir_config-&amp;gt;get(&#39;CleanLevel&#39;) || 1;
+
+    my %options = map { $_ =&amp;gt; 1 } $r-&amp;gt;dir_config-&amp;gt;get(&#39;CleanOption&#39;);
+
+    # store the configuration
+    $context = { level   =&amp;gt; $level,
+                 options =&amp;gt; \%options,
+                 extra   =&amp;gt; undef };
+
+    # output filters that alter content are responsible for removing
+    # the Content-Length header, but we only need to do this once.
+    $r-&amp;gt;headers_out-&amp;gt;unset(&#39;Content-Length&#39;);
+  }
+
+  # retrieve the filter context, which was set up on the first invocation
+  $context ||= $f-&amp;gt;ctx;
+
+  # now, filter the content
+  while ($f-&amp;gt;read(my $buffer, 1024)) {
+
+    # prepend any tags leftover from the last buffer or invocation
+    $buffer = $context-&amp;gt;{extra} . $buffer if $context-&amp;gt;{extra};
+
+    # if our buffer ends in a split tag (&#39;&amp;lt;strong&#39; for example)
+    # save processing the tag for later
+    if (($context-&amp;gt;{extra}) = $buffer =~ m/(&amp;lt;[^&amp;gt;]*)$/) {
+      $buffer = substr($buffer, 0, - length($context-&amp;gt;{extra}));
+    }
+
+    my $h = HTML::Clean-&amp;gt;new(\$buffer);
+
+    $h-&amp;gt;level($context-&amp;gt;{level});
+
+    $h-&amp;gt;strip($context-&amp;gt;{options});
+
+    $f-&amp;gt;print(${$h-&amp;gt;data});
+  }
+
+  if ($f-&amp;gt;seen_eos) {
+    # we&#39;ve seen the end of the data stream
+
+    # print any leftover data
+    $f-&amp;gt;print($context-&amp;gt;{extra}) if $context-&amp;gt;{extra};
+  }
+  else {
+    # there&#39;s more data to come
+
+    # store the filter context, including any leftover data
+    # in the &#39;extra&#39; key
+    $f-&amp;gt;ctx($context);
+  }
+
+  return Apache::OK;
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you can dismiss the mod_perl specific bits for a moment, you will see the &lt;code&gt;HTML::Clean&lt;/code&gt; logic embedded in the middle of the handler, which is not very different from the isolated code we used to illustrate &lt;code&gt;HTML::Clean&lt;/code&gt; by itself. One of the things we need to do differently, however, is determine which options to pass to the &lt;code&gt;level()&lt;/code&gt; and &lt;code&gt;options()&lt;/code&gt; methods of &lt;code&gt;HTML::Clean&lt;/code&gt;. Here, we use &lt;code&gt;$r-&amp;gt;dir_config()&lt;/code&gt; to gather whatever &lt;code&gt;httpd.conf&lt;/code&gt; options we specified through our &lt;code&gt;PerlSetVar&lt;/code&gt; and &lt;code&gt;PerlAddVar&lt;/code&gt; configurations.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $level = $r-&amp;gt;dir_config-&amp;gt;get(&#39;CleanLevel&#39;) || 1;
+
+my %options = map { $_ =&amp;gt; 1 } $r-&amp;gt;dir_config-&amp;gt;get(&#39;CleanOption&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This use of &lt;code&gt;dir_config()&lt;/code&gt; is in fact no different than how we would have coded it in mod_perl 1.0. Similarly, later methods like &lt;code&gt;r-&amp;gt;content_type()&lt;/code&gt;, &lt;code&gt;$r-&amp;gt;server-&amp;gt;log-&amp;gt;info()&lt;/code&gt;, and &lt;code&gt;$r-&amp;gt;uri()&lt;/code&gt; also behave the same as they did in mod_perl 1.0, which should offer some degree of comfort. For instance, the block&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;unless ($r-&amp;gt;content_type =~ m!text/html!i) {
+  $log-&amp;gt;info(&#39;skipping request to &#39;, $r-&amp;gt;uri, &#39; (not an HTML document)&#39;);
+
+  return Apache::DECLINED;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;looks almost exactly the same as it would have been in mod_perl 1.0, save the use of &lt;code&gt;Apache::DECLINED&lt;/code&gt;. The new &lt;code&gt;Apache::Const&lt;/code&gt; class provides access to all constants you will need in your handlers, albeit through a slightly different interface than before - when using the &lt;code&gt;-compile&lt;/code&gt; option, constants are imported into the &lt;code&gt;Apache::&lt;/code&gt; namespace. If you want the constants in your own namespace, mimicking the &lt;code&gt;OK&lt;/code&gt; of yore, you can just &lt;code&gt;use Apache::Const&lt;/code&gt; by itself without the without the &lt;code&gt;-compile&lt;/code&gt; option.&lt;/p&gt;
+
+&lt;p&gt;Some of the other minor differences you will notice are the addition of a bunch of &lt;code&gt;use&lt;/code&gt; statements at the top of the handler. Whereas with mod_perl 1.0 just about every class was magically present when you needed it, with mod_perl 2.0 you need to be very specific about the classes you will be using in your handler, and almost nothing is available by default.&lt;/p&gt;
+
+&lt;p&gt;In general, the most important class is &lt;code&gt;Apache::RequestRec&lt;/code&gt;, which provides access to all the elements in the Apache C &lt;code&gt;request_rec&lt;/code&gt; structure. Methods originating from the request object, &lt;code&gt;$r&lt;/code&gt;, but not operating on the actual &lt;code&gt;request_rec&lt;/code&gt; slots, such as &lt;code&gt;$r-&amp;gt;dir_config()&lt;/code&gt;, are defined in &lt;code&gt;Apache::RequestUtil&lt;/code&gt;. This is a nice separation, and can help you think about mod_perl more in terms of access to the underlying Apache guts than just a box of black magic.&lt;/p&gt;
+
+&lt;p&gt;If you recall from 1.0, &lt;code&gt;$r-&amp;gt;dir_config()&lt;/code&gt; returned an &lt;code&gt;Apache::Table&lt;/code&gt; object, which corresponded to an Apache table and allowed things like headers to be stored in a case-insensitive, multi-keyed manner. In 2.0, Apache tables are accessed through the APR (Apache Portable Runtime) layer, so any API that accesses tables needs to &lt;code&gt;use APR::Table&lt;/code&gt;. This includes the &lt;code&gt;get()&lt;/code&gt; and &lt;code&gt;set()&lt;/code&gt; methods used on tables like &lt;code&gt;headers_out&lt;/code&gt; and &lt;code&gt;dir_config&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Besides &lt;code&gt;Apache::RequestRec&lt;/code&gt;, &lt;code&gt;Apache::RequestUtil&lt;/code&gt;, and &lt;code&gt;APR::Table&lt;/code&gt;, our handler also needs access to the &lt;code&gt;Apache::Log&lt;/code&gt; and &lt;code&gt;Apache::Filter&lt;/code&gt; classes. &lt;code&gt;Apache::Log&lt;/code&gt; works no differently than it did under mod_perl 1.0, while &lt;code&gt;Apache::Filter&lt;/code&gt; is entirely new and will be discussed shortly.&lt;/p&gt;
+
+&lt;p&gt;From experience, I can tell you that determining which module you need to &lt;code&gt;use&lt;/code&gt; in order to access the functionality you require is maddening. In the old days (just weeks before this article was written) developers needed to plow through code examples in the mod_perl test suite in order to discern which modules they needed. But no more. Recently introduced was the &lt;code&gt;ModPerl::MethodLookup&lt;/code&gt; package, which contains the &lt;code&gt;lookup_method()&lt;/code&gt; function - just pass it the name of the method you are looking for and you will get back a list of modules likely to suit your needs. See the &lt;a href=&#34;http://perl.apache.org/docs/2.0/api/ModPerl/MethodLookup.html&#34;&gt;&lt;code&gt;MethodLookup&lt;/code&gt; documentation&lt;/a&gt; for more details.&lt;/p&gt;
+
+&lt;p&gt;With basic housekeeping out of the way, we can focus on the guts of our output filter and the &lt;code&gt;Apache::Filter&lt;/code&gt; streaming API. You will notice that the first argument passed to the &lt;code&gt;handler()&lt;/code&gt; subroutine is an &lt;code&gt;Apache::Filter&lt;/code&gt; object, not the typical &lt;code&gt;$r&lt;/code&gt; you might have been expecting. mod_perl 2.0 has stepped up it&amp;rsquo;s DWIM factor a bit in an attempt to make writing filters a bit more intuitive - in fact, it is possible to write an output filter without ever needing to access &lt;code&gt;$r&lt;/code&gt;, so mod_perl gives you what you will primarily need. In order to access &lt;code&gt;$r&lt;/code&gt; we call the (aptly named) &lt;code&gt;r()&lt;/code&gt; method on our &lt;code&gt;$f&lt;/code&gt;, then use &lt;code&gt;$r&lt;/code&gt; as the gateway to per-request attributes, such as the MIME type of the response. Note that our filter genuinely declines to process the request if the content is not HTML. No fancy footwork, just processing like it should be.&lt;/p&gt;
+
+&lt;p&gt;Beyond the typical handler initializations is where things really start to get unfamiliar, starting with the notion of filter context, or &lt;code&gt;$f-&amp;gt;ctx()&lt;/code&gt;. Unlike with mod_perl 1.0, where every handler is called only once per request, output filters can be (and generally are) called multiple times per request. There can be several reasons for this, but for our purposes it is sufficient to understand that we need to adjust our normal handler logic and compensate for some of the subtle behaviors that can arise by being called several times.&lt;/p&gt;
+
+&lt;p&gt;So, the first thing we do is isolate parts of the request that only need to happen once per request. &lt;code&gt;$f-&amp;gt;ctx()&lt;/code&gt;, which stores the filter context, will return &lt;code&gt;undef&lt;/code&gt; on the first request, so we can use it as an indicator of the initial invocation of our filter. Since we only really need to parse our &lt;code&gt;httpd.conf&lt;/code&gt; configuration once, we use the initial invocation to get our &lt;code&gt;PerlSetVar&lt;/code&gt; options and store them in a hash for later - because &lt;code&gt;$f-&amp;gt;ctx()&lt;/code&gt; can store a scalar for us, we store our hash as a reference in &lt;code&gt;$context&lt;/code&gt;. We also set aside space in the hash for the &lt;code&gt;extra&lt;/code&gt; element, which will become important later.&lt;/p&gt;
+
+&lt;p&gt;Another thing we need to do only once per request is to remove the &lt;code&gt;Content-Length&lt;/code&gt; header from the response. Apache 2.0 has taken great steps to make sure that all requests are as RFC compliant as possible, while at the same time trying to make the developer&amp;rsquo;s life easier. As it turns out, part of this was the addition of the Content-Length filter, which calculates the length of the response and adds the &lt;code&gt;Content-Length&lt;/code&gt; header if Apache deems it appropriate. If you are writing a handler that alters content to the point where the length of the response is different (which is probably true in most cases) you are responsible for removing the &lt;code&gt;Content-Length&lt;/code&gt; header from the outgoing headers table. A simple call to &lt;code&gt;$r-&amp;gt;headers_out-&amp;gt;unset()&lt;/code&gt; is all we need to accomplish this, which is again the same as it would have been in mod_perl 1.0. And don&amp;rsquo;t worry, if the &lt;code&gt;Content-Length&lt;/code&gt; is missing Apache takes other steps, such as using a chunked transfer encoding, to ensure that the request is HTTP compliant.&lt;/p&gt;
+
+&lt;p&gt;That about wraps up all the processing which should only happen once per request. If you do not like seeing the informational &lt;code&gt;&amp;quot;skipping...&amp;quot;&lt;/code&gt; message on every non-HTML filter invocation, feel free to add logic that tests against &lt;code&gt;$f-&amp;gt;ctx()&lt;/code&gt; there as well.&lt;/p&gt;
+
+&lt;p&gt;Once we have taken care of one-time-only processing, we can move on to the heart of our output filter. The actual &lt;code&gt;Apache::Filter&lt;/code&gt; streaming API is fairly straight forward. For the most part, we simply call &lt;code&gt;$f-&amp;gt;read()&lt;/code&gt; to read incoming data in chunks, in our case &lt;code&gt;1K&lt;/code&gt; at a time. Sending the processed data down the line requires only that we call &lt;code&gt;$f-&amp;gt;print()&lt;/code&gt;. All in all, the basis of the streaming API couldn&amp;rsquo;t be any simpler. Where it begins to get complex stems from the nature of our particular filter.&lt;/p&gt;
+
+&lt;p&gt;The idea behind &lt;code&gt;HTML::Clean&lt;/code&gt; is that it can, in part, make HTML more compact. However, since HTML is tag based, and those tags often come in pairs, we need to take special steps to make sure that our tags remain balanced after &lt;code&gt;Apache::Clean&lt;/code&gt; has run. Because we are reading and processing data in chunks, there is the possibility that a tag might be stranded between chunks. For instance, if the HTML looked like&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[1019 bytes of stuff] &amp;lt;strong&amp;gt;Bold!&amp;lt;/strong&amp;gt; [more stuff]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;the first chunk of data that &lt;code&gt;Apache::Clean&lt;/code&gt; would see is&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[1019 bytes of stuff] &amp;lt;str
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because &lt;code&gt;&amp;lt;str&lt;/code&gt; is not a valid HTML tag, &lt;code&gt;HTML::Clean&lt;/code&gt; leaves it unaltered. When the next chunk of data is read from the filter, it comes across as&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ong&amp;gt;Bold!&amp;lt;/strong&amp;gt; [more stuff]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and &lt;code&gt;HTML::Clean&lt;/code&gt; again leaves the unrecognized &lt;code&gt;ong&amp;gt;&lt;/code&gt; unprocessed. However, it does catch the closing &lt;code&gt;&amp;lt;/strong&amp;gt;&lt;/code&gt; tag. The end result, as you can probably see now, would be&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[1020 bytes of stuff] &amp;lt;strong&amp;gt;Bold!&amp;lt;/b&amp;gt; [more stuff]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which is definitely undesirable. Our matching regex and &lt;code&gt;extra&lt;/code&gt; manipulations make certain that any dangling tags are prepended to the front of the next buffer, safeguarding against this particular problem. Of course, this kind of logic is not required of all filters. Just remember to keep in mind the complexity that operating on data in pieces adds when you implement your own filter.&lt;/p&gt;
+
+&lt;p&gt;Once we are finished processing all the data from the current filter invocation we come to a critical junction - determining whether we have seen all of the data from the actual response. If our filter will not be called again for this request, &lt;code&gt;$f-&amp;gt;seen_eos()&lt;/code&gt; will return true, meaning that we have reached the end of the data stream. Because we may have leftover tag fragments stored in &lt;code&gt;$context-&amp;gt;{extra}&lt;/code&gt;, we need to send those along before exiting our filter. On the other hand, if there is more data to come, then we would need to store the current filter context so it can be used on the next invocation.&lt;/p&gt;
+
+&lt;h3 id=&#34;voila&#34;&gt;Voila!&lt;/h3&gt;
+
+&lt;p&gt;So there you have it, output filtering made easy with mod_perl 2.0. All in all, it is a bit different than what you might be used to with mod_perl 1.0, but it&amp;rsquo;s not that difficult once you get your head around it. And it does allow for some pretty amazing things. For instance, not only can we now use Perl to code interesting handlers like &lt;code&gt;Apache::Clean&lt;/code&gt;, but the overall filter mechanism makes it possible to use Perl to manipulate &lt;em&gt;any and all&lt;/em&gt; content originating from the server - just a simple line like&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PerlOutputFilterHandler My::Cool::Stuff
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;on the server level of your &lt;code&gt;httpd.conf&lt;/code&gt; (such as next to the &lt;code&gt;DocumentRoot&lt;/code&gt; directive) will allow you to post-process &lt;em&gt;every&lt;/em&gt; request. Cool.&lt;/p&gt;
+
+&lt;p&gt;Of course, that&amp;rsquo;s not the end of the story, and what&amp;rsquo;s left over has both positive and negative sides. What we&amp;rsquo;ve seen here is really just scratching the surface of filters: There are still input and connection filters to talk about, as well as raw access to the Apache filtering API via bucket brigades. The downside is that constructing a filter that handles conditional &lt;code&gt;GET&lt;/code&gt; requests properly isn&amp;rsquo;t really as good as it could be due to the (current) incompleteness of the mod_perl 2.0 filtering API. However, these things aside, what we&amp;rsquo;ve accomplished here is already pretty impressive, and I hope it gets your creativity flowing and you start tinkering with the very cool new world of mod_perl 2.0.&lt;/p&gt;
+
+&lt;p&gt;If you want to try the code from this article, then it is available &lt;a href=&#34;http://www.modperlcookbook.org/~geoff/perl.com/Apache-Clean-2.0.tar.gz&#34;&gt;as a distribution&lt;/a&gt; from my Web site. Other good sources of information are the (growing) &lt;a href=&#34;http://perl.apache.org/docs/2.0/&#34;&gt;mod_perl 2.0 docs&lt;/a&gt;, particularly &lt;a href=&#34;http://perl.apache.org/docs/2.0/user/handlers/filters.html&#34;&gt;the section on filtering&lt;/a&gt;, which has been (very) recently updated with the latest information.&lt;/p&gt;
+
+&lt;h3 id=&#34;stay-tuned&#34;&gt;Stay Tuned &amp;hellip;&lt;/h3&gt;
+
+&lt;p&gt;How did I know that my code here actually worked and did what I expected it to? I wrote a test suite for &lt;code&gt;Clean.pm&lt;/code&gt; using the new &lt;code&gt;Apache::Test&lt;/code&gt; framework and put my code against a live Apache server under every situation I could think of. &lt;code&gt;Apache::Test&lt;/code&gt; is probably the single best thing to come out of the mod_perl 2.0 redesign effort, and what I will share with you next time.&lt;/p&gt;
+
+&lt;h3 id=&#34;thanks&#34;&gt;Thanks&lt;/h3&gt;
+
+&lt;p&gt;Many thanks to Stas Bekman, who reviewed this article, even though it meant having to deal with both my questions, suggestions and API gripes.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

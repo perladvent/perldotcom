@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Closures on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/closures/</link>
+    <description>Recent content in Closures on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 16 Jun 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/closures/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Understanding and Using Iterators</title>
+      <link>http://localhost:1313/pub/2005/06/16/iterators.html/</link>
+      <pubDate>Thu, 16 Jun 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/06/16/iterators.html/</guid>
+      <description>
+
+&lt;p&gt;The purpose of this tutorial is to give a general overview of what iterators are, why they are useful, how to build them, and things to consider to avoid common pitfalls. I intend to give the reader enough information to begin using iterators, though this article assumes some understanding of idiomatic Perl programming. Please consult the &amp;ldquo;&lt;a href=&#34;#see_also&#34;&gt;See Also&lt;/a&gt;&amp;rdquo; section if you need supplemental information.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-is-an-iterator&#34;&gt;What Is an Iterator?&lt;/h3&gt;
+
+&lt;p&gt;Iterators come in many forms, and you have probably used one without even knowing it. The &lt;code&gt;readline&lt;/code&gt; and &lt;code&gt;glob&lt;/code&gt; functions, as well as the flip-flop operator, are all iterators when used in scalar context. A user-defined iterator usually takes the form of a code reference that, when executed, calculates the next item in a list and returns it. When the iterator reaches the end of the list, it returns an agreed-upon value. While implementations vary, a subroutine that creates a closure around any necessary state variables and returns the code reference is common. This technique is called a &lt;em&gt;factory&lt;/em&gt; and facilitates code reuse.&lt;/p&gt;
+
+&lt;h3 id=&#34;why-are-iterators-useful&#34;&gt;Why Are Iterators Useful?&lt;/h3&gt;
+
+&lt;p&gt;The most straightforward way to use a list is to define an algorithm to generate the list and store the results in an array. There are several reasons why you might want to consider an iterator instead:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;The list in its entirety would use too much memory.&lt;/p&gt;
+
+&lt;p&gt;Iterators have tiny memory footprints, because they can store only the state information necessary to calculate the next item.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The list is infinite.&lt;/p&gt;
+
+&lt;p&gt;Iterators return after each iteration, allowing the traversal of an infinite list to stop at any point.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The list should be circular.&lt;/p&gt;
+
+&lt;p&gt;Iterators contain state information, as well as logic allowing a list to wrap around.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The list is large but you only need a few items.&lt;/p&gt;
+
+&lt;p&gt;Iterators allow you to stop at any time, avoiding the need to calculate any more items than is necessary.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The list needs to be duplicated, split, or variated.&lt;/p&gt;
+
+&lt;p&gt;Iterators are lightweight and have their own copies of state variables.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;how-to-build-an-iterator&#34;&gt;How to Build an Iterator&lt;/h3&gt;
+
+&lt;p&gt;The basic structure of an iterator factory looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub gen_iterator {
+    my @initial_info = @_;
+
+    my ($current_state, $done);
+
+    return sub {
+        # code to calculate $next_state or $done;
+        return undef if $done;
+        return $current_state = $next_state;
+    };
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make the factory more flexible, the factory may take arguments to decide how to create the iterator. The factory declares all necessary state variables and possibly initializes them. It then returns a code reference&amp;ndash;in the same scope as the state variables&amp;ndash;to the caller, completing the transaction. Upon each execution of the code reference, the state variables are updated and the next item is returned, until the iterator has exhausted the list.&lt;/p&gt;
+
+&lt;p&gt;The basic usage of an iterator looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $next = gen_iterator( 42 );
+while ( my $item = $next-&amp;gt;() ) {
+    print &amp;quot;$item\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;example-the-list-in-its-entirety-would-use-too-much-memory&#34;&gt;Example: The List in Its Entirety Would Use Too Much Memory&lt;/h4&gt;
+
+&lt;p&gt;You work in genetics and you need every possible sequence of DNA strands of lengths 1 to 14. Even if there were no memory overhead in using arrays, it would still take nearly five gigabytes of memory to accommodate the full list. Iterators come to the rescue:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @DNA = qw/A C T G/;
+my $seq = gen_permutate(14, @DNA);
+while ( my $strand = $seq-&amp;gt;() ) {
+    print &amp;quot;$strand\n&amp;quot;;
+}
+
+sub gen_permutate {
+    my ($max, @list) = @_;
+    my @curr;
+    return sub {
+        if ( (join &#39;&#39;, map { $list[ $_ ] } @curr) eq $list[ -1 ] x @curr ) {
+            @curr = (0) x (@curr + 1);
+        }
+        else {
+            my $pos = @curr;
+            while ( --$pos &amp;gt; -1 ) {
+                ++$curr[ $pos ], last if $curr[ $pos ] &amp;lt; $#list;
+                $curr[ $pos ] = 0;
+            }
+        }
+        return undef if @curr &amp;gt; $max;
+        return join &#39;&#39;, map { $list[ $_ ] } @curr;
+    };
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;example-the-list-is-infinite&#34;&gt;Example: The List Is Infinite&lt;/h4&gt;
+
+&lt;p&gt;You need to assign IDs to all current and future employees and ensure that it is possible to determine if an ID is valid with nothing more than the number itself. You have already taken care of persistence and number validation (using the &lt;a href=&#34;http://www.webopedia.com/TERM/L/Luhn_formula.html&#34;&gt;LUHN formula&lt;/a&gt;). Iterators take care of the rest:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $start = $ARGV[0] || 999999;
+my $next_id = gen_id( $start );
+print $next_id-&amp;gt;(), &amp;quot;\n&amp;quot; for 1 .. 10;  # Next 10 IDs
+
+sub gen_id {
+    my $curr = shift;
+    return sub {
+        0 while ! is_valid( ++$curr );
+        return $curr;
+    };
+}
+
+sub is_valid {
+    my ($num, $chk) = (shift, &#39;&#39;);
+    my $tot;
+    for ( 0 .. length($num) - 1 ) {
+        my $dig = substr($num, $_, 1);
+        $_ % 2 ? ($chk .= $dig * 2) : ($tot += $dig);
+    }
+
+    $tot += $_ for split //, $chk;
+
+    return $tot % 10 == 0 ? 1 : 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;example-the-list-should-be-circular&#34;&gt;Example: The List Should Be Circular&lt;/h4&gt;
+
+&lt;p&gt;You need to support legacy apps with hardcoded filenames, but want to keep logs for three days before overwriting them. You have everything you need except a way to keep track of which file to write to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $next_file = rotate( qw/FileA FileB FileC/ );
+print $next_file-&amp;gt;(), &amp;quot;\n&amp;quot; for 1 .. 10;
+
+sub rotate {
+    my @list  = @_;
+    my $index = -1;
+
+    return sub {
+        $index++;
+        $index = 0 if $index &amp;gt; $#list;
+        return $list[ $index ];
+    };
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Adding one state variable and an additional check would provide the ability to loop a user-defined number of times.&lt;/p&gt;
+
+&lt;h4 id=&#34;example-the-list-is-large-but-only-a-few-items-may-be-needed&#34;&gt;Example: The List Is Large But Only a Few Items May Be Needed&lt;/h4&gt;
+
+&lt;p&gt;You have forgotten the password to your DSL modem and the vendor charges more than the cost of a replacement to unlock it. Fortunately, you remember that it was only four lowercase characters:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;while ( my $pass = $next_pw-&amp;gt;() ) {
+    if ( unlock( $pass ) ) {
+        print &amp;quot;$pass\n&amp;quot;;
+        last;
+    }
+}
+
+sub fix_size_perm {
+
+    my ($size, @list) = @_;
+    my @curr          = (0) x ($size - 1);
+
+    push @curr, -1;
+
+    return sub {
+        if ( (join &#39;&#39;, map { $list[ $_ ] } @curr) eq $list[ -1 ] x @curr ) {
+            @curr = (0) x (@curr + 1);
+        }
+        else {
+            my $pos = @curr;
+            while ( --$pos &amp;gt; -1 ) {
+                ++$curr[ $pos ], last if $curr[ $pos ] &amp;lt; $#list;
+                $curr[ $pos ] = 0;
+            }
+        }
+
+        return undef if @curr &amp;gt; $size;
+        return join &#39;&#39;, map { $list[ $_ ] } @curr;
+    };
+}
+
+sub unlock { $_[0] eq &#39;john&#39; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;example-the-list-needs-to-be-duplicated-split-or-modified-into-multiple-variants&#34;&gt;Example: The List Needs To Be Duplicated, Split, or Modified into Multiple Variants&lt;/h4&gt;
+
+&lt;p&gt;Duplicating the list is useful when each item of the list requires multiple functions applied to it, if you can apply them in parallel. If there is only one function, it may be advantageous to break the list up and run duplicate copies of the function. In some cases, multiple variations are necessary, which is why factories are so useful. For instance, multiple lists of different letters might come in handy when writing a crossword solver.&lt;/p&gt;
+
+&lt;p&gt;The following example uses the idea of breaking up the list to enhance the employee ID example. Assigning ranges to departments adds additional meaning to the ID.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %lookup;
+
+@lookup{ qw/sales support security management/ }
+    = map { { start =&amp;gt; $_ * 10_000 } } 1..4;
+
+$lookup{$_}{iter} = gen_id( $lookup{$_}{start} ) for keys %lookup;
+
+# ....
+
+my $dept = $employee-&amp;gt;dept;
+my $id   = $lookup{$dept}{id}();
+$employee-&amp;gt;id( $id );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;things-to-consider&#34;&gt;Things To Consider&lt;/h3&gt;
+
+&lt;h4 id=&#34;the-iterator-s-is-different-than-the-factory-s&#34;&gt;The iterator&amp;rsquo;s &lt;code&gt;@_&lt;/code&gt; is Different Than the Factory&amp;rsquo;s&lt;/h4&gt;
+
+&lt;p&gt;The following code doesn&amp;rsquo;t work as you might expect:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub gen_greeting {
+    return sub { print &amp;quot;Hello &amp;quot;, $_[0] };
+}
+
+my $greeting = gen_greeting( &#39;world&#39; );
+$greeting-&amp;gt;();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It may seem obvious, but closures need lexicals to close over, as each subroutine has its own &lt;code&gt;@_&lt;/code&gt;. The fix is simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub gen_greeting {
+    my $msg = shift;
+    return sub { print &amp;quot;Hello &amp;quot;, $msg };
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;the-return-value-indicating-exhaustion-is-important&#34;&gt;The Return Value Indicating Exhaustion Is Important&lt;/h4&gt;
+
+&lt;p&gt;Attempt to identify a value that will never occur in the list. Using &lt;em&gt;undef&lt;/em&gt; is usually safe, but not always. Document your choice well, so calling code can behave correctly. Using &lt;code&gt;while ( my $answer = $next-&amp;gt;() ) { ... }&lt;/code&gt; would result in an infinite loop if 42 indicated exhaustion.&lt;/p&gt;
+
+&lt;p&gt;If it is not possible to know in advance valid values in the list, allow users to define their own values as an argument to the factory.&lt;/p&gt;
+
+&lt;h4 id=&#34;references-to-external-variables-for-state-may-cause-problems&#34;&gt;References to External Variables for State May Cause Problems&lt;/h4&gt;
+
+&lt;p&gt;Problems can arise when factory arguments needed to maintain state are references. This is because the variable being referred to can have its value changed at any time during the course of iteration. A solution might be to de-reference and make a copy of the result. In the case of large hashes or arrays, this may be counterproductive to the ultimate goal. Document your solution and your assumptions so that the caller knows what to expect.&lt;/p&gt;
+
+&lt;h4 id=&#34;you-may-need-to-handle-edge-cases&#34;&gt;You May Need to Handle Edge Cases&lt;/h4&gt;
+
+&lt;p&gt;Sometimes, the first or the last item in a list requires more logic than the others in the list. Consider the following iterator for the Fibonacci numbers:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub gen_fib {
+    my ($low, $high) = (1, 0);
+
+    return sub {
+        ($low, $high) = ($high, $low + $high);
+        return $high;
+    };
+}
+
+my $fib = gen_fib();
+print $fib-&amp;gt;(), &amp;quot;\n&amp;quot; for 1 .. 20;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Besides the funny initialization of &lt;code&gt;$low&lt;/code&gt; being greater than &lt;code&gt;$high&lt;/code&gt;, it also misses &lt;code&gt;0&lt;/code&gt;, which should be the first item returned. Here is one way to handle it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub gen_fib {
+
+    my ($low, $high) = (1, 0);
+
+    my $seen_edge;
+
+    return sub {
+        return 0 if ! $seen_edge++;
+        ($low, $high) = ($high, $low + $high);
+        return $high;
+    };
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;state-variables-persist-as-long-as-the-iterator&#34;&gt;State Variables Persist As Long As the Iterator&lt;/h4&gt;
+
+&lt;p&gt;Reaching the end of the list does not necessarily free the iterator and state variables. Because Perl uses reference counting for its garbage collection, the state variables will exist as long as the iterator does.&lt;/p&gt;
+
+&lt;p&gt;Though most iterators have a small memory footprint, this is not always the case. Even if a single iterator doesn&amp;rsquo;t consume a large amount of memory, it isn&amp;rsquo;t always possible to forsee how many iterators a program will create. Be sure to document how the caller can destroy the iterator when necessary.&lt;/p&gt;
+
+&lt;p&gt;In addition to documentation, you may also want to &lt;code&gt;undef&lt;/code&gt; the state variables at exhaustion, and perhaps warn the caller if the iterator is being called after exhaustion.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub gen_countdown {
+   my $curr = shift;
+
+   return sub {
+       return $curr++ || &#39;blast off&#39;;
+   }
+}
+
+my $t = gen_countdown( -10 );
+print $t-&amp;gt;(), &amp;quot;\n&amp;quot; for 1..12; # off by 1 error
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Becomes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub gen_countdown {
+   my $curr = shift;
+
+   return sub {
+       if ( defined $curr &amp;amp;&amp;amp; $curr == 0 ) {
+           undef $curr, return &#39;blast off&#39;;
+       }
+
+       warn &#39;List already exhausted&#39; and return if ! $curr;
+
+       return $curr++;
+   }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-see-also-see-also-span&#34;&gt;&lt;span id=&#34;see_also&#34;&gt;See Also&lt;/span&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://perlmonks.org/?node_id=268891&#34;&gt;Closure on Closures&lt;/a&gt;, by &lt;a href=&#34;http://perlmonks.org/?node=broquaint&#34;&gt;broquaint&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://perlmonks.org/index.pl?node_id=458418&#34;&gt;Recursively Generated Iterators&lt;/a&gt;, by &lt;a href=&#34;http://perlmonks.org/index.pl?node_id=300037&#34;&gt;Roy Johnson&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perlsub.html&#34;&gt;perlsub&lt;/a&gt; (&lt;code&gt;perldoc perlsub&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/functions/glob.html&#34;&gt;glob&lt;/a&gt; (&lt;code&gt;perldoc -f glob&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perlop.html#Range-Operators&#34;&gt;Range Operators&lt;/a&gt; (&lt;code&gt;perldoc perlop&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://perl.plover.com/hop/&#34;&gt;Higher Order Perl&lt;/a&gt;, by &lt;a href=&#34;http://perlmonks.org/?node=Dominus&#34;&gt;Dominus&lt;/a&gt;
+A great book that covers the concept of iterators and a whole lot more.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

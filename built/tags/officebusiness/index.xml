@@ -1,0 +1,610 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Officebusiness on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/officebusiness/</link>
+    <description>Recent content in Officebusiness on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 05 May 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/officebusiness/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Massive Data Aggregation with Perl</title>
+      <link>http://localhost:1313/pub/2005/05/05/aggregation.html/</link>
+      <pubDate>Thu, 05 May 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/05/05/aggregation.html/</guid>
+      <description>
+
+&lt;p&gt;This article is a case study of the use of &lt;a href=&#34;http://www.perl.org/&#34;&gt;Perl&lt;/a&gt; and &lt;a href=&#34;http://www.w3.org/XML/&#34;&gt;XML&lt;/a&gt;/&lt;a href=&#34;http://www.w3.org/RDF/&#34;&gt;RDF&lt;/a&gt; technologies to channel disparate sources of data into a semi-structured repository. This repository helped to build structured &lt;a href=&#34;http://en.wikipedia.org/wiki/OLAP&#34;&gt;OLAP&lt;/a&gt; warehouses by mining an RDF repository with &lt;a href=&#34;https://metacpan.org/XML::SAX::Machines&#34;&gt;SAX machines&lt;/a&gt;. Channels of data included user-contributed datasets, data from FTP and HTTP remote-based repositories, and data from other intra-enterprise based assets. We called the system the &amp;lsquo;Kitchen Sync&amp;rsquo;, but one of the project&amp;rsquo;s visionaries best described it as akin to a device that accepts piles of random coins and returns them sorted for analysis. This system collected voter data and was the primary data collection point in a national organization for the presidential campaign during the 2004 election.&lt;/p&gt;
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;My initial question was why anyone would want to store data in XML/RDF formats. It&amp;rsquo;s verbose, it lacks widely accepted query interfaces (such as SQL), and it generally requires more work than a database. XML, in particular, is a great messaging interface, but a poor persistence medium.&lt;/p&gt;
+
+&lt;p&gt;Eventually, I concluded that this particular implementation did benefit from the use of XML and RDF as messaging protocols. The messaging interface involved the use of SAX machines to parse a queue of XML and RDF files. The XML files contained the metadata for what we called polls, and the RDF files contained data from those polls. We had a very large buffer, from which cron-based processes frequently constructed data warehouses for analysis.&lt;/p&gt;
+
+&lt;h3 id=&#34;hindsight-and-realizations&#34;&gt;Hindsight and Realizations&lt;/h3&gt;
+
+&lt;p&gt;The difficulty of this project was in the gathering of requirements and vendor interfacing. When implementing application workflow, it is critical to use a programming language that doesn&amp;rsquo;t get in the way and allows you to do what you want&amp;ndash;and that is where Perl really shined. A language that allows for quick development is an asset, especially in a rushed environment where projects are due &amp;ldquo;yesterday&amp;rdquo;. The code samples here are not examples of how to write great object-oriented Perl code. They are real world examples of the code used to get things done in this project.&lt;/p&gt;
+
+&lt;p&gt;For example, when a voter-data vendor changed its poll format, our data collection spiders stopped returned data and alerted our staff immediately. In just minutes, we adapted our SAX machine to the vendor&amp;rsquo;s new format and we had our data streams back up and running. It would have taken hours or days to call the vendor about the change and engage in a technical discussion to get them to do things our way. Instead, Perl allowed us to adapt to their ways quickly and efficiently.&lt;/p&gt;
+
+&lt;h3 id=&#34;project-goals&#34;&gt;Project Goals&lt;/h3&gt;
+
+&lt;p&gt;The architects of this project specified several goals and metrics for the application. The main goals&amp;ndash;with the penultimate objective being to accumulate as much data as possible before election day&amp;ndash;were to:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Develop a web-based application for defining metadata of polls, and uploading sets of poll data to the system.&lt;/p&gt;
+
+&lt;p&gt;The application had to give the user the ability to define sets of questions and answers known as polls. Poll metadata could contain related data contained in documents of standard business formats (&lt;em&gt;.doc&lt;/em&gt;, &lt;em&gt;.pdf&lt;/em&gt;). The users also needed an easy method, one that minimized possible errors, to upload data to the system.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Meet requirements of adding 50 million new records per day.&lt;/p&gt;
+
+&lt;p&gt;That metric corresponds to approximately 578 records per second. Assuming a non-linear load distribution over time, peak transaction requirements were likely to be orders of magnitude higher than the average of 578 per second.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Develop a persistent store for RDF and XML data representing polls and poll data.&lt;/p&gt;
+
+&lt;p&gt;The web application had to generate XML documents from poll definitions and RDF documents from uploaded poll data. We stored the poll data in RDF. We needed an API to manage these documents.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Develop a mechanized data collection system for the retrieval of data from FTP- and HTTP-based data repositories.&lt;/p&gt;
+
+&lt;p&gt;The plan was to assimilate data sources into our organization from several commercial and other types of vendors. Most vendors had varying schemas and formats for their data. We wanted to acquire as much data as possible before the election to gauge voter support levels and other key metrics crucial to winning a political election.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web-application&#34;&gt;Web Application&lt;/h3&gt;
+
+&lt;p&gt;When I started this project, I had been using &lt;a href=&#34;http://perl.apache.org/docs/2.0/index.html&#34;&gt;mod_perl2&lt;/a&gt; extensively in prototyping applications and also as a means of finding all of the cool new features. Mod_perl2 had proven itself stable enough to use in production, so I implemented a Model-View-Controller application design pattern using a native mod_perl2 and an &lt;a href=&#34;http://httpd.apache.org/apreq/docs/libapreq2/&#34;&gt;libapreq2&lt;/a&gt;-enabled &lt;a href=&#34;http://httpd.apache.org/&#34;&gt;Apache server&lt;/a&gt;. I adopted the controller design patterns from recipes in the &lt;a href=&#34;http://www.modperlcookbook.org/&#34;&gt;Modperl Cookbook&lt;/a&gt;. The model classes subclassed &lt;a href=&#34;http://www.sleepycat.com/products/xml.shtml&#34;&gt;Berkeley DBXML&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/XML::LibXML&#34;&gt;XML::LibXML&lt;/a&gt; for object methods and persistence. We used &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;Template Toolkit&lt;/a&gt; to implement views. (I will present more about the specifics of the persistence layer later in this article.)&lt;/p&gt;
+
+&lt;p&gt;Of primary importance with the web application component of the system was ease of use. If the system was not easy to use, then we would likely receive less data as a result of user frustration. The component of the web application that took extended transaction processing time was the poll data upload component.&lt;/p&gt;
+
+&lt;p&gt;If the user uploads a 10MB file on a 10Kbps upstream connection (common for residential DSL lines), the transaction would take approximately twenty minutes. On a 100Kbps upstream connection (business grade DSL), the transaction would take two minutes&amp;ndash;certainly much longer than most unsuspecting users would wait before clicking on the browser refresh button.&lt;/p&gt;
+
+&lt;p&gt;To prevent the user from accidentally corrupting the lengthy upload process, I created a monitoring browser window which opened via the following &lt;a href=&#34;http://www.mozilla.org/js/&#34;&gt;JavaScript&lt;/a&gt; call when the user clicked the upload button.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;input type=submit name=&#39;submit&#39; value=&#39;Upload&#39;
+    onClick=&amp;quot;window.open(&#39;/ksync/dataset/monitor&#39;, &#39;Upload&#39;,
+       &#39;width=740,height=400&#39;)&amp;quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The server forked off a child process which read the upload status from a &lt;a href=&#34;http://www.sleepycat.com/products/db.shtml&#34;&gt;BerkeleyDB&lt;/a&gt; database. The parent process used a &lt;a href=&#34;http://httpd.apache.org/apreq/&#34;&gt;libapreq&lt;/a&gt; &lt;a href=&#34;http://httpd.apache.org/apreq/docs/libapreq2/group__apreq__xs__request.html#item_upload_hook&#34;&gt;UPLOAD_HOOK&lt;/a&gt;-based approach to measure the amount of data uploaded, and to write that plus a few other metrics to the BerkeleyDB database. The following is a snippet of code from the upload handler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Location /ksync/poll/data/progress&amp;gt;
+    PerlResponseHandler KSYNC::Apache::Data::Upload-&amp;gt;progress
+&amp;lt;/Location&amp;gt;
+
+sub progress : method {
+    my ( $self, $r ) = @_;
+
+    # We deal with commas and tabs as delimiters currently
+    my $delimiter;
+
+    # Create a BerkeleyDB to keep track of upload progress
+    my $db = _init_status_db( DB_CREATE );
+
+    # Get the specifics of the poll we&#39;re getting data for
+    my $poll = $r-&amp;gt;pnotes(&#39;SESSION&#39;)-&amp;gt;{&#39;poll&#39;};
+
+    # Generate a unique identifier for files based on the poll
+    my $id = _file_id($poll);
+
+    # Store any data which does not validate according to the poll schema
+    my $invalid = IO::File-&amp;gt;new();
+    my $ivfn = join &#39;&#39;, $config-&amp;gt;get(&#39;data_root&#39;), &#39;/invalid/&#39;, $id, &#39;.txt&#39;;
+    $invalid-&amp;gt;open(&amp;quot;&amp;gt; $ivfn&amp;quot;);
+
+    # Set the rdf filename
+    my $gfn = join &#39;&#39;, $config-&amp;gt;get(&#39;data_root&#39;), &#39;/valid/&#39;, $id, &#39;.rdf&#39;;
+
+    # Create an RDF document object to store the data
+    my $rdf = KSYNC::Model::Poll::Data::RDF-&amp;gt;new(
+                $gfn,
+                $poll,
+                $r-&amp;gt;pnotes(&#39;SESSION&#39;)-&amp;gt;{&#39;creator&#39;},
+                DateTime-&amp;gt;now-&amp;gt;ymd,
+    );
+
+    # Get the poll questions for to make sure the answers are valid
+    my $questions = $poll-&amp;gt;questions;
+
+    # Create a data structure to hold the answers to validate against.
+    my @valid_answers = _valid_answers($questions);
+
+    # And a data structure to hold the validation results
+    my $question_data = KSYNC::Model::Poll::validation_results($questions);
+
+    # Set progress store parameters
+    my $length              = 0;
+    my $good_lines_total    = 0;
+    my $invalid_lines_total = 0;
+    my $began;              # Boolean to determine if we&#39;ve started parsing data
+    my $li                  = 1;    # Starting line number
+
+    # The subroutine to process uploaded data
+    my $fragment;
+    my $upload_hook = sub {
+        my ( $upload, $data, $data_len, $hook_data ) = @_;
+
+        if ( !$began ) {   # If this is the first set check the array length
+
+            # Chop up the stream
+            my @lines = split &amp;quot;\n&amp;quot;, $data;
+
+            # Determine the delimiter for this line
+            $delimiter = _delimiter(@lines);
+
+            unless ( ( split( /$delimiter/, $lines[0] ) ) ==
+                scalar( @{$question_data} ) + 1 )
+            {
+                $db-&amp;gt;db_put( &#39;done&#39;, &#39;1&#39; );
+
+                # The dataset isn&#39;t valid, so throw an exception
+                KSYNC::Apache::Exception-&amp;gt;throw(&#39;Invalid Dataset!&#39;);
+            }
+        }
+
+        # Mark the start up the upload
+        $began = 1;
+
+        # Validate the data against the poll answers we&#39;ve defined
+        my ( $good_lines, $invalid_lines );
+
+        ( $good_lines, $invalid_lines, $question_data, $li, $fragment ) =
+          KSYNC::Model::Poll::Data::validate( \@valid_answers,
+                                              $data,
+                                              $question_data,
+                                              $li,
+                                              $delimiter,
+                                              $fragment );
+
+        # Keep up the running count of good and invalid lines
+        $good_lines_total     += scalar( @{$good_lines} );
+        $invalid_lines_total  += scalar( @{$invalid_lines} );
+
+        # Increment the number of bytes processed
+        $length += length($data);
+
+        # Update the status for the monitor process
+        $db-&amp;gt;db_put(
+                     valid     =&amp;gt; $good_lines_total,
+                     invalid   =&amp;gt; $invalid_lines_total,
+                     bytes     =&amp;gt; $length,
+                     filename  =&amp;gt; $upload-&amp;gt;filename,
+                     filetype  =&amp;gt; $upload-&amp;gt;type,
+                     questions =&amp;gt; $question_data,
+                   );
+
+        # And store the data we&#39;ve collected
+        $rdf-&amp;gt;write( $good_lines ) if scalar( @{$good_lines} );
+
+        # Write out any invalid data points to a separate file
+        _write_txt( $invalid, $invalid_lines ) if scalar( @{$invalid_lines} );
+    };
+
+    my $req = Apache::Request-&amp;gt;new(
+        $r,
+        POST_MAX    =&amp;gt; 1024 * 1024 * 1024,    # One Gigabyte
+        HOOK_DATA   =&amp;gt; &#39;Note&#39;,
+        UPLOAD_HOOK =&amp;gt; $upload_hook,
+        TEMP_DIR    =&amp;gt; $config-&amp;gt;get(&#39;temp_dir&#39;),
+    );
+
+    my $upload = eval { $req-&amp;gt;upload( scalar +( $req-&amp;gt;upload )[0] ) };
+    if ( ref $@ and $@-&amp;gt;isa(&amp;quot;Apache::Request::Error&amp;quot;) ) {
+
+        # ... handle Apache::Request::Error object in $@
+        $r-&amp;gt;headers_out-&amp;gt;set( Location =&amp;gt; &#39;https://&#39;
+              . $r-&amp;gt;construct_server
+              . &#39;/ksync/poll/data/upload/aborted&#39; );
+        return Apache::REDIRECT;
+    }
+
+    # Finish up
+    $invalid-&amp;gt;close;
+    $rdf-&amp;gt;save;
+
+    # Set status so the progress window will close
+    $db-&amp;gt;db_put(&#39;done&#39;, 1&#39;);
+    undef $db;
+
+    # Send the user to the summary page
+    $r-&amp;gt;headers_out-&amp;gt;set(
+      Location =&amp;gt; join(&#39;&#39;,
+                       &#39;https://&#39;,
+                       $r-&amp;gt;construct_server,
+                       &#39;/poll/data/upload/summary&#39;,
+                      )
+    );
+    return Apache::REDIRECT;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;During the upload process, the users saw a status window which refreshed every two seconds and had a pleasant animated GIF to enhance their experience, as well as several metrics on the status of the upload. One user uploaded a file that took 45 minutes because of a degraded network connection, but the uploaded file had no errors.&lt;/p&gt;
+
+&lt;p&gt;The system converted &lt;a href=&#34;http://en.wikipedia.org/wiki/Comma-separated_values&#34;&gt;CSV&lt;/a&gt; files that users uploaded into RDF and saved them to the RDF store during the upload process. Because of the use of the UPLOAD_HOOK approach for processing uploaded data, the mod_perl-enabled Apache processes never grew in size or leaked memory as a result of handling the upload content.&lt;/p&gt;
+
+&lt;h3 id=&#34;poll-and-poll-data-stores&#34;&gt;Poll and Poll Data Stores&lt;/h3&gt;
+
+&lt;p&gt;Several parties involved raised questions about the use of XML and RDF as persistence mediums. Why not use a relational database? Our primary reasons for deciding against a relational database were that we had several different schemas and formats of incoming data, and we needed to be able to absorb huge influxes of data in very short time periods.&lt;/p&gt;
+
+&lt;p&gt;Consider how a relational database could have handled the variation in schemas and formats. Creating vendor-specific drivers to handle each format would have been straightforward. To handle the variations in schema, we could have normalized each data stream and its attributes so that we could store all the data in source, object, attribute, and value tables. The problem with that approach is that you get one really big table with all the values, which becomes more difficult to manage as time goes on. Another possible approach, which I have used in the past, is to create separate tables for each data stream to fit the schema, and then use the power of left, right, and outer joins to extract the needed information. It scales much better than the first approach but it is not as well suited for data mining as warehouses are.&lt;/p&gt;
+
+&lt;p&gt;With regard to absorbing a lot of data very quickly, transactional relational databases have limitations when you insert or update data in a table with many rows. Additionally, the insert and update transactions are not asynchronous. When inserting or updating a record, the transaction will not complete until the indexes associated with the indexed fields of that record have updated. This slows down as the database grows in size.&lt;/p&gt;
+
+&lt;p&gt;We wanted the transactions between users, machines, and the Kitchen Sync to be as asynchronous as possible. Our ability to take in data in RDF format would not degrade with increasing amounts of data already taken in before warehousing for analysis. Data exchange challenges between vendors and us included a few large transactions in RDF format per data set, and how the length of the transaction time depended solely on the speed of the network connection between the vendor and our data center.&lt;/p&gt;
+
+&lt;p&gt;With the decision to use XML for storing poll metadata and RDF for storing poll data in place, we turned our attention to the specifics of the persistence layer. We stored the poll objects in XML, as shown in this example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot;?&amp;gt;
+&amp;lt;poll&amp;gt;
+    &amp;lt;creator&amp;gt;Fred Moyer&amp;lt;/creator&amp;gt;
+    &amp;lt;date&amp;gt;2005-03-01&amp;lt;/date&amp;gt;
+    &amp;lt;vendor&amp;gt;Voter Data Inc.&amp;lt;/vendor&amp;gt;
+    &amp;lt;location&amp;gt;https://www.voterdatainc.com/poll/1234&amp;lt;/location&amp;gt;
+    &amp;lt;questions&amp;gt;
+        &amp;lt;question&amp;gt;
+            &amp;lt;name&amp;gt;Who is buried in Grant&#39;s Tomb?&amp;lt;/name&amp;gt;
+            &amp;lt;answers&amp;gt;
+                &amp;lt;answer&amp;gt;
+                    &amp;lt;name&amp;gt;Ulysses Grant&amp;lt;/name&amp;gt;
+                    &amp;lt;value&amp;gt;0&amp;lt;/value&amp;gt;
+                &amp;lt;/answer&amp;gt;
+                &amp;lt;answer&amp;gt;
+                    &amp;lt;name&amp;gt;John Kerry&amp;lt;/name&amp;gt;
+                    &amp;lt;value&amp;gt;1&amp;lt;/value&amp;gt;
+                &amp;lt;/answer&amp;gt;
+                &amp;lt;answer&amp;gt;
+                    &amp;lt;name&amp;gt;George Bush&amp;lt;/name&amp;gt;
+                    &amp;lt;value&amp;gt;2&amp;lt;/value&amp;gt;
+                &amp;lt;/answer&amp;gt;
+                &amp;lt;answer&amp;gt;
+                    &amp;lt;name&amp;gt;Alfred E.  Neumann&amp;lt;/name&amp;gt;
+                    &amp;lt;value&amp;gt;3&amp;lt;/name&amp;gt;
+                &amp;lt;/answer&amp;gt;
+            &amp;lt;/answers&amp;gt;
+        &amp;lt;/question&amp;gt;
+    &amp;lt;/questions&amp;gt;
+    &amp;lt;media&amp;gt;
+        &amp;lt;pdf&amp;gt;
+            &amp;lt;name&amp;gt;Name of a PDF file describing this poll&amp;lt;/name&amp;gt;
+            &amp;lt;raw&amp;gt;The raw contents of the PDF file&amp;lt;/raw&amp;gt;
+            &amp;lt;text&amp;gt;The text of the PDF file, generated with XPDF libs&amp;lt;/text&amp;gt;
+        &amp;lt;/pdf&amp;gt;
+    &amp;lt;/media&amp;gt;
+&amp;lt;/poll&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We also needed an API to manage those documents. We chose &lt;a href=&#34;http://www.sleepycat.com/products/xml.shtml&#34;&gt;Berkeley DBXML&lt;/a&gt; because of its simple but effective API and its ability to scale to terabyte size if needed. We created a poll class which subclassed the Sleepycat and XML::LibXML modules and provided some Perlish methods for manipulating polls.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package KSYNC::Model::Poll;
+
+use strict;
+use warnings;
+
+use base qw(KSYNC::Model);
+use SleepyCat::DbXml qw(simple);
+use XML::LibXML;
+use KSYNC::Exception;
+
+my $ACTIVITY_LOC = &#39;data/poll.dbxml&#39;;
+
+BEGIN {
+    # Initialize the DbXml database
+    my $container = XmlContainer-&amp;gt;new($ACTIVITY_LOC);
+}
+
+# Call base class constructor KSYNC::Model-&amp;gt;new
+sub new {
+    my ($class, %args) = @_;
+
+    my $self = $class-&amp;gt;SUPER::new(%args);
+    return $self;
+}
+
+# Transform the poll object into an xml document
+sub as_xml {
+    my ($self, $id) = @_;
+
+    my $dom = XML::LibXML::Document-&amp;gt;new();
+    my $pi = $dom-&amp;gt;createPI( &#39;xml-styleshet&#39;,
+                             &#39;href=&amp;quot;/css/poll.xsl&amp;quot; type=&amp;quot;text/xsl&amp;quot;&#39; );
+    $dom-&amp;gt;appendChild($pi);
+    my $element = XML::LibXML::Element-&amp;gt;new(&#39;Poll&#39;);
+
+    $element-&amp;gt;appendTextChild(&#39;Type&#39;,        $self-&amp;gt;type);
+    $element-&amp;gt;appendTextChild(&#39;Creator&#39;,     $self-&amp;gt;creator);
+    $element-&amp;gt;appendTextChild(&#39;Description&#39;, $self-&amp;gt;description);
+    $element-&amp;gt;appendTextChild(&#39;Vendor&#39;,      $self-&amp;gt;vendor);
+    $element-&amp;gt;appendTextChild(&#39;Began&#39;,       $self-&amp;gt;began);
+    $element-&amp;gt;appendTextChild(&#39;Completed&#39;,   $self-&amp;gt;completed);
+
+    my $questions = XML::LibXML::Element-&amp;gt;new(&#39;Questions&#39;);
+
+    for my $question ( @{ $self-&amp;gt;{question} } ) {
+        $questions-&amp;gt;appendChild($question-&amp;gt;as_element);
+    }
+
+    $element-&amp;gt;appendChild($questions);
+
+    $dom-&amp;gt;setDocumentElement($element);
+    return $dom;
+}
+
+sub save {
+    my $self = shift;
+
+    # Connect to the DbXml databae
+    $container-&amp;gt;open(Db::DB_CREATE);
+
+    # Create a new document for storage from xml serialization of $self
+    my $doc = XmlDocument-&amp;gt;new();
+    $doc-&amp;gt;setContent($self-&amp;gt;as_xml);
+
+    # Save, throw an exception if problems happen
+    eval { $container-&amp;gt;putDocument($doc); };
+    KSYNC::Exception-&amp;gt;throw(&amp;quot;Could not add document: $@&amp;quot;) if $@;
+
+    # Return the ID of the newly added document
+    return $doc-&amp;gt;getID();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We chose RDF as the format for poll data because the format contains links to resources that describe the namespaces of the document, making the document self-describing. The availability of standardized namespaces such as &lt;a href=&#34;http://dublincore.org/&#34;&gt;Dublin Core&lt;/a&gt; gave us predefined tags such as &lt;code&gt;dc:date&lt;/code&gt; and &lt;code&gt;dc:creator&lt;/code&gt;. We added our own namespaces for representation of poll data. Depending on what verbosity of data the vendors kept, we could add &lt;code&gt;dc:date&lt;/code&gt; tags to different portions of the document to provide historical references. We constructed our URLs in a &lt;a href=&#34;http://en.wikipedia.org/wiki/REST&#34;&gt;REST&lt;/a&gt; format for all web-based resources.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot;?&amp;gt;
+&amp;lt;rdf:RDF
+    xmlns:RDF=&amp;quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&amp;quot;
+        xmlns:dc=&amp;quot;http://purl.org/dc/elements/1.1/&amp;quot;
+    xmlns:ourparty=&amp;quot;http://www.ourparty.org/xml/schema#&amp;quot;&amp;gt;
+
+    &amp;lt;rdf:Description rdf:about=&amp;quot;http://www.ourparty.org/poll/1234&amp;quot;&amp;gt;
+        &amp;lt;dc:date&amp;gt;2004-10-14&amp;lt;/dc:date&amp;gt;
+            &amp;lt;dc:creator&amp;gt;fmoyer@plusthree.com&amp;lt;/dc:creator&amp;gt;
+        &amp;lt;/rdf:Description&amp;gt;
+
+        &amp;lt;rdf:Bag&amp;gt;
+        &amp;lt;rdf:li ourparty:id=&amp;quot;6372095736&amp;quot; ourparty:question=&amp;quot;1&amp;quot;
+            ourparty:answer=&amp;quot;1&amp;quot; dc:date=&amp;quot;2005-03-01&amp;quot; /&amp;gt;
+        &amp;lt;rdf:li ourparty:id=&amp;quot;2420080069&amp;quot; ourparty:question=&amp;quot;2&amp;quot;
+            ourparty:answer=&amp;quot;3&amp;quot; dc:date=&amp;quot;2005-03-02&amp;quot; /&amp;gt;
+    &amp;lt;/rdf:Bag&amp;gt;
+&amp;lt;/rdf:RDF&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We used &lt;a href=&#34;https://metacpan.org/pod/XML::SAX::Machines&#34;&gt;SAX machines&lt;/a&gt; as drivers to generate summary models of RDF files and &lt;a href=&#34;https://metacpan.org/pod/LibXML&#34;&gt;LibXML&lt;/a&gt; streaming parsers to traverse the RDF files. We stacked drivers by using &lt;a href=&#34;https://metacpan.org/pod/XML::SAX::Pipeline&#34;&gt;pipelined SAX machines&lt;/a&gt; and constructed SAX drivers for the different vendor data schemas. Cron-based machines scanned the RDF store, identified new poll data, and processed them into summary XML documents which we served to administrative users via XSLT transformations. Additionally, we used the SAX machines to create denormalized SQL warehouses for data mining.&lt;/p&gt;
+
+&lt;p&gt;An example SAX driver for Voter Data, Inc. RDF poll data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package KSYNC::SAX::Voterdatainc;
+
+use strict;
+use warnings;
+
+use base qw(KSYNC::SAX);
+
+my %NS = (
+    rdf      =&amp;gt; &#39;http://www.w3.org/1999/02/22-rdf-syntax-ns#&#39;,
+    dc       =&amp;gt; &#39;http://purl.org/dc/elements/1.1/&#39;,
+    ourparty =&amp;gt; &#39;http://www.ourparty.org/xml/schema#&#39;,
+);
+
+my $VENDOR = &#39;Voter Data, Inc.&#39;;
+
+sub new {
+    my $class = shift;
+
+    # Call the super constructor to create the driver
+    my $self = $class-&amp;gt;SUPER::new(@_, { vendor =&amp;gt; $VENDOR });
+
+    return $self;
+}
+
+sub start_element {
+    my ($self, $data) = @_;
+
+    # Process rdf:li elements
+    if ( $data-&amp;gt;{Name} eq &#39;rdf:li&#39; ) {
+
+        # Grab the data
+        my $id      = $data-&amp;gt;{Attributes}{ &amp;quot;{$NS{ourparty}}id&amp;quot; }{Value};
+        my $answer  = $data-&amp;gt;{Attributes}{ &amp;quot;{$NS{ourparty}}answer&amp;quot; }{Value};
+        my $creator = $data-&amp;gt;{Attributes}{ &amp;quot;{$NS{dc}}creator&amp;quot; }{Value};
+        my $date    = $data-&amp;gt;{Attributes}{ &amp;quot;{$NS{dc}}date&amp;quot; }{Value};
+
+        # Map the data to a common response
+        $self-&amp;gt;add_response({ vendor        =&amp;gt; $VENDOR,
+                              voter_id      =&amp;gt; $id,
+                              support_level =&amp;gt; $answer,
+                              creator       =&amp;gt; $creator,
+                              date          =&amp;gt; $date,
+                           });
+
+        # Call the base class start_element method to do something with the data
+        $self-&amp;gt;SUPER::start_element($data);
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We stored RDF documents compressed in bzip2 format, because bzip2 compression algorithm is especially efficient at compressing repeating element data. As shown below in the SAX machine example, using &lt;code&gt;bzcat&lt;/code&gt; as the intake to a pipeline parser allowed decompression of the bzip2 documents for parsing and creating a summary of a poll data set.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use KSYNC::SAX::Voterdatainc;
+use XML::SAX::Machines qw(Pipeline);
+
+# The poll data
+my $rdf = &#39;data/voterdatainc/1759265.rdf.bz2&#39;;
+
+# Create a vendor specific driver
+my $driver = KSYNC::SAX::Voterdatainc-&amp;gt;new();
+
+# Create a driver to add the data to a data warehouse handle
+my $dbh = KSYNC::DBI-&amp;gt;connect();
+my $warehouser = KSYNC::SAX::DBI-&amp;gt;new(
+                    source =&amp;gt; &#39;http://www.voterdatainc/ourparty/poll.xml&#39;,
+                    dbh    =&amp;gt; $dbh,
+                );
+
+# Create a parser which uncompresses the poll data set, summarizes it, and
+# outputs data to a filter which warehouses the denormalized data
+my $parser = Pipeline(
+                &amp;quot;bzcat $rdf |&amp;quot; =&amp;gt;
+                $driver        =&amp;gt;
+                $warehouser    =&amp;gt;
+;
+
+# Parse the poll data
+$parser-&amp;gt;parse();
+
+# Summarize the poll data
+print &amp;quot;Average support level:  &amp;quot;,   $driver-&amp;gt;average_support_level, &amp;quot;\n&amp;quot;;
+print &amp;quot;Starting date:  &amp;quot;,         $driver-&amp;gt;minimum_date, &amp;quot;\n&amp;quot;;
+print &amp;quot;Ending date:  &amp;quot;,       $driver-&amp;gt;maximum_date, &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Between the polls, the XML Schema dictionaries, and the RDF files, we know who the polls contacted, what they saw, and how they responded. A major benefit of keeping the collected information in RDF format is the preservation of historical information. We constructed SQL warehouses to analyze changes in voter support levels over time. This was critical for measuring the effect of events such as presidential debates on voter interest and support.&lt;/p&gt;
+
+&lt;p&gt;Using RDF also provided us with the flexibility to map new data sources as needed. If a vendor collected some information which we had not processed before, they would add an &lt;code&gt;about&lt;/code&gt; tag such as &lt;code&gt;&amp;lt;rdf:Description rdf:about=&amp;quot;http://www.datavendor.com/ourparty/poll5.xml&amp;quot; /&amp;gt;&lt;/code&gt; , which we would map to features of our SAX machines as needed.&lt;/p&gt;
+
+&lt;p&gt;We added some hooks to the SAX machines to match certain URIs and then process selected element data. Late in the campaign, when early voting started, we were able to quickly modify our existing SAX machines to collect early voting data from the data streams and produce SQL warehouses for analysis.&lt;/p&gt;
+
+&lt;h3 id=&#34;mechanization-of-data-collection&#34;&gt;Mechanization of Data Collection&lt;/h3&gt;
+
+&lt;p&gt;A major focus of the application was retrieving data from remote sources. Certain vendors used our secure FTP site to send us data, but most had web and FTP sites to which they posted the information. We needed a way to collect data from those servers. Some vendors were able to provide data to us in XML and RDF formats, but for the most part, we would receive data in CSV, TSV, or some form of XML. Each vendor generally had supplementary data beyond the normal voter data fields which we also wanted to capture. Using that additional data was not an immediate need, but by storing it in RDF format we could extract it and generate SQL warehouses whenever necessary.&lt;/p&gt;
+
+&lt;p&gt;We developed a part of the application known as the spider and created a database table containing information on the data source authentication, protocol, and data structure details. A factory class &lt;code&gt;KSYNC::Model::Spider&lt;/code&gt; read the data source entries and constructed spider objects for each data source. These spiders used &lt;a href=&#34;https://metacpan.org/pod/Net::FTP&#34;&gt;Net::FTP&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/LWP&#34;&gt;LWP&lt;/a&gt; to retrieve poll data, and processed the data using the appropriate &lt;code&gt;KSYNC::SAX&lt;/code&gt; machine. To add a new data source to our automated collection system, an entry in the database configured the spider, and if the new data source had data in a format that we did not support, we added a SAX machine for that data source.&lt;/p&gt;
+
+&lt;p&gt;An example of spider usage:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package KSYNC::Model::Spider;
+
+use strict;
+use warnings;
+
+use Carp &#39;croak&#39;;
+use base &#39;KSYNC::Model&#39;;
+
+sub new {
+    my ($class, %args) = @_;
+
+    # Create an FTP or HTTP spider based on the type specified in %args
+    my $spider_pkg = $class-&amp;gt;_factory($args{type});
+    my $self = $spider_pkg-&amp;gt;new(%args);
+
+    return $self;
+}
+
+sub _factory {
+    my ($class, $type) = @_;
+
+    # Create the package name for the spider type
+    my $pkg = join &#39;::&#39;, $class, $type;
+
+    # Load the package
+    eval &amp;quot;use $pkg&amp;quot;;
+    croak(&amp;quot;Error loading factory module: $@&amp;quot;) if $@;
+
+    return $pkg;
+}
+
+1;
+
+package KSYNC::Model::Spider::FTP;
+
+use Net::FTP;
+use KSYNC::Exception;
+
+sub new {
+    my ($class, %args) = @_;
+
+    my $self = { %args };
+
+    # Load the appropriate authentication package via Spider::Model::Auth
+    # factory class
+    $self-&amp;gt;{auth} = Spider::Model::Auth-&amp;gt;new(%{$args{auth}});
+
+    return bless $self, $class;
+}
+
+sub authenticate {
+    my $self = shift;
+
+    # Login
+    eval { $self-&amp;gt;ftp-&amp;gt;login($self-&amp;gt;auth-&amp;gt;username, $self-&amp;gt;auth-&amp;gt;password); };
+
+    # Throw an exception if problems occurred
+    KSYNC::Exception-&amp;gt;throw(&amp;quot;Cannot login &amp;quot;, $self-&amp;gt;ftp-&amp;gt;message) if $@;
+}
+
+sub crawl {
+    my $self = shift;
+
+    # Set binary retrieval mode
+    $self-&amp;gt;ftp-&amp;gt;binary;
+
+    # Find new poll data
+    my @datasets = $self-&amp;gt;_find_new();
+
+    # Process that poll data
+    foreach my $dataset (@datasets) {
+        eval { $self-&amp;gt;_process($dataset); };
+        $self-&amp;gt;error(&amp;quot;Could not process poll data $dataset-&amp;gt;id&amp;quot;, $@) if $@;
+    }
+}
+
+sub ftp {
+    croak(&amp;quot;Method Not Implemented!&amp;quot;) if @_ &amp;gt; 1;
+    $_[0]-&amp;gt;{ftp} ||= Net::FTP-&amp;gt;new($self-&amp;gt;auth-&amp;gt;host);
+}
+
+1;
+
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use KSYNC::Model::Spider;
+use KSYNC::Model::Vendor;
+
+# Retrieve a vendor so we can grab their latest data
+my $vendor = KSYNC::Model::Vendor-&amp;gt;retrieve({
+  name =&amp;gt; &#39;Voter Data, Inc.&#39;,
+});
+
+# Construct a spider to crawl their site
+my $spider = KSYNC::Model::Spider-&amp;gt;new({ type =&amp;gt; $vendor-&amp;gt;type });
+
+# Login
+$spider-&amp;gt;login();
+
+# Grab the data
+$spider-&amp;gt;crawl();
+
+# Logout
+$spider-&amp;gt;logout();
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;conclusions&#34;&gt;Conclusions&lt;/h3&gt;
+
+&lt;p&gt;In this project, getting things done was of paramount importance. Perl allowed us to deal with the complexities of the business requirements and the technical details of data schemas and formats without presenting additional technical obstacles, as programming languages occasionally do. The &lt;a href=&#34;http://www.cpan.org&#34;&gt;CPAN&lt;/a&gt;, &lt;a href=&#34;http://perl.apache.org&#34;&gt;mod_perl&lt;/a&gt;, and &lt;a href=&#34;http://httpd.apache.org/apreq&#34;&gt;libapreq&lt;/a&gt; provided the components that allowed us to quickly build an application to deal with complex, semi-structured data on an enterprise scale. From creating a user friendly web application to automating data collection and SQL warehouse generation, Perl was central to the success of this project.&lt;/p&gt;
+
+&lt;h3 id=&#34;credits&#34;&gt;Credits&lt;/h3&gt;
+
+&lt;p&gt;Thanks to the following people who made this possible and contributed to this project: Thomas Burke, Charles Frank, Lyle Brooks, Lina Brunton, Aaron Ross, Alan Julson, Marc Schloss, and Robert Vadnais.&lt;/p&gt;
+
+&lt;p&gt;Thanks to &lt;a href=&#34;http://www.plusthree.com/&#34;&gt;Plus Three LP&lt;/a&gt; for sponsoring work on this project.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

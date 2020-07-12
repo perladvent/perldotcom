@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Dist Zilla on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/dist-zilla/</link>
+    <description>Recent content in Dist Zilla on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 01 Aug 2018 20:20:00 +0000</lastBuildDate>
+    <atom:link href="/tags/dist-zilla/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How to become a CPAN contributor - part 2</title>
+      <link>http://localhost:1313/article/how-to-become-cpan-contributor-part-2/</link>
+      <pubDate>Wed, 01 Aug 2018 20:20:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/how-to-become-cpan-contributor-part-2/</guid>
+      <description>
+
+&lt;p&gt;In the previous &lt;a href=&#34;http://localhost:1313/article/how-to-become-cpan-contributor/&#34;&gt;article&lt;/a&gt; I described some typical issues that are good for first time CPAN contributors to tackle. In this article, I will go through the nitty-gritty of fixing issues, and some gotchas to watch out for. If you&amp;rsquo;re not familiar with the differences between a Perl distribution, module and package, check out this &lt;a href=&#34;http://localhost:1313/article/96/2014/6/13/Perl-distributions--modules--packages-explained/&#34;&gt;guide&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;missing-license-meta-name&#34;&gt;Missing license meta name&lt;/h3&gt;
+
+&lt;p&gt;This is where the build script is missing a license name. It should be an easy fix - just add the license name to the build script. However there is a catch and I have been bitten by it before: the license meta name depends on the build script type. For example, if the distribution document says the license is &amp;ldquo;Artistic 2&amp;rdquo; in Makefile.PL the meta name would be &amp;ldquo;artistic_2&amp;rdquo; whereas in a dist.ini it would be &amp;ldquo;Artistic_2_0&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;E.g. the Makefile.PL from my distribution &lt;a href=&#34;https://metacpan.org/release/Map-Tube&#34;&gt;Map::Tube&lt;/a&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+ABSTRACT_FROM &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;lib/Map/Tube.pm&amp;#39;&lt;/span&gt;,
+LICENSE       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;artistic_2&amp;#39;&lt;/span&gt;,
+EXE_FILES     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [ &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;script/map-data-converter&amp;#39;&lt;/span&gt; ],
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Compared to the dist.ini from my distribution &lt;a href=&#34;https://metacpan.org/release/Map-Tube-Delhi&#34;&gt;Map::Tube::Delhi&lt;/a&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+author  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Mohammad S Anwar &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;mohammad.anwar@yahoo.com&amp;gt;&lt;/span&gt;
+license &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Artistic_2_0
+copyright_holder &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Mohammad S Anwar
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you are adding a software license to a distribution, &lt;a href=&#34;https://metacpan.org/pod/Software::License&#34;&gt;Software::License&lt;/a&gt; is a good resource which has many different types of Open Source licenses.&lt;/p&gt;
+
+&lt;p&gt;One thing to check for is whether the distribution repository has a META.yml file or not. If it does, adding the license meta name to the build script may cause the build process to warn: &amp;ldquo;Invalid LICENSE value &amp;hellip;&amp;rdquo;. This happens because the META.yml already contains a license value of &amp;ldquo;unknown&amp;rdquo;, which conflicts with the build script. The solution here is to delete the META.yml file and build the distribution, adding the newly-generated META.yml back into the repository.&lt;/p&gt;
+
+&lt;p&gt;You might be thinking, why would you keep META.yml in the project repository as it can be easily generated? I agree it&amp;rsquo;s probably a mistake, but keep in mind your intent is to add the license meta and nothing else. The author might have a good reason for keeping the META.yml file around. One approach would be to discuss with the author if it is good idea to drop it completely.&lt;/p&gt;
+
+&lt;h3 id=&#34;missing-strict-warnings-pragma&#34;&gt;Missing strict/warnings pragma&lt;/h3&gt;
+
+&lt;p&gt;This is the easiest of all: one or more modules in the distribution are missing the [strict]](https://metacpan.org/pod/strict) or &lt;a href=&#34;https://metacpan.org/pod/warnings&#34;&gt;warnings&lt;/a&gt; pragmas. Just add the line &lt;code&gt;use strict;&lt;/code&gt; (or &lt;code&gt;use warnings;&lt;/code&gt;) at the top of the modules missing them:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; package_name;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Is it that simple? Yes and no. If the module uses Moose or Moo then &lt;code&gt;use strict;&lt;/code&gt; is enabled automatically, so the additional import is redundant. The module &lt;a href=&#34;https://metacpan.org/pod/Test::Strict&#34;&gt;Test::Strict&lt;/a&gt; has the &lt;code&gt;strict_ok&lt;/code&gt; test function to detect whether a module has enabled strict mode or not (full disclosure, I am the distribution maintainer).&lt;/p&gt;
+
+&lt;p&gt;With the warnings pragma, there can be other considerations too. I was giving talk at the German Perl Workshop 2018, during the talk I spoke about one of my pull requests being rejected by the author for adding warnings pragma. At the time I didn&amp;rsquo;t have the courage to question the author, so I apologized and moved on. Surprisingly, the very same author was sitting in the front row attending my talk! And he was none other than [Reini Urban](). At the end of the talk, he explained to me why he rejected the pull request: in some cases, adding the warnings pragma can reduce how fast Perl executes.&lt;/p&gt;
+
+&lt;p&gt;So the moral of the story is, be careful when adding use warnings; line. To be honest with you, I avoid dealing with missing warnings issues unless I know the author personally.&lt;/p&gt;
+
+&lt;h3 id=&#34;missing-meta-json&#34;&gt;Missing META.json&lt;/h3&gt;
+
+&lt;p&gt;Sometimes, you will find a distribution missing the META.json file. Recently, I have noticed many CPAN module authors have adopted &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla&#34;&gt;Dist::Zilla&lt;/a&gt; as the distribution builder. I am a big fan of this tool, however if the author is moving from a traditional distribution builder like &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker&#34;&gt;ExtUtils::MakeMaker&lt;/a&gt; then they often forget to generate this file.&lt;/p&gt;
+
+&lt;p&gt;There is an easy solution to this problem: just add &lt;code&gt;[MetaJSON]&lt;/code&gt; to the dist.ini file, and Dist::Zilla will generate it during the build process.&lt;/p&gt;
+
+&lt;h3 id=&#34;missing-a-minimum-perl-version&#34;&gt;Missing a minimum Perl version&lt;/h3&gt;
+
+&lt;p&gt;This is where the build script does not declare the minimum version of Perl it requires. I am now going to show you how to add this information depending on what distribution builder is used by the module author.&lt;/p&gt;
+
+&lt;p&gt;In case of ExtUtils::MakeMaker, it is as simple as adding the key &lt;code&gt;MIN_PERL_VERSION&lt;/code&gt; as shown below to the Makefile.PL script.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; ExtUtils::MakeMaker;
+
+WriteMakefile(
+  MIN_PERL_VERSION   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.006&lt;/span&gt;,
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Whereas if distribution builder is Module::Build then you can do something like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Module::Build;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $builder &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Module::Builder&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(
+  requires &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;perl&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.006&lt;/span&gt;,
+  },
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If it is using Dist::Zilla then you can either explicitly set the minimum Perl version in the dist.ini as below:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+[Prereqs]
+perl &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.006&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Or you can use the plugin &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::MinimumPerlFast&#34;&gt;MinimumPerlFast&lt;/a&gt; which will detect the minimum Perl version needed by the distribution:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+[MinimumPerlFast]
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you need any help getting started as a CPAN contributor, feel free to &lt;a href=&#34;mailto:mohammad.anwar@yahoo.com&#34;&gt;email me&lt;/a&gt; and if necessary, we can remote pair program to get you going.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - October 2017</title>
+      <link>http://localhost:1313/article/what-s-new-on-cpan---october-2017/</link>
+      <pubDate>Thu, 09 Nov 2017 09:07:44 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/what-s-new-on-cpan---october-2017/</guid>
+      <description>
+
+&lt;p&gt;Welcome to &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo;, a curated look at last month&amp;rsquo;s new CPAN uploads for your reading and programming pleasure. Enjoy!&lt;/p&gt;
+
+&lt;h3 id=&#34;apis-apps&#34;&gt;APIs &amp;amp; Apps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/App::tt&#34;&gt;App::tt&lt;/a&gt; is a time tracking application for the terminal&lt;/li&gt;
+&lt;li&gt;Get bindings for Bitbucket Server REST APIs via &lt;a href=&#34;https://metacpan.org/pod/WebService::BitbucketServer&#34;&gt;WebService::BitbucketServer&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WWW::Oxontime&#34;&gt;WWW::Oxontime&lt;/a&gt; can get live Oxford UK bus departure times&lt;/li&gt;
+&lt;li&gt;Inspect Apache errors log with &lt;a href=&#34;https://metacpan.org/pod/App::Elog&#34;&gt;App::Elog&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Yandex::Disk&#34;&gt;Yandex::Disk&lt;/a&gt; is a simple API for Yandex Disk&lt;/li&gt;
+&lt;li&gt;Parse network device configurations with &lt;a href=&#34;https://metacpan.org/pod/ncp&#34;&gt;ncp&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;config-devops&#34;&gt;Config &amp;amp; Devops&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Directory::Scanner&#34;&gt;Directory::Scanner&lt;/a&gt; is a streaming searcher that won&amp;rsquo;t prefetch the results to save resources&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/OTRS::OPM::Installer&#34;&gt;OTRS::OPM::Installer&lt;/a&gt; installs dependencies for the ticket manager app&lt;/li&gt;
+&lt;li&gt;Format strings with terminal escape codes using &lt;a href=&#34;https://metacpan.org/pod/String::Tagged::Terminal&#34;&gt;String::Tagged::Terminal&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Win32::Net::Info&#34;&gt;Win32::Net::Info&lt;/a&gt; can retrieve Windows network adapter information&lt;/li&gt;
+&lt;li&gt;Use icon libraries in Wx with &lt;a href=&#34;https://metacpan.org/pod/Wx::Perl::IconDepot&#34;&gt;Wx::Perl::IconDepot&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;data&#34;&gt;Data&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Data::SeaBASS&#34;&gt;Data::SeaBASS&lt;/a&gt; can read/write &lt;a href=&#34;https://seabass.gsfc.nasa.gov/wiki/System_Description&#34;&gt;SeaBASS&lt;/a&gt; ocean data files&lt;/li&gt;
+&lt;li&gt;Get globstar (&lt;code&gt;**&lt;/code&gt;) globbing with &lt;a href=&#34;https://metacpan.org/pod/File::Globstar&#34;&gt;File::Globstar&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Geo::Coder::Free&#34;&gt;Geo::Coder::Free&lt;/a&gt; provides geocoding functionality using free databases&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Geo::Coder::US::Census&#34;&gt;Geo::Coder::US::Census&lt;/a&gt; provides a geocoding functionality US census.gov data&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;development-version-control&#34;&gt;Development &amp;amp; Version Control&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Display the cumulative test running time with &lt;a href=&#34;https://metacpan.org/pod/App::Prove::Plugin::CumulativeTimer&#34;&gt;App::Prove::Plugin::CumulativeTimer&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Defined::KV&#34;&gt;Defined::KV&lt;/a&gt; provides a drop-in replacement function for a common idiom&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::Git::RequireUnixEOL&#34;&gt;Dist::Zilla::Plugin::Git::RequireUnixEOL&lt;/a&gt; enforces Unix line endings in your distribution&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/List::Breakdown&#34;&gt;List::Breakdown&lt;/a&gt; can conveniently breakdown lists into sublists&lt;/li&gt;
+&lt;li&gt;Easily create named, parameterized types using &lt;a href=&#34;https://metacpan.org/pod/Type::TinyX::Facets&#34;&gt;Type::TinyX::Facets&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/roles&#34;&gt;roles&lt;/a&gt; is a simple pragma for composing roles&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;language-international&#34;&gt;Language &amp;amp; International&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Convert between braille character sets using &lt;a href=&#34;https://metacpan.org/pod/App::Brl2Brl&#34;&gt;App::Brl2Brl&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Translates Portuguese words to Galician using fuzzy replacements with &lt;a href=&#34;https://metacpan.org/pod/Lingua::FuzzyTrans::PT2GL&#34;&gt;Lingua::FuzzyTrans::PT2GL&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;hardware&#34;&gt;Hardware&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/PGPLOT::Device&#34;&gt;PGPLOT::Device&lt;/a&gt; can autogenerate PGPLOT device names&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;science-mathematics&#34;&gt;Science &amp;amp; Mathematics&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Math::Base85&#34;&gt;Math::Base85&lt;/a&gt; provides support for base 85 numbers as defined by RFC 1924&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web&#34;&gt;Web&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Log Catalyst DBIC querylogs to the console using &lt;a href=&#34;https://metacpan.org/pod/Catalyst::Plugin::DBIC::ConsoleQueryLog&#34;&gt;Catalyst::Plugin::DBIC::ConsoleQueryLog&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Plugin::WebSocket&#34;&gt;Dancer2::Plugin::WebSocket&lt;/a&gt; adds a websocket interface to Dancer2&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/HTML::Untidy&#34;&gt;HTML::Untidy&lt;/a&gt; is another way to generate HTML quickly and programmatically&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Mojolicious::Plugin::ClientIP::Pluggable&#34;&gt;Mojolicious::Plugin::ClientIP::Pluggable&lt;/a&gt; provides convenient client IP header handling for Mojolicious requests&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>More Code, Less Cruft: Managing Distributions with Dist::Zilla</title>
+      <link>http://localhost:1313/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html/</link>
+      <pubDate>Tue, 09 Mar 2010 16:14:12 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html/</guid>
+      <description>
+
+&lt;p&gt;Every software distribution is a bunch of files written and maintained by programmers. The files are of three types: code, documentation, and crap—though this distinction is too subtle. Much of the documentation and code is crap, too. It&amp;rsquo;s pointless. It&amp;rsquo;s boring to write and to maintain, but convention dictates that it exist.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s killer feature is the CPAN, and &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla&#34;&gt;Dist::Zilla&lt;/a&gt; is a tool for packaging code to release to the CPAN. The central notion of Dzil is that no programmer should ever have to waste his or her precious time on boring things like &lt;em&gt;README&lt;/em&gt; files, prerequisite accounting, duplicated license statements, or anything else other than solving real problems.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s worth noting, too, that the &amp;ldquo;CPAN distribution&amp;rdquo; format is useful even if your code never escapes to the CPAN. Libraries packaged &lt;em&gt;in any way&lt;/em&gt; are much easier to manage than their unpackaged counterpart, and any libraries package the CPAN way can interact with all the standard CPAN tools. As long are you&amp;rsquo;re going to package up your code, you might as well use the same tools as everyone else in the game.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-step-by-step-conversion&#34;&gt;&lt;strong&gt;A Step-by-Step Conversion&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Switching your old code to use Dist::Zilla is easy. You can be conservative and work in small steps, or you can go whole hog. This article demonstrates the process with one of my distributions, &lt;a href=&#34;https://metacpan.org/pod/Number::Nary&#34;&gt;Number::Nary&lt;/a&gt;. To follow along, clone its git repository and start with the commit tagged &lt;code&gt;pre-dzil&lt;/code&gt;. If you don&amp;rsquo;t want to use &lt;code&gt;git&lt;/code&gt;, that&amp;rsquo;s fine. You&amp;rsquo;ll still be able to see what&amp;rsquo;s going on.&lt;/p&gt;
+
+&lt;h4 id=&#34;replacing-makefile-pl&#34;&gt;&lt;strong&gt;Replacing Makefile.PL&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;The first thing to do is to replace &lt;em&gt;Makefile.PL&lt;/em&gt;, the traditional program for building and installing distributions (or &lt;em&gt;dists&lt;/em&gt;). If you started with a &lt;a href=&#34;https://metacpan.org/pod/Module::Build&#34;&gt;Module::Build&lt;/a&gt;-based distribution, you&amp;rsquo;d replace &lt;em&gt;Build.PL&lt;/em&gt;, instead. Dist::Zilla will build those files for you in the dist you ship so that installing users have them, but you&amp;rsquo;ll never need to think about them again.&lt;/p&gt;
+
+&lt;p&gt;I packaged &lt;code&gt;Number::Nary&lt;/code&gt; with &lt;a href=&#34;https://metacpan.org/pod/Module::Install&#34;&gt;Module::Install&lt;/a&gt;, the library that inspired me to build &lt;code&gt;Dist::Zilla&lt;/code&gt;. Its &lt;em&gt;Makefile.PL&lt;/em&gt; looked like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use inc::Module::Install;
+  all_from(&#39;lib/Number/Nary.pm&#39;);
+  requires(&#39;Carp&#39;            =&amp;gt; 0);
+  requires(&#39;Test::More&#39;      =&amp;gt; 0);
+  requires(&#39;List::MoreUtils&#39; =&amp;gt; 0.09);
+  requires(&#39;Sub::Exporter&#39;   =&amp;gt; 0.90);
+  requires(&#39;UDCode&#39;          =&amp;gt; 0);
+  auto_manifest;
+  extra_tests;
+  WriteAll;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If I&amp;rsquo;d used &lt;code&gt;ExtUtils::MakeMaker&lt;/code&gt;, it might&amp;rsquo;ve looked something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use ExtUtils::MakeMaker;
+
+  WriteMakefile(
+    NAME      =&amp;gt; &#39;Number::Nary&#39;,
+    DISTNAME  =&amp;gt; &#39;Number-Nary&#39;,
+    AUTHOR    =&amp;gt; &#39;Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;&#39;,
+    ABSTRACT  =&amp;gt; &#39;encode and decode numbers as n-ary strings&#39;,
+    VERSION   =&amp;gt; &#39;0.108&#39;,
+    LICENSE   =&amp;gt; &#39;perl&#39;,
+    PREREQ_PM =&amp;gt; {
+      &#39;Carp&#39;                =&amp;gt; 0
+      &#39;List::MoreUtils&#39;     =&amp;gt; &#39;0.09&#39;,
+      &#39;Sub::Exporter&#39;       =&amp;gt; 0,
+      &#39;Test::More&#39;          =&amp;gt; 0,
+      &#39;UDCode&#39;              =&amp;gt; 0,
+    }
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Delete that file and replace it with the file &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  name    = Number-Nary
+  version = 0.108
+  author  = Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;
+  license = Perl_5
+  copyright_holder = Ricardo Signes
+
+  [AllFiles]
+  [MetaYAML]
+  [MakeMaker]
+  [Manifest]
+
+  [Prereq]
+  Carp            = 0
+  Test::More      = 0
+  List::MoreUtils = 0.09
+  Sub::Exporter   = 0.90
+  UDCode          = 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yes, this file contains &lt;em&gt;more&lt;/em&gt; lines than the original version, but don&amp;rsquo;t worry—that won&amp;rsquo;t last long.&lt;/p&gt;
+
+&lt;p&gt;Most of this should be self-explanatory, but the cluster of square-bracketed names isn&amp;rsquo;t. Each line enables a Dzil plugin, and every plugin helps with part of the well-defined process of building your dist. The plugins I&amp;rsquo;ve used here enable the absolute minimum behavior needed to replace &lt;em&gt;Makefile.PL&lt;/em&gt;: they pull in all the files in your checkout. When you build the dist, they add the extra files you need to ship.&lt;/p&gt;
+
+&lt;p&gt;At this point, you can build a releasable tarball by running &lt;code&gt;dzil build&lt;/code&gt; (instead of &lt;code&gt;perl Makefile.PL &amp;amp;&amp;amp; make dist&lt;/code&gt;). There are more savings on the way, too.&lt;/p&gt;
+
+&lt;h4 id=&#34;eliminating-pointless-packaging-files&#34;&gt;&lt;strong&gt;Eliminating Pointless Packaging Files&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;The &lt;em&gt;MANIFEST.SKIP&lt;/em&gt; file tells other packaging tools which files to exclude when building a distribution. You can keep using it (with the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::ManifestSkip&#34;&gt;ManifestSkip&lt;/a&gt; plugin), but you can almost always just drop the file and use the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PruneCruft&#34;&gt;PruneCruft&lt;/a&gt; plugin instead. It prunes all the files people usually put in their skip file.&lt;/p&gt;
+
+&lt;p&gt;The CPAN community has a tradition of shipping lots of good documentation written in Pod. Even so, several tools expect you also to provide a plain &lt;em&gt;README&lt;/em&gt; file. The &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::Readme&#34;&gt;Readme&lt;/a&gt; plugin will generate one for you.&lt;/p&gt;
+
+&lt;p&gt;Downstream distributors (like Linux distributions) like to see really clear license statements, especially in the form of a &lt;em&gt;LICENSE&lt;/em&gt; file. Because your &lt;em&gt;dist.ini&lt;/em&gt; knows the details of your license, the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::License&#34;&gt;License&lt;/a&gt; plugin can generate this file for you.&lt;/p&gt;
+
+&lt;p&gt;All three of these plugins are part of the &lt;code&gt;Dist::Zilla&lt;/code&gt; distribution. Thus you can delete three whole files—&lt;em&gt;MANIFEST.SKIP&lt;/em&gt;, &lt;em&gt;LICENSE&lt;/em&gt;, and *README*—at the cost of a couple of extra lines in &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [PruneCruft]
+  [License]
+  [Readme]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s not bad, especially when you remember that now when you edit your dist version, license, or abstract, these generated files will &lt;em&gt;always&lt;/em&gt; contain the new data.&lt;/p&gt;
+
+&lt;h4 id=&#34;stock-tests&#34;&gt;&lt;strong&gt;Stock Tests&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;People expect CPAN authors to run several tests before releasing a distribution to the public. &lt;code&gt;Number::Nary&lt;/code&gt; had three of them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  xt/release/perl-critic.t
+  xt/release/pod-coverage.t
+  xt/release/pod-syntax.t
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Storing them under the &lt;em&gt;./xt/release&lt;/em&gt; directory indicates that only people interested in testing a new release should run them.)&lt;/p&gt;
+
+&lt;p&gt;These files are pretty simple, but the last thing you want is to find out that you&amp;rsquo;ve copied and pasted a slightly buggy version of the file around. Instead, you can generate these files as needed. If there&amp;rsquo;s a bug, fix the plugin once and everything gets the fix on the next rebuild. Once again, you can delete those three files in favor of three plugins:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [ExtraTests]
+  [CriticTests]
+  [PodTests]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;CriticTests&lt;/code&gt; and &lt;code&gt;PodTests&lt;/code&gt; add test files to your &lt;em&gt;./xt&lt;/em&gt; directory. &lt;code&gt;ExtraTests&lt;/code&gt; rewrites them to live in &lt;em&gt;./t&lt;/em&gt;, but only under the correct circumstances, such as during release testing.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve customized your Pod coverage tests to consider certain methods trusted despite having no docs, you can move that configuration into your Pod itself. Add a line like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  =for Pod::Coverage some_method some_other_method this_is_covered_too
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::CriticTests&#34;&gt;CriticTests&lt;/a&gt; plugin, by the way, does not come with &lt;code&gt;Dist::Zilla&lt;/code&gt;. It&amp;rsquo;s a third party plugin, written by Jerome Quelin. There are a bunch of those on the CPAN, and they&amp;rsquo;re easy to install. &lt;code&gt;[CriticTests]&lt;/code&gt; tells &lt;code&gt;Dist::Zilla&lt;/code&gt; to load Dist::Zilla::Plugin::CriticTests. Install it with &lt;em&gt;cpan&lt;/em&gt; or your package manager and you&amp;rsquo;re ready to use the plugin.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-classic-bundle-and-cutting-releases&#34;&gt;&lt;strong&gt;The @Classic Bundle and Cutting Releases&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Because most of the time you want to use the same config everywhere, &lt;code&gt;Dist::Zilla&lt;/code&gt; makes it easy to reuse configuration. The current &lt;em&gt;dist.ini&lt;/em&gt; file is very close to the &amp;ldquo;Classic&amp;rdquo; old-school plugin bundle shipped with &lt;code&gt;Dist::Zilla&lt;/code&gt;. You ca replace all the plugin configuration (except for Prereq) with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [CriticTests]
+  [@Classic]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;which makes for a nice, small config file.&lt;/p&gt;
+
+&lt;p&gt;Classic enables a few other plugins, most of which aren&amp;rsquo;t worth mentioning right now. A notable exception is &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::UploadToCPAN&#34;&gt;UploadToCPAN&lt;/a&gt;. It enables the command &lt;code&gt;dzil release&lt;/code&gt;, which will build a tarball and upload it to the CPAN, assuming you have a &lt;em&gt;~/.dzil/config.ini&lt;/em&gt; which resembles:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [!release]
+  user     = rjbs
+  password = PeasAreDelicious
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;letting-dist-zilla-alter-your-modules&#34;&gt;&lt;strong&gt;Letting Dist::Zilla Alter Your Modules&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;So far, this &lt;code&gt;Dist::Zilla&lt;/code&gt; configuration builds extra files like tests and packaging files. You can get a lot more out of &lt;code&gt;Dist::Zilla&lt;/code&gt; if you also let it mess around with your library files.&lt;/p&gt;
+
+&lt;p&gt;Add the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PkgVersion&#34;&gt;PkgVersion&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PodVersion&#34;&gt;PodVersion&lt;/a&gt; plugins to let &lt;code&gt;Dist::Zilla&lt;/code&gt; take care of setting the version in every library file. They find &lt;em&gt;.pm&lt;/em&gt; files and add a &lt;code&gt;our $VERSION = ...&lt;/code&gt; declaration and a &lt;code&gt;=head1 VERSION&lt;/code&gt; section to the Pod—which means you can delete all those lines from the code and not worry about keeping them up to date anymore.&lt;/p&gt;
+
+&lt;h4 id=&#34;prereq-detection&#34;&gt;&lt;strong&gt;Prereq Detection&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now the &lt;em&gt;dist.ini&lt;/em&gt; looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  name    = Number-Nary
+  version = 0.108
+  author  = Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;
+  license = Perl_5
+  copyright_holder = Ricardo Signes
+
+  [CriticTests]
+  [PodVersion]
+  [PkgVersion]
+  [@Classic]
+
+  [Prereq]
+  Carp            = 0
+  Test::More      = 0
+  List::MoreUtils = 0.09
+  Sub::Exporter   = 0.90
+  UDCode          = 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Way too much of this file handles prerequisites. &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::AutoPrereq&#34;&gt;AutoPrereq&lt;/a&gt; fixes all of that by analyzing the code to determine all of the necessary dependencies and their versions. Install this third-party plugin (also by Jerome Quelin!) and replace &lt;code&gt;Prereq&lt;/code&gt; with &lt;code&gt;AutoPrereq&lt;/code&gt;. This plugin requires the use of the &lt;code&gt;use MODULE VERSION&lt;/code&gt; form for modules which require specific versions. This is actually a &lt;em&gt;very good&lt;/em&gt; thing, because it means that your code will no longer even &lt;em&gt;compile&lt;/em&gt; if Perl cannot meet those prerequisites. It also keeps code and installation data in sync. (Make sure that you&amp;rsquo;re requiring the right version in your code. Many dists require one version in the code and one in the prereq listing. Now that you have only one place to list the required version, make sure you get it right.)&lt;/p&gt;
+
+&lt;p&gt;You don&amp;rsquo;t have to modify &lt;em&gt;all&lt;/em&gt; &lt;code&gt;use&lt;/code&gt; statements to that form. In this example, it&amp;rsquo;s only necessary for &lt;code&gt;List::MoreUtils&lt;/code&gt; and &lt;code&gt;Sub::Exporter&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;pod-rewriting&#34;&gt;&lt;strong&gt;Pod Rewriting&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now it&amp;rsquo;s time to bring out some heavy guns. &lt;a href=&#34;https://metacpan.org/pod/Pod::Weaver&#34;&gt;Pod::Weaver&lt;/a&gt; is a system for rewriting documentation. It can add sections, rejigger existing sections, or even translate non-Pod syntax into Pod as needed. Its basic built-in configuration can take the place of PodVersion, which allows you to delete gobs of boring boilerplate Pod. For example, you can get rid of all the NAME sections. All you need to do is provide an abstract in a comment. If your library says:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Number::Nary;
+  # ABSTRACT: encode and decode numbers as n-ary strings
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; then you&amp;rsquo;ll get a &lt;code&gt;NAME&lt;/code&gt; section containing that abstract. You can document methods and attributes and functions with &lt;code&gt;=method&lt;/code&gt; and &lt;code&gt;=attr&lt;/code&gt; and &lt;code&gt;=func&lt;/code&gt; respectively. &lt;code&gt;Pod::Weaver&lt;/code&gt; will gather them up, put them under a top-level heading, and make them into real Pod.&lt;/p&gt;
+
+&lt;p&gt;You can delete your &amp;ldquo;License and Copyright&amp;rdquo; sections. &lt;code&gt;Pod::Weaver&lt;/code&gt; will generate those just like &lt;code&gt;Dist::Zilla&lt;/code&gt; generates a &lt;em&gt;LICENSE&lt;/em&gt; file. It&amp;rsquo;ll generate an &lt;code&gt;AUTHOR&lt;/code&gt; section, so you can drop that too.&lt;/p&gt;
+
+&lt;h4 id=&#34;release-automation&#34;&gt;&lt;strong&gt;Release Automation&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now you&amp;rsquo;re in the home stretch, ready to understand the &amp;ldquo;maximum overkill&amp;rdquo; approach to using Dist::Zilla. First, get rid of the version setting in the &lt;em&gt;dist.ini&lt;/em&gt; and load the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::AutoVersion&#34;&gt;AutoVersion&lt;/a&gt; plugin. It will set a new version per day, or use any other sort of scheme you configure. Then add &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::NextRelease&#34;&gt;NextRelease&lt;/a&gt;, which will update the changelog with every new release. In other words, the changelog file now starts with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  {{$NEXT}}
+            updated distribution to use Dist::Zilla
+            expect lots more releases now that it&#39;s so easy!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you next run &lt;code&gt;dzil release&lt;/code&gt;, the distribution will pick a new version number and build a dist using it. It will replace &lt;code&gt;{{$NEXT}}&lt;/code&gt; with that version number (and the date and time of the build). After it has uploaded the release, it will update the changelog on disk to replace the marker with the release that was made and re-add it above, making room for notes on the next release.&lt;/p&gt;
+
+&lt;h4 id=&#34;version-control&#34;&gt;&lt;strong&gt;Version Control&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Finally, you can tie the whole thing into your version control system. I use Git. (That&amp;rsquo;s convenient, because it&amp;rsquo;s the only VCS with a &lt;code&gt;Dist::Zilla&lt;/code&gt; plugin so far.) Add a single line to &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [@Git]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Git plugin bundle will refuse to cut a release if there are uncommitted changes in the working tree. Once the tree is clean for a release, Dzil will commit the changes to the changelog, tag the release, and push the changes and the new tag to the remote origin.&lt;/p&gt;
+
+&lt;p&gt;Like the CriticTests, the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::PluginBundle::Git&#34;&gt;Dzil Git plugins&lt;/a&gt; aren&amp;rsquo;t bundled with Dist::Zilla (thank Jerome Quelin one more time). The at sign in the plugin name indicates that it&amp;rsquo;s a &lt;em&gt;bundle&lt;/em&gt; of Dzil plugins, but you can load or install the whole thing at once. To install it, install &lt;code&gt;Dist::Zilla::PluginBundle::Git&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;total-savings&#34;&gt;&lt;strong&gt;Total Savings?&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Switching this little dist to Dist::Zilla entirely eliminated seven files from the repository. It cleaned out a lot of garbage Pod that was a drag to maintain. It improved the chances that every dist will have consistent data throughout, and it made cutting a new release as easy as running &lt;code&gt;dzil release&lt;/code&gt;. That release command will do absolutely everything needed to make a pristine, installable CPAN distribution, apart from the actual programming.&lt;/p&gt;
+
+&lt;p&gt;All told, it takes under half an hour to upgrade a dist to Dist::Zilla, depending on the number of files from which you have to delete cruft. Once you&amp;rsquo;ve converted a few, explore some Dzil plugins. When you see how easy it is to write one, you&amp;rsquo;ll probably want make a few of your own. Pretty soon you may find your &lt;em&gt;dist.ini&lt;/em&gt; files contain exactly as much configuration as mine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [@RJBS]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s the best kind of lazy.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

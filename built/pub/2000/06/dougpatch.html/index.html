@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Notes on Doug&#39;s Method Lookup Patch </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=""/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2000/06/dougpatch.html/" />
+<meta property="og:title" content="Notes on Doug&#39;s Method Lookup Patch" />
+<meta property="og:description" content="Since 1997 Perl.com has published articles about the Perl programming language, its culture and community.">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2000-06-06T06:06:06Z" />
+<meta property="og:image" content="http://localhost:1313/images/author/simon-cozens.jpg" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Notes on Doug&#39;s Method Lookup Patch</h1>
+              <p class="blog-post-meta">Jun 27, 2000 by
+              
+              
+                
+                
+                <a href="#author-bio-simon-cozens">Simon Cozens</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p><span id="__index__"></span></p>
+
+<p><a href="#speeding%20up%20method%20lookups">Speeding up method lookups</a></p>
+
+<ul>
+<li><a href="#methods%20and%20subroutines">Methods and subroutines</a></li>
+<li><a href="#what%20entersub%20knows%20about%20methods">What entersub knows about methods</a></li>
+<li><a href="#when%20to%20convert%20methods">When to convert methods</a></li>
+<li><a href="#how%20to%20convert%20methods">How to convert methods</a></li>
+<li><a href="#finding%20the%20stash">Finding the stash</a></li>
+<li><a href="#extract%20the%20gv%20entry">Extract the GV entry</a></li>
+<li><a href="#rewrite%20entersub">Rewrite entersub</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+<li><a href="#exercises">Exercises</a></li>
+</ul>
+
+<hr />
+
+<h1 id="span-id-speeding-up-method-lookups-speeding-up-method-lookups-span"><span id="speeding up method lookups">Speeding up method lookups</span></h1>
+
+<p>Last week, Doug MacEachern provided an interesting and extremely clever patch to speed up method calls. His benchmarks showed that it completely reduced the overhead of using methods, and appeared to suggest that method calls could actually be faster than subroutine calls. Let&rsquo;s have a look at the patch in detail, to see how it&rsquo;s done.</p>
+
+<p>Here&rsquo;s the original musing from Sarathy, which started it all off:</p>
+
+<pre><code>    If @ISA isn't modified at run time, Foo::-&gt;bar() could be resolved
+    at compile time to a subroutine call, as can this:
+
+    my Foo $obj = shift;
+    $obj-&gt;bar();
+</code></pre>
+
+<p>As all the tutorials on Perl&rsquo;s object-oriented programming rightly state, when you call a method, you&rsquo;re calling a subroutine. The difference, however, is that a method call has to perform a lookup to find out which package its subroutine lives in.</p>
+
+<p>In the normal case without inheritance, <code>Foo-&gt;bar()</code> will be subroutine <code>bar</code> in package <code>Foo</code>. However, because of inheritance, you can&rsquo;t tell just by looking at <code>Foo-&gt;bar()</code> where <code>bar</code> is going to be - <code>Foo</code> may inherit <code>bar</code> from <code>Frob</code>, from example.</p>
+
+<p>To resolve this, when you call a method, Perl checks for a subroutine <code>bar</code> in package <code>Foo</code>. If it doesn&rsquo;t find one, it checks <code>Foo</code>&rsquo;s parents: all the packages listed in <code>Foo</code>&rsquo;s <code>@ISA</code> array. It then checks the grandparents, and so on. This lookup has to be done at run-time, instead of compile time, because <code>@ISA</code> is an ordinary variable - someone may change the inheritance tree from under your feet.</p>
+
+<p>Sarathy&rsquo;s thought was that if you know for sure what&rsquo;s going to be in <code>@ISA</code> at the time you perform the compilation, you change an expensive method call into a slightly less expensive subroutine call. And that&rsquo;s what Doug&rsquo;s patch does.</p>
+
+<p>We can divide the patch up into two parts: the function <code>method_to_entersub</code> performs the conversion and tells us <strong>how</strong> it&rsquo;s done, and the part of the code which calls <code>method_to_entersub</code>, telling us <strong>when</strong> it&rsquo;s done. We&rsquo;ll look first at the when.</p>
+
+<p>Before we do that, though, a little detour about how subroutine calling works internally.</p>
+
+<p>Perl constructs the <code>entersub</code> op in a similar way for a method call and an ordinary subroutine call. The difference is that for a subroutine call, the <code>entersub</code> op is preceded by an op that fetches the GV that holds the subroutine code, and for a method call, the <code>entersub</code> op is preceded by an op that looks up the method name in the inheritance tree. You can see this in the following <code>B::Terse</code> output.</p>
+
+<pre><code>        % perl -MO=Terse,exec -e 'bar()'
+        ...
+        SVOP (0xa043b00) gv  GV (0xa04ecf8) *bar              &lt;- cvop
+        UNOP (0xa0b6a60) entersub [1]
+        ...
+</code></pre>
+
+<p>For a method call, though, Perl also attaches an op representing the class (let&rsquo;s call it <code>o2</code>, since that&rsquo;s as good a name as any) and <code>svop</code>, instead of being a GV, becomes a special op to signify that a method should be called in that class:</p>
+
+<pre><code>    % perl -MO=Terse,exec -e 'Foo-&gt;bar()'
+    ...
+    SVOP (0xa043b00) const  PV (0xa0411f0) &quot;Foo&quot;          &lt;- o2
+    SVOP (0xa043b40) method_named  PVIV (0xa04ecf8) &quot;bar&quot; &lt;- cvop
+    UNOP (0xa0d0500) entersub [1]
+    ...
+</code></pre>
+
+<p>For class methods, <code>o</code> is a constant, while for object methods, <code>o2</code> fetches the object, allowing us to work out the class at run time:</p>
+
+<pre><code>    % perl -MO=Terse,exec -e '$foo-&gt;bar()'
+    ...
+    SVOP (0xa043b00) gvsv  GV (0xa04ecf8) *foo            &lt;- o2
+    SVOP (0xa0d5720) method_named  PVIV (0xa0411f0) &quot;bar&quot; &lt;- cvop
+    UNOP (0xa0d04d0) entersub [1]
+    ...
+</code></pre>
+
+<p><code>method_named</code> is the op representing, unsurprisingly, a named method. You can also call methods on the fly, like this:</p>
+
+<pre><code>                Foo-&gt;$methname()
+</code></pre>
+
+<p>and in this case, the <code>method</code> op is preceded by an op that fetches the method name from <code>$methname</code>. In this example, it&rsquo;s a simple variable lookup:</p>
+
+<pre><code>    % perl -MO=Terse,exec -e 'Foo-&gt;$x()'
+    ...
+    SVOP (0xa043b00) const  PV (0xa0411f0) &quot;Foo&quot;          &lt;- o2
+    SVOP (0xa043b60) gvsv  GV (0xa04ed70) *x              &lt;- child of cvop
+    UNOP (0xa043b40) method                               &lt;- cvop
+    UNOP (0xa0d04d0) entersub [1]
+    ...
+</code></pre>
+
+<p>What we want to do is trap both these method-style <code>cvop</code>s, <code>method_named</code> and <code>method</code>, and see if we can perform the method lookup at compile time. Once we know what subroutine will actually be called, we can change the op tree so that it calls the subroutine directly, so that at run time when the method is actually called, Perl won&rsquo;t have to search the inheritance tree any more.</p>
+
+<pre><code> --- ./op.c.orig Fri Jun  2 15:49:32 2000
+ +++ ./op.c  Thu Jun 15 22:45:33 2000
+ @@ -6243,6 +6309,12 @@
+          } 
+      }
+      else if (   cvop-&gt;op_type == OP_METHOD 
+               || cvop-&gt;op_type == OP_METHOD_NAMED) {
+ +        if (o2-&gt;op_type == OP_CONST || o2-&gt;op_type == OP_PADSV) {
+ +            OP *nop;
+ +            if ((nop = method_to_entersub(aTHX_ o2, cvop))) {
+ +                return nop;
+ +            }
+ +        }
+          if (o2-&gt;op_type == OP_CONST) {
+              o2-&gt;op_private &amp;= ~OPpCONST_STRICT;
+          }
+</code></pre>
+
+<p>If you&rsquo;re not used to reading patches, the first three lines tell you where we are: the seven lines from 6243 of <em>op.c</em>, which become thirteen lines from 6309 when the patch is applied. The lines starting with a plus are to be added.</p>
+
+<p>Line 6243 is in the middle of the function <code>Perl_ck_subr</code>, which is the check routine called when an <code>entersub</code> op is filed. Check routines are fed an op and produce a `cleaned up&rsquo; version, performing any optimization or elimination of redundancies. Perl replaces each op in the op tree built during the compile phase with these optimized versions.</p>
+
+<p>As we learnt above, we&rsquo;re going to be in one of three situations at this point: ordinary subroutine, which will have a GV op attached to our <code>entersub</code> op; named method, which has <code>method_named</code> attached; or unnamed method, which has <code>method</code> attached. We care about cases when <code>cvop</code> is a <code>method</code> or <code>method_named</code> op:</p>
+
+<pre><code> else if (   cvop-&gt;op_type == OP_METHOD 
+          || cvop-&gt;op_type == OP_METHOD_NAMED) {
+</code></pre>
+
+<p>We&rsquo;re fixing class methods, which means we try the conversion when <code>o2</code> is a constant. We also want to fix up <code>my Dog $sam; $sam-&gt;bark;</code>, in which case <code>o2</code>, the object, is a lexical variable: (In internal-speak, a pad sv.)</p>
+
+<pre><code> if (o2-&gt;op_type == OP_CONST || o2-&gt;op_type == OP_PADSV) {
+</code></pre>
+
+<p>In these cases, we try to convert the method to a subroutine, and return the new method if we manage it:</p>
+
+<pre><code>     OP *nop;
+     if ((nop = method_to_entersub(aTHX_ o2, cvop))) {
+         return nop;
+     }
+</code></pre>
+
+<p>The final touch is a portion of the original source: in <code>Foo-&gt;bar</code>, <code>Foo</code> is obviously a class name, and shouldn&rsquo;t fire off a warning if <code>strict</code> is checking against barewords. Hence, we remove the strict test from constants which are class names.</p>
+
+<pre><code> if (o2-&gt;op_type == OP_CONST) {
+     o2-&gt;op_private &amp;= ~OPpCONST_STRICT;
+ }
+</code></pre>
+
+<p>That&rsquo;s &lsquo;when&rsquo;. Now let&rsquo;s see &lsquo;how&rsquo;.</p>
+
+<h2 id="span-id-how-to-convert-methods-how-to-convert-methods-span"><span id="how to convert methods">How to convert methods</span></h2>
+
+<p>Inside the check routine, the variable <code>svop</code> holds the <code>method</code> or <code>method_named</code> node that specifies how Perl should locate the subroutine that is actually called; <code>o</code> is the node that is executed just before this, that fetches the GV for the class name or the value of the variable that contains the object on whose behalf the method will be called. For example:</p>
+
+<pre><code>    Foo-&gt;bar():
+
+    SVOP (0xa043b00) const  PV (0xa0411f0) &quot;Foo&quot;          &lt;- o
+    SVOP (0xa043b40) method_named  PVIV (0xa04ecf8) &quot;bar&quot; &lt;- svop
+    UNOP (0xa0d0500) entersub [1]
+    ...
+
+    $foo-&gt;bar():
+
+    SVOP (0xa043b00) gvsv  GV (0xa04ecf8) *foo            &lt;- o
+    SVOP (0xa0d5720) method_named  PVIV (0xa0411f0) &quot;bar&quot; &lt;- svop
+    UNOP (0xa0d04d0) entersub [1]
+</code></pre>
+
+<p>There is also a <code>method</code> variable that holds the SV that is contained in <code>o</code>. Our function opens by getting the method name out of there:</p>
+
+<pre><code> if (svop-&gt;op_type == OP_METHOD_NAMED) {
+     methname = SvPV(method, methlen);
+ }
+ else {
+     return Nullop;
+ }
+</code></pre>
+
+<p>If it isn&rsquo;t a named method, (that is, if we&rsquo;ve got something like <code>$foo-&gt;$bar()</code>) we can&rsquo;t do anything with it. We return the false value <code>Nullop</code>, which is a null pointer cast into an op, signalling to the calling routine that we couldn&rsquo;t modify the program.</p>
+
+<pre><code> if (cvop-&gt;op_type == OP_METHOD_NAMED &amp;&amp;
+     o2-&gt;op_type == OP_CONST || o2-&gt;op_type == OP_PADSV) {
+</code></pre>
+
+<p>Now, we&rsquo;re fixing up two things: class method calls where <code>o</code> is constant, and <code>my Dog $sam</code> situations where <code>o</code> is a pad SV.</p>
+
+<p>Inside this function, we have three tasks:</p>
+
+<p><strong><span id="item_Find_the_stash">Find the stash</span></strong></p>
+
+<p>A stash is a package symbol table, such as <code>%Foo::</code> in Perl space. We need to find the class to which our method belongs, and bring out the symbol table from it.</p>
+
+<p><strong><span id="item_Extract_the_GV_entry">Extract the GV entry</span></strong></p>
+
+<p>We&rsquo;re trying to create an <code>entersub</code> op which calls, for example <code>&amp;Foo::bar</code>. We&rsquo;ve got <code>%Foo::</code> from the above: the next task is to find <code>*Foo::bar</code>. At this point, we want to take care of inheritance.</p>
+
+<p><strong><span id="item_Rewrite_entersub">Rewrite entersub</span></strong></p>
+
+<p>Finally, we fiddle with the op tree to convert the method form of <code>entersub</code> to a subroutine call which merely calls the GV we&rsquo;ve just found.</p>
+
+<p>Along the way, we also need to take care of the fact that Perl caches method lookups.</p>
+
+<h2 id="span-id-finding-the-stash-finding-the-stash-span"><span id="finding the stash">Finding the stash</span></h2>
+
+<p>We&rsquo;re trying to find the GV <code>*Class::Method</code> so we can feed it to <code>entersub</code>. The first thing we need to do, then, is to find the package symbol table, or `stash&rsquo;, for the class. There are two possible situations we&rsquo;re in now, and the situation determines how we find the stash: either we&rsquo;ve got a constant class, or the object is a lexical.</p>
+
+<p>If we&rsquo;ve got a constant class, finding the stash is simple: the PV of the SV hidden in the SvOP <code>o</code> tells us the name of the package, and <code>gv_stashpvn</code> returns the stash given a PV.</p>
+
+<pre><code> if (o-&gt;op_type == OP_CONST) {
+     STRLEN len;
+     char *package = SvPV(((SVOP*)o)-&gt;op_sv, len);
+     stash = gv_stashpvn(package, len, FALSE);
+ }
+</code></pre>
+
+<p>Don&rsquo;t be frightened of the scary casting in line 3: we&rsquo;re just getting the string value from the <code>const</code> op.</p>
+
+<p>If we&rsquo;ve got a lexical (pad sv) object, <code>my Dog $sam</code>, life is slightly more interesting.</p>
+
+<pre><code> else if (o-&gt;op_type == OP_PADSV) {
+</code></pre>
+
+<p>We fetch the actually SV itself from the current pad - the pad is where Perl keeps the lexical variables belonging to the current block, and it&rsquo;s just an ordinary array:</p>
+
+<pre><code>     SV *sv = *av_fetch(PL_comppad_name, o-&gt;op_targ, FALSE);
+</code></pre>
+
+<p>We hope this SV exists, and is an object. If it is an object, <code>SvSTASH</code> will give us the stash, since Perl stored a pointer to the stash when we used <code>bless</code> to create the object.</p>
+
+<pre><code>     if (sv &amp;&amp; SvOBJECT(sv)) {
+         stash = SvSTASH(sv);
+     }
+</code></pre>
+
+<p>Otherwise, we can&rsquo;t do much.</p>
+
+<pre><code>     else {
+         return Nullop;
+     }
+ }
+</code></pre>
+
+<p>Those are the only two cases - lexicals and constants - that can possibly happen, but computer programming sometimes makes the impossible possible. Doug stands firm against the demons of illogic:</p>
+
+<pre><code> else {
+     return Nullop;
+ }
+</code></pre>
+
+<h2 id="span-id-extract-the-gv-entry-extract-the-gv-entry-span"><span id="extract the gv entry">Extract the GV entry</span></h2>
+
+<p>If we&rsquo;ve got a stash, we can now try and find the GV. Thankfully, there&rsquo;s a function in <em>gv.c</em> which does this, and even takes care of inheritance for us as well.</p>
+
+<pre><code> if (!(stash &amp;&amp; (gv = gv_fetchmeth(stash, methname, methlen, 0)) 
+             &amp;&amp;  isGV(gv))) {
+     return Nullop;
+ }
+</code></pre>
+
+<p>If <code>gv_fetchmeth</code> fails, or if what it returns is not a gv for some reason, then we couldn&rsquo;t find the package that actually contains the method, so we give up and return <code>Nullop</code>. Otherwise, <code>gv</code> points to the GV that contains the subroutine we want <code>entersub</code> to call. Or it will do the first time the method is looked up. If, however, our method is inherited and provided by another stash, <code>gv_fetchmeth</code> provides an alias to the real GV in the object&rsquo;s stash.</p>
+
+<p>In order to get at the code for the real subroutine, we have to get the original GV from this alias; we use the <code>GvCV</code> macro to do this. If the GV we get from <code>GvCV</code> is in a different class to our method, then we have an alias. We need <code>entersub</code> to point to the original GV, and not this alias:</p>
+
+<pre><code> if (GvSTASH(CvGV(GvCV(gv))) != stash) {
+     gv = CvGV(GvCV(gv)); /* point to the real gv */
+ }
+</code></pre>
+
+<p>In his comments, which I&rsquo;ve snipped, Doug notes that this cached lookup will only be valid if inheritance doesn&rsquo;t change at run time. There&rsquo;s currently no way to freeze <code>@ISA</code> at run time yet, (hey, there&rsquo;s a job for someone!) so Doug suggests as an alternative a simple <code>return Nullop</code> to abort if we have a cached lookup.</p>
+
+<h2 id="span-id-rewrite-entersub-rewrite-entersub-span"><span id="rewrite entersub">Rewrite entersub</span></h2>
+
+<p>Finally, we have enough information to rewrite the <code>entersub</code> op: We have a GV, which contains a CV, which we can now call directly. Let&rsquo;s arrange things to do that.</p>
+
+<p>First, remove the <code>strict</code> test from the method name as before.</p>
+
+<pre><code> o-&gt;op_private &amp;= ~(OPpCONST_BARE|OPpCONST_STRICT);
+</code></pre>
+
+<p>Now find the <code>op_method_named</code> op, and change it into the GV to create a subroutine call.</p>
+
+<pre><code> for (mop = o; mop-&gt;op_sibling-&gt;op_sibling; mop = mop-&gt;op_sibling) ;
+ op_free(mop-&gt;op_sibling); /* loose OP_METHOD{,_NAMED} */
+ mop-&gt;op_sibling = scalar(newUNOP(OP_RV2CV, 0,
+                             newGVOP(OP_GV, 0, gv)));
+</code></pre>
+
+<p>Triumphantly, we return the converted op:</p>
+
+<pre><code> nop = convert(OP_ENTERSUB, OPf_STACKED, o);
+ return nop;
+</code></pre>
+
+<h2 id="span-id-conclusion-conclusion-span"><span id="conclusion">Conclusion</span></h2>
+
+<p>We got a lot of mileage out of that patch; we&rsquo;ve seen how Perl finds and calls methods and subroutines, and shown how Doug&rsquo;s patch can turn methods into subroutines. This should almost totally remove the overhead in using object-oriented Perl, but for the following two points.</p>
+
+<h2 id="span-id-exercises-exercises-span"><span id="exercises">Exercises</span></h2>
+
+<ol>
+<li><p>Doug&rsquo;s patch needs a way of validating the inheritance tree at compile time; the obvious way to do this is to freeze <code>@ISA</code>. Write a pragma which does this.</p>
+
+<p>For bonus points <strong>and</strong> god-of-the-week status, find a way of validating the method cache at compile time while keeping <code>@ISA</code> variable.</p></li>
+
+<li><p>This only works for named methods; find a way to make it work for methods that are fetched from variables or via other means. That is, make <code>Class-&gt;$thing()</code> convertible to a sub.</p></li>
+</ol>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/community">community</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-simon-cozens">
+  <div class="col-sm-2">
+    
+    <a href="/authors/simon-cozens/"><div class="circle-avatar" style="background-image:url(/images/author/simon-cozens.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/simon-cozens/"><h3>Simon Cozens</h3></a>
+    <p></p>
+    <h5><a href="/authors/simon-cozens/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2000_06_dougpatch.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

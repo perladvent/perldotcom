@@ -80,7 +80,7 @@ The construction method `make` is, again, flexible and robust. The author has ex
         die "@{[(caller(1))[3]]}: Cannot take $_[0] of $_[1].\n";
     }
 
-In turn, it calls the built-in `caller` function to refer back to the original code (similar to an `assert` in C, or a lightweight version of the `cluck` or `confess` functions in the [Carp](https://perldoc.perl.org/Carp.html) package).
+In turn, it calls the built-in `caller` function to refer back to the original code (similar to an `assert` in C, or a lightweight version of the `cluck` or `confess` functions in the [Carp]({{</* perldoc "Carp" */>}}) package).
 
 `make` also calls the the `remake` function, if `make` receives only one argument (for example, a string such as `"1 + 2i"`) and must deduce the real and/or imaginary parts:
 

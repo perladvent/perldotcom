@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Stasis on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/stasis/</link>
+    <description>Recent content in Stasis on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 27 Aug 2015 13:09:11 +0000</lastBuildDate>
+    <atom:link href="/tags/stasis/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Simple, secure backups with Perl</title>
+      <link>http://localhost:1313/article/185/2015/8/27/Simple--secure-backups-with-Perl/</link>
+      <pubDate>Thu, 27 Aug 2015 13:09:11 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/185/2015/8/27/Simple--secure-backups-with-Perl/</guid>
+      <description>
+
+&lt;p&gt;Recently I was searching for a backup solution, and ended up rolling my own. The result is &lt;a href=&#34;https://github.com/dnmfarrell/Stasis&#34;&gt;Stasis&lt;/a&gt; a Perl program that uses &lt;code&gt;tar&lt;/code&gt; and &lt;code&gt;gpg&lt;/code&gt; to compress and encrypt files.&lt;/p&gt;
+
+&lt;h3 id=&#34;how-it-works&#34;&gt;How it works&lt;/h3&gt;
+
+&lt;p&gt;Stasis takes a list of file and directory paths and builds a temporary compressed gzip archive using &lt;code&gt;tar&lt;/code&gt;. It then encrypts the temporary archive with &lt;code&gt;gpg&lt;/code&gt; using &lt;a href=&#34;https://en.wikipedia.org/wiki/Advanced_Encryption_Standard&#34;&gt;AES 256-bit&lt;/a&gt;, saving it to a new location and removes the temporary archive. Stasis supports backups using a passphrase or a GPG key.&lt;/p&gt;
+
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s say I wanted to backup all files in my main home directories. I&amp;rsquo;d create a text file called &lt;code&gt;files_to_backup.txt&lt;/code&gt;, that contains:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;/home/dfarrell/Documents
+/home/dfarrell/Downloads
+/home/dfarrell/Music
+/home/dfarrell/Pictures
+/home/dfarrell/Videos
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I can save all of these directories and files to Dropbox:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis --destination ~/Dropbox --files files_to_backup.txt --passphrase mysecretkey
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or more tersely:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt --passphrase mysecretkey
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Use passfile instead of passphrase:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt --passfile /path/to/passfile
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Use the &amp;ldquo;referrer&amp;rdquo; argument to provide a GPG key instead of a passphrase:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt -r keyname@example.com
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Ignore the files matching patterns in &lt;code&gt;.stasisignore&lt;/code&gt;. This is useful if I wanted to ignore certain types of files, like OSX &lt;code&gt;.DS_Store&lt;/code&gt; index files or more broadly, all hidden files: &lt;code&gt;.*&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt -r keyname@example.com -i .stasisignore
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;limiting-the-number-of-backups&#34;&gt;Limiting the number of backups&lt;/h3&gt;
+
+&lt;p&gt;Stasis accepts the &lt;code&gt;--limit&lt;/code&gt; option to only retain the most recent x backups:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt -r mygpgkey@email.com --limit 4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It works really nicely with the &lt;code&gt;--days&lt;/code&gt; option, which tells stasis to only create a new archive if one deosn&amp;rsquo;t already exist within x days. So to keep a months&amp;rsquo; worth of weekly archives, I can do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt -r mygpgkey@email.com --limit 4 --days 7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now stasis will only retain the last 4 archives, and only create one new archive a week. My personal laptop isn&amp;rsquo;t always on, so I have a cron job that checks for this every 30 minutes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;*/30 * * * * stasis -de ~/Dropbox -f files_to_backup.txt -r mygpgkey@email.com -l 4 -da 7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;restoring-a-backup&#34;&gt;Restoring a backup&lt;/h3&gt;
+
+&lt;p&gt;First decrypt the the backup with &lt;code&gt;gpg&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ gpg -d /path/to/backup.tar.gz.gpg &amp;gt; /path/to/output.tar.gz
+gpg: AES256 encrypted data
+gpg: encrypted with 1 passphrase
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;GPG will ask for the passphrase or GPG key passphrase to unlock the data. You can then inspect the decrypted archive&amp;rsquo;s files with &lt;code&gt;tar&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tar --list -f /path/to/output.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tar -zvtf /path/to/output.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To unzip the archive:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tar -zvxf /path/to/output.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;disadvantages-of-stasis&#34;&gt;Disadvantages of Stasis&lt;/h3&gt;
+
+&lt;p&gt;Stasis suits my needs but it has several drawbacks which mean it might not be ideal for you. For one thing, it creates a standalone, encrypted archive every time it runs instead of incremental backups. Although this is simple, it also wastes space, so consider the implications if you intend to keep many backup copies. Because Stasis creates a temporary copy of the data it archives, it also requires enough disk space to create two compressed archives of the data.&lt;/p&gt;
+
+&lt;p&gt;As Stasis creates a new archive every time, it can be a resource intensive process to backup. On my ultrabook, it takes Stasis about 20 seconds to create a new 400MB new archive. If you are intending to archive large amounts of data, you may need another solution.&lt;/p&gt;
+
+&lt;p&gt;Archive names are fixed and should not be changed. Stasis creates encrypted archives with the ISO 8601 datetime in the filename like:&lt;code&gt;stasis-0000-00-00T00:00:00.tar.gz.gpg&lt;/code&gt;. To detect previous backup files, Stasis looks for files matching this pattern in the backup directory. This comes into play of you use the &lt;code&gt;--limit&lt;/code&gt; option.&lt;/p&gt;
+
+&lt;h3 id=&#34;stasis-cheatsheet&#34;&gt;Stasis cheatsheet&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;stasis [options]
+
+Options:
+
+  --destination -de destination directory to save the encrypted archive to
+  --days        -da only create an archive if one doesn&#39;t exist within this many days (optional)
+  --files       -f  filepath to a text file of filepaths to backup
+  --ignore      -i  filepath to a text file of glob patterns to ignore (optional)
+  --limit       -l  limit number of stasis backups to keep in destination directory (optional)
+  --passphrase      passphrase to use
+  --passfile        filepath to a textfile containing the password to use
+  --referrer    -r  name of the gpg key to use (instead of a passphrase or passfile)
+  --temp        -t  temp directory path, uses /tmp by default
+  --verbose     -v  verbose, print progress statements (optional)
+  --help        -h  print this documentation (optional)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Updated&lt;/strong&gt;:&lt;em&gt;Added new section covering &amp;ndash;days options, removed scripting section 2016-04-02&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

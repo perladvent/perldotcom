@@ -1,0 +1,507 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Binary on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/binary/</link>
+    <description>Recent content in Binary on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 23 Aug 2016 08:58:54 +0000</lastBuildDate>
+    <atom:link href="/tags/binary/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Save space with bit arrays</title>
+      <link>http://localhost:1313/article/save-space-with-bit-arrays/</link>
+      <pubDate>Tue, 23 Aug 2016 08:58:54 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/save-space-with-bit-arrays/</guid>
+      <description>
+
+&lt;p&gt;&amp;ldquo;Big data&amp;rdquo; is an overused term, but when you&amp;rsquo;re actually working with big data, every bit can count. Shaving several bits from data structure used billions of times can save a lot of space. A few months ago I was working on a job distribution system; it would send millions of jobs out every day. We wanted to capture every decision made by the system, so that a user could later query the system to understand &lt;em&gt;why&lt;/em&gt; a job had or hadn&amp;rsquo;t been sent to a partner.&lt;/p&gt;
+
+&lt;p&gt;The problem was that the system was making billions of decisions a day, so we needed a way to pack those decisions as efficiently as possible. A colleague of mine had the bright idea to use a &lt;a href=&#34;https://en.wikipedia.org/wiki/Bit_array&#34;&gt;bit array&lt;/a&gt;, and it worked very well - we were able to compress the data by a factor of 18 or more. If you&amp;rsquo;re not familiar with bit arrays, or a little rusty on the code, keep reading and I&amp;rsquo;ll show you how to use them with Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;bit-array-basics&#34;&gt;Bit array basics&lt;/h3&gt;
+
+&lt;p&gt;Bit arrays are a way of storing multiple booleans in single number. Consider the number 0 as a byte/octet represented as bits:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;00000000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instead of treating it like a number, using &lt;a href=&#34;https://en.wikipedia.org/wiki/Bitwise_operation&#34;&gt;bitwise operators&lt;/a&gt; we can treat each bit as a separate column. As this is an 8 bit number, we can store up to 8 booleans in it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;0|0|0|0|0|0|0|0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To store a boolean in the first bit of the array, we can use bitwise or equals (&lt;code&gt;|=&lt;/code&gt;). Here&amp;rsquo;s how that looks in C pseudocode:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;short bit_array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+bit_array &lt;span style=&#34;color:#f92672&#34;&gt;|=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let&amp;rsquo;s take this one step at a time. First I initialize an 8 bit integer called &lt;code&gt;bit_array&lt;/code&gt;. Next, I create a binary number with the bit set that I wish to set in &lt;code&gt;bit_array&lt;/code&gt;. I do this with the left bitshift code &lt;code&gt;1 &amp;lt;&amp;lt; 6&lt;/code&gt;. This means, &amp;ldquo;shift the bits in the number on the left, 6 places to the left&amp;rdquo;, which does this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;00000001 &amp;lt;&amp;lt; 6;
+01000000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is called a bitmask. Next I use or equals to update &lt;code&gt;bit_array&lt;/code&gt; with the bitmask &lt;code&gt;01000000&lt;/code&gt;. Bitwise or (&lt;code&gt;|&lt;/code&gt;) works by setting any bit to 1 in its left operand that is set to 1 in its right operand. Adding a equals sign on the end simply assigns the resulting value to &lt;code&gt;bit_array&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If we wanted to store a boolean in the fourth bit, we&amp;rsquo;d do this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;bit_array &lt;span style=&#34;color:#f92672&#34;&gt;|=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So now the &lt;code&gt;bit_array&lt;/code&gt; looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;01001000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To test if a particular bit is set, I can use bitwise and (&lt;code&gt;&amp;amp;&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (bit_array &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;)) {
+  &lt;span style=&#34;color:#e6db74&#34;&gt;/* the seventh column is true */&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Bitwise and returns a number with every bit set to 0 in its left operand which is 0 in its right operand. So the code &lt;code&gt;1 &amp;lt;&amp;lt; 6&lt;/code&gt; bitshifts a number that only has one particular bit set to 1 (&lt;code&gt;01000000&lt;/code&gt;). This is the bitmask. If the bit array has that bit set to 1, it will return non-zero (true), else it returns zero (false).&lt;/p&gt;
+
+&lt;h3 id=&#34;bit-arrays-in-perl&#34;&gt;Bit arrays in Perl&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m going to use a contrived example to show how bit arrays work in Perl. Imagine we&amp;rsquo;re working on an ordering system at a pizza restaurant. We need to store all the toppings required for the pizza. In Perl we store numbers in scalars, which are usually 32 or 64 bits long; that&amp;rsquo;s a lot of toppings we can pack into a single number!&lt;/p&gt;
+
+&lt;p&gt;Here is the class:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Pizza::Order;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; utf8;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %toppings &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+  tomato        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+  cheese        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+  onion         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,
+  sausage       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,
+  pepperoni     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;,
+  ham           &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;,
+  chicken       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;,
+  bbq_chicken   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;,
+  olives        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;,
+  vegetables    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;,
+  jalapeńo      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;,
+  ranch         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;,
+  eggplant      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;,
+  garlic        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;,
+);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;new&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $class &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; bless &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$self, $class;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;print_state&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%014b\n&amp;#34;&lt;/span&gt;, $$self;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;available_toppings&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; keys %toppings;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;add_topping&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $topping) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# bitwise OR equals to set a bit field&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $$self &lt;span style=&#34;color:#f92672&#34;&gt;|=&lt;/span&gt; $toppings{ $topping };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;remove_topping&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $topping) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# bitwise NOT to invert a field and bitwise AND equals to unset it&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $$self &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;$toppings{ $topping };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_toppings&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @ordered_toppings &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ();
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $topping (keys %toppings) {
+    push @ordered_toppings, $topping
+      &lt;span style=&#34;color:#75715e&#34;&gt;# bitwise AND to test if this bit is set&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $$self &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; $toppings{ $topping };
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; @ordered_toppings;
+}
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I create a class called &lt;code&gt;Pizza::Order&lt;/code&gt;. The &lt;code&gt;%toppings&lt;/code&gt; hash stores names of pizza toppings and their associated bitmask. I could only think of 14 toppings, leaving 18 spare slots for the future (if we want to stick to 32 bit integers). The &lt;code&gt;new&lt;/code&gt; subroutine is a constructor which creates a blessed scalar as the &lt;code&gt;Pizza::Order&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;print_state&lt;/code&gt; method uses &lt;a href=&#34;https://perldoc.perl.org/functions/printf.html&#34;&gt;printf&lt;/a&gt; to print the Pizza::Order object state as a binary number. This is a really useful feature of &lt;code&gt;printf&lt;/code&gt; which many other languages don&amp;rsquo;t have (C &amp;amp; Python for example). Both &lt;code&gt;add_topping&lt;/code&gt; and &lt;code&gt;get_toppings&lt;/code&gt; use the techniques described earlier to set and check for set bits.&lt;/p&gt;
+
+&lt;p&gt;More interesting perhaps, is the &lt;code&gt;remove_topping&lt;/code&gt; method. This uses bitwise not (&lt;code&gt;~&lt;/code&gt;) to invert a bitmask and then bitwise and (&lt;code&gt;&amp;amp;&lt;/code&gt;) equals to unset it. Pretty nifty, huh? Here&amp;rsquo;s a quick script to test it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Pizza::Order;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $order &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Pizza::Order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;();
+$order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add_topping(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;cheese&amp;#39;&lt;/span&gt;);
+$order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add_topping(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;eggplant&amp;#39;&lt;/span&gt;);
+$order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;remove_topping(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;cheese&amp;#39;&lt;/span&gt;);
+$order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add_topping(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tomato&amp;#39;&lt;/span&gt;);
+$order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;print_state();
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$_\n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; $order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_toppings();&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This prints:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;01000000000001&lt;/span&gt;
+eggplant
+tomato&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The first line is the current state of the &lt;code&gt;$order&lt;/code&gt; object. It shows the first, and second-to-last bits set, which correspond to the tomato and eggplant bitmasks. It then prints out those toppings. Yay, it works!&lt;/p&gt;
+
+&lt;h3 id=&#34;bit-array-limitations&#34;&gt;Bit array limitations&lt;/h3&gt;
+
+&lt;p&gt;One thing to watch out for when storing bit arrays on disk is code change. Imagine if I had several years&amp;rsquo; worth of pizza orders saved in a database. Then one day, we stopped offering bbq chicken. It would be tempting to update the toppings hash like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %toppings &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+  tomato        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+  cheese        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+  onion         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,
+  sausage       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,
+  pepperoni     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;,
+  ham           &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;,
+  chicken       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;,
+  olives        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;, &lt;span style=&#34;color:#75715e&#34;&gt;# deleted bbq_chicken&lt;/span&gt;
+  vegetables    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;,
+  jalapeńo      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;,
+  ranch         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;,
+  eggplant      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;,
+  garlic        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;,
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I deleted the &lt;code&gt;bbq_chicken&lt;/code&gt; entry and bumped up the remaining toppings bitmasks. The problem is compatibility: in all the historical pizza orders, &lt;code&gt;olives&lt;/code&gt; (for example) had a bitmask of &lt;code&gt;00000010000000&lt;/code&gt; but in the new code, its bitmask is one lower. So if I tried to load a historical order with this class, the toppings data would be wrong. One way to handle this is remove, but not reuse, the bitmask for the deleted entry.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %toppings &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+  tomato        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+  cheese        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+  onion         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,
+  sausage       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,
+  pepperoni     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;,
+  ham           &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;,
+  chicken       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;,
+  &lt;span style=&#34;color:#75715e&#34;&gt;# reserved&lt;/span&gt;
+  olives        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;,
+  vegetables    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;,
+  jalapeńo      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;,
+  ranch         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;,
+  eggplant      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;,
+  garlic        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;,
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This limitation makes bitmasks less useful for long-term storage of data, unless the existing bitmasks are unlikely to change. Note that it&amp;rsquo;s fine to add additional toppings and bitmasks, it&amp;rsquo;s just re-using existing bitmasks that causes issues.&lt;/p&gt;
+
+&lt;p&gt;Another thing to consider is upper limits (update - see &lt;a href=&#34;http://perltricks.com/article/using-bitmasks-with-large-integers/&#34;&gt;using bit arrays with large integers&lt;/a&gt;). If you want your Perl code to be compatible with 32 bit and 64 bit Perls, you should probably stick to a maximum of 32 bitmasks (using a module like &lt;a href=&#34;https://metacpan.org/pod/bigint&#34;&gt;bigint&lt;/a&gt; may &lt;em&gt;not&lt;/em&gt; work because of addressable memory limitations). You can see the settings your Perl has been compiled with by typing &lt;code&gt;perl -V | grep longsize&lt;/code&gt; at the command line. The longsize value is the number of bytes your Perl can store in an integer natively.&lt;/p&gt;
+
+&lt;p&gt;Finally, in order to get the data back out of a bit array it needs to be tested with all the available bitmasks. Consider the &lt;code&gt;get_toppings&lt;/code&gt; method in &lt;code&gt;Pizza::Order&lt;/code&gt;. To find out what toppings are set, the code has to check every topping&amp;rsquo;s bitmask. This is pretty inefficient. So bitmasks are good for compact data storage, but not fast access.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Wikipedia has useful entries on &lt;a href=&#34;https://en.wikipedia.org/wiki/Bit_array&#34;&gt;bit arrays&lt;/a&gt; and &lt;a href=&#34;https://en.wikipedia.org/wiki/Bitwise_operation&#34;&gt;bitwise operators&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Perl&amp;rsquo;s official &lt;a href=&#34;https://perldoc.perl.org/perlop.html&#34;&gt;operator documentation&lt;/a&gt; covers the bitwise operators. You can read it in the terminal with the command &lt;code&gt;perldoc perlop&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Use Perl&amp;rsquo;s builtin functions &lt;a href=&#34;https://perldoc.perl.org/functions/sprintf.html&#34;&gt;sprintf&lt;/a&gt; (&lt;code&gt;perldoc -f sprintf&lt;/code&gt;) and &lt;a href=&#34;https://perldoc.perl.org/functions/printf.html&#34;&gt;printf&lt;/a&gt; (&lt;code&gt;perldoc -f printf&lt;/code&gt;) to inspect binary values&lt;/li&gt;
+&lt;li&gt;Stringifying / printing numbers as binary isn&amp;rsquo;t the only nice binary feature Perl has over other languages. Another is the ability to write binary numbers inline, just like octal and hexadecimal numbers, for example: &lt;code&gt;0b00001000&lt;/code&gt;. This is great for comparing binary numbers&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/bigint&#34;&gt;bigint&lt;/a&gt; is one of several modules on CPAN for working with large integers, see &lt;a href=&#34;http://perltricks.com/article/using-bitmasks-with-large-integers/&#34;&gt;using bit arrays with large integers&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Building a UTF-8 encoder in Perl</title>
+      <link>http://localhost:1313/article/building-a-utf-8-encoder-in-perl/</link>
+      <pubDate>Tue, 02 Aug 2016 08:47:57 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/building-a-utf-8-encoder-in-perl/</guid>
+      <description>
+
+&lt;p&gt;This week I wrote a UTF-8 encoder/decoder. Perl already comes with UTF-8 encoding features built-in, so this wasn&amp;rsquo;t necessary, but sometimes it&amp;rsquo;s nice to understand how things work. The UTF-8 scheme is defined in &lt;a href=&#34;https://tools.ietf.org/html/rfc3629&#34;&gt;RFC 3629&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-does-a-utf-8-encoder-do&#34;&gt;What does a UTF-8 encoder do?&lt;/h3&gt;
+
+&lt;p&gt;UTF-8 is a scheme for encoding &lt;a href=&#34;https://en.wikipedia.org/wiki/Unicode&#34;&gt;Unicode&lt;/a&gt; sequences of codepoints as bytes/octets. A codepoint is just a number, that identifies the Unicode entry (such as 0x24 which is a dollar sign).&lt;/p&gt;
+
+&lt;p&gt;Unicode defines codepoints in the range 0x0000..0x10FFFF, so the encoder must take a codepoint and convert it to bytes according to the UTF-8 scheme, which looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Char. number range  |     UTF-8 bytes/octets sequence
+   (hexadecimal)    |              (binary)
+--------------------+------------------------------------
+0000 0000-0000 007F | 0xxxxxxx
+0000 0080-0000 07FF | 110xxxxx 10xxxxxx
+0000 0800-0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
+0001 0000-0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This has some interesting properties. First of all, codepoints in the range 0x00..0x7F (0-127) will have the same bytes as with ASCII encoding, which is convenient. Second it&amp;rsquo;s a &lt;em&gt;variable width&lt;/em&gt; encoding, which means that a single codepoint can be 1-4 bytes long.&lt;/p&gt;
+
+&lt;p&gt;Decoding is simply the process in reverse: converting a sequence of bytes back into a codepoint.&lt;/p&gt;
+
+&lt;h3 id=&#34;encoding-utf-8&#34;&gt;Encoding UTF-8&lt;/h3&gt;
+
+&lt;p&gt;To encode UTF-8, I need to convert a codepoint (which is just a number), into a sequence of bytes. As there are four different byte sequences defined in the UTF-8 table, there are four scenarios to handle:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;codepoint_to_bytes&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $codepoint &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($codepoint &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0x80&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; pack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;C&amp;#39;&lt;/span&gt;, $codepoint;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($codepoint &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0x800&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; pack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CC&amp;#39;&lt;/span&gt;,
+           $codepoint &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b11000000&lt;/span&gt;,
+           $codepoint       &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b10000000&lt;/span&gt;;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($codepoint &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0x10000&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; pack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CCC&amp;#39;&lt;/span&gt;,
+           $codepoint &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b11100000&lt;/span&gt;,
+           $codepoint &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b10000000&lt;/span&gt;,
+           $codepoint       &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b10000000&lt;/span&gt;;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; pack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CCCC&amp;#39;&lt;/span&gt;,
+           $codepoint &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b11110000&lt;/span&gt;,
+           $codepoint &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b10000000&lt;/span&gt;,
+           $codepoint &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b10000000&lt;/span&gt;,
+           $codepoint       &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b10000000&lt;/span&gt;;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The first is the easiest: if the codepoint is between 0x00 and 0x7F, no transformation is required, so I just &lt;a href=&#34;https://perldoc.perl.org/functions/pack.html&#34;&gt;pack&lt;/a&gt; the codepoint as-is. The byte value of a character is the same as the codepoint (e.g. &lt;code&gt;&#39;U&#39; == 56 == 0x38 == 00111000&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;For the second scenario I have to populate the bitmask &lt;code&gt;110xxxxx 10xxxxxx&lt;/code&gt; with the codepoint, which means I need to return two bytes. This is how I do it:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;For the first byte, bitshift the codepoint 6 places to the right (as the second byte will get those 6 bits).&lt;/li&gt;
+&lt;li&gt;Use bitwise OR to set the two most significant bits to one (&lt;code&gt;xxxxxxxx | 11000000 == 11xxxxxx&lt;/code&gt;). I&amp;rsquo;m using Perl&amp;rsquo;s inline binary notation (&lt;code&gt;0b...&lt;/code&gt;) which makes it easy to compare the binary numbers with the bitmask.&lt;/li&gt;
+&lt;li&gt;For the second byte use bitwise AND to set the two most significant bits to zero (&lt;code&gt;xxxxxxxx &amp;amp; 00111111 == 00xxxxxx&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;Use bitwise OR to set the most significant bit to 1 (&lt;code&gt;xxxxxxxx | 10000000 == 1xxxxxxx&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;Use &lt;a href=&#34;https://perldoc.perl.org/functions/pack.html&#34;&gt;pack&lt;/a&gt; to combine the bytes into a scalar and return it.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The process for three byte and four byte encoding follows the same approach, with the rules updated according to the UTF-8 scheme.&lt;/p&gt;
+
+&lt;p&gt;If I wanted to get UTF-8 encoded bytes for the &lt;a href=&#34;http://www.fileformat.info/info/unicode/char/1f4fa/fontsupport.htm&#34;&gt;Television&lt;/a&gt; codepoint (U+1F4FA) I could use the code like so:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bytes &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; codepoint_to_bytes(&lt;span style=&#34;color:#ae81ff&#34;&gt;0x1F4FA&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;decoding-utf-8&#34;&gt;Decoding UTF-8&lt;/h3&gt;
+
+&lt;p&gt;To decode UTF-8 bytes, we need to reverse the encoding process to get back to the original Unicode codepoint number. The decoder must check how many bytes it received, extract the appropriate bits and add them together.&lt;/p&gt;
+
+&lt;p&gt;Perl tries &amp;ldquo;to make the easy things easy, and the hard things possible&amp;rdquo; as the saying goes, but sometimes it makes easy things harder than they are in simpler languages like C. Binary data is one such area: Perl needs to be told to turn off its character features before you can safely work with the data.&lt;/p&gt;
+
+&lt;p&gt;There are two ways to do that. The old, discouraged way is to use the &lt;a href=&#34;https://metacpan.org/pod/bytes&#34;&gt;bytes pragma&lt;/a&gt;. The newer way is to use the &lt;a href=&#34;https://metacpan.org/pod/Encode#SYNOPSIS&#34;&gt;Encode&lt;/a&gt; module to encode the scalar as bytes and remove its UTF-8 flag. After that, Perl&amp;rsquo;s functions will treat the scalar as a sequence of bytes instead of characters:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Encode &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;encode&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;bytes_to_codepoint&lt;/span&gt; {
+  &lt;span style=&#34;color:#75715e&#34;&gt;# treat the scalar as bytes/octets&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $input    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; encode(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;UTF-8&amp;#39;&lt;/span&gt;, shift);
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# length returns number of bytes&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $len      &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; length $input;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $template &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;C&amp;#39;&lt;/span&gt; x $len;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @bytes    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack $template, $input;
+
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the subroutine &lt;code&gt;bytes_to_codepoint&lt;/code&gt; I use &lt;code&gt;encode()&lt;/code&gt; to populate &lt;code&gt;$input&lt;/code&gt; with the bytes passed to it. Next I use the &lt;code&gt;length&lt;/code&gt; function to return the number of bytes in &lt;code&gt;$input&lt;/code&gt; - this is different from its usual behavior which returns the number of characters; this is the effect of using &lt;code&gt;encode()&lt;/code&gt; to convert the scalar to bytes. Finally I use &lt;a href=&#34;https://perldoc.perl.org/functions/unpack.html&#34;&gt;unpack&lt;/a&gt; to extract the bytes from &lt;code&gt;$input&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now I know the number of bytes passed to &lt;code&gt;bytes_to_codepoint&lt;/code&gt;, it&amp;rsquo;s just a matter of reversing the binary operations from the encoding process:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($len &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];
+}
+&lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($len &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00011111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+          ($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;);
+}
+&lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($len &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00001111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+         (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+         ( $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;);
+}
+&lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00000111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+         (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+         (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+          ($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;);
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If there is just one byte, I return it as-is because the codepoint number is the same as the byte value. As with encoding, it gets interesting with two bytes:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Remove the bitmask from the first byte with bitwise AND. Remember bitwise AND returns any bits as zero which are zero in the right operand (&lt;code&gt;xxxxxxxx &amp;amp; 00011111 == 000xxxxx&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;Bit shift the resulting number 6 places to the left to get the original value. So &lt;code&gt;00000010&lt;/code&gt; would become &lt;code&gt;10000000&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Remove the bitmask from the second byte with bitwise AND (&lt;code&gt;xxxxxxxx &amp;amp; 00111111 == 00xxxxxx&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;Add the numbers together.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The same logic applies to three byte and four byte sequences, I just update the bitwise operations to match the UTF-8 scheme. The final code looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Encode &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;encode&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;bytes_to_codepoint&lt;/span&gt; {
+  &lt;span style=&#34;color:#75715e&#34;&gt;# treat the scalar as bytes/octets&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $input    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; encode(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;UTF-8&amp;#39;&lt;/span&gt;, shift);
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# length returns number of bytes&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $len      &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; length $input;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $template &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;C&amp;#39;&lt;/span&gt; x $len;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @bytes    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack $template, $input;
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# reverse encoding&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($len &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($len &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00011111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+            ($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;);
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($len &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00001111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+           (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+           ( $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;);
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00000111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+           (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+           (($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+            ($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0b00111111&lt;/span&gt;);
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let&amp;rsquo;s say I wanted to get the codepoint for the &lt;a href=&#34;http://www.fileformat.info/info/unicode/char/1f5fc/index.htm&#34;&gt;Tokyo Tower&lt;/a&gt; I can call the code like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; utf8;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $codepoint &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; bytes_to_codepoint(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;🗼&amp;#39;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;notes&#34;&gt;Notes&lt;/h3&gt;
+
+&lt;ol&gt;
+&lt;li&gt;This is a naive implementation - it doesn&amp;rsquo;t handle UTF-16 reserved characters (U+D800..U+DFFF), noncharacters and only encodes/decodes one codepoint at a time.&lt;/li&gt;
+&lt;li&gt;Take a look at &lt;a href=&#34;https://metacpan.org/pod/Unicode::UTF8&#34;&gt;Unicode::UTF8&lt;/a&gt; if you need a fast UTF-8 encoder and don&amp;rsquo;t want to use Perl&amp;rsquo;s builtin tools.&lt;/li&gt;
+&lt;li&gt;UTF-8 is by far the most popular Unicode encoding. It was created by Ken Thompson and Rob Pike in &lt;a href=&#34;http://doc.cat-v.org/bell_labs/utf-8_history&#34;&gt;just a few days&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Building your own UTF-8 encoder? Check out Markus Kuhn&amp;rsquo;s &lt;a href=&#34;https://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt&#34;&gt;decoder test file&lt;/a&gt; which contains several difficult or edge case tests for UTF-8 decoding. Markus also wrote a comprehensive &lt;a href=&#34;https://www.cl.cam.ac.uk/~mgk25/unicode.html&#34;&gt;UTF-8 and Unicode FAQ for Unix/Linux&lt;/a&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How to parse binary data with Perl</title>
+      <link>http://localhost:1313/article/how-to-parse-binary-data-with-perl/</link>
+      <pubDate>Mon, 18 Apr 2016 19:56:47 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/how-to-parse-binary-data-with-perl/</guid>
+      <description>
+
+&lt;p&gt;Parsing binary data is one of those tasks that seems to come up rarely, but is useful to know. Many common file types like images, music, timestamps, network packets and auth logs all come in binary flavors. Unfortunately it&amp;rsquo;s nowhere near as exciting as the fictitious depictions from &lt;a href=&#34;https://en.wikipedia.org/wiki/Hackers_%28film%29&#34;&gt;Hackers&lt;/a&gt;. The good news though is parsing binary data with Perl is easy using the &lt;code&gt;unpack&lt;/code&gt; function. I&amp;rsquo;m going to walk you through the three steps you&amp;rsquo;ll need when working with binary data.&lt;/p&gt;
+
+&lt;h3 id=&#34;1-open-a-binary-filehandle&#34;&gt;1. Open a binary filehandle&lt;/h3&gt;
+
+&lt;p&gt;Start things off &lt;em&gt;right&lt;/em&gt; by opening a filehandle to binary file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; autodie;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:raw&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/share/zoneinfo/America/New_York&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is a suitably Modern Perlish beginning. I start by importing &lt;a href=&#34;https://metacpan.org/pod/autodie&#34;&gt;autodie&lt;/a&gt; which ensures the code will &lt;code&gt;die&lt;/code&gt; if any function call fails. This avoids repetitive &lt;code&gt;... or die &amp;quot;IO failed&amp;quot;&lt;/code&gt; type coding constructs.&lt;/p&gt;
+
+&lt;p&gt;Next I use the &lt;code&gt;:raw&lt;/code&gt; IO layer to open a filehandle to a binary file. This will avoid newline translation issues. No need for &lt;code&gt;binmode&lt;/code&gt; here. The file I&amp;rsquo;m opening is a history of New York timezone changes, from the &lt;a href=&#34;https://en.wikipedia.org/wiki/Tz_database&#34;&gt;tz database&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;2-read-a-few-bytes&#34;&gt;2. Read a few bytes&lt;/h3&gt;
+
+&lt;p&gt;All binary files have a specific format that they follow. In the case of the zoneinfo files, the first 44 bytes/octets are the header, so I&amp;rsquo;ll grab that:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; autodie;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:raw&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/share/zoneinfo/America/New_York&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bytes_read &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; read $fh, &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bytes, &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;;
+die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Got $bytes_read but expected 44&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $bytes_read &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here I use &lt;code&gt;read&lt;/code&gt; to read in 44 bytes of data into the variable &lt;code&gt;$bytes&lt;/code&gt;. The &lt;code&gt;read&lt;/code&gt; function returns the number of bytes read; it&amp;rsquo;s good practice to check this as &lt;code&gt;read&lt;/code&gt; may not return the expected number of bytes if it reaches the end of the file. In this case, if the file ends before the header does, we know we&amp;rsquo;ve got bad data and bail out.&lt;/p&gt;
+
+&lt;h3 id=&#34;3-unpack-bytes-into-variables&#34;&gt;3. Unpack bytes into variables&lt;/h3&gt;
+
+&lt;p&gt;Now comes the fun part. I&amp;rsquo;ve got to split out the data in &lt;code&gt;$bytes&lt;/code&gt; into separate Perl variables. The tzfile &lt;a href=&#34;http://linux.die.net/man/5/tzfile&#34;&gt;man page&lt;/a&gt; defines the header format:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Timezone information files begin with the magic characters &amp;ldquo;TZif&amp;rdquo; to identify them as timezone information files, followed by a character identifying the version of the file&amp;rsquo;s format (as of 2005, either an ASCII NUL (&amp;rsquo;\0&amp;rsquo;) or a &amp;lsquo;2&amp;rsquo;) followed by fifteen bytes containing zeros reserved for future use, followed by six four-byte values of type long&lt;/p&gt;
+
+&lt;p&gt;&lt;cite&gt;Tzfile manual&lt;/cite&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The &lt;code&gt;unpack&lt;/code&gt; function takes a template of the binary data to read (this is defined in the pack &lt;a href=&#34;https://perldoc.perl.org/functions/pack.html&#34;&gt;documentation&lt;/a&gt;) and returns Perl variables. I&amp;rsquo;m going to match up the header description with the template codes to design the template.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Example&lt;/th&gt;
+&lt;th&gt;Type&lt;/th&gt;
+&lt;th&gt;Length&lt;/th&gt;
+&lt;th&gt;Template Code&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Magic chars&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;TZif&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;String&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;a4&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Version&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;2&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;String&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;a&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Reserved&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Ignore&lt;/td&gt;
+&lt;td&gt;15&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;x15&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Numbers&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;244&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Long&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;N N N N N N&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The header begins with the magic chars &amp;ldquo;TZif&amp;rdquo;, this is 4 bytes. The template code &lt;code&gt;a4&lt;/code&gt; matches this. Next is the version, this is a single ASCII character matched by &lt;code&gt;a&lt;/code&gt; (the strings are not space or null terminated, I could have use &lt;code&gt;A&lt;/code&gt; instead). The next 15 bytes are reserved and can be ignored, so I use &lt;code&gt;x15&lt;/code&gt; to skip over them. Finally there are 6 numbers of type long. Each one is separate variable so I must write &lt;code&gt;N&lt;/code&gt; 6 times instead of &lt;code&gt;N6&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; autodie;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:raw&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/share/zoneinfo/America/New_York&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bytes_read &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; read $fh, &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bytes, &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;;
+die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Got $bytes_read but expected 44&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $bytes_read &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($magic, $version, @numbers) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;a4 a x15 N N N N N N&amp;#39;&lt;/span&gt;, $bytes;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code passes my template to &lt;code&gt;unpack&lt;/code&gt; and it returns the variables we asked for. Now they&amp;rsquo;re in Perl variables, the hard part is done. In the case of a tzfile, the header defines the length of the body of the file, so I can use these variables to calculate how much more data to read from the file.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re interested in how to parse the rest of a tzfile, check out the source code of my module &lt;a href=&#34;https://metacpan.org/pod/Time::Tzfile&#34;&gt;Time::Tzfile&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;troubleshooting&#34;&gt;Troubleshooting&lt;/h3&gt;
+
+&lt;p&gt;Sometimes you&amp;rsquo;ll unpack some binary data and get garbage. This happens when the template passed to &lt;code&gt;unpack&lt;/code&gt; doesn&amp;rsquo;t match the binary data. The first thing you can do is print the binary data to the terminal with &lt;code&gt;hexdump&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here are the first 44 bytes of the New York tzfile:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ hexdump -c -n 44 /usr/share/zoneinfo/America/New_York
+0000000   T   Z   i   f   2  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0
+0000010  \0  \0  \0  \0  \0  \0  \0 005  \0  \0  \0 005  \0  \0  \0  \0
+0000020  \0  \0  \0 354  \0  \0  \0 005  \0  \0  \0 024
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This gives you a chance to inspect the data byte by byte and see if it matches your template. To create a template to match binary data, take it one value at a time. Consider the type of value you&amp;rsquo;re trying to match. Get the right bit length and for numbers, be sure to know if it is signed or unsigned.&lt;/p&gt;
+
+&lt;p&gt;The other thing to be aware of is &lt;a href=&#34;https://en.wikipedia.org/wiki/Endianness&#34;&gt;endianness&lt;/a&gt; of the data. Often man pages will say a variable is in &amp;ldquo;standard&amp;rdquo; or &amp;ldquo;network&amp;rdquo; order. This means big endian. Tzfiles have several 32 bit signed integers in big endian order. There is no &lt;code&gt;unpack&lt;/code&gt; template code which matches that type. To match it I need to use &lt;code&gt;l&amp;gt;&lt;/code&gt;. The &lt;code&gt;l&lt;/code&gt; matches signed 32 bit integers and the &lt;code&gt;&amp;gt;&lt;/code&gt; is a modifier which tells Perl the value is big endian.&lt;/p&gt;
+
+&lt;p&gt;Between Perl&amp;rsquo;s built-in template &lt;a href=&#34;https://perldoc.perl.org/functions/pack.html&#34;&gt;types&lt;/a&gt; and the modifiers, you can match any binary data.&lt;/p&gt;
+
+&lt;h3 id=&#34;more-binary-parsing-examples&#34;&gt;More binary parsing examples&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;In section 7.2 of &lt;a href=&#34;http://perlhacks.com/2014/04/data-munging-perl/&#34;&gt;Data Munging with Perl&lt;/a&gt; Dave Cross shows how to parse png and mp3 files.&lt;/li&gt;
+&lt;li&gt;There are some useful replies on the Perl Monks thread &lt;a href=&#34;http://www.perlmonks.org/?node_id=53473&#34;&gt;Confession of a Perl Hacker&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;The Perl Monks &lt;a href=&#34;http://www.perlmonks.org/?node_id=224666&#34;&gt;Pack/Unpack tutorial&lt;/a&gt; has some great information on the template types.&lt;/li&gt;
+&lt;li&gt;Entry 117 &amp;ldquo;Use pack and unpack for data munging&amp;rdquo; from &lt;a href=&#34;http://www.effectiveperlprogramming.com/&#34;&gt;Effective Perl Programming&lt;/a&gt; shows how to use &lt;code&gt;unpack&lt;/code&gt; for fixed width data.&lt;/li&gt;
+&lt;li&gt;The official Perl documentation also has a pack/unpack &lt;a href=&#34;https://perldoc.perl.org/perlpacktut.html&#34;&gt;tutorial&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

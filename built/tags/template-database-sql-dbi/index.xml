@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Template Database Sql Dbi on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/template-database-sql-dbi/</link>
+    <description>Recent content in Template Database Sql Dbi on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 15 Jul 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/template-database-sql-dbi/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How to Avoid Writing Code</title>
+      <link>http://localhost:1313/pub/2003/07/15/nocode.html/</link>
+      <pubDate>Tue, 15 Jul 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/07/15/nocode.html/</guid>
+      <description>
+
+&lt;p&gt;One of the most boring programming tasks in the world has to be pulling data out of a database and displaying it on a web site. Yet it&amp;rsquo;s also one of the most ubiquitous. Perl programmers being lazy, there are tools to help make boring programming tasks less painful, and two of these tools, &lt;code&gt;Class::DBI&lt;/code&gt; and the &lt;code&gt;Template&lt;/code&gt; Toolkit, create a whole which is far more drudgery-destroying than its parts.&lt;/p&gt;
+
+&lt;p&gt;Both these tools can do more complicated stuff than that described in this article, but my aim is to motivate people who may not have tried them out to give them a go and see how much work they can save you for even simple tasks.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve assumed that you know the basics of designing a database&amp;ndash;why you have several tables and &lt;code&gt;JOIN&lt;/code&gt; them rather than putting everything in the same table. I&amp;rsquo;ve also assumed that you&amp;rsquo;re not allergic to reading documentation, so I&amp;rsquo;m going to spend more space on saying &lt;em&gt;why&lt;/em&gt; I use particular features of the modules rather than explaining exactly &lt;em&gt;how&lt;/em&gt; they work.&lt;/p&gt;
+
+&lt;h3 id=&#34;synergy&#34;&gt;Synergy&lt;/h3&gt;
+
+&lt;p&gt;The reason that &lt;code&gt;Class::DBI&lt;/code&gt; and the &lt;code&gt;Template&lt;/code&gt; Toolkit work so well together is simple. &lt;code&gt;Template&lt;/code&gt; Toolkit templates can call methods on objects passed to them&amp;ndash;so there&amp;rsquo;s no need to explicitly pull every column out of the database before you process the template&amp;ndash;and &lt;code&gt;Class::DBI&lt;/code&gt; saves you the bother of writing methods to retrieve database columns. You&amp;rsquo;re essentially going straight from the database to HTML with only a very small amount of Perl in the middle.&lt;/p&gt;
+
+&lt;p&gt;Suppose you&amp;rsquo;re writing a web application to store details of books and their authors, and reviews of the books by users of the site. You&amp;rsquo;d like to have a page that displays all the books in your database and, for each book, offers links to all the reviews already written. With suitably set-up classes you can write a couple of lines of Perl:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -w
+  use strict;
+
+  use Bookworms::Book;
+  use Bookworms::Template;
+
+  my @books = Bookworms::Book-&amp;gt;retrieve_all;
+  @books = sort { $a-&amp;gt;title cmp $b-&amp;gt;title } @books;
+  print Bookworms::Template-&amp;gt;output( template =&amp;gt; &amp;quot;book_list.tt&amp;quot;,
+                                     vars     =&amp;gt; { books =&amp;gt; \@books } );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;hand your designer a simple template to pretty up:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [% page_title = &amp;quot;List all books&amp;quot; %]
+  [% INCLUDE header.tt %]
+
+    &amp;lt;ul&amp;gt;
+      [% FOREACH book = books %]
+        &amp;lt;li&amp;gt;[% book.title %] ([% book.author.name %])
+            [% FOREACH review = book.reviews %]
+              (&amp;lt;a href=&amp;quot;review.cgi?review=[% review.uid %]&amp;quot;&amp;gt;Read review
+              by [% review.reviewer.name %]&amp;lt;/a&amp;gt;)
+            [% END %]
+        &amp;lt;/li&amp;gt;
+      [% END %]
+    &amp;lt;/ul&amp;gt;
+
+  [% INCLUDE footer.tt %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and your task is done. You don&amp;rsquo;t have to explicitly select the reviews; you don&amp;rsquo;t have to then cross-reference to another table to find out the reviewer&amp;rsquo;s name; you don&amp;rsquo;t have to mess with HERE-documents or fill your program with print statements. You hardly have to do anything.&lt;/p&gt;
+
+&lt;p&gt;Except of course, write the &lt;code&gt;Bookworm::*&lt;/code&gt; classes in the first place, but that&amp;rsquo;s easy.&lt;/p&gt;
+
+&lt;h3 id=&#34;simple-small-classes&#34;&gt;Simple, Small Classes&lt;/h3&gt;
+
+&lt;p&gt;For convenience, we write a class containing all the SQL needed to set up our database schema. This is very useful for running tests as well as for deploying a new install of the application.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Bookworm::Setup;
+  use strict;
+  use DBI;
+
+  # Hash for table creation SQL - keys are the names of the tables,
+  # values are SQL statements to create the corresponding tables.
+  my %sql = (
+      author =&amp;gt; qq {
+          CREATE TABLE author (
+              uid   int(10) unsigned NOT NULL auto_increment,
+              name  varchar(200),
+              PRIMARY KEY (uid)
+          )
+      },
+      book =&amp;gt; qq{
+          CREATE TABLE book (
+              uid           int(10) unsigned NOT NULL auto_increment,
+              title         varchar(200),
+              first_name    varchar(200),
+              author        int(10) unsigned, # references author.uid
+              PRIMARY KEY (uid)
+          )
+      },
+      review =&amp;gt; qq{
+          CREATE TABLE review (
+              uid       int(10) unsigned NOT NULL auto_increment,
+              book      int(10) unsigned, # references book.uid
+              reviewer  int(10) unsigned, # references reviewer.uid
+              PRIMARY KEY (uid)
+          )
+      },
+      reviewer =&amp;gt; qq{
+          CREATE TABLE review (
+              uid   int(10) unsigned NOT NULL auto_increment,
+              name  varchar(200),
+              PRIMARY KEY (uid)
+          )
+      }
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This class has a single method that sets up a database conforming to the schema above. Here&amp;rsquo;s the rendered POD for it; the implementation is pretty simple. The &amp;ldquo;force_clear&amp;rdquo; option is very useful for testing.
+        setup_db( dbname      =&amp;gt; &amp;lsquo;bookworms&amp;rsquo;,
+                  dbuser      =&amp;gt; &amp;lsquo;username&amp;rsquo;,
+                  dbpass      =&amp;gt; &amp;lsquo;password&amp;rsquo;,
+                  force_clear =&amp;gt; 0            # optional, defaults to 0
+                );&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Sets up the tables. Unless &amp;quot;force_clear&amp;quot; is supplied and set to a
+  true value, any existing tables with the same names as we want to
+  create will be left alone, whether or not they have the right
+  columns etc. If &amp;quot;force_clear&amp;quot; is true, then any tables that are &amp;quot;in
+  the way&amp;quot; will be removed. _Note that this option will nuke all your
+  existing data._
+
+  The database user &amp;quot;dbuser&amp;quot; must be able to create and drop tables in
+  the database &amp;quot;dbname&amp;quot;.
+
+  Croaks on error, returns true if all OK.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, another class to wrap around the &lt;code&gt;Template&lt;/code&gt; Toolkit; we want to grab global variables like the name of the site, and so on, from a config class. (There are plenty of config modules on CPAN; you&amp;rsquo;re bound to find one you like. I quite like &lt;code&gt;Config::Tiny&lt;/code&gt;; other people swear by &lt;code&gt;AppConfig&lt;/code&gt;&amp;ndash;and since the latter is a prerequisite of the &lt;code&gt;Template&lt;/code&gt; Toolkit, you&amp;rsquo;ll have it installed already.) &lt;code&gt;Bookworms::Config&lt;/code&gt; is just a little wrapper class around &lt;code&gt;Config::Tiny&lt;/code&gt;, so if I change to a different config method later I don&amp;rsquo;t have to rewrite lots of code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Bookworms::Template;
+  use strict;
+  use Bookworms::Config;
+  use CGI;
+  use Template;
+
+  # We have one method, which returns everything you need to send to
+  # STDOUT, including the Content-Type: header.
+
+  sub output {
+      my ($class, %args) = @_;
+
+      my $config = Bookworms::Config-&amp;gt;new;
+      my $template_path = $config-&amp;gt;get_var( &amp;quot;template_path&amp;quot; );
+      my $tt = Template-&amp;gt;new( { INCLUDE_PATH =&amp;gt; $template_path } );
+
+      my $tt_vars = $args{vars} || {};
+      $tt_vars-&amp;gt;{site_name} = $config-&amp;gt;get_var( &amp;quot;site_name&amp;quot; );
+
+      my $header = CGI::header;
+
+      my $output;
+      $tt-&amp;gt;process( $args{template}, $tt_vars, \$output)
+          or croak $tt-&amp;gt;error;
+      return $header . $output;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can start writing the classes to manage our database tables. Here&amp;rsquo;s the class to handle book objects:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Bookworms::Book;
+  use base &#39;Bookworms::DBI&#39;;
+  use strict;
+
+  __PACKAGE__-&amp;gt;set_up_table( &amp;quot;book&amp;quot; );
+  __PACKAGE__-&amp;gt;has_a( author =&amp;gt; &amp;quot;Bookworms::Author&amp;quot; );
+  __PACKAGE__-&amp;gt;has_many( &amp;quot;reviews&amp;quot;,
+                         &amp;quot;Bookworms::Review&amp;quot; =&amp;gt; &amp;quot;book&amp;quot; );
+
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yes, that&amp;rsquo;s all you need. This simple class, by its ultimate inheritance from &lt;code&gt;Class::DBI&lt;/code&gt;, has auto-created constructors and accessors for every aspect of a book as defined in our database schema. And moreover, because we&amp;rsquo;ve told it (using &lt;code&gt;has_a&lt;/code&gt;) that the &lt;code&gt;author&lt;/code&gt; column in the &lt;code&gt;book&lt;/code&gt; table is actually a foreign key for the primary key of the table modeled by &lt;code&gt;Bookworms::Author&lt;/code&gt;, when we use the &lt;code&gt;-&amp;gt;author&lt;/code&gt; accessor we actually get a &lt;code&gt;Bookworms::Author&lt;/code&gt; object, which we can then call methods on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $hobbit = Bookworms::Book-&amp;gt;search( title =&amp;gt; &amp;quot;The Hobbit&amp;quot; );
+  print &amp;quot;The Hobbit was written by &amp;quot; . $hobbit-&amp;gt;author-&amp;gt;name;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are a couple of supporting classes that we need to write, but they&amp;rsquo;re not complicated either.&lt;/p&gt;
+
+&lt;p&gt;First a base class, as with all &lt;code&gt;Class::DBI&lt;/code&gt; applications, to set the database details:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Bookworms::DBI;
+  use base &amp;quot;Class::DBI::mysql&amp;quot;;
+
+  __PACKAGE__-&amp;gt;set_db( &amp;quot;Main&amp;quot;, &amp;quot;dbi:mysql:bookworms&amp;quot;,
+    &amp;quot;username&amp;quot;, &amp;quot;password&amp;quot; );
+
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our base class inherits from &lt;code&gt;Class::DBI::mysql&lt;/code&gt; instead of plain &lt;code&gt;Class::DBI&lt;/code&gt;, so we can save ourselves the trouble of directly specifying the table columns for each of our database tables&amp;ndash;the database-specific base classes will auto-create a &lt;code&gt;set_up_table&lt;/code&gt; method to handle all this for you.&lt;/p&gt;
+
+&lt;p&gt;At the time of writing, base classes for MySQL, PostgreSQL, Oracle, and SQLite are available on CPAN. There&amp;rsquo;s also &lt;code&gt;Class::DBI::BaseDSN&lt;/code&gt;, which allows you to specify the database type at runtime.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll also want a class for each of the author, review, and reviewer tables, but these are even simpler than the &lt;code&gt;Book&lt;/code&gt; class. For example, the author class could be as trivial as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Bookworms::Author;
+  use base &#39;Bookworms::DBI&#39;;
+  use strict;
+
+  __PACKAGE__-&amp;gt;set_up_table( &amp;quot;author&amp;quot; );
+
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we wanted to be able to access all the books by a given author, we could add the single line&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  __PACKAGE__-&amp;gt;has_many( &amp;quot;books&amp;quot;,
+                         &amp;quot;Bookworms::Book&amp;quot; =&amp;gt; &amp;quot;author&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and an accessor to return an array of &lt;code&gt;Bookworms::Book&lt;/code&gt; objects would be automatically created, to be used like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $author = Bookworms::Author-&amp;gt;search( name =&amp;gt; &amp;quot;J K Rowling&amp;quot; );
+  my @books = $author-&amp;gt;books;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or indeed:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;h1&amp;gt;[% author.name %]&amp;lt;/h1&amp;gt;
+
+  &amp;lt;ul&amp;gt;
+    [% FOREACH book = author.books %]
+      &amp;lt;li&amp;gt;[% book.title %]&amp;lt;/li&amp;gt;
+    [% END %]
+  &amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Simple, small, almost trivial classes, taking a minute or two each to write.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-does-this-get-me&#34;&gt;What Does This Get Me?&lt;/h3&gt;
+
+&lt;p&gt;The immediate benefits of all this are obvious:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You don&amp;rsquo;t have to mess about with HTML, since the very simplistic use of the &lt;code&gt;Template&lt;/code&gt; Toolkit means that templates are comprehensible to competent web designers.&lt;/li&gt;
+&lt;li&gt;You don&amp;rsquo;t have to maintain classes full of copy-and-paste code, since the repetitive programming tasks like creating constructors and simple accessors are done for you.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A large hidden benefit is testing. Since the actual CGI scripts&amp;ndash;which can be a pain to test&amp;ndash;are so simple, you can concentrate most of your energy on testing the underlying modules.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s probably worth writing a couple of simple tests to make sure that you&amp;rsquo;ve set up your classes the way you intended to, particularly in your first couple of forays into &lt;code&gt;Class::DBI&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Test::More tests =&amp;gt; 5;
+  use strict;
+
+  use_ok( &amp;quot;Bookworms::Author&amp;quot; );
+  use_ok( &amp;quot;Bookworms::Book&amp;quot; );
+  my $author = Bookworms::Author-&amp;gt;create({ name =&amp;gt; &amp;quot;Isaac Asimov&amp;quot; });
+  isa_ok( $author, &amp;quot;Bookworms::Author&amp;quot; );
+  my $book = Bookworms::Book-&amp;gt;create({ title  =&amp;gt; &amp;quot;Foundation&amp;quot;,
+                                       author =&amp;gt; $author });
+  isa_ok( $book, &amp;quot;Bookworms::Book&amp;quot; );
+  is( $book-&amp;gt;author-&amp;gt;name, &amp;quot;Isaac Asimov&amp;quot;, &amp;quot;right author&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, the big testing win with this technique of separating out the heavy lifting from the CGI scripts into modules is when you&amp;rsquo;d like to add something more complicated. Say, for example, fuzzy matching. It&amp;rsquo;s well known that people can&amp;rsquo;t spell, and you&amp;rsquo;d like someone typing in &amp;ldquo;Isaac Assimov&amp;rdquo; to find the author they&amp;rsquo;re looking for. So, let&amp;rsquo;s process the author names as we create the author objects, and store some kind of canonicalized form in the database.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Class::DBI&lt;/code&gt; allows you to define &amp;ldquo;triggers&amp;rdquo;&amp;ndash;methods that are called at given points during the lifetime of an object. We&amp;rsquo;ll want to use an &lt;code&gt;after_create&lt;/code&gt; trigger, which is called after an object has been created and stored in the database. We use this in preference to a &lt;code&gt;before_create&lt;/code&gt; trigger, since we want to know the uid of the object, and this is only created (via the auto_increment primary key) once the object has been written to the database.&lt;/p&gt;
+
+&lt;p&gt;We use &lt;code&gt;Search::InvertedIndex&lt;/code&gt; to store the canonicalized names, for quick access. We start with a very simple canonicalization&amp;ndash;stripping out vowels and collapsing repeated letters. (I&amp;rsquo;ve found that this can pick up about half of name misspellings found in the wild, which is pretty impressive.)&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll write a couple of tests before we move on to code. Here are some that check that our class is doing what we told it to&amp;ndash;removing vowels and collapsing repeated consonants.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Test::More tests =&amp;gt; 2;
+  use strict;
+
+  use Bookworms::Author;
+
+  my $author = Bookworms::Author-&amp;gt;create({ name =&amp;gt; &amp;quot;Isaac Asimov&amp;quot; });
+  my @matches = Bookworms::Author-&amp;gt;fuzzy_match( name =&amp;gt; &amp;quot;asemov&amp;quot; );
+  is_deeply( \@matches, [ $author ],
+    &amp;quot;fuzzy matching catches wrong vowels&amp;quot; );
+  @matches = Bookworms::Author-&amp;gt;fuzzy_match(
+    name =&amp;gt; &amp;quot;assimov&amp;quot; );
+  is_deeply( \@matches, [ $author ],
+    &amp;quot;fuzzy matching catches repeated letters&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We should also write some other tests to run our algorithms over various misspellings that we&amp;rsquo;ve captured from actual users, to give an idea of whether &amp;ldquo;what we told our class to do&amp;rdquo; is the right thing.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the first addition to the &lt;code&gt;Bookworms::Author&lt;/code&gt; class, to store the indexed data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Search::InvertedIndex;
+
+  my $database = Search::InvertedIndex::DB::Mysql-&amp;gt;new(
+                     -db_name    =&amp;gt; &amp;quot;bookworms&amp;quot;,
+                     -username   =&amp;gt; &amp;quot;username&amp;quot;,
+                     -password   =&amp;gt; &amp;quot;password&amp;quot;,
+                     -hostname   =&amp;gt; &amp;quot;&amp;quot;,
+                     -table_name =&amp;gt; &amp;quot;sii_author&amp;quot;,
+                     -lock_mode  =&amp;gt; &amp;quot;EX&amp;quot;
+    ) or die &amp;quot;Couldn&#39;t set up db&amp;quot;;
+
+  my $map = Search::InvertedIndex-&amp;gt;new( -database =&amp;gt; $database )
+    or die &amp;quot;Couldn&#39;t set up map&amp;quot;;
+  $map-&amp;gt;add_group( -group =&amp;gt; &amp;quot;author_name&amp;quot; );
+
+  __PACKAGE__-&amp;gt;add_trigger( after_create =&amp;gt; sub {
+      my $self = shift;
+      my $update = Search::InvertedIndex::Update-&amp;gt;new(
+          -group =&amp;gt; &amp;quot;author_name&amp;quot;,
+          -index =&amp;gt; $self-&amp;gt;uid,
+          -data  =&amp;gt; $self-&amp;gt;name,
+           -keys  =&amp;gt; { map { $self-&amp;gt;_canonicalise($_) =&amp;gt; 1 }
+                       split(/\s+/, $self-&amp;gt;name)
+                     }
+          );
+          $map-&amp;gt;update( -update =&amp;gt; $update );
+      }
+  } );
+
+  sub _canonicalise {
+      my ($class, $word) = @_;
+      return &amp;quot;&amp;quot; unless $word;
+      $word = lc($word);
+      $word =~ s/[aeiou]//g;    # remove vowels
+      $word =~ s/(\w)\1+/$1/eg; # collapse doubled
+                                # (or tripled, etc) letters
+      return $word;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(We&amp;rsquo;ll also want similar triggers for &lt;code&gt;after_update&lt;/code&gt; and &lt;code&gt;after_delete&lt;/code&gt;, in order that our indexing is kept up to date with our data.)&lt;/p&gt;
+
+&lt;p&gt;Then we can write the fuzzy_matching method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub fuzzy_match {
+      my ($class, %args) = @_;
+      return () unless $args{name};
+      my @terms = map { $class-&amp;gt;_canonicalise($_) =&amp;gt; 1 }
+                        split(/\s+/, $args{name});
+      my @leaves;
+      foreach my $term (@terms) {
+          push @leaves, Search::InvertedIndex::Query::Leaf-&amp;gt;new(
+              -key   =&amp;gt; $term,
+              -group =&amp;gt; &amp;quot;author_name&amp;quot; );
+      }
+
+      my $query = Search::InvertedIndex::Query-&amp;gt;new( -logic =&amp;gt; &#39;and&#39;,
+                                                     -leafs =&amp;gt; \@leaves );
+      my $result = $map-&amp;gt;search( -query =&amp;gt; $query );
+
+      my @matches;
+      my $num_results = $result-&amp;gt;number_of_index_entries || 0;
+      if ( $num_results ) {
+          for my $i ( 1 .. $num_results ) {
+              my ($index, $data) = $result-&amp;gt;entry( -number =&amp;gt; $i - 1 );
+              push @matches, $data;
+          }
+      }
+
+      return @matches;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(The matching method can be improved. I&amp;rsquo;ve found that neither &lt;code&gt;Text::Soundex&lt;/code&gt; nor &lt;code&gt;Text::Metaphone&lt;/code&gt; are much of an improvement over the simple approach already detailed, but &lt;code&gt;Text::DoubleMetaphone&lt;/code&gt; is definitely worth plugging in, to catch misspellings such as Nicolas/Nicholas and Asimov/Azimof.)&lt;/p&gt;
+
+&lt;p&gt;There are plenty of other features that our little web application would benefit from, but I shall leave those as an exercise for the reader. I hope I&amp;rsquo;ve given you some insight into my current preferred web development techniques&amp;ndash;and I&amp;rsquo;d love to see a finished &lt;code&gt;Bookworms&lt;/code&gt; application if it does scratch anyone&amp;rsquo;s itch.&lt;/p&gt;
+
+&lt;h3 id=&#34;see-also&#34;&gt;See Also&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Class::DBI&#34;&gt;Class::DBI&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;The Template Toolkit&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Search::InvertedIndex&#34;&gt;Search::InvertedIndex&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Text::DoubleMetaphone&#34;&gt;Text::DoubleMetaphone&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

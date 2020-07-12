@@ -1,0 +1,782 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mod Perl Shared Memory on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/mod-perl-shared-memory/</link>
+    <description>Recent content in Mod Perl Shared Memory on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 04 Dec 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/mod-perl-shared-memory/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Improving mod_perl Sites&#39; Performance: Part 5</title>
+      <link>http://localhost:1313/pub/2002/12/04/mod_perl.html/</link>
+      <pubDate>Wed, 04 Dec 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/12/04/mod_perl.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-sharing-memory-sharing-memory-span&#34;&gt;&lt;span id=&#34;sharing_memory&#34;&gt;Sharing Memory&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;As we have learned in the previous article, sharing memory helps us save memory with mod_perl, giving us a huge speed increase; but we pay the price with a big memory footprint. I presented a few techniques to save memory by trying to share more of it. In this article, we will see other techniques allowing you to save even more memory.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-preloading-registry-scripts-at-server-startup-preloading-registry-scripts-at-server-startup-span&#34;&gt;&lt;span id=&#34;preloading_registry_scripts_at_server_startup&#34;&gt;Preloading Registry Scripts at Server Startup&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;What happens if you find yourself stuck with Perl CGI scripts and you cannot or don&amp;rsquo;t want to move most of the stuff into modules to benefit from modules preloading, so the code will be shared by the children? Luckily, you can preload scripts as well. This time the &lt;code&gt;Apache::RegistryLoader&lt;/code&gt; module comes to your aid. &lt;code&gt;Apache::RegistryLoader&lt;/code&gt; compiles &lt;code&gt;Apache::Registry&lt;/code&gt; scripts at server startup.&lt;/p&gt;
+
+&lt;p&gt;For example, to preload the script &lt;em&gt;/perl/test.pl&lt;/em&gt;, which is in fact the file &lt;em&gt;/home/httpd/perl/test.pl&lt;/em&gt;, you would do the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Apache::RegistryLoader ();
+  Apache::RegistryLoader-&amp;gt;new-&amp;gt;handler(&amp;quot;/perl/test.pl&amp;quot;,
+                            &amp;quot;/home/httpd/perl/test.pl&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You should put this code either into a &lt;code&gt;&amp;lt;Perl&amp;gt;&lt;/code&gt; section or into a startup script.&lt;/p&gt;
+
+&lt;p&gt;But what if you have a bunch of scripts located under the same directory and you don&amp;rsquo;t want to list them one by one? Take the benefit of Perl modules and put them to good use - the &lt;code&gt;File::Find&lt;/code&gt; module will do most of the work for you.&lt;/p&gt;
+
+&lt;p&gt;The following code walks the directory tree under which all &lt;code&gt;Apache::Registry&lt;/code&gt; scripts are located. For each file it encounters with the extension &lt;em&gt;.pl&lt;/em&gt;, it calls the &lt;code&gt;Apache::RegistryLoader::handler()&lt;/code&gt; method to preload the script in the parent server, before pre-forking the child processes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use File::Find qw(finddepth);
+  use Apache::RegistryLoader ();
+  {
+    my $scripts_root_dir = &amp;quot;/home/httpd/perl/&amp;quot;;
+    my $rl = Apache::RegistryLoader-&amp;gt;new;
+    finddepth
+      (
+       sub {
+         return unless /\.pl$/;
+         my $url = &amp;quot;$File::Find::dir/$_&amp;quot;;
+         $url =~ s|$scripts_root_dir/?|/|;
+         warn &amp;quot;pre-loading $url\n&amp;quot;;
+           # preload $url
+         my $status = $rl-&amp;gt;handler($url);
+         unless($status == 200) {
+           warn &amp;quot;pre-load of `$url&#39; failed, status=$status\n&amp;quot;;
+         }
+       },
+       $scripts_root_dir);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that I didn&amp;rsquo;t use the second argument to &lt;code&gt;handler()&lt;/code&gt; here, as in the first example. To make the loader smarter about the URI to filename translation, you might need to provide a &lt;code&gt;trans()&lt;/code&gt; function to translate the URI to a filename. URI to filename translation normally doesn&amp;rsquo;t happen until HTTP request time, so the module is forced to roll its own translation. If the filename is omitted and a &lt;code&gt;trans()&lt;/code&gt; function was not defined, then the loader will try using the URI relative to &lt;strong&gt;ServerRoot&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;A simple &lt;code&gt;trans()&lt;/code&gt; function can be like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub mytrans {
+    my $uri = shift;
+    $uri =~ s|^/perl/|/home/httpd/perl/|;
+    return $uri;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can easily derive the right translation by looking at the &lt;code&gt;Alias&lt;/code&gt; directive. The above &lt;code&gt;mytrans()&lt;/code&gt; function is matching our &lt;code&gt;Alias&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Alias /perl/ /home/httpd/perl/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After defining the URI to filename translation function, you should pass it during the creation of the &lt;code&gt;Apache::RegistryLoader&lt;/code&gt; object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $rl = Apache::RegistryLoader-&amp;gt;new(trans =&amp;gt; \&amp;amp;mytrans);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I won&amp;rsquo;t show any benchmarks here, since the effect is absolutely the same as with preloading modules.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-modules-initializing-at-server-startup-modules-initializing-at-server-startup-span&#34;&gt;&lt;span id=&#34;modules_initializing_at_server_startup&#34;&gt;Modules Initializing at Server Startup&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We have just learned that it&amp;rsquo;s important to preload the modules and scripts at the server startup. It turns out that it&amp;rsquo;s not enough for some modules and you have to prerun their initialization code to get more memory pages shared. Basically you will find an information about specific modules in their respective manpages. I will present a few examples of widely used modules where the code can be initialized.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-initializing-dbi-pm-initializing-dbi-pm-span&#34;&gt;&lt;span id=&#34;initializing_dbi.pm&#34;&gt;Initializing DBI.pm&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The first example is the &lt;code&gt;DBI&lt;/code&gt; module. As you know, &lt;code&gt;DBI&lt;/code&gt; works with many database drivers in the &lt;code&gt;DBD::&lt;/code&gt; namespace, such as &lt;code&gt;DBD::mysql&lt;/code&gt;. It&amp;rsquo;s not enough to preload &lt;code&gt;DBI&lt;/code&gt;; you should initialize &lt;code&gt;DBI&lt;/code&gt; with the &lt;code&gt;driver(s)&lt;/code&gt; that you are going to use (usually a single driver is used) if you want to minimize memory use after forking the child processes. Note that you want to do this under mod_perl and other environments where shared memory is important. In other circumstances, you shouldn&amp;rsquo;t initialize drivers.&lt;/p&gt;
+
+&lt;p&gt;You probably know already that under mod_perl you should use the &lt;code&gt;Apache::DBI&lt;/code&gt; module to make the connection persistent, unless you want to open a separate connection for each user &amp;ndash; in which case, you should not use this module. &lt;code&gt;Apache::DBI&lt;/code&gt; automatically loads &lt;code&gt;DBI&lt;/code&gt; and overrides some of its methods, so you should continue coding just as though you were simply using the &lt;code&gt;DBI&lt;/code&gt; module.&lt;/p&gt;
+
+&lt;p&gt;Just as with modules preloading, our goal is to find the startup environment that will lead to the smallest ``difference&amp;rdquo; between the shared and normal memory reported, which would mean a smaller total memory usage.&lt;/p&gt;
+
+&lt;p&gt;And again, in order to make it easy to measure, I will use only one child process. To do this, I will use these settings in &lt;em&gt;httpd.conf&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers 1
+  MaxSpareServers 1
+  StartServers 1
+  MaxClients 1
+  MaxRequestsPerChild 100
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;m going to run memory benchmarks on five different versions of the &lt;em&gt;startup.pl&lt;/em&gt; file. I always preload these modules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Gtop();
+  use Apache::DBI(); # preloads DBI as well
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_option&#34;&gt;option 1&lt;/span&gt;&lt;/strong&gt;&lt;br /&gt;
+Leave the file unmodified.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;option 2&lt;/strong&gt;&lt;br /&gt;
+Install MySQL driver (I will use MySQL RDBMS for our test):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DBI-&amp;gt;install_driver(&amp;quot;mysql&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s safe to use this method, since just like with &lt;code&gt;use()&lt;/code&gt;, if it can&amp;rsquo;t be installed it&amp;rsquo;ll &lt;code&gt;die()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;option 3&lt;/strong&gt;&lt;br /&gt;
+Preload MySQL driver module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use DBD::mysql;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;option 4&lt;/strong&gt;&lt;br /&gt;
+Tell &lt;code&gt;Apache::DBI&lt;/code&gt; to connect to the database when the child process starts (&lt;code&gt;ChildInitHandler&lt;/code&gt;) - no driver is preloaded before the child gets spawned!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Apache::DBI-&amp;gt;connect_on_init(&#39;DBI:mysql:test::localhost&#39;,
+                             &amp;quot;&amp;quot;,
+                             &amp;quot;&amp;quot;,
+                             {
+                              PrintError =&amp;gt; 1, # warn() on errors
+                              RaiseError =&amp;gt; 0, # don&#39;t die on error
+                              AutoCommit =&amp;gt; 1, # commit executes
+                              # immediately
+                             }
+                            )
+  or die &amp;quot;Cannot connect to database: $DBI::errstr&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is the &lt;code&gt;Apache::Registry&lt;/code&gt; test script that I have used:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  preload_dbi.pl
+  --------------
+  use strict;
+  use GTop ();
+  use DBI ();
+
+  my $dbh = DBI-&amp;gt;connect(&amp;quot;DBI:mysql:test::localhost&amp;quot;,
+                         &amp;quot;&amp;quot;,
+                         &amp;quot;&amp;quot;,
+                         {
+                          PrintError =&amp;gt; 1, # warn() on errors
+                          RaiseError =&amp;gt; 0, # don&#39;t die on error
+                          AutoCommit =&amp;gt; 1, # commit executes
+                                           # immediately
+                         }
+                        )
+    or die &amp;quot;Cannot connect to database: $DBI::errstr&amp;quot;;
+
+  my $r = shift;
+  $r-&amp;gt;send_http_header(&#39;text/plain&#39;);
+
+  my $do_sql = &amp;quot;show tables&amp;quot;;
+  my $sth = $dbh-&amp;gt;prepare($do_sql);
+  $sth-&amp;gt;execute();
+  my @data = ();
+  while (my @row = $sth-&amp;gt;fetchrow_array){
+    push @data, @row;
+  }
+  print &amp;quot;Data: @data\n&amp;quot;;
+  $dbh-&amp;gt;disconnect(); # NOP under Apache::DBI
+
+  my $proc_mem = GTop-&amp;gt;new-&amp;gt;proc_mem($$);
+  my $size  = $proc_mem-&amp;gt;size;
+  my $share = $proc_mem-&amp;gt;share;
+  my $diff  = $size - $share;
+  printf &amp;quot;%8s %8s %8s\n&amp;quot;, qw(Size Shared Diff);
+  printf &amp;quot;%8d %8d %8d (bytes)\n&amp;quot;,$size,$share,$diff;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The script opens a connection to the database &lt;em&gt;&amp;lsquo;test&amp;rsquo;&lt;/em&gt; and issues a query to learn what tables the databases has. When the data is collected and printed the connection would be closed in the regular case, but &lt;code&gt;Apache::DBI&lt;/code&gt; overrides it with empty method. When the data is processed, some code to print the memory usage follows &amp;ndash; this should already be familiar to you.&lt;/p&gt;
+
+&lt;p&gt;The server was restarted before each new test.&lt;/p&gt;
+
+&lt;p&gt;So here are the results of the five tests that were conducted, sorted by the &lt;em&gt;Diff&lt;/em&gt; column:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;After the first request:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Version     Size   Shared     Diff        Test type
+  --------------------------------------------------------------------
+        1  3465216  2621440   843776  install_driver
+        2  3461120  2609152   851968  install_driver &amp;amp; connect_on_init
+        3  3465216  2605056   860160  preload driver
+        4  3461120  2494464   966656  nothing added
+        5  3461120  2482176   978944  connect_on_init
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;After the second request (all the subsequent request showed the same results):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Version     Size   Shared    Diff         Test type
+  --------------------------------------------------------------------
+        1  3469312  2609152   860160  install_driver
+        2  3481600  2605056   876544  install_driver &amp;amp; connect_on_init
+        3  3469312  2588672   880640  preload driver
+        4  3477504  2482176   995328  nothing added
+        5  3481600  2469888  1011712  connect_on_init
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Now what do we conclude from looking at these numbers. First, we see that only after a second reload do we get the final memory footprint for a specific request in question (if you pass different arguments the memory usage might and will be different).&lt;/p&gt;
+
+&lt;p&gt;But both tables show the same pattern of memory usage. We can clearly see that the real winner is the &lt;em&gt;startup.pl&lt;/em&gt; file&amp;rsquo;s version where the MySQL driver was installed (1). Since we want to have a connection ready for the first request made to the freshly spawned child process, we generally use the second version (2), which uses somewhat more memory, but has almost the same number of shared memory pages. The third version only preloads the driver, resulting in smaller shared memory. The last two versions having nothing initialized (4) and having only the &lt;code&gt;connect_on_init()&lt;/code&gt; method used (5). The former is a little bit better than the latter, but both significantly worse than the first two versions.&lt;/p&gt;
+
+&lt;p&gt;To remind you why do we look for the smallest value in the column &lt;em&gt;diff&lt;/em&gt;, recall the real memory usage formula:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  RAM_dedicated_to_mod_perl = diff * number_of_processes
+                            + the_processes_with_largest_shared_memory
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that the smaller the diff is, the bigger the number of processes you can have using the same amount of RAM. Therefore, every 100K difference counts, when you multiply it by the number of processes. If we take the number from the version (1) vs. (4) and assume that we have 256M of memory dedicated to mod_perl processes, we will get the following numbers using the formula derived from the above formula:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;               RAM - largest_shared_size
+  N_of Procs = -------------------------
+                        Diff
+
+                268435456 - 2609152
+  (ver 1)  N =  ------------------- = 309
+                      860160
+
+                268435456 - 2469888
+  (ver 5)  N =  ------------------- = 262
+                     1011712
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So you can see the difference - 17 percent more child processes in the first version.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-initializing-cgi-pm-initializing-cgi-pm-span&#34;&gt;&lt;span id=&#34;initializing_cgi.pm&#34;&gt;Initializing CGI.pm&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;CGI.pm&lt;/code&gt; is a big module that by default postpones the compilation of its methods until they are actually needed, thus making it possible to use it under a slow mod_cgi handler without adding a big overhead. That&amp;rsquo;s not what we want under mod_perl, and if you use &lt;code&gt;CGI.pm&lt;/code&gt; you should precompile the methods that you are going to use at the server startup in addition to preloading the module. Use the compile method for that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use CGI;
+  CGI-&amp;gt;compile(&#39;:all&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;where you should replace the tag group &lt;code&gt;:all&lt;/code&gt; with the real tags and group tags that you are going to use if you want to optimize the memory usage.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m going to compare the shared memory footprint by using a script that is backward compatible with mod_cgi. You will see that you can improve the performance of these kind of scripts as well, but if you really want a fast code think about porting it to use &lt;code&gt;Apache::Request&lt;/code&gt; for the CGI interface, and some other module for HTML generation.&lt;/p&gt;
+
+&lt;p&gt;So here is the &lt;code&gt;Apache::Registry&lt;/code&gt; script that I&amp;rsquo;m going to use to make the comparison:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  preload_cgi_pm.pl
+  -----------------
+  use strict;
+  use CGI ();
+  use GTop ();
+
+  my $q = new CGI;
+  print $q-&amp;gt;header(&#39;text/plain&#39;);
+  print join &amp;quot;\n&amp;quot;, map {&amp;quot;$_ =&amp;gt; &amp;quot;.$q-&amp;gt;param($_) } $q-&amp;gt;param;
+  print &amp;quot;\n&amp;quot;;
+
+  my $proc_mem = GTop-&amp;gt;new-&amp;gt;proc_mem($$);
+  my $size  = $proc_mem-&amp;gt;size;
+  my $share = $proc_mem-&amp;gt;share;
+  my $diff  = $size - $share;
+  printf &amp;quot;%8s %8s %8s\n&amp;quot;, qw(Size Shared Diff);
+  printf &amp;quot;%8d %8d %8d (bytes)\n&amp;quot;,$size,$share,$diff;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The script initializes the &lt;code&gt;CGI&lt;/code&gt; object, sends a HTTP header and then prints all the arguments and values that were passed to the script if there were any. As usual, at the end, I print the memory usage.&lt;/p&gt;
+
+&lt;p&gt;As usual, I am going to use a single child process, using the usual settings in &lt;em&gt;httpd.conf&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers 1
+  MaxSpareServers 1
+  StartServers 1
+  MaxClients 1
+  MaxRequestsPerChild 100
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;m going to run memory benchmarks on three different versions of the &lt;em&gt;startup.pl&lt;/em&gt; file. I always preload this module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Gtop();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;option 1&lt;/strong&gt;&lt;br /&gt;
+Leave the file unmodified.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;option 2&lt;/strong&gt;&lt;br /&gt;
+Preload &lt;code&gt;CGI.pm&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use CGI ();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;option 3&lt;/strong&gt;&lt;br /&gt;
+Preload &lt;code&gt;CGI.pm&lt;/code&gt; and pre-compile the methods that I&amp;rsquo;m going to use in the script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use CGI ();
+  CGI-&amp;gt;compile(qw(header param));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The server was restarted before each new test.&lt;/p&gt;
+
+&lt;p&gt;So here are the results of the three tests that were conducted, sorted by the &lt;em&gt;Diff&lt;/em&gt; column:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;After the first request:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Version     Size   Shared     Diff        Test type
+  --------------------------------------------------------------------
+        1  3321856  2146304  1175552  not preloaded
+        2  3321856  2326528   995328  preloaded
+        3  3244032  2465792   778240  preloaded &amp;amp; methods+compiled
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;After the second request (all the subsequent request showed the same results):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Version     Size   Shared    Diff         Test type
+  --------------------------------------------------------------------
+        1  3325952  2134016  1191936 not preloaded
+        2  3325952  2314240  1011712 preloaded
+        3  3248128  2445312   802816 preloaded &amp;amp; methods+compiled
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The first version shows the results of the script execution when &lt;code&gt;CGI.pm&lt;/code&gt; wasn&amp;rsquo;t preloaded. The second version has the module preloaded. The third is when it&amp;rsquo;s both preloaded and the methods that are going to be used are precompiled at the server startup.&lt;/p&gt;
+
+&lt;p&gt;By looking at version one of the second table, we can conclude that preloading adds about 20K to the shared size. As I have mentioned at the beginning of this section, that&amp;rsquo;s how &lt;code&gt;CGI.pm&lt;/code&gt; was implemented &amp;ndash; to reduce the load overhead. This means that preloading CGI almost hardly changes anything. But if we compare the second and the third versions, then we will see a significant difference of 207K (1011712-802816), and I have only used a few methods (the &lt;em&gt;header&lt;/em&gt; method loads a few more methods transparently for a user). Imagine how much memory I&amp;rsquo;m going to save if I&amp;rsquo;m going to precompile all the methods that I&amp;rsquo;m using in other scripts that use &lt;code&gt;CGI.pm&lt;/code&gt; and do a little bit more than the script that I have used in the test.&lt;/p&gt;
+
+&lt;p&gt;But even in our simple case using the same formula, what do we see? (assuming that I have 256MB dedicated for mod_perl)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;               RAM - largest_shared_size
+  N_of Procs = -------------------------
+                        Diff
+
+                268435456 - 2134016
+  (ver 1)  N =  ------------------- = 223
+                      1191936
+
+                268435456 - 2445312
+  (ver 3)  N =  ------------------- = 331
+                     802816
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If I preload &lt;code&gt;CGI.pm&lt;/code&gt; and precompile a few methods that I use in the test script, I can have 50 percent more child processes than when I don&amp;rsquo;t preload and precompile the methods that I am going to use.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve heard that the 3.x generation of &lt;code&gt;CGI.pm&lt;/code&gt; will be less bloated, but it&amp;rsquo;s in a beta state as of this writing.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-increasing-shared-memory-with-mergemem-increasing-shared-memory-with-mergemem-span&#34;&gt;&lt;span id=&#34;increasing_shared_memory_with_mergemem&#34;&gt;Increasing Shared Memory With mergemem&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;mergemem&lt;/code&gt; is an experimental utility for linux, which looks &lt;em&gt;very&lt;/em&gt; interesting for us mod_perl users: &lt;a href=&#34;http://www.complang.tuwien.ac.at/ulrich/mergemem/&#34;&gt;http://www.complang.tuwien.ac.at/ulrich/mergemem/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;It looks like it could be run periodically on your server to find and merge duplicate pages. It won&amp;rsquo;t halt your httpds during the merge, this aspect has been taken into consideration already during the design of mergemem: Merging is not performed with one big system call. Instead most operation is in userspace, making a lot of small system calls.&lt;/p&gt;
+
+&lt;p&gt;Therefore, blocking of the system should not happen. And, if it really should turn out to take too much time you can reduce the priority of the process.&lt;/p&gt;
+
+&lt;p&gt;The worst case that can happen is this: &lt;code&gt;mergemem&lt;/code&gt; merges two pages and immediately afterward, they will be split. The split costs about the same as the time consumed by merging.&lt;/p&gt;
+
+&lt;p&gt;This software comes with a utility called &lt;code&gt;memcmp&lt;/code&gt; to tell you how much you might save.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The mod_perl site&amp;rsquo;s URL: &lt;a href=&#34;http://perl.apache.org/&#34;&gt;http://perl.apache.org/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;mergemem project &lt;a href=&#34;http://www.complang.tuwien.ac.at/ulrich/mergemem/&#34;&gt;http://www.complang.tuwien.ac.at/ulrich/mergemem/&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Improving mod_perl Sites&#39; Performance: Part 4</title>
+      <link>http://localhost:1313/pub/2002/07/30/mod_perl.html/</link>
+      <pubDate>Tue, 30 Jul 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/07/30/mod_perl.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-introduction-introduction-span&#34;&gt;&lt;span id=&#34;introduction&#34;&gt;Introduction&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If your OS supports sharing of memory (and most sane systems do), you might save a lot of RAM by sharing it between child processes. This will allow you to run more processes and hopefully better satisfy the client, without investing extra money into buying more memory.&lt;/p&gt;
+
+&lt;p&gt;This is only possible when you preload code at server startup. However, during a child process&amp;rsquo; life, its memory pages tend to become unshared. There is no way we can make Perl allocate memory so that (dynamic) variables land on different memory pages from constants, so the &lt;strong&gt;copy-on-write&lt;/strong&gt; effect will hit you almost at random.&lt;/p&gt;
+
+&lt;p&gt;If you are pre-loading many modules, you might be able to trade off the memory that stays shared against the time for an occasional fork by tuning &lt;code&gt;MaxRequestsPerChild&lt;/code&gt;. Each time a child reaches this upper limit and dies, it should release its unshared pages. The new child which replaces it will share its fresh pages until it scribbles on them.&lt;/p&gt;
+
+&lt;p&gt;The ideal is a point where your processes usually restart before too much memory becomes unshared. You should take some measurements to see if it makes a real difference, and to find the range of reasonable values. If you have success with this, tuning the value of &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; will probably be peculiar to your situation and may change with changing circumstances.&lt;/p&gt;
+
+&lt;p&gt;It is very important to understand that your goal is not to have &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; to be 10000. Having a child serving 300 requests on precompiled code is already a huge overall speedup, so if it is 100 or 10000 it probably does not really matter if you can save RAM by using a lower value.&lt;/p&gt;
+
+&lt;p&gt;Do not forget that if you preload most of your code at server startup, the newly forked child gets ready very very fast, because it inherits most of the preloaded code and the perl interpreter from the parent process.&lt;/p&gt;
+
+&lt;p&gt;During the life of the child, its memory pages (which aren&amp;rsquo;t really its own to start with, it uses the parent&amp;rsquo;s pages) gradually get `dirty&amp;rsquo; - variables which were originally inherited and shared are updated or modified &amp;ndash; and the &lt;em&gt;copy-on-write&lt;/em&gt; happens. This reduces the number of shared memory pages, thus increasing the memory requirement. Killing the child and spawning a new one allows the new child to get back to the pristine shared memory of the parent process.&lt;/p&gt;
+
+&lt;p&gt;The recommendation is that &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; should not be too large, otherwise you lose some of the benefit of sharing memory.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-how-shared-is-my-memory-how-shared-is-my-memory-span&#34;&gt;&lt;span id=&#34;how_shared_is_my_memory&#34;&gt;How Shared Is My Memory?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;You&amp;rsquo;ve probably noticed that the word shared is repeated many times in relation to &lt;code&gt;mod_perl&lt;/code&gt;. Indeed, shared memory might save you a lot of money, since with sharing in place you can run many more servers than without it.&lt;/p&gt;
+
+&lt;p&gt;How much shared memory do you have? You can see it by either using the memory utility that comes with your system or you can deploy the &lt;code&gt;GTop&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use GTop ();
+  print &amp;quot;Shared memory of the current process: &amp;quot;,
+    GTop-&amp;gt;new-&amp;gt;proc_mem($$)-&amp;gt;share,&amp;quot;\n&amp;quot;;
+
+  print &amp;quot;Total shared memory: &amp;quot;,
+    GTop-&amp;gt;new-&amp;gt;mem-&amp;gt;share,&amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you watch the output of the &lt;code&gt;top&lt;/code&gt; utility, don&amp;rsquo;t confuse the &lt;code&gt;RES&lt;/code&gt; (or &lt;code&gt;RSS&lt;/code&gt;) columns with the &lt;code&gt;SHARE&lt;/code&gt; column. &lt;code&gt;RES&lt;/code&gt; is RESident memory, which is the size of pages currently swapped in.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-calculating-real-memory-usage-calculating-real-memory-usage-span&#34;&gt;&lt;span id=&#34;calculating_real_memory_usage&#34;&gt;Calculating Real Memory Usage&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I have shown how to measure the size of the process&amp;rsquo; shared memory, but we still want to know what the real memory usage is. Obviously this cannot be calculated simply by adding up the memory size of each process because that wouldn&amp;rsquo;t account for the shared memory.&lt;/p&gt;
+
+&lt;p&gt;On the other hand we cannot just subtract the shared memory size from the total size to get the real memory usage numbers, because in reality each process has a different history of processed requests, therefore the shared memory is not the same for all processes.&lt;/p&gt;
+
+&lt;p&gt;So how do we measure the real memory size used by the server we run? It&amp;rsquo;s probably too difficult to give the exact number, but I&amp;rsquo;ve found a way to get a fair approximation, which was verified in the following way. I calculated the real memory used by a technique you will see in the moment, and then stopped the Apache server and saw that the memory usage report indicated that the total used memory went down by almost the same number I&amp;rsquo;ve calculated. Note that some OSs do smart memory pages caching so you may not see the memory usage decrease as soon as it actually happens when you quit the application.&lt;/p&gt;
+
+&lt;p&gt;This is a technique I&amp;rsquo;ve used:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;For each process sum up the difference between shared and system memory. To calculate a difference for a single process use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use GTop;
+  my $proc_mem = GTop-&amp;gt;new-&amp;gt;proc_mem($$);
+  my $diff     = $proc_mem-&amp;gt;size - $proc_mem-&amp;gt;share;
+  print &amp;quot;Difference is $diff bytes\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Now if we add the shared memory size of the process with maximum shared memory, we will get all the memory that actually is being used by all httpd processes, except for the parent process.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Finally, add the size of the parent process.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Please note that this might be incorrect for your system, so you use this number on your own risk.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve used this technique to display real memory usage in the module &lt;code&gt;Apache::VMonitor&lt;/code&gt; (see the previous article), so instead of trying to manually calculate this number you can use this module to do it automatically. In fact in the calculations used in this module there is no separation between the parent and child processes, they are all counted indifferently using the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use GTop ();
+  my $gtop = GTop-&amp;gt;new;
+  my $total_real = 0;
+  my $max_shared = 0;
+  # @mod_perl_pids is initialized by Apache::Scoreboard,
+  # irrelevant here
+  my @mod_perl_pids = some_code();
+  for my $pid (@mod_perl_pids)
+    my $proc_mem = $gtop-&amp;gt;proc_mem($pid);
+    my $size     = $proc_mem-&amp;gt;size($pid);
+    my $share    = $proc_mem-&amp;gt;share($pid);
+    $total_real += $size - $share;
+    $max_shared  = $share if $max_shared &amp;lt; $share;
+  }
+  $total_real += $max_shared;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So as you see we that we accumulate the difference between the shared and reported memory:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $total_real  += $size-$share;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and at the end add the biggest shared process size:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $total_real += $max_shared;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So now &lt;code&gt;$total_real&lt;/code&gt; contains approximately the really used memory.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-are-my-variables-shared-are-my-variables-shared-span&#34;&gt;&lt;span id=&#34;are_my_variables_shared&#34;&gt;Are My Variables Shared?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;How do you find out if the code you write is shared between the processes or not? The code should be shared, except where it is on a memory page with variables that change. Some variables are read-only in usage and never change. For example, if you have some variables that use a lot of memory and you want them to be read-only. As you know the variable becomes unshared when the process modifies its value.&lt;/p&gt;
+
+&lt;p&gt;So imagine that you have this 10Mb in-memory database that resides in a single variable, you perform various operations on it and want to make sure that the variable is still shared. For example if you do some matching regular expression (regex) processing on this variable and want to use the &lt;code&gt;pos()&lt;/code&gt; function, will it make the variable unshared or not?&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;Apache::Peek&lt;/code&gt; module comes to rescue. Let&amp;rsquo;s write a module called &lt;em&gt;MyShared.pm&lt;/em&gt; which we preload at server startup, so all the variables of this module are initially shared by all children.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MyShared.pm
+  ---------
+  package MyShared;
+  use Apache::Peek;
+
+  my $readonly = &amp;quot;Chris&amp;quot;;
+
+  sub match    { $readonly =~ /\w/g;               }
+  sub print_pos{ print &amp;quot;pos: &amp;quot;,pos($readonly),&amp;quot;\n&amp;quot;;}
+  sub dump     { Dump($readonly);                  }
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This module declares the package &lt;code&gt;MyShared&lt;/code&gt;, loads the &lt;code&gt;Apache::Peek&lt;/code&gt; module and defines the lexically scoped &lt;code&gt;$readonly&lt;/code&gt; variable which is supposed to be a variable of large size (think about a huge hash data structure), but we will use a small one to simplify this example.&lt;/p&gt;
+
+&lt;p&gt;The module also defines three subroutines: &lt;code&gt;match()&lt;/code&gt; that does a simple character matching, &lt;code&gt;print_pos()&lt;/code&gt; that prints the current position of the matching engine inside the string that was last matched and finally the &lt;code&gt;dump()&lt;/code&gt; subroutine that calls the &lt;code&gt;Apache::Peek&lt;/code&gt; module&amp;rsquo;s &lt;code&gt;Dump()&lt;/code&gt; function to dump a raw Perl data-type of the &lt;code&gt;$readonly&lt;/code&gt; variable.&lt;/p&gt;
+
+&lt;p&gt;Here is the script that prints the process ID (PID) and calls all three functions. The goal is to check whether &lt;code&gt;pos()&lt;/code&gt; makes the variable &lt;em&gt;dirty&lt;/em&gt; and therefore unshared.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  share_test.pl
+  -------------
+  use MyShared;
+  print &amp;quot;Content-type: text/plain\r\n\r\n&amp;quot;;
+  print &amp;quot;PID: $$\n&amp;quot;;
+  MyShared::match();
+  MyShared::print_pos();
+  MyShared::dump();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Before you restart the server, in &lt;em&gt;httpd.conf&lt;/em&gt; set:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MaxClients 2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;for easier tracking. You need at least two servers to compare the print outs of the test program. Having more than two can make the comparison process harder.&lt;/p&gt;
+
+&lt;p&gt;Now open two browser windows and issue the request for this script several times in both windows, so you get different processes PIDs reported in the two windows and each process has processed a different number of requests to the &lt;em&gt;share_test.pl&lt;/em&gt; script.&lt;/p&gt;
+
+&lt;p&gt;In the first window you will see something like that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PID: 27040
+  pos: 1
+  SV = PVMG(0x853db20) at 0x8250e8c
+    REFCNT = 3
+    FLAGS = (PADBUSY,PADMY,SMG,POK,pPOK)
+    IV = 0
+    NV = 0
+    PV = 0x8271af0 &amp;quot;Chris&amp;quot;\0
+    CUR = 5
+    LEN = 6
+    MAGIC = 0x853dd80
+      MG_VIRTUAL = &amp;amp;vtbl_mglob
+      MG_TYPE = &#39;g&#39;
+      MG_LEN = 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And in the second window:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PID: 27041
+  pos: 2
+  SV = PVMG(0x853db20) at 0x8250e8c
+    REFCNT = 3
+    FLAGS = (PADBUSY,PADMY,SMG,POK,pPOK)
+    IV = 0
+    NV = 0
+    PV = 0x8271af0 &amp;quot;Chris&amp;quot;\0
+    CUR = 5
+    LEN = 6
+    MAGIC = 0x853dd80
+      MG_VIRTUAL = &amp;amp;vtbl_mglob
+      MG_TYPE = &#39;g&#39;
+      MG_LEN = 2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We see that all the addresses of the supposedly big structure are the same (&lt;code&gt;0x8250e8c&lt;/code&gt; and &lt;code&gt;0x8271af0&lt;/code&gt;), therefore the variable data structure is almost completely shared. The only difference is in &lt;code&gt;SV.MAGIC.MG_LEN&lt;/code&gt; record, which is not shared.&lt;/p&gt;
+
+&lt;p&gt;So given that the &lt;code&gt;$readonly&lt;/code&gt; variable is a big one, its value is still shared between the processes, while part of the variable data structure is non-shared. But it&amp;rsquo;s almost insignificant because it takes a very little memory space.&lt;/p&gt;
+
+&lt;p&gt;Now if you need to compare more than variable, doing it by hand can be quite time consuming and error prune. Therefore it&amp;rsquo;s better to correct the testing script to dump the Perl data-types into files (e.g &lt;em&gt;/tmp/dump.$$&lt;/em&gt;, where &lt;code&gt;$$&lt;/code&gt; is the PID of the process) and then using &lt;code&gt;diff(1)&lt;/code&gt; utility to see whether there is some difference.&lt;/p&gt;
+
+&lt;p&gt;So correcting the &lt;code&gt;dump()&lt;/code&gt; function to write the info to the file will do the job. Notice that I use &lt;code&gt;Devel::Peek&lt;/code&gt; and not &lt;code&gt;Apache::Peek&lt;/code&gt;. The both are almost the same, but &lt;code&gt;Apache::Peek&lt;/code&gt; prints it output directly to the opened socket so I cannot intercept and redirect the result to the file. Since &lt;code&gt;Devel::Peek&lt;/code&gt; dumps results to the STDERR stream I can use the old trick of saving away the default STDERR handler, and open a new filehandler using the STDERR. In our example when &lt;code&gt;Devel::Peek&lt;/code&gt; now prints to STDERR it actually prints to our file. When I&amp;rsquo;m done, I make sure to restore the original STDERR filehandler.&lt;/p&gt;
+
+&lt;p&gt;So this is the resulting code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MyShared2.pm
+  ---------
+  package MyShared2;
+  use Devel::Peek;
+
+  my $readonly = &amp;quot;Chris&amp;quot;;
+
+  sub match    { $readonly =~ /\w/g;               }
+  sub print_pos{ print &amp;quot;pos: &amp;quot;,pos($readonly),&amp;quot;\n&amp;quot;;}
+  sub dump{
+    my $dump_file = &amp;quot;/tmp/dump.$$&amp;quot;;
+    print &amp;quot;Dumping the data into $dump_file\n&amp;quot;;
+    open OLDERR, &amp;quot;&amp;gt;&amp;amp;STDERR&amp;quot;;
+    open STDERR, &amp;quot;&amp;gt;&amp;quot;.$dump_file or die &amp;quot;Can&#39;t open $dump_file: $!&amp;quot;;
+    Dump($readonly);
+    close STDERR ;
+    open STDERR, &amp;quot;&amp;gt;&amp;amp;OLDERR&amp;quot;;
+  }
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When if I modify the code to use the modified module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  share_test2.pl
+  -------------
+  use MyShared2;
+  print &amp;quot;Content-type: text/plain\r\n\r\n&amp;quot;;
+  print &amp;quot;PID: $$\n&amp;quot;;
+  MyShared2::match();
+  MyShared2::print_pos();
+  MyShared2::dump();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And run it as before (with MaxClients 2), two dump files will be created in the directory &lt;em&gt;/tmp&lt;/em&gt;. In our test these were created as &lt;em&gt;/tmp/dump.1224&lt;/em&gt; and &lt;em&gt;/tmp/dump.1225&lt;/em&gt;. When I run diff(1):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % diff /tmp/dump.1224 /tmp/dump.1225
+  12c12
+  &amp;lt;       MG_LEN = 1
+  ---
+  &amp;gt;       MG_LEN = 2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We see that the two padlists (of the variable &lt;code&gt;readonly&lt;/code&gt;) are different, as we have observed before when I did a manual comparison.&lt;/p&gt;
+
+&lt;p&gt;In fact we if we think about these results again, we get to a conclusion that there is no need for two processes to find out whether the variable gets modified (and therefore unshared). It&amp;rsquo;s enough to check the datastructure before the script was executed and after that. You can modify the &lt;code&gt;MyShared2&lt;/code&gt; module to dump the padlists into a different file after each invocation and than to run the &lt;code&gt;diff(1)&lt;/code&gt; on the two files.&lt;/p&gt;
+
+&lt;p&gt;If you want to watch whether some lexically scoped (with &lt;code&gt;my())&lt;/code&gt; variables in your &lt;code&gt;Apache::Registry&lt;/code&gt; script inside the same process get changed between invocations you can use the &lt;code&gt;Apache::RegistryLexInfo&lt;/code&gt; module instead. Since it does exactly this: it makes a snapshot of the padlist before and after the code execution and shows the difference between the two. This specific module was written to work with &lt;code&gt;Apache::Registry&lt;/code&gt; scripts so it won&amp;rsquo;t work for loaded modules. Use the technique I have described above for any type of variables in modules and scripts.&lt;/p&gt;
+
+&lt;p&gt;Surely another way of ensuring that a scalar is readonly and therefore sharable is to either use the &lt;code&gt;constant&lt;/code&gt; pragma or &lt;code&gt;readonly&lt;/code&gt; pragma. But then you won&amp;rsquo;t be able to make calls that alter the variable even a little, like in the example that I&amp;rsquo;ve just showen, because it will be a true constant variable and you will get compile time error if you try this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MyConstant.pm
+  -------------
+  package MyConstant;
+  use constant readonly =&amp;gt; &amp;quot;Chris&amp;quot;;
+
+  sub match    { readonly =~ /\w/g;               }
+  sub print_pos{ print &amp;quot;pos: &amp;quot;,pos(readonly),&amp;quot;\n&amp;quot;;}
+  1;
+
+  % perl -c MyConstant.pm
+
+  Can&#39;t modify constant item in match position at MyConstant.pm line
+  5, near &amp;quot;readonly)&amp;quot;
+  MyConstant.pm had compilation errors.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However this code is just right:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MyConstant1.pm
+  -------------
+  package MyConstant1;
+  use constant readonly =&amp;gt; &amp;quot;Chris&amp;quot;;
+
+  sub match { readonly =~ /\w/g; }
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-preloading-perl-modules-at-server-startup-preloading-perl-modules-at-server-startup-span&#34;&gt;&lt;span id=&#34;preloading_perl_modules_at_server_startup&#34;&gt;Preloading Perl Modules at Server Startup&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;You can use the &lt;code&gt;PerlRequire&lt;/code&gt; and &lt;code&gt;PerlModule&lt;/code&gt; directives to load commonly used modules such as &lt;code&gt;CGI.pm&lt;/code&gt;, &lt;code&gt;DBI&lt;/code&gt; and etc., when the server is started. On most systems, server children will be able to share the code space used by these modules. Just add the following directives into &lt;em&gt;httpd.conf&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlModule CGI
+  PerlModule DBI
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But an even better approach is to create a separate startup file (where you code in plain perl) and put there things like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use DBI ();
+  use Carp ();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Don&amp;rsquo;t forget to prevent importing of the symbols exported by default by the module you are going to preload, by placing empty parentheses &lt;code&gt;()&lt;/code&gt; after a module&amp;rsquo;s name. Unless you need some of these in the startup file, which is unlikely. This will save you a few more memory bits.&lt;/p&gt;
+
+&lt;p&gt;Then you &lt;code&gt;require()&lt;/code&gt; this startup file in &lt;em&gt;httpd.conf&lt;/em&gt; with the &lt;code&gt;PerlRequire&lt;/code&gt; directive, placing it before the rest of the mod_perl configuration directives:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlRequire /path/to/start-up.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;CGI.pm&lt;/code&gt; is a special case. Ordinarily &lt;code&gt;CGI.pm&lt;/code&gt; autoloads most of its functions on an as-needed basis. This speeds up the loading time by deferring the compilation phase. When you use mod_perl, FastCGI or another system that uses a persistent Perl interpreter, you will want to precompile the functions at initialization time. To accomplish this, call the package function &lt;code&gt;compile()&lt;/code&gt; like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use CGI ();
+  CGI-&amp;gt;compile(&#39;:all&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The arguments to &lt;code&gt;compile()&lt;/code&gt; are a list of method names or sets, and are identical to those accepted by the &lt;code&gt;use()&lt;/code&gt; and &lt;code&gt;import()&lt;/code&gt; operators. Note that in most cases you will want to replace &lt;code&gt;&#39;:all&#39;&lt;/code&gt; with the tag names that you actually use in your code, since generally you only use a subset of them.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s conduct a memory usage test to prove that preloading, reduces memory requirements.&lt;/p&gt;
+
+&lt;p&gt;In order to have an easy measurement I will use only one child process, therefore I will use this setting:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers 1
+  MaxSpareServers 1
+  StartServers 1
+  MaxClients 1
+  MaxRequestsPerChild 100
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;m going to use the &lt;code&gt;Apache::Registry&lt;/code&gt; script &lt;em&gt;memuse.pl&lt;/em&gt; which consists of two parts: the first one preloads a bunch of modules (that most of them aren&amp;rsquo;t going to be used), the second part reports the memory size and the shared memory size used by the single child process that I start. and of course it prints the difference between the two sizes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  memuse.pl
+  ---------
+  use strict;
+  use CGI ();
+  use DB_File ();
+  use LWP::UserAgent ();
+  use Storable ();
+  use DBI ();
+  use GTop ();
+
+  my $r = shift;
+  $r-&amp;gt;send_http_header(&#39;text/plain&#39;);
+  my $proc_mem = GTop-&amp;gt;new-&amp;gt;proc_mem($$);
+  my $size  = $proc_mem-&amp;gt;size;
+  my $share = $proc_mem-&amp;gt;share;
+  my $diff  = $size - $share;
+  printf &amp;quot;%10s %10s %10s\n&amp;quot;, qw(Size Shared Difference);
+  printf &amp;quot;%10d %10d %10d (bytes)\n&amp;quot;,$size,$share,$diff;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First I restart the server and execute this CGI script when none of the above modules preloaded. Here is the result:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     Size   Shared     Diff
+  4706304  2134016  2572288 (bytes)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I take all the modules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use strict;
+  use CGI ();
+  use DB_File ();
+  use LWP::UserAgent ();
+  use Storable ();
+  use DBI ();
+  use GTop ();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and copy them into the startup script, so they will get preloaded. The script remains unchanged. I restart the server and execute it again. I get the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     Size   Shared    Diff
+  4710400  3997696  712704 (bytes)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s put the two results into one table:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Preloading    Size   Shared     Diff
+     Yes     4710400  3997696   712704 (bytes)
+      No     4706304  2134016  2572288 (bytes)
+  --------------------------------------------
+  Difference    4096  1863680 -1859584
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can clearly see that when the modules weren&amp;rsquo;t preloaded the shared memory pages size, were about 1864Kb smaller relative to the case where the modules were preloaded.&lt;/p&gt;
+
+&lt;p&gt;Assuming that you have had 256M dedicated to the web server, if you didn&amp;rsquo;t preload the modules, you could have:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  268435456 = X * 2572288 + 2134016
+
+  X = (268435456 - 2134016) / 2572288 = 103
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;103 servers.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s calculate the same thing with modules preloaded:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  268435456 = X * 712704 + 3997696
+
+  X = (268435456 - 3997696) / 712704 = 371
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can have almost 4 times more servers!!!&lt;/p&gt;
+
+&lt;p&gt;Remember that I have mentioned before that memory pages gets dirty and the size of the shared memory gets smaller with time? So I have presented the ideal case where the shared memory stays intact. Therefore the real numbers will be a little bit different, but not far from the numbers in our example.&lt;/p&gt;
+
+&lt;p&gt;Also it&amp;rsquo;s obvious that in your case it&amp;rsquo;s possible that the process size will be bigger and the shared memory will be smaller, since you will use different modules and a different code, so you won&amp;rsquo;t get this fantastic ratio, but this example is certainly helps to feel the difference.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The mod_perl site&amp;rsquo;s URL: &lt;a href=&#34;http://perl.apache.org/&#34;&gt;http://perl.apache.org/&lt;/a&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/GTop&#34;&gt;GTop&lt;/a&gt; relies in turn on libgtop library not available for all platforms&lt;/p&gt;
+
+&lt;p&gt;Visit &lt;a href=&#34;http://home-of-linux.org/gnome/libgtop/&#34;&gt;http://home-of-linux.org/gnome/libgtop/&lt;/a&gt; for more information&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Apache::Peek&#34;&gt;Apache::Peek&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Devel::Peek&#34;&gt;Devel::Peek&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

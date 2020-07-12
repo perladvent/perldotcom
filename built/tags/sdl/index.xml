@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sdl on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/sdl/</link>
+    <description>Recent content in Sdl on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 24 Jan 2011 06:00:01 -0800</lastBuildDate>
+    <atom:link href="/tags/sdl/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Visualizing Music with SDL and Perl</title>
+      <link>http://localhost:1313/pub/2011/01/visualizing-music-with-sdl-and-perl.html/</link>
+      <pubDate>Mon, 24 Jan 2011 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/01/visualizing-music-with-sdl-and-perl.html/</guid>
+      <description>
+
+&lt;h1 id=&#34;music-visualization-with-perl-and-sdl&#34;&gt;&lt;strong&gt;Music Visualization with Perl and SDL&lt;/strong&gt;&lt;/h1&gt;
+
+&lt;p&gt;Many users know SDL as a powerful cross-platform library for graphics programming and input, especially as the foundation of many open source games. Perl users know it as the technology behind the beloved &lt;a href=&#34;http://www.frozen-bubble.org/&#34;&gt;Frozen Bubble&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Perl and SDL can do far more than destroy an infinite onslaught of cartoon bubbles, however. The recently revitalized &lt;a href=&#34;http://sdlperl.ath.cx/projects/SDLPerl/&#34;&gt;SDL Perl&lt;/a&gt; project has taken up the challenge of demonstrating that everyone&amp;rsquo;s favorite system administration language is capable of producing powerful multimedia programs—including, but not limited to, games.&lt;/p&gt;
+
+&lt;p&gt;In this edited excerpt from the &lt;a href=&#34;http://sdlperl.ath.cx/releases/SDL_Manual.html&#34;&gt;SDL Perl manual&lt;/a&gt;, lead developer Kartik Thakore walks through a non-game application of SDL and Perl, building a music player with visualizations in just a few lines of code.&lt;/p&gt;
+
+&lt;h2 id=&#34;running-this-demo&#34;&gt;&lt;strong&gt;Running this Demo&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;To run this example software, you need:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Perl 5.10, with threading enabled&lt;/li&gt;
+&lt;li&gt;A curent installation of CPAN&lt;/li&gt;
+&lt;li&gt;The native libraries of libsdl, libsdl_mixer (with Ogg support), libsdl_gfx, and their development packages&lt;/li&gt;
+&lt;li&gt;SDL perl version 5.526 or newer&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2011_01_visualizing-music-with-sdl-and-perl/music_visualizer.zip&#34;&gt;this article&amp;rsquo;s example files&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;With all of that installed, extract the example file and run the visualizer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ cd music_visualiser/
+    $ perl visualiser.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;music-visualizer&#34;&gt;&lt;strong&gt;Music Visualizer&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The music visualizer example processes real-time sound data—data as it plays—and displays the wave form on the screen. It will look something like Figure 1.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_01_visualizing-music-with-sdl-and-perl/spectro-1.png&#34; alt=&#34;Simple Music Visualization&#34; /&gt;
+&lt;em&gt;Figure 1. A simple music visualization.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;the-code-and-comments&#34;&gt;&lt;strong&gt;The Code and Comments&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;The program begins with the usual boilerplate of an SDL Perl application:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use strict;
+    use warnings;
+
+    use Cwd;
+    use Carp;
+    use File::Spec;
+
+    use threads;
+    use threads::shared;
+
+    use SDL;
+    use SDL::Event;
+    use SDL::Events;
+
+    use SDL::Audio;
+    use SDL::Mixer;
+    use SDL::Mixer::Music;
+    use SDL::Mixer::Effects;
+
+    use SDLx::App;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It then creates an application with both audio and video support:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $app = SDLx::App-&amp;gt;new(
+        init   =&amp;gt; SDL_INIT_AUDIO | SDL_INIT_VIDEO,
+        width  =&amp;gt; 800,
+        height =&amp;gt; 600,
+        depth  =&amp;gt; 32,
+        title  =&amp;gt; &amp;quot;Sound Event Demo&amp;quot;,
+        eoq    =&amp;gt; 1,
+        dt     =&amp;gt; 0.2,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The application must initialize the audio system with a format matching the expected audio input. &lt;code&gt;AUDIO_S16&lt;/code&gt; provides a 16-bit signed integer array for the stream data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Initialize the Audio
+    unless ( SDL::Mixer::open_audio( 44100, AUDIO_S16, 2, 1024 ) == 0 ) {
+        Carp::croak &amp;quot;Cannot open audio: &amp;quot; . SDL::get_error();
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The music player needs the music files from the &lt;em&gt;data/music/&lt;/em&gt; directory:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Load our music files
+    my $data_dir = &#39;.&#39;;
+    my @songs    = glob &#39;data/music/*.ogg&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A music effect reads the music data into a stream array, shared between threads:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @stream_data :shared;
+
+    #  Music Effect to pull Stream Data
+    sub music_data {
+        my ( $channel, $samples, $position, @stream ) = @_;
+
+        {
+            lock(@stream_data);
+            push @stream_data, @stream;
+        }
+
+        return @stream;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and that effect gets registered as a callback with &lt;code&gt;SDL::Mixer::Effects&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $music_data_effect_id =
+          SDL::Mixer::Effects::register( MIX_CHANNEL_POST, &amp;quot;main::music_data&amp;quot;,
+            &amp;quot;main::done_music_data&amp;quot;, 0 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The program&amp;rsquo;s single command-line option governs the number of lines to display in the visualizer. The default is 50.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $lines = $ARGV[0] || 50;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The drawing callback for the &lt;code&gt;SDLx::App&lt;/code&gt; runs while a song plays. It reads the stream data and displays it on the screen as a wave form. The math calculations produce a multi-colored bar graph representing slices of the music data. The remaining visualization code should be straightforward:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #  Music Playing Callbacks
+    my $current_song = 0;
+    my $lines        = $ARGV[0] || 50;
+
+    my $current_music_callback = sub {
+        my ( $delta, $app ) = @_;
+
+        $app-&amp;gt;draw_rect( [ 0, 0, $app-&amp;gt;w(), $app-&amp;gt;h() ], 0x000000FF );
+        $app-&amp;gt;draw_gfx_text(
+            [ 5, $app-&amp;gt;h() - 10 ],
+            [ 255, 0, 0, 255 ],
+            &amp;quot;Playing Song: &amp;quot; . $songs[ $current_song - 1 ]
+        );
+
+        my @stream;
+        {
+            lock @stream_data;
+            @stream      = @stream_data;
+            @stream_data = ();
+        }
+
+        # To show the right amount of lines we choose a cut of the stream
+        # this is purely for asthetic reasons.
+
+        my $cut = @stream / $lines;
+
+        # The width of each line is calculated to use.
+        my $l_wdt = ( $app-&amp;gt;w() / $lines ) / 2;
+
+        for ( my $i = 0 ; $i &amp;lt; $#stream ; $i += $cut ) {
+
+            #  In stereo mode the stream is split between two alternating streams
+            my $left  = $stream[$i];
+            my $right = $stream[ $i + 1 ];
+
+            #  For each bar we calculate a Y point and a X point
+            my $point_y = ( ( ($left) ) * $app-&amp;gt;h() / 4 / 32000 ) + ( $app-&amp;gt;h / 2 );
+            my $point_y_r =
+              ( ( ($right) ) * $app-&amp;gt;h() / 4 / 32000 ) + ( $app-&amp;gt;h / 2 );
+            my $point_x = ( $i / @stream ) * $app-&amp;gt;w;
+
+            # Using the parameters
+            #   Surface, box coordinates and color as RGBA
+            SDL::GFX::Primitives::box_RGBA(
+                $app,
+                $point_x - $l_wdt,
+                $app-&amp;gt;h() / 2,
+                $point_x + $l_wdt,
+                $point_y, 40, 0, 255, 128
+            );
+            SDL::GFX::Primitives::box_RGBA(
+                $app,
+                $point_x - $l_wdt,
+                $app-&amp;gt;h() / 2,
+                $point_x + $l_wdt,
+                $point_y_r, 255, 0, 40, 128
+            );
+
+        }
+
+      $app-&amp;gt;flip();
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whenever a song finishes, &lt;code&gt;SDL::Mixer::Music::playing_music&lt;/code&gt; returns &lt;code&gt;0&lt;/code&gt;. The program detects this state change and calls &lt;code&gt;music_finished_playing()&lt;/code&gt;, where the program attaches the &lt;code&gt;$play_next_song_callback&lt;/code&gt; callback to switch to the next song gracefully:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $cms_move_callback_id;
+    my $pns_move_callback_id;
+    my $play_next_song_callback;
+
+    sub music_finished_playing {
+        SDL::Mixer::Music::halt_music();
+        $pns_move_callback_id = $app-&amp;gt;add_move_handler( $play_next_song_callback )
+            if defined $play_next_song_callback;
+    }
+
+    $play_next_song_callback = sub {
+        return $app-&amp;gt;stop() if $current_song &amp;gt;= @songs;
+
+        my $song = SDL::Mixer::Music::load_MUS($songs[$current_song++]);
+
+        SDL::Mixer::Music::hook_music_finished(&#39;main::music_finished_playing&#39;);
+        SDL::Mixer::Music::play_music($song, 0 );
+
+        $app-&amp;gt;remove_move_handler( $pns_move_callback_id )
+            if defined $pns_move_callback_id;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A move handler detects if music is playing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;add_move_handler(
+       sub {
+           my $music_playing = SDL::Mixer::Music::playing_music();
+           music_finished_playing() unless $music_playing;
+       }
+   );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first callback to trigger &lt;code&gt;$play_next_song_callback&lt;/code&gt; gets the first song:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;add_show_handler($current_music_callback);
+    $pns_move_callback_id = $app-&amp;gt;add_move_handler( $play_next_song_callback);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and a keyboard event handler for a keypress allows the user to move through songs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;add_event_handler(
+        sub {
+            my ($event, $app) = @_;
+
+            if ($event-&amp;gt;type == SDL_KEYDOWN &amp;amp;&amp;amp; $event-&amp;gt;key_sym == SDLK_DOWN)
+            {
+                # Indicate that we are done playing the music_finished_playing
+                music_finished_playing();
+            }
+        }
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;From there, the application is ready to run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;run();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and the final code gracefully stops &lt;code&gt;SDL::Mixer&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    SDL::Mixer::Effects::unregister( MIX_CHANNEL_POST, $music_data_effect_id );
+    SDL::Mixer::Music::hook_music_finished();
+    SDL::Mixer::Music::halt_music();
+    SDL::Mixer::close_audio();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The result? Several dozen lines of code glue together the SDL mixer and display a real-time visualization of the music.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

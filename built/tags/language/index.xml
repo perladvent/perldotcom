@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Language on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/language/</link>
+    <description>Recent content in Language on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 27 Oct 2019 12:07:00 +0000</lastBuildDate>
+    <atom:link href="/tags/language/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>My Perl Wishlist: Invariant Sigils (Part 1)</title>
+      <link>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</link>
+      <pubDate>Sun, 27 Oct 2019 12:07:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</guid>
+      <description>
+
+&lt;p&gt;Pop quiz!  Q: What was my mistake in this line?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is %HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;A: I had the answer right, but I messed up the sigil on &lt;code&gt;HASH&lt;/code&gt;.  It
+should be:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is $HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;#  ^ $, not %&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Unfortunately, on Perl v5.20+, both statements work the same way!  I
+didn&amp;rsquo;t catch the problem until I shipped this code and
+&lt;a href=&#34;http://matrix.cpantesters.org/?dist=vars-i+1.08-TRIAL&#34;&gt;cpantesters&lt;/a&gt;
+showed me my mistake.  It was an easy fix, but it reminded me that Perl&amp;rsquo;s
+&lt;a href=&#34;http://modernperlbooks.com/books/modern_perl/chapter_03.html#variablenamesandsigils&#34;&gt;variant sigils&lt;/a&gt;
+can trip up programmers at any level.  If I could change one thing about
+Perl 5, I would change to invariant sigils.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-current-situation&#34;&gt;The current situation&lt;/h2&gt;
+
+&lt;p&gt;In Perl, the sigil tells you
+&lt;a href=&#34;https://perldoc.perl.org/perlintro.html#Perl-variable-types&#34;&gt;how many things to expect&lt;/a&gt;.
+Scalars such as &lt;code&gt;$foo&lt;/code&gt; are single values.  Any single value in an array
+&lt;code&gt;@foo&lt;/code&gt; or hash &lt;code&gt;%foo&lt;/code&gt;, since it is only one thing,
+&lt;a href=&#34;https://perldoc.perl.org/perldata.html#Variable-names&#34;&gt;also uses &lt;code&gt;$&lt;/code&gt;&lt;/a&gt;,
+so &lt;code&gt;$foo&lt;/code&gt;, &lt;code&gt;@foo&lt;/code&gt;, and &lt;code&gt;%foo&lt;/code&gt; could all refer to different pieces of the
+same variable &amp;mdash; or to different variables.
+This technique of &amp;ldquo;variant sigils&amp;rdquo; works, but confuses
+new Perl users and tripped up yours truly.  To know what you
+are accessing in an array or hash, you have to look at both the sigil
+and the brackets.  As a reminder:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: the first element of array &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0, 1]&lt;/code&gt;: the list &lt;code&gt;($z[0], $z[1])&lt;/code&gt; of two elements from &lt;code&gt;@z&lt;/code&gt; (an &amp;ldquo;array slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt; of two elements from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0, 1]&lt;/code&gt;: the list &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt; of keys and two values from array &lt;code&gt;@z&lt;/code&gt; (a &amp;ldquo;hash slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt; of keys and values from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;make-the-sigils-part-of-the-name&#34;&gt;Make the sigils part of the name&lt;/h2&gt;
+
+&lt;p&gt;To save myself from repeating my errors, I&amp;rsquo;d like the sigil to be part of a
+variable&amp;rsquo;s name.  This is not a new idea; scalars work this way in Perl, bash,
+and &lt;a href=&#34;https://docs.perl6.org/language/101-basics#sigil_and_identifier&#34;&gt;Raku&lt;/a&gt;
+(&lt;a href=&#34;https://github.com/perl6/problem-solving/blob/master/solutions/language/Path-to-Raku.md&#34;&gt;formerly Perl 6&lt;/a&gt;).
+That would make the above table look like:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: the first element of &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Simpler!  Any reference to &lt;code&gt;@z&lt;/code&gt; would always be doing &lt;em&gt;something&lt;/em&gt; with
+the array named &lt;code&gt;@z&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;but-what-about-slices&#34;&gt;But what about slices?&lt;/h2&gt;
+
+&lt;p&gt;Slices such as &lt;code&gt;@z[0,1]&lt;/code&gt; and &lt;code&gt;%z{qw(hello there)}&lt;/code&gt; return multiple
+values from an array or hash.  If sigils &lt;code&gt;@&lt;/code&gt; and &lt;code&gt;%&lt;/code&gt; are no longer
+available for slicing, we need an alternative.
+The Perl family currently provides two models: postfix dereferencing
+(&amp;ldquo;postderef&amp;rdquo;) syntax and postfix adverbs.&lt;/p&gt;
+
+&lt;p&gt;Perl v5.20+ support
+&lt;a href=&#34;https://www.effectiveperlprogramming.com/2014/09/use-postfix-dereferencing/&#34;&gt;postderef&lt;/a&gt;,
+which gives us one option.  Postderef separates the name from the slice:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Valid Perl v5.20+&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{a};      &lt;span style=&#34;color:#75715e&#34;&gt;# Scalar, element at index &amp;#34;a&amp;#34; of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;%{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the key &amp;#34;a&amp;#34; and the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The type of slice comes after the reference, instead of as a sigil
+before the reference.  With non-references, that idea would give us slice
+syntax such as &lt;code&gt;@array@[1,2,3]&lt;/code&gt; or &lt;code&gt;%hash%{a}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Raku gives us another option: &amp;ldquo;adverbs&amp;rdquo; such as
+&lt;a href=&#34;https://docs.perl6.org/language/subscripts#:kv&#34;&gt;&lt;code&gt;:kv&lt;/code&gt;&lt;/a&gt;.  For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl6&#34; data-lang=&#34;perl6&#34;&gt;# Valid Raku
+%hash{&amp;#34;a&amp;#34;}          # Single value, element at index &amp;#34;a&amp;#34; of %hash
+%hash{&amp;#34;a&amp;#34;}:v;       # The same --- just the value
+%hash{&amp;#34;a&amp;#34;}:kv;      # The list including key &amp;#34;a&amp;#34; and the value of the &amp;#34;a&amp;#34; element of %hash&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The adverb (e.g., &lt;code&gt;:kv&lt;/code&gt;) goes in postfix position, immediately
+after the brackets or braces.  Following this model,
+slices would look like &lt;code&gt;@array[1,2,3]:l&lt;/code&gt; or &lt;code&gt;%hash{a}:kv&lt;/code&gt;.  (For clarity,
+I propose &lt;code&gt;:l&lt;/code&gt;, as in &lt;strong&gt;l&lt;/strong&gt;ist, instead of Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt;.  Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt; can return
+a scalar or a list.)&lt;/p&gt;
+
+&lt;p&gt;So, the choices I see are (postderef-inspired / Raku-inspired):&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;What you want&lt;/th&gt;
+&lt;th&gt;No subscript&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; access&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; access&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Scalar&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: a single value from an array&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of values&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: an array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z@[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:l&lt;/code&gt;: the list currently written &lt;code&gt;($z[0], $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z@{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:l&lt;/code&gt;: the list currently written &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of key/value pairs&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: a hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z%[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:kv&lt;/code&gt;: the list currently written &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z%{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:kv&lt;/code&gt;: the list currently written &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;you-can-t-always-get-what-you-want&#34;&gt;You can&amp;rsquo;t always get what you want&lt;/h2&gt;
+
+&lt;p&gt;I prefer the adverb syntax.  It is easy to read, and it draws on
+all the expertise that has gone into the design of Raku.
+However, my preference has to be implementable.
+I&amp;rsquo;m not convinced that it is without major surgery.&lt;/p&gt;
+
+&lt;p&gt;The Perl parser decides how to interpret what is inside the brackets
+depending on the context provided by the slice.
+The parser interprets the &lt;code&gt;...&lt;/code&gt; in &lt;code&gt;@foo[...]&lt;/code&gt; as
+a list (&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L1143-L1148&#34;&gt;ref&lt;/a&gt;).
+In &lt;code&gt;$foo[...]&lt;/code&gt;, the parser sees the &lt;code&gt;...&lt;/code&gt; as a scalar expression
+(&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L958-L960&#34;&gt;ref&lt;/a&gt;).
+For any slice syntax, the Perl parser needs to know the desired
+type of result while parsing the subscript expression.  The adverb form,
+unfortunately, leaves the parser guessing until after the subscript
+is parsed.&lt;/p&gt;
+
+&lt;p&gt;You can, in fact, hack the Perl parser to save the subscript
+until it sees a postfix adverb.  The parser can then apply the correct
+context.  I wrote a
+&lt;a href=&#34;https://github.com/Perl/perl5/compare/9786385e68f7f14df6f4dd0f04d2c72c0d9a2511...cxw42:3cd904788536b445c9c3abe9b469e1b569942051&#34;&gt;proof-of-concept&lt;/a&gt;
+for &lt;code&gt;@arr[expr]:v&lt;/code&gt;.  It doesn&amp;rsquo;t execute any code, but it does parse
+a postfix-adverb slice without crashing!  However, while writing that code,
+I ran across a surprise: new syntax isn&amp;rsquo;t tied to a &lt;code&gt;use v5.xx&lt;/code&gt;
+directive.&lt;/p&gt;
+
+&lt;p&gt;It turns out the Perl parser lets code written against any Perl version
+use the latest syntax.  Both of the following command lines work on Perl v5.30:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ perl -Mstrict -Mwarnings -E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#                           ^ -E: use all the latest features
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;$ perl -Mstrict -Mwarnings -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#75715e&#34;&gt;# (!!!)
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;#                           ^ -e: not the latest features&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The second command line does not &lt;code&gt;use v5.30&lt;/code&gt;, so you can&amp;rsquo;t use &lt;code&gt;say&lt;/code&gt;
+(introduced in v5.10).  However, you can use postderef (from v5.20)!&lt;/p&gt;
+
+&lt;p&gt;Because the parser lets old programs use new syntax, any proposed addition
+to Perl&amp;rsquo;s syntax has to be meaningless in all previous Perl versions.
+A postfix adverb fails this test.  For example, the following is a valid
+Perl program:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;kv&lt;/span&gt; { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kv&amp;#34;&lt;/span&gt; }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @arr &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ? @arr[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]:kv;
+        &lt;span style=&#34;color:#75715e&#34;&gt;# ^^^^^^^^^^^^ valid Perl 5 syntax, but not a slice :(&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;My preferred slice syntax could change the meaning of existing programs,
+so it looks like I can&amp;rsquo;t get my first choice.&lt;/p&gt;
+
+&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+
+&lt;p&gt;This is not the end of the story!  In Part 2, I will dig deeper into
+Perl&amp;rsquo;s parser and tokenizer.  I will share some surprises I discovered
+while investigating postderef.  I will then describe a possible path
+to invariant sigils and the simplicity they can provide.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>New Features of Perl 5.14: Non-destructive Substitution</title>
+      <link>http://localhost:1313/pub/2011/05/new-features-of-perl-514-non-destructive-substitution.html/</link>
+      <pubDate>Wed, 18 May 2011 15:08:19 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/05/new-features-of-perl-514-non-destructive-substitution.html/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;http://news.perlfoundation.org/2011/05/perl-514.html&#34;&gt;Perl 5.14 is now available&lt;/a&gt;. While this latest major release of Perl 5 brings with it many bugfixes, updates to the core libraries, and the usual performance improvements, it also includes a few nice new features.&lt;/p&gt;
+
+&lt;p&gt;One such feature is non-destructive substitution:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use 5.014;
+
+    my $greeting  = &#39;Hello, world!&#39;;
+
+    # be more elite
+    say $greeting =~ tr/aeiou/4310V/r;
+
+    # then run away
+    say $greeting =~ s/Hello/Goodbye/r;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The new &lt;code&gt;/r&lt;/code&gt; modifier to the substitution and transliteration operators causes Perl to return the modified string, rather than modifying the original string in place. This replaces the idiomatic but unwieldy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my  $greeting  = &#39;Hello, world!&#39;;
+    my ($leetgreet = $greeting) =~ tr/aeiou/4310V/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This feature is even more useful for avoiding two common problems with substitutions in &lt;code&gt;map&lt;/code&gt; expressions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @modified = map { s/foo/BAR/ } @original;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Not only does the substitution modify the values of &lt;code&gt;@original&lt;/code&gt; in place, but the substitution returns a true value if the substitution succeeded and a false value otherwise. While that code &lt;em&gt;looks&lt;/em&gt; correct, it&amp;rsquo;s very subtly wrong. The corrected version of this code in Perl 5.12 or earlier is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @modified = map { my $copy = $_; $copy =~ s/foo/BAR/; $copy } @original;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;5.14 requires the addition of a single character to produce the intended behavior:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @modified = map { s/foo/BAR/r } @original;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;See &lt;code&gt;perldoc perlop&lt;/code&gt; for documentation of the &lt;code&gt;/r&lt;/code&gt; modifier.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>New Features of Perl 5.14: package BLOCK</title>
+      <link>http://localhost:1313/pub/2011/05/new-features-of-perl-514-package-block.html/</link>
+      <pubDate>Mon, 16 May 2011 11:31:25 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/05/new-features-of-perl-514-package-block.html/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;http://news.perlfoundation.org/2011/05/perl-514.html&#34;&gt;Perl 5.14 is now available&lt;/a&gt;. While this latest major release of Perl 5 brings with it many bugfixes, updates to the core libraries, and the usual performance improvements, it also includes a few nice new features. This series of articles provides a quick introduction to several of these features.&lt;/p&gt;
+
+&lt;p&gt;One such feature is the package BLOCK syntax:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package My::Class
+    {
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you declare a package, you may now provide a block at the end of the declaration. Within that block, the current namespace will be the provided package name. Outside of that block, the previously effective namespace will be in effect. The block provides normal lexical scoping, so that any lexical variables declared within the block will be visible only inside the block. As well, any lexical pragmas will respect the block&amp;rsquo;s scoping.&lt;/p&gt;
+
+&lt;p&gt;You do not need a trailing semicolon after the closing curly brace.&lt;/p&gt;
+
+&lt;p&gt;You may combine this with the package VERSION syntax introduced in Perl 5.12:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package My::Class v2011.05.16
+    {
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The VERSION must be an integer, a real number (with a single decimal), or a dotted-decimal v-string as shown in the previous example. When present, the VERSION declaration sets the package-scoped &lt;code&gt;$VERSION&lt;/code&gt; variable within the given namespace to the provided value.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;perldoc -f package&lt;/code&gt; documents this syntax.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,875 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Languages on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/languages/</link>
+    <description>Recent content in Languages on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 25 Mar 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/languages/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Making Dictionaries with Perl</title>
+      <link>http://localhost:1313/pub/2004/03/25/dictionaries.html/</link>
+      <pubDate>Thu, 25 Mar 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/03/25/dictionaries.html/</guid>
+      <description>
+
+&lt;p&gt;When you woke up this morning, the last thing you are likely to have thought is &amp;ldquo;If only I had a &lt;em&gt;dictionary!&lt;/em&gt;&amp;rdquo; But there are thousands of languages on Earth that many people want to learn, but they can&amp;rsquo;t, because there are little or no materials to start with: no &lt;em&gt;Pocket Mohawk-English Dictionary&lt;/em&gt;, no &lt;em&gt;Cherokee Poetry Reader&lt;/em&gt;, no &lt;em&gt;Everyday Otomi: Second Year&lt;/em&gt;. Only in the past few years have people realized that these languages are not just curiosities, but are basic indispensable, untranslatable parts of local cultures &amp;ndash; and they&amp;rsquo;re disappearing in droves.&lt;/p&gt;
+
+&lt;p&gt;As I was learning Perl, the long arm of coincidence put me in contact with a good number of linguists who work on producing materials to help the study of these endangered languages. These folks work on producing textbooks and other &amp;ldquo;language materials,&amp;rdquo; which is mostly straightforward, since the 1980s gave us &amp;ldquo;desktop publishing.&amp;rdquo; But there was one real trouble spot: dictionaries. Writing a dictionary of any real size using just a word processor is maddening, like writing a novel on Post-Its. So they started using database programs, but had no way to turn this into anything you could print and call a dictionary. They had no way to take this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Headword: dagiisláng
+  Citation: HSD
+  Part of speech: verb
+  English: wave a piece of cloth
+  Example:  Dáayaangwaay hal dagiislánggan. | He was waving a flag.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And turn it into this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_03_25_dictionaries/dagislang.gif&#34; width=&#34;416&#34; height=&#34;52&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;Well,&amp;rdquo; I said and have been saying ever since, &amp;ldquo;This is no big deal, for you see, &lt;em&gt;I&lt;/em&gt; am a &lt;em&gt;programmer&lt;/em&gt;! Just export your database as CSV or something, email it to me, and I&amp;rsquo;ll write a program that reads that and writes out a word-processor file with everything formatted all nice just like you want.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;A mere &lt;em&gt;person,&lt;/em&gt; you, can &lt;em&gt;program&lt;/em&gt; something that writes a word-processing document? But how can this &lt;em&gt;be?!&lt;/em&gt; Surely this would require a year&amp;rsquo;s work, a million lines of C++, and a bajillion dollars!&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;Yes. But instead I&amp;rsquo;ll just use Perl, where I can do it in a few dozen lines of code, taking me just a few minutes.&amp;rdquo; Because, you see, a conventionally formatted dictionary is just a glorified version of what people with business degrees would call a &amp;ldquo;database report&amp;rdquo;, and people who work in cubicles generate such things all the time. And now I&amp;rsquo;ll show you how it&amp;rsquo;s done.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-reading-the-input-reading-the-input-span&#34;&gt;&lt;span id=&#34;Reading_The_Input&#34;&gt;Reading the Input&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Of course you&amp;rsquo;ll need Perl, and that&amp;rsquo;s not hard to come by. Then, at most, you just need a module for the input format and a module for the output format. And you don&amp;rsquo;t even need that if the input and/or output formats are simple enough. In this case, the input format I&amp;rsquo;m often given is simple enough. It&amp;rsquo;s called Shoebox Standard Format, and it looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  \hw dagiisláng
+  \cit hsd
+  \pos verb
+  \engl wave a piece of cloth
+  \ex Dáayaangwaay hal dagiislánggan. | He was waving a flag.
+
+  \hw anáa
+  \cit hsd; led-285
+  \pos adverb
+  \engl inside a house; at home
+
+  \hw súut hlgitl&#39;áa
+  \cit hsd; led-149; led-411
+  \engl speak harshly to someone; insult
+  \ex &#39;Láa hal súut hlgitl&#39;gán. | She said harsh words to her.
+
+  \hw tlak&#39;aláang
+  \cit led-398
+  \pos noun
+  \engl the shelter of a tree
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Namely, &lt;code&gt;\fieldname fieldvalue&lt;/code&gt;, each record (&amp;ldquo;entry&amp;rdquo;) starting with a \hw field, and the records and fields being in no particular order. (And the data, incidentally, is vocabulary from Haida, an endangered language spoken in the Southeast Alaskan islands, where I live.)&lt;/p&gt;
+
+&lt;p&gt;Now, one could parse this with a &lt;code&gt;regexp&lt;/code&gt; and a bit of &lt;code&gt;while(&amp;lt;IN&amp;gt;) {...}&lt;/code&gt;, but there&amp;rsquo;s already a module for this that will read in a whole file as a big data list-of-lists data structure. After just a glance at the module&amp;rsquo;s documentation, we can write this simple program to read in the lexicon as an object, and dump it to make sure that it&amp;rsquo;s getting well filled in:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Text::Shoebox::Lexicon;
+  my $lex = Text::Shoebox::Lexicon-&amp;gt;read_file( &amp;quot;haida.sf&amp;quot; );
+  $lex-&amp;gt;dump;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that prints this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Lexicon Text::Shoebox::Lexicon=HASH(0x15550f0) contains 4 entries:
+
+ Entry Text::Shoebox::Entry=ARRAY(0x1559104) contains:
+   hw = &amp;quot;dagiisláng&amp;quot;
+   cit = &amp;quot;hsd&amp;quot;
+   pos = &amp;quot;verb&amp;quot;
+   engl = &amp;quot;wave a piece of cloth&amp;quot;
+   ex = &amp;quot;Dáayaangwaay hal dagiislánggan. | He was waving a flag.&amp;quot;
+
+ Entry Text::Shoebox::Entry=ARRAY(0x1559194) contains:
+   hw = &amp;quot;anáa&amp;quot;
+   cit = &amp;quot;hsd; led-285&amp;quot;
+   pos = &amp;quot;adverb&amp;quot;
+   engl = &amp;quot;inside a house; at home&amp;quot;
+
+ Entry Text::Shoebox::Entry=ARRAY(0x155920c) contains:
+   hw = &amp;quot;súut hlgitl&#39;áa&amp;quot;
+   cit = &amp;quot;hsd; led-149; led-411&amp;quot;
+   engl = &amp;quot;speak harshly to someone; insult&amp;quot;
+   ex = &amp;quot;&#39;Láa hal súut hlgitl&#39;gán. | She said harsh words to her.&amp;quot;
+
+ Entry Text::Shoebox::Entry=ARRAY(0x1559284) contains:
+   hw = &amp;quot;tlak&#39;aláang&amp;quot;
+   cit = &amp;quot;led-398&amp;quot;
+   pos = &amp;quot;noun&amp;quot;
+   engl = &amp;quot;the shelter of a tree&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A further glance shows that &lt;code&gt;$lexicon-&amp;gt;entries&lt;/code&gt; returns a list of the entry objects, and that &lt;code&gt;$entry-&amp;gt;as_list&lt;/code&gt; returns the entry&amp;rsquo;s contents as a list &lt;code&gt;(key1, value1, key2, value2)&lt;/code&gt; &amp;ndash; exactly the kind of list that is ripe for dumping into a Perl hash. So:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  foreach my $entry ($lex-&amp;gt;entries) {
+    my %e = $entry-&amp;gt;as_list;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that works perfectly, assuming we never have an entry like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  \hw súut hlgitl&#39;áa
+  \cit hsd; led-149; led-411
+  \engl speak harshly to someone
+  \engl insult
+  \ex &#39;Láa hal súut hlgitl&#39;gán. | She said harsh words to her.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In that case, because there&amp;rsquo;s two &amp;ldquo;engl&amp;rdquo; fields, &lt;code&gt;$entry-&amp;gt;as_list&lt;/code&gt; would return this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; (
+  &#39;hw&#39;   =&amp;gt; &amp;quot;súut hlgitl&#39;áa&amp;quot;,
+  &#39;cit&#39;  =&amp;gt; &amp;quot;hsd; led-149; led-411&amp;quot;,
+  &#39;engl&#39; =&amp;gt; &amp;quot;speak harshly to someone&amp;quot;,
+  &#39;engl&#39; =&amp;gt; &amp;quot;insult&amp;quot;,
+  &#39;ex&#39;   =&amp;gt; &amp;quot;&#39;Láa hal súut hlgitl&#39;gán. | She said harsh words to her.&amp;quot;,
+ )
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And once we dump that into the hash %e, we would end up with just this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; (
+  &#39;hw&#39;   =&amp;gt; &amp;quot;súut hlgitl&#39;áa&amp;quot;,
+  &#39;cit&#39;  =&amp;gt; &amp;quot;hsd; led-149; led-411&amp;quot;,
+  &#39;engl&#39; =&amp;gt; &amp;quot;insult&amp;quot;,
+  &#39;ex&#39;   =&amp;gt; &amp;quot;&#39;Láa hal súut hlgitl&#39;gán. | She said harsh words to her.&amp;quot;,
+ )
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;since, of course, hash keys have to be unique in Perl hashes. If you needed to deal with a lexicon that had such entries, there are various methods in the Text::Shoebox::Entry class, but for a simple lexicon where each field comes up just once per entry, you can just use a hash &amp;ndash; and you can even check that that&amp;rsquo;s the case by calling with &lt;code&gt;$entry-&amp;gt;assert_keys_unique;&lt;/code&gt;, which normally does nothing &amp;ndash; unless it sees duplicate field names in that given entry, in which case it will abort the program and print a helpful error message about the offending entry.&lt;/p&gt;
+
+&lt;p&gt;But for our data, with its unique keys, a hash works just fine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  foreach my $entry ($lex-&amp;gt;entries) {
+    my %e = $entry-&amp;gt;as_list;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We would then do things with the contents of $e in that loop: either generating output right there, or putting it into Perl variables whose contents will later be output by other subroutines of ours.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-making-the-output-making-the-output-span&#34;&gt;&lt;span id=&#34;Making_The_Output&#34;&gt;Making the Output&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Since we&amp;rsquo;ve got the basic input code squared away, now we get to think about how to output data. Once we know that, we&amp;rsquo;ll know better how to write the code to make the formats meet in the middle.&lt;/p&gt;
+
+&lt;p&gt;As output formats go, HTML is good for many purposes; practically all programmers can code in it pretty well, and just about everyone can hardcopy HTML with their browser or word processor. However, even after all these years, there are still some basic problems with HTML: as a typesetting language, there&amp;rsquo;s still no reliable support for control of page-layout options like headers and page-numbering, page breaks, newspaper columns, and the like. More importantly, WYSIWYG HTML editors all seem to be harmless at best or disastrous at worst. In my experience, that has ruled out HTML as an output format for the many lexicons where the output file still needs various kinds of manual touching-up in a word processor.&lt;/p&gt;
+
+&lt;p&gt;Because of these problems with HTML, I have generally chosen RTF as my output format. RTF is technically a Microsoft format, but somehow, &lt;em&gt;somehow&lt;/em&gt;, it avoided most of the lunacy that that usually entails. Moreover, just about every word processor supports it. And Microsoft Word both prints and edits RTF pretty much flawlessly. (After all, it had to be good at &lt;em&gt;something&lt;/em&gt;.) And finally, there&amp;rsquo;s good Perl support for generating RTF, via the CPAN modules RTF::Writer and RTF::Document, so you can almost completely insulate yourself from dealing directly with the language. I&amp;rsquo;ll use RTF::Writer, simply because I&amp;rsquo;m more familiar with it. (This may be due to the fact that it was written by the author of the delightful O&amp;rsquo;Reilly book &lt;em&gt;RTF Pocket Guide&lt;/em&gt;, a handsome and charming man whose modesty forbids him from revealing that he is me.)&lt;/p&gt;
+
+&lt;p&gt;With a bit of skimming the RTF::Writer documentation, we can see that to send output to an RTF file, you create a sort of file handle for it, and then send data to it via its &lt;code&gt;print&lt;/code&gt; or &lt;code&gt;paragraph&lt;/code&gt; methods, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use RTF::Writer;
+  my $rtf = RTF::Writer-&amp;gt;new_to_file( &amp;quot;sample.rtf&amp;quot; );
+  $rtf-&amp;gt;prolog();  # sets up sane defaults
+
+  $rtf-&amp;gt;paragraph( &amp;quot;Hello world!&amp;quot; );
+  $rtf-&amp;gt;close;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That writes an RTF document consisting of just a sane header and then basically the text, &amp;ldquo;Hello world!&amp;rdquo;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  {\rtf1\ansi\deff0{\fonttbl
+  {\f0 \froman Times New Roman;}}
+  {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+  {\pard
+  Hello world!
+  \par}
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The RTF::Writer documentation comes with a list of some basic escape codes that are basically all we need to format our lexicon. The notables are:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  \b     for bold
+  \i     for italic
+  \f2    switch to font #2 (i.e., the second font we declare for this document)
+  \fs40  switch text size to 20-point (40 = how many half-points)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;RTF::Writer&amp;rsquo;s interface is designed so that normal text passed to it will get escaped before being written to the RTF output file, and clearly you don&amp;rsquo;t want that to happen to these codes &amp;ndash; you want the &lt;code&gt;\b&lt;/code&gt; to be written as is, not escaped so that it&amp;rsquo;d show a literal backslash and a literal b in the document. To signal this to the RTF::Writer interface, you pass references to these strings, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $rtf-&amp;gt;paragraph( \&#39;\i&#39;, &amp;quot;Hello world!&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can also limit the effect of a code by wrapping it in an arrayref, i.e., with &lt;code&gt;[code, text]&lt;/code&gt;, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $rtf-&amp;gt;paragraph(
+    &amp;quot;And &amp;quot;,
+    [ \&#39;\i&#39;, &amp;quot;Hello world!&amp;quot; ],
+    &amp;quot; is what I say.&amp;quot;
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;ll produce a document saying: And &lt;em&gt;Hello world!&lt;/em&gt; is what I say.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s just about all the RTF we&amp;rsquo;d need to know to produce some simple lexicon output. We can exercise this with some literal text:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use RTF::Writer;
+  my $rtf = RTF::Writer-&amp;gt;new_to_file( &amp;quot;lex.rtf&amp;quot; );
+  $rtf-&amp;gt;prolog();  # sets up sane defaults
+
+  $rtf-&amp;gt;paragraph(
+    [ \&#39;\b&#39;,    &amp;quot;tlak&#39;aláang: &amp;quot; ],
+    [ \&#39;\b\i&#39;,  &amp;quot;n.&amp;quot; ],
+    &amp;quot; the shelter of a tree&amp;quot;
+  );
+  $rtf-&amp;gt;paragraph(
+    [ \&#39;\b&#39;,    &amp;quot;anáa: &amp;quot; ],
+    [ \&#39;\b\i&#39;,  &amp;quot;adv.&amp;quot; ],
+    &amp;quot; inside a house; at home&amp;quot;
+  );
+
+  $rtf-&amp;gt;close;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that gets us something very close to the kind of formatting you&amp;rsquo;d find in a typical fancy dictionary:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_03_25_dictionaries/two_entries.gif&#34; width=&#34;481&#34; height=&#34;69&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Of course, we&amp;rsquo;d like to tweak spacing and fonts a bit, but that can be left for later as just minor additions to the code. Knowing just as much as we do now, we can see the output code taking shape. It would be something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  foreach my $entry (...) {
+    ...
+    $rtf-&amp;gt;paragraph(
+      [ \&#39;\b&#39;,    $headword, &amp;quot;: &amp;quot; ],
+      [ \&#39;\b\i&#39;,  $part_of_speech ],
+      &amp;quot; &amp;quot;, $english,
+      ...and something to drop the example sentences, if any...
+    );
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In fact, we can already cobble this together with our earlier input-reading code, to make a clunky but working prototype:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use strict;
+  use Text::Shoebox::Lexicon;
+  my $lex = Text::Shoebox::Lexicon-&amp;gt;read_file( &amp;quot;haida.sf&amp;quot; );
+
+  use RTF::Writer;
+  my $rtf = RTF::Writer-&amp;gt;new_to_file( &amp;quot;lex.rtf&amp;quot; );
+  $rtf-&amp;gt;prolog();  # sets up sane defaults
+
+  foreach my $entry ($lex-&amp;gt;entries) {
+    my %e = $entry-&amp;gt;as_list;
+    $rtf-&amp;gt;paragraph(
+      [ \&#39;\b&#39;,    $e{&#39;hw&#39;}  || &amp;quot;?hw?&amp;quot;, &amp;quot;: &amp;quot; ],
+      [ \&#39;\b\i&#39;,  $e{&#39;pos&#39;} || &amp;quot;?pos?&amp;quot; ],
+      &amp;quot; &amp;quot;, $e{&#39;engl&#39;} || &amp;quot;?english?&amp;quot;
+    );
+  }
+  $rtf-&amp;gt;close;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that produces this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_03_25_dictionaries/four_entries.gif&#34; width=&#34;486&#34; height=&#34;103&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now, sure, the entries aren&amp;rsquo;t in alphabetical order, we see &amp;ldquo;noun&amp;rdquo; instead of &amp;ldquo;n.&amp;rdquo;, and the example sentences aren&amp;rsquo;t in there yet. But consider that with not even twenty lines of Perl, we&amp;rsquo;ve got a working dictionary renderer. It&amp;rsquo;s downhill from here.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-sorting-and-duplicate-headwords-sorting-and-duplicate-headwords-span&#34;&gt;&lt;span id=&#34;Sorting_and_Duplicate_Headwords&#34;&gt;Sorting and Duplicate Headwords&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So how do we take entries in whatever order, and put them into alphabetical order? A first hack is something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my %headword2entry;
+  foreach my $entry ($lex-&amp;gt;entries) {
+    my %e = $entry-&amp;gt;as_list;
+    $headword2entry{ $e{&#39;hw&#39;} } = \%e;
+  }
+
+  foreach my $headword (sort keys %headword2entry) {
+    my %e = %{ $headword2entry{$headword} };
+    ...and print it here...
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that indeed works fine. But suppose one of the linguists comes by and adds these three entries into our little database:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  \hw gíi
+  \pos auxiliary verb
+  \engl already; always; often
+
+  \hw gu
+  \pos postposition
+  \engl there
+
+  \hw gíi
+  \pos verb
+  \engl swim away [of fish]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When we run our program, there&amp;rsquo;s trouble with the output:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_03_25_dictionaries/six_entries_sorted1.gif&#34; width=&#34;487&#34; height=&#34;153&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;First off, the second &amp;ldquo;gíi&amp;rdquo; (the verb for fish swimming away) was stored as &lt;code&gt;$headword2entry{&#39;gíi&#39;}&lt;/code&gt; and that overwrote the first &amp;ldquo;gíi&amp;rdquo; entry (the one that means already, always, or often). And secondly, &amp;ldquo;gíi&amp;rdquo; got sorted &lt;em&gt;after&lt;/em&gt; &amp;ldquo;gu&amp;rdquo;!&lt;/p&gt;
+
+&lt;p&gt;The first problem can be solved by changing from the current data structure, which is like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $headword2entry{ &#39;gíi&#39; } = ...one_entry...;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;over to a new data structure, which is like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $headword2entries{ &#39;gíi&#39; } =
+    [ ...one_entry... , ...another_entry..., ...maybe_even_another... ];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;even though in most cases that list will hold just one entry.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s simple to graft into our program, even if the syntax for dereferencing gets a bit thick:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my %headword2entries;
+  foreach my $entry ($lex-&amp;gt;entries) {
+    my %e = $entry-&amp;gt;as_list;
+    push @{ $headword2entries{ $e{&#39;hw&#39;} } },  \%e;
+  }
+
+  foreach my $headword (sort keys %headword2entries) {
+    foreach my $entry ( @{ $headword2entries{$headword} } ) {
+      ...code to print the entry...
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that works just right: both &amp;ldquo;gíi&amp;rdquo; entries show up.&lt;/p&gt;
+
+&lt;p&gt;Now how to get &lt;code&gt;sort keys %headword2entries&lt;/code&gt; to sort &amp;ldquo;gíi&amp;rdquo; &lt;em&gt;before&lt;/em&gt; &amp;ldquo;gu&amp;rdquo;? The default &lt;code&gt;sort()&lt;/code&gt; that Perl uses just sorts ASCIIbetically, where &amp;ldquo;í&amp;rdquo; comes not just after &amp;ldquo;u&amp;rdquo;, but actually after all the unaccented letters. We can get Perl to use a smarter &lt;code&gt;sort()&lt;/code&gt; if we add a &amp;ldquo;use locale;&amp;rdquo; line and see about changing our current locale to French or German or something that&amp;rsquo;d know that &amp;ldquo;í&amp;rdquo; sorts before &amp;ldquo;u&amp;rdquo;. This approach works in some cases, but suppose that you&amp;rsquo;re dealing with a language that uses &amp;ldquo;dh&amp;rdquo; as a combined letter that comes after &amp;ldquo;d&amp;rdquo;. You&amp;rsquo;d be out of luck, since there aren&amp;rsquo;t any existing locales that (as far as I know) that have &amp;ldquo;dh&amp;rdquo; as a letter after &amp;ldquo;d&amp;rdquo;, and since under most operating systems you can&amp;rsquo;t define you own locales.&lt;/p&gt;
+
+&lt;p&gt;But CPAN, once again, comes to the rescue. The CPAN module Sort::ArbBiLex lets you state a sort order and get back a function that sorts according to that order. We can just pull this example from the docs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Sort::ArbBiLex (
+    &#39;custom_sort&#39; =&amp;gt;    # that&#39;s the function name to define
+    &amp;quot;
+     a A à À á Á â Â ã Ã ä Ä å Å æ Æ
+     b B
+     c C ç Ç
+     d D ð Ð
+     e E è È é É ê Ê ë Ë
+     f F
+     g G
+     h H
+     i I ì Ì í Í î Î ï Ï
+     j J
+     k K
+     l L
+     m M
+     n N ñ Ñ
+     o O ò Ò ó Ó ô Ô õ Õ ö Ö ø Ø
+     p P
+     q Q
+     r R
+     s S ß
+     t T þ Þ
+     u U ù Ù ú Ú û Û ü Ü
+     v V
+     w W
+     x X
+     y Y ý Ý ÿ
+     z Z
+    &amp;quot;
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And if we need that &amp;ldquo;dh&amp;rdquo; to be a new letter between &amp;ldquo;d&amp;rdquo; and &amp;ldquo;e&amp;rdquo;, it&amp;rsquo;s a simple matter of adding a line to the above code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     ...
+     d D ð Ð
+     dh Dh
+     e E è È é É ê Ê ë Ë
+     ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And if the above sort order isn&amp;rsquo;t right, we can fix this by just moving things around. For example, a few Haida words use an x-circumflex character for an odd pharyngeal sound, and since that character isn&amp;rsquo;t in Latin-1, the folks working on Haida use a special font that replaces the Latin-1 þ character with the x-circumflex. To have that sort as a letter after x, we&amp;rsquo;d rearrange the end of the above sort-order to read like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     ...
+     t T
+     u U ù Ù ú Ú û Û ü Ü
+     v V
+     w W
+     x X
+     þ Þ
+     y Y ý Ý ÿ
+     z Z
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once we get the big &lt;code&gt;use Sort::ArbBiLex (...);&lt;/code&gt; statement set up just the way we like it, we can just replace the &amp;ldquo;sort&amp;rdquo; in our &amp;ldquo;sort keys&amp;rdquo; with &amp;ldquo;custom_sort&amp;rdquo;, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  foreach my $headword (custom_sort keys %headword2entries) {
+    foreach my $entry ( @{ $headword2entries{$headword} } ) {
+      ...code to print the entry...
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With that in place, our entries sort just right:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_03_25_dictionaries/seven_entries_sorted1.gif&#34; width=&#34;485&#34; height=&#34;173&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-reverse-indexing-reverse-indexing-span&#34;&gt;&lt;span id=&#34;Reverse_Indexing&#34;&gt;Reverse Indexing&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The last thing anyone wants to do when they&amp;rsquo;ve finished working on a dictionary, is to turn right around and write another one &amp;ndash; but that&amp;rsquo;s exactly the problem that comes up in lexicography: you&amp;rsquo;ve been compiling a Haida-to-English dictionary, and then someone says &amp;ldquo;Gee, it&amp;rsquo;d be really handy to have an English-to-Haida one, too!&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;In the bad old days before people used databases for their lexicons, this process of &amp;ldquo;reversing the dictionary&amp;rdquo; was manual. Now that we have databases, we just need a way to see the entry that expresses &amp;ldquo;gu&amp;rdquo; = &amp;ldquo;there&amp;rdquo; in our main lexicon, and then make an entry in a reverse lexicon that expresses &amp;ldquo;there&amp;rdquo; = &amp;ldquo;gu&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;The reverse lexicon could be just &lt;code&gt;%english2native&lt;/code&gt; with entries like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $english2native{&#39;there&#39;} = &amp;quot;gu&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But there could be several words that mean &amp;ldquo;there&amp;rdquo; &amp;ndash; like &amp;ldquo;gyaasdáan&amp;rdquo; &amp;ndash; so we&amp;rsquo;d have to use an array here, just as we did in &lt;code&gt;%headword2entries&lt;/code&gt;, like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $english2native{&#39;there&#39;} = [ &amp;quot;gu&amp;quot;, &amp;quot;gyaasdáan&amp;quot; ];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can implement this by changing our initial lexicon-scanning routine to add a line to push to &lt;code&gt;@{$english2native{each_english_bit}}&lt;/code&gt;, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  foreach my $entry ($lex-&amp;gt;entries) {
+    my %e = $entry-&amp;gt;as_list;
+    push @{ $headword2entries{ $e{&#39;hw&#39;} } },  \%e;
+    foreach my $engl ( reversables( $e{&#39;engl&#39;} ) ) {
+      push @{ $english2native{ $engl } }, $e{&#39;hw&#39;}
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And later on, we can spit out the contents of &lt;code&gt;%english2native&lt;/code&gt; after the main dictionary:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $rtf-&amp;gt;paragraph( &amp;quot;\n\nEnglish to Haida Index\n&amp;quot; );
+
+  foreach my $engl ( custom_sort keys %english2native) {
+    my $n = join &amp;quot;; &amp;quot;, custom_sort @{ $english2native{ $engl } };
+    $rtf-&amp;gt;paragraph( &amp;quot;$engl: $n&amp;quot; );
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;All we need now is a routine, &lt;code&gt;reversables()&lt;/code&gt;, that can take the string &amp;ldquo;already; always; often&amp;rdquo; (from the &lt;em&gt;gíi&lt;/em&gt; entry) and turn it into the list (&amp;ldquo;already,&amp;rdquo; &amp;ldquo;always,&amp;rdquo; &amp;ldquo;often&amp;rdquo;), and to take the string &amp;ldquo;the shelter of a tree&amp;rdquo; and turn it into the one-item list &lt;code&gt;(&amp;quot;shelter of a tree&amp;quot;)&lt;/code&gt;. (If we left the &amp;ldquo;the&amp;rdquo; on there, we&amp;rsquo;d have a huge bunch of entries under &amp;ldquo;the&amp;rdquo;!)&lt;/p&gt;
+
+&lt;p&gt;This function is a decent first hack:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub reversables {
+    my $in = shift || return();
+    my @english;
+    foreach my $term ( split /\s*;\s*/, $in ) {
+      $term =~ s/^(a|an|the|to)\s+//i;
+       # Take the &amp;quot;to&amp;quot; off of &amp;quot;to swim away [of fish]&amp;quot;,
+       # and the &amp;quot;the&amp;quot; off of &amp;quot;the shelter of a tree&amp;quot;
+      push @english, $term;
+    }
+    return @english;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, consider the entry &lt;strong&gt;anáa:&lt;/strong&gt; &amp;ldquo;inside a house; at home&amp;rdquo; &amp;ndash; our &lt;code&gt;reversables()&lt;/code&gt; function will return this as the list &lt;code&gt;(&amp;quot;inside a house&amp;quot;, &amp;quot;at home&amp;quot;)&lt;/code&gt;. That seems passable, but if I were looking for a word like this in the English end of the dictionary, I&amp;rsquo;d probably want it to be under &amp;ldquo;home&amp;rdquo; and &amp;ldquo;house&amp;rdquo; as well.&lt;/p&gt;
+
+&lt;p&gt;Now, there are four alternatives here for how to have finer control over the reversing:&lt;/p&gt;
+
+&lt;p&gt;&lt;span&gt;Just don&amp;rsquo;t bother, and instead just do this all manually in the editing of the final draft.&lt;/span&gt;
+This is a bad approach because, in my experience, the people working on the lexicon get so used to the just-passable reversing algorithm that they end up thinking it&amp;rsquo;s no big deal, and so in the end its effects never get fixed.&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t do automatic reversing, but have a mandatory field in each entry that says what English headword(s) should point to this native entry.
+For example, if we call the field &amp;ldquo;ehw&amp;rdquo; (for &amp;ldquo;English headword&amp;rdquo;), then for &amp;ldquo;at home; inside a house&amp;rdquo; could say something like: &amp;ldquo;\ehw home, at; house, inside a&amp;rdquo;. However, having this be mandatory is a real drag for simple entries like &amp;ldquo;gu,&amp;rdquo; where you&amp;rsquo;d have to do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        \hw gu
+        \engl there
+        \ehw there
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;span id=&#34;*_Make_an_&#34;&gt;* Make an &amp;ldquo;ehw&amp;rdquo; field optional, and when it&amp;rsquo;s absent, use a smart reversing algorithm.&lt;/span&gt;
+So when we have an entry like &amp;ldquo;\hw gu \engl there&amp;rdquo;, of course the reversing algorithm would know to infer a &amp;ldquo;\ehw there.&amp;rdquo; And it would somehow be smart enough to know to index &amp;ldquo;wave a piece of cloth&amp;rdquo; under &amp;ldquo;wave&amp;rdquo; and &amp;ldquo;cloth&amp;rdquo; but not under &amp;ldquo;a,&amp;rdquo; &amp;ldquo;piece,&amp;rdquo; or &amp;ldquo;of.&amp;rdquo; The problem with very smart fallback algorithms like this is that people have to understand them completely, so that they can know whether the result is good enough or whether it should be overridden with a default &amp;ldquo;\ehw&amp;rdquo; field. But since nobody can remember all the hacks that get built into the smart algorithm, they either err on the side of doubt by &lt;em&gt;always&lt;/em&gt; putting a &amp;ldquo;\ehw&amp;rdquo; field (thus making the whole algorithm pointless), or by &lt;em&gt;never&lt;/em&gt; putting a &amp;ldquo;\ehw&amp;rdquo; field, or, worse some unpredictable and headachy mix of the two. So ironically, a smart fallback algorithm is often a &lt;em&gt;bad&lt;/em&gt; idea. That leads us to the final alternative:&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;*_Make_an_&#34;&gt;* Make an &amp;ldquo;ehw&amp;rdquo; field optional, and when it&amp;rsquo;s absent, use a &lt;em&gt;dumb&lt;/em&gt; reversing algorithm.&lt;/span&gt;
+By &amp;ldquo;dumb,&amp;rdquo; I mean a maximum of two rules &amp;ndash; if it&amp;rsquo;s any more complex than that, people will forget how it works and won&amp;rsquo;t know when they should key in an explicit &amp;ldquo;\ehw&amp;rdquo; field.&lt;/p&gt;
+
+&lt;p&gt;So while we could add more and more things to our &lt;code&gt;reversables()&lt;/code&gt; algorithm, it seems wisest to refrain from doing this, to be content with our one &lt;em&gt;s/^(a|an|the|to)\s+//i&lt;/em&gt; rule, and instead just add support for an &amp;ldquo;\ehw&amp;rdquo; field. We can do that simply by changing the call to &lt;code&gt;reversables()&lt;/code&gt;, from this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    foreach my $engl ( reversables( $e{&#39;engl&#39;} ) ) {
+      push @{ $english2native{ $engl } }, $e{&#39;hw&#39;}
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @reversed = $e{&#39;ehw&#39;} ? split( m/\s*;\s*/, $e{&#39;ehw&#39;} )
+                             : reversables( $e{&#39;engl&#39;} );
+    foreach my $engl ( @reversed ) {
+      push @{ $english2native{ $engl } }, $e{&#39;hw&#39;}
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With that in place (and with a &amp;ldquo;\ehw home, at; house, inside a&amp;rdquo; line in the &amp;ldquo;anáa&amp;rdquo; entry just to get the ball rolling), our program runs and spits out an English index after the Haida dictionary:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_03_25_dictionaries/reversed_index.gif&#34; width=&#34;347&#34; height=&#34;318&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conditional-output-and-example-sentences-conditional-output-and-example-sentences-span&#34;&gt;&lt;span id=&#34;Conditional_Output,_and_Example_Sentences&#34;&gt;Conditional Output and Example Sentences&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There&amp;rsquo;s two optional parts of the entries that we haven&amp;rsquo;t used yet: the citation fields, like &amp;ldquo;\cit hsd; led-149; led-411&amp;rdquo;, and the example sentences field, like &amp;ldquo;\ex &amp;lsquo;Láa hal súut hlgitl&amp;rsquo;gán. | She said harsh words to her.&amp;ldquo;. The citation fields are typically only of importance to the editors, who might want to spot-check words against the places in the text where they were found. (And typically the editors are the only ones who would be fluent with the abbreviations, e.g., would know that &amp;ldquo;led-149&amp;rdquo; is short for &amp;ldquo;page 149 of the Leer-Edenso Dictionary of Haida&amp;rdquo;.)&lt;/p&gt;
+
+&lt;p&gt;Ideally our program should produce output for the editors with the citations, and output for normal users (without the citations). We can do this my having a &lt;code&gt;$For_Editors&lt;/code&gt; variable that&amp;rsquo;s set early on in the program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $For_Editors = 0; # set to 1 to add citations
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then later on we have code that uses that variable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  foreach my $headword ( custom_sort keys %headword2entries) {
+    foreach my $entry ( @{ $headword2entries{$headword} } ) {
+      print_entry( $entry );
+    }
+  }
+
+  sub print_entry {
+    my %e = %{$_[0]};
+    $rtf-&amp;gt;paragraph(
+      [ \&#39;\b&#39;,    $e{&#39;hw&#39;}  || &amp;quot;?hw?&amp;quot;, &amp;quot;: &amp;quot; ],
+      [ \&#39;\b\i&#39;,  $e{&#39;pos&#39;} || &amp;quot;?pos?&amp;quot; ],
+      &amp;quot; &amp;quot;, $e{&#39;engl&#39;} || &amp;quot;?english?&amp;quot;, &amp;quot;.&amp;quot;,
+      $For_Editors &amp;amp;&amp;amp; $e{&#39;cit&#39;} ? &amp;quot; [$e{&#39;cit&#39;}]&amp;quot; : (),
+    );
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our new and punctuation-rich &lt;code&gt;$For_Editors &amp;amp;&amp;amp; $e{&#39;cit&#39;}&lt;/code&gt; line is just a concise way of saying &amp;ldquo;if this is for the editors and if there&amp;rsquo;s a citation in this entry, then print a space and a bracket before it, and a bracket after it &amp;ndash; otherwise don&amp;rsquo;t add anything&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;Our example sentences (&amp;rdquo;\ex &amp;lsquo;Láa hal súut hlgitl&amp;rsquo;gán. | She said harsh words to her&amp;rdquo;.) should probably end up in any normal dictionary, but of course we wouldn&amp;rsquo;t want to try adding the contents of &lt;code&gt;$e{&#39;ex&#39;}&lt;/code&gt; with formatting codes around it if it weren&amp;rsquo;t actually present in this entry. We can use the same sort of &lt;code&gt;$value ? &amp;quot;...$value...&amp;quot; : ()&lt;/code&gt; idiom we used before &amp;ndash; except that this time we need to first take out the &amp;ldquo;|&amp;rdquo; that separates the Haida part from the English translation. That&amp;rsquo;s simple, though:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my($ex, $ex_eng);
+    ($ex, $ex_eng) = split m/\|/, $e{&#39;ex&#39;} if $e{&#39;ex&#39;};
+    $rtf-&amp;gt;paragraph(
+      ...
+      $ex_eng ? (&amp;quot; $ex = $ex_eng&amp;quot;) : (),
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With that code in place, our entries that have example sentences, show them, like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_03_25_dictionaries/suut.gif&#34; width=&#34;479&#34; height=&#34;50&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-fancier-formatting-fancier-formatting-span&#34;&gt;&lt;span id=&#34;Fancier_Formatting&#34;&gt;Fancier Formatting&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now that basically everything else about our program is working, how about we polish it off with some formatting codes to make it look just right. We&amp;rsquo;ve already got some simple bold and italic codes, so the next thing is certainly to use different fonts. We could use, say, Bookman for the main headword and Times for the rest of the entry &amp;ndash; except for in the example sentence, we can use Bookman again for the Haida text, and Arial for the English translation.&lt;/p&gt;
+
+&lt;p&gt;However, a glance at the RTF Pocket Guide shows no RTF code that means &amp;ldquo;change to the font &amp;lsquo;Arial&amp;rsquo;&amp;rdquo; &amp;ndash; just a code that means &amp;ldquo;change to font number N [i.e., the second font we declare for this document]&amp;rdquo;, This declaring is just a matter of adding a parameter &lt;code&gt;&#39;fonts&#39; =&lt;/code&gt; [ &amp;hellip;&lt;em&gt;font names&lt;/em&gt;&amp;hellip;],&amp;gt; to that dull &lt;code&gt;$rtf-&amp;gt;prolog()&lt;/code&gt; method we called back when we created &lt;code&gt;$rtf&lt;/code&gt;. As the RTF::Writer documentation notes, &amp;ldquo;You should be sure to declare all fonts that you switch to in your document (as with \&amp;lsquo;\f3&amp;rsquo;, to change the current font to what&amp;rsquo;s declared in entry 3 (counting from 0) in the font table).&amp;rdquo; So if we just change our &lt;code&gt;prolog&lt;/code&gt; call to this&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $rtf-&amp;gt;prolog( &#39;fonts&#39; =&amp;gt; [ &amp;quot;Times New Roman&amp;quot;, &amp;quot;Bookman&amp;quot;, &amp;quot;Arial&amp;quot; ] );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; Then we can use a &lt;code&gt;\f0&lt;/code&gt; to switch to Times New Roman (which is the default, incidentally, since it&amp;rsquo;s the first declared font), and &lt;code&gt;\f1&lt;/code&gt; to switch to Bookman, and &lt;code&gt;\f2&lt;/code&gt; to switch to Arial.&lt;/p&gt;
+
+&lt;p&gt;And suppose we want everything to be in 10-point, except for the Arial part, which we want in specifically 9-point Arial so it won&amp;rsquo;t steal attention from the rest of the text, as sans-serif fonts often do. That&amp;rsquo;s just a matter of a &lt;code&gt;\fs20&lt;/code&gt; and &lt;code&gt;\fs18&lt;/code&gt; code &amp;ndash; &amp;ldquo;fs&amp;rdquo; for &amp;ldquo;font size&amp;rdquo;, plus the desired font size, in *half-*points. (Odd, I know.)&lt;/p&gt;
+
+&lt;p&gt;With these extra codes in place, our &lt;code&gt;print_entry&lt;/code&gt; routine now looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub print_entry {
+    my %e = %{$_[0]};
+    my($ex, $ex_eng);
+    ($ex, $ex_eng) = split m/\|/, $e{&#39;ex&#39;} if $e{&#39;ex&#39;};
+    $rtf-&amp;gt;paragraph(  \&#39;\fs20&#39;,  # Start out in ten-point
+      [ \&#39;\f1\b&#39;, $e{&#39;hw&#39;}  || &amp;quot;?hw?&amp;quot;, &amp;quot;: &amp;quot; ],
+      [ \&#39;\b\i&#39;,  $e{&#39;pos&#39;} || &amp;quot;?pos?&amp;quot; ],
+      &amp;quot; &amp;quot;, $e{&#39;engl&#39;} || &amp;quot;?english?&amp;quot;, &amp;quot;.&amp;quot;,
+      $For_Editors &amp;amp;&amp;amp; $e{&#39;cit&#39;} ? &amp;quot; [$e{&#39;cit&#39;}]&amp;quot; : (),
+      $ex_eng ? (&amp;quot; &amp;quot;, \&#39;\f1&#39;, $ex, \&#39;\f2\fs18&#39;, $ex_eng) : (),
+    );
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s dense, but then it does a lot of work! And that work comes out looking like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_03_25_dictionaries/all_pretty2.gif&#34; width=&#34;479&#34; height=&#34;218&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As to adding fancier formatting, this is usually best done by just flipping through the &lt;em&gt;RTF Pocket Guide&lt;/em&gt; and looking for a mention of the effect you want. For example, in a lexicon we might be particularly interested in hanging indents (&lt;code&gt;\fi-300&lt;/code&gt;), two-column pages (&lt;code&gt;\col2&lt;/code&gt;), and page numbering (&lt;code&gt;{\header \pard\ql\plain p.\chpgn \par}&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Now suppose that you&amp;rsquo;re trying to make the most of your xeroxing budget, trading off nice large readable point size against how many people get copies. One way to squeeze as much content into as small a space is to use abbreviations for the most repeated text in the dictionary &amp;ndash; the part-of-speech tags. So we can turn &amp;ldquo;noun&amp;rdquo; into just &amp;ldquo;n.&amp;rdquo;, &amp;ldquo;verb&amp;rdquo; into &amp;ldquo;v.&amp;rdquo;, and so on. Each time, we save only a little space, but it adds up quick. And doing this (or at least trying it out to see how it looks) is straightforward. We need only change one line in &lt;code&gt;print_entry()&lt;/code&gt;, from this&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      [ \&#39;\b\i&#39;,  $e{&#39;pos&#39;} || &amp;quot;?pos?&amp;quot; ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      [ \&#39;\b\i&#39;,  $Abbrev{$e{&#39;pos&#39;}||&#39;&#39;} || $e{&#39;pos&#39;} || &amp;quot;?pos?&amp;quot; ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And earlier we&amp;rsquo;ll have to define what should be in &lt;code&gt;%Abbrev&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my %Abbrev = (
+   &#39;auxiliary verb&#39; =&amp;gt; &#39;aux.&#39;,
+   qw(noun n. verb v. adverb adv.),
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But that&amp;rsquo;s all it takes to change our output to look like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_03_25_dictionaries/all_pretty3.gif&#34; width=&#34;462&#34; height=&#34;216&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;That continues to print &amp;ldquo;?pos?&amp;rdquo; when an entry is erroneously missing the part-of-speech field. And it doesn&amp;rsquo;t abbreviate the term &amp;ldquo;postposition&amp;rdquo;. (If we did so, it&amp;rsquo;d probably be &amp;ldquo;pp.&amp;rdquo;, which people would probably think was &amp;ldquo;participle&amp;rdquo; or something.) But the most common terms, &amp;ldquo;noun&amp;rdquo; and &amp;ldquo;verb&amp;rdquo;, got shrunk down, saving a few characters per entry, which could add up to a dozen pages in a large printout.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-other-formats-other-formats-span&#34;&gt;&lt;span id=&#34;Other_Formats&#34;&gt;Other Formats&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve just been talking about producing conventionally formatted dictionaries, but the same database and the same kinds of Perl could be used to instead produce different output formats. Use a bit of fancy page layout and a double-sided printer (or copier) and the same data can be turned into readymade flashcards. Or if you have a subject field in entries (like &amp;ldquo;plant&amp;rdquo;, &amp;ldquo;color&amp;rdquo;, &amp;ldquo;body part&amp;rdquo;, &amp;ldquo;food&amp;rdquo;), it&amp;rsquo;s easy to re-sort entries by topic, and produce a &amp;ldquo;topical dictionary&amp;rdquo;, which language teachers find very useful in planning classroom exercises.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-world-enough-and-time-world-enough-and-time-span&#34;&gt;&lt;span id=&#34;World_Enough_and_Time&#34;&gt;World Enough and Time&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;As A. N. Whitehead&amp;rsquo;s famous quote goes, &amp;ldquo;Civilization advances by extending the number of important operations which we can perform without thinking about them. Operations of thought are like cavalry charges in a battle - they are strictly limited in number, they require fresh horses, and must only be made at decisive moments.&amp;rdquo; I&amp;rsquo;ve found this to be personally and critically true in dealing with endangered languages: it takes man-years of time to produce a dictionary of any useful size, both on the part of linguists and of members of the community. And with most of North America&amp;rsquo;s native languages, the most fluent speakers are over 65, so there&amp;rsquo;s no great surplus of man-years.&lt;/p&gt;
+
+&lt;p&gt;Whitehead was more right than he knew: saving time and effort doesn&amp;rsquo;t just advance civilizations, it can help save them.&lt;/p&gt;
+
+&lt;p&gt;So when Perl helps us glue together a database program, a printer, and a word processor so that the typesetting phase of a dictionary takes not months, but minutes, this frees up the linguists and teachers and elders to spend scarce time and &amp;ldquo;decisive moments&amp;rdquo; working on preserving the language through study and teaching. We need every minute to work on revitalizing these languages that are the foundation of endangered cultures and civilizations &amp;ndash; with all their stories, poems, songs, sayings, proverbs, figures of speech, jokes, liturgy, and heaps of specialized jargon from botany and agriculture and healing and just plain ways of relating to people and the world, very little of which would survive mere translation to English.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;re in a hurry, and so we really appreciate Perl.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-finished-code-for-sample-haida-dictionary-finished-code-for-sample-haida-dictionary-span&#34;&gt;&lt;span id=&#34;Finished_Code_for_Sample_Haida_Dictionary&#34;&gt;Finished Code for Sample Haida Dictionary&lt;/span&gt;&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;  use strict;
+  use warnings;
+
+  my $For_Editors = 0; # set to 1 to add citations
+
+  use RTF::Writer;
+  use Text::Shoebox::Lexicon;
+  my $lex = Text::Shoebox::Lexicon-&amp;gt;read_file( &amp;quot;haida.sf&amp;quot; );
+
+  my $rtf = RTF::Writer-&amp;gt;new_to_file( &amp;quot;lex.rtf&amp;quot; );
+  $rtf-&amp;gt;prolog( &#39;fonts&#39; =&amp;gt; [ &amp;quot;Times New Roman&amp;quot;, &amp;quot;Bookman&amp;quot;, &amp;quot;Arial&amp;quot; ] );
+
+  use Sort::ArbBiLex (
+    &#39;custom_sort&#39; =&amp;gt;
+    &amp;quot;
+     a A à À á Á â Â ã Ã ä Ä å Å æ Æ
+     b B
+     c C ç Ç
+     d D ð Ð
+     e E è È é É ê Ê ë Ë
+     f F
+     g G
+     h H
+     i I ì Ì í Í î Î ï Ï
+     j J
+     k K
+     l L
+     m M
+     n N ñ Ñ
+     o O ò Ò ó Ó ô Ô õ Õ ö Ö ø Ø
+     p P
+     q Q
+     r R
+     s S ß
+     t T þ Þ
+     u U ù Ù ú Ú û Û ü Ü
+     v V
+     w W
+     x X
+     y Y ý Ý ÿ
+     z Z
+    &amp;quot;
+  );
+  my %headword2entries;
+  my %english2native;
+
+  my %Abbrev = (
+   &#39;auxiliary verb&#39; =&amp;gt; &#39;aux.&#39;,
+   qw(noun n. verb v. adverb adv.),
+  );
+
+  foreach my $entry ($lex-&amp;gt;entries) {
+    my(%e) = $entry-&amp;gt;as_list;
+    push @{ $headword2entries{ $e{&#39;hw&#39;} } },  \%e;
+    my @reversed = $e{&#39;ehw&#39;} ? split( m/\s*;\s*/, $e{&#39;ehw&#39;} )
+                             : reversables( $e{&#39;engl&#39;} );
+    foreach my $engl ( @reversed ) {
+      push @{ $english2native{ $engl } }, $e{&#39;hw&#39;}
+    }
+  }
+
+  $rtf-&amp;gt;paragraph( &amp;quot;Haida to English Dictionary\n\n&amp;quot; );
+
+  foreach my $headword ( custom_sort keys %headword2entries) {
+    foreach my $entry ( @{ $headword2entries{$headword} } ) {
+      print_entry( $entry );
+    }
+  }
+
+  $rtf-&amp;gt;paragraph( &amp;quot;\n\nEnglish to Haida Index\n&amp;quot; );
+
+  foreach my $engl ( custom_sort keys %english2native) {
+    my $native = join &amp;quot;; &amp;quot;, custom_sort @{ $english2native{ $engl } };
+    $rtf-&amp;gt;paragraph( &amp;quot;$engl: $native&amp;quot; );
+  }
+
+  $rtf-&amp;gt;close;
+  exit;
+
+
+  sub reversables {
+    my $in = shift || return;
+    my @english;
+    foreach my $term ( grep $_, split /\s*;\s*/, $in ) {
+      $term =~ s/^(a|an|the|to)\s+//;
+      push @english, $term;
+    }
+    return @english;
+  }
+
+
+  sub print_entry {
+    my %e = %{$_[0]};
+    my($ex, $ex_eng);
+    ($ex, $ex_eng) = split m/\|/, $e{&#39;ex&#39;} if $e{&#39;ex&#39;};
+    $rtf-&amp;gt;paragraph(  \&#39;\fs20&#39;,  # Start out in ten-point
+      [ \&#39;\f1\b&#39;, $e{&#39;hw&#39;}  || &amp;quot;?hw?&amp;quot;, &amp;quot;: &amp;quot; ],
+      [ \&#39;\b\i&#39;,  $Abbrev{$e{&#39;pos&#39;}||&#39;&#39;} || $e{&#39;pos&#39;} || &amp;quot;?pos?&amp;quot; ],
+      &amp;quot; &amp;quot;, $e{&#39;engl&#39;} || &amp;quot;?english?&amp;quot;, &amp;quot;.&amp;quot;,
+      $For_Editors &amp;amp;&amp;amp; $e{&#39;cit&#39;} ? &amp;quot; [$e{&#39;cit&#39;}]&amp;quot; : (),
+      $ex_eng ? (&amp;quot; &amp;quot;, \&#39;\f1&#39;, $ex, \&#39;\f2\fs18&#39;, $ex_eng) : (),
+    );
+  }
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Lightweight Languages</title>
+      <link>http://localhost:1313/pub/2001/11/21/lightweight.html/</link>
+      <pubDate>Wed, 21 Nov 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/11/21/lightweight.html/</guid>
+      <description>&lt;p&gt;What happens if you get a bunch of academic computer scientists and implementors of languages such as Perl, Python, Smalltalk and Curl, and lock them into a room for a day? Bringing together the academic and commercial sides of language design and implementation was the interesting premise behind last weekend&amp;rsquo;s Lightweight Languages Workshop, &lt;a href=&#34;http://ll1.mit.edu&#34;&gt;LL1&lt;/a&gt;, at the AI Lab at MIT, and I&amp;rsquo;m happy to say that it wasn&amp;rsquo;t the great flame-fest you might imagine.&lt;/p&gt;
+
+&lt;p&gt;While there were the occasional jibes from all sides, (and mainly in our direction) it was a good-natured and enjoyable event. The one-day workshop began with a keynote by Olin Shivers, associate professor of computing at Georgia Tech, on how &amp;ldquo;Lambda&amp;rdquo; was the ultimate little language. He was, of course, teaching us about the Joys of Scheme. Olin showed us how we could use Scheme as a basis for implementing domain-specific languages, such as awk, and by embedding these languages in Scheme, one would have not just the power of the original language, but also the implementation language available as well. The alert reader will remember that this is something Larry spoke about in the State of the Onion this year with regard to Perl 6, and something that Damian Conway and Leon Brocard have been working on in Perl 5.&lt;/p&gt;
+
+&lt;p&gt;Olin demonstrated the power of his &amp;ldquo;embedding&amp;rdquo; technique by calling from Scheme to Awk and from Awk back into Scheme in the same routine. He&amp;rsquo;s even written a &lt;a href=&#34;http://www.swiss.ai.mit.edu/ftpdir/scsh&#34;&gt;Scheme shell&lt;/a&gt; along the same lines, but there was some disagreement as to whether or not being able to do shell-like things with Scheme syntax means you have a Scheme shell. Olin also brushed aside suggestions that writing Awk, Scheme and Shell in the same syntax in the same function might be potentially confusing, saying that it had never tripped him up.&lt;/p&gt;
+
+&lt;p&gt;Next came an enlightening panel discussion on the merits of &lt;a href=&#34;http://www.dreamsongs.com/WorseIsBetter.html&#34;&gt;the Worse-Is-Better philosophy&lt;/a&gt;; that is, the idea, that doing it right is not as important as doing it right now. I spoke first, explaining how Parrot development has to strike a balance between being correct, maintainable and fast, and ended by asking why doing the right thing is almost always the opposite of doing the fast thing; Jeremy Hylton, one of the Python developers and a really nice guy, replied that Python did not have this problem - for them, correctness and maintainability were more important than performance, giving them more flexibility in terms of doing it Right.&lt;/p&gt;
+
+&lt;p&gt;Dan Weinreb piped up with the idea that programming implementation tends to be driven by managerial paranoia; thankfully, this is something that both the open-source language implementation community and the academic community are pretty much immune from. Nevertheless, the pressure to release can have adverse affects on future performance, as illustrated by Guy Steele, one of the designers on Java, who told us a sad story about the dangers of Worse Is Better - by putting some vital component of Java (I think it was tail recursion, but it might have been something else) off in order to get release 1.0 out of the door, it made it much harder to implement later on. This resonated with the experience that Python implementors had adding lexical scoping. This rapidly caused a degeneration into whether a language without lexical scoping or the lambda operator can be said to be properly thought out.&lt;/p&gt;
+
+&lt;p&gt;Joe Marshall gave a short talk on one element of the initial implementation of the Rebol programming language. Rebol 1.0 was slightly different from the &amp;ldquo;network programming language&amp;rdquo; that Rebol is today - it was essentially Scheme with the brackets filed off. He explained that in his original Scheme implementation, he used a terribly complicated trick to avoid outgrowing the stack; something that was completely rewritten in the next implementation. Again we found that maintainability was more important in the long run.&lt;/p&gt;
+
+&lt;p&gt;Jeremy Hylton then gave his presentation, on the design and implementation of Python. It was amusing but, at least to me, not entirely surprising, that Jeremy was the one developer at the conference that Dan Sugalski and I had most in common with. The implementation teams of Perl and Python are facing very much the same problems and approaching them in only very slightly different ways. That is, compared with many of the other approaches we saw presented, at least.&lt;/p&gt;
+
+&lt;p&gt;Then it was our turn. We were running very late by this point, so I skipped over most of my talk; Dan explained what a lightweight language usually needed from its interpreter, and how Parrot was planning to provide that. David Simmons, one of the developers of SmallScript, a &amp;ldquo;scripting&amp;rdquo; Smalltalk implementation, challenged us on the viability of JIT compiling Parrot code, something we were interested in after looking at the &lt;a href=&#34;http://www.go-mono.com&#34;&gt;Mono project&lt;/a&gt;&amp;rsquo;s JIT compiler.&lt;/p&gt;
+
+&lt;p&gt;We had been intrigued all day by the title of Shriram Krishnamurthi&amp;rsquo;s talk, &amp;ldquo;The Swine Before Perl.&amp;rdquo; We didn&amp;rsquo;t know whether that referred to us or to Jeremy, who was talking before us. In the event, Shriram delivered a wonderfully interesting presentation about Scheme, and how he could apply &amp;ldquo;laziness, impatience and hubris&amp;rdquo; to Scheme programming. He mentioned a Scheme Web server that served dynamic pages many times faster than Apache/mod_perl, and a way of manipulating Scheme macros to provide a pre-compiled state-machine generator. He countered criticisms that Scheme is just lots of insane silly parentheses by demonstrating how XML was just lots of insane silly angle brackets. A fair point well made.&lt;/p&gt;
+
+&lt;p&gt;Waldemar Horwat lead us through some of the more important design decisions involved in JavaScript version 2.0. No, don&amp;rsquo;t laugh, it&amp;rsquo;s a much more fully featured language than you&amp;rsquo;d think. His main point was, unsurpisingly, something else that Larry had picked up on in his State of the Onion talk; that modules need to provide ways of encoding the version of their API so as to protect their namespace from subclasses. That&amp;rsquo;s to say, if there&amp;rsquo;s a Perl module &lt;code&gt;Foo&lt;/code&gt; and you subclass it to &lt;code&gt;Foo::Advanced&lt;/code&gt; by adding a &lt;code&gt;frobnitz&lt;/code&gt; method, then what happens when the original author of &lt;code&gt;Foo&lt;/code&gt; produces the next version of &lt;code&gt;Foo&lt;/code&gt; that already has a &lt;code&gt;frobnitz&lt;/code&gt; method? Waldemar&amp;rsquo;s solution was to use version-specific namespaces that only expose certain subsets of the whole API if a particular version number is asked for. This allows dependent modules to be future-proofed.&lt;/p&gt;
+
+&lt;p&gt;Christopher Barber gave a talk on Curl, a bizarre little language that fills the same sort of niche as Flash. David Simmons spoke about SmallScript and his work porting Smalltalk to the Microsoft CLR; he had high hopes for the way Microsoft .NET was panning out. Jonathan Bachrach, one of the AI Labs researchers gave a clever talk, which I missed due to being out in the corridors debating the finer points of threading and continuations with a Scheme hacker. I returned to see him explain a efficient but highly difficult to follow method of determining whether two classes are the same; he also said that his language compiles down to C and the C compiler is executed on the fly, since it&amp;rsquo;s faster to call GCC than to start up your own virtual machine. Paul Graham rounded off the talks by talking about his new dialect of Lisp, which he called Arc. Arc is designed to be a language for &amp;ldquo;good programmers&amp;rdquo; only, and gets away without taking the shortcuts and safeguards that you need if you&amp;rsquo;re trying to be accessible. His presentation was very entertaining, and I have high hopes for his little language.&lt;/p&gt;
+
+&lt;p&gt;As I&amp;rsquo;ve indicated, the interest of the workshop was as much what was going on outside the talks as well; Dan and I got to meet a load of interesting and clever people, and it was challenging for us to discuss our ideas with them - especially since we didn&amp;rsquo;t always see eye to eye with our academic counterparts. Sadly, few people seemed to have heard much about &lt;a href=&#34;http://www.ruby-lang.org/&#34;&gt;Ruby&lt;/a&gt;, something they will probably come to regret in time. Dan seemed to have picked up a few more interesting technical tips, such as a way to collect reference count loops without walking all of the objects in a heap. Oh, and we found that you should pour liquid nitrogen into containers first rather than trying to make ice cream by directly pouring it into a mix of milk and butter. And that the ice-cream so produced is exceptionally tasty.&lt;/p&gt;
+
+&lt;p&gt;But seriously, what did we learn? I think we learned that many problems that we&amp;rsquo;re facing in terms of Perl implementation right now have already been thoroughly researched and dealt with as many as 30 years ago; but we also learned that if we want to get at this research, then we need to do a lot of digging. The academic community is good at solving tricky problems like threading, continuations, despatch and the like, but not very interested in working out all the implications. To bring an academic success to commercial fruition requires one, as Olin Shivers puts it, &amp;ldquo;to become Larry Wall for a year&amp;rdquo; - to take care of all the gritty implementation details, and that&amp;rsquo;s not the sort of thing that gets a PhD.&lt;/p&gt;
+
+&lt;p&gt;So the impetus is on us as serious language implementors to take the time to look into and understand the current state of the art in VM research to avoid re-inventing the wheel. Conferences such as LL1, and the mailing list that has been established as a result of it, are a useful way for us to find out what&amp;rsquo;s going on and exchange experience with the academic community, and I look forward intently to the next one!&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;O&amp;rsquo;Reilly &amp;amp; Associates was proud to be a co-sponsor of the Lightweight Languages Workshop.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How Perl Creates Orders For The Air Force</title>
+      <link>http://localhost:1313/pub/1998/07/rwperl.html/</link>
+      <pubDate>Wed, 22 Jul 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/1998/07/rwperl.html/</guid>
+      <description>&lt;p&gt;&lt;em&gt;This article is the first in a series that will provide examples of Perl solving real-world problems, particularly in an organization. If you have your own real-life story to tell, send it to &lt;a href=&#34;mailto:dale@songline.com&#34;&gt;Perl.com Editor&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;How many times have I been in a meeting where someone questions using Perl for a key business application? Someone says we shouldn&amp;rsquo;t use Perl because it is &lt;em&gt;freeware&lt;/em&gt;. Most programming languages, I argue, are not &lt;em&gt;owned&lt;/em&gt; by anyone. Are C and C++ any different from Perl in that regard? If I win that point, someone brings up yet another. I once had a webmaster tell me that we shouldn&amp;rsquo;t use Perl because of virus concerns.&lt;/p&gt;
+
+&lt;p&gt;I just have to accept the fact that educating everyone about Perl is part of the price I pay to use Perl. Fortunately, most people are easily persuaded and when I start talking about Perl, it is hard to shut me up.&lt;/p&gt;
+
+&lt;p&gt;While I was in the Air Force, I worked in the Base Network Control Center. It was our responsibility to handle all computer hardware and software purchases for the base.&lt;/p&gt;
+
+&lt;p&gt;The process of ordering equipment was not simple. Many forms had to be filled out and then signed by the right people in all of the right places.&lt;/p&gt;
+
+&lt;p&gt;We had created a database to track all of this for us but it was still a difficult process. A single order might have to be on 10 different forms and have 2 or 3 different documents generated. Also, there were 13 different times that the database entries had to be updated, from the start of an order until the equipment was received and picked up. This left too much room for human error. Updating the database was a bother and many times it just didn&amp;rsquo;t get done. Because of this, the integrity of the database was always in question. Even &lt;em&gt;if&lt;/em&gt; the database was religiously maintained, the ordering process itself was cumbersome. With nearly 1,000 orders per year, this was a lot of work!&lt;/p&gt;
+
+&lt;p&gt;Since I was doing Web development for the base, I proposed a web-based solution written in Perl. In a meeting to discuss the project, I was candid. I said I wasn&amp;rsquo;t sure I could do it but I&amp;rsquo;d give it a try. There were other solutions proposed but my Web-based solution won out.&lt;/p&gt;
+
+&lt;p&gt;We had a list of requirements for the application:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Web-based database&lt;/li&gt;
+&lt;li&gt;Customer ability to check their order status&lt;/li&gt;
+&lt;li&gt;Eliminate unnecessary database entries&lt;/li&gt;
+&lt;li&gt;Automate as many necessary entries as possible&lt;/li&gt;
+&lt;li&gt;Generate forms from a web-based interface&lt;/li&gt;
+&lt;li&gt;Generate letters automatically when necessary&lt;/li&gt;
+&lt;li&gt;Notify customers via e-mail when their equipment arrives&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The new Perl application was built around a database. It was actually a flat-file text database. There were two data files that we used; open and closed. The open database had around 1,000 records, and the closed database had around 6,000 records. Each record had 33 fields. (In retrospect, I might not do it with text files again. On a smaller project, text files are fine but something of this size should have been on a real database.) Overall, the speed wasn&amp;rsquo;t a problem since 95% of what we did was on the smaller, open database file.&lt;/p&gt;
+
+&lt;p&gt;Our personnel were able to create and update database entries from their web browser. The application also created forms and other documents that they needed. For instance, we generated printable order forms compatible with the Delrina Form Flow software that was in place for creating equipment orders. We also stored the form data so that forms could be called up and changed or reprinted at a later time.&lt;/p&gt;
+
+&lt;p&gt;We also handled other documents in Rich Text Format (RTF), which the Perl application could easily manipulate. We could modify the RTF files on the fly and send the results to the client for printing.&lt;/p&gt;
+
+&lt;p&gt;Once the equipment arrived on site, our personnel used the Web interface to bring up the order number, check which items had come in and the database was updated. Perhaps the best feature was that the customers were automatically e-mailed a message that listed the items that had come in.&lt;/p&gt;
+
+&lt;p&gt;This solution saved us an &lt;em&gt;official&lt;/em&gt; estimate of 900 man-hours per year. That is all that I could justify on paper. I personally think that this estimate was low. It simplified so many areas of the ordering process that I could safely say it saved well over 1,500 man-hours per year.&lt;/p&gt;
+
+&lt;p&gt;Not only did it save time:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Our customers were able to check the status of their orders from their desktop&lt;/li&gt;
+&lt;li&gt;Our customers got the most current information available&lt;/li&gt;
+&lt;li&gt;The database integrity was greatly improved&lt;/li&gt;
+&lt;li&gt;The manual database updates were cut down from 13 to 5&lt;/li&gt;
+&lt;li&gt;Many database functions were masked behind the web interface&lt;/li&gt;
+&lt;li&gt;Saved 20-30 phone calls per week because customers could check status on their own&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is just one example of how Perl can be used to create programs that simplify difficult processes and save time and money for any organization. Sure, there are many other languages and commercial applications that you can choose to develop in, but they too have pros and cons. I have had many of the more &lt;em&gt;seasoned&lt;/em&gt; web developers ask me &lt;em&gt;&amp;ldquo;why don&amp;rsquo;t I develop in Java?&amp;rdquo;&lt;/em&gt; I ask them back &amp;ldquo;&lt;em&gt;Why don&amp;rsquo;t you develop in Perl?&amp;rdquo;&lt;/em&gt; I have never been faced with a Web application that I could not do in Perl.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Support for XML Developing</title>
+      <link>http://localhost:1313/pub/1998/06/perl-xml.html/</link>
+      <pubDate>Tue, 10 Mar 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/1998/06/perl-xml.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;how-to-make-perl-the-language-of-choice-for-xml&#34;&gt;How to Make Perl The Language of Choice for XML&lt;/h3&gt;
+
+&lt;p&gt;Perl has been the language of choice for anyone doing serious text processing. Now efforts are underway to make Perl the language of choice for those doing &amp;ldquo;structured&amp;rdquo; text processing using the Extensible Markup Language (XML).&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://www.w3.org/tr/1998/rec-xml-19980210&#34;&gt;XML 1.0 specification&lt;/a&gt; was recently (Feb. 10, 1998) released as a recommendation by the &lt;a href=&#34;http://www.w3.org/&#34;&gt;World Wide Web Consortium&lt;/a&gt;. XML is a subset of SGML (Standard Generalized Markup Language) and it seems to be emerging as a universal syntax for defining non-proprietary document markup and data formats. XML made significant changes to SGML to reflect the nature of the Web and to make it easier to build tools that process XML.&lt;/p&gt;
+
+&lt;p&gt;Tim Bray, co-editor of the XML 1.0 specification, has used Perl extensively for huge text processing applications. He had a special interest in seeing a bridge built from Perl to XML &amp;ndash; one that would make it simple for programmers to process XML data. So, out of this interest, a small group of developers met at O&amp;rsquo;Reilly &amp;amp; Associates in Sebastopol, California for a one-day Perl/XML summit. In addition to Tim, those attending the summit were:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Larry Wall, creator of Perl, and senior developer, O&amp;rsquo;Reilly &amp;amp; Associates&lt;/li&gt;
+&lt;li&gt;Dick Hardt, developer of Perl for Win 32, and Chief Technology Officer, ActiveState Tool Corp.&lt;/li&gt;
+&lt;li&gt;Tim O&amp;rsquo;Reilly, President and CEO, O&amp;rsquo;Reilly &amp;amp; Associates&lt;/li&gt;
+&lt;li&gt;Dale Dougherty, CEO, Songline Studios&lt;/li&gt;
+&lt;li&gt;Gina Blaber, Director, Software Products Group, O&amp;rsquo;Reilly &amp;amp; Associates.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&amp;ldquo;In the design of XML, we were continuously mindful of the need to enable the fast, efficient creation of scripts and programs for processing XML,&amp;rdquo; says Tim Bray.&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;For many of us in the XML effort, the most important goal is to increase the proportion of the world&amp;rsquo;s documents stored in open, non-proprietary formats,&amp;rdquo; Bray continues. &amp;ldquo;Building slick XML processing into Perl makes the use of such formats more rewarding and helps frustrate the efforts of those who would imprison human knowledge behind the barbed-wire of proprietary file formats.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;XML is currently perceived as powerful and important, but not particularly easy,&amp;rdquo; explains Larry Wall. &amp;ldquo;This makes XML and Perl naturally complementary, since Perl is a language that makes easy things easy to do, and hard things possible.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;One of the first steps that the summit group identified was to get Perl working with Unicode (ISO 10646). Unicode enables code to be easily translated into other languages; XML requires Unicode. Larry Wall will lead the team working on this task.&lt;/p&gt;
+
+&lt;p&gt;The next step is figuring out at what level Perl actually provides support for XML: whether it&amp;rsquo;s built into the language, implemented as a module or a combination of both.&lt;/p&gt;
+
+&lt;p&gt;Among the goals set at the meeting were:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Release a Perl/XML spec in Q3, 1998.&lt;/li&gt;
+&lt;li&gt;Establish a mailing list for discussion of Perl and XML developer issues.&lt;/li&gt;
+&lt;li&gt;Develop an XML white paper, co-authored by Larry Wall and Tim Bray, to be released this spring.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you are interested in these efforts, you might want to attend the Perl and XML session at the XML Developer&amp;rsquo;s Day in Seattle at the &lt;a href=&#34;http://www.gca.org/&#34;&gt;The XML Conference&lt;/a&gt; on March 27, 1998. Larry Wall and Dick Hardt will be speaking. The Perl Developer Update will also keep track of new announcements.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

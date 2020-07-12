@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Test Builder Tester on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/test-builder-tester/</link>
+    <description>Recent content in Test Builder Tester on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 08 Dec 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/test-builder-tester/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Testing Files and Test Modules</title>
+      <link>http://localhost:1313/pub/2005/12/08/test_files.html/</link>
+      <pubDate>Thu, 08 Dec 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/12/08/test_files.html/</guid>
+      <description>
+
+&lt;p&gt;For the last several years, there has been more and more emphasis on automated testing. No self-respecting CPAN author can post a distribution without tests. Yet some things are hard to test. This article explains how writing &lt;code&gt;Test::Files&lt;/code&gt; gave me a useful tool for validating one module&amp;rsquo;s output and taught me a few things about the current state of Perl testing.&lt;/p&gt;
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;My boss put me to work writing a moderately large suite in Perl. Among many other things, it needed to perform check out and commit operations on CVS repositories. In a quest to build quality tests for that module, I wrote &lt;a href=&#34;https://metacpan.org/pod/Test::Files&#34;&gt;&lt;code&gt;Test::Files&lt;/code&gt;&lt;/a&gt;, which is now on CPAN. This article explains how to use that module and, perhaps more importantly, how it tests itself.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-test-files&#34;&gt;Using &lt;code&gt;Test::Files&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;To use &lt;code&gt;Test::Files&lt;/code&gt;, first use &lt;a href=&#34;https://metacpan.org/pod/Test::More&#34;&gt;&lt;code&gt;Test::More&lt;/code&gt;&lt;/a&gt; and tell it how many tests you want to run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use strict;
+use warnings;
+use Test::More tests =&amp;gt; 5;
+use Test::Files;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After you use the module, there are four things it can help you do:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Compare one file to a string or to another file.&lt;/li&gt;
+&lt;li&gt;Make sure that directories have the files you expect them to have.&lt;/li&gt;
+&lt;li&gt;Compare all the files in one directory to all the files in another directory.&lt;/li&gt;
+&lt;li&gt;Exclude some things from consideration.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;single-files&#34;&gt;Single Files&lt;/h3&gt;
+
+&lt;p&gt;In the simplest case, you have written a file. Now it is time to validate it. That could look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;file_ok($file_name, &amp;quot;This is the\ntext\n&amp;quot;,
+    &amp;quot;file one contents&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;file_ok&lt;/code&gt; function takes two (or optionally, and preferably, three) arguments. The first is the name of the file you want to validate. The second is a text string containing the text that should be in the file. The third is the name of the test. In the rush of writing, I&amp;rsquo;m likely to fail to mention the test names at some point, so let me say up front that all of the tests shown here take a name argument. Including a name makes finding the test easier.&lt;/p&gt;
+
+&lt;p&gt;If the file agrees with the string, the test passes with only an OK message. Otherwise, the test will fail and diagnostic messages will show where the two differed. The diagnostic output is really the reason to use &lt;code&gt;Test::Files&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Some, including myself, prefer to check one file against another. I put one version in the distribution. The other one, my tests write. To compare two files, use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;compare_ok($file1, $file2, $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As with &lt;code&gt;file_ok&lt;/code&gt;, if the files are the same, &lt;code&gt;Test::Files&lt;/code&gt; only reports an OK message. Failure shows where the files differ.&lt;/p&gt;
+
+&lt;h3 id=&#34;directory-structures&#34;&gt;Directory Structures&lt;/h3&gt;
+
+&lt;p&gt;Sometimes, you need to validate that certain files are present in a directory. Other times, you need to make that check exclusive so that only known files are present. Finally, you might want to know that not only is the directory structure is the same, but that the files contain the same data.&lt;/p&gt;
+
+&lt;p&gt;To look for some files in a directory by name, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;dir_contains_ok($dir, [qw(list files here)], $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will succeed, even if the directory has some other files you weren&amp;rsquo;t looking for.&lt;/p&gt;
+
+&lt;p&gt;To ensure that your list is exclusive, add only to the function name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;dir_only_contains_ok($dir, [qw(list all files here)], $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Both of these report a list of absent files if they fail due to them. The exclusive form also reports a list of unexpected files, if it sees any.&lt;/p&gt;
+
+&lt;h3 id=&#34;directory-contents&#34;&gt;Directory Contents&lt;/h3&gt;
+
+&lt;p&gt;If knowing that certain file names are present is not enough, use the &lt;code&gt;compare_dirs_ok&lt;/code&gt; function to check the contents of all files in one directory against files in another directory. A typical module might build one directory during &lt;code&gt;make test&lt;/code&gt;, with the other built ahead of time and shipped with the distribution.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;compare_dirs_ok($test_built, $shipped, $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will generate a separate diagnostic &lt;code&gt;diff&lt;/code&gt; output for each pair of files that differs, in addition to listing files that are missing from either distribution. (If you need to know which files are missing from the built directory, either reverse the order of the directories or use &lt;code&gt;dir_only_contains_ok&lt;/code&gt; in addition to &lt;code&gt;compare_dirs_ok&lt;/code&gt;. This is a bug and might eventually be fixed.) Even though this could yield many diagnostic reports, all of those separate failures only count as one failed test.&lt;/p&gt;
+
+&lt;p&gt;There are many times when testing &lt;em&gt;all&lt;/em&gt; files in the directories is just wrong. In these cases, it is best to use &lt;a href=&#34;https://metacpan.org/pod/File::Find&#34;&gt;&lt;code&gt;File::Find&lt;/code&gt;&lt;/a&gt; or an equivalent, putting an exclusion criterion at the top of your wanted function and a call to &lt;code&gt;compare_ok&lt;/code&gt; at the bottom. This probably requires you to use &lt;code&gt;no_plan&lt;/code&gt; with &lt;code&gt;Test::More&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More qw(no_plan);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Test::More&lt;/code&gt; wants to know the exact number of tests you are about to run. If you tell it the wrong number, the test harness will think something is wrong with your test script, causing it to report failures. To avoid this confusion, use &lt;code&gt;no_plan&lt;/code&gt;&amp;ndash;but keep in mind that plans are there for a reason. If your test dies, the plan lets the harness know how many tests it missed. If you have &lt;code&gt;no_plan&lt;/code&gt;, the harness doesn&amp;rsquo;t always have enough information to keep score. Thus, you should put such tests in separate scripts, so that the harness can count your other tests properly.&lt;/p&gt;
+
+&lt;h3 id=&#34;filtering&#34;&gt;Filtering&lt;/h3&gt;
+
+&lt;p&gt;While the above list of functions seemed sufficient during planning, reality set in as soon as I tried it out on my CVS module. I wanted to compare two CVS repositories: one ready for shipment with the distribution, the other built during testing. As soon as I tried the test it failed, not because the operative parts of the module were not working, but because the CVS timestamps differed between the two versions.&lt;/p&gt;
+
+&lt;p&gt;To deal with cosmetic differences that should not count as failures, I added two functions to the above list: one for single files and the other for directories. These new functions accept a code reference that receives each line prior to comparison. It performs any needed alterations, and then returns a line suitable for comparison. My example function below redacts the offending timestamps. With the filtered versions in place, the tests pass and fail when they should.&lt;/p&gt;
+
+&lt;p&gt;My final tests for the CVS repository directories look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;compare_dirs_filter_ok(
+    &#39;t/cvsroot/CVSROOT&#39;,
+    &#39;t/sampleroot/CVSROOT&#39;,
+    \&amp;amp;chop_dates,
+    &amp;quot;make repo&amp;quot;
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code reference argument comes between the directory names and the test name. The &lt;code&gt;chop_dates&lt;/code&gt; function is not particularly complex. It removes two kinds of dates favored by CVS, as shown in its comments.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub chop_dates {
+    my $line =  shift;
+
+    #  2003.10.15.13.45.57 (year month day hour minute sec)
+    $line    =~ s/\d{4}(.\d\d){5}//;
+
+    #  Thu Oct 16 18:00:28 2003
+    $line    =~ s/\w{3} \w{3} \d\d? \d\d:\d\d:\d\d \d{4}//;
+
+    return $line;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This shows the general behavior of filters. They receive a line of input which they must not directly change. Instead, they must return a new, corrected line.&lt;/p&gt;
+
+&lt;p&gt;In addition to &lt;code&gt;compare_dirs_filter_ok&lt;/code&gt; for whole directory structures, there is also &lt;code&gt;compare_filter_ok&lt;/code&gt;, which works similarly for single file comparisons. (There is no &lt;code&gt;file_filter_ok&lt;/code&gt;, but maybe there should be.)&lt;/p&gt;
+
+&lt;h3 id=&#34;testing-a-test-module&#34;&gt;Testing a Test Module&lt;/h3&gt;
+
+&lt;p&gt;The most interesting part of writing &lt;code&gt;Test::Files&lt;/code&gt; was learning how to test it. Thanks to Schwern, I learned about &lt;a href=&#34;https://metacpan.org/pod/Test::Builder::Tester&#34;&gt;&lt;code&gt;Test::Builder::Tester&lt;/code&gt;&lt;/a&gt;, which eases the problems inherent in testing a Perl test module.&lt;/p&gt;
+
+&lt;p&gt;The difficulty with testing Perl tests has to do with how they normally run. The venerable test harness scheme expects test scripts to produce pass and fail data on standard out and diagnostic help on standard error. This is a great design. The simplicity is exactly what you would expect from a Unix-inspired tool. Yet, it poses a problem for testing test modules.&lt;/p&gt;
+
+&lt;p&gt;When eventual users use the test module, their harness expects it to write quite specific things to standard out and standard error. Among the things that must go to standard out are a sequence of lines such as &lt;code&gt;ok 1&lt;/code&gt;. When you write a test of the test module, its harness also expects to see this sort of data on standard out and standard error. Having two different sources of &lt;code&gt;ok 1&lt;/code&gt; is highly confusing, not least to the harness, which chokes on such duplications.&lt;/p&gt;
+
+&lt;p&gt;Test module writers need a scheme to trap the output from the module being tested, check it for correct content, and report that result onto the actual standard channels for the harness to see. This is tricky, requiring care in diversion of file handles at the right moments without the knowledge of the module whose output is diverted. Doing this by hand is inelegant and prone to error. Further, multiple test scripts might have to recreate home-rolled solutions (introducing the oldest of known coding sins: duplication of code). Finally, the diagnostic output, in the event of failure, from homemade diverters is unlikely to be helpful when tests of the test module fail.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Enter &lt;code&gt;Test::Builder::Tester&lt;/code&gt;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To help us test testers, Mark Fowler collected some code from Schwern, and used it to make &lt;code&gt;Test::Builder::Tester&lt;/code&gt;. With it, tests of test modules are relatively painless and their failure diagnostics are highly informative. Here are two examples from the &lt;code&gt;Test::Files&lt;/code&gt; test suite. The first shows a file comparison that should pass:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;test_out(&amp;quot;ok 1 - passing file&amp;quot;);
+compare_ok(&amp;quot;t/ok_pass.dat&amp;quot;, &amp;quot;t/ok_pass.same.dat&amp;quot;,
+    &amp;quot;passing file&amp;quot;);
+test_test(&amp;quot;passing file&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This test should work, generating &lt;code&gt;ok 1 - passing file&lt;/code&gt; on standard output. To tell &lt;code&gt;Test::Builder::Tester&lt;/code&gt; what the standard output should be, I called &lt;code&gt;test_out&lt;/code&gt;. After the test, I called &lt;code&gt;test_test&lt;/code&gt; with only the name of my test. (To avoid confusion, I made the test names the same.)&lt;/p&gt;
+
+&lt;p&gt;Between the call to &lt;code&gt;test_out&lt;/code&gt; and the one to &lt;code&gt;test_test&lt;/code&gt;, &lt;code&gt;Test::Builder::Tester&lt;/code&gt; diverted the regular output channels so the harness won&amp;rsquo;t see them.&lt;/p&gt;
+
+&lt;p&gt;The second example shows a failed test and how to check both standard out and standard error. The later contains the diagnostic data the module should generate.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;test_out(&amp;quot;not ok 1 - failing file&amp;quot;);
+$line = line_num(+9);
+test_diag(&amp;quot;    Failed test (t/03compare_ok.t at line $line)&amp;quot;,
+&#39;+---+--------------------+-------------------+&#39;,
+&#39;|   |Got                 |Expected           |&#39;,
+&#39;| Ln|                    |                   |&#39;,
+&#39;+---+--------------------+-------------------+&#39;,
+&#39;|  1|This file           |This file          |&#39;,
+&#39;*  2|is for 03ok_pass.t  |is for many tests  *&#39;,
+&#39;+---+--------------------+-------------------+&#39;  );
+compare_ok(&amp;quot;t/ok_pass.dat&amp;quot;, &amp;quot;t/ok_pass.diff.dat&amp;quot;,
+    &amp;quot;failing file&amp;quot;);
+test_test(&amp;quot;failing file&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Two new functions appear here. First, &lt;code&gt;line_num&lt;/code&gt; returns the current line number plus or minus an offset. Because failing tests report the line number of the failure, checking standard error for an exact match requires matching that number. Yet, no one wants his tests to break because he inserted a new line at the top of the script. With &lt;code&gt;line_num&lt;/code&gt;, you can obtain the line number of the test relative to where you are. Here, there are nine lines between the call to &lt;code&gt;line_num&lt;/code&gt; and the actual test.&lt;/p&gt;
+
+&lt;p&gt;The other new function is &lt;code&gt;test_diag&lt;/code&gt;. It allows you to check the standard error output, where diagnostic messages appear. The easiest way to use it is to provide each line of output as a separate parameter.&lt;/p&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;Now you know how to use &lt;code&gt;Test::Files&lt;/code&gt; and how to test modules that implement tests. There is one final way I use &lt;code&gt;Test::Files&lt;/code&gt;. I use it outside of module testing any time I want to know how the contents of text files in two directory hierarchies compare. With this, I can quickly locate differences in archives, for example, enabling me to debug builders of those archives. In one example, I used it compare more than 400 text files in two WebSphere .ear archives. My program had only about 30 operative lines (there were also comments and blank lines) and performed the comparison in under five seconds. This is testament to the leverage of Perl and CPAN.&lt;/p&gt;
+
+&lt;p&gt;(Since doing that comparison, I have moved to a new company. In the process I exchanged WebSphere for &lt;code&gt;mod_perl&lt;/code&gt; and am generally happier with the latter.)&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

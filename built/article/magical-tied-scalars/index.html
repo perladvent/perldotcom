@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Magical tied scalars </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Subvert and simplify code with tied scalars"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/magical-tied-scalars/" />
+<meta property="og:title" content="Magical tied scalars" />
+<meta property="og:description" content="Subvert and simplify code with tied scalars">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2016-02-02T02:02:02Z" />
+<meta property="og:image" content="http://localhost:1313/images/author/brian-d-foy.jpg" />
+<meta property="og:article:tag" content="tie" />
+<meta property="og:article:tag" content="scalar" />
+<meta property="og:article:tag" content="callback" />
+<meta property="og:article:tag" content="cycle" />
+<meta property="og:article:tag" content="mastering-perl" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Magical tied scalars</h1>
+              <p class="blog-post-meta">Feb 16, 2016 by
+              
+              
+                
+                
+                <a href="#author-bio-brian-d-foy">brian d foy</a>
+              
+              </p>
+              <img alt="" src=""/>
+                <p>Perl&rsquo;s <code>tie</code> mechanism allows me to create something that looks like a scalar but does anything I want it to do. I can change how the familiar scalar interface of simple access and assignment actually work. I&rsquo;ve found this so useful at times that I devoted an entire chapter of <a href="http://www.masteringperl.org/">Mastering Perl</a> to it.</p>
+
+<p>I think I fell in love with this technique when it allowed me to solve a seemly intractable problem creating some HTML by hand (so you know this must have been a long time ago). Someone had created a library to create an HTML table that allowed me to set the color of the table rows by passing in a scalar value for <code>tr</code>&rsquo;s <code>bgcolor</code> attribute. Fortunately I&rsquo;ve forgotten who that was or what the code looked like, but it was something like this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">print_table_and_stuff</span> {
+    <span style="color:#66d9ef">my</span>( $color, @lots_of_other_arguments ) <span style="color:#f92672">=</span> @_;
+
+    <span style="color:#f92672">...</span> lots of code <span style="color:#f92672">...</span>
+    <span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;&lt;table&gt;&#34;</span>;
+
+    <span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $item ( @items ) {
+            <span style="color:#66d9ef">print</span> <span style="color:#e6db74">qq(&lt;tr bgcolor=&#34;$color&#34;&gt;)</span>;
+            <span style="color:#f92672">...</span> fill in the cells <span style="color:#f92672">...</span>
+            <span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;&lt;/tr&gt;&#34;</span>;
+            }
+
+    <span style="color:#f92672">...</span> lots of code <span style="color:#f92672">...</span>
+    }</code></pre></div>
+<p>Besides all the goofy things going on with the code, such as printing directly and not using templates, whoever wrote it wasn&rsquo;t thinking that anyone would want to have tables with alternating (or even rotating) row colors. There was a time before that was a thing and the code pre-dated even that. My task was to get alternating row colors with as little disturbance as possible.</p>
+
+<p>I could have replaced the subroutine using one of the techniques I showed in <a href="http://www.masteringperl.org/">Mastering Perl</a>, but there was something simpler. If I could get <code>$color</code> to change on its own, I wouldn&rsquo;t have to mess with the code.</p>
+
+<p>Thus, I invented <a href="https://metacpan.org/pod/Tie::Cycle">Tie::Cycle</a>. The <code>tie</code> interface allows me to decide what a scalar should do when I access it or store it. I supply code behind both of those operations by defining special subroutines. Here&rsquo;s an extract of the code that shows those special methods:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">package</span> Tie::Cycle;
+<span style="color:#66d9ef">use</span> strict;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">TIESCALAR</span> {
+        <span style="color:#66d9ef">my</span>( $class, $list_ref ) <span style="color:#f92672">=</span> @_;
+        <span style="color:#66d9ef">my</span> $self <span style="color:#f92672">=</span> bless <span style="color:#f92672">[]</span>, $class;
+
+        <span style="color:#66d9ef">unless</span>( $self<span style="color:#f92672">-&gt;</span>STORE( $list_ref ) ) {
+                carp <span style="color:#e6db74">&#34;Argument must be an array reference&#34;</span>;
+                <span style="color:#66d9ef">return</span>;
+                }
+
+        <span style="color:#66d9ef">return</span> $self;
+        }
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">FETCH</span> {
+        <span style="color:#66d9ef">my</span>( $self ) <span style="color:#f92672">=</span> @_;
+
+        <span style="color:#66d9ef">my</span> $index <span style="color:#f92672">=</span> $self<span style="color:#f92672">-&gt;</span>[CURSOR_COL]<span style="color:#f92672">++</span>;
+        $self<span style="color:#f92672">-&gt;</span>[CURSOR_COL] %<span style="color:#960050;background-color:#1e0010">=</span> <span style="color:#960050;background-color:#1e0010">$</span>self<span style="color:#f92672">-&gt;</span>_count;
+
+        <span style="color:#66d9ef">return</span> $self<span style="color:#f92672">-&gt;</span>_item( $index );
+        }
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">STORE</span> {
+        <span style="color:#66d9ef">my</span>( $self, $list_ref ) <span style="color:#f92672">=</span> @_;
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">unless</span> ref $list_ref <span style="color:#f92672">eq</span> ref <span style="color:#f92672">[]</span>;
+        <span style="color:#66d9ef">my</span> @shallow_copy <span style="color:#f92672">=</span> map { $_ } @$list_ref;
+
+        $self<span style="color:#f92672">-&gt;</span>[CURSOR_COL] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+        $self<span style="color:#f92672">-&gt;</span>[COUNT_COL]  <span style="color:#f92672">=</span> scalar @shallow_copy;
+        $self<span style="color:#f92672">-&gt;</span>[ITEM_COL]   <span style="color:#f92672">=</span> <span style="color:#f92672">\</span>@shallow_copy;
+        }</code></pre></div>
+<p>The <code>tie</code> interface includes the <code>TIESCALAR</code> method that creates the <code>tied</code> object, the <code>FETCH</code> method that decides how to return a value, and the <code>STORE</code> method that decides how to store a value. In this case, I want to store an array of values and cycle through them. Each time I access the scalar, Perl calls <code>FETCH</code>. Each time it calls <code>FETCH</code> I increment a counter so I&rsquo;ll get the next value. When I get to the end, I wrap around to the beginning of the array.</p>
+
+<p>In this short bit of code, I create the tied scalar by calling <code>tie</code> with the target scalar, the module name that defines the interface, and the arguments to pass to <code>TIESCALAR</code>. After that, I use <code>$scalar</code> as a normal scalar:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.10</span>;
+<span style="color:#66d9ef">use</span> Tie::Cycle;
+
+tie <span style="color:#66d9ef">my</span> $scalar, <span style="color:#e6db74">&#39;Tie::Cycle&#39;</span>, [ <span style="color:#e6db74">qw(red green blue)</span> ];
+
+<span style="color:#66d9ef">my</span> $count;
+<span style="color:#66d9ef">while</span>( $count<span style="color:#f92672">++</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">10</span> ) {
+        say $scalar;
+        }</code></pre></div>
+<p>Each time through the <code>while</code>, I output the value of <code>$scalar</code>. It doesn&rsquo;t look like I&rsquo;m doing anything fancy, but I&rsquo;m implicitly calling <code>Tie::Cycle::FETCH</code> each time. Now the colors rotate.</p>
+
+<p>This is a bit more fun when I cycle through colored boxes:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.10</span>;
+<span style="color:#66d9ef">use</span> open <span style="color:#e6db74">qw(:std :utf8)</span>;
+
+<span style="color:#66d9ef">use</span> Tie::Cycle;
+<span style="color:#66d9ef">use</span> Term::ANSIColor;
+
+tie <span style="color:#66d9ef">my</span> $scalar, <span style="color:#e6db74">&#39;Tie::Cycle&#39;</span>, [
+        map { colored( [ $_ ], <span style="color:#e6db74">&#34;\x{25AE}&#34;</span> ) }
+                <span style="color:#e6db74">qw(red green blue)</span>
+        ];
+
+<span style="color:#66d9ef">my</span> $count;
+<span style="color:#66d9ef">while</span>( $count<span style="color:#f92672">++</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">10</span> ) {
+        <span style="color:#66d9ef">print</span> $scalar;
+        }
+<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\n&#34;</span>;</code></pre></div>
+<p>With an appropriate terminal, I see a series of Christmas lights.</p>
+
+<p>Recently, David Farrell had a similar problem. He could pass a value to a method that gave it a delay time to retry if it failed. That&rsquo;s a nice feature, but he could only pass in a scalar. He didn&rsquo;t want to pass in a value for two seconds and have it retry every two seconds. Instead, he wanted to back off. Wait two seconds the first time, then 4 seconds the next time, and eight seconds the next time. If something is falling over because you&rsquo;re hitting it too frequently, you want to back off the pressure.</p>
+
+<p>However, using the same trick I used for HTML row colors, he was able to create what looks like a simple scalar variable but was really a method call that increased the value each time:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> strict;
+<span style="color:#66d9ef">use</span> warnings;
+<span style="color:#66d9ef">package</span> Tie::Scalar::Ratio;
+
+<span style="color:#66d9ef">use</span> parent <span style="color:#e6db74">&#39;Tie::Scalar&#39;</span>;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">TIESCALAR</span> {
+  <span style="color:#66d9ef">my</span> ($class, $ratio, $value) <span style="color:#f92672">=</span> @_;
+
+  die <span style="color:#e6db74">&#39;Must provide ratio argument, a number to multiply the scalar value by&#39;</span>
+        <span style="color:#66d9ef">unless</span> $ratio <span style="color:#f92672">&amp;&amp;</span> $ratio <span style="color:#f92672">=~</span> <span style="color:#e6db74">/^[\d.]+$/</span>;
+
+  bless {
+        ratio <span style="color:#f92672">=&gt;</span> $ratio,
+        value <span style="color:#f92672">=&gt;</span> $value,
+  }, $class;
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">STORE</span> {
+  <span style="color:#66d9ef">my</span> ($self, $value) <span style="color:#f92672">=</span> @_;
+  $self<span style="color:#f92672">-&gt;</span>{value} <span style="color:#f92672">=</span> $value;
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">FETCH</span> {
+  <span style="color:#66d9ef">my</span> ($self) <span style="color:#f92672">=</span> @_;
+  <span style="color:#66d9ef">my</span> $old_value <span style="color:#f92672">=</span> $self<span style="color:#f92672">-&gt;</span>{value};
+  $self<span style="color:#f92672">-&gt;</span>{value} <span style="color:#f92672">*=</span> $self<span style="color:#f92672">-&gt;</span>{ratio} <span style="color:#66d9ef">if</span> $self<span style="color:#f92672">-&gt;</span>{value};
+  <span style="color:#66d9ef">return</span> $old_value;
+}
+
+<span style="color:#ae81ff">1</span>;</code></pre></div>
+<p>My program to demonstrate this is almost the same as my prior one. The part where I use <code>$scalar</code> is the same.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.10</span>;
+<span style="color:#66d9ef">use</span> Tie::Scalar::Ratio;
+
+tie <span style="color:#66d9ef">my</span> $scalar, <span style="color:#e6db74">&#39;Tie::Scalar::Ratio&#39;</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">37</span>;
+
+<span style="color:#66d9ef">my</span> $count;
+<span style="color:#66d9ef">while</span>( $count<span style="color:#f92672">++</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">10</span> ) {
+        say $scalar;
+        }</code></pre></div>
+<p>Each time I access the scalar, I get back the previous value multiplied by the ratio. In this case, I multiply the previous value by <code>2</code> each time.</p>
+
+<p>This is a tidy solution because it fits into the code that&rsquo;s already there. The existing code that expected a single value gets a scalar that changes its value each time.</p>
+
+<p>Instead of giving Tie::Scalar::Ratio, I&rsquo;d like to give it a callback. David also created <a href="https://metacpan.org/pod/Tie::Scalar::Callback">Tie::Scalar::Callback</a>. Each time I access the scalar, this module calls the subroutine I passed to it and give me back the result. The code looks similar to the others:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> strict;
+<span style="color:#66d9ef">use</span> warnings;
+<span style="color:#66d9ef">package</span> Tie::Scalar::Callback;
+
+<span style="color:#66d9ef">use</span> parent <span style="color:#e6db74">&#39;Tie::Scalar&#39;</span>;
+<span style="color:#66d9ef">use</span> Carp <span style="color:#e6db74">qw(carp)</span>;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">TIESCALAR</span> {
+  <span style="color:#66d9ef">my</span> ($class, $sub ) <span style="color:#f92672">=</span> @_;
+
+  die <span style="color:#e6db74">&#39;Must provide subroutine reference argument&#39;</span>
+        <span style="color:#66d9ef">unless</span> $sub <span style="color:#f92672">&amp;&amp;</span> ref $sub <span style="color:#f92672">eq</span> ref <span style="color:#66d9ef">sub</span> {};
+
+  bless $sub, $class;
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">STORE</span> {
+  carp <span style="color:#e6db74">&#34;You can&#39;t assign to this tied scalar&#34;</span>;
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">FETCH</span> {
+  <span style="color:#66d9ef">my</span> ($self) <span style="color:#f92672">=</span> @_;
+  <span style="color:#66d9ef">return</span> $self<span style="color:#f92672">-&gt;</span>();
+}
+
+<span style="color:#ae81ff">1</span>;</code></pre></div>
+<p>Here&rsquo;s a subroutine that does the same thing as the previous example by stores the state in the subroutine rather than in the tied object:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> $coderef <span style="color:#f92672">=</span> <span style="color:#66d9ef">sub</span> {
+        state $value  <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>;
+        state $factor <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>;
+        $value <span style="color:#f92672">*=</span> $factor;
+        }
+
+tie <span style="color:#66d9ef">my</span> $scalar, <span style="color:#e6db74">&#39;Tie::Scalar::Callback&#39;</span>, $sub;
+
+<span style="color:#66d9ef">my</span> $count;
+<span style="color:#66d9ef">while</span>( $count<span style="color:#f92672">++</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">10</span> ) {
+        say $scalar;
+        }</code></pre></div>
+<p>That&rsquo;s a simple callback, but I can make something a little more exotic. How about a sine-based function?</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.10</span>;
+<span style="color:#66d9ef">use</span> Tie::Scalar::Callback;
+
+<span style="color:#66d9ef">my</span> $coderef <span style="color:#f92672">=</span> <span style="color:#66d9ef">sub</span> {
+        state $pi     <span style="color:#f92672">=</span> <span style="color:#ae81ff">3.14152926</span>;
+        state $eighth <span style="color:#f92672">=</span> $pi <span style="color:#f92672">/</span> <span style="color:#ae81ff">8</span>;
+        state $value  <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+
+        sprintf <span style="color:#e6db74">&#39;%.3f&#39;</span>, abs sin( $value <span style="color:#f92672">+=</span> $eighth );
+        };
+
+tie <span style="color:#66d9ef">my</span> $scalar, <span style="color:#e6db74">&#39;Tie::Scalar::Callback&#39;</span>, $coderef;
+
+<span style="color:#66d9ef">my</span> $count;
+<span style="color:#66d9ef">while</span>( $count<span style="color:#f92672">++</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">10</span> ) {
+        say $scalar;
+        }</code></pre></div>
+<p>Now the output backs off and speeds up. There&rsquo;s something that might be more useful. Perhaps I want to use the load average to decide the number:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Sys::LoadAvg <span style="color:#e6db74">qw(loadavg)</span>;
+<span style="color:#66d9ef">use</span> Tie::Scalar::Callback;
+
+<span style="color:#66d9ef">my</span> $coderef <span style="color:#f92672">=</span> <span style="color:#66d9ef">sub</span> {
+        state $factor  <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>;
+
+        <span style="color:#66d9ef">my</span> @loads <span style="color:#f92672">=</span> loadavg();
+
+        $factor <span style="color:#f92672">*</span> $loads[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>];
+        };
+
+tie <span style="color:#66d9ef">my</span> $scalar, <span style="color:#e6db74">&#39;Tie::Scalar::Callback&#39;</span>, $coderef;</code></pre></div>
+<p>Finally, just for fun, here&rsquo;s a tied scalar that creates the Fibonacci series using the inline <code>package NAMESPACE BLOCK</code> syntax introduced in v5.14:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.14</span>;
+
+<span style="color:#66d9ef">package</span> Tie::Scalar::Fibonacci {
+        <span style="color:#66d9ef">use</span> parent <span style="color:#e6db74">&#39;Tie::Scalar&#39;</span>;
+        <span style="color:#66d9ef">use</span> Carp <span style="color:#e6db74">qw(croak)</span>;
+        <span style="color:#66d9ef">use</span> List::Util <span style="color:#e6db74">qw(sum)</span>;
+
+        <span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">TIESCALAR</span> {
+                <span style="color:#66d9ef">my</span>( $class, $count ) <span style="color:#f92672">=</span> @_;
+                $count <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#66d9ef">unless</span> defined $count;
+                die <span style="color:#e6db74">&#34;count must be a counting number&#34;</span> <span style="color:#66d9ef">if</span> $count <span style="color:#f92672">=~</span> <span style="color:#e6db74">/[^0-9]/</span>;
+                die <span style="color:#e6db74">&#34;count must be greater than 1&#34;</span>    <span style="color:#66d9ef">if</span> $count <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">1</span>;
+
+                <span style="color:#66d9ef">my</span> $array <span style="color:#f92672">=</span> [ ( <span style="color:#ae81ff">1</span> ) x ( $count ) ];
+                bless $array, $class
+                }
+        <span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">STORE</span>     { croak <span style="color:#e6db74">&#34;You can&#39;t assign to this scalar!&#34;</span> }
+
+        <span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">FETCH</span> {
+                <span style="color:#66d9ef">my</span> ($self) <span style="color:#f92672">=</span> @_;
+                push @$self, sum( @$self );
+                shift @$self;
+                }
+        }
+
+tie <span style="color:#66d9ef">my</span> $scalar, <span style="color:#e6db74">&#39;Tie::Scalar::Fibonacci&#39;</span>;
+
+<span style="color:#66d9ef">my</span> $count;
+<span style="color:#66d9ef">while</span>( $count<span style="color:#f92672">++</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">10</span> ) {
+        <span style="color:#66d9ef">print</span> $scalar, <span style="color:#e6db74">&#39; &#39;</span>;
+        }
+<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\n&#34;</span>;</code></pre></div>
+<p>Every time I access it I get the next number in the Fibonacci series. Curiously, doing it this way, I&rsquo;m computing a number that I&rsquo;ll use in the future by pushing it onto the end and returning the oldest value by shifting it off the front. There&rsquo;s no recursion here like in almost every example on the interwebs.</p>
+
+<p>But, it can generate other series too. Instead of looking at the previous two values, I can give <code>TIESCALAR</code> a different number to specify how many previous numbers to sum:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">tie <span style="color:#66d9ef">my</span> $scalar, <span style="color:#e6db74">&#39;Tie::Scalar::Fibonacci&#39;</span>, <span style="color:#ae81ff">5</span>;
+
+<span style="color:#66d9ef">my</span> $count;
+<span style="color:#66d9ef">while</span>( $count<span style="color:#f92672">++</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">10</span> ) {
+        <span style="color:#66d9ef">print</span> $scalar, <span style="color:#e6db74">&#39; &#39;</span>;
+        }
+<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\n&#34;</span>;</code></pre></div>
+<p>The idea is the same, but the sums are different. If you&rsquo;ve used a tied variable in an interesting way, let us know about it!
+<br />
+<em>This article was originally posted on <a href="http://perltricks.com">PerlTricks.com</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/tie">tie</a></div>
+                
+                  <div class="tag"><a href="/tags/scalar">scalar</a></div>
+                
+                  <div class="tag"><a href="/tags/callback">callback</a></div>
+                
+                  <div class="tag"><a href="/tags/cycle">cycle</a></div>
+                
+                  <div class="tag"><a href="/tags/mastering-perl">mastering-perl</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-brian-d-foy">
+  <div class="col-sm-2">
+    
+    <a href="/authors/brian-d-foy/"><div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/brian-d-foy/"><h3>brian d foy</h3></a>
+    <p><a href="http://www.pair.com/~comdog/">brian d foy</a> is a Perl trainer and writer, and a senior editor at Perl.com. He&rsquo;s the author of <a href="https://www.masteringperl.org">Mastering Perl</a>, <a href="https://leanpub.com/mojo_web_clients">Mojolicious Web Clients</a>, <a href="https://leanpub.com/learning_perl_exercises">Learning Perl Exercises</a>, and co-author of <a href="https://www.programmingperl.org">Programming Perl</a>, <a href="https://www.learning-perl.com">Learning Perl</a>, <a href="https://www.intermediateperl.com">Intermediate Perl</a> and <a href="https://www.effectiveperlprogramming.com">Effective Perl Programming</a>.</p>
+    <h5><a href="/authors/brian-d-foy/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/magical-tied-scalars.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

@@ -80,7 +80,7 @@ What OS your module happens to land on is both less and more of an issue than mo
 
 The VMS filesystem, for example, has the idea of a volume in a fully qualified filename. VMS also handles file permissions and file versioning very differently than the standard Unix/Win32/Mac model. An excellent example of how to handle these differences is the core module [File::Spec]({{<mcpan "File::Spec" >}}).
 
-Because this is an issue most authors have had to face at some point, there is a standard `perlpod` called, fittingly, [`perlport`](http://perldoc.perl.org/perlport.html). If you follow what's in there, you will be just fine.
+Because this is an issue most authors have had to face at some point, there is a standard `perlpod` called, fittingly, [`perlport`]({{</* perldoc "perlport" */>}}). If you follow what's in there, you will be just fine.
 
 ##### Perl Version
 
@@ -195,7 +195,7 @@ The best description that I've seen of what you need to do to port your applicat
 
 Although Unicode had some support prior to 5.8.0, a major feature in 5.8.0 was the near-seamless handling of Unicode within Perl itself. Prior that that, developers had to use Unicode::String and other modules. This means that you should look to handling strings as gingerly as possible if you consider support for Unicode on Perls prior to 5.8.0 as important. Luckily, most major modules already do this for you without you having to worry about it.
 
-Discussing how to handle Unicode cleanly is an article in itself. Please see [`perlunicode`](http://perldoc.perl.org/perlunicode.html) and [`perluniintro`](http://perldoc.perl.org/perluniintro.html) for more information.
+Discussing how to handle Unicode cleanly is an article in itself. Please see [`perlunicode`]({{</* perldoc "perlunicode" */>}}) and [`perluniintro`]({{</* perldoc "perluniintro" */>}}) for more information.
 
 #### Playing Nicely with Others
 
@@ -223,7 +223,7 @@ The `mod_perl` folks have an excellent set of documentation as to what's differe
 
 ##### Overloading
 
-It's very easy to create an overloaded class that cannot work with other overloaded classes. For example, if I'm using Overload::Num1 and Overload::Num2, I would expect `$num1 + $num2` to DWIM. Unfortunately, with most overloaded classes written as below, they won't. (For more information as to how this code works, please read [`overload`](http://perldoc.perl.org/overload.html), or the excellent article "[Overloading](/pub/2003/07/22/overloading.html).")
+It's very easy to create an overloaded class that cannot work with other overloaded classes. For example, if I'm using Overload::Num1 and Overload::Num2, I would expect `$num1 + $num2` to DWIM. Unfortunately, with most overloaded classes written as below, they won't. (For more information as to how this code works, please read [`overload`]({{</* perldoc "overload" */>}}), or the excellent article "[Overloading](/pub/2003/07/22/overloading.html).")
 
     sub add {
         my ($l, $r, $inv) = @_;
@@ -309,7 +309,7 @@ At some point, your module needs to accept some data from somewhere. If you're l
 
 -   Overloading accessors
 
-    [`overload`](http://perldoc.perl.org/overload.html) allows you to overload the accessor operators, such as `@{}` and `%{}`. This means that one can theoretically bless an array reference and provide the ability to access it as a hash reference. Object::MultiType is an example of this. It is a hashref that provides array-like access.
+    [`overload`]({{</* perldoc "overload" */>}}) allows you to overload the accessor operators, such as `@{}` and `%{}`. This means that one can theoretically bless an array reference and provide the ability to access it as a hash reference. Object::MultiType is an example of this. It is a hashref that provides array-like access.
 
     Unfortunately, the CPAN module that would do this doesn't exist, yet.
 

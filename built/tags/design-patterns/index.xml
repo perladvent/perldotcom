@@ -1,0 +1,628 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Design Patterns on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/design-patterns/</link>
+    <description>Recent content in Design Patterns on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 07 Aug 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/design-patterns/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Perl Design Patterns, Part 2</title>
+      <link>http://localhost:1313/pub/2003/08/07/design2.html/</link>
+      <pubDate>Thu, 07 Aug 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/08/07/design2.html/</guid>
+      <description>
+
+&lt;p&gt;This is the second in a series of articles which form one Perl programmer&amp;rsquo;s response to the book, &lt;em&gt;Design Patterns&lt;/em&gt; (also known as the Gang of Four book or simply as GoF, because four authors wrote it).&lt;/p&gt;
+
+&lt;p&gt;As I showed in the &lt;a href=&#34;http://localhost:1313/pub/2003/06/13/design1.html&#34;&gt;first article&lt;/a&gt;, Perl provides the best patterns in its core and many others are modules which ship with Perl or are available from CPAN. There I considered Iterator (&lt;code&gt;foreach&lt;/code&gt;), Decorator (pipes and list filters), Flyweight (&lt;code&gt;Memoize.pm&lt;/code&gt;), and Singleton (bless an object in a &lt;code&gt;BEGIN&lt;/code&gt; block).&lt;/p&gt;
+
+&lt;p&gt;People into patterns often talk about how knowing patterns makes describing designs easier. The parenthetical comments in the last sentence show how Perl takes this to new heights by including the patterns internally.&lt;/p&gt;
+
+&lt;p&gt;This article continues my treatment by considering patterns which rely on data containers and/or code references (which are also called callbacks). Before showing the patterns let me explain these terms.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-data-containers-data-containers-span&#34;&gt;&lt;span id=&#34;data_containers&#34;&gt;Data Containers&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;I use data containers to mean any reference that holds a data structure. Arrays and hashes are common data containers, but hashes of lists of hashes storing things are more interesting. Careful use of these structure containers can often eliminate the need for objects.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a concrete example. Suppose I want a phone list. I might use a container like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $phone_list = {
+        &#39;phil&#39; =&amp;gt; [
+            { type =&amp;gt; &#39;home&#39;,  number =&amp;gt; &#39;555-0001&#39; },
+            { type =&amp;gt; &#39;pager&#39;, number =&amp;gt; &#39;555-1000&#39; },
+        ],
+        &#39;frank&#39; =&amp;gt; [
+            { type =&amp;gt; &#39;cell&#39;,  number =&amp;gt; &#39;555-9012&#39; },
+            { type =&amp;gt; &#39;pager&#39;, number =&amp;gt; &#39;555-5678&#39; },
+            { type =&amp;gt; &#39;home&#39;,  number =&amp;gt; &#39;555-1234&#39; },
+        ],
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This container is housed in a hash. Its keys are names; its values are phone numbers. The numbers are listed in the order the person would like them used. (Call Frank on his cell phone first, then try his pager. If all else fails, use his home phone.)&lt;/p&gt;
+
+&lt;p&gt;To use this structure I might do the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    my $phone_list = {
+        &#39;Phil&#39; =&amp;gt; [
+            { type =&amp;gt; &#39;home&#39;,  number =&amp;gt; &#39;555-0001&#39; },
+            { type =&amp;gt; &#39;pager&#39;, number =&amp;gt; &#39;555-1000&#39; },
+        ],
+        &#39;Frank&#39; =&amp;gt; [
+            { type =&amp;gt; &#39;cell&#39;,  number =&amp;gt; &#39;555-9012&#39; },
+            { type =&amp;gt; &#39;pager&#39;, number =&amp;gt; &#39;555-5678&#39; },
+            { type =&amp;gt; &#39;home&#39;,  number =&amp;gt; &#39;555-1234&#39; },
+        ],
+    };
+
+    my $person = shift or die &amp;quot;usage: $0 person\n&amp;quot;;
+
+    foreach my $number (@{$phone_list-&amp;gt;{$person}}) {
+        print &amp;quot;$number-&amp;gt;{type} $number-&amp;gt;{number}\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here, the user supplies the name of the person he or she wants to reach as a command line argument which I store as &lt;code&gt;$person&lt;/code&gt;. I then loop through all the phone numbers for that person, printing the type and number.&lt;/p&gt;
+
+&lt;p&gt;Of course, in practice your data would live outside your script. The example just shows what one data container can hold.&lt;/p&gt;
+
+&lt;p&gt;If you need to use a structure made of data nodes, you can often avoid the need for a node object by using a data container instead. Object Oriented programming proponents would probably want me to make an object for each person. In that object they might even want me to store an object for each phone type in some cumbersome list container. My advice: don&amp;rsquo;t give in to pedants. Even in Java, I can build a structure like the one above (though not as easily). Doing so is often wise. Objects work better in more complex situations.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-what-s-a-code-reference-what-s-a-code-reference-span&#34;&gt;&lt;span id=&#34;what&#39;s_a_code_reference&#34;&gt;What&amp;rsquo;s a Code Reference?&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;A code reference is like any reference in Perl, but what it points to is a subroutine you can call. For instance, I could write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $doubler = sub { return 2 * $_[0]; };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then later in my program I would call that routine as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $doubled = &amp;amp;$doubler(5);  # $doubled is now 10
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example is contrived. But it lets you see the basic syntax of code references. If you assign a sub to a variable, you receive a code reference by the grace of Perl. To call the sub stored in the reference put an &lt;code&gt;&amp;amp;&lt;/code&gt; in front of the variable which stores it. This is like we do for other references, as in this standard hash walker:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    foreach my $key (keys %$hash_reference) { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;&amp;amp;&lt;/code&gt; is the sigil (or funny character) for subroutines, just like &lt;code&gt;@&lt;/code&gt; and &lt;code&gt;%&lt;/code&gt; are the sigils for arrays and hashes.&lt;/p&gt;
+
+&lt;p&gt;Many patterns in GoF and outside it can be implemented well in Perl with code references. Languages which don&amp;rsquo;t provide code references are missing an important type.&lt;/p&gt;
+
+&lt;p&gt;Having explained these tools, I&amp;rsquo;m ready to show you some patterns which use them.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-strategy-strategy-span&#34;&gt;&lt;span id=&#34;strategy&#34;&gt;Strategy&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;When you want to select from a series of choices for how something should be done, you need a strategy scheme. For example, you might want to sort based on a comparison function. Each time you sort, you should be able to specify the order strategy.&lt;/p&gt;
+
+&lt;p&gt;Since Perl has code references, we can easily implement the strategy pattern without bloating our code base with a proliferation of classes whose sole purpose is to provide one function.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s an example with the built-in sort:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sort { lc($a) cmp lc($b) } @items
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This sorts without regard to case. Notice how &lt;code&gt;sort&lt;/code&gt; is receiving the function directly in the call. Though we could do this for our own functions, it is more common to take a reference to the function as a required positional parameter.&lt;/p&gt;
+
+&lt;p&gt;Suppose, for example, that we want to list all files in the current directory, or any of its subdirectories, with some property. There are two pieces to this task: (1) Scan down the directory tree for all the entries, and (2) Test each file to see if it meets the criterion. Ideally we would like to separate these tasks so we can reuse them independently (for instance scanning a directory tree is more common than any particular criterion). We will make the criterion a strategy executed by the directory scanner.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    my @files = find_files(\&amp;amp;is_hidden, &amp;quot;.&amp;quot;);
+    local $&amp;quot; = &amp;quot;\n&amp;quot;;
+    print &amp;quot;@files\n&amp;quot;;
+
+    sub is_hidden {
+        my $file = shift;
+        $file    =~ s!.*/!!;
+        return 0 if ($file =~ /^\./);
+        return 1;
+    }
+
+    sub find_files {
+        my $callback = shift;
+        my $path     = shift;
+        my @retval;
+
+        push   @retval, $path if &amp;amp;$callback($path);
+        return @retval unless (-d $path);
+
+        # identify children
+        opendir DIR, $path or return;
+        my @files = readdir DIR;
+        closedir DIR;
+
+        # visit each child
+        foreach my $file (@files) {
+            next if ($file =~ /^\.\.?$/);  # skip . and ..
+            push @retval, find_files(&amp;quot;$path/$file&amp;quot;, $callback);
+        }
+
+        return @retval;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To understand this example, start with the initial call to &lt;code&gt;find_files&lt;/code&gt;. It passes two arguments. The first is a code reference. Note the syntax. As I pointed out in the introduction, to let Perl know I mean a subroutine, I put the &lt;code&gt;&amp;amp;&lt;/code&gt; sigil in front of &lt;code&gt;is_hidden&lt;/code&gt;. To make a reference to that routine (instead of calling it immediately), I put a backslash in front, just as I would to take any other kind of reference.&lt;/p&gt;
+
+&lt;p&gt;When I use the callback in &lt;code&gt;find_files&lt;/code&gt;, &lt;code&gt;$callback&lt;/code&gt; has the reference to the code. To dereference it I put the &lt;code&gt;&amp;amp;&lt;/code&gt; sigil in front of it.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;find_files&lt;/code&gt; subroutine takes a path where the search begins and a code reference called &lt;code&gt;$callback&lt;/code&gt;. At each invocation, it stores the path in the return list, if callback returns true for that path. This allows you to reuse &lt;code&gt;find_files&lt;/code&gt; for many applications, changing only the callback subroutine to change the outcome. This is the strategy pattern, but without the hassle of subclassing the &lt;code&gt;find_files&lt;/code&gt; abstract base class and overriding the criterion method.&lt;/p&gt;
+
+&lt;p&gt;In &lt;code&gt;find_files&lt;/code&gt;, I use recursion to descend the directory tree and its subtrees. First, I call the callback to see if the current path should go into the output. Then the real routine begins. What the callback does makes no difference to this routine. Any true or false value is OK with &lt;code&gt;find_files&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The recursion stops if the file is not a directory. At that point the list is immediately returned. (It could be empty or have the current path in it, depending on the callback&amp;rsquo;s return value.) Otherwise, all the files and subdirectories in the current path are read into &lt;code&gt;@files&lt;/code&gt;. Each of those entries is scanned by the recursive call to find_files (unless the file is . or .., which would create endless recursion). Whatever the recursive call to &lt;code&gt;find_files&lt;/code&gt; returns, it is pushed onto the end of the final output. When all children have been visited, &lt;code&gt;@result&lt;/code&gt; is returned to the caller.&lt;/p&gt;
+
+&lt;p&gt;The CPAN module &lt;code&gt;File::Find&lt;/code&gt; robustly solves the problem approached quickly in my example above. It relies on exactly this kind of function callback.&lt;/p&gt;
+
+&lt;p&gt;The Strategy Pattern uses a callback to perform a single task that varies from use to use. The next pattern uses a series of callbacks to implement the steps of an algorithm.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-template-method-template-method-span&#34;&gt;&lt;span id=&#34;template_method&#34;&gt;Template Method&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In some calculations the steps are known, but what the steps do is not. For example, computing charges for a rental might involve three steps:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Calculate amount due from rates.&lt;/li&gt;
+&lt;li&gt;Calculate taxes.&lt;/li&gt;
+&lt;li&gt;Add these together.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Yet different rentals might have different schemes for calculating the amount due from rates, and different jurisdictions usually have different tax schemes. A template method can implement the outline, deferring to callers for the individual schemes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Calc;
+    use strict; use warnings;
+
+    sub calculate {
+        my $class     = shift;   # discarded
+        my $data      = shift;
+        my $rate_calc = shift;   # a code ref
+        my $tax_calc  = shift;   # also a code ref
+
+        my $rate      = &amp;amp;$rate_calc($data);
+        my $taxes     = &amp;amp;$tax_calc($data, $rate);
+        my $answer    = $rate + $taxes;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here the caller supplies a data reference (probably to a hash or object) together with two code references which are used as callbacks. Each callback must expect the data reference as its first parameter. The &lt;code&gt;tax_calc&lt;/code&gt; code reference also receives the amount due from the rate calculator. This allows it to use a percentage of the amount together with information in the data reference.&lt;/p&gt;
+
+&lt;p&gt;A caller might look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use Calc;
+
+    my $rental = {
+        days_used    =&amp;gt; 5,
+        day_rate     =&amp;gt; 19.95,
+        tax_rate     =&amp;gt; .13,
+    };
+
+    my $amount_owed = Calc-&amp;gt;calculate($rental, \&amp;amp;rate_calc, \&amp;amp;taxes);
+    print &amp;quot;You owe $amount_owed\n&amp;quot;;
+
+    sub rate_calc {
+        my $data = shift;
+        return $data-&amp;gt;{days_used} * $data-&amp;gt;{day_rate};
+    }
+
+    sub taxes {
+        my $data     = shift;  # discarded
+        my $subtotal = shift;
+
+        return $data-&amp;gt;{tax_rate} * $subtotal;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I made this contrived caller so you can see the calling sequence. The data here is a simple hash. To save exporting from &lt;code&gt;Calc&lt;/code&gt;, I made calculate a class method, so I call it through its class. In the call, I pass a reference to my data hash and references to the two calculation routines.&lt;/p&gt;
+
+&lt;p&gt;This can be made more complex if you like. One could even make a full-blown class hierarchy of calculators, allowing callers to select the one they want. This example is about as simple as I could make the template method pattern.&lt;/p&gt;
+
+&lt;p&gt;Another approach to templates is to have the caller place methods in the template package. This approach amounts to an implementation of mixins a la Ruby. Here&amp;rsquo;s a sample that is more object oriented.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Calc;
+
+    sub calculate {
+        my $self = shift;
+        my $rate = $self-&amp;gt;calculate_rate();
+        my $tax  = $self-&amp;gt;calculate_tax($rate);
+        return $rate + $tax;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The whole module is really only the template method. To use it, you have to code &lt;code&gt;calculate_rate&lt;/code&gt; and &lt;code&gt;calculate_tax&lt;/code&gt; methods, or your script will die. Here&amp;rsquo;s a particular implementation of the scheme:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package CalcDaily;
+    package Calc;
+    use strict; use warnings;
+
+    sub new {
+        my $class = shift;
+        my $self  = {
+            days_used    =&amp;gt; shift,
+            day_rate     =&amp;gt; shift,
+            tax_rate     =&amp;gt; shift,
+        };
+        return bless $self, $class;
+    }
+
+    sub calculate_rate {
+        my $data = shift;
+        return $data-&amp;gt;{days_used} * $data-&amp;gt;{day_rate};
+    }
+
+    sub calculate_tax {
+        my $data     = shift;  # discarded
+        my $subtotal = shift;
+
+        return $data-&amp;gt;{tax_rate} * $subtotal;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that I added a constructor and two methods to the &lt;code&gt;Calc&lt;/code&gt; package in a different source file. This is perfectly legal and occasionally useful. By doing this, the template is totally isolated. It doesn&amp;rsquo;t even know what sort of data will be stored in the objects of its own type. That does mean that only one &lt;code&gt;Calc&lt;/code&gt; subtype can be used at a time. If that&amp;rsquo;s a problem for you, do the standard thing: have &lt;code&gt;Calc&lt;/code&gt; call methods on objects in some separate hierarchy.&lt;/p&gt;
+
+&lt;p&gt;There are two package statements at the top of the file, this is on purpose. The first one tells people (and crawlers) that this is the &lt;code&gt;CalcDaily&lt;/code&gt; package which rightfully belongs in &lt;code&gt;CalcDaily.pm&lt;/code&gt;, not the original &lt;code&gt;Calc&lt;/code&gt;, which belongs in &lt;code&gt;Calc.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, here&amp;rsquo;s the caller, which is only slightly modified:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+    use Calc;
+    use CalcDaily;
+
+    my $rental      = Calc-&amp;gt;new(5, 19.95, .13);
+    my $amount_owed = $rental-&amp;gt;calculate();
+    print &amp;quot;You owe $amount_owed\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This technique is similar to the one used in the debugger architecture for Perl. To make my own debugger, I need a name for it. I might choose &lt;code&gt;PhilDebug.pm&lt;/code&gt;. Then I have to make a file with that name in a Devel directory which is in my &lt;code&gt;@INC&lt;/code&gt; list. The first line in the file should be (but doesn&amp;rsquo;t have to be):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Devel::PhilDebug;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This allows the CPAN indexer to properly catalog my module.&lt;/p&gt;
+
+&lt;p&gt;The base package for debuggers is fixed as &lt;code&gt;DB&lt;/code&gt;. Perl expects to call the &lt;code&gt;DB&lt;/code&gt; function in that package. So all together it might look something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Devel::PhilDebug;
+    package DB;
+
+    sub DB {
+        my @info = caller(0);
+        print &amp;quot;@info\n&amp;quot;;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Any script will use this debugger if it is invoked as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    perl -d:PhilDebug script
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each time the debugger notices that a new statement is about to start, it first calls &lt;code&gt;DB::DB&lt;/code&gt;. This is a very powerful example of plug-and-play.&lt;/p&gt;
+
+&lt;p&gt;It is not usually wise to pollute foreign classes with your own code. Yet, Perl permits this, because it is sometimes highly useful. There seems to be a theme here:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Don&amp;rsquo;t rule out dangerous things. Just avoid them, unless you have a good reason to use them.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The Strategy and Template patterns use code references to allow the caller to adjust the behavior of an algorithm. The template I showed used a data container to hold rental information. The next pattern makes more use of data containers.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-builder-builder-span&#34;&gt;&lt;span id=&#34;builder&#34;&gt;Builder&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Many structures external to your program should be represented with composites (like trees or the data container in the introduction) inside your program. There are two fundamentally different ways to represent these structures. For an object-oriented way to compose such structures see the Composite Pattern in GoF (which I will discuss in my next article).&lt;/p&gt;
+
+&lt;p&gt;Here we&amp;rsquo;ll look at how to build a composite structure in a hash of hashes. You might rather build the objected-oriented version. Which you choose should depend on the complexity of the data and the methods to act on it. If data and methods are simple, you should probably use the hash structure. It will be faster, have built-in support, and be more familiar to Perl programmers who might need to maintain your code. If the complexities are large, you should use full-blown objects. They make the structure easier to understand for object-oriented programmers and provide more code-based documentation than simple hashes.&lt;/p&gt;
+
+&lt;p&gt;So, hashes are superior structures for simple to moderately complex data. To see how to build a hash structure consider an example: visualizing an outline. For simplicity, I&amp;rsquo;ll represent the outline purely through indentation (not with Roman or other numerals). Here&amp;rsquo;s an example outline:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Grocery Store
+        Milk
+        Juice
+        Butcher
+            Thin sliced ham
+            Chuck roast
+        Cheese
+    Cleaners
+    Home Center
+        Door
+        Lock
+        Shims
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This outline describes a theoretical shopping trip. I want to represent it internally in my program so I can play with it. (One of my favorite games is turning outlines into pictures, see below.)&lt;/p&gt;
+
+&lt;p&gt;Instead of a full-blown object, I&amp;rsquo;ll use a little hash-based data container for each node in the tree. Each node will keep track of three things:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Name&lt;/li&gt;
+&lt;li&gt;Level&lt;/li&gt;
+&lt;li&gt;Children (a list of other nodes)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;To keep track of who is a child of whom, I&amp;rsquo;ll use a stack of these nodes. The node on the top of the stack is usually the parent of the next line of input. To show my method, I&amp;rsquo;ll intersperse comments with the script. At the bottom of this section the script appears in one piece.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These lines are always a good idea.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $root = {
+        name     =&amp;gt; &amp;quot;ROOT&amp;quot;,
+        level    =&amp;gt; -1,
+        children =&amp;gt; [],
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the root node. It&amp;rsquo;s a hash reference containing the three keys mentioned earlier. The root node is special. Since it isn&amp;rsquo;t in the file, I give it an artificial name and a level that is lower than anyone else&amp;rsquo;s. (In a moment, we will see that levels in the input will be zero or positive.) Initially the list of children is empty.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @stack;
+    push @stack, $root;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The stack will keep track of the ancestry of each new node. For starters it needs the root node, which won&amp;rsquo;t ever be popped, because it is an ancestor of all the nodes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    while (&amp;lt;&amp;gt;) {
+        /^(\s*)(.*)/;
+        my $indentation = length $1 if defined ($1);
+        my $name        = $2;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To read the file, I chose a magic &lt;code&gt;while&lt;/code&gt;. For each line there will be two parts: the indentation (the leading spaces) and the name (the rest of the line). The regular expression captures any leading space into &lt;code&gt;$1&lt;/code&gt; and everything else (except the new line) into &lt;code&gt;$2&lt;/code&gt;. The length of the indentation is the important part, the bigger this is the more ancestors the node has. Lines starting at the margin have an indentation of 0 (which is why the &lt;code&gt;ROOT&lt;/code&gt; has a level of -1).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        while ($indentation &amp;lt;= $stack[-1]{level}) {
+            pop @stack;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This loop handles ancestry. It pops the stack, until the node on top of the stack is the parent of the new node. Think of an example. When &lt;code&gt;Home Center&lt;/code&gt; comes along, &lt;code&gt;Cleaners&lt;/code&gt; and &lt;code&gt;ROOT&lt;/code&gt; are on the stack. &lt;code&gt;Home Center&lt;/code&gt;&amp;rsquo;s level is 0 (it&amp;rsquo;s at the margin), so is &lt;code&gt;Cleaners&lt;/code&gt;&amp;rsquo;. Thus, &lt;code&gt;Cleaners&lt;/code&gt; is popped (since 0 &amp;lt;= 0). Then only &lt;code&gt;ROOT&lt;/code&gt; remains, so popping stops (0 is not &amp;lt;= -1).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $node = {
+            name     =&amp;gt; $name,
+            level    =&amp;gt; $indentation,
+            children =&amp;gt; [],
+        };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This builds a new node for the current line. It&amp;rsquo;s name and level are set. We haven&amp;rsquo;t seen any children yet, but I make room for them in an empty list.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        push @{$stack[-1]{children}}, $node;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This line adds the new node to its parent&amp;rsquo;s list of children. Remember that the parent is sitting on top of the stack. The top of the stack is &lt;code&gt;$stack[-1]&lt;/code&gt; or the last element in the array.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        push @stack, $node;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This pushes the new node onto the stack, in case it has children. The closing brace ends the magic &lt;code&gt;while&lt;/code&gt; loop. For simplicity, I chose to display the output with &lt;code&gt;Data::Dumper&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Data::Dumper; print Dumper($root);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running this shows the tree (sideways) on standard out.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the whole code without interruption:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    my $root = {
+        name     =&amp;gt; &amp;quot;ROOT&amp;quot;,
+        level    =&amp;gt; -1,
+        children =&amp;gt; [],
+    };
+
+    my @stack;
+    push @stack, $root;
+
+    while (&amp;lt;&amp;gt;) {
+        /^(\s*)(.*)/;
+        my $indentation = length $1;
+        my $name        = $2;
+        while ($indentation &amp;lt;= $stack[-1]{level}) {
+            pop @stack;
+        }
+        my $node = {
+            name     =&amp;gt; $name,
+            level    =&amp;gt; $indentation,
+            children =&amp;gt; [],
+        };
+        push @{$stack[-1]{children}}, $node;
+        push @stack, $node;
+    }
+
+    use Data::Dumper; print Dumper($root);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I promised to explain how structures like the one above can be turned into pictures. The CPAN module &lt;code&gt;UML::Sequence&lt;/code&gt; builds a structure similar to the one shown here. It then uses that to generate a UML Sequence diagram of the steps in SVG (Scalable Vector Graphics) format. That format can be converted with standard tools like Batik to PNG or JPEG. In practice the outlines which I turn into pictures represent call sequences for programs. Perl can even generate the outline by running the program. See &lt;code&gt;UML::Sequence&lt;/code&gt; for more details.&lt;/p&gt;
+
+&lt;p&gt;When you have some interesting structured input, a builder might help make a good internal structure. One high value builder is &lt;code&gt;XML::DOM&lt;/code&gt;. Another with a slightly different approach is &lt;code&gt;XML::Twig&lt;/code&gt;. It is not coincidental that XML parsers are really builders, as XML files are non-binary trees.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-interpreter-interpreter-span&#34;&gt;&lt;span id=&#34;interpreter&#34;&gt;Interpreter&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you haven&amp;rsquo;t looked in GoF yet, start with the interpreter pattern. Laughter is good for the soul. The person who taught me patterns in Java did not even know why this pattern would not work in practice. He had heard it was somewhat slow, but he wasn&amp;rsquo;t sure. Well I&amp;rsquo;m sure.&lt;/p&gt;
+
+&lt;p&gt;Luckily for us, Perl has alternatives. These range from quick and dirty to full blown. Here&amp;rsquo;s the litany covered with examples below:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;split&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;eval&lt;/code&gt;&amp;lsquo;ing Perl code&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Config::Auto&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Parse::RecDescent&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Since we already have a language we like (that&amp;rsquo;s Perl for those who haven&amp;rsquo;t been paying attention), interpreting is limited to small languages that do something for us. Usually these turn out to be configuration files, so I will focus on those. (See the builder section above if a tree can represent your data file.)&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-splitting-splitting-span&#34;&gt;&lt;span id=&#34;splitting&#34;&gt;Splitting&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The easiest route involves &lt;code&gt;split&lt;/code&gt;. Suppose I have a config file which uses &lt;code&gt;variable=value&lt;/code&gt; settings. Comments and blanks should be ignored, all other lines should have a variable, value pair. That&amp;rsquo;s easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub parse_config {
+        my $file = shift;
+        my %answer;
+
+        open CONFIG, &amp;quot;$file&amp;quot; or die &amp;quot;Couldn&#39;t read config file $file: $!\n&amp;quot;;
+        while (&amp;lt;CONFIG&amp;gt;) {
+            next if (/^#|^\s*$/);  # skip blanks and comments
+            my ($variable, $value) = split /=/;
+            $answer{$variable} = $value;
+        }
+        close CONFIG;
+
+        return %answer;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This subroutine expects a config file name. It opens and reads that file. Inside the magic &lt;code&gt;while&lt;/code&gt; loop the regex rejects lines which start with &amp;lsquo;#&amp;rsquo; and those which contain only whitespace. All other lines are split on &amp;lsquo;=&amp;rsquo;. The variables become keys in the &lt;code&gt;%answer&lt;/code&gt; hash. When all the lines are read, the caller gets the hash back.&lt;/p&gt;
+
+&lt;p&gt;You could go much further along these lines, but see below for those who&amp;rsquo;ve gone before you (see especially &lt;code&gt;Config::Auto&lt;/code&gt;).&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-evaluating-perl-code-evaluating-perl-code-span&#34;&gt;&lt;span id=&#34;evaluating_perl_code&#34;&gt;Evaluating Perl Code&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;My current favorite way to bring configuration information into a Perl program is to specify the config file in Perl. So, I might have a config file like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    our $db_name = &amp;quot;projectdb&amp;quot;;
+    our $db_pass = &amp;quot;my_special_password_no_one_will_think_of&amp;quot;;
+    our %personal = (
+        name    =&amp;gt; &amp;quot;Phil Crow&amp;quot;,
+        address =&amp;gt; &amp;quot;philcrow2000@yahoo.com&amp;quot;,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To use this in a Perl program all I have to do is eval it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ...
+    open CONFIG, &amp;quot;config.txt&amp;quot; or die &amp;quot;couldn&#39;t...\n&amp;quot;;
+    my $config = join &amp;quot;&amp;quot;, &amp;lt;CONFIG&amp;gt;;
+    close CONFIG;
+
+    eval $config;
+    die &amp;quot;Couldn&#39;t eval your config: $@\n&amp;quot; if $@;
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To read the file, I open it, then use join to put the angle read operator in list context. This lets me bring the whole file into a scalar. Once it&amp;rsquo;s in (and the file is closed for tidiness), I just eval the string I read. I need to check &lt;code&gt;$@&lt;/code&gt; to make sure the file was good Perl. After that, I&amp;rsquo;m ready to use the values just as if they appeared in the program originally.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-config-auto-for-those-who-can-t-be-bothered-config-auto-for-those-who-can-t-be-bothered-span&#34;&gt;&lt;span id=&#34;config::auto__for_those_who_can&#39;t_be_bothered&#34;&gt;Config::Auto &amp;ndash; For Those Who Can&amp;rsquo;t be Bothered&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;If you&amp;rsquo;re too lazy to write your own config handler, or if you have lots of configs outside your control, &lt;code&gt;Config::Auto&lt;/code&gt; may be for you. Basically, it takes a file and guesses how to turn it into a config hash. (It can even guess the name of your config file). Using it is easy (if it works):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use Config::Auto;
+
+    my $config = Config::Auto::parse(&amp;quot;your.config&amp;quot;);
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What ends up in &lt;code&gt;$config&lt;/code&gt; depends on what your config file looks like (shock). For files which use &lt;code&gt;variable=value&lt;/code&gt; pairs, you get what you expect, which is exactly what the first example above generates for the same input. It is possible to specify a config file that &lt;code&gt;Config::Auto&lt;/code&gt; cannot understand (shock and amazement).&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-real-hackers-use-parse-recdescent-real-hackers-use-parse-recdescent-span&#34;&gt;&lt;span id=&#34;real_hackers_use_parse::recdescent&#34;&gt;Real Hackers Use Parse::RecDescent&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;If the file you need to parse is complex, consider &lt;code&gt;Parse::RecDescent&lt;/code&gt;. It implements a clever top/down parser scheme. To use it, you specify a grammar. (You remember grammars, don&amp;rsquo;t you? If not, see below.) It builds a parser from your grammar. You feed text to the parser. It does whatever the grammar specifies in its actions.&lt;/p&gt;
+
+&lt;p&gt;To give you a feel for how this works, I&amp;rsquo;ll parse small Roman numerals. The program below takes numbers from the keyboard and translates them from Roman numerals to decimal integers, so XXIX becomes 29.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use Parse::RecDescent;
+
+    my $grammar = q{
+        Numeral : TenList FiveList OneList /\Z/
+                    { $item[1] + $item[2] + $item[3]; }
+                | /quit/i { exit(0); }
+                | &amp;lt;error&amp;gt;
+
+        TenList : Ten(3)                  { 30            }
+                | Ten(2) OptionalNine     { 20 + $item[2] }
+                | Ten OptionalNine        { 10 + $item[2] }
+                | OptionalNine            { $item[1]      }
+
+        OptionalNine : One Ten { 9 }
+                     |         { 0 }
+
+        FiveList : One Five { 4 }
+                 | Five     { 5 }
+                 |          { 0 }
+
+        OneList : /(I{0,3})/i { length $1 }
+
+        Ten : /X/i
+
+        Five : /V/i
+
+        One : /I/i
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;my $parse = new Parse::RecDescent($grammar);&lt;/p&gt;
+
+&lt;p&gt;while (&amp;lt;&amp;gt;) { chomp; my $value = $parse-&amp;gt;Numeral($_); print ``value: $value\n&amp;rdquo;; }&lt;/p&gt;
+
+&lt;p&gt;As you can see &lt;code&gt;$grammar&lt;/code&gt; takes up most of the space in this program. The rest is pretty simple. Once I receive the parser from the &lt;code&gt;Parse::RecDescent&lt;/code&gt; constructor, I just call its Numeral method repeatedly.&lt;/p&gt;
+
+&lt;p&gt;So what does the grammar mean? Let&amp;rsquo;s start at the top. Grammars are built from rules. The rule for a Numeral (the Roman kind) says:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    A Numeral takes the form of one of these choices
+        a TenList then a FiveList then a OneList then the end of the string
+        OR
+        the word quit in any case (not a Numeral, but a way to quit)
+        OR
+        anything else, which is an error
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;ll see what TenList and its friends are shortly. The code after the first choice is called an action. If the rule matches a possibility, it performs that possibility&amp;rsquo;s action. So if a valid Numeral is seen, the action is executed. This particular action adds up the values TenList, FiveList, and OneList have accumulated. The items are numbered starting with 1, so TenList&amp;rsquo;s value is in &lt;code&gt;$item[1]&lt;/code&gt;, etc.&lt;/p&gt;
+
+&lt;p&gt;How does TenList get a value? Well, when Numeral starts matching, it looks first for a valid TenList. There are four choices:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    A TenList takes the form of one of these choices
+        three Tens
+        OR
+        two Tens then an OptionalNine
+        OR
+        a Ten then an OptionalNine
+        OR
+        an OptionalNine
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These choices are tried in order. A Ten is simply an upper- or lower-case X (see the Ten rule). The result of an action is the result of its last statement. So, if there are three tens, the TenList returns 30. If there are two tens, it returns 20 plus whatever OptionalNine returned.&lt;/p&gt;
+
+&lt;p&gt;The Roman numeral IX is our 9. I call this an OptionalNine. (The names are completely arbitrary.) So after zero, one, or two X&amp;rsquo;s, there can be an IX which adds 9 to the total. If there is no IX, the OptionalNine will match the empty rule. That consumes no text from the input and returns zero according to its action.&lt;/p&gt;
+
+&lt;p&gt;Roman numerals are a lot more complex than my little grammar can handle. For starters, by my calendar, we&amp;rsquo;re now in the year MMIII. There are no M&amp;rsquo;s in my grammar. Further, some Romans thought that IIIIII was perfectly valid. In my grammar three is the limit for all repetitions, and only I and X can repeat. Further, reductions can only take one away. So, IIX is not eight, it&amp;rsquo;s invalid. This grammar can recognize any normalized Roman numeral up to 38. Feel free to expand it.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Parse::RecDescent&lt;/code&gt; is not as fast as a yacc-generated parser, but it is easier to use. See the documentation in the distribution for more information, especially the tutorial which originally appeared in The Perl Journal.&lt;/p&gt;
+
+&lt;p&gt;If you look at what&amp;rsquo;s inside the parser (say with &lt;code&gt;Data::Dumper&lt;/code&gt;) you might think this actually implements the interpreter pattern. After all, it makes a tree of objects from the grammar. Look closer and you will see the key difference. All of the objects in the tree are members of classes of like &lt;code&gt;Parse::RecDescent::Action&lt;/code&gt;, which were written by Damian Conway when he wrote the module. In the GoF interpreter pattern we are expected to build a class for each non-terminal in the grammar (above those classes would be Numeral, ReducedTen, etc.). Thus, the tree node types are different for each grammar.&lt;/p&gt;
+
+&lt;p&gt;This difference has two implications: (1) it makes the &lt;code&gt;RecDescent&lt;/code&gt; parser generator simpler and (2) it&amp;rsquo;s result faster.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-summary-summary-span&#34;&gt;&lt;span id=&#34;summary&#34;&gt;Summary&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In this installment we have seen how to use code references to implement the Strategy and Template Method patterns. We even saw how to force our code into someone else&amp;rsquo;s class. Builder turns text into an internal structure, which most Interpreters also do. Those structures can often be simple combinations of hashes, lists, and scalars. If what you need to read is simpler, use split or &lt;code&gt;Config::Auto&lt;/code&gt;. If it is more complex, use &lt;code&gt;Parse::RecDescent&lt;/code&gt;. If that won&amp;rsquo;t do it fast enough, you might need one of the yaccs.&lt;/p&gt;
+
+&lt;p&gt;Next time I will look at patterns which actually rely on objects.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

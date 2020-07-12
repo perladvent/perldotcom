@@ -45,7 +45,7 @@ The length of an array (aka the 'size') is the count of the number of elements i
 
 ```perl
 my @numbers = (1, 2, 3, 4, 5);
-my $array_length = @numbers; 
+my $array_length = @numbers;
 print $array_length;
 # 5
 ```
@@ -69,7 +69,7 @@ my @numbers = (11, 64, 29, 22, 100);
 my $numbers_array_length = @numbers;
 my $last_element_index = numbers_array_length - 1;
 # therefore ...
-print $numbers[$last_element_index]; 
+print $numbers[$last_element_index];
 # 100
 ```
 
@@ -91,7 +91,7 @@ foreach my $element (@names_start_with_j) {
 # Jennifer
 ```
 
-Other common functions for looping through arrays are [grep](http://perldoc.perl.org/functions/grep.html) and [map](http://perldoc.perl.org/functions/map.html).
+Other common functions for looping through arrays are [grep]({{</* perlfunc "grep" */>}}) and [map]({{</* perlfunc "map" */>}}).
 
 ### shift, unshift, push and pop
 
@@ -102,7 +102,7 @@ Perl arrays are dynamic in length, which means that elements can be added to and
 ```perl
 my @compass_points = ('north', 'east', 'south', 'west');
 my $direction = shift @compass_points;
-print $direction; 
+print $direction;
 # north
 ```
 
@@ -125,7 +125,7 @@ my $direction = 'north-east';
 unshift @compass_points, $direction;
 # @compass_points contains: north-east, north, east, south and west
 
-my $west = pop @compass_points; 
+my $west = pop @compass_points;
 push @compass_points, $new_direction; # put $west back
 ```
 

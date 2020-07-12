@@ -1,0 +1,854 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Flood Control on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/flood-control/</link>
+    <description>Recent content in Flood Control on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 03 Feb 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/flood-control/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Throwing Shapes</title>
+      <link>http://localhost:1313/pub/2005/02/03/rpc_design.html/</link>
+      <pubDate>Thu, 03 Feb 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/02/03/rpc_design.html/</guid>
+      <description>
+
+&lt;p&gt;Sometimes data processing is better when separated into different processes that may run on the same machine or even on different ones. This is the well-known client-server technique. You can do it using a known protocol (such as http) or by developing your own, specific protocol. This approach needs implementation for constructor and parser procedures for each packet type (request and response). It&amp;rsquo;s possible for different packets to have the same structure so the constructor and parser will be always the same. Perhaps the simplest solution is to have key/value pairs packed with newline characters or with other separators inside a text block. Binary form with length encoding is another solution.&lt;/p&gt;
+
+&lt;p&gt;In an attempt to simplify this client-server interaction, the &lt;em&gt;Remote Procedure Call&lt;/em&gt; (RPC) technique appeared. It tries to map functions inside the client code to their counterparts inside the server. RPC hides all the details between a client function call and the server function&amp;rsquo;s response. This includes argument serialization (to make data appropriate to transfer over the net, also known as marshaling), transport, the server function call, and returning response data back to the client (also serialized). In some implementations, RPC also tries to remove requirements for the client and the server to run on the same operating system or hardware, or to be written in the same programming language.&lt;/p&gt;
+
+&lt;p&gt;In the Perl world there are several modules that offer different kinds of RPC, including &lt;a href=&#34;https://metacpan.org/pod/RPC::Simple&#34;&gt;RPC::Simple&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/RPC::XML&#34;&gt;RPC::XML&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/DCE::RPC&#34;&gt;DCE::RPC&lt;/a&gt;, and more.&lt;/p&gt;
+
+&lt;p&gt;In this article I&amp;rsquo;ll explain how to use Perl-specific features to develop a compact RPC implementation that I will name &lt;em&gt;Perl-centric Remote Call&lt;/em&gt; (PerlRC). As the name suggests, it will run only with Perl clients and servers.&lt;/p&gt;
+
+&lt;h3 id=&#34;shape&#34;&gt;Shape&lt;/h3&gt;
+
+&lt;p&gt;PerlRC needs to simulate a function call environment that seems familiar to the client. This requires handling the four key properties of a function call:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Function name&lt;/li&gt;
+&lt;li&gt;Function arguments&lt;/li&gt;
+&lt;li&gt;Calling context&lt;/li&gt;
+&lt;li&gt;Return data&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The design of the Perl language allows generic argument handling, which means that it is possible to handle arguments without knowing them before the function call. There are also ways to discover the calling context. Finally, the caller can handle results in the same way as the called function&amp;rsquo;s arguments &amp;ndash; generically, without knowing their details until the function call returns.&lt;/p&gt;
+
+&lt;p&gt;With this in mind, the PerlRC code must follow these steps:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Creating Transport Containers&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Essentially these are the request and response packets. I&amp;rsquo;ll use hashes for both. Each one will be serialized to a scalar which the code will send to the other side with a trailing newline terminator.&lt;/p&gt;
+
+&lt;p&gt;A request container resembles:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# request hash
+  $req1 = {
+            &#39;ARGS&#39; =&amp;gt; [          # arguments list
+                        2,
+                        8
+                      ],
+            &#39;NAME&#39; =&amp;gt; &#39;power&#39;,   # remote function name
+            &#39;WANTARRAY&#39; =&amp;gt; 0     # calling context
+          };
+
+  # result hash for scalar context
+  $res1 = {
+            &#39;RET_SCALAR&#39; =&amp;gt; 256  # result scalar
+          };
+
+  # result hash for array context
+  $res2 = {
+            &#39;RET_ARRAY&#39; =&amp;gt; [     # result array
+                             12,
+                             13,
+                             14,
+                             15,
+                             16,
+                             17,
+                             18,
+                           ]
+          };
+
+  # result hash for error
+  $res3 = {
+            # error description
+            &#39;ERROR&#39; =&amp;gt; &#39;No such function: test&#39;
+          };
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Arguments&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To keep things simple, the first argument will represent the remote function name to call. This server must remove this argument from the list before passing on the rest to the remote function. The request container holds the name for the remote function and a separate reference to the argument list.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Calling Context Discovery&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Find the calling context with the built-in &lt;code&gt;wantarray&lt;/code&gt; function and put this value (0 for scalar and 1 for array context) in the request hash.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Transfer Both to the Server&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Serialize the request to scalar and escape newline chars with &lt;code&gt;\n&lt;/code&gt;. Append the newline terminator and send it to the server.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Unpack Request Data&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;The server takes the request scalar, removes the trailing newline terminator, and unpacks the request data into a local hash that contains the function name, the calling context, and the argument list.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Server-side Function Call&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Find and call the required function in appropriate context. Take the result data or the error. Create a result container with separate fields for scalar and array contexts and one field for any error.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Pack Result Data&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Serialize the result hash, escape newlines, append a terminating newline, and send the result data to the client.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Client Unpack of the Result Data&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;When the client receives the result container, remove the trailing newline char. Unescape any newline chars and unpack the data into a local result hash. Depending on the calling context, return to the caller either the scalar or array field from the result hash or die with an error description if such exists.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The implementation uses two modules:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Storable&#34;&gt;&lt;code&gt;Storable&lt;/code&gt;&lt;/a&gt; handles the serialization of arbitrary data. Serializing data converts it to a string of characters suitable for saving or sending across the network and unserializable later into the form of the original. The rest of the article will also refer to this process as packing and unpacking the data.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/IO::Socket::INET&#34;&gt;IO::Socket::INET&lt;/a&gt; handles the creation of Internet domain sockets.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Both modules are standard in the latest Perl distribution packages.&lt;/p&gt;
+
+&lt;p&gt;It is possible to use any serialization module including FreezeThaw, XML::Dumper, or even Data::Dumper + &lt;code&gt;eval()&lt;/code&gt; instead of Storable.&lt;/p&gt;
+
+&lt;h3 id=&#34;point-of-no-return&#34;&gt;Point of No Return&lt;/h3&gt;
+
+&lt;p&gt;Enough background. Here&amp;rsquo;s the PerlRC implementation of the server:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Storable qw( thaw nfreeze );
+  use IO::Socket::INET;
+
+  # function table, maps caller names to actual server subs
+  our %FUNC_MAP = (
+                  power =&amp;gt; \&amp;amp;power,
+                  range =&amp;gt; \&amp;amp;range,
+                  tree  =&amp;gt; \&amp;amp;tree,
+                  );                                
+
+  # create listen socket
+  my $sr = IO::Socket::INET-&amp;gt;new( Listen    =&amp;gt; 5,
+                                  LocalAddr =&amp;gt; &#39;localhost:9999&#39;,
+                                  ReuseAddr =&amp;gt; 1 );
+
+  while(4)
+    {
+    # awaiting connection
+    my $cl = $sr-&amp;gt;accept() or next; # accept new connection or loop on error
+
+    while( my $req = &amp;lt;$cl&amp;gt; ) # read request data, exit loop on empty request
+      {
+      chomp( $req );
+      my $thaw = thaw( r_unescape( $req ) ); # &#39;unpack&#39; request data (\n unescape)
+      my %req = %{ $thaw || {} };            # copy to local hash
+
+      my %res;                                # result data
+      my $func = $FUNC_MAP{ $req{ &#39;NAME&#39; } }; # find required function
+      if( ! $func ) # check if function exists
+        {
+        # function name is not found, return error
+        $res{ &#39;ERROR&#39; } = &amp;quot;No such function: &amp;quot; . $req{ &#39;NAME&#39; };
+        }
+      else
+        {
+        # function exists, proceed with execution
+        my @args = @{ $req{ &#39;ARGS&#39; } }; # copy to local arguments hash
+        if( $req{ &#39;WANTARRAY&#39; } )       # depending on the required context...
+          {
+          my @ret = &amp;amp;$func( @args );    # call function in array context
+          $res{ &#39;RET_ARRAY&#39; } = \@ret;  # return array
+          }
+        else
+          {
+          my $ret = &amp;amp;$func( @args );    # call function in scalar context
+          $res{ &#39;RET_SCALAR&#39; } = $ret;  # return scalar
+          }  
+        }
+
+      my $res = r_escape( nfreeze( \%res ) ); # &#39;pack&#39; result data (\n escape)
+      print $cl &amp;quot;$res\n&amp;quot;;                     # send result data to the client
+      }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The client side is also simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Storable qw( thaw nfreeze );
+  use IO::Socket::INET;
+
+  # connect to the server
+  my $cl = IO::Socket::INET-&amp;gt;new(  PeerAddr =&amp;gt; &amp;quot;localhost:9999&amp;quot; ) 
+       or die &amp;quot;connect error\n&amp;quot;;
+
+  # this is interface sub to calling server
+  sub r_call
+  {
+    my %req; # request data
+
+    $req{ &#39;NAME&#39; }      = shift;             # function name to call
+    $req{ &#39;WANTARRAY&#39; } = wantarray ? 1 : 0; # context hint
+    $req{ &#39;ARGS&#39; }      = \@_;               # arguments
+
+    my $req = r_escape( nfreeze( \%req ) );  # &#39;pack&#39; request data (\n escape)
+    print $cl &amp;quot;$req\n&amp;quot;;                      # send to the server
+    my $res = &amp;lt;$cl&amp;gt;;                         # get result line
+    chomp( $res );
+
+    my $thaw = thaw( r_unescape( $res ) );   # &#39;unpack&#39; result (\n unescape)
+    my %res = %{ $thaw || {} };              # copy result data to local hash
+
+    # server error -- break execution!
+    die &amp;quot;r_call: server error: $res{&#39;ERROR&#39;}\n&amp;quot; if $res{ &#39;ERROR&#39; };
+
+    # finally return result in the required context
+    return wantarray ? @{ $res{ &#39;RET_ARRAY&#39; } } : $res{ &#39;RET_SCALAR&#39; };
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On both sides there are two very simple functions that escape and unescape newline chars. This is necessary to prevent serialized data that contains newline chars from breaking the chosen packet terminator. (A newline works well there because it interacts well with the &lt;code&gt;readline()&lt;/code&gt; operation on the socket.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub r_escape
+  {
+    my $s = shift;
+    # replace all newlines, CR and % with CGI-style encoded sequences
+    $s =~ s/([%\r\n])/sprintf(&amp;quot;%%%02X&amp;quot;, ord($1))/ge;
+    return $s;
+  }
+
+  sub r_unescape
+  {
+    my $s = shift;
+    # convert back escapes to the original chars
+    $s =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/ge;
+    return $s;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;waiting-in-the-wings&#34;&gt;Waiting In The Wings&lt;/h3&gt;
+
+&lt;p&gt;That&amp;rsquo;s the client and server. Now they need to do something useful. Here&amp;rsquo;s some code to run on the server from a client:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  =head2 power()
+
+   arguments: a number (n) and power (p)
+     returns: the number powered (n**p)
+
+  =cut
+
+  sub power
+  {
+    my $n = shift;
+    my $p = shift;
+    return $n**$p;
+  }
+
+  =head2 range( f, t )
+
+   arguments: lower (f) and upper indexes (t)
+     returns: array with number elements between the lower and upper indexes
+              ( f .. t )
+  =cut         
+
+  sub range
+  {
+    my $f = shift;
+    my $t = shift;
+    return $f .. $t;
+  }
+
+  =head2 tree()
+
+   arguments: none
+     returns: in scalar context: hash reference to data tree
+              in array  context: hash (array) of data tree
+       usage:
+              $data = tree(); $data-&amp;gt;{ ... }
+              %data = tree(); $data{ ... }
+  =cut
+
+  sub tree
+  {
+    my $ret = {
+              this =&amp;gt; &#39;is test&#39;,
+              nothing =&amp;gt; [ qw( ever goes as planned ) ],
+              number_is =&amp;gt; 42,
+              };
+    return wantarray ? %$ret : $ret;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make these available to clients, the server must have a map of functions. It&amp;rsquo;s easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # function table, maps caller names to actual server subs
+  our %FUNC_MAP = (
+                  power =&amp;gt; \&amp;amp;power,
+                  range =&amp;gt; \&amp;amp;range,
+                  tree  =&amp;gt; \&amp;amp;tree,
+                  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s all of the setup for the server. Now you can start it.&lt;/p&gt;
+
+&lt;p&gt;The client side calls functions in this way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  r_call( &#39;test&#39;,  1, 2, 3, &#39;opa&#39; );  # this will receive &#39;not found&#39; error
+  my $r = r_call( &#39;power&#39;,  2,  8 );  # $r = 256
+  my @a = r_call( &#39;range&#39;, 12, 18 );  # @a = ( 12, 13, 14, 15, 16, 17, 18 )
+  my %t = r_call( &#39;tree&#39; );           # returns data as hash
+  my $t = r_call( &#39;tree&#39; );           # returns data as reference
+
+  print( &amp;quot;Tree is:\n&amp;quot; . Dumper( \%t ) );
+  # this will print:
+
+  Tree is:
+  $VAR1 = {
+            &#39;number_is&#39; =&amp;gt; 42,
+            &#39;nothing&#39; =&amp;gt; [
+                           &#39;ever&#39;,
+                           &#39;goes&#39;,
+                           &#39;as&#39;,
+                           &#39;planned&#39;
+                         ],
+            &#39;this&#39; =&amp;gt; &#39;is test&#39;
+          };
+
+  # and will be the same as 
+  print( &amp;quot;Tree is:\n&amp;quot; . Dumper( $t ) );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;one-wish&#34;&gt;One Wish&lt;/h3&gt;
+
+&lt;p&gt;At this point everything works, but as usual, someone will want another feature. Suppose that the server and the client sides each had one wish.&lt;/p&gt;
+
+&lt;p&gt;The server side wish may be to have a built-in facility to find callable functions so as to build the function map can be built automatically.&lt;/p&gt;
+
+&lt;p&gt;Automatic map discovery has one major flaw which is that all functions in the current package are available to the client. This may not be always desirable. There are simple solutions to the problem. For example, all functions that need external visibility within a package could have a specific name prefix. A map discovery procedure can filter the list of all functions with this prefix and map those externally under the original names (without the prefix).&lt;/p&gt;
+
+&lt;p&gt;The following code finds all defined functions in the current namespace (the one that called &lt;code&gt;r_map_discover()&lt;/code&gt;) and returns a hash with function-name keys and function-code-reference values:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub r_map_discover
+  {
+    my ( $package ) = caller(); # get the package name of the caller
+    my $prefix = shift;         # optional prefix
+    my %map;
+
+    # disable check for symbolic references
+    no strict &#39;refs&#39;;
+
+    # loop over all entries in the caller package&#39;s namespace
+    while( my ( $k, $v ) = each %{ $package . &#39;::&#39; } ) 
+      {
+      my $sym = $package . &#39;::&#39; . $k; # construct the full name of each symbol
+      next unless $k =~ s/^$prefix//; # allow only entries starting with prefix
+      my $r = *{ $sym }{ &#39;CODE&#39; };    # take reference to the CODE in the glob
+      next unless $r;  # reference is empty, no code under this name, skip
+      $map{ $k } = $r; # reference points to CODE, assign it to the map
+      }
+    return %map;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make the use automatic discovery instead of a static function map, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # function table, maps caller names to actual server subs, initially empty
+  our %FUNC_MAP;
+
+  # run the automatic discovery function
+  %FUNC_MAP = r_map_discover();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now &lt;code&gt;%FUNC_MAP&lt;/code&gt; has all of the externally-visible functions in the current package (namespace). That means it&amp;rsquo;s time to modify the names in the module to work with automatic discovery. Suppose the prefix is &lt;code&gt;x_&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub x_power
+  {
+    ...
+  }
+
+  sub x_range
+  {
+    ...
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The server will discover only those functions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%FUNC_MAP = r_map_discover( &#39;x_&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the client will continue to call functions under their usual names:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $r = r_call( &#39;power&#39;,  2,  8 );  # $r = 256
+  my @a = r_call( &#39;range&#39;, 12, 18 );  # @a = ( 12, 13, 14, 15, 16, 17, 18 )
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s it for the server&amp;rsquo;s wish. Now it&amp;rsquo;s time to grant the client&amp;rsquo;s wish.&lt;/p&gt;
+
+&lt;p&gt;Call remote functions transparently might be most important client wish, avoiding the use of &lt;code&gt;r_call()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Perl allows the creation of anonymous function references. It&amp;rsquo;s also possible to install that reference in a namespace under a real name. The result is a function created at run-time. If the function definition takes place in a specific lexical context, it will still have access to that context even when called later from outside that context. Those functions are closures and they are one way to avoid using &lt;code&gt;r_call()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub r_define_subs
+  {
+    my ( $package ) = caller(); # get the package name of the caller
+    for my $fn ( @_ )           # loop over the specified function names
+      {
+      my $sym = $package . &#39;::&#39; . $fn;    # construct the full symbol name
+      no strict;                          # turn off symbolic refs check
+      *$sym = sub { r_call( $fn, @_ ); }; # construct and tie the closure
+      use strict;                         # turn the check back on
+      }
+  }
+
+  # define/import &#39;range&#39; and &#39;tree&#39; functions in the current package
+  r_define_subs( &#39;range&#39;, &#39;tree&#39; );
+
+  # now call them as they are normal functions
+  my @a = range( 12, 18 );      # @a = ( 12 .. 18 )
+  my %t = tree();               # returns data as reference
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach hides the use of &lt;code&gt;r_call()&lt;/code&gt; to only one place which the client doesn&amp;rsquo;t see. Wish granted.&lt;/p&gt;
+
+&lt;h3 id=&#34;limits&#34;&gt;Limits&lt;/h3&gt;
+
+&lt;p&gt;The biggest limitations of PerlRC relate to serialization.&lt;/p&gt;
+
+&lt;p&gt;First of all, both the client and server must have compatible serialization modules or versions. This is crucial! To avoid problems here, either you&amp;rsquo;ll have to write your own serialization code or perform some kind of version check. If you perform this check, be sure to do it before sending a request and response, in plain text, without using serialization at all.&lt;/p&gt;
+
+&lt;p&gt;Another problem is in what data you can serialize in the argument or result containers. Holding references there to something outside the same container may pull in more data than you want, if your serialization follows references, or it may not pull in enough data if your serialization process is very simple. Also there is no way to serialize file handles, compiled code, or objects (which are not in the same container really). In some cases, serializing code and objects may be possible if the serialization modules supports such features (as do Storable and FreezeThaw), if you have the required class modules on both sides, and if you trust code on either side.&lt;/p&gt;
+
+&lt;p&gt;The documentation of the serialization modules explain further limitations and workarounds for both approaches.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;There is a bit more work to do on PerlRC before using it in production, but if you need simple RPC or you need to tweak the way RPC deals with data or communication, you may have good experiences writing your own implementation instead fitting your application around readymade modules. I hope this text is a good starting point.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Implementing Flood Control</title>
+      <link>http://localhost:1313/pub/2004/11/11/floodcontrol.html/</link>
+      <pubDate>Thu, 11 Nov 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/11/11/floodcontrol.html/</guid>
+      <description>
+
+&lt;p&gt;Accordingly to Merriam-Webster Online, &amp;ldquo;flood&amp;rdquo; means:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;1: a rising and overflowing of a body of water especially onto normally dry land;&lt;/p&gt;
+
+&lt;p&gt;2: an overwhelming quantity or volume.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;In computer software there are very similar situations when an unpredictable and irregular flow of events can reach higher levels. Such situations usually are not comfortable for users, either slowing down systems or having other undesired effects.&lt;/p&gt;
+
+&lt;p&gt;Floods can occur from accessing web pages, requesting information from various sources (ftp lists, irc services, etc.), receiving SMS notification messages, and email processing. It is obvious that it is not possible to list all flood cases.&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;Flood control&amp;rdquo; is a method of controlling the processing-rate of a stream of events. It can reject or postpone events until there are available resources (CPU, time, space, etc.) for them. Essentially the flood control restricts the number of events processed in a specific period of time.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-closing-the-gates-closing-the-gates-span&#34;&gt;&lt;span id=&#34;closing_the_gates&#34;&gt;Closing the Gates&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;To maintain flood control, you must calculate the flood ratio, which is:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_11_11_floodcontrol/flood2-eq1.gif&#34; alt=&#34;flood ratio equation&#34; width=&#34;73&#34; height=&#34;50&#34; /&gt;
+&lt;em&gt;Figure 1. Flood ratio equation.&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;fr flood ratio
+ec event count
+tp time period for ec
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To determine if a flood is occurring, compare the flood ratio to the fixed maximum (threshold) ratio. If the result is less than the threshold, there&amp;rsquo;s no flood. Accept the event. If the result is higher, refuse or postpone the event.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_11_11_floodcontrol/flood2-eq2.gif&#34; alt=&#34;comparing the ratios&#34; width=&#34;68&#34; height=&#34;50&#34; /&gt;
+&lt;em&gt;Figure 2. Comparing the ratios.&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ec event count
+tp time period for ec
+fc fixed event count (max)
+fp fixed time period for fc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It is possible to keep an array of timestamps of all events. Upon receipt of a new event, calculate the time period since the oldest event to use as the current count/time ratio. This approach has two drawbacks. The first is that it uses more and more memory to hold all of the timestamps. Suppose that you want only two events to happen inside a one-minute period, giving two events per minute. Someone can trigger a single event, wait half an hour, and finally flood you with another 58 requests. At this point the ratio will be 1.9/min., well below the 2/min. limit. This is the second drawback.&lt;/p&gt;
+
+&lt;p&gt;A better approach is to keep a sliding window either of events (&lt;code&gt;fc&lt;/code&gt;) or time period (&lt;code&gt;fp&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;This period window requires an array of the last events. This array size is unknown. (The specific time units are not important, but the following examples use minutes.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;               past                                   now
+    Timeline:  1----2----3----4----5----6----7----8----9---&amp;gt; (min)
+    Events:    e1      e2 e3         e4     e5 e6     e7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This timeline measures event timestamps. To calculate the flood ratio, you count events newer than the current time window of size &lt;code&gt;fp&lt;/code&gt;. And check against a ratio of four events in three minutes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Time now:      9
+Time window:   from 9-3 = 6 to now(9), so window is 6-9
+Oldest event:  e5 (not before 6)
+Event count:   3 (in 6-9 period)
+Flood ratio:   3/3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This ratio of &lt;sup&gt;3&lt;/sup&gt;&amp;frasl;&lt;sub&gt;3&lt;/sub&gt; is below the flood threshold of &lt;sup&gt;4&lt;/sup&gt;&amp;frasl;&lt;sub&gt;3&lt;/sub&gt;, so at this moment there is no flood. Perform this check at the last event to check. In this example, this event is &lt;code&gt;e7&lt;/code&gt;. After each check, you can safely remove all events older than the time window to reduce memory consumption.&lt;/p&gt;
+
+&lt;p&gt;The other solution requires a fixed array of events with size &lt;code&gt;fc&lt;/code&gt;. With our 4ev/3min example, then:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;               past                  now
+    Timeline:  &amp;lt;--5----6----7----8----9---&amp;gt; (min)
+    Events:      e4        e5 e6     e7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The event array (window) is size 4. To check for a flood at &lt;code&gt;e7&lt;/code&gt;, we use this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Window size &amp;quot;fc&amp;quot;: 4
+First event time: e4 -&amp;gt; 5
+Last  event time: e7 -&amp;gt; 9
+Time period &amp;quot;tp&amp;quot;: 9-5 = 4
+Flood ratio is:   4/4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The ratio of &lt;sup&gt;4&lt;/sup&gt;&amp;frasl;&lt;sub&gt;4&lt;/sub&gt; is also below the threshold of &lt;sup&gt;4&lt;/sup&gt;&amp;frasl;&lt;sub&gt;3&lt;/sub&gt;, so it&amp;rsquo;s OK to accept event &lt;code&gt;e7&lt;/code&gt;. When you must check a new event, add it to the end of the event array (window) and remove the oldest one. If the new event would cause a flood, remember to reverse these operations.&lt;/p&gt;
+
+&lt;p&gt;If the flood check fails, you can find a point in the future when this check will be OK. This makes it possible to return some feedback information to the user indicating how much time to wait before the system will accept the next event:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_11_11_floodcontrol/flood2-eq3.gif&#34; alt=&#34;time until next event equation&#34; width=&#34;126&#34; height=&#34;50&#34; /&gt;
+&lt;em&gt;Figure 3. Time until next event equation.&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ec  event count (requests received, here equal to fc)
+fc  fixed event count (max)
+fp  fixed time period for fc
+now the future time point we search for
+ot  oldest event time point in the array (event timestamp)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_11_11_floodcontrol/flood2-eq4.gif&#34; alt=&#34;simplified time until next event equation&#34; width=&#34;186&#34; height=&#34;50&#34; /&gt;
+&lt;em&gt;Figure 4. Simplified time until next event equation.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_11_11_floodcontrol/flood2-eq5.gif&#34; alt=&#34;time to wait equation&#34; width=&#34;192&#34; height=&#34;30&#34; /&gt;
+&lt;em&gt;Figure 5. The time-to-wait equation.&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;time the actual current time (time of the new event)
+wait time period to wait before next allowed event
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If &lt;code&gt;wait&lt;/code&gt; is positive, then this event should be either rejected or postponed. When &lt;code&gt;wait&lt;/code&gt; is 0 or negative, it&amp;rsquo;s OK to process the event immediately.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-code-the-code-span&#34;&gt;&lt;span id=&#34;the_code&#34;&gt;The Code&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In the following implementation I&amp;rsquo;ll use a slightly modified version of the sliding window of events. To avoid removing the last event and eventually replacing it after a failed check, I decided to check the current flood ratio with the existing events array and with the time of the new one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;               past                  now
+    Timeline:  &amp;lt;--5----6----7----8----9---&amp;gt; (min)
+    Events:      e3   e4   e5 e6    (e7)
+
+    Window size fc: 4 (without e7)
+    First event time: e4 -&amp;gt; 5
+    Last event time: e7 -&amp;gt; 9
+    Time period tp: 9-5 = 4
+    Flood ratio is:   4/4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This seems a bit strange at first, but it works exactly as needed. The check is performed as if &lt;code&gt;e6&lt;/code&gt; is timed as &lt;code&gt;e7&lt;/code&gt;, which is the worst case (the biggest time period for the fixed event window size). If the check passes, than after removing &lt;code&gt;e3&lt;/code&gt;, the flood ratio will be always below the threshold!&lt;/p&gt;
+
+&lt;p&gt;Following this description I wrote a function to call for each request or event that needs flood control. It receives a fixed, maximum count of requests (the events window size) and a fixed time period. It returns how much time must elapse until the next allowed event, or 0 if it&amp;rsquo;s OK to process the event immediately.&lt;/p&gt;
+
+&lt;p&gt;This function should be generic, so it needs some kind of event names. To achieve this there is a third argument &amp;ndash; the specific event name for each flood check.&lt;/p&gt;
+
+&lt;p&gt;Here is the actual code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# this package hash holds flood arrays for each event name
+# hash with flood keys, this is the internal flood check data storage
+our %FLOOD;
+
+sub flood_check
+{
+  my $fc = shift; # max flood events count
+  my $fp = shift; # max flood time period for $fc events
+  my $en = shift; # event name (key) which identifies flood check data
+
+  $FLOOD{ $en } ||= [];   # make empty flood array for this event name
+  my $ar = $FLOOD{ $en }; # get array ref for event&#39;s flood array
+  my $ec = @$ar;          # events count in the flood array
+
+  if( $ec &amp;gt;= $fc ) 
+    {
+    # flood array has enough events to do real flood check
+    my $ot = $$ar[0];      # oldest event timestamp in the flood array
+    my $tp = time() - $ot; # time period between current and oldest event
+
+    # now calculate time in seconds until next allowed event
+    my $wait = int( ( $ot + ( $ec * $fp / $fc ) ) - time() );
+    if( $wait &amp;gt; 0 )
+      {
+      # positive number of seconds means flood in progress
+      # event should be rejected or postponed
+      return $wait;
+      }
+    # negative or 0 seconds means that event should be accepted
+    # oldest event is removed from the flood array
+    shift @$ar;
+    }
+  # flood array is not full or oldest event is already removed
+  # so current event has to be added
+  push  @$ar, time();
+  # event is ok
+  return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;ve put this on the CPAN as &lt;a href=&#34;https://metacpan.org/pod/Algorithm::FloodControl&#34;&gt;Algorithm::FloodControl&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;To test it, I wrote a simple program that accepts text, line by line, from standard input and prints each accepted line or the amount of time before the program will accept the next line.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+use strict;
+use Algorithm::FloodControl;
+
+while(&amp;lt;&amp;gt;)
+  {
+  # time is used to illustrate the results
+  my $tm = scalar localtime;
+
+  # exit on `quit&#39; or `exit&#39; strings
+  exit if /exit|quit/i;
+
+  # FLOOD CHECK: allow no more than 2 same lines in 10 seconds
+  # here I use the actual data for flood event name!
+  my $lw = flood_check( 2, 10, $_ );
+
+  if( $lw ) # local wait time
+    {
+    chomp;
+    print &amp;quot;WARNING: next event allowed in $lw seconds (LOCAL CHECK for &#39;$_&#39;)\n&amp;quot;;
+    next;
+    }
+  print &amp;quot;$tm: LOCAL  OK: $_&amp;quot;;
+
+  # FLOOD CHECK: allow no more than 5 lines in 60 seconds
+  my $gw = flood_check( 5, 60, &#39;GLOBAL&#39; );
+
+  if( $gw ) # global wait time
+    {
+    print &amp;quot;WARNING: next event allowed in $gw seconds (GLOBAL CHECK)\n&amp;quot;;
+    next;
+    }
+  print &amp;quot;$tm: GLOBAL OK: $_&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I named this &lt;code&gt;floodtest.pl&lt;/code&gt;. The of the test were: (&amp;rdquo;&amp;gt;&amp;rdquo; marks my input lines)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;cade@aenea:~$ ./floodtest.pl 
+&amp;gt; hello
+Wed Feb 17 08:25:35 2004: LOCAL  OK: hello
+Wed Feb 17 08:25:35 2004: GLOBAL OK: hello
+&amp;gt; hello
+Wed Feb 17 08:25:38 2004: LOCAL  OK: hello
+Wed Feb 17 08:25:38 2004: GLOBAL OK: hello
+&amp;gt; hello
+WARNING: next event allowed in 5 seconds (LOCAL CHECK for &#39;hello&#39;)
+&amp;gt; bye
+Wed Feb 17 08:25:43 2004: LOCAL  OK: bye
+Wed Feb 17 08:25:43 2004: GLOBAL OK: bye
+&amp;gt; hello
+Wed Feb 17 08:25:45 2004: LOCAL  OK: hello
+Wed Feb 17 08:25:45 2004: GLOBAL OK: hello
+&amp;gt; see you
+Wed Feb 17 08:25:48 2004: LOCAL  OK: see you
+Wed Feb 17 08:25:48 2004: GLOBAL OK: see you
+&amp;gt; next time
+Wed Feb 17 08:25:52 2004: LOCAL  OK: next time
+WARNING: next event allowed in 43 seconds (GLOBAL CHECK)
+&amp;gt; one more try?
+Wed Feb 17 08:26:09 2004: LOCAL  OK: one more try?
+WARNING: next event allowed in 26 seconds (GLOBAL CHECK)
+&amp;gt; free again
+Wed Feb 17 08:26:31 2004: LOCAL  OK: free again
+WARNING: next event allowed in 4 seconds (GLOBAL CHECK)
+&amp;gt; free again
+Wed Feb 17 08:26:42 2004: LOCAL  OK: free again
+Wed Feb 17 08:26:42 2004: GLOBAL OK: free again
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see that I could not enter &amp;ldquo;hello&amp;rdquo; 3 times during the first 10 seconds but still I managed to enter one more &amp;ldquo;hello&amp;rdquo; a bit later (the 10-second flood had ended for the &amp;ldquo;hello&amp;rdquo; line) and 2 other lines before the global flood check triggered (5 lines for 1 minute). After 60 seconds, &lt;em&gt;floodtest.pl&lt;/em&gt; finally accepted my sixth line, &amp;ldquo;free again.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;The next sections show how to use flood control in several applications. These examples are not exhaustive but are very common, so they will work as templates for other cases.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-my-scores-please-my-scores-please-span&#34;&gt;&lt;span id=&#34;my_scores_please&#34;&gt;My Scores Please?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Imagine an IRC bot (robot) which can report scores from the local game servers. Generally this bot receives requests from someone inside IRC channel (a chat room, for those of you who haven�t used IRC) and reports current scores back to the channel. If this eventually becomes very popular, people will start requesting scores more frequently than it is useful just for fun, so there&amp;rsquo;s a clear need for flood control.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;d prefer to allow any user to request scores no more than twice per minute, but at the same time I want to allow 10 requests total every two minutes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub scores_request
+{
+    my $irc     = shift; # the IRC connection which I communicate over
+                         # this is a Net::IRC::Connection object
+    my $channel = shift; # the channel where &amp;quot;scores&amp;quot; are requested
+    my $user    = shift; # the user who requested scores
+
+    # next line means: do flood check for $user and if it is ok, then
+    #                  check for global flood. this is usual Perl idiom.
+    my $wait = flood_check( 2, 60, $user ) || flood_check( 10, 120, &#39;*&#39; );
+    if( $wait ) # can be 0 or positive number so this check is simple
+      {
+      # oops flood detected, report this personally to the user
+      $irc-&amp;gt;notice( $user, &amp;quot;please wait $wait seconds&amp;quot; );
+      }
+    else
+      {
+      # it is ok, there is no flood, print scores back to the channel
+      $irc-&amp;gt;privmsg( $channel, get_scores() );
+      }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code uses the &lt;a href=&#34;https://metacpan.org/pod/Net::IRC&#34;&gt;Net::IRC&lt;/a&gt; module, so if you want to know the details of the &lt;code&gt;notice()&lt;/code&gt; and &lt;code&gt;privmsg()&lt;/code&gt; functions, check the module documentation.&lt;/p&gt;
+
+&lt;p&gt;This is good example of combining events, but it works correctly only if the second flood ratio (in this case &lt;sup&gt;10&lt;/sup&gt;&amp;frasl;&lt;sub&gt;120&lt;/sub&gt;) is greater than first one (&lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;60&lt;/sub&gt;). Otherwise you should extend the &lt;code&gt;flood_check()&lt;/code&gt; function with an array of events to check in one loop, so if any of them fails the internal storage will update. Perhaps &lt;code&gt;Algorithm::FloodControl&lt;/code&gt; will have such a feature in the future.&lt;/p&gt;
+
+&lt;p&gt;Another common case is to limit the execution of resource-consuming web scripts (CGI).&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-don-t-flood-the-page-don-t-flood-the-page-span&#34;&gt;&lt;span id=&#34;_don_t__flood_the_page_&#34;&gt;(Don&amp;rsquo;t) Flood the Page!&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you want to limit CGI-script execution you will hit a problem: you must save and restore the flood-control internal data between script invocations. For this reason the &lt;code&gt;Algorithm::FloodControl&lt;/code&gt; module exports another function called &lt;code&gt;flood_storage&lt;/code&gt;, which can get or set the internal data.&lt;/p&gt;
+
+&lt;p&gt;In this example I&amp;rsquo;ll use two other modules, &lt;a href=&#34;https://metacpan.org/pod/Storable&#34;&gt;Storable&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/LockFile::Simple&#34;&gt;LockFile::Simple&lt;/a&gt;. I use the first to save and restore the flood-control data to and from disk files and the second to lock this file to avoid corruptions if two or more instances of the script run at the same time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+use strict;
+use Storable qw( store retrieve );
+use LockFile::Simple qw( lock unlock );
+use Algorithm::FloodControl;
+
+# this is the file that should keep the flood data though /tmp is not
+# the perfect place for it
+my $flood_file = &amp;quot;/tmp/flood-cgi.dat&amp;quot;;
+
+# this is required so the web browser will know what is expected
+print &amp;quot;Content-type: text/plain\n\n&amp;quot;;
+
+# I wanted to limit the script executions per remote IP so I have to
+# read it from the web server environment
+my $remote_ip = $ENV{&#39;REMOTE_ADDR&#39;};
+
+# first of all--lock the flood file
+lock( $flood_file );
+
+# now read the flood data if flood file exists
+my $FLOOD = retrieve( $flood_file ) if -r $flood_file;
+
+# load flood data into the internal storage
+flood_storage( $FLOOD ) if $FLOOD;
+
+# do the actual flood check: max 5 times per minute for each IP
+# this is the place where more checks can be done
+my $wait = flood_check( 5, 60, &amp;quot;TEST_CGI:$remote_ip&amp;quot; );
+
+# save hte internal data back to the disk
+store( flood_storage(), $flood_file );
+
+# and finally unlock the file
+unlock( $flood_file );
+
+if( $wait )
+  {
+  # report flood situation
+  print &amp;quot;You have to wait $wait seconds before requesting this page again.\n&amp;quot;;
+  exit;
+  }
+
+# there is no flood, continue with the real work here
+print &amp;quot;Hello, this is main script here, local time is:\n&amp;quot;;
+print scalar localtime;
+print &amp;quot;\n...\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are various issues to consider, such as the save/restore method, time required, and locking, but in any case the scheme will be similar.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-beep-beep-beep-beep-beep-beep-span&#34;&gt;&lt;span id=&#34;beep__beep__beep___&#34;&gt;Beep, Beep, Beep &amp;hellip;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In this last example I&amp;rsquo;ll describe a small program, a variation of which I use for (email) SMS notifications. I wanted to avoid scanning large mail directories so I made my email filter copy incoming messages into a separate folder. The program scans this copy folder every 10 minutes for new messages. If there are any, it sends a notification for each one to my mobile phone and removes the copy of the message.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+use strict;
+use Algorithm::FloodControl;
+
+our $MAIL_ROOT = &#39;/home/cade/mail&#39;;
+our @SCAN = ( 
+              { # this is my personal mail, I&#39;d like to be notified often
+                FOLDER  =&amp;gt; &#39;Personal2&#39;, # directory (mail folder) to scan
+                FC      =&amp;gt; 20,          # fixed event count
+                FP      =&amp;gt; 60*60,       # fixed time period, 1 hour
+              }, 
+              { # this is a mailing list, I don&#39;t need frequent notifications
+                FOLDER  =&amp;gt; &#39;AList2&#39;,    # directory (mail folder) to scan
+                FC      =&amp;gt; 3,           # fixed event count
+                FP      =&amp;gt; 20*60,       # fixed time period, 20 minutes
+              }
+            );
+while(4)
+  {
+  process_folder( $_ ) for @SCAN;
+  sleep(10*60); # sleep 10 minutes
+  }
+
+sub process_folder
+{
+  my $hr     = shift; # this is hash reference
+  my $fc     = $hr-&amp;gt;{ &#39;FC&#39; };
+  my $fp     = $hr-&amp;gt;{ &#39;FP&#39; };
+  my $folder = $hr-&amp;gt;{ &#39;FOLDER&#39; };
+
+  my @msg = glob &amp;quot;$MAIL_ROOT/$folder/*&amp;quot;;
+  return unless @msg; # no messages found
+  for( @msg )
+    {
+    # there are new messages, so flood check is required
+    my  $wait = flood_check( $fc, $fp, $folder );
+    if( $wait )
+      {
+      # skip this pass if non-zero wait time is received for this folder
+      print &amp;quot;FLOOD! $wait seconds required.\n&amp;quot;;
+      return;
+      }
+    send_sms( $folder, $_ );
+    }
+}
+
+sub send_sms
+{
+  my $folder = shift;
+  my $file   = shift;
+  # implementation of this function is beyond the scope of this example
+  # so I&#39;ll point just that it extracts subject line from the message file
+  # and sends (over local sms gateway) text including folder name, time 
+  # and subject
+  unlink( $file );
+  print &amp;quot;SMS: $folder, $file\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, this code &amp;ndash; while implementing a totally different task &amp;ndash; has exactly the same flood check as in the previous two examples.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I said in the beginning that flood control has a vast field of applications. There are many cases where it is appropriate or even necessary. There is no excuse to avoid such checks; implementing it is not hard at all.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

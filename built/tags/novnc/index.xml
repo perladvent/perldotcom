@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Novnc on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/novnc/</link>
+    <description>Recent content in Novnc on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 02 Feb 2016 13:41:18 +0000</lastBuildDate>
+    <atom:link href="/tags/novnc/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Get an in-browser remote desktop with Mojolicious and noVNC</title>
+      <link>http://localhost:1313/article/212/2016/2/2/Get-an-in-browser-remote-desktop-with-Mojolicious-and-noVNC/</link>
+      <pubDate>Tue, 02 Feb 2016 13:41:18 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/212/2016/2/2/Get-an-in-browser-remote-desktop-with-Mojolicious-and-noVNC/</guid>
+      <description>
+
+&lt;p&gt;While SSH is a staple of remote system administration, sometimes only a GUI will do. Perhaps the remote system doesn&amp;rsquo;t have a terminal environment to connect to; perhaps the target application doesn&amp;rsquo;t present an adequate command line interface; perhaps there is an existing GUI session you need to interact with. There can be all kinds of reasons.&lt;/p&gt;
+
+&lt;p&gt;For this purpose, a generic type of remote desktop service called VNC is commonly used. The servers are easy to install, start on seemingly all platforms and lots of hardware has a VNC server embedded for remote administration. Clients are similarly easy to use, but when building a management console in the web, wouldn&amp;rsquo;t it be nice to have the console view right in your browser?&lt;/p&gt;
+
+&lt;p&gt;Luckily there is a pure JavaScript VNC client called &lt;a href=&#34;https://github.com/kanaka/noVNC&#34;&gt;noVNC&lt;/a&gt; noVNC listens for VNC traffic over WebSockets, which is convenient for browsers but isn&amp;rsquo;t supported by most VNC servers. To overcome this problem they provide a command-line application called &lt;a href=&#34;https://github.com/kanaka/websockify&#34;&gt;Websockify&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Websockify is a relay that connects to a TCP connection (the VNC server) and exposes the traffic as a WebSocket stream such that a browser client can listen on. While this does fix the problem it isn&amp;rsquo;t an elegant solution. Each VNC Server needs its own instance of Websockify requiring a separate port. Further you either need to leave these connected at all times in case of a web client or else spawn them on demand and clean them up later.&lt;/p&gt;
+
+&lt;h2 id=&#34;mojolicious-to-the-rescue&#34;&gt;Mojolicious to the Rescue&lt;/h2&gt;
+
+&lt;p&gt;Mojolicious has a built-in event-based &lt;a href=&#34;http://mojoliciou.us/perldoc/Mojo/IOLoop/Client&#34;&gt;TCP Client&lt;/a&gt; and native &lt;a href=&#34;http://mojolicious.org/perldoc/Mojolicious/Guides/Tutorial#WebSockets&#34;&gt;WebSocket&lt;/a&gt; handling. If you are already serving your site with Mojolicious, why not let it do the TCP/WebSocket relay work too? Even if you aren&amp;rsquo;t, the on-demand nature of the solution I&amp;rsquo;m going to show would be useful as a stand-alone app for this single purpose versus the websockify application.&lt;/p&gt;
+
+&lt;p&gt;Here is a &lt;a href=&#34;http://mojolicio.us/perldoc/Mojolicious/Guides/Tutorial&#34;&gt;Mojolicious::Lite&lt;/a&gt; application which serves the noVNC client when you request a url like &lt;code&gt;/192.168.0.1&lt;/code&gt;. When the page loads, the client requests the WebSocket route at &lt;code&gt;/proxy?target=192.168.0.1&lt;/code&gt; which establishes the bridge. This example is bundled with my forthcoming wrapper module with a working name of &lt;a href=&#34;https://github.com/jberger/Mojo-Websockify/blob/master/ex/client.pl&#34;&gt;Mojo::Websockify&lt;/a&gt;. The code is remarkably simple:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Mojolicious::Lite;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Mojo::IOLoop;
+
+websocket &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/proxy&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;render_later&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;on(finish &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;websocket closing&amp;#39;&lt;/span&gt; });
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tx &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;tx;
+  $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;with_protocols(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;binary&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $host &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;target&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;127.0.0.1&amp;#39;&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $host &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s{:(\d+)$}{}&lt;/span&gt; ? $1 : &lt;span style=&#34;color:#ae81ff&#34;&gt;5901&lt;/span&gt;;
+
+  Mojo::IOLoop&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;client(address &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $host, port &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $port, &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($loop, $err, $tcp) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+    $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;finish(&lt;span style=&#34;color:#ae81ff&#34;&gt;4500&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;TCP connection error: $err&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $err;
+    $tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;on(error &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;finish(&lt;span style=&#34;color:#ae81ff&#34;&gt;4500&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;TCP error: $_[1]&amp;#34;&lt;/span&gt;) });
+
+    $tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;on(read &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($tcp, $bytes) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+      $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;send({binary &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $bytes});
+    });
+
+    $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;on(binary &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($tx, $bytes) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+      $tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;write($bytes);
+    });
+
+    $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;on(finish &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+      $tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;close;
+      undef $tcp;
+      undef $tx;
+    });
+  });
+};
+
+get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/*target&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;stash(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;target&amp;#39;&lt;/span&gt;);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;url_for(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;proxy&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;query(target &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $target);
+  $url&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;path&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;leading_slash(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;# novnc assumes no leading slash :(&lt;/span&gt;
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;render(
+    vnc  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;
+    base &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;req&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;url&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_abs,
+    path &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $url,
+  );
+};
+
+app&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;start;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;get&lt;/code&gt; route shown at the bottom and isn&amp;rsquo;t very exciting. It&amp;rsquo;s the frontend route that renders the noVNC client and tells it the WebSocket url.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;websocket&lt;/code&gt; route is the more interesting one, which I will explain in detail. After shifting off the controller, we tell the server not to attempt to render a template (&lt;code&gt;render_later&lt;/code&gt;), then subscribe to the finish handler. This is actually a hint to the server that we intend to initiate a WebSocket connection later. Typically this is done by either subscribing to one of the message events or else by sending data upon connection, but in this case we won&amp;rsquo;t do either until the TCP connection is established. Then after extracting the target host and port from the query argument we are ready to make the TCP connection.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://mojolicious.org/perldoc/Mojo/IOLoop#client&#34;&gt;&lt;code&gt;Mojo::IOLoop-&amp;gt;client&lt;/code&gt;&lt;/a&gt; simply takes connection arguments and a callback for what to do once connected. We use this callback to establish our relay. The WebSocket protocol reserves all closing statuses below 4000 for internal use, so I&amp;rsquo;ve taken to using the standard HTTP statuses and prepending a 4 to them. Thus when setting up the TCP error handling, either on initially connecting or for subsequent errors, the status passed to the WebSocket &lt;code&gt;finish&lt;/code&gt; method is 4500.&lt;/p&gt;
+
+&lt;p&gt;The relay itself is the next two method calls. First, when the TCP socket emits a &lt;code&gt;read&lt;/code&gt; event, we take its raw bytes and send them (as binary messages) to the WebSocket client. Then when the WebSocket emits a binary frame (i.e. when it receives a binary message) we write that back to the TCP connection. Finally when the Websocket is closed, we also close the TCP connection and cleanup our handlers.&lt;/p&gt;
+
+&lt;p&gt;Simple, isn&amp;rsquo;t it?!&lt;/p&gt;
+
+&lt;h2 id=&#34;additional-notes&#34;&gt;Additional Notes&lt;/h2&gt;
+
+&lt;p&gt;There are a few things missing. First is that I haven&amp;rsquo;t addressed security in this example. If any part of the stream is publicly available you will want to encrypt the traffic and put the servers behind authentication. Another risk is the issue of &amp;ldquo;back pressure&amp;rdquo; where a stream starts sending floods of data.&lt;/p&gt;
+
+&lt;p&gt;You may have noticed I skipped one line, which until a recent version of Chrome wasn&amp;rsquo;t necessary. When the WebSocket connection is first established it calls &lt;code&gt;with_protocols(&#39;binary&#39;)&lt;/code&gt;. Early versions of noVNC also supported sending the TCP traffic as base64 encoded text, since early implementations of WebSockets didn&amp;rsquo;t distinguish between text and binary frame types as the modern ones do. The WebSocket protocol allows the client to request an application-defined &amp;ldquo;sub-protocol&amp;rdquo; which noVNC used to request binary or base64, the latter of which has long since been deprecated and removed. The client still asks for the binary sub-protocol and recent versions of Chrome have started to refuse to connect if the server doesn&amp;rsquo;t indicate that it can handle this request.&lt;/p&gt;
+
+&lt;h2 id=&#34;shouldn-t-this-be-on-cpan&#34;&gt;Shouldn&amp;rsquo;t This Be On CPAN?&lt;/h2&gt;
+
+&lt;p&gt;I&amp;rsquo;m hoping to wrap this TCP/WebSocket bridge logic up as a module called &lt;code&gt;Mojo::Websockify&lt;/code&gt; and include the noVNC client as an example. It turns out however, that the logic which is simple to show here is remarkably hard to package in a generic, extensible way. For example, you may want to check if the TCP service is already in use via some database-locking table, or to allow remote-takeover of sessions using a message broker between clients. I&amp;rsquo;ll probably just simplify things for the common case and build in some protection for the &amp;ldquo;back pressure&amp;rdquo; problem. In the meantime I hope you have enjoyed seeing how beautifully simple Mojolicious&amp;rsquo; WebSocket and TCP services are.&lt;/p&gt;
+
+&lt;p&gt;Happy Perling!&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

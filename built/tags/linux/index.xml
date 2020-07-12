@@ -1,0 +1,1367 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Linux on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/linux/</link>
+    <description>Recent content in Linux on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 23 Jan 2020 10:39:00 +0000</lastBuildDate>
+    <atom:link href="/tags/linux/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The Rock Pi S Review</title>
+      <link>http://localhost:1313/article/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/</link>
+      <pubDate>Thu, 23 Jan 2020 10:39:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/</guid>
+      <description>&lt;p&gt;When writing articles like these, there is an inevitable comparison to the
+Raspberry Pi series. There is no way to fight this,
+and for good reason. The first Raspberry Pi ushered in a slew of Single
+Board Computers (SBCs), and one of them is the Rock Pi S, a new board from Seeed
+Studio.&lt;/p&gt;
+
+&lt;p&gt;In the interest of full disclosure, the Rock Pi S was provided by Seeed
+Studio for this review. Specifically, it&amp;rsquo;s the model with 512MB of RAM and
+4Gb of built-in flash.&lt;/p&gt;
+
+&lt;p&gt;The Rock Pi S competes in the same segment as the Raspberry Pi Zero, particularly the Zero W
+with built-in WiFi. Its form factor is different; where the Zero is
+shaped like a stick of gum, the Rock Pi S is closer to a square. The Rock
+also has USB-C for power, an ethernet jack, and a USB-A port. Depending on the
+project, it can end up being cheaper than the Zero, since you don&amp;rsquo;t have to
+buy a micro-USB to USB-A adapter to hook up most other devices.&lt;/p&gt;
+
+&lt;p&gt;You do still need a micro SD card. While there are versions of the Rock with
+built-in flash, it&amp;rsquo;s small and not meant for booting an OS. Note that the size of the built-in flash
+is listed in giga&lt;em&gt;bits&lt;/em&gt;. The 4Gb version is actually 512 mega&lt;em&gt;bytes&lt;/em&gt;. So get an
+SD card.&lt;/p&gt;
+
+&lt;p&gt;Which leaves us the question of which SD card. Some people automatically
+reach for a class 10 or UHS-I card, since those have the highest performance on
+the box. Trouble is, the traditional class ratings on SD cards only tell you
+the sequential read and write performance. That&amp;rsquo;s fine for cameras, but
+running an operating system means lots of random reads. Testing often showed
+that a good class 4 card was better than a lot of the class 10 cards out there.&lt;/p&gt;
+
+&lt;p&gt;These days, we don&amp;rsquo;t have to worry about that, because the SD Association
+came up with the &lt;a href=&#34;https://www.sdcard.org/developers/overview/application/index.html&#34;&gt;Application Performance Classes&lt;/a&gt;
+of A1 and A2. These set a minimum of random IO operations per second, which
+is just what we want. So get an A1 card and you&amp;rsquo;ll be happy with the results.&lt;/p&gt;
+
+&lt;p&gt;The big thing in the Rock&amp;rsquo;s favor is a quad core ARM processor. While it&amp;rsquo;s not
+going to set any Bitcoin mining records, I&amp;rsquo;ve found multicore
+processors are handy for hardware projects. On a single core processor running
+Linux, your program can get interrupted by something else at any time. This
+means that a program running on a mere 16MHz Arduino may run better than a
+1GHz Raspberry Pi. A quad core processor mitigates this, since secondary
+programs have 3 other cores to work with.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/rockpi2.jpg&#34; alt=&#34;The Rock Pi S&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The Rock is powered over its USB-C port. I found attaching it to a
+laptop USB port provided enough power to get going. This is also handy because
+you can run &lt;code&gt;adb shell&lt;/code&gt; to connect to the Rock&amp;rsquo;s OS. &amp;ldquo;ADB&amp;rdquo; is the
+Android Debug Bridge, and while the Rock does support running Android, I used
+a Ubuntu Bionic image. Yes, &lt;code&gt;adb&lt;/code&gt; did still work with Ubuntu installed. This is great for
+headless installs, since you won&amp;rsquo;t have networking available at first boot.&lt;/p&gt;
+
+&lt;p&gt;Since it&amp;rsquo;s running Ubuntu, we have &lt;code&gt;perl&lt;/code&gt; from the start:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -v:
+
+This is perl 5, version 26, subversion 1 (v5.26.1) built for aarch64-linux-gnu-thread-multi
+(with 67 registered patches, see perl -V for more detail)
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What you won&amp;rsquo;t have is an equivalent to &lt;a href=&#34;https://metacpan.org/pod/RPi::WiringPi&#34;&gt;RPi::WiringPi&lt;/a&gt;
+to control GPIO (&amp;ldquo;General Purpose Input/Output&amp;rdquo;). GPIO is the most basic
+building block for hardware programming. We&amp;rsquo;re either controlling the output
+voltage to cause something to happen, like blinking an LED, or we&amp;rsquo;re taking
+input to see if something happened, like hitting a switch. It&amp;rsquo;s simple, but
+very useful. Tons of hardware projects come down to just seeing if something
+is on, or turning something on.&lt;/p&gt;
+
+&lt;p&gt;What we lack is a library to do that on the Rock Pi S. That&amp;rsquo;s OK, because it&amp;rsquo;s
+Linux, and Linux provides a simple sysfs interface to access GPIO pins. As long
+as there&amp;rsquo;s a GPIO driver for the board, you can control the pins.&lt;/p&gt;
+
+&lt;p&gt;The Rock has two headers, one of which is color coded and has the main pins you want to work with in most projects. Note
+that there are a few variations of the pinout depending on the version of
+the board you get. The version should be printed on the board (I received a
+V12 board), so make sure you&amp;rsquo;re looking at the right pinout for your board.
+See the &lt;a href=&#34;https://wiki.radxa.com/RockpiS/hardware/rockpiS#gpio&#34;&gt;GPIO header documentation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;One thing to keep in mind is that the pins are specified as 3.3V input. That means you don&amp;rsquo;t want to put 5V
+into them. Feeding it 5V might cause glitches, or could break the board
+completely.&lt;/p&gt;
+
+&lt;p&gt;To get at the pins, we can use the &lt;a href=&#34;https://www.kernel.org/doc/html/latest/admin-guide/gpio/sysfs.html&#34;&gt;Linux sysfs interface&lt;/a&gt;.
+You will note a big fat deprecation warning at the top. The new way to do it
+is with gpio-cdev, which requires some &lt;code&gt;ioctl()&lt;/code&gt; calls. Since this is
+more difficult to handle&amp;ndash;it requires importing some constants from the
+kernel headers, instead of just accessing files&amp;ndash;we&amp;rsquo;ll stick with the sysfs
+interface for now. That said, if someone would like to make a CPAN module
+that provides those kernel symbols (and maybe the ones for I2C and SPI, as
+well), I would welcome that.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s what we need to do:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Make the pin accessible by writing the pin number to &lt;code&gt;/sys/class/gpio/export&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Set the pin as an input pin by writing &amp;ldquo;in&amp;rdquo; to &lt;code&gt;/sys/class/gpioN/direction&lt;/code&gt; (where N is the pin number)&lt;/li&gt;
+&lt;li&gt;Read the current value from &lt;code&gt;/sys/class/gpioN/value&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Since pullups are active, a pin not connected to anything will output a 1, and connecting it to ground will give you a 0&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can connect a wire from a ground pin to the pin you select, and the value
+output should go from 1 to 0.&lt;/p&gt;
+
+&lt;p&gt;You may be wondering why this is backwards; don&amp;rsquo;t you want to see a 1 when
+something is connected? The reason is pullup resistors. If a pin is
+disconnected, it will tend to &amp;ldquo;float&amp;rdquo;, picking up interference from the
+electronics around it. That results in getting random 0&amp;rsquo;s and 1&amp;rsquo;s. If you
+instead connect a resistor tied to high voltage, 1 is what you consistently get
+on the pin.
+If you then connect that pin to ground, it will see a 0 instead. We
+just have to remember that the whole thing is backwards from what we normally
+expect&amp;ndash;1 for disconnected, 0 for connected.&lt;/p&gt;
+
+&lt;p&gt;The full program is at the end of the article. The &lt;code&gt;export_pin&lt;/code&gt; and &lt;code&gt;set_input&lt;/code&gt;
+functions both take a pin number and ask the kernel to export it for
+use or set it as input (respectively).  The &lt;code&gt;read_pin&lt;/code&gt; function takes a pin
+and returns its current value (either 1 or 0). The &lt;code&gt;write_pin&lt;/code&gt; function is
+just a helper function for doing the file IO for other functions.&lt;/p&gt;
+
+&lt;p&gt;At the very bottom is the code to wrap all this together. We export the pin
+passed in from the command line, set it as input, and then read the pin in a
+loop. By outputting &amp;ldquo;\r&amp;rdquo;, the previously printed value is overwritten in the
+terminal, rather than having one long string of values. Since we&amp;rsquo;re using
+the &lt;a href=&#34;https://metacpan.org/pod/Time::HiRes&#34;&gt;Time::HiRes&lt;/a&gt; version of &lt;code&gt;sleep&lt;/code&gt;, we can use
+seconds in floating point to slow the output down without being too slow.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve been waiting for a board like this for a while, packing in a multicore
+processor, networking, a full sized USB jack, and running on Linux in a sub $20
+price range. This might be a new favorite.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.26&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Time::HiRes &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;sleep&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; constant BASE_PATH &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/sys/class/gpio&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; constant SLEEP_TIME &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0.1&lt;/span&gt;;
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $GPIO &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; usage();
+$GPIO &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/\A\d+\z/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; usage();
+
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;set_input&lt;/span&gt;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($pin) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; write_pin( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/gpio&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $pin &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/direction&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;in&amp;#34;&lt;/span&gt; );
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;export_pin&lt;/span&gt;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($pin) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; write_pin( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/export&amp;#39;&lt;/span&gt;, $pin );
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;read_pin&lt;/span&gt;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($pin) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $full_path &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; BASE_PATH &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/gpio&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $pin &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/value&amp;#39;&lt;/span&gt;;
+    open( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $in, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, $full_path )
+        &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Can&amp;#39;t read from $full_path: $!\n&amp;#34;&lt;/span&gt;;
+    
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $line &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$in&amp;gt;&lt;/span&gt; ) {
+        $data &lt;span style=&#34;color:#f92672&#34;&gt;.=&lt;/span&gt; $line;
+    }
+
+    close( $in );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $data;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;write_pin&lt;/span&gt;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($path, $data) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $full_path &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; BASE_PATH &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $path;
+    open( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $out, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;gt;&amp;#39;&lt;/span&gt;, $full_path )
+        &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Can&amp;#39;t write to $full_path: $!\n&amp;#34;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $out &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$data&amp;#34;&lt;/span&gt;;
+    close $out;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;usage&lt;/span&gt;
+{
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Usage: rockpi_gpio.pl &amp;lt;pin number&amp;gt;\n&amp;#34;&lt;/span&gt;;
+}
+
+
+export_pin( $GPIO );
+set_input( $GPIO );
+$| &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# Autoflush output&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $in &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; read_pin( $GPIO );
+    chomp $in;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$in\r&amp;#34;&lt;/span&gt;;
+    sleep SLEEP_TIME;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+    </item>
+    
+    <item>
+      <title>Monitoring my phone&#39;s internet activity with DD-WRT and Perl</title>
+      <link>http://localhost:1313/article/monitoring-my-phone-s-internet-activity-with-netflows-and-perl/</link>
+      <pubDate>Thu, 26 Oct 2017 19:56:37 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/monitoring-my-phone-s-internet-activity-with-netflows-and-perl/</guid>
+      <description>
+
+&lt;p&gt;I&amp;rsquo;ve had a cracked phone screen for years, but recently as the glass started falling out, I decided it was time to upgrade. I bought a Samsung &lt;a href=&#34;https://www.samsung.com/us/explore/galaxy-s8/&#34;&gt;Galaxy S8&lt;/a&gt;, and was surprised to see &amp;ldquo;Unusual traffic from your computer network&amp;rdquo; &lt;a href=&#34;https://support.google.com/websearch/answer/86640?hl=en&#34;&gt;messages&lt;/a&gt; when searching via Google. This peaked my curiosity, so I decided to monitor the phone&amp;rsquo;s Internet traffic to see &lt;em&gt;who&lt;/em&gt; it was communicating with.&lt;/p&gt;
+
+&lt;h3 id=&#34;router-setup&#34;&gt;Router Setup&lt;/h3&gt;
+
+&lt;p&gt;I run &lt;a href=&#34;http://www.dd-wrt.com/site/index&#34;&gt;DD-WRT&lt;/a&gt; Linux on my home WiFi router. DD-WRT can run an &lt;a href=&#34;https://www.dd-wrt.com/wiki/index.php/Network_traffic_analysis_with_netflow_and_ntop&#34;&gt;Rflow service&lt;/a&gt; where it posts &lt;a href=&#34;https://en.wikipedia.org/wiki/NetFlow&#34;&gt;NetFlow&lt;/a&gt; traffic data to another computer on the network via UDP. I enabled the service, and configured it to post to my laptop&amp;rsquo;s IP address and the default port, 2055.&lt;/p&gt;
+
+&lt;h3 id=&#34;monitoring&#34;&gt;Monitoring&lt;/h3&gt;
+
+&lt;p&gt;I installed &lt;a href=&#34;https://www.ntop.org/&#34;&gt;ntop&lt;/a&gt; and setup a virtual interface pointing at the UDP socket, and lo! it quickly started displaying the NetFlow data. The problem was I couldn&amp;rsquo;t figure out how to filter out data that wasn&amp;rsquo;t from my phone (the various pcap filter expressions I tried did not work). Also it irked me to rely on a software program to do something as simple as parsing data from a UDP socket.&lt;/p&gt;
+
+&lt;p&gt;Luckily I speak &lt;a href=&#34;https://en.wikipedia.org/wiki/Perl&#34;&gt;chainsaw&lt;/a&gt;, and whipped up this script to do the job:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IO::Socket::INET;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Netflow;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; IO::Socket::INET&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(
+  LocalPort &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2055&lt;/span&gt;,
+  Proto     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;udp&amp;#39;&lt;/span&gt;
+);
+
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $logfile, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;gt;&amp;gt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;galaxy-s8.log&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($sender, $datagram);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; ($sender &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $sock&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;recv($datagram, &lt;span style=&#34;color:#ae81ff&#34;&gt;0xFFFF&lt;/span&gt;))
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($sender_port, $sender_addr) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack_sockaddr_in($sender);
+  $sender_addr &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; inet_ntoa($sender_addr);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($headers, $records) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Data::Netflow::decode($datagram, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) ;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $r (@$records) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{SrcAddr} &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;192.168.1.139&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{DstAddr} &lt;span style=&#34;color:#f92672&#34;&gt;ne&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;192.168.1.1&amp;#39;&lt;/span&gt;) {
+      printf $logfile &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%s,%d,%d,%d,%d\n&amp;#34;&lt;/span&gt;, $r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{DstAddr}, $r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{DstPort}, $r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{Packets}, $r&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{Octets}, time;
+    }
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The script opens a UDP socket on port 2055 and reads datagrams from it. It uses &lt;a href=&#34;https://metacpan.org/pod/Data::Netflow&#34;&gt;Data::Netflow&lt;/a&gt; to parse the datagrams from the socket. The &lt;code&gt;decode&lt;/code&gt; function accepts a datagram and returns a hashref of header data, and an arrayref of NetFlow &lt;a href=&#34;https://en.wikipedia.org/wiki/NetFlow#NetFlow_Record&#34;&gt;records&lt;/a&gt;. Each record is a hashref and strangely by default its keys are stringified numbers (&amp;ldquo;1&amp;rdquo; through &amp;ldquo;20&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;However if the second argument passed to &lt;code&gt;decode&lt;/code&gt; is true, then the record hashrefs use field names instead of numbers. Each record contains data like the source and destination IP addresses and ports, the number of packets sent, total number of bytes in the packets and so on. If the record&amp;rsquo;s source IP address match my phone&amp;rsquo;s network address, the script prints the pertinent information to a logfile.&lt;/p&gt;
+
+&lt;p&gt;I disabled mobile data on my phone, and ran this script for 24 hours.&lt;/p&gt;
+
+&lt;h3 id=&#34;results&#34;&gt;Results&lt;/h3&gt;
+
+&lt;p&gt;I used &lt;a href=&#34;https://metacpan.org/pod/Net::Whois::IP&#34;&gt;Net::Whois::IP&lt;/a&gt; to lookup the organization for each IP address. Here&amp;rsquo;s the top ten Organizations by the number of packets sent:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Fastly (SKYCA-3) =&amp;gt; 1243
+OPENX TECHNOLOGIES, INC. (OPENX) =&amp;gt; 989
+Saferoute Incorporated (SAFER-1) =&amp;gt; 553
+Servers.com, Inc. (SERVE-105) =&amp;gt; 13
+Integral Ad Science, Inc. (ASML-5) =&amp;gt; 36
+Facebook =&amp;gt; 724
+Google LLC (GOOGL-2) =&amp;gt; 794
+Amazon.com, Inc. (AMAZO-4) =&amp;gt; 2000
+Search Guide Inc (SG-63) =&amp;gt; 140
+Chaos Computer Club e.V =&amp;gt; 224
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And by the number of bytes sent:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Amazon Technologies Inc. (AT-88-Z) =&amp;gt; 1218193
+Amazon.com, Inc. (AMAZO-48) =&amp;gt; 9230
+Google LLC (GOGL) =&amp;gt; 40239218
+VLAN927 =&amp;gt; 2005
+ADFORM-NET =&amp;gt; 3041
+ANS Communications, Inc (ANS) =&amp;gt; 1880
+Wal-Mart Stores, Inc. (WALMAR) =&amp;gt; 1573
+INAP-NYM-QUANTCAST-26423 =&amp;gt; 4822
+Web.com, Inc. (WEBCO-24) =&amp;gt; 4232
+CERFnet (CERF) =&amp;gt; 361
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It seems to me to be mostly web browsing / marketing data. The &lt;a href=&#34;https://www.ccc.de/en/club&#34;&gt;Chaos Computer Club&lt;/a&gt; entry is from using &lt;a href=&#34;https://guardianproject.info/apps/orfox/&#34;&gt;Orfox&lt;/a&gt; (a Tor browser). Although honestly, if something malicious was using AWS, I&amp;rsquo;m not sure how I could tell. Perhaps looking at the distribution and frequency of packets sent and correlating it with a journal of my phone activity might be a way to identify suspicious traffic.&lt;/p&gt;
+
+&lt;p&gt;In the meantime, Google has stopped warning me about unusual activity, and I haven&amp;rsquo;t cracked the screen yet, so I suppose I&amp;rsquo;ll keep using this phone for now.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.dd-wrt.com/site/index&#34;&gt;DD-WRT&lt;/a&gt; is a Linux distribution for routers&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Data::Netflow&#34;&gt;Data::Netflow&lt;/a&gt; is a Perl module that can encode/decode Netflow data versions 5 and 9 (DD-WRT produces version 5).&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::Whois::IP&#34;&gt;Net::Whois::IP&lt;/a&gt; is a Perl module for running &lt;a href=&#34;https://en.wikipedia.org/wiki/WHOIS&#34;&gt;WHOIS&lt;/a&gt; queries, it parses the response into a Perl data structure although it doesn&amp;rsquo;t normalize the keys.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Fixing a sluggish Linux after suspend-resume</title>
+      <link>http://localhost:1313/article/fixing-a-sluggish-linux-after-suspend-resume/</link>
+      <pubDate>Tue, 26 Apr 2016 20:42:41 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/fixing-a-sluggish-linux-after-suspend-resume/</guid>
+      <description>
+
+&lt;p&gt;Occasionally when I suspend my Linux laptop (sleep mode) and later resume working the machine is sluggish. Perceptible pauses occur every time I change applications, scrolling is fractured and text edits are delayed. Monitoring tools like &lt;a href=&#34;http://hisham.hm/htop/&#34;&gt;htop&lt;/a&gt; and &lt;a href=&#34;http://guichaz.free.fr/iotop/&#34;&gt;iotop&lt;/a&gt; give no indication of system resources being under heavy load. I can close all applications and the sluggishness persists.&lt;/p&gt;
+
+&lt;p&gt;Apparently this is a bug where the CPU frequency has been pinned to a very low level. Linux uses CPU frequency scaling to save power; when the machine is resumed, it should start increasing the CPU frequency to meet the demands of the system, but it doesn&amp;rsquo;t always do that. A reboot fixes the problem, but who has time for that? The good news is that it&amp;rsquo;s an easy fix with the &lt;code&gt;cpupower&lt;/code&gt; utility.&lt;/p&gt;
+
+&lt;h3 id=&#34;get-the-cpupower-utility&#34;&gt;Get the cpupower utility&lt;/h3&gt;
+
+&lt;p&gt;You may have &lt;code&gt;cpupower&lt;/code&gt; already installed, but if not it&amp;rsquo;s easy to get with via a package manager. On Ubuntu &lt;a href=&#34;http://manpages.ubuntu.com/manpages/trusty/man1/cpupower.1.html&#34;&gt;cpupower&lt;/a&gt; is part of the &lt;code&gt;linux-tools-common&lt;/code&gt; package. You can install it at the terminal with this command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo apt-get install linux-tools-common
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On RHEL based distributions like Fedora and CentOS, &lt;code&gt;cpupower&lt;/code&gt; is bundled with the &lt;code&gt;kernel-tools&lt;/code&gt; package. On CentOS and older Fedoras you can install it with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum install kernel-tools
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On newer Fedoras you can use &lt;code&gt;dnf&lt;/code&gt; to install it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf install kernel-tools
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;switch-back-to-performance-mode&#34;&gt;Switch back to performance mode&lt;/h3&gt;
+
+&lt;p&gt;CPU frequency scaling for modern Intel CPUs is provided by the &lt;a href=&#34;https://www.kernel.org/doc/Documentation/cpu-freq/intel-pstate.txt&#34;&gt;intel_pstate driver&lt;/a&gt;. It supports two modes (called &amp;ldquo;governors&amp;rdquo;) of operation: performance and powersave. Performance mode is not necessarily &amp;ldquo;all guns blazing&amp;rdquo; performance. Likewise, powersave doesn&amp;rsquo;t cripple your system either. Both are intelligent governors that responds to system loads by scaling the CPU frequency. I&amp;rsquo;ve found that switching governors immediately resolves my sluggish system issue.&lt;/p&gt;
+
+&lt;p&gt;To confirm which governors are available, I use &lt;code&gt;cpupower&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpupower frequency-info --governors
+analyzing CPU 0:
+performance powersave
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here you can see my system printed both &amp;ldquo;performance&amp;rdquo; and &amp;ldquo;powersave&amp;rdquo; as expected. To switch to the performance governor, I can use the following command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo cpupower frequency-set --governor performance
+Setting cpu: 0
+Setting cpu: 1
+Setting cpu: 2
+Setting cpu: 3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;frequency-info&lt;/code&gt; subcommand will show me which governor is active:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpupower frequency-info
+analyzing CPU 0:
+  driver: intel_pstate
+  CPUs which run at the same hardware frequency: 0
+  CPUs which need to have their frequency coordinated by software: 0
+  maximum transition latency: 0.97 ms.
+  hardware limits: 500 MHz - 2.70 GHz
+  available cpufreq governors: performance, powersave
+  current policy: frequency should be within 500 MHz and 2.70 GHz.
+                  The governor &amp;quot;performance&amp;quot; may decide which speed to use
+                  within this range.
+  current CPU frequency is 2.28 GHz.
+  boost state support:
+    Supported: yes
+    Active: yes
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &amp;ldquo;current policy&amp;rdquo; section describes the active governor, which in my case is showing the performance governor as active.&lt;/p&gt;
+
+&lt;h3 id=&#34;cpupower-resources&#34;&gt;cpupower resources&lt;/h3&gt;
+
+&lt;p&gt;The Redhat Linux documentation includes an CPU frequency setup &lt;a href=&#34;https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Power_Management_Guide/cpufreq_setup.html#enabling_a_cpufreq_governor&#34;&gt;guide&lt;/a&gt; with instruction on how to load additional drivers. The Arch Linux CPU frequency scaling &lt;a href=&#34;https://wiki.archlinux.org/index.php/CPU_Frequency_Scaling&#34;&gt;documentation&lt;/a&gt; contains lots of useful information including which files control frequency settings.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;cpupower&lt;/code&gt; manpage is pretty sparse. Once you have installed &lt;code&gt;cpupower&lt;/code&gt; try running the &lt;code&gt;help&lt;/code&gt; command to get started:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpupower help
+Usage:  cpupower [-d|--debug] [-c|--cpu cpulist ] &amp;lt;command&amp;gt; [&amp;lt;args&amp;gt;]
+Supported commands are:
+        frequency-info
+        frequency-set
+        idle-info
+        idle-set
+        set
+        info
+        monitor
+        help
+
+Not all commands can make use of the -c cpulist option.
+
+Use &#39;cpupower help &amp;lt;command&amp;gt;&#39; for getting help for above commands.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Prevent harmful Linux updates with versionlock</title>
+      <link>http://localhost:1313/article/prevent-harmful-updates-with-versionlock/</link>
+      <pubDate>Mon, 21 Mar 2016 20:46:17 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/prevent-harmful-updates-with-versionlock/</guid>
+      <description>
+
+&lt;p&gt;On my home machine I run Fedora, a Linux distro famous for being at the cutting-edge of Linux development. My laptop is the &lt;a href=&#34;http://perltricks.com/article/187/2015/8/18/Laptop-review--Dell-XPS-13-2015/&#34;&gt;Dell XPS 13&lt;/a&gt; which uses some fairly advanced hardware. In Open Source this can be dangerous combination: older Linux kernels can&amp;rsquo;t handle my machine&amp;rsquo;s hardware, and brand new kernels often break it too. Every time I do a software update, I&amp;rsquo;m walking a tightrope.&lt;/p&gt;
+
+&lt;p&gt;The way I handle this is with a package manager plugin called &lt;a href=&#34;https://github.com/rpm-software-management/dnf-plugins-extras&#34;&gt;versionlock&lt;/a&gt;. It lets me tell the package manager to lock certain packages at their current version and voilà! I can blindly apply all software updates and know that those troublesome packages will not be upgraded.&lt;/p&gt;
+
+&lt;h3 id=&#34;installation&#34;&gt;Installation&lt;/h3&gt;
+
+&lt;p&gt;The versionlock plugin is available for both dnf and yum, so pick which package manager your system is using. For dnf:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf install python-dnf-plugins-extras-versionlock
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And for yum:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum install yum-plugin-versionlock
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;lock-a-package&#34;&gt;Lock a package&lt;/h3&gt;
+
+&lt;p&gt;To add a package to the locked list, simply run the package manager program with the &lt;code&gt;versionlock&lt;/code&gt; and &lt;code&gt;add&lt;/code&gt; commands:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf versionlock add my-package
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The yum version:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum versionlock add my-package
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, the commands for dnf and yum are the same. You can lock multiple packages in one command. Here&amp;rsquo;s how I prevent my system from upgrading the kernel packages:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf versionlock add kernel-0:4.3.5-300.fc23 kernel-modules-0:4.3.5-300.fc23 kernel-core-0:4.3.5-300.fc23 kernel-devel-0:4.3.5-300.fc23
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;list-locked-packages&#34;&gt;List locked packages&lt;/h3&gt;
+
+&lt;p&gt;To see which packages are locked, use the &lt;code&gt;list&lt;/code&gt; command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ dnf versionlock list
+Last metadata expiration check: 0:00:00 ago on Mon Mar 21 20:58:57 2016.
+kernel-0:4.3.5-300.fc23.*
+kernel-modules-0:4.3.5-300.fc23.*
+kernel-core-0:4.3.5-300.fc23.*
+kernel-devel-0:4.3.5-300.fc23.*
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;unlock-a-package&#34;&gt;Unlock a package&lt;/h3&gt;
+
+&lt;p&gt;To remove one package from the lock list, use &lt;code&gt;delete&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf versionlock delete my-package
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To remove all packages from the lock list, use &lt;code&gt;clear&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum versionlock clear
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;help&#34;&gt;Help&lt;/h3&gt;
+
+&lt;p&gt;If you ever forget these commands, you can list the available commands with &lt;code&gt;help&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ dnf help versionlock
+versionlock [add|exclude|list|delete|clear] [&amp;lt;package-nevr-spec&amp;gt;]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;how-many-installers-do-you-need&#34;&gt;How many installers do you need?&lt;/h3&gt;
+
+&lt;p&gt;On Fedora I also remove the &lt;a href=&#34;https://wiki.gnome.org/Apps/Software&#34;&gt;Gnome Software&lt;/a&gt; program (&lt;code&gt;gnome-software&lt;/code&gt; package). Whilst it&amp;rsquo;s useful to be reminded of pending updates via the GUI, any package installed via Gnome Software is not part of the dnf history. That makes it harder when it&amp;rsquo;s necessary to downgrade or remove a troublesome package.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Managing packages can be a pain, but versionlock makes life easier. If you use Debian or Ubuntu you can use &lt;code&gt;apt-mark hold my-package&lt;/code&gt; and &lt;code&gt;apt-mark unhold my-package&lt;/code&gt; to similar effect.
+&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How to get Perl 6 now</title>
+      <link>http://localhost:1313/article/207/2015/12/31/How-to-get-Perl-6-now/</link>
+      <pubDate>Thu, 31 Dec 2015 19:08:59 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/207/2015/12/31/How-to-get-Perl-6-now/</guid>
+      <description>
+
+&lt;p&gt;Great news, Perl 6 was &lt;a href=&#34;https://perl6advent.wordpress.com/2015/12/25/christmas-is-here/&#34;&gt;released&lt;/a&gt; on Christmas Day; finally us geeks got something we wanted for Christmas. Send the books back Grandma! (unless you got &lt;a href=&#34;http://perltricks.com/article/205/2015/12/21/Modern-Perl-4th-edition--a-review&#34;&gt;Modern Perl&lt;/a&gt;).&lt;/p&gt;
+
+&lt;h3 id=&#34;installation-on-linux-osx&#34;&gt;Installation on Linux, OSX&lt;/h3&gt;
+
+&lt;p&gt;On Linux and Mac the easiest way to get Perl 6 is with &lt;a href=&#34;https://github.com/tadzik/rakudobrew&#34;&gt;rakudobrew&lt;/a&gt;. You&amp;rsquo;ll need the typical software development tools like &lt;code&gt;git&lt;/code&gt;, &lt;code&gt;gcc&lt;/code&gt; and &lt;code&gt;make&lt;/code&gt;. On OSX Apple&amp;rsquo;s &lt;a href=&#34;https://developer.apple.com/opensource/&#34;&gt;Command Line Tools app&lt;/a&gt; provides most of these and is easy to install. On Linux they&amp;rsquo;re available via the package manager. Once you have the prerequisite tools installed, you can install rakudobrew via the terminal:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ git clone https:&lt;span style=&#34;color:#e6db74&#34;&gt;//gi&lt;/span&gt;thub&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/tadzik/&lt;/span&gt;rakudobrew &lt;span style=&#34;color:#f92672&#34;&gt;~/.&lt;/span&gt;rakudobrew
+$ export PATH&lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/.rakudobrew/&lt;/span&gt;bin:$PATH
+$ rakudobrew build moar
+$ rakudobrew build panda&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will install &lt;code&gt;perl6&lt;/code&gt; and &lt;code&gt;panda&lt;/code&gt; the Perl 6 package manager.&lt;/p&gt;
+
+&lt;h3 id=&#34;installation-on-windows&#34;&gt;Installation on Windows&lt;/h3&gt;
+
+&lt;p&gt;On Windows it&amp;rsquo;s a different story. I was unable to get rakudobrew to work on Windows, which is a shame as it&amp;rsquo;s such a convenient tool. If you&amp;rsquo;re feeling adventurous, you can &lt;a href=&#34;http://perltricks.com/article/135/2014/11/18/Building-Perl-6-with-Visual-Studio-2013&#34;&gt;build your own Perl 6 with Visual Studio&lt;/a&gt;. Sinan Unur has &lt;a href=&#34;https://www.nu42.com/2015/12/perl6-rakudo-released.html&#34;&gt;blogged&lt;/a&gt; about building panda with the same toolset.&lt;/p&gt;
+
+&lt;p&gt;Alternatively you can use the latest &lt;a href=&#34;http://rakudo.org/downloads/star/&#34;&gt;Rakudo Star distribution&lt;/a&gt; which comes with a convenient &lt;code&gt;.msi&lt;/code&gt; installer. Unfortunately the most recent Rakudo Star distribution is from September, so you won&amp;rsquo;t benefit from the last 3 months of updates to Perl 6 (a new version should be available soon). If you&amp;rsquo;ve installed Rakudo Star, you&amp;rsquo;ll need to add the Perl 6 binaries to your path. You can do that using &lt;code&gt;cmd.exe&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; SETX PATH &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%PATH%;C:\rakudo\bin&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now start a new &lt;code&gt;cmd.exe&lt;/code&gt; terminal, and you&amp;rsquo;ll be use Perl 6. Rakudo Star ships with Panda too, so you&amp;rsquo;ll be able to start installing Perl 6 modules right away.&lt;/p&gt;
+
+&lt;h3 id=&#34;useful-perl-6-resources&#34;&gt;Useful Perl 6 resources&lt;/h3&gt;
+
+&lt;p&gt;So you&amp;rsquo;ve got Perl 6 installed, now what? To keep up to date with Perl 6 developments, I read the &lt;a href=&#34;https://p6weekly.wordpress.com/&#34;&gt;Perl 6 Weekly&lt;/a&gt; blog. The &lt;a href=&#34;http://perlweekly.com/&#34;&gt;Perl Weekly&lt;/a&gt; newsletter also includes Perl 6 articles, so be sure to subscribe if you haven&amp;rsquo;t already. The official website &lt;a href=&#34;http://perl6.org/&#34;&gt;Perl6.org&lt;/a&gt; is a good reference for all things Perl 6 related. Wendy has posted a &lt;a href=&#34;https://wendyga.wordpress.com/2015/12/25/why-would-you-want-to-use-perl-6-some-answers/&#34;&gt;useful list&lt;/a&gt; of Perl 6 features.&lt;/p&gt;
+
+&lt;p&gt;Here at PerlTricks.com, we&amp;rsquo;ve got several Perl 6 articles that may be of interest:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://perltricks.com/article/144/2015/1/13/How-to-create-a-grammar-in-Perl-6&#34;&gt;How to create a Grammar&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://perltricks.com/article/170/2015/4/30/Parsing-Perl-5-pod-with-Perl-6&#34;&gt;Parsing Perl 5 Pod with Perl 6&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://perltricks.com/article/136/2014/11/20/Get-started-with-Perl-6-one-liners&#34;&gt;Get started with Perl 6 One Liners&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://perltricks.com/article/177/2015/6/9/Get-to-grips-with-Prove--Perl-s-test-workhorse&#34;&gt;How to run Perl 6 tests with prove&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://perltricks.com/article/194/2015/9/22/Activating-Perl-6-syntax-highlighting-in-Vim&#34;&gt;Activate Perl 6 syntax highlighting in Vim&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Update&lt;/strong&gt; - Visual Studio article now includes instructions for VS2015. Added link to nu42.com. 2016-01-04&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Schedule jobs like a boss with every</title>
+      <link>http://localhost:1313/article/55/2013/12/22/Schedule-jobs-like-a-boss-with-every/</link>
+      <pubDate>Sun, 22 Dec 2013 15:08:51 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/55/2013/12/22/Schedule-jobs-like-a-boss-with-every/</guid>
+      <description>&lt;nav&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#requirements&#34;&gt;Requirements&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#get-every&#34;&gt;Get every&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#scheduling-jobs-with-every&#34;&gt;Scheduling jobs with every&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#further-info&#34;&gt;Further info&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/nav&gt;
+
+&lt;p&gt;Scheduling jobs on cron is often a trial-and-error process but every, a command line app written in Perl makes it a lot easier.&lt;/p&gt;
+
+&lt;h6 id=&#34;requirements&#34;&gt;Requirements&lt;/h6&gt;
+
+&lt;p&gt;You need to have cron, which comes with most Unix-based platforms (e.g. Linux, Mac OSX, BSD) and have Perl installed.&lt;/p&gt;
+
+&lt;h6 id=&#34;get-every&#34;&gt;Get every&lt;/h6&gt;
+
+&lt;p&gt;every was developed by &lt;a href=&#34;http://re-becca.org/&#34;&gt;Rebecca&lt;/a&gt; and is hosted on her &lt;a href=&#34;https://github.com/iarna/App-Every&#34;&gt;Github&lt;/a&gt; page. You can download it directly from the command line using wget:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ wget &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;https://raw.github.com/iarna/App-Every/master/packed/every&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Or curl:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ curl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;O &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;https://raw.github.com/iarna/App-Every/master/packed/every&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Save every to /usr/bin or add the parent directory to your PATH variable so you can run every from the command line.&lt;/p&gt;
+
+&lt;h6 id=&#34;scheduling-jobs-with-every&#34;&gt;Scheduling jobs with every&lt;/h6&gt;
+
+&lt;p&gt;The command to every to schedule a job takes the form: &amp;ldquo;every [num] unit program&amp;rdquo; (num defaults to one). So for example if you wanted to schedule a shell script to run every minute, type the following:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ every minute script&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Which creates the following crontab:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;SHELL&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/bin/&lt;/span&gt;bash
+PATH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/home/si&lt;/span&gt;llymoose&lt;span style=&#34;color:#e6db74&#34;&gt;/perl5/&lt;/span&gt;perlbrew&lt;span style=&#34;color:#e6db74&#34;&gt;/bin:/&lt;/span&gt;home&lt;span style=&#34;color:#e6db74&#34;&gt;/sillymoose/&lt;/span&gt;perl5&lt;span style=&#34;color:#e6db74&#34;&gt;/perlbrew/&lt;/span&gt;perls&lt;span style=&#34;color:#e6db74&#34;&gt;/perl-5.16.3/&lt;/span&gt;bin:&lt;span style=&#34;color:#e6db74&#34;&gt;/usr/&lt;/span&gt;local&lt;span style=&#34;color:#e6db74&#34;&gt;/bin:/&lt;/span&gt;usr&lt;span style=&#34;color:#e6db74&#34;&gt;/bin:/&lt;/span&gt;bin:&lt;span style=&#34;color:#e6db74&#34;&gt;/usr/&lt;/span&gt;local&lt;span style=&#34;color:#e6db74&#34;&gt;/sbin:/&lt;/span&gt;usr&lt;span style=&#34;color:#e6db74&#34;&gt;/sbin:/&lt;/span&gt;home&lt;span style=&#34;color:#e6db74&#34;&gt;/sillymoose/&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;local&lt;span style=&#34;color:#e6db74&#34;&gt;/bin:/&lt;/span&gt;home&lt;span style=&#34;color:#e6db74&#34;&gt;/sillymoose/&lt;/span&gt;bin:
+&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/1 * * * * cd &amp;#34;/&lt;/span&gt;home&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;sillymoose&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#34;&lt;/span&gt;;  script&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;every translates the command into a new crontab entry and prints it on the command line. Helpfully it will set the SHELL variable and copy the user&amp;rsquo;s PATH into the crontab. The icing on the cake is that every prepends a change directory command to ensure that cron executes the job from the script&amp;rsquo;s parent directory. By doing these things, every eliminates (probably) the three most common causes of failed cron jobs.&lt;/p&gt;
+
+&lt;p&gt;Other units that every recognizes are: hour, day, week, month and the day of the week (e.g. Wednesday). The following are all valid every commands:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ every &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; hours script&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sh
+
+$ every mon script&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sh
+
+$ every &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; months script&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;One really cool feature of modern cron installs is that you can schedule a job to run on reboot. every also supports this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ every @reboot script&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;further-info&#34;&gt;Further info&lt;/h3&gt;
+
+&lt;p&gt;every has more options than described above. Run &amp;ldquo;every &amp;ndash;help&amp;rdquo; to see the full panoply of options.&lt;/p&gt;
+
+&lt;p&gt;every was written in Perl by &lt;a href=&#34;http://re-becca.org/&#34;&gt;Rebecca&lt;/a&gt;. She is also on twitter (&lt;a href=&#34;https://twitter.com/ReBeccaOrg&#34;&gt;@ReBeccaOrg&lt;/a&gt;). So if you use every and find it useful, maybe reach out and say thank you.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>The ultimate guide to Windows and Unix file line ending conversion in Perl </title>
+      <link>http://localhost:1313/article/53/2013/12/14/The-ultimate-guide-to-Windows-and-Unix-file-line-ending-conversion-in-Perl-/</link>
+      <pubDate>Sat, 14 Dec 2013 21:13:28 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/53/2013/12/14/The-ultimate-guide-to-Windows-and-Unix-file-line-ending-conversion-in-Perl-/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Most programmers know that the file line endings used by Windows and Unix-based systems are different. Windows uses CRLF and the Unix-based systems use LF. So fixing this is in Perl requires a simple substitution regex right? Not so fast &amp;hellip;&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;requirements&#34;&gt;Requirements&lt;/h3&gt;
+
+&lt;p&gt;You must be using Perl version 5.14 or greater.&lt;/p&gt;
+
+&lt;h3 id=&#34;conversion-on-unix-based-systems&#34;&gt;Conversion on Unix-based systems&lt;/h3&gt;
+
+&lt;p&gt;These are easy. To convert a file to Unix-style line endings (as used by Linux, BSD, OSX) just open up the terminal and run:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;pi&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;bak &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;s/\R/\012/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code works by replacing any line break characters (&amp;rdquo;\R&amp;rdquo;) with a single line feed character (&amp;rdquo;\012&amp;rdquo;). The &amp;ldquo;\R&amp;rdquo; meta-character is available in Perl from version 5.10 onwards, it&amp;rsquo;s useful because it will even work for files with mixed line ending styles. The in-place switch (&amp;ldquo;i&amp;rdquo;) creates a backup of the original file with the extension &amp;ldquo;.bak&amp;rdquo;. To convert a file from Unix to Windows-style line endings, use this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;pi&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;bak &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;s/\R/\015\012/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This replaces any vertical character with the CRLF (&amp;rdquo;\015\012&amp;rdquo;) line ending used by Windows. Again, this will also work for files with a mix of Unix and Windows line endings.&lt;/p&gt;
+
+&lt;h3 id=&#34;conversion-on-windows&#34;&gt;Conversion on Windows&lt;/h3&gt;
+
+&lt;p&gt;Things are trickier on Windows; there are a few things to be aware of:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;By default Perl changes the value of &amp;ldquo;\n&amp;rdquo; to CRLF. This means that the regex match: &amp;ldquo;/\015\012/&amp;rdquo; will fail on Windows as Perl is actually running: &amp;ldquo;/\015\015\012/&amp;ldquo;. Regexes using meta-characters and hex codes (&amp;rdquo;/\r\n/&amp;rdquo; and &amp;ldquo;/\x0d\x0a/&amp;ldquo;) fail for the same reason.&lt;/li&gt;
+&lt;li&gt;Single-quotes must be replaced with double-quotes to enclose the code in &amp;ldquo;e&amp;rdquo; and quoting operators must be used when single quotes are required within the code (e.g. &amp;ldquo;q||&amp;rdquo;)&lt;/li&gt;
+&lt;li&gt;The in-place switch (&amp;ldquo;i&amp;rdquo;) works, but any extension (e.g. &amp;ldquo;.bak&amp;rdquo;) will change the file ending and the default programs associated with it. The examples below use alternative methods.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you&amp;rsquo;re using cmd.exe or PowerShell the following Perl one liner will convert a file to Windows-style line endings:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;pe &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;binmode(STDOUT);s/\R/\015\012/&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#e6db74&#34;&gt;/file &amp;gt; /&lt;/span&gt;path&lt;span style=&#34;color:#e6db74&#34;&gt;/to/&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The main differences here are: replacing single-quotes with double-quotes, &amp;ldquo;binmode(STDOUT)&amp;rdquo; to turn off Perl&amp;rsquo;s CRLF line endings and the use of redirect &amp;ldquo;&amp;gt;&amp;rdquo; to write the contents to a different file, instead of using the in-place switch. To convert a file to Unix-style line endings on cmd.exe this will work:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;pe &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;binmode(STDOUT);s/\R/\012/&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#e6db74&#34;&gt;/file &amp;gt; /&lt;/span&gt;path&lt;span style=&#34;color:#e6db74&#34;&gt;/to/&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;On PowerShell a few more changes are required. To convert to Unix-style line endings use:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;ne&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;open(OUT, q(&amp;gt;&amp;gt;), q(/path/to/new/file));binmode(OUT);print OUT s/\R/\012/r&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So what just happened there? First of all we changed the command line switch &amp;ldquo;p&amp;rdquo; to &amp;ldquo;n&amp;rdquo;. This stops Perl from printing every line it processes to standard output. Instead we opened an appending filehandle &amp;ldquo;OUT&amp;rdquo; to our output file and printed the result ourselves. The reason we had to do this was that PowerShell automatically interprets standard output as Unicode and replaces Unix-style endings with Windows CRLF endings. Hence using the re-direct method (&amp;rdquo;&amp;gt;&amp;rdquo;) does not work. And before you try, piping the output like this generates an error:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;pe &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;binmode(STDOUT);s/\R/\012/r&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#e6db74&#34;&gt;/file | set-content /&lt;/span&gt;path&lt;span style=&#34;color:#e6db74&#34;&gt;/to/&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Encoding Byte&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We also had to use the quoting operator (&amp;ldquo;q()&amp;rdquo;) to quote our content instead of using single quotes. Finally, the substitution regex (&amp;ldquo;s/\R/\012/&amp;ldquo;) was changed to use the &amp;ldquo;r&amp;rdquo; modifier, which returns the result of the substitution without modifying the original variable. This feature is available from Perl version 5.14 onwards.&lt;/p&gt;
+
+&lt;h3 id=&#34;further-reading&#34;&gt;Further Reading&lt;/h3&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s offical documentation &amp;ldquo;perlrun&amp;rdquo; entry has a lot of detail on Perl&amp;rsquo;s command line switches. Access it &lt;a href=&#34;https://perldoc.perl.org/perlrun.html&#34;&gt;online&lt;/a&gt; or at the command line by typing: &amp;ldquo;perldoc perlrun&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Peteris Krummins&amp;rsquo; &lt;a href=&#34;http://www.catonmat.net/&#34;&gt;website&lt;/a&gt; provides loads of Perl one liners. His new book &lt;a href=&#34;http://www.amazon.com/gp/product/159327520X/ref=as_li_qf_sp_asin_tl?ie=UTF8&amp;amp;camp=1789&amp;amp;creative=9325&amp;amp;creativeASIN=159327520X&amp;amp;linkCode=as2&amp;amp;tag=perltrickscom-20&#34;&gt;Perl One-Liners: 130 Programs That Get Things Done&lt;/a&gt; has just been published (affiliate link). It contains many useful one liners, but also 9 pages of detailed guidance on running one liners on Windows - highly recommended!&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Wear the cloak of invisibility with OpenVPN and Perl</title>
+      <link>http://localhost:1313/article/50/2013/12/2/Wear-the-cloak-of-invisibility-with-OpenVPN-and-Perl/</link>
+      <pubDate>Mon, 02 Dec 2013 04:38:11 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/50/2013/12/2/Wear-the-cloak-of-invisibility-with-OpenVPN-and-Perl/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Screen-scraping useragents can be identified by several characteristics including their IP address and useragent string. This article shows how with the VPN service of &lt;a href=&#34;http://hidemyass.com/vpn/r14824/&#34;&gt;HideMyAss.com&lt;/a&gt; and the Perl module &lt;a href=&#34;https://metacpan.org/pod/Net::OpenVPN::Agent&#34;&gt;Net::OpenVPN::Agent&lt;/a&gt; you can obfuscate these data points and make your useragent harder to detect and monitor.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;pre-requisites&#34;&gt;Pre-requisites&lt;/h3&gt;
+
+&lt;p&gt;The following solution has been tested on Linux and may work on other UNIX-based platforms but is unlikely to work on Windows. Before getting started you&amp;rsquo;ll need to install &lt;a href=&#34;http://openvpn.net/index.php/open-source.html&#34;&gt;OpenVPN&lt;/a&gt; (open source networking software) - this is used to connect to the VPN networks of &lt;a href=&#34;http://hidemyass.com/vpn/r14824/&#34;&gt;HideMyAss.com&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;You will also need to install Net::OpenVPN::Agent via CPAN:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;cpan Net::OpenVPN::Agent&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Finally you will need a &amp;ldquo;VPN Pro&amp;rdquo; account with &lt;a href=&#34;http://hidemyass.com/vpn/r14824/&#34;&gt;HideMyAss.com&lt;/a&gt;. They provide 49,000 IP addresses Worldwide. I can recommend their service and have been using them successfully for months. If you have an account with a different VPN provider that uses OpenVPN, you should be able to hack Net::OpenVPN::Agent to use that service instead (contact me if you&amp;rsquo;d like help with this - I&amp;rsquo;m the module author).&lt;/p&gt;
+
+&lt;h3 id=&#34;overview&#34;&gt;Overview&lt;/h3&gt;
+
+&lt;p&gt;The Net::OpenVPN::Agent provides a configurable useragent that will automatically connect to a random &lt;a href=&#34;http://hidemyass.com/vpn/r14824/&#34;&gt;HideMyAss.com&lt;/a&gt; server before fetching the target URL. After a configurable number of requests, the useragent will automatically disconnect and re-connect to another random server. When connecting to a new server, the useragent will also select a new useragent string from a configurable list of useragent strings. This way both the IP address and the useragent string will change at the same time to adopt a new identity. The useragent is designed to be resilient: server connections and failed page requests will be attempted multiple times (configurable), new IP addresses are confirmed using a remote service and full logging capability is provided via &lt;a href=&#34;https://metacpan.org/pod/Log::Log4perl&#34;&gt;Log::log4perl&lt;/a&gt; (also configurable).&lt;/p&gt;
+
+&lt;h3 id=&#34;configuration&#34;&gt;Configuration&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::OpenVPN::Agent&#34;&gt;Net::OpenVPN::Agent&lt;/a&gt; requires a YAML file called agent.conf to be present in the root application directory. This is explained in the &lt;a href=&#34;https://metacpan.org/pod/Net::OpenVPN::Agent#new&#34;&gt;module documentation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-a-covert-scraper&#34;&gt;Writing a covert scraper&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s pull together a simple scraper to demonstrate the concept. The code below initializes uses &lt;a href=&#34;https://metacpan.org/pod/Net::OpenVPN::Agent&#34;&gt;Net::OpenVPN::Agent&lt;/a&gt; to get the main page of the New York times website. It then extracts and requests every URL it finds, with the aim of doing something with that content.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::OpenVPN::Agent;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.10.3&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; utf8;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ua &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::OpenVPN::Agent&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $base_url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;http://www.nytimes.com&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $html &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $ua&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_page($base_url) &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/\n//g&lt;/span&gt;r;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; ($html &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/href=&amp;#34;($base_url.*?)&amp;#34;/g&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $story &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $ua&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_page($_)
+    &lt;span style=&#34;color:#75715e&#34;&gt;# do something&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Running this code at the terminal with full logging gives the following output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) times&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; setting ip address
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//g&lt;/span&gt;eoip&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;hidemyass&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/ip/&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request limit is zero, resetting the request limit&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//s&lt;/span&gt;ecurenetconnection&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/vpnconfig/s&lt;/span&gt;ervers&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;cli&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;php
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//s&lt;/span&gt;ecurenetconnection&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/vpnconfig/o&lt;/span&gt;penvpn&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;template&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ovpn
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Connecting to &lt;span style=&#34;color:#ae81ff&#34;&gt;72.11.140.130&lt;/span&gt;, USA, California, Los Angeles (LOC1 S4), us
+WARN &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Ip address &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; changed, re&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;requesting ip
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//g&lt;/span&gt;eoip&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;hidemyass&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/ip/&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Ip address changed to &lt;span style=&#34;color:#ae81ff&#34;&gt;72.11.140.138&lt;/span&gt; from &lt;span style=&#34;color:#ae81ff&#34;&gt;172.254.124.113&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;weather
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/s&lt;/span&gt;ports&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/sci&lt;/span&gt;ence&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/&lt;/span&gt;health&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/&lt;/span&gt;arts&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request limit is zero, resetting the request limit&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Disconnecting from server&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Connecting to &lt;span style=&#34;color:#ae81ff&#34;&gt;173.234.233.226&lt;/span&gt;, USA, New York, Manhattan (LOC1 S3), us
+WARN &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Ip address &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; changed, re&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;requesting ip
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//g&lt;/span&gt;eoip&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;hidemyass&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/ip/&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Ip address changed to &lt;span style=&#34;color:#ae81ff&#34;&gt;108.62.48.75&lt;/span&gt; from &lt;span style=&#34;color:#ae81ff&#34;&gt;72.11.140.138&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/s&lt;/span&gt;tyle&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/o&lt;/span&gt;pinion&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The output demonstrates how the useragent first establishes a secure, encrypted connection to a Los Angeles-based VPN before proceeding to request pages from the New York Times website. Once the configured page request limit is reached the useragent automatically disconnects and connects to a new VPN in New York, establishing a new IP and adopting a new useragent string. From the New York Times web server perspective, it received a series of requests from two different users with different IP addresses, one in Los Angeles and the other in New York. And neither of these is the user&amp;rsquo;s actual IP address.&lt;/p&gt;
+
+&lt;h3 id=&#34;warning&#34;&gt;Warning&lt;/h3&gt;
+
+&lt;p&gt;The ability to anonymously scrape websites is a powerful but potentially harmful activity - you should never screen-scrape for unethical or illegal purposes. Adhere to robots.txt. This approach does not guarantee anonymity: the VPN provider may disclose all connections logs if required to by a law enforcement agency.&lt;/p&gt;
+
+&lt;h3 id=&#34;disclosure&#34;&gt;Disclosure&lt;/h3&gt;
+
+&lt;p&gt;As a customer of &lt;a href=&#34;http://hidemyass.com/vpn/r14824/&#34;&gt;HideMyAss.com&lt;/a&gt; I receive an affiliate payment for the successful referrals from the links on this page.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How to schedule Perl scripts using cron</title>
+      <link>http://localhost:1313/article/43/2013/10/11/How-to-schedule-Perl-scripts-using-cron/</link>
+      <pubDate>Fri, 11 Oct 2013 01:54:20 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/43/2013/10/11/How-to-schedule-Perl-scripts-using-cron/</guid>
+      <description>
+
+&lt;p&gt;Cron is a job scheduling program available on UNIX-like platforms. Most system commands can be scheduled including the execution of Perl programs. Once a job is setup, cron will run it as scheduled even if the user is not logged in, which can be a great way to automate sysadmin tasks or repetitive jobs. This article describes how to run Perl scripts with cron.&lt;/p&gt;
+
+&lt;h3 id=&#34;perl-script-tips&#34;&gt;Perl script tips&lt;/h3&gt;
+
+&lt;p&gt;When preparing a script to be run by cron, there a few things to keep in mind. You may want to add a shebang line to the of the script for the Perl binary you want to execute. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/local/bin/perl&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you plan to run the script on different platforms, you can omit the shebang line, as the location of the Perl binary may vary from platform to platform (more on this later).&lt;/p&gt;
+
+&lt;p&gt;Also ensure that any paths used in the script are absolute paths (such as for opening filehandles, database connection strings and external program paths).&lt;/p&gt;
+
+&lt;h3 id=&#34;setup-a-crontab&#34;&gt;Setup a crontab&lt;/h3&gt;
+
+&lt;p&gt;To schedule a job with cron, the job needs to be added to the user&amp;rsquo;s crontab. To do this open a terminal and type the following:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;crontab &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will open the crontab in a text editor. To add a job, a line must be added in the following format:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; command to be executed
+&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+-----&lt;/span&gt; day of week  (&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;, Sunday&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)
+&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+-------&lt;/span&gt; month        (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;)
+&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+---------&lt;/span&gt; day of month (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;31&lt;/span&gt;)
+&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+-----------&lt;/span&gt; hour         (&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;23&lt;/span&gt;)
+&lt;span style=&#34;color:#f92672&#34;&gt;+-------------&lt;/span&gt; min          (&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;59&lt;/span&gt;)
+
+An asterisk (&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;) means all&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here are some example crontab entries:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# execute every minute&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; perl &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;Beacon&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# execute every 5 minutes&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/5 * * * * perl /&lt;/span&gt;path&lt;span style=&#34;color:#e6db74&#34;&gt;/to/&lt;/span&gt;Beacon&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# execute every hour at 0 minutes past the hour&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; perl &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;Beacon&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# execute every 12 hours at half past the hour&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/12 * * * perl /&lt;/span&gt;path&lt;span style=&#34;color:#e6db74&#34;&gt;/to/&lt;/span&gt;Beacon&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If your script does not contain a shebang line, provide the absolute path to the Perl binary in the crontab. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/12 * * * /&lt;/span&gt;usr&lt;span style=&#34;color:#e6db74&#34;&gt;/local/&lt;/span&gt;bin&lt;span style=&#34;color:#e6db74&#34;&gt;/perl /&lt;/span&gt;path&lt;span style=&#34;color:#e6db74&#34;&gt;/to/&lt;/span&gt;Beacon&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Save the crontab and exit the text editor. To check the job has been scheduled, you can check your crontab with this command from the terminal:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;crontab &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;l&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will print your current crontab to the terminal.&lt;/p&gt;
+
+&lt;h3 id=&#34;troubleshooting-cron&#34;&gt;Troubleshooting cron&lt;/h3&gt;
+
+&lt;p&gt;Working with cron is usually straightforward, but if you are having difficulty getting the Perl script to run, check the following:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Check the cron log to be sure that cron is running the job as you expect. It is usually found here: /var/log/cron&lt;/li&gt;
+&lt;li&gt;Check that you are providing the correct absolute path to the Perl binary. Either in the shebang line inside the script or in crontab (if you are not sure what this is type &amp;ldquo;which perl&amp;rdquo; at the terminal).&lt;/li&gt;
+&lt;li&gt;Make sure the script permissions allow execution (e.g. &amp;ldquo;chmod +x /path/to/file&amp;rdquo;)&lt;/li&gt;
+&lt;li&gt;If you are running additional programs within the Perl script, consider adding their binary paths to the crontab as cron does not have the same PATH as the user.&lt;/li&gt;
+&lt;li&gt;If you need to run a script as root, just create a crontab for root using sudo: &amp;ldquo;sudo crontab -e&amp;rdquo;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A good list of general cron tips can be found &lt;a href=&#34;http://askubuntu.com/questions/23009/reasons-why-crontab-does-not-work&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Catch and Handle Signals in Perl</title>
+      <link>http://localhost:1313/article/37/2013/8/18/Catch-and-Handle-Signals-in-Perl/</link>
+      <pubDate>Sun, 18 Aug 2013 18:48:51 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/37/2013/8/18/Catch-and-Handle-Signals-in-Perl/</guid>
+      <description>
+
+&lt;p&gt;Signals are types of messages sent by an operating system to a process such as a Perl program. Signals provide a method for communicating with a process, for example when running a command line program pressing control-c will send the interrupt signal (&amp;lsquo;SIGINT&amp;rsquo;) to the program by default terminating it. Signals are often unexpected and if not handled can leave your Perl program or data in an unfinished state. This article describes some useful Perl programming tools for gracefully handling signals.&lt;/p&gt;
+
+&lt;h3 id=&#34;method-1-the-sig-hash&#34;&gt;Method 1: The %SIG Hash&lt;/h3&gt;
+
+&lt;p&gt;All Perl programs have the global variable %SIG hash which contains keys corresponding to each signal type. When a signal is sent to a Perl program, the value of the matching key name in %SIG is automatically de-referenced. This makes it possible to assign code references to handle specific signals by adding a coderef to the signal&amp;rsquo;s key value in %SIG. Let&amp;rsquo;s use an example Perl script called sleeper.pl to demonstrate. All sleeper.pl does is sleep for 20 seconds:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now let&amp;rsquo;s update sleeper.pl to handle an interrupt signal using %SIG:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+$SIG{INT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Caught a sigint $!&amp;#34;&lt;/span&gt; };
+
+sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If we run sleeper.pl on the command line and press control-c to send a SIGINT to it, we can see the our code ref was executed:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl sleeper&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+&lt;span style=&#34;color:#f92672&#34;&gt;^&lt;/span&gt;CCaught a sig int Interrupted system call at projects&lt;span style=&#34;color:#e6db74&#34;&gt;/scripts/s&lt;/span&gt;leeper&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl line &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;By updating the various key-value pairs in %SIG it&amp;rsquo;s possible to handle specific signals, for example we can update sleeper.pl to handle a terminate signal:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+$SIG{INT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Caught a sigint $!&amp;#34;&lt;/span&gt; };
+$SIG{TERM} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Caught a sigterm $!&amp;#34;&lt;/span&gt; };
+
+sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It&amp;rsquo;s often easier to define a signal handling subroutine rather than using anonymous subroutines for every signal you wish to catch. Let&amp;rsquo;s update sleeper.pl accordingly:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+$SIG{INT}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&amp;amp;&lt;/span&gt;signal_handler;
+$SIG{TERM} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&amp;amp;&lt;/span&gt;signal_handler;
+
+sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;signal_handler&lt;/span&gt; {
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Caught a signal $!&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now the signal_handler subroutine will be called everytime sleeper.pl receives a SIGINT or SIGTERM signal. Using these techniques it&amp;rsquo;s possible to extend signal-handling behavior for all signals that you wish to be handled.&lt;/p&gt;
+
+&lt;h3 id=&#34;method-2-sigtrap&#34;&gt;Method 2: sigtrap&lt;/h3&gt;
+
+&lt;p&gt;sigtrap is a useful Perl pragma that makes handling signals easier than manipulating %SIG directly. The sigtrap pragma recognizes three groups of signals: normal-signals (HUP, PIPE, INT, TERM), error-signals (ABRT, BUS, EMT, FPE, ILL, QUIT, SEGV, SYS and TRAP) and old-interface-signals (ABRT, BUS, EMT, FPE, ILL, PIPE, QUIT, SEGV, SYS, TERM, and TRAP). Using sigtrap we can update sleeper.pl to die when any of the normal-signals are received:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; sigtrap &lt;span style=&#34;color:#e6db74&#34;&gt;qw/die normal-signals/&lt;/span&gt;;
+
+sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Instead of calling die we can have sigtrap call the signal_handler routine that we defined previously:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; sigtrap &lt;span style=&#34;color:#e6db74&#34;&gt;qw/handler signal_handler normal-signals/&lt;/span&gt;;
+
+sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;signal_handler&lt;/span&gt; {
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Caught a signal $!&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;There is a lot more to sigtrap, check out the &lt;a href=&#34;https://perldoc.perl.org/sigtrap.html&#34;&gt;sigtrap perldoc entry&lt;/a&gt; for more details about its functionality.&lt;/p&gt;
+
+&lt;h3 id=&#34;useful-signal-handling-behavior&#34;&gt;Useful signal handling behavior&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s common to call die when handling SIGINT and SIGTERM. die is useful because it will ensure that Perl stops correctly: for example Perl will execute a destructor method if present when die is called, but the destructor method will not be called if a SIGINT or SIGTERM is received and no signal handler calls die. Additional behaviors that are useful in a signal handling subroutine are stack tracing, event logging, thread termination and temporary file clean up. The correct behavior to define will depend on the type of signal received and the type of Perl program.&lt;/p&gt;
+
+&lt;h3 id=&#34;posix-signals&#34;&gt;POSIX signals&lt;/h3&gt;
+
+&lt;p&gt;Not every signal can be handled: on POSIX compliant systems (such as BSD, Linux and OSX) SIGSTOP and SIGKILL cannot be caught, blocked or ignored. See the &lt;a href=&#34;http://man7.org/linux/man-pages/man7/signal.7.html&#34;&gt;signal man page&lt;/a&gt; for further details. Not every signal needs to be handled - each signal has a default program behavior (disposition) which may not affect the running of the program (also defined on the man page). You can find a list of signals Perl recognizes by printing %SIG at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;foreach (keys %SIG) { print &amp;#34;$_\n&amp;#34; }&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;windows-signals&#34;&gt;Windows signals&lt;/h3&gt;
+
+&lt;p&gt;Windows implements a subset of the standard POSIX signals. These signals can still be handled using the techniques described above. Microsoft have provided a list of these signals on &lt;a href=&#34;http://msdn.microsoft.com/en-us/library/ms811896#ucmgch09_topic3&#34;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Run local Perl as root</title>
+      <link>http://localhost:1313/article/36/2013/8/10/Run-local-Perl-as-root/</link>
+      <pubDate>Sat, 10 Aug 2013 14:33:18 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/36/2013/8/10/Run-local-Perl-as-root/</guid>
+      <description>&lt;p&gt;This is a simple trick for conveniently running local Perl as a root user on UNIX-based systems.&lt;/p&gt;
+
+&lt;p&gt;Occasionally it&amp;rsquo;s necessary to run locally-installed Perl as root. However at the command line if you type:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;sudo perl program&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;By default the Perl that is executed is the system Perl binary. This can be problematic as the System Perl may not have the modules required, or even be the correct version of Perl that you need to run. An easy fix for this is to use the which command:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) program&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;By nesting which between a dollar sign parentheses, the terminal will resolve the command first, which returns a string to the local Perl binary. Sudo then operates on this binary instead of the system Perl binary. You can prove this with the following terminal commands:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;which perl
+&lt;span style=&#34;color:#e6db74&#34;&gt;/home/si&lt;/span&gt;llymoose&lt;span style=&#34;color:#e6db74&#34;&gt;/perl5/&lt;/span&gt;perlbrew&lt;span style=&#34;color:#e6db74&#34;&gt;/perls/&lt;/span&gt;perl&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.16.3&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/bin/&lt;/span&gt;perl
+
+sudo which perl
+&lt;span style=&#34;color:#e6db74&#34;&gt;/bin/&lt;/span&gt;perl
+
+sudo echo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl)
+&lt;span style=&#34;color:#e6db74&#34;&gt;/home/si&lt;/span&gt;llymoose&lt;span style=&#34;color:#e6db74&#34;&gt;/perl5/&lt;/span&gt;perlbrew&lt;span style=&#34;color:#e6db74&#34;&gt;/perls/&lt;/span&gt;perl&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.16.3&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/bin/&lt;/span&gt;perl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Installing Perl modules with C library dependencies</title>
+      <link>http://localhost:1313/article/19/2013/4/15/Installing-Perl-modules-with-C-library-dependencies/</link>
+      <pubDate>Mon, 15 Apr 2013 18:37:26 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/19/2013/4/15/Installing-Perl-modules-with-C-library-dependencies/</guid>
+      <description>
+
+&lt;p&gt;Some Perl modules have specific C library dependencies that need to be met or else they won&amp;rsquo;t install. These issues can be tricky to solve as CPAN is not able to automatically install or report on non-Perl dependencies and Google isn&amp;rsquo;t good at returning useful results for these types of issues (&lt;a href=&#34;https://metacpan.org/pod/Net::SSLeay&#34;&gt;Net::SSLeay&lt;/a&gt; is a common example of a tricky module to install). Usually you will only find out about missing dependencies when trying to install the module, as the install will fail. What you need to do at this point is &lt;strong&gt;identify&lt;/strong&gt; and &lt;strong&gt;install&lt;/strong&gt; the missing C libraries.&lt;/p&gt;
+
+&lt;h3 id=&#34;identifying-c-library-dependencies&#34;&gt;Identifying C Library dependencies&lt;/h3&gt;
+
+&lt;p&gt;Here are some places to check for dependencies:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Install error message&lt;/strong&gt; - scan the command line output from the failed install: often Perl developers will write specific error messages that indicate the missing C library.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Module documentation&lt;/strong&gt; - check the main POD page for the module on &lt;a href=&#34;https://metacpan.org/&#34;&gt;metacpan&lt;/a&gt; it may indicate which C libraries are required.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Distribution files&lt;/strong&gt; - check the README and INSTALL files that come with the distribution for the module you are trying to install. If available they will be in the root directory of the tarball. You can browse these files online at &lt;a href=&#34;https://metacpan.org/&#34;&gt;metacpan&lt;/a&gt; by searching for the module, then clicking the &amp;lsquo;browse&amp;rsquo; link on the module&amp;rsquo;s main page.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Search your package manager&lt;/strong&gt; - look at the technologies and keywords associated with the module. For example &lt;a href=&#34;https://metacpan.org/pod/Net::SSLeay&#34;&gt;Net::SSLeay&lt;/a&gt; probably has something to do with SSL, so search for Perl-related SSL packages (example below).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;installing-c-library-dependencies&#34;&gt;Installing C library dependencies&lt;/h3&gt;
+
+&lt;p&gt;Once you have identified the missing C libraries, you need to install them. If you are on Linux, this can be done using a package manager and searching for and installing the package containing the C library:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# yum package manager&lt;/span&gt;
+$ sudo yum search ssl
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+sudo yum install openssl&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;perl&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;x86_64 perl&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Net&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;SSLeay&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;x86_64 perl&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Crypt&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;SSLeay&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;x86_64&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you are not on Linux, try downloading the library directly from the C library&amp;rsquo;s homepage - these are easy to find via Google and usually have specific Windows / OSX distributions.&lt;/p&gt;
+
+&lt;p&gt;Once you have installed the requisite libraries, try installing the Perl module again with CPAN.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Test if the user is root</title>
+      <link>http://localhost:1313/article/16/2013/4/10/Test-if-the-user-is-root/</link>
+      <pubDate>Wed, 10 Apr 2013 21:48:42 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/16/2013/4/10/Test-if-the-user-is-root/</guid>
+      <description>&lt;p&gt;When Perl is executing a program, it maintains the user id of the process owner in a global variable ($&amp;lt;). When a Perl program is executed by root or a user with root privileges (e.g. using the sudo command), the user id variable is always set to zero. This can be checked at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print $&amp;lt; . \n;&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;
+$ sudo perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print $&amp;lt; . \n;&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Because the root user id is always zero and in Perl zero is treated as false, it is a trivial task to test if the user is root during runtime. This can be used to for flow control, such as exiting the program early:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;qw/croak/&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($&amp;lt;) {
+    croak &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error: exiting program as not executed by root\n&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In Windows the user id variable is always set to zero and is of limited use. However the Perl &lt;a href=&#34;https://metacpan.org/pod/Win32&#34;&gt;Win32&lt;/a&gt; module has the Win32::IsAdminUser() method that can be used instead of $&amp;lt;, like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Win32;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;qw/croak/&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; Win32::IsAdminUser()) {
+    croak &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error: exiting program as not executed by root\n&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>The e-smith Server and Gateway: a Perl Case Study</title>
+      <link>http://localhost:1313/pub/2001/02/esmith.html/</link>
+      <pubDate>Tue, 20 Feb 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/02/esmith.html/</guid>
+      <description>
+
+&lt;p&gt;The e-smith server and gateway system is a Linux distribution designed for small to medium enterprises. It&amp;rsquo;s intended to simplify the process of setting up Internet and file-sharing services and can be administered by a non-technical user with no prior Linux experience.&lt;/p&gt;
+
+&lt;p&gt;We chose Perl as the main development language for the e-smith server and gateway because of its widespread popularity (making it easier to recruit developers) and it&amp;rsquo;s well suited to e-smith&amp;rsquo;s blend of system administration, templating and Web-application development.&lt;/p&gt;
+
+&lt;p&gt;Of course, the system isn&amp;rsquo;t just Perl. Other parts of the system include the base operating system (based on Red Hat 7.0), a customized installer using Red Hat&amp;rsquo;s Anaconda (which is written in Python), and a range of applications including mail and Web servers, file sharing, and Web-based e-mail using IMP (which is written in PHP). However, despite the modifications and quick hacks we&amp;rsquo;ve made in other languages, the bulk of development performed by the e-smith team is in Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-aen16-the-e-smith-manager-a-perl-cgi-application-span&#34;&gt;&lt;span id=&#34;aen16&#34;&gt;The E-Smith Manager: a Perl CGI Application&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Administration of an e-smith server and gateway system is performed primarily via a Web interface called the &amp;ldquo;e-smith manager.&amp;rdquo; This is essentially a collection of CGI programs that display system information and allow the administrator to modify it as necessary.&lt;/p&gt;
+
+&lt;p&gt;This allows system owners with no previous knowledge of Linux to administer their systems easily without the need to understand the arcana of the command line, text configuration files, and so on.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_02_esmith/perl-article-manager.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The manager interface is based on the &lt;code&gt;CGI&lt;/code&gt; module that comes standard with the Perl distribution. However, a module &lt;code&gt;esmith::cgi&lt;/code&gt; has been written to provide further abstractions of common tasks such as:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;generating page headers and footers&lt;/li&gt;
+&lt;li&gt;generating commonly used widgets&lt;/li&gt;
+&lt;li&gt;generating status report pages&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;It is likely that this module will be further extended in the next version to provide more abstract ways of building &amp;ldquo;wizard&amp;rdquo; style interfaces, so that developers don&amp;rsquo;t have to copy and paste huge swathes of code calling the &lt;code&gt;CGI&lt;/code&gt; module directly.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl, the first postmodern computer language</title>
+      <link>http://localhost:1313/pub/1999/03/pm.html/</link>
+      <pubDate>Tue, 09 Mar 1999 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/1999/03/pm.html/</guid>
+      <description>
+
+&lt;h2 id=&#34;span-id-perl-the-first-postmodern-compu-span-perl-the-first-postmodern-computer-language&#34;&gt;&lt;span id=&#34;Perl_the_first_postmodern_compu&#34;&gt;&lt;/span&gt;Perl, the first postmodern computer language&lt;/h2&gt;
+
+&lt;p&gt;&lt;em&gt;The following is the text of Larry Wall&amp;rsquo;s talk at Linux World on Wednesday, March 3.   He explains why Perl is a fitting language for the postmodern era.  As a member of the audience commented: &amp;ldquo;Another mindbender from Larry.&amp;rdquo;&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;highlights-which-should-convince-you-to-read-the-text-in-its-entirety&#34;&gt;Highlights (Which Should Convince You To Read the Text in its Entirety)&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;I&amp;rsquo;m here to talk about &lt;a href=&#34;#jump1&#34;&gt;why Perl and Linux have both been so successful.&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;I still feel like I have to &lt;a href=&#34;#jump2&#34;&gt;justify Perl all the time to a lot of people&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;The Modernist believes in OR more than AND. Postmodernists believe in AND more than OR. &amp;hellip; At least we can use Perl as an example. In Perl, AND has higher precedence than OR does. There you have it. &lt;a href=&#34;#jump3&#34;&gt;That proves Perl is a postmodern language&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;I picked the feature set of Perl because I thought they were cool features. I left the other ones behind because &lt;a href=&#34;#jump4&#34;&gt;I thought they sucked&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;When&amp;rsquo;s the last time you used &lt;a href=&#34;#jump5&#34;&gt;duct tape&lt;/a&gt; on a duct?&lt;/li&gt;
+&lt;li&gt;One of the characteristics of a postmodern computer language is that it puts the focus not so much onto the problem to be solved, but rather onto &lt;a href=&#34;#jump6&#34;&gt;the person trying to solve the problem&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;The very fact that it&amp;rsquo;s possible to write messy programs in Perl is also &lt;a href=&#34;#jump6&#34;&gt;what makes it possible to write programs that are cleaner in Perl&lt;/a&gt; than they could ever be in a language that attempts to enforce cleanliness.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#jump7&#34;&gt;We&amp;rsquo;re not objective about Perl&lt;/a&gt;, but as postmodernists, we freely admit that we&amp;rsquo;re not objective, and we try to compensate for it when we want people to think we&amp;rsquo;re objective. Or when we want to think ourselves objective. Or, at least, not objectionable.&lt;/li&gt;
+&lt;li&gt;We&amp;rsquo;ve actually been &lt;a href=&#34;#jump8&#34;&gt;doing open source for a couple of decades now&lt;/a&gt;. Why is it suddenly taking off now? Why not twenty years ago. Linux could have been written twenty years ago, albeit not by Linus.&lt;/li&gt;
+&lt;li&gt;As Heidi would say: &amp;lsquo;&lt;a href=&#34;#jump9&#34;&gt;Tsall good. Except when it sucks&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Thank you all for coming. I was hoping the title of this talk would scare away everyone who shouldn&amp;rsquo;t be here.
+Obviously I should have made up a scarier title&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Perl meets Godzilla?&lt;/p&gt;
+
+&lt;p&gt;Bambi meets Perl?&lt;/p&gt;
+
+&lt;p&gt;I just did an interview for Feed Magazine. When I read their intro to it, I was interested to see that they made reference to my ``curious speeches.&amp;rdquo; I&amp;rsquo;ll take that as a compliment. Why I take it as a compliment is the subject of this speech. That&amp;rsquo;s assuming this speech actually has a subject, which is still in doubt. Hey, at least it has a title. That&amp;rsquo;s something.&lt;/p&gt;
+
+&lt;p&gt;By the way, I&amp;rsquo;m planning to leave some amount of time at the end for Q and A, so you should start thinking about the Q part while I&amp;rsquo;m talking.&lt;/p&gt;
+
+&lt;p&gt;When I was invited to talk here, it occurred to me that most of the people here would be more interested in Linux than in Perl, so, in the interests of universal harmonic convergence, I thought I should talk about both Perl and Linux. To do that, I had to figure out what Perl and Linux have in common. Besides the obvious, of course.&lt;/p&gt;
+
+&lt;p&gt;Obviously, both Perl and Linux owe a lot to Unix culture, but this is well documented. If I merely pointed out the obvious commonalities, I&amp;rsquo;d have to talk the whole time about things you can find out from the manuals. (Or should I say, things you &lt;em&gt;ought&lt;/em&gt; to be able to find out from the manuals? Whatever.)&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m not here today to teach you how to use Perl or Linux. I&amp;rsquo;m not here to teach you what Perl or Linux are.&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;jump1&#34;&gt;&lt;/span&gt;I&amp;rsquo;m here to talk about why Perl and Linux have both been so successful. Note that I&amp;rsquo;m measuring success here not so much in terms of numbers of users, but in terms of satisfaction of users.&lt;/p&gt;
+
+&lt;p&gt;So I started thinking about deeper connections between Perl and Linux, and that led me to think more about the deeper reasons for writing software. And that led to the subject of this talk. I&amp;rsquo;m going to start off talking by about postmodernism. After that, I&amp;rsquo;ll switch to talking about postmodernism. And at the conclusion, I&amp;rsquo;ll return to the subject of postmodernism.&lt;/p&gt;
+
+&lt;p&gt;However, since this talk is itself a postmodern work of art, I&amp;rsquo;ll be dragging in all sort of other cool things along the way, so maybe you won&amp;rsquo;t fall asleep.&lt;/p&gt;
+
+&lt;p&gt;Nowadays people are actually somewhat jaded by the term ``postmodern&amp;rdquo;. Well, perhaps jaded is an understatement. Nauseated might be more like it. But, anyway, I still distinctly remember the first time I heard it back in the &amp;lsquo;70s. I think my jaw fell and bounced off the floor several times. To me it was utterly inconceivable that anything could follow modern. Isn&amp;rsquo;t the very idea of ``modern&amp;rdquo; always associated with the ideas ``new&amp;rdquo; and ``now&amp;rdquo;?&lt;/p&gt;
+
+&lt;p&gt;The idea was so inconceivable to me that it took me at least ten seconds to figure it out. Or to think I&amp;rsquo;d figured it out. As a musician, the pat answer occurred to me almost immediately. I was familiar with the periods of music: Baroque, Classical, Romantic, and Modern. Obviously, if there were to be a period of music following the Modern, it would have to be called something other than Modern. And postmodern is as good a name as any, especially since it&amp;rsquo;s a bit of a joke on the ordinary meaning of modern. Obviously the Modern period was misnamed.&lt;/p&gt;
+
+&lt;p&gt;But, as I said, that was the pat answer. The Modern period was not misnamed. True, the ordinary word ``modern&amp;rdquo; is associated with ``new&amp;rdquo; and ``now&amp;rdquo;, but the historical period we call Modern chose to associate itself with the ``new&amp;rdquo; and the ``now&amp;rdquo; in such a deep way that we actually see the breakdown of the whole notion of periods. The Modern period is the period that refuses to die. The world is now an odd mix of the Modern and the postmodern. Oddly, it&amp;rsquo;s not just because the Modern refuses to die, but also because the postmodern refuses to kill the Modern. But then, the postmodern refuses to kill anything completely.&lt;/p&gt;
+
+&lt;p&gt;For example, it&amp;rsquo;s been several decades now since a certain set of Bible translations came out, and you&amp;rsquo;ll notice a pattern: the New English Bible, the New American Standard Bible, and the New International Version, to name a few. It&amp;rsquo;s really funny. I suspect we&amp;rsquo;ll still be calling them ``new this&amp;rdquo; and ``new that&amp;rdquo; a hundred years from now. Much like New College at Oxford. Do you know when New College was founded. Any guesses? New College was new in 1379.&lt;/p&gt;
+
+&lt;p&gt;A couple of days ago I was discussing all this with my daughter on the way to school. As usual, I turned on the radio to hear the news, and Heidi immediately started surfing all the music stations. Since this is one of the perils of fatherhood, I only said, ``I have to talk about postmodernism on Wednesday. What should I say?&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;She said, ``Like, it&amp;rsquo;s all about how you don&amp;rsquo;t have justify everything with a reason anymore. You can just put in stuff because you like it, you know, because it&amp;rsquo;s cool. With Modern stuff you always had to justify everything.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;jump2&#34;&gt;&lt;/span&gt;I said, ``I still feel like I have to justify Perl all the time to a lot of people.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;She settled on a station with some interesting music, and said, ``This is Dave Matthews&amp;rsquo; Band. The thing that&amp;rsquo;s really cool about him is that he, like, went out and found all these different artists who have different styles, and combined them all in ways you&amp;rsquo;ve never heard before.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;I said, ``Isn&amp;rsquo;t it interesting how postmodernism has become so much a part of our culture that it&amp;rsquo;s sort of fading into the woodwork?&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Heidi frowned and said, ``Dude, dad, it&amp;rsquo;s not like it&amp;rsquo;s some kind of a fad. Postmodernism is deeper than that&amp;ndash;it really is the culmination of everything that went before it. Like, it&amp;rsquo;s all about coming full circle. It&amp;rsquo;s not like we&amp;rsquo;re going to stop wanting to do that next week.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;I said, ``I suspect you&amp;rsquo;re right. After all, the various earlier periods of music were measured in centuries.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;``It&amp;rsquo;s not just music,&amp;rdquo; she said.&lt;/p&gt;
+
+&lt;p&gt;``Well, of course not,&amp;rdquo; I replied, ``all these things go together, but some disciplines change at different rates. The reason I&amp;rsquo;m giving this talk on Wednesday is because I think there&amp;rsquo;s still a big streak of Modernism running through the middle of computer science, and a lot of people are out of touch with their culture. On the other hand, I&amp;rsquo;m not really out to fight Modernism, since postmodernism includes Modernism as just another valid source of ideas. In fact, Perl contains lots of modern ideas from computer science. Along with all the rest of the ideas in there.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Heidi said, ``You wanna know something really funny. In my IMP class, our class slogan is, &amp;lsquo;There&amp;rsquo;s more than one way to do it.&amp;ldquo;&amp;rsquo;&lt;/p&gt;
+
+&lt;p&gt;``You&amp;rsquo;re kidding,&amp;rdquo; I said. [I should also say that that IMP stands for Interactive Math Program, which is a math curriculum in which you sort of learn everything at once. In sort of a postmodern way.] Anyway, I said, ``You&amp;rsquo;re kidding.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;``No,&amp;rdquo; she said, ``That&amp;rsquo;s why IMP is better for math students like me&amp;ndash;we learn better when we can see the big picture, and how everything fits in. The old way of learning math never gave you any context&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;While I was digesting this, and thinking about how it applied to computer science, she went on, ``Well, it&amp;rsquo;s like, you know, we have this saying at school, when somebody gets uptight about something, we say: &amp;lsquo;Tsall good. If someone is depressed, we say: &amp;lsquo;Tsall good.&amp;ldquo;&amp;rsquo;&lt;/p&gt;
+
+&lt;p&gt;``But you don&amp;rsquo;t actually think everything is good, do you?&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;``No, of course not.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;``Are you saying that everything has good elements in it?&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;``No, Dad, I think when we say that, we&amp;rsquo;re saying that, overall, things are good. Like, look at the big picture, don&amp;rsquo;t just focus in on the two or three bad things that are happening to you right now.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;I report this conversation to you not just because I think my kids are cute and smart, but also because I think it&amp;rsquo;s important that we know where our culture is going, and because it&amp;rsquo;s our kids that will shape our culture in the future. I don&amp;rsquo;t think I could have defined postmodernism better than Heidi. Look at the big picture. Don&amp;rsquo;t focus in on two or three things to the exclusion of other things. Keep everything in context. Don&amp;rsquo;t go out of your way to justify stuff that&amp;rsquo;s obviously cool. Don&amp;rsquo;t ridicule ideas merely because they&amp;rsquo;re not the latest and greatest. Pick your own fashions. Don&amp;rsquo;t let someone else tell you what you should like. &amp;lsquo;Tsall good.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s all well and good, but I ask you, if it&amp;rsquo;s all good, why, in every other breath, does my daughter say ``That sucks.&amp;ldquo;?&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s a mystery here, and if we can fathom it, perhaps we&amp;rsquo;ll learn a thing or two. I think that what&amp;rsquo;s going on here is that our culture has undergone a basic shift, one that is actually healthy. It used to be that we evaluated everything and everyone based on reputation or position. And the basic underlying assumption was that we all had to agree whether something (or someone) was good or bad. Most of us actually used to believe in monoculturalism. Although even back then, we didn&amp;rsquo;t really practice it. And in fact, you could argue that the whole point of Modernism was to &lt;em&gt;break&lt;/em&gt; our cultural assumptions. We could argue all day long about whether postmodernism came about because Modernism succeeded or because it failed. As a postmodern myself, I take both sides. To some extent.&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;jump3&#34;&gt;&lt;/span&gt;This would bother a Modernist, because a Modernist has to decide whether this is true OR that is true. The Modernist believes in OR more than AND. Postmodernists believe in AND more than OR. In the very postmodern Stephen Sondheim musical, _Into the Woods_, one of the heroines laments, ``Is it always or, and never and?&amp;rdquo; Of course, at the time, she was trying to rationalize an adulterous relationship, so perhaps we&amp;rsquo;d better drop that example. Well, hey. At least we can use Perl as an example. In Perl, AND has higher precedence than OR does. There you have it. That proves Perl is a postmodern language.&lt;/p&gt;
+
+&lt;p&gt;But back to the monoculturism of Modernism, or rather the assumption of monoculturalism. Nowadays we&amp;rsquo;ve managed to liberate ourselves from that assumption, by and large (where by and large doesn&amp;rsquo;t yet include parts of the Midwest). This has had the result that we&amp;rsquo;re actually free to evaluate things (and people) on the basis of what&amp;rsquo;s actually good and what&amp;rsquo;s actually bad, rather than having to take someone&amp;rsquo;s word for it.&lt;/p&gt;
+
+&lt;p&gt;More than that, we&amp;rsquo;re &lt;em&gt;required&lt;/em&gt; to make individual choices, the assumption being that not everyone is going to agree, and that not everyone should be required to agree. However, in trade for losing our monoculturalism, we are now required to discuss things. We&amp;rsquo;re not required to agree about everything, but we are required to at least agree to disagree. Since we&amp;rsquo;re required to discuss things, this has the effect that we tend to ``deconstruct&amp;rdquo; the things we evaluate. I&amp;rsquo;ll talk more about the pros and cons of deconstructionism in a bit, but let me just throw out an example to wake you up.&lt;/p&gt;
+
+&lt;p&gt;The most deconstructed man on the planet right now is Bill Clinton. The public, and later the Senate, chose to evaluate Bill Clinton&amp;rsquo;s morality separately from Clinton&amp;rsquo;s fitness to govern. I&amp;rsquo;m not going to comment on whether I agree with that decision, but I&amp;rsquo;d just like to point out that this could not have happened thirty or forty years ago. We were not postmoderns back then. We had to have a whole president, or no president, so  hanky panky going on back then as there is now). Everything used to be in black and white, like our TVs. We kept our presidents looking good until we got one we couldn&amp;rsquo;t make look good, and then everyone switched to making the president look bad for a while. But we never did deconstruct Nixon the way we&amp;rsquo;ve deconstructed all the presidents since Nixon. Nixon is still monolithic, even though we&amp;rsquo;ve managed to bypass him and deconstruct Kennedy in hindsight. Perhaps it&amp;rsquo;s all related to the saying that ``Beauty is skin deep, but ugly goes right to the bone.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;If that&amp;rsquo;s the case, I pity the person who&amp;rsquo;s only skin and bones.&lt;/p&gt;
+
+&lt;p&gt;Now you may be wondering what all this has to do with Perl. So am I. I&amp;rsquo;ll think of something presently.&lt;/p&gt;
+
+&lt;p&gt;Time passes&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;While I&amp;rsquo;m thinking about the next thing to say in my talk, let me say a bit more about deconstructionism. I do not view deconstructionism as a form of postmodernism so much as I view deconstructionism as the bridge between Modernism and postmodernism. Modernism, as a form of Classicalism, was always striving for simplicity, and was therefore essentially reductionistic. That is, it tended to take things to pieces. That actually hasn&amp;rsquo;t changed much. It&amp;rsquo;s just that Modernism tended to take one of the pieces in isolation and glorify it, while postmodernism tries to show you all the pieces at once, and how they relate to each other.&lt;/p&gt;
+
+&lt;p&gt;For instance, this talk. If this were a Modern talk, I&amp;rsquo;d try to have one major point, and drive it into the ground with many arguments, all coherently arranged. Instead, however, I let you see that there&amp;rsquo;s a progression in my own thought process as I&amp;rsquo;m writing. I would pause in my talk at the same point that I paused in my thought process. If I were a journalist, I&amp;rsquo;d spend as much time talking about my angst in covering the story as I&amp;rsquo;d spend covering the actual story. And if I were building a building instead of writing a talk, I&amp;rsquo;d let the girders and ductwork show. These are all forms of deconstructionism.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m still trying to think about how this relates to Perl, by the way.&lt;/p&gt;
+
+&lt;p&gt;More time passes&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;I first heard about postmodernism in the late &amp;lsquo;70s at Seattle Pacific University from my wife&amp;rsquo;s Lit Crit professor, Dr. Janet Blumberg. Postmodernism came early to literature, so it&amp;rsquo;s no surprise that we heard it first from a literary critic. By the way, don&amp;rsquo;t think of literary critics like you think of theatre critics. Literary critics usually know what they&amp;rsquo;re talking about.&lt;/p&gt;
+
+&lt;p&gt;Even if they&amp;rsquo;re wrong.&lt;/p&gt;
+
+&lt;p&gt;Anyway, we heard it first from Dr. Blumberg, who was never wrong, so naturally we first thought about in in terms of literature. In fact, most people still think of postmodernism as a kind of weird literature. But postmodernism was also coming along in architecture too, as we were soon to find out. Seattle Pacific was wanting to build a new science and math building, so they decided to recycle an old warehouse down by the ship canal. Note the first element of postmodernism there&amp;ndash;they were reusing something old, taking the good parts, and leaving behind the bad parts, though they probably didn&amp;rsquo;t say to themselves, ``This rules,&amp;rdquo; or ``That sucks.&amp;rdquo; But I&amp;rsquo;m sure they &lt;em&gt;thought&lt;/em&gt; it. Anyway, they combined the old with modern ideas about having a large open lab inside, and making the whole building solar heated. They made it a comfy place at the same time, with a sunken study area containing sofas. And they made all the girders and ductwork show, because they thought it was cool. They also did it because it was postmodern, though they didn&amp;rsquo;t know that yet.&lt;/p&gt;
+
+&lt;p&gt;I think I know now how this relates to Perl.&lt;/p&gt;
+
+&lt;p&gt;When I started writing Perl, I&amp;rsquo;d actually been steeped in enough postmodernism to know that that&amp;rsquo;s what I wanted to do. Or rather, that I wanted to do something that would turn out to be postmodern, because you can&amp;rsquo;t actually do something postmodern, you can only really do something cool that turns out to be postmodern. Hmm. Do I really believe that? I dunno. Maybe. Sometimes. You may actually find this difficult to believe, but I didn&amp;rsquo;t actually set out to write a postmodern talk. I was just going to talk about how Perl is postmodern. But it just kind of happened. So you get to see all the ductwork.&lt;/p&gt;
+
+&lt;p&gt;Anyway, back to Perl. When I started designing Perl, I explicitly set out to deconstruct all the computer languages I knew and recombine or reconstruct them in a different way, because there were many things I liked about other languages, and many things I disliked. I lovingly reused features from many languages. (I suppose a Modernist would say I stole the features, since Modernists are hung up about originality.) Whatever the verb you choose, I&amp;rsquo;ve done it over the course of the years from C, sh, csh, grep, sed, awk, Fortran, COBOL, PL/I, BASIC-PLUS, SNOBOL, Lisp, Ada, C++, and Python. To name a few. To the extent that Perl rules rather than sucks, it&amp;rsquo;s because the various features of these languages ruled rather than sucked.&lt;/p&gt;
+
+&lt;p&gt;But note something important here. I left behind more than I took. A lot more. In modern terms, there was a lot of stuff that sucked. Now, on the feature set issue, Perl is always getting a lot of bad press.&lt;/p&gt;
+
+&lt;p&gt;I think people who give bad press to Perl&amp;rsquo;s feature set should have more angst about their reporting.&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;jump4&#34;&gt;&lt;/span&gt;I picked the feature set of Perl because I thought they were cool features. I left the other ones behind because I thought they sucked.&lt;/p&gt;
+
+&lt;p&gt;More than that, I combined these cool features in a way that makes sense to me as a postmodern linguist, not in a way that makes sense to the typical Modernistic computer scientist. Recall that the essence of Modernism is to take one cool idea and drive it into the ground. It&amp;rsquo;s not difficult to look at computer languages and see which ones are trying to be modern by driving something into the ground. Think about Lisp, and parentheses. Think about Forth, and stack code. Think about Prolog, and backtracking. Think about Smalltalk, and objects. (Or if you don&amp;rsquo;t want to think about Smalltalk, think about Java, and objects.)&lt;/p&gt;
+
+&lt;p&gt;Think about Python, and whitespace. Hi, Guido.&lt;/p&gt;
+
+&lt;p&gt;Or think about shell programming, and reductionism. How many times have we heard the mantra that a program should do one thing and do it well?&lt;/p&gt;
+
+&lt;p&gt;Well&amp;hellip;Perl does one thing, and does it well. What it does well is to integrate all its features into one language. More importantly, it does this without making them all look like each other. Ducts shouldn&amp;rsquo;t look like girders, and girders shouldn&amp;rsquo;t look like ducts. Neither of those should look like water pipes, and it&amp;rsquo;s really important that water pipes not look like sewer pipes. Or smell like sewer pipes. Modernism says that we should make all these things look the same (and preferably invisible). Postmodernism says it&amp;rsquo;s okay for them to stick out, and to look different, because a duct ought to look like a duct, and a sewer pipe ought to look like a sewer pipe, and hammer ought to look like a hammer, and a telephone ought to look like either a telephone, or a Star Trek communicator. Things that are different should look different.&lt;/p&gt;
+
+&lt;p&gt;You&amp;rsquo;ve all heard the saying: If all you have is a hammer, everything starts to look like a nail. That&amp;rsquo;s actually a Modernistic saying. The postmodern version is: If all you have is duct tape, everything starts to look like a duct. Right. &lt;span id=&#34;jump5&#34;&gt;&lt;/span&gt;When&amp;rsquo;s the last time you used duct tape on a duct?&lt;/p&gt;
+
+&lt;p&gt;The funny thing is, Modernism itself was a kind of hammer, and it made everything look like something to be hammered. The protest movement of the &amp;lsquo;60s was Modernistic: ``If I had a hammer, I&amp;rsquo;d hammer all over this land.&amp;rdquo; The focus was always on the nail, or on whatever it was that was getting pounded. And many things did get hammered in the Modern age. Architectural beauty, for one. That one is obvious just by looking at the skyline of any major city. It&amp;rsquo;s easy to tell which buildings were built in the 50&amp;rsquo;s and 60&amp;rsquo;s. They&amp;rsquo;re the ones that look like boxes. When we first saw them, we thought they looked very modern. Well, they did. But when the Seattle First National Bank was built in, you guessed it, Seattle, we all made jokes about how it looked like the box the Space Needle came in. At least the Space Needle was cute, kinda like the Jetsons were cute. But the Space Needle wasn&amp;rsquo;t really very functional, unless you go in for rotating restaurants.&lt;/p&gt;
+
+&lt;p&gt;In fact, at many different levels, Modernism brought us various kinds of &lt;em&gt;dysfunction&lt;/em&gt;. Every cultural institution took a beating. Government took a beating. Schools took a beating. Certainly the family took a beating. Everyone took a beating, because Modernism was about attacking problems. Modernism was the hammer. (I&amp;rsquo;d like to make a pun on hammer and sickle here, but I&amp;rsquo;m not sure what it would be. Certainly Russia was more hammered than we were by Modernism, in the cloak of Marxism. I know what it means to be hammered, but I&amp;rsquo;m still trying to figure out what it would mean to be more sickled. Hmm. Unless that&amp;rsquo;s talking about the Grim Reaper. Russia has a lot of experience with that too.) Anyway, back to our talk. Modernism oversimplifies. Modernism puts the focus squarely on the hammer and the nail.&lt;/p&gt;
+
+&lt;p&gt;In contrast, postmodernism puts the focus back onto the carpenter. You&amp;rsquo;ll note that carpenters are allowed to choose whether or not to use hammers. They can use saws and tape measures if they choose, too. They have some amount of free will in the matter. They&amp;rsquo;re allowed to be creative. Especially if they&amp;rsquo;re working on Mrs. Winchester&amp;rsquo;s house. Hey, it&amp;rsquo;s right down the road, if you don&amp;rsquo;t believe me.&lt;/p&gt;
+
+&lt;p&gt;So, to drag the subject back to computers, &lt;span id=&#34;jump6&#34;&gt;&lt;/span&gt;one of the characteristics of a postmodern computer language is that it puts the focus not so much onto the problem to be solved, but rather onto the person trying to solve the problem. I claim that Perl does that, and I also claim that, on some level or other, it was the first computer language to do that. I&amp;rsquo;d also like to claim that, in many ways, it&amp;rsquo;s still the only language to do that.&lt;/p&gt;
+
+&lt;p&gt;How does Perl put the focus onto the creativity of the programmer? Very simple. Perl is humble. It doesn&amp;rsquo;t try to tell the programmer how to program. It lets the programmer decide what rules today, and what sucks. It doesn&amp;rsquo;t have any theoretical axes to grind. And where it has theoretical axes, it doesn&amp;rsquo;t grind them. Perl doesn&amp;rsquo;t have any agenda at all, other than to be maximally useful to the maximal number of people. To be the duct tape of the Internet, and of everything else. You&amp;rsquo;ve heard the joke, I&amp;rsquo;m sure. How is duct tape like the Force? It has a light side, and a dark side, and it holds the universe together. Later in this talk, I intend to define the universe and give three examples.&lt;/p&gt;
+
+&lt;p&gt;I have to be honest here. I&amp;rsquo;m with Linus&amp;ndash;I personally want to take over the world. I want to take over the world because I&amp;rsquo;m an egomaniac. A nice sort of egomaniac, an egomaniac moderated by belief in the value of humility, but an egomaniac nonetheless.&lt;/p&gt;
+
+&lt;p&gt;Fortunately, I am not Perl. Perl was my servant before it was anyone else&amp;rsquo;s, so I taught Perl to be a better servant than I could ever teach myself to be. Perl is like the perfect butler. Whatever you ask Perl to do, it says ``Very good, sir,&amp;rdquo; or ``Very good, madam.&amp;rdquo; Only occasionally does Perl give you a stiff upper lip, or say ``Tsk, tsk.&amp;rdquo; But if you ask Perl its opinion, it will advise you on matters of taste. ``I&amp;rsquo;m sorry sir, but bareword &amp;lsquo;foo&amp;rsquo; is not allowed while &amp;lsquo;strict subs&amp;rsquo; is in use.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Contrast that with the Modern idea of how a computer should behave. It&amp;rsquo;s really rather patronizing: ``I&amp;rsquo;m sorry Dave. I can&amp;rsquo;t allow you to do that.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;The trouble with having a submissive servant is that it puts the burden back on you to make the decisions. Come to think of it, that&amp;rsquo;s the problem with having a submissive wife too. My wife is very submissive. She&amp;rsquo;s always saying, ``I submit this problem to you because I don&amp;rsquo;t want to decide it.&amp;rdquo; Ah, well.&lt;/p&gt;
+
+&lt;p&gt;If the burden of decision making is on the programmer, then it&amp;rsquo;s possible for the programmer to make a mess of things. It&amp;rsquo;s possible for Perl programmers to write messy programs. (In case you hadn&amp;rsquo;t noticed.) It&amp;rsquo;s also possible for Perl programmers to write extremely clean, concise, and beautiful programs.&lt;/p&gt;
+
+&lt;p&gt;Let me state my beliefs about this in the strongest possible way. The very fact that it&amp;rsquo;s possible to write messy programs in Perl is also what makes it possible to write programs that are cleaner in Perl than they could ever be in a language that attempts to enforce cleanliness. The potential for greater good goes right along with the potential for greater evil. A little baby has little potential for good or evil, at least in the short term. A President of the United States has tremendous potential for both good and evil.&lt;/p&gt;
+
+&lt;p&gt;I do not believe it is wrong to aspire to greatness, if greatness is properly defined. Greatness does not imply goodness. The President is not intrisically ``gooder&amp;rdquo; than a baby. He merely has more options for exercising creativity, for good or for ill.&lt;/p&gt;
+
+&lt;p&gt;True greatness is measured by how much freedom you give to others, not by how much you can coerce others to do what you want. I remember praying a prayer when I was very young, not much more than a baby myself. ``God is great. God is good. Let us thank him for our food. Amen.&amp;rdquo; Well, I&amp;rsquo;m here to say amen to that. God&amp;rsquo;s greatness and goodness are measured by the fact that he gives us choices. He doesn&amp;rsquo;t require us to thank him for our food. (In case you hadn&amp;rsquo;t noticed.) God is not a Modernist. He doesn&amp;rsquo;t view us as nails. God expects us to behave like carpenters. Indeed, he gave us a carpenter as an example.&lt;/p&gt;
+
+&lt;p&gt;So I think God is postmodern. He has his own ideas of what rules, and what sucks, and he doesn&amp;rsquo;t expect everyone else to agree with him. Mind you, he &lt;em&gt;likes&lt;/em&gt; it when people agree with him. I like it when people agree with me about Perl. But I don&amp;rsquo;t expect everyone to agree with me. Of course, some of my loyal followers expect everyone to agree with me. I try to think of it as an endearing characteristic. Personally, I think the Perl slogan, There&amp;rsquo;s More Than One Way To Do It, applies outside of Perl as well as inside. I explicitly give people the freedom &lt;em&gt;not&lt;/em&gt; to use Perl, just as God gives people the freedom to go to the devil if they so choose.&lt;/p&gt;
+
+&lt;p&gt;As long as we&amp;rsquo;re in a demonizing frame of mind, please allow me to demonize Modernism a little more. True, postmodernism admits Modernism as one source of inspiration, along with Romanticism, Classicalism, and, er, uh, Baroqueism. Baroqueness? I always thinks it&amp;rsquo;s a compliment when someone says Perl is baroque. I just think of J.S. Bach. He wrote a lot of way cool stuff. Handel also had his moments.&lt;/p&gt;
+
+&lt;p&gt;Anyway, back to Modernism. Postmodernism does draw some inspiration from Modernism. And, in fact, postmodernism could not have come about without Modernism before it, because deconstructionism is simultaneously Modern and postmodern, being both reductionistic and holistic. Be that as it may, Postmodernism has deconstructed Modernism and determined that large parts of it suck. In religious terms, Modernism can be viewed as a series of cults. And postmodernism is defined as an escape from those cults. A kind of deprogramming, if you will. Perhaps the title of this talk should have been, ``Perl, the first postmodern DEprogramming language&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;We won&amp;rsquo;t go into the fact that ``Perl culture&amp;rdquo; sometimes gets shortened to ``Perl cult&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;I have to give credit where credit is due here. And to show my ductwork. I didn&amp;rsquo;t think of all this myself. I was flying up to Seattle with my wife and my daughter (yes, that one) because my daughter is thinking about attending Seattle Pacific University, that hotbed of subversive postmodernism. Surprise, surprise. So I asked my wife about the differences between Modernism and postmodernism. After all, one has to talk about &lt;em&gt;something&lt;/em&gt; with one&amp;rsquo;s spouse.&lt;/p&gt;
+
+&lt;p&gt;Especially in front of one&amp;rsquo;s daughter.&lt;/p&gt;
+
+&lt;p&gt;Before I get into the list of Modernistic cults, though, I just remembered another cute story about Seattle Pacific. The school had commissioned a Modern Artist to produce a Modern Art, you know the kind, a sculpture, if you can call it that, to be placed on the lawn out in front of student union building, on the corner of campus where anyone driving by could see it. It was most definitely Modern. It consisted of two large black surfaces, partly rounded and partly square, leaning against each other. It was actually rather hideous. You know the sort.&lt;/p&gt;
+
+&lt;p&gt;Well, one day we noticed that the large sculpture had had babies. There were seven or eight of the cute little beggars, perfect little replicas huddling around their mommy. It was wonderful. It was precious. It was funny. At least, it was funny until the Modern Artist came storming in and, with no sense of humor at all, removed his work of art, threatening never to have anything to do with Seattle Pacific again. Good riddance, we thought. And smiled. We&amp;rsquo;re still smiling. In case you hadn&amp;rsquo;t noticed.&lt;/p&gt;
+
+&lt;p&gt;Anyway, back to cults. The story I just told is illustrative of several of them. First of all, we have the Cult of Spareness. The example of Modern Art I just mentioned was very spare. It was minimalistic. It was almost an artless Art. Certainly the emotion it was trying to instill was something akin to hammering. We felt like nails.&lt;/p&gt;
+
+&lt;p&gt;Many modern computer languages aspire to be minimalistic. They either succeed in being minimalistic, in which case they&amp;rsquo;re relatively useless, or they don&amp;rsquo;t succeed in being truly minimalistic, in which case you can actually solve real problems with them. A number of languages give lip service to the idea of minimalism, but merely sweep the complexity of the problem under the carpet of the programmer. C is a minimalistic language, but only if you don&amp;rsquo;t count all the libraries that are necessary to use it usefully. C++ is obviously not trying to be minimalistic. Unix is considered by some to be a minimalistic operating system, but the fact of the matter is that if you think of Unix as a programming language, it&amp;rsquo;s far richer than even Perl. Perl is, by and large, a digested and simplified version of Unix. Perl is the Cliff Notes of Unix.&lt;/p&gt;
+
+&lt;p&gt;Unix (and by extension Linux) are really simultaneously Modern and postmodern. Unix philosophy is supposedly reductionistic, and minimalistic. But instead of being Modernistic, Unix is actually deconstructionistic. The saving grace of deconstructionism is that it is also reconstructionism. When you&amp;rsquo;ve broken everything down into bits, you&amp;rsquo;re required to put them back together again a different way. In order to solve real problems, Unix requires you not only to be reductionistic, but also holistic. It&amp;rsquo;s no accident that the ductwork shows in shell scripts. Only we call them pipes.&lt;/p&gt;
+
+&lt;p&gt;Postmodernism isn&amp;rsquo;t afraid of ornamentation, because postmodernism is a retreat from classicalism back to romanticism. That particular pendulum is quite periodic. The Classical and Modern periods of art identified beauty with simplicity. The Baroque and Romantic periods of art identified beauty with complexity. I think it&amp;rsquo;s an interesting synchronicity that, even as our art is becoming more complex again, science is also discovering beauty in complexity theory. Perhaps it&amp;rsquo;s more than a synchronicity. Just as Modern art had exhausted the possibilities of bigger hammers, so had science. In short, we&amp;rsquo;d been oversimplifying for too long, and hence couldn&amp;rsquo;t see the simplicity within the complexity of a leaf. I would like to tell you that Perl is simple in its complexity. But some people won&amp;rsquo;t understand that. So pretend I didn&amp;rsquo;t say that, unless you do.&lt;/p&gt;
+
+&lt;p&gt;I could go on about simplicity, but let&amp;rsquo;s move on to the next cult. Modernism is also a Cult of Originality. It didn&amp;rsquo;t matter if the sculpture was hideous, as long as it was original. It didn&amp;rsquo;t matter if there was no music in the music. Plagiarism was the greatest sin. To have your work labeled ``pastiche&amp;rdquo; was the worst insult. The only artistic endeavor in the Modern period not to suffer greatly from the Cult of Originality was architecture. Architecture went in for simplicity and functionalism instead. With the notable exception of certain buildings that were meant to look like Modern art, usually because they contained Modern art. Odd how that happens.&lt;/p&gt;
+
+&lt;p&gt;The Cult of Originality shows up in computer science as well. For some reason, many languages that came out of academia suffer from this. Everything is reinvented from first principles (or in some cases, zeroeth principles), and nothing in the language resembles anything in any other language you&amp;rsquo;ve ever seen. And then the language designer wonders why the language never catches on.&lt;/p&gt;
+
+&lt;p&gt;No computer language is an island, either.&lt;/p&gt;
+
+&lt;p&gt;In case you hadn&amp;rsquo;t noticed, Perl is not big on originality. Come to think of it, neither is Linux. Does this bother you? Good, perhaps our culture really is getting to be more postmodern.&lt;/p&gt;
+
+&lt;p&gt;The next cult on the hit parade is the Cult of Seriousness. Recall how seriously our Modern Artist took himself and his art. He was unable to laugh at himself.&lt;/p&gt;
+
+&lt;p&gt;I find that there are a certain number of humorless people who don&amp;rsquo;t appreciate, um, humor. There is a small but steady drizzle of messages into O&amp;rsquo;Reilly &amp;amp; Associates from people who are offended by the fact that my book, the Camel book, contains jokes. It&amp;rsquo;s really quite funny reading the messages from these people. It reminds me of the time I was sitting in a theatre in Palo Alto. It was intermission, and we were in the middle of watching a hilarious play about a dysfunctional family. You know, kind of like a sitcom, only done right. The audience just roared throughout the first act. Anyway, at intermission, this older guy with a deep, gruff voice behind me says to his wife, in all seriousness, ``I don&amp;rsquo;t see what&amp;rsquo;s so funny. It&amp;rsquo;s just like an ordinary family.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;I confess, I had to cover my mouth with my hands to keep from guffawing like Tom Christiansen. That&amp;rsquo;s got to be one of the funniest things I&amp;rsquo;ve ever heard. Well, maybe you had to be there.&lt;/p&gt;
+
+&lt;p&gt;Postmodernism is not afraid to laugh at itself. It&amp;rsquo;s not afraid of cute, and it&amp;rsquo;s not afraid of funky, and it&amp;rsquo;s not afraid of what a Modernist would call kitsch. You know, it&amp;rsquo;s actually kind of liberating to be going down the road, and be able to yell, ``New buggie! Pea soup green.&amp;rdquo; Postmoderns aren&amp;rsquo;t afraid to be nostalgic about old slug bugs, either. Sentimentality is cool, if you&amp;rsquo;re into that sort of thing. Retro rules. Unless it rocks. I don&amp;rsquo;t know if sentimentality rules or rocks, but&amp;rsquo;s it&amp;rsquo;s definitely cool.&lt;/p&gt;
+
+&lt;p&gt;As Heidi would say, ``Dude, I&amp;rsquo;m stoked.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;You&amp;rsquo;ll notice I keep talking about my wife and my daughter. In case you hadn&amp;rsquo;t noticed. The Modernist would of course explain to you that I was resorting to cheap sentimental tricks to try to establish an emotional bond with my audience. A postmodernist would, of course, agree. But the postmodernist will point out that cheap tricks are less expensive than costly tricks. Showing your ductwork is usually cheaper than hiding it. Even if it&amp;rsquo;s not cheaper, it&amp;rsquo;s certainly more entertaining. I certainly find the Iron Chef entertaining. That&amp;rsquo;s definitely a postmodern show. There&amp;rsquo;s lots of cool stuff on TV these days. My daughter enjoys Daria, because it&amp;rsquo;s so cynical about everything, including itself. And if you&amp;rsquo;d like to see an unashamedly postmodern anime, you should get ahold of Revolutionary Girl Utena.&lt;/p&gt;
+
+&lt;p&gt;Well, enough of that. Let&amp;rsquo;s see what&amp;rsquo;s next in our talk. Oh, oh, here comes a biggie. The Cult of Objectivity.&lt;/p&gt;
+
+&lt;p&gt;You know, Modernism tried. It tried real hard. It really, really tried. It tried to get rid of conventions. It thought it got rid of conventions. But all it really did was make its conventions invisible. At least to itself.&lt;/p&gt;
+
+&lt;p&gt;Reductionists often feel like they&amp;rsquo;re being objective. But the problem with reductionism is that, once you&amp;rsquo;ve split your universe into enough pieces, you can&amp;rsquo;t keep track of them any more. Psychologists tell us that the human mind can only keep track of about about seven objects, plus or minus two. That&amp;rsquo;s for short-term memory. It gets both worse and better for long-term memory, but the principle still stands. If you lose track of something, it&amp;rsquo;s because you thought it was less important, and didn&amp;rsquo;t think about it often enough to remind yourself. This is what happened to Modernists in literature. They&amp;rsquo;ve forgotten what&amp;rsquo;s important about literature.&lt;/p&gt;
+
+&lt;p&gt;Note how we still periodically hear the phrase ``serious literature&amp;rdquo;. This is literature that is supposedly about Real Life. Let me tell you something. The most serious literature I&amp;rsquo;ve ever read is by Lois McMaster Bujold. Any of you read her? It&amp;rsquo;s also the funniest literature I&amp;rsquo;ve ever read. It&amp;rsquo;s also space opera. ``Genre fiction,&amp;rdquo; sneers the Modernist. Meaning it follows certain conventions. So what? Nobody in the world can mix gravity and levity the way Bujold does in her Vorkosigan books. It&amp;rsquo;s oh so definitely about real life. So what if it follows space opera conventions. Sonnets follow certain conventions too, but I don&amp;rsquo;t see them getting sneered at much these days. Certainly they were always called ``serious&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;How long till Bujold becomes required reading in high school? Far too long, in my opinion. Horrors. We wouldn&amp;rsquo;t want our students actually enjoying what they read. It&amp;rsquo;s not&amp;ndash;it&amp;rsquo;s not Real Life.&lt;/p&gt;
+
+&lt;p&gt;As if the Lord of the Flies is real life. Feh.&lt;/p&gt;
+
+&lt;p&gt;Perl programming is unabashedly genre programming. It has conventions. It has culture. Perl was the first computer language whose culture was designed for diversity right along with the language. &lt;span id=&#34;jump7&#34;&gt;&lt;/span&gt;We&amp;rsquo;re not objective about Perl, but as postmodernists, we freely admit that we&amp;rsquo;re not objective, and we try to compensate for it when we want people to think we&amp;rsquo;re objective. Or when we want to think ourselves objective. Or, at least, not objectionable.&lt;/p&gt;
+
+&lt;p&gt;Or, at least, not object-oriented.&lt;/p&gt;
+
+&lt;p&gt;I would like to say one thing here about objectivity, however. While I despise the Modern Cult of Objectivity, I also despise the quasi-postmodern Cult of Subjectivity. I call it absolute cultural relativism. It&amp;rsquo;s the notion that everything is as good as everything else, because goodness is only a matter of opinion. It&amp;rsquo;s like claiming that the only thing you can know absolutely is that you can&amp;rsquo;t know anything absolutely. I think this is really just another form of Modernism, a kind of existentialism really, though unfortunately it&amp;rsquo;s come to be associated with postmodernism. But I think it sucks.&lt;/p&gt;
+
+&lt;p&gt;The funny thing is, it&amp;rsquo;s almost right. It&amp;rsquo;s very close to what I do, in fact, believe. I&amp;rsquo;d go so far as to call myself a strong postmodernist. Strong postmodernism says that all truth is created. But this really isn&amp;rsquo;t a problem for anyone who believes in a Creator. All truths are created relative, but some are more relative than others. A universal truth only has to be true about our particular universe, so to speak. It doesn&amp;rsquo;t much matter whether the universe itself is true or false, just as long as it makes a good story. And I think our universe does make a good story. I happen to like the Author.&lt;/p&gt;
+
+&lt;p&gt;I like Lois McMaster Bujold too, so I read her stories. Same for Tolkien, and C.S. Lewis. Turning that around, some people use Perl because they like me. Who am I to argue with them? You&amp;rsquo;re all totally objective about Linus and Linux, right? Uh, huh. Three cheers for objectivity.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m getting tired of talking about cults, and you&amp;rsquo;re probably getting tired of listening to me talk about cults. However, I want to talk about the open source phenomenon now, and I&amp;rsquo;m afraid I&amp;rsquo;ll have to drag the cults in occasionally. But fear not. I think the open source movement is, actually, a postmodern movement.&lt;/p&gt;
+
+&lt;p&gt;Think about it. &lt;span id=&#34;jump8&#34;&gt;&lt;/span&gt;We&amp;rsquo;ve actually been doing open source for a couple of decades now. Why is it suddenly taking off now? Why not twenty years ago. Linux could have been written twenty years ago, albeit not by Linus.&lt;/p&gt;
+
+&lt;p&gt;Of course there are lots of mundane reasons why Linux wasn&amp;rsquo;t written twenty years ago, not the least of which is that we didn&amp;rsquo;t really have the ubiquitous, cheap hardware to support it yet. Nor did we have the networking to support cooperative development. But since this is a philosophical talk, I&amp;rsquo;ll ignore reality and talk about what I think was really going on. Here&amp;rsquo;s where the cults come back in again.&lt;/p&gt;
+
+&lt;p&gt;The Cult of Spareness decreed that we should all use the same operating system. Of course, everyone had their own idea of what that was, but Bill Gates actually had the most success in carrying out the decree. For which he is now on trial, where he may eventually have to consent to a consent decree. All in all, it&amp;rsquo;s been a bad year to be named Bill. The wolves are circling, and waiting for further signs of weakness, and everyone&amp;rsquo;s hedging their bets by attending LinuxWorld, and making sure the press know it.&lt;/p&gt;
+
+&lt;p&gt;Meanwhile, back on the Unix side of the universe, The Cult of Originality decreed that, if you were going to work on something, it had to be something new. Reimplementing an open source Unix would have been laughable, especially since any university could get the sources to Unix anyway for next to nothing. When other companies besides Ma Bell figured out that they should have an implementation of Unix, they all had to make it different enough that they could distinguish themselves in the marketplace. That is, what they wrote had to be original.&lt;/p&gt;
+
+&lt;p&gt;The Cult of Seriousness decreed that everyone had to keep their source code hidden, because other people might laugh at how bad our code is, and make us fix it. Or worse, someone might steal our bad code and make it better. Then we would be out of business, and Life is Serious Business. A peek at the source code for Unix is obviously worth $100,000, because we can get that much for it. Programming for the fun of it? Get real!&lt;/p&gt;
+
+&lt;p&gt;Finally, the Cult of Objectivity decreed that the way we always did business was obviously the only way to do business. Our culture is the only possible culture. There are no social conventions here. These aren&amp;rsquo;t the droids you&amp;rsquo;re looking for. Move along.&lt;/p&gt;
+
+&lt;p&gt;In short, think about what it takes to put together an open source project such as Linux or Perl. You need a lot of people who think programming is serious fun. You need a culture of sharing, which is just the flip side of a culture in which you can borrow things without shame. You need people who have been hammered into dysfunctionality &lt;em&gt;long&lt;/em&gt; enough that they&amp;rsquo;re looking for new ways to form communities. You need people who are willing to be partisan on behalf of their chosen culture, while remaining sufficiently non-partisan to keep in touch with the rest of the world. It&amp;rsquo;s no fun to create a new culture and then cut it off from the rest of humanity. No, the fun thing is to try to persuade others to share your opinions about what rules and what sucks. Nothing is more fun than evangelism.&lt;/p&gt;
+
+&lt;p&gt;There are two kinds of joiners in the world. Think of it in terms of anthropology. There are the kinds of people who join a tribe, and kind of get sucked in, like a black hole. That&amp;rsquo;s the last you hear from them, unless you happen to be in the black hole with them. And we need people like this in our tribes, if only to be cheerleaders.&lt;/p&gt;
+
+&lt;p&gt;But the open source movement is energized by the other sort of joiner. This sort of person joins many tribes. These are the people who inhabit the intersections of the Venn diagrams. They believe in ANDs rather than ORs. They&amp;rsquo;re a member of more than one subset, more than one tribe. The reason these people are important is, just like merchants who go between real tribes, they carry ideas from one intellectual tribe to another. I call these people ``glue people&amp;rdquo;, because they not only join themselves to a tribe, they join tribes together. Twenty years ago, you couldn&amp;rsquo;t easily be a glue person, because our culture was not yet sufficiently accepting of diversity. It was also not accepting of information sharing. If you got sucked in by Bell Labs, you might get out to the occasional Usenix, but that was about it. If you got sucked in by the NSA, nobody ever heard from you again. Come to think of it, that&amp;rsquo;s still true.&lt;/p&gt;
+
+&lt;p&gt;Still and all, things have improved greatly, and the bridges across the gaps have gotten sturdier. Now people can send their memes across a wider chasms without getting crucified on one end of the bridge or the other. And as we started sending these memes across the chasms, what we discovered was that we didn&amp;rsquo;t have a bunch of separate open source movements, but rather a single big open source movement. To be sure, it&amp;rsquo;s a fuzzy, postmodern sort of movement, with lots of diversity, and a certain amount of turmoil, but it&amp;rsquo;s about as good as any movement gets these days. We all suck at slightly different things, but we&amp;rsquo;re in basic agreement that the old way of business sucked a lot worse that whatever it is we&amp;rsquo;re doing now. We&amp;rsquo;ve agreed to agree. Except when we don&amp;rsquo;t.&lt;/p&gt;
+
+&lt;p&gt;That sounds like it ought to be the end of my talk, but I still have a bunch of things to say, so I&amp;rsquo;ll just keep going. Who knows, maybe it&amp;rsquo;ll relate.&lt;/p&gt;
+
+&lt;p&gt;The other day, I was talking to a glue person whose name is Sharon Hopkins. Among other things, she&amp;rsquo;s known as the Perl Poet, because she&amp;rsquo;s written more poetry in Perl than anyone else. She also writes a kind of non-Perl poetry that was dubbed by another poet as ``sharonesque&amp;rdquo;. Here&amp;rsquo;s a cute example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;            I&#39;d travel to the ends of time
+            For you, my one, my only love.
+            I&#39;d force the sun to leave its track
+            (If you were lost) to fetch you back.
+            I&#39;d suck the juices from a lime,
+            I&#39;d re-write Moby Dick in rhyme,
+            I&#39;d happily commit a crime!
+            For you, my dearest darling dove.
+            I&#39;d do it all, and more beside --
+ 
+            Now *would* you take the trash outside?
+
+                                    Sharon Hopkins
+                                    Winter, 1989-90
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I had to write a response to that poem. Actually, two responses. I won&amp;rsquo;t inflict the longer one on you, but here&amp;rsquo;s the shorter one:
+            I&amp;rsquo;ve taken the trash out innumerable times,
+            I&amp;rsquo;ve taken the trash out in inclement climes,
+            I&amp;rsquo;ve taken the trash out &amp;lsquo;cuz that&amp;rsquo;s what I do,
+            But I &lt;em&gt;won&amp;rsquo;t&lt;/em&gt; take the trash out when you tell me to.&lt;/p&gt;
+
+&lt;p&gt;Well, anyway, most of Sharon&amp;rsquo;s poetry is relational, as befits a postmodern glue person. As I was saying, we were talking recently. Oddly, the subject was postmodernism. Fancy that. We were discussing how postmodern stuff can have goofy things mixed in with things that matter. She likes Iron Chef, too. That&amp;rsquo;s a Japanese show where you have some seriously good cooking mixed with an extremely silly race to cook the best meal. Watching the judges judge the meals is the best part. We were also talking about Revolutionary Girl Utena, where we have the Absolute Destiny Apocalypse mixed in with octopi falling out of closets. Both shows are full of arbitrary but endearing conventions. Anyway, I said something about what I was going to talk about here, and she said an interesting thing:
+&amp;gt; Yes, Modernism created a lot of dysfunction&amp;ndash;nobody disputes that. We were encouraged to revolt, deconstruct, cut apart our papers, run away from home and take drugs, not get married, and so on. Modernism tore a lot of things apart, but especially the family. The interesting thing to me is that postmodernism is propagating the dysfunction, because it actually finds its meaning in dysfunction. Postmodernism really is a result of Modernism.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;For one thing, notice how you can&amp;rsquo;t rebel by being dysfunctional any more. It&amp;rsquo;s no longer interesting&amp;ndash;we&amp;rsquo;ve done that already.&lt;/p&gt;
+
+&lt;p&gt;But it&amp;rsquo;s more than that. Think of Perl culture as a dysfunctional family. Or think of the various communities that arise on the net. Think of our Gen X group at church and their obviously postmodern tastes: night club decor mixed with candles. But it&amp;rsquo;s really about being together. Nowadays, family is where you find it. Family is where you create it.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I think Sharon knows what she&amp;rsquo;s talking about here. She actually met her current boyfriend online, but don&amp;rsquo;t tell her I said that. Anyway, I thought she has an interesting perspective on the way the net works nowadays. Imagine, open source is merely a byproduct of our need for family. So, look at all of you out there. You&amp;rsquo;re just a big, dysfunctional family trying to create meaning. Don&amp;rsquo;t look so nervous. I&amp;rsquo;m not going to call for a group hug.
+Let&amp;rsquo;s see, what else can I talk about. Did you realize how many things can be abbreviated ``pm&amp;rdquo;? Prime Minister. Post Meridian. Post Modern. Perl Module. Perl Monger. Are there any Perl Mongers out there today? There you have it&amp;ndash;yet another dysfunctional family. You guys can go out and have a group hug later in the pub.&lt;/p&gt;
+
+&lt;p&gt;Okay, let&amp;rsquo;s see. ``pm&amp;rdquo; is an abbreviation for Perl Module, which is why, of course, we use ``.pm&amp;rdquo; is the extension for a Perl module. It used to be that we used ``.pl&amp;rdquo; for Perl code. People still do use ``.pl&amp;rdquo; in Windows, but that&amp;rsquo;s because they&amp;rsquo;re all still stuck back in the Modern age. Anyway, there&amp;rsquo;s a funny thing about using ``.pl&amp;rdquo; for the Perl extension. People used to argue a lot about what the next language after C would be. Everone knew that the previous language had been called ``B&amp;rdquo;, after the first letter in BCPL, which came even earlier than B. The two proposed candidates for the next language were ``D&amp;rdquo;, because that&amp;rsquo;s what comes after ``C&amp;rdquo; in the alphabet, and ``P&amp;rdquo;, because that was the next letter in BCPL.&lt;/p&gt;
+
+&lt;p&gt;Well, as you can see, it didn&amp;rsquo;t work out either way. One of the successors to C was C++, which is a cute pun on the autoincrement operator, but makes it an absolute pain to try to figure out what the proper extension for a C++ file should be. .C? .cpp? .cxx? I suppose as a postmodern person, I shouldn&amp;rsquo;t mind the diversity, but somehow I do. I suppose a little inconsistency is good for the soul.&lt;/p&gt;
+
+&lt;p&gt;Anyway, the other successor to C gobbled up two letters instead of one. Which is why many Perl scripts have the extension, ``.pl&amp;rdquo;, finishing off BCPL. It&amp;rsquo;s a pity, in a way. Now there can never be a language named ``L&amp;rdquo;. Perhaps it&amp;rsquo;s just as well. Quite apart from the annual yuletide puns we&amp;rsquo;d get on ``noel, noel&amp;rdquo;, there&amp;rsquo;s also the problem that people would have confused the language with lex, which already uses a ``.l&amp;rdquo; extension. Since lex had already taken it, noel was available. So to speak. Sorry.&lt;/p&gt;
+
+&lt;p&gt;Anyway. Isn&amp;rsquo;t history fascinating? Especially postmodern history? &lt;span id=&#34;jump9&#34;&gt;&lt;/span&gt;As Heidi would say: &amp;lsquo;Tsall good. Except when it sucks.&lt;/p&gt;
+
+&lt;p&gt;Or as Tiny Tim says, God bless us, every one.&lt;/p&gt;
+
+&lt;p&gt;If you guys want me to stop talking, you&amp;rsquo;d better ask some questions.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tie on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/tie/</link>
+    <description>Recent content in Tie on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 30 Apr 2018 20:34:45 +0000</lastBuildDate>
+    <atom:link href="/tags/tie/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>XS utility routines that are good to know</title>
+      <link>http://localhost:1313/article/xs-utility-routines-that-are-good-to-know/</link>
+      <pubDate>Mon, 30 Apr 2018 20:34:45 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/xs-utility-routines-that-are-good-to-know/</guid>
+      <description>
+
+&lt;p&gt;In the previous &lt;a href=&#34;http://localhost:1313/article/writing-your-own-xs-functions/&#34;&gt;tutorial&lt;/a&gt;, we learned how to write our own functions in XS, how to process multiple arguments, and return different values, including &lt;code&gt;undef&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In this tutorial I&amp;rsquo;m going to cover some useful routines for common cases you&amp;rsquo;ll encounter when programming in XS. One that you&amp;rsquo;ve already seen is &lt;code&gt;SvOK&lt;/code&gt; which can tell you if a scalar is defined or not. Here are the new areas I&amp;rsquo;ll discuss:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Scheduling XS code to run at startup&lt;/li&gt;
+&lt;li&gt;Handling tied variables&lt;/li&gt;
+&lt;li&gt;Unicode tools&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;When writing XS code, these are things you&amp;rsquo;ll often want to be aware of, and know how to handle.&lt;/p&gt;
+
+&lt;h3 id=&#34;module-code&#34;&gt;Module Code&lt;/h3&gt;
+
+&lt;p&gt;As before, we&amp;rsquo;ll define the module code to load our XS. This is all that&amp;rsquo;s required:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package XS::Tutorial::Three;
+require XSLoader;
+
+XSLoader::load();
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That should be saved as &lt;code&gt;lib/XS/Tutorial/Three.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;xs-code&#34;&gt;XS Code&lt;/h3&gt;
+
+&lt;p&gt;The top of the XS file will look similar to the previous chapter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#define PERL_NO_GET_CONTEXT // we&#39;ll define thread context if necessary (faster)
+#include &amp;quot;EXTERN.h&amp;quot;         // globals/constant import locations
+#include &amp;quot;perl.h&amp;quot;           // Perl symbols, structures and constants definition
+#include &amp;quot;XSUB.h&amp;quot;           // xsubpp functions and macros
+
+MODULE = XS::Tutorial::Three  PACKAGE = XS::Tutorial::Three
+PROTOTYPES: ENABLE
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember to append any XS code after the &lt;code&gt;PROTOTYPES&lt;/code&gt; line. This should be saved as &lt;code&gt;lib/XS/Tutorial/Three.xs&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;scheduling-xs-code-to-run-at-startup&#34;&gt;Scheduling XS code to run at startup&lt;/h3&gt;
+
+&lt;p&gt;Sometimes you&amp;rsquo;ll need to run some code before your XS functions can work. For example, &lt;a href=&#34;https://github.com/openvenues/libpostal&#34;&gt;libpostal&lt;/a&gt; has startup routines which populate data structures that must be called before the library can be used.&lt;/p&gt;
+
+&lt;p&gt;You could code this in a &amp;ldquo;lazy&amp;rdquo; way, that is, inside the XS function, check to see if the init code has been run, and if not, run it before executing the rest of the function code.&lt;/p&gt;
+
+&lt;p&gt;However XS offers another way to do it by using the &lt;code&gt;BOOT&lt;/code&gt; keyword. Any C code included below the keyword, will be executed during the startup process:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;BOOT:
+printf(&amp;quot;We&#39;re starting up!\n&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The boot section is terminated by the first empty line after the keyword.&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-tied-variables&#34;&gt;Handling tied variables&lt;/h3&gt;
+
+&lt;p&gt;Tied variables are special variables that execute custom code when they are interacted with. But you never use them, so why worry about them? The
+thing is if you&amp;rsquo;re writing code to be used by others, you can&amp;rsquo;t be sure that a caller won&amp;rsquo;t pass a tied variable to one of your XS functions. And unlike
+regular Perl, XS does &lt;strong&gt;not&lt;/strong&gt; execute tied code automatically.&lt;/p&gt;
+
+&lt;p&gt;XS does provide &lt;a href=&#34;https://perldoc.perl.org/perlapi.html#Magical-Functions&#34;&gt;functions&lt;/a&gt; for working with tied variables though. One you&amp;rsquo;ll see in a lot of XS code is &lt;code&gt;SvGETMAGIC&lt;/code&gt;. Imagine your function is passed a tied variable; it&amp;rsquo;s value will be undefined in XS, until you call &lt;code&gt;mg_get&lt;/code&gt; (&amp;ldquo;magic get&amp;rdquo;) on it, which calls &lt;code&gt;FETCH&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, &lt;code&gt;mg_get&lt;/code&gt; can only be called on tied scalars so you don&amp;rsquo;t want to call it on a regular scalar. That&amp;rsquo;s where &lt;code&gt;SvGETMAGIC&lt;/code&gt; comes in: if the scalar is
+tied, it will call &lt;code&gt;mg_get&lt;/code&gt;, if not, nothing will happen.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s how you might use it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SV*
+get_tied_value(SV *foo)
+
+PPCODE:
+  /* call FETCH() if it&#39;s a tied variable to populate the sv */
+  SvGETMAGIC(foo);
+  PUSHs(sv_2mortal(foo));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code declares an XS function called &lt;code&gt;get_tied_value&lt;/code&gt;, which accepts a scalar variable, and calls &lt;code&gt;SvGETMAGIC&lt;/code&gt; on it, returning the value, by pushing it onto the stack.&lt;/p&gt;
+
+&lt;h4 id=&#34;magic&#34;&gt;Magic?&lt;/h4&gt;
+
+&lt;p&gt;You might be wondering why functions dealing with tied variables are named &amp;ldquo;magic&amp;rdquo; or &amp;ldquo;mg&amp;rdquo;. The reason is that tied behavior for each variable is implemented via a pointer to a &lt;a href=&#34;https://perldoc.perl.org/perlguts.html#Magic-Virtual-Tables&#34;&gt;magic virtual table&lt;/a&gt; which is a structure containing function pointers to the tied behavior.&lt;/p&gt;
+
+&lt;p&gt;Often the Perl C API will provide &lt;code&gt;mg&lt;/code&gt; (&amp;ldquo;magic&amp;rdquo;) and &lt;code&gt;nomg&lt;/code&gt; (&amp;ldquo;non magic&amp;rdquo;) variants of functions, so you can decide if you want to trigger the tied behavior.&lt;/p&gt;
+
+&lt;h3 id=&#34;utf-8-tools&#34;&gt;UTF-8 tools&lt;/h3&gt;
+
+&lt;p&gt;Perl has loads of tools for managing UTF-8 encoded text, but with XS you&amp;rsquo;re working in C, which does not. Start thinking about basic types like &lt;code&gt;char&lt;/code&gt;
+and common assumptions in C code, and you&amp;rsquo;ll realize that multibyte characters can wreak havoc unless you handle them correctly.&lt;/p&gt;
+
+&lt;p&gt;Fortunately, the Perl C API does provide &lt;a href=&#34;https://perldoc.perl.org/perlapi.html#Unicode-Support&#34;&gt;functions&lt;/a&gt; for managing UTF-8 data that
+can help. Here are a couple of examples.&lt;/p&gt;
+
+&lt;p&gt;Perl scalars have a UTF-8 flag, which is turned on when the scalar contains decoded UTF-8 data. We can detect it with &lt;code&gt;SvUTF8&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SV*
+is_utf8(SV *foo)
+PPCODE:
+  /* if the UTF-8 flag is set return 1 &amp;quot;true&amp;quot; */
+  if (SvUTF8(foo)) {
+    PUSHs(sv_2mortal(newSViv(1)));
+  }
+  /* else return undef &amp;quot;false&amp;quot; */
+  else {
+    PUSHs(sv_newmortal());
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This declares an XS function called &lt;code&gt;is_utf8&lt;/code&gt; which accepts a scalar and returns true if the UTF-8 flag is set, or false if it isn&amp;rsquo;t.&lt;/p&gt;
+
+&lt;p&gt;Imagine you have some C code that only works with ASCII text, that is, single byte characters. You can detect incoming scalars that have the UTF-8 flag turned on
+with &lt;code&gt;SvUTF8&lt;/code&gt;, but what do you do about ones that have the flag?&lt;/p&gt;
+
+&lt;p&gt;You could &lt;code&gt;croak&lt;/code&gt; immediately, throwing an exception. Or you could try to &lt;em&gt;downgrade&lt;/em&gt; the scalar to be non UTF-8 as the string may be marked as UTF-8 but only contain ASCII compatible characters (decimal values 0-127).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SV*
+is_downgradeable(SV *foo)
+PPCODE:
+  /* if the UTF-8 flag is set and the scalar is not downgrade-able return
+     undef */
+  if (SvUTF8(foo) &amp;amp;&amp;amp; !sv_utf8_downgrade(foo, TRUE)) {
+    PUSHs(sv_newmortal());
+  }
+  /* else return 1 */
+  else {
+    PUSHs(sv_2mortal(newSViv(1)));
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This function returns false if the scalar contains data that is not downgrade-able to ASCII, otherwise it returns true. It does that by using the &lt;code&gt;sv_utf8_downgrade&lt;/code&gt; function, which accepts the scalar and a boolean value indicating if it&amp;rsquo;s ok to fail. As the second argument is &lt;code&gt;TRUE&lt;/code&gt;, the function simply returns false if the scalar is not downgrade-able (otherwise it would &lt;code&gt;croak&lt;/code&gt;).&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Parts &lt;a href=&#34;http://localhost:1313/article/getting-started-with-xs/&#34;&gt;one&lt;/a&gt; and &lt;a href=&#34;http://localhost:1313/article/writing-your-own-xs-functions/&#34;&gt;two&lt;/a&gt; in this series contain the background information necessary to understand this one&lt;/li&gt;
+&lt;li&gt;This series is also on CPAN (&lt;a href=&#34;https://metacpan.org/pod/XS::Tutorial&#34;&gt;XS::Tutorial&lt;/a&gt;) complete with all the code&lt;/li&gt;
+&lt;li&gt;The &lt;a href=&#34;https://perldoc.perl.org/perlxs.html#The-BOOT%3a-Keyword&#34;&gt;BOOT&lt;/a&gt; keyword&lt;/li&gt;
+&lt;li&gt;Tied variable &lt;a href=&#34;https://perldoc.perl.org/perlapi.html#Magical-Functions&#34;&gt;functions&lt;/a&gt; and the &lt;a href=&#34;https://perldoc.perl.org/perlguts.html#Magic-Virtual-Tables&#34;&gt;magic virtual table&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perlapi.html#Unicode-Support&#34;&gt;Perl UTF-8 functions&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+Cover image &amp;copy; &lt;a href=&#34;https://pixabay.com/en/plumbing-pipe-wrench-plumber-840835/&#34;&gt;Steve Buissinne&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Magical tied scalars</title>
+      <link>http://localhost:1313/article/magical-tied-scalars/</link>
+      <pubDate>Tue, 16 Feb 2016 09:50:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/magical-tied-scalars/</guid>
+      <description>&lt;p&gt;Perl&amp;rsquo;s &lt;code&gt;tie&lt;/code&gt; mechanism allows me to create something that looks like a scalar but does anything I want it to do. I can change how the familiar scalar interface of simple access and assignment actually work. I&amp;rsquo;ve found this so useful at times that I devoted an entire chapter of &lt;a href=&#34;http://www.masteringperl.org/&#34;&gt;Mastering Perl&lt;/a&gt; to it.&lt;/p&gt;
+
+&lt;p&gt;I think I fell in love with this technique when it allowed me to solve a seemly intractable problem creating some HTML by hand (so you know this must have been a long time ago). Someone had created a library to create an HTML table that allowed me to set the color of the table rows by passing in a scalar value for &lt;code&gt;tr&lt;/code&gt;&amp;rsquo;s &lt;code&gt;bgcolor&lt;/code&gt; attribute. Fortunately I&amp;rsquo;ve forgotten who that was or what the code looked like, but it was something like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;print_table_and_stuff&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $color, @lots_of_other_arguments ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; lots of code &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;table&amp;gt;&amp;#34;&lt;/span&gt;;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $item ( @items ) {
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qq(&amp;lt;tr bgcolor=&amp;#34;$color&amp;#34;&amp;gt;)&lt;/span&gt;;
+            &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; fill in the cells &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;/tr&amp;gt;&amp;#34;&lt;/span&gt;;
+            }
+
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; lots of code &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Besides all the goofy things going on with the code, such as printing directly and not using templates, whoever wrote it wasn&amp;rsquo;t thinking that anyone would want to have tables with alternating (or even rotating) row colors. There was a time before that was a thing and the code pre-dated even that. My task was to get alternating row colors with as little disturbance as possible.&lt;/p&gt;
+
+&lt;p&gt;I could have replaced the subroutine using one of the techniques I showed in &lt;a href=&#34;http://www.masteringperl.org/&#34;&gt;Mastering Perl&lt;/a&gt;, but there was something simpler. If I could get &lt;code&gt;$color&lt;/code&gt; to change on its own, I wouldn&amp;rsquo;t have to mess with the code.&lt;/p&gt;
+
+&lt;p&gt;Thus, I invented &lt;a href=&#34;https://metacpan.org/pod/Tie::Cycle&#34;&gt;Tie::Cycle&lt;/a&gt;. The &lt;code&gt;tie&lt;/code&gt; interface allows me to decide what a scalar should do when I access it or store it. I supply code behind both of those operations by defining special subroutines. Here&amp;rsquo;s an extract of the code that shows those special methods:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Tie::Cycle;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TIESCALAR&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $class, $list_ref ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; bless &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;, $class;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt;( $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;STORE( $list_ref ) ) {
+                carp &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Argument must be an array reference&amp;#34;&lt;/span&gt;;
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+                }
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self;
+        }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;FETCH&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $self ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $index &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[CURSOR_COL]&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+        $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[CURSOR_COL] %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt;self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;_count;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;_item( $index );
+        }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;STORE&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $self, $list_ref ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; ref $list_ref &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; ref &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @shallow_copy &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; map { $_ } @$list_ref;
+
+        $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[CURSOR_COL] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+        $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[COUNT_COL]  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; scalar @shallow_copy;
+        $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[ITEM_COL]   &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;@shallow_copy;
+        }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;tie&lt;/code&gt; interface includes the &lt;code&gt;TIESCALAR&lt;/code&gt; method that creates the &lt;code&gt;tied&lt;/code&gt; object, the &lt;code&gt;FETCH&lt;/code&gt; method that decides how to return a value, and the &lt;code&gt;STORE&lt;/code&gt; method that decides how to store a value. In this case, I want to store an array of values and cycle through them. Each time I access the scalar, Perl calls &lt;code&gt;FETCH&lt;/code&gt;. Each time it calls &lt;code&gt;FETCH&lt;/code&gt; I increment a counter so I&amp;rsquo;ll get the next value. When I get to the end, I wrap around to the beginning of the array.&lt;/p&gt;
+
+&lt;p&gt;In this short bit of code, I create the tied scalar by calling &lt;code&gt;tie&lt;/code&gt; with the target scalar, the module name that defines the interface, and the arguments to pass to &lt;code&gt;TIESCALAR&lt;/code&gt;. After that, I use &lt;code&gt;$scalar&lt;/code&gt; as a normal scalar:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Tie::Cycle;
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Cycle&amp;#39;&lt;/span&gt;, [ &lt;span style=&#34;color:#e6db74&#34;&gt;qw(red green blue)&lt;/span&gt; ];
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        say $scalar;
+        }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Each time through the &lt;code&gt;while&lt;/code&gt;, I output the value of &lt;code&gt;$scalar&lt;/code&gt;. It doesn&amp;rsquo;t look like I&amp;rsquo;m doing anything fancy, but I&amp;rsquo;m implicitly calling &lt;code&gt;Tie::Cycle::FETCH&lt;/code&gt; each time. Now the colors rotate.&lt;/p&gt;
+
+&lt;p&gt;This is a bit more fun when I cycle through colored boxes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; open &lt;span style=&#34;color:#e6db74&#34;&gt;qw(:std :utf8)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Tie::Cycle;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Term::ANSIColor;
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Cycle&amp;#39;&lt;/span&gt;, [
+        map { colored( [ $_ ], &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\x{25AE}&amp;#34;&lt;/span&gt; ) }
+                &lt;span style=&#34;color:#e6db74&#34;&gt;qw(red green blue)&lt;/span&gt;
+        ];
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $scalar;
+        }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;With an appropriate terminal, I see a series of Christmas lights.&lt;/p&gt;
+
+&lt;p&gt;Recently, David Farrell had a similar problem. He could pass a value to a method that gave it a delay time to retry if it failed. That&amp;rsquo;s a nice feature, but he could only pass in a scalar. He didn&amp;rsquo;t want to pass in a value for two seconds and have it retry every two seconds. Instead, he wanted to back off. Wait two seconds the first time, then 4 seconds the next time, and eight seconds the next time. If something is falling over because you&amp;rsquo;re hitting it too frequently, you want to back off the pressure.&lt;/p&gt;
+
+&lt;p&gt;However, using the same trick I used for HTML row colors, he was able to create what looks like a simple scalar variable but was really a method call that increased the value each time:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Tie::Scalar::Ratio;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; parent &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TIESCALAR&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($class, $ratio, $value) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Must provide ratio argument, a number to multiply the scalar value by&amp;#39;&lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $ratio &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $ratio &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^[\d.]+$/&lt;/span&gt;;
+
+  bless {
+        ratio &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ratio,
+        value &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $value,
+  }, $class;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;STORE&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $value) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{value} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $value;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;FETCH&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $old_value &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{value};
+  $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{value} &lt;span style=&#34;color:#f92672&#34;&gt;*=&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ratio} &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{value};
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $old_value;
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;My program to demonstrate this is almost the same as my prior one. The part where I use &lt;code&gt;$scalar&lt;/code&gt; is the same.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Tie::Scalar::Ratio;
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Ratio&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;37&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        say $scalar;
+        }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Each time I access the scalar, I get back the previous value multiplied by the ratio. In this case, I multiply the previous value by &lt;code&gt;2&lt;/code&gt; each time.&lt;/p&gt;
+
+&lt;p&gt;This is a tidy solution because it fits into the code that&amp;rsquo;s already there. The existing code that expected a single value gets a scalar that changes its value each time.&lt;/p&gt;
+
+&lt;p&gt;Instead of giving Tie::Scalar::Ratio, I&amp;rsquo;d like to give it a callback. David also created &lt;a href=&#34;https://metacpan.org/pod/Tie::Scalar::Callback&#34;&gt;Tie::Scalar::Callback&lt;/a&gt;. Each time I access the scalar, this module calls the subroutine I passed to it and give me back the result. The code looks similar to the others:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Tie::Scalar::Callback;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; parent &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;qw(carp)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TIESCALAR&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($class, $sub ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Must provide subroutine reference argument&amp;#39;&lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $sub &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; ref $sub &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; ref &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {};
+
+  bless $sub, $class;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;STORE&lt;/span&gt; {
+  carp &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;You can&amp;#39;t assign to this tied scalar&amp;#34;&lt;/span&gt;;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;FETCH&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;();
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here&amp;rsquo;s a subroutine that does the same thing as the previous example by stores the state in the subroutine rather than in the tied object:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        state $value  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;
+        state $factor &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;
+        $value &lt;span style=&#34;color:#f92672&#34;&gt;*=&lt;/span&gt; $factor;
+        }
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Callback&amp;#39;&lt;/span&gt;, $sub;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        say $scalar;
+        }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That&amp;rsquo;s a simple callback, but I can make something a little more exotic. How about a sine-based function?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Tie::Scalar::Callback;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        state $pi     &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3.14152926&lt;/span&gt;;
+        state $eighth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $pi &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;;
+        state $value  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+        sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%.3f&amp;#39;&lt;/span&gt;, abs sin( $value &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; $eighth );
+        };
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Callback&amp;#39;&lt;/span&gt;, $coderef;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        say $scalar;
+        }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now the output backs off and speeds up. There&amp;rsquo;s something that might be more useful. Perhaps I want to use the load average to decide the number:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Sys::LoadAvg &lt;span style=&#34;color:#e6db74&#34;&gt;qw(loadavg)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Tie::Scalar::Callback;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        state $factor  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @loads &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; loadavg();
+
+        $factor &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; $loads[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;];
+        };
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Callback&amp;#39;&lt;/span&gt;, $coderef;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Finally, just for fun, here&amp;rsquo;s a tied scalar that creates the Fibonacci series using the inline &lt;code&gt;package NAMESPACE BLOCK&lt;/code&gt; syntax introduced in v5.14:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.14&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Tie::Scalar::Fibonacci {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; parent &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar&amp;#39;&lt;/span&gt;;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;qw(croak)&lt;/span&gt;;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; List::Util &lt;span style=&#34;color:#e6db74&#34;&gt;qw(sum)&lt;/span&gt;;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TIESCALAR&lt;/span&gt; {
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $class, $count ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+                $count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; defined $count;
+                die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;count must be a counting number&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $count &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/[^0-9]/&lt;/span&gt;;
+                die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;count must be greater than 1&amp;#34;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $count &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [ ( &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ) x ( $count ) ];
+                bless $array, $class
+                }
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;STORE&lt;/span&gt;     { croak &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;You can&amp;#39;t assign to this scalar!&amp;#34;&lt;/span&gt; }
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;FETCH&lt;/span&gt; {
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+                push @$self, sum( @$self );
+                shift @$self;
+                }
+        }
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Fibonacci&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;;
+        }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Every time I access it I get the next number in the Fibonacci series. Curiously, doing it this way, I&amp;rsquo;m computing a number that I&amp;rsquo;ll use in the future by pushing it onto the end and returning the oldest value by shifting it off the front. There&amp;rsquo;s no recursion here like in almost every example on the interwebs.&lt;/p&gt;
+
+&lt;p&gt;But, it can generate other series too. Instead of looking at the previous two values, I can give &lt;code&gt;TIESCALAR&lt;/code&gt; a different number to specify how many previous numbers to sum:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Fibonacci&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;;
+        }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The idea is the same, but the sums are different. If you&amp;rsquo;ve used a tied variable in an interesting way, let us know about it!
+&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

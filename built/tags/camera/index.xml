@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Camera on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/camera/</link>
+    <description>Recent content in Camera on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 15 Dec 2014 13:58:21 +0000</lastBuildDate>
+    <atom:link href="/tags/camera/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>A Hackerspace Webcam</title>
+      <link>http://localhost:1313/article/140/2014/12/15/A-Hackerspace-Webcam/</link>
+      <pubDate>Mon, 15 Dec 2014 13:58:21 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/140/2014/12/15/A-Hackerspace-Webcam/</guid>
+      <description>&lt;p&gt;Nearly every hackerspace has some kind of live camera on their website, and every one of them solves it in their own way. If you want to visit the shop, it&amp;rsquo;s nice to know if someone else is hanging around. At &lt;a href=&#34;http://thebodgery.org&#34;&gt;The Bodgery&lt;/a&gt;, it was decided to base one on a Raspberry Pi that would upload a picture every 30 seconds whenever an open switch is set. When a member opens the space, the switch activates one of the Pi&amp;rsquo;s &amp;ldquo;General Purpose Input/Output&amp;rdquo; (GPIO) pins, which causes the Pi to start taking pictures. When shut off, a default picture is thrown up, declaring us closed.&lt;/p&gt;
+
+&lt;p&gt;The first task was to make a box. The Bodgery has a 50W laser cutter, so I started with a design created with &lt;a href=&#34;http://www.makercase.com/&#34;&gt;MakerCase&lt;/a&gt;. After measuring the Pi and putting in the dimensions, MakerCase created a box with &amp;ldquo;finger joints&amp;rdquo; (tabs that fit the edges together). Using &lt;a href=&#34;https://inkscape.org/en/&#34;&gt;Inkscape&lt;/a&gt; and some more measuring, a hole was made in the front panel for the Pi&amp;rsquo;s camera. Unfortunately, I didn&amp;rsquo;t take into account the length of the Pi&amp;rsquo;s SD card on one side and the WiFi adaptor on the other, so my original design was a little short. No matter-the backend of the case could be left open for this project.&lt;/p&gt;
+
+&lt;p&gt;On the web server side, an account was created that had write access to a specific file. An ssh key was created and added to this account&amp;rsquo;s &lt;code&gt;~/.ssh/authroized_keys&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;p&gt;Using &lt;a href=&#34;https://metacpan.org/pod/Device::WebIO::RaspberryPi&#34;&gt;Device::WebIO::RaspberryPi&lt;/a&gt;, you can query the status of GPIO pins, and also get a filehandle for reading the picture from the camera. The camera is implemented using &amp;ldquo;&lt;a href=&#34;https://github.com/thaytan/gst-rpicamsrc&#34;&gt;rpicamsrc&lt;/a&gt;&amp;rdquo;, a plugin for &lt;a href=&#34;http://gstreamer.freedesktop.org/&#34;&gt;GStreamer&lt;/a&gt; that accesses the Raspberry Pi&amp;rsquo;s camera module directly - which is great, because my previous attempts at getting the data using GStreamer&amp;rsquo;s &lt;code&gt;v4lsrc&lt;/code&gt; or other methods usually ended in frustration.&lt;/p&gt;
+
+&lt;p&gt;The basic boilerplate sets up pin 17 as input, and then sets the image width, height, and JPEG quality (between 0 and 100, higher is better quality, but larger file size).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $rpi &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Device::WebIO::RaspberryPi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+$rpi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;set_as_input( &lt;span style=&#34;color:#ae81ff&#34;&gt;17&lt;/span&gt; );
+$rpi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;img_set_width( &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;800&lt;/span&gt; );
+$rpi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;img_set_height( &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;600&lt;/span&gt; );
+$rpi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;img_set_quality( &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;70&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The next step is to have something that polls the input pin on a regular basis (once a second will do). There are many ways to do this, and I choose an &lt;a href=&#34;https://metacpan.org/pod/AnyEvent&#34;&gt;AnyEvent&lt;/a&gt; timer.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $condvar &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; AnyEvent&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;condvar;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $input_timer; $input_timer &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; AnyEvent&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;timer(
+    after    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+    interval &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+    cb       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        $INPUT &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $rpi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;input_pin( &lt;span style=&#34;color:#ae81ff&#34;&gt;17&lt;/span&gt; );
+        $input_timer;
+    },
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This sets an global var &lt;code&gt;$INPUT&lt;/code&gt;. That gets picked up by another timer, which takes the picture and uploads when &lt;code&gt;$INPUT&lt;/code&gt; is set. In a more sophisticated program, I&amp;rsquo;d probably have this activate another timer directly for sending a picture. For such a simple program though, I&amp;rsquo;m not too worried about it.&lt;/p&gt;
+
+&lt;p&gt;The method &lt;code&gt;img_stream()&lt;/code&gt; will return a filehandle for reading the image:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $rpi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;img_stream( &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;image/jpeg&amp;#39;&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The method takes a channel number for the camera (if you have one camera, you have one channel) and a desired MIME type. The &lt;code&gt;img_allowed_content_types()&lt;/code&gt; method will return a list of supported MIME types. On Device::WebIO::RaspberryPi, only &lt;code&gt;image/jpeg&lt;/code&gt; is currently supported.&lt;/p&gt;
+
+&lt;p&gt;Once you have the filehandle, use &lt;code&gt;scp&lt;/code&gt; to upload it. A simple but crude method is to create a temporary file (with &lt;a href=&#34;https://metacpan.org/pod/File::Temp&#34;&gt;File::Temp&lt;/a&gt;) and then call &lt;code&gt;scp&lt;/code&gt; as an external program:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Temp &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tempdir&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($tmp_fh, $tmp_filename) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tempfile();
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Write to a temporary file&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $buffer &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( read( $fh, $buffer, &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; ) ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $tmp_fh $buffer;
+}
+close $tmp_fh;
+close $fh;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Upload to server using scp&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @scp_command &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;scp&amp;#39;&lt;/span&gt;,
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-i&amp;#39;&lt;/span&gt;, PRIVATE_KEY_FILE,
+    $tmp_filename,
+    SERVER_USERNAME &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;@&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; SERVER_HOST &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; SERVER_UPLOAD_PATH,
+);
+say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Executing: @scp_command&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; DEBUG;
+(system( @scp_command ) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not exec &amp;#39;@scp_command&amp;#39;: $!\n&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Delete temp file&lt;/span&gt;
+unlink $tmp_filename;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::SCP&#34;&gt;Net::SCP&lt;/a&gt; is another way of going about this, although that just wraps the external command like is done above.&lt;/p&gt;
+
+&lt;p&gt;As an exercise to the reader, create a &lt;code&gt;tmpfs&lt;/code&gt; (RAM disk) on your Raspberry Pi and have the temp file written there. 10MB should be enough. &lt;code&gt;File::Temp::tempfile()&lt;/code&gt; can be passed a &lt;code&gt;DIR&lt;/code&gt; parameter to write a file there. This avoids writing to the SD card, which is both slow and tends to wear it out prematurely.&lt;/p&gt;
+
+&lt;p&gt;The complete code is on &lt;a href=&#34;https://github.com/frezik/bodgery_cam&#34;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

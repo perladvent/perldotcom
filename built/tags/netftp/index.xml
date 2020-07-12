@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Netftp on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/netftp/</link>
+    <description>Recent content in Netftp on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 31 May 2020 11:48:52 +0000</lastBuildDate>
+    <atom:link href="/tags/netftp/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>A tour with Net::FTP</title>
+      <link>http://localhost:1313/article/a-tour-with-net-ftp/</link>
+      <pubDate>Sun, 31 May 2020 11:48:52 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/a-tour-with-net-ftp/</guid>
+      <description>
+
+&lt;p&gt;When we want to have a way to exchange files between machines, we often think about rsync, scp, git or even something slow and complex (looking at you Artifactory and S3), but the answer is often right in front of your eyes: FTP!&lt;/p&gt;
+
+&lt;p&gt;The &amp;ldquo;File Transfer Protocol&amp;rdquo; provides a very simple and convenient way to share files. It&amp;rsquo;s battle-tested, requires almost no maintenance, and has a simple anonymous access mechanism. It can be integrated with several standard auth methods and even some virtual ones, none of which I show here.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/a-tour-with-net-ftp/battlereadymeow.jpeg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In this article, I&amp;rsquo;ll install a local FTP server and create a simple FTP client in Perl.&lt;/p&gt;
+
+&lt;h2 id=&#34;a-bit-of-context&#34;&gt;A bit of context&lt;/h2&gt;
+
+&lt;p&gt;At &lt;code&gt;$work&lt;/code&gt; I have to carry on an army of developers that create customized build pipelines from handcrafted local configuration files.&lt;/p&gt;
+
+&lt;p&gt;This file is not hosted &amp;ldquo;by design&amp;rdquo; like you would have with Travis CI or a GitHub Action, but it is used to feed a &amp;ldquo;heavy client&amp;rdquo; that parses, resolves templates, and creates a workspace in some centralized automations servers through HTTP API calls.&lt;/p&gt;
+
+&lt;p&gt;It was a lot of support to help developers to create this file according to the spec (yet another file format), and we were blind when we wanted to help them with failing workspace creation/build (no way to retrieve configuration from workspace).&lt;/p&gt;
+
+&lt;p&gt;I got the idea to backup and centralize automatically the configuration file during the creation of the build pipeline workspace. It was intended to help both developers (configuration &amp;ldquo;samples&amp;rdquo;) and support team (see history, versioned then we can check diffs, file to replay). The constraints were to be able to exchange file from various places with variable users. The FTP protocol is a perfect fit for that.&lt;/p&gt;
+
+&lt;p&gt;I added also a cronjob to autocommit and push to a git repository and we had magically a website listing versioned configurations files.&lt;/p&gt;
+
+&lt;p&gt;In addition, FTP proved later to also require zero support. I mean really zero maintenance!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/a-tour-with-net-ftp/toolowmaintenance.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;download-and-install-ftpd&#34;&gt;Download and install ftpd&lt;/h2&gt;
+
+&lt;p&gt;I decided to use &lt;a href=&#34;https://www.pureftpd.org/project/pure-ftpd/&#34;&gt;pure-ftpd&lt;/a&gt; but there are some other good alternatives if you want.&lt;/p&gt;
+
+&lt;p&gt;First I download the tarball, untar it, and change into its directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ wget https://download.pureftpd.org/pub/pure-ftpd/releases/pure-ftpd-1.0.49.tar.gz
+$ tar xvzf pure-ftpd-1.0.49.tar.gz
+$ cd pure-ftpd-1.0.49/&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I configure &lt;code&gt;ftpd&lt;/code&gt; so I can execute it as casual (non-root) user using a non-restricted port, and I&amp;rsquo;ll set the destination directory to my &lt;code&gt;$HOME/ftpd&lt;/code&gt; :&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./configure --prefix&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;$HOME/ftpd --with-nonroot &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; make &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; make install&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I create two directories. The &lt;em&gt;ftp&lt;/em&gt; is what I&amp;rsquo;ll publish and &lt;em&gt;run&lt;/em&gt; is where I&amp;rsquo;ll put the pidfile.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ cd $HOME/ftpd
+$ mkdir ftp
+$ mkdir run&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now we can start the ftp server. I need to give some custom configurations:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;FTP_ANON_DIR&lt;/code&gt; is the directory I want to publish&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-e&lt;/code&gt; allows anonymous access&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-M&lt;/code&gt; allows anonymous users to create directories&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-g&lt;/code&gt; specifies the directory for the pidfile:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ FTP_ANON_DIR&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;pwd&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;/ftp ; ./sbin/pure-ftpd -e -M -g run &amp;amp;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;At this point I should have a running ftp server. Let&amp;rsquo;s check!&lt;/p&gt;
+
+&lt;h2 id=&#34;test-with-ftp&#34;&gt;Test with ftp&lt;/h2&gt;
+
+&lt;p&gt;First, I test with the preinstalled &lt;code&gt;ftp&lt;/code&gt; client. If everything is fine I see the typical FTP exchange:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ftp localhost &lt;span style=&#34;color:#ae81ff&#34;&gt;2121&lt;/span&gt;
+Connected to localhost.
+&lt;span style=&#34;color:#ae81ff&#34;&gt;220&lt;/span&gt;---------- Welcome to Pure-FTPd ----------
+&lt;span style=&#34;color:#ae81ff&#34;&gt;220&lt;/span&gt;-You are user number &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; of &lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt; allowed.
+&lt;span style=&#34;color:#ae81ff&#34;&gt;220&lt;/span&gt;-Local time is now &lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;:56. Server port: &lt;span style=&#34;color:#ae81ff&#34;&gt;2121&lt;/span&gt;.
+&lt;span style=&#34;color:#ae81ff&#34;&gt;220&lt;/span&gt;-Only anonymous FTP is allowed here
+&lt;span style=&#34;color:#ae81ff&#34;&gt;220&lt;/span&gt; You will be disconnected after &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; minutes of inactivity.
+Name &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;localhost:tib&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;:
+&lt;span style=&#34;color:#ae81ff&#34;&gt;230&lt;/span&gt; Anonymous user logged in
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If I get &lt;code&gt;ftp: connect: Connection refused&lt;/code&gt; it&amp;rsquo;s probably one of:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ftpd&lt;/code&gt; is not running (check with &lt;code&gt;ps aux | grep &amp;quot;ftp[d]&amp;quot;&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;I&amp;rsquo;m using the wrong port&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If I get &lt;code&gt;421 Can&#39;t change directory to /home/tib/ftpd/ftp/ [/]&lt;/code&gt; it&amp;rsquo;s probably because I haven&amp;rsquo;t created the directory I specified in &lt;code&gt;FTP_ANON_DIR&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;simple-client-in-perl&#34;&gt;Simple client in Perl&lt;/h2&gt;
+
+&lt;p&gt;Ok that&amp;rsquo;s cool, but I only played with ftp server and preinstalled &lt;code&gt;ftp&lt;/code&gt; client until now. What about writing some Perl now?&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/a-tour-with-net-ftp/whatif.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::FTP&#34;&gt;Net::FTP&lt;/a&gt; is a superb &lt;a href=&#34;https://metacpan.org/&#34;&gt;CPAN&lt;/a&gt; module dedicated to FTP protocol and I&amp;rsquo;ll use that.&lt;/p&gt;
+
+&lt;h3 id=&#34;simple-listing&#34;&gt;Simple listing&lt;/h3&gt;
+
+&lt;p&gt;First, a very simple listing script &lt;code&gt;ls.pl&lt;/code&gt;. This program connects to the server, asks for a list of files, and outputs each one. It&amp;rsquo;s clear that&amp;rsquo;s super easy and straightforward to play with FTP in Perl!&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::FTP;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $HOST &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;localhost&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $PORT &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2121&lt;/span&gt;;
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ftp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::FTP&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($HOST, Port &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $PORT, Debug &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)
+	&lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cannot connect to $HOST: $@&amp;#34;&lt;/span&gt;;
+$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;login() &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cannot login &amp;#34;&lt;/span&gt;, $ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;message;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $f ($ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;ls()) { &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$f\n&amp;#34;&lt;/span&gt;; }
+$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;quit;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;upload&#34;&gt;Upload&lt;/h3&gt;
+
+&lt;p&gt;What next?  Maybe upload something? Again, it&amp;rsquo;s super simple. Instead of listing files, I&amp;rsquo;m &lt;code&gt;put&lt;/code&gt;ting them:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::FTP;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $HOST &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;localhost&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $PORT &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2121&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ftp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::FTP&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($HOST, Port &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $PORT, Debug &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)
+	&lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cannot connect to $HOST: $@&amp;#34;&lt;/span&gt;;
+$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;login() &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cannot login &amp;#34;&lt;/span&gt;, $ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;message;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file(@ARGV) {
+    $ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;put(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$file&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$file&amp;#34;&lt;/span&gt;)
+    	&lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cannot put $file&amp;#34;&lt;/span&gt;, $ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;message;
+}
+$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;quit;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I run this and supply the files I want to upload:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ perl upload.pl file1.txt file2.txt&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;.&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&#34;put-things-together&#34;&gt;Put things together&lt;/h2&gt;
+
+&lt;p&gt;I propose a more complete client with some command-line parsing and more actions. In addition to the previous code for listing and uploading, here I added a way to view a file. &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; to handle command line parameters.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Getopt::Long;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Slurp;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::FTP;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $HOST &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;localhost&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $PORT &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2121&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %options &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ();
+
+GetOptions(
+	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;action|c=s&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$options{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;action&amp;#39;&lt;/span&gt;},
+	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;file|f=s&amp;#34;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$options{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;file&amp;#39;&lt;/span&gt;},
+	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;help|h&amp;#34;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$options{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;help&amp;#39;&lt;/span&gt;}
+	);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;print_usage&lt;/span&gt;() {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;List all files :\n\t$0 -c list\n&amp;#34;&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Upload file :\n\t$0 -c upload -f file.txt\n&amp;#34;&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Print file :\n\t$0 -c view -f file.txt\n\n&amp;#34;&lt;/span&gt;;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_ftp&lt;/span&gt;() {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ftp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::FTP&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($HOST, Port &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $PORT, Debug &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)
+		&lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cannot connect to $HOST: $@&amp;#34;&lt;/span&gt;;
+	$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;login() &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cannot login &amp;#34;&lt;/span&gt;, $ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;message;
+}
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# ls / on remote ftp&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;list&lt;/span&gt;() {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ftp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; get_ftp();
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $f ($ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;ls()) { &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$f\n&amp;#34;&lt;/span&gt;; }
+	$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;quit;
+}
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Upload a file&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;upload&lt;/span&gt;($) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+	(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e $file) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ftp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; get_ftp();
+	$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;login() &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cannot login &amp;#34;&lt;/span&gt;, $ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;message;
+	$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;put(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$file&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cannot put $file &amp;#34;&lt;/span&gt;, $ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;message;
+	$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;quit;
+}
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Read a file&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;view&lt;/span&gt;($) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ftp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; get_ftp();
+	$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$file&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cannot read $file &amp;#34;&lt;/span&gt;, $ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;message;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e $file) { &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; read_file($file); }
+	$ftp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;quit;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;($options{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;action&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;list&amp;#39;&lt;/span&gt;) {
+	list();
+} &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt;($options{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;action&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;upload&amp;#39;&lt;/span&gt;) {
+	upload($options{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;file&amp;#39;&lt;/span&gt;});
+} &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt;($options{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;action&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;view&amp;#39;&lt;/span&gt;) {
+	view($options{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;file&amp;#39;&lt;/span&gt;});
+} &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+	print_usage();
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&#34;more-about-design-and-security&#34;&gt;More about design and security&lt;/h2&gt;
+
+&lt;p&gt;This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and &lt;a href=&#34;https://metacpan.org/pod/Net::FTP&#34;&gt;Net::FTP&lt;/a&gt;!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

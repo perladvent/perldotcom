@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Autrijus Tang on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/autrijus-tang/</link>
+    <description>Recent content in Autrijus Tang on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 30 Apr 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/autrijus-tang/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Becoming a CPAN Tester with CPANPLUS</title>
+      <link>http://localhost:1313/pub/2002/04/30/cpants.html/</link>
+      <pubDate>Tue, 30 Apr 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/04/30/cpants.html/</guid>
+      <description>
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;&amp;ldquo;This is a great war long-planned,
+and we are but one piece in it,
+whatever pride may say.
+&amp;hellip; And now, all realms shall be put to the test.&amp;rdquo;
+&amp;ndash; Beregond, &amp;lt;&amp;lt;Lord of the Rings&amp;gt;&amp;gt;&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&#34;span-id-introduction-introduction-span&#34;&gt;&lt;span id=&#34;introduction&#34;&gt;Introduction&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In &lt;a href=&#34;#f1&#34;&gt;&lt;em&gt;CPANPLUS &amp;ndash; Like CPAN.pm only better?&lt;/em&gt;&lt;/a&gt;, Jos Boumans recounted the tale of how his &lt;strong&gt;CPANPLUS&lt;/strong&gt; project came to be; one of the original goals was to provide a modular backend to &lt;em&gt;CPANTS&lt;/em&gt;, the CPAN Testing Service, so modules can be automatically built and tested on multiple platforms.&lt;/p&gt;
+
+&lt;p&gt;Although the initial &lt;strong&gt;CPANPLUS&lt;/strong&gt; release did not support testing-related features, Jos considered them important enough to be listed near the top of his &lt;em&gt;Current and Future Developments&lt;/em&gt; wish list, and quoted Michael Schwern&amp;rsquo;s opinion on their potential benefits&lt;a href=&#34;#f2&#34;&gt;&lt;sup&gt;*&lt;/sup&gt;&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;It would alter the way free software is distributed. It would get a mark of quality; it would be tested and reviewed. And gosh darnit, it would be good.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;At that time, despite having participated in CPANPLUS&amp;rsquo;s development for more than four months, I was blissfully unaware of the project&amp;rsquo;s original vision. But it seemed like a worthwhile goal to pursue, so I quickly jotted down several pieces that need to work together:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Check test reports of modules before installation.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Report &lt;code&gt;make test&lt;/code&gt; results to the author, and make them available for other users to check.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Tools to batch-test modules with or without human intervention.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;A clean API for other programs to perform tests, reporting and queries.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Today, with the 0.032 release of &lt;strong&gt;CPANPLUS&lt;/strong&gt;, all the above pieces are completed. This article will show you how to configure and use these tools, as well as describing some important new features in &lt;strong&gt;CPANPLUS&lt;/strong&gt; that made them possible.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-setting-up-the-environment-setting-up-the-environment-span&#34;&gt;&lt;span id=&#34;setting up the environment&#34;&gt;Setting Up the Environment&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;First, you need a copy of &lt;strong&gt;CPANPLUS&lt;/strong&gt; 0.032 or above. I recommend the tarball automatically built from the &lt;em&gt;distribution branch&lt;/em&gt;, available at &lt;a href=&#34;http://egb.elixus.org/cpanplus-dist.tar.gz&#34;&gt;http://egb.elixus.org/cpanplus-dist.tar.gz&lt;/a&gt;; it should contain the latest bug-fixes and features marked as &lt;em&gt;stable&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Since Jos&amp;rsquo; article and README already contain install instructions, I will not repeat the details. However, please note that the dependency detection logic in &lt;em&gt;Makefile.PL&lt;/em&gt; has been changed since Jos&amp;rsquo; previous article, which means when faced with this prompt:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; [CPAN Test reporting]
+ - Mail::Send           ...failed! (needs 0.01)
+ - File::Temp           ...loaded. (0.13 &amp;gt;= 0.01)
+ ==&amp;gt; Do you wish to install the 1 optional module(s)? [n]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You should generally answer &lt;code&gt;y&lt;/code&gt; here, as only modules that can safely install on your machine are displayed. The default &lt;code&gt;n&lt;/code&gt; does not mean we don&amp;rsquo;t recommend it; it merely means it isn&amp;rsquo;t mandatory for the bare-bone &lt;strong&gt;CPANPLUS&lt;/strong&gt; to function.&lt;/p&gt;
+
+&lt;p&gt;For this article&amp;rsquo;s purpose, you need to answer &lt;code&gt;y&lt;/code&gt; to all such questions, since we will be using &lt;strong&gt;LWP&lt;/strong&gt;, &lt;strong&gt;Mail::Send&lt;/strong&gt; and &lt;strong&gt;IPC::Run&lt;/strong&gt; extensively in testing-related functions.&lt;/p&gt;
+
+&lt;p&gt;After running &lt;em&gt;Makefile.PL&lt;/em&gt;, you should run &lt;code&gt;make test&lt;/code&gt;&lt;a href=&#34;#f3&#34;&gt;&lt;sup&gt;*&lt;/sup&gt;&lt;/a&gt; like every good user; if any dependent modules were selected in the previous step, then you will have to run &lt;code&gt;make test&lt;/code&gt; as root, so it can fetch and install these modules automatically before testing itself.&lt;/p&gt;
+
+&lt;p&gt;After the comforting &lt;code&gt;All tests successful&lt;/code&gt; message appears on your screen, just do a &lt;code&gt;make install&lt;/code&gt;, and we are ready to go.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-why-is-testing-important-why-is-testing-important-span&#34;&gt;&lt;span id=&#34;why is testing important&#34;&gt;Why Is Testing Important?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&amp;hellip; or not. What if, instead of &lt;code&gt;All tests successful&lt;/code&gt;, you see a series of cryptic messages:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; % sudo make test
+ /usr/bin/perl Makefile.PL --config=-target,skiptest
+ --installdeps=Term::Size,0.01
+ *** Installing dependencies...
+ *** Installing Term::Size...
+ Can&#39;t bless nonreference value at lib/CPANPLUS/Internals/Module.pm
+ line 239.
+ Compilation failed in require at Makefile.PL line 20.
+ make: *** [installdeps] Error 255
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;An experienced Perl user will probably take the following steps:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Look at &lt;em&gt;lib/CPANPLUS/Internals/Module.pm&lt;/em&gt; and see whether it&amp;rsquo;s a trivial mistake. Unfortunately, it is not.&lt;/li&gt;
+&lt;li&gt;Search README for the project&amp;rsquo;s mailing list address. Discovering that it&amp;rsquo;s hosted in SourceForge, check Geocrawler (or any search engine) for existing bug reports and discussions. Unfortunately, there are none.&lt;/li&gt;
+&lt;li&gt;Copy-and-paste the error message into a bug-reporting e-mail to the mailing list, including your operating system name and version, Perl version, and wait for a fix.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Apparently, the above is exactly what Juerd Waalboer (the bug&amp;rsquo;s original reporter) did when he ran into this trouble. Thanks, Juerd!&lt;/p&gt;
+
+&lt;p&gt;However, there are a number of problems with the procedure above. It might be thwarted at every step:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;What if Juerd had been less experienced, and unaware of this bug-reporting procedure?&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;What if he decided to kluge around it by commenting out line 239, instead of taking the laborious copy-and-paste path to report it?&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;CPANPLUS&lt;/strong&gt; has a mailing list; other modules might not. Worse, they may not even have a working contact address &amp;ndash; maybe the author is on vacation.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;He might not have the sense to provide adequate debug-related data, and simply wrote &lt;code&gt;CPANPLUS didn&#39;t work! It can&#39;t install!#!@#@#!&lt;/code&gt; in red-colored blinking HTML email, wasting bandwidth and causing developers to ignore his mail completely.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Even after a fix was made available, and posted as a patch on the mailing list, other people about to install &lt;strong&gt;CPANPLUS&lt;/strong&gt; 0.03 still have no way to find out about it beforehand. Thus, when the same problem occurs again, they may forget to search in the archives, resulting in duplicate bug reports, or (worse) more dissatisfied users.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Actually, we had not mentioned the very likely scenario: What if Juerd didn&amp;rsquo;t run &lt;code&gt;make test&lt;/code&gt; at all? If so, the developers will have no way to know that this bug has ever happened.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Finally, while &lt;strong&gt;CPANPLUS&lt;/strong&gt; (like most CPAN modules) includes a regression test suite, some modules may omit their tests altogether. Users may not feel comfortable to mail the author to request a test script to accompany the distribution; consequently, bugs will surface in harder-to-detect ways, and may never get fixed.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As you can see, both authors and users can certainly benefit a lot from an improved test reporting system &amp;ndash; one that simplifies the process of reporting a failed (or successful) installation, and allows users to check for existing reports before downloading a module.&lt;/p&gt;
+
+&lt;p&gt;Such a system already exists; it&amp;rsquo;s called &lt;em&gt;CPAN Testers&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-what-is-cpan-testers-what-is-cpan-testers-span&#34;&gt;&lt;span id=&#34;what is cpan testers&#34;&gt;What Is &lt;em&gt;CPAN Testers&lt;/em&gt;?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;When most people run &lt;code&gt;make test&lt;/code&gt;, it&amp;rsquo;s immediately followed by a &lt;code&gt;make install&lt;/code&gt;; that is, people only test modules that they are going to use. But they may not have the time or inclination to report the outcome, for various reasons listed above.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;CPAN Testers&lt;/em&gt; (&lt;www.cpantesters.org&gt;) is an effort to set up a &lt;em&gt;Quality Assurance&lt;/em&gt; (&lt;em&gt;QA&lt;/em&gt;) team for CPAN modules. As its homepage states:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; The objective of the group is to test as many of the
+ distributions on CPAN as possible, on as many platforms
+ as possible.
+
+ The ultimate goal is to improve the portability of the
+ distributions on CPAN, and provide good feedback to the
+ authors.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Central to its operation is a mailing list, &lt;em&gt;&lt;a href=&#34;mailto:cpan-testers@perl.org&#34;&gt;cpan-testers@perl.org&lt;/a&gt;&lt;/em&gt;, and a small program, &lt;em&gt;cpantest&lt;/em&gt;. The program is a convenient way to report a distribution&amp;rsquo;s test result, which is sent to the mailing list using an uniform format. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; # test passed, send a report automatically (no comments)
+ cpantest -g pass -auto -p CPANPLUS-0.032
+ # test failed, launch an editor to edit the report, and cc to kane
+ cpantest -g fail -p CPANPLUS-0.032 kane@cpan.org
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The argument (&lt;code&gt;pass&lt;/code&gt;/&lt;code&gt;fail&lt;/code&gt;) after the &lt;strong&gt;-g&lt;/strong&gt; option is called the &lt;em&gt;grade&lt;/em&gt; &amp;ndash; the overall result of a test run. It may also be &lt;code&gt;na&lt;/code&gt; (not available), which means the module is not expected to work on this platform at all (&lt;strong&gt;Win32::Process&lt;/strong&gt; on FreeBSD, for example), and &lt;code&gt;unknown&lt;/code&gt; in the case that no tests are provided in the distribution.&lt;/p&gt;
+
+&lt;p&gt;All recent CPAN uploads, as well as all test results, are forwarded to the &lt;code&gt;cpan-testers&lt;/code&gt; mailing list&amp;rsquo;s subscribers &amp;ndash; CPAN testers. After a distribution&amp;rsquo;s release on CPAN, one or more testers will pick it up, test it, then feed the result back to the author and to the list. The testers don&amp;rsquo;t have to know what the module is about; all they do is to ensure it&amp;rsquo;s working as advertised.&lt;/p&gt;
+
+&lt;p&gt;Test reports on the mailing list are automatically recorded in a ever-growing database. &lt;a href=&#34;http://www.cpantesters.org/&#34;&gt;http://www.cpantesters.org/&lt;/a&gt; is its search interface, where you can query by distribution name, version, or the testing platform.&lt;/p&gt;
+
+&lt;p&gt;Theoretically, you can query that database before installing any CPAN module, to see whether it works on your platform, and check for associated bug reports. The same information is also present at each module&amp;rsquo;s page in &lt;a href=&#34;https://metacpan.org/&#34;&gt;MetaCPAN&lt;/a&gt;, and maybe &lt;a href=&#34;http://rt.cpan.org/&#34;&gt;CPAN RT&lt;/a&gt; in the near future.&lt;/p&gt;
+
+&lt;p&gt;Alas, while this system certainly works, it is far from perfect. Here are some of its shortcomings:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The integration between Web site and mailing list hadn&amp;rsquo;t extended to the &lt;em&gt;CPAN.pm&lt;/em&gt; shell, so checking for test results requires an additional step to navigate the Web browser.&lt;/li&gt;
+&lt;li&gt;People who aren&amp;rsquo;t subscribed to the &lt;code&gt;cpan-testers&lt;/code&gt; list rarely submit test reports, so coverage of platforms is limited to a few popular ones; a heavily used module may still be tested in only two or three platforms, hardly representing its entire user base.&lt;/li&gt;
+&lt;li&gt;There are no &lt;em&gt;smoking&lt;/em&gt; (automatic cross-platform testing) mechanisms; all testers must manually fetch, extract, test and submit their test reports, including the same copy-and-paste toil we described earlier. This entry barrier has seriously limited the number of active volunteer testers.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Fortunately, &lt;strong&gt;CPANPLUS&lt;/strong&gt; addressed most of these issues, and made it significantly easier to participate in testing-related activities. Let&amp;rsquo;s walk through them in the following sections.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-checking-test-reports-checking-test-reports-span&#34;&gt;&lt;span id=&#34;checking test reports&#34;&gt;Checking test reports&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;CPANPLUS offers a straightforward way to check existing reports. Simply enter &lt;code&gt;cpanp -c ModuleName&lt;/code&gt; in the command line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; % cpanp -c CPANPLUS
+ [/K/KA/KANE/CPANPLUS-0.032.tar.gz]
+ PASS freebsd 4.5-release i386-freebsd
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, this reports the most recent version of &lt;strong&gt;CPANPLUS&lt;/strong&gt;, which passed its tests on FreeBSD as of this writing.&lt;/p&gt;
+
+&lt;p&gt;You can also specify a particular version of some distribution. For example, the version Juerd was having problems with is 0.03, so he can do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; % cpanp -c CPANPLUS-0.03
+ [/K/KA/KANE/CPANPLUS-0.03.tar.gz]
+     FAIL freebsd 4.2-stable i386-freebsd (*)
+     PASS freebsd 4.5-release i386-freebsd (*)
+     PASS linux 2.2.14-5.0 i686-linux
+ ==&amp;gt; http://testers.cpan.org/search?request=dist&amp;amp;dist=CPANPLUS
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, there are three reports, two of which contain additional details (marked with &lt;code&gt;*&lt;/code&gt;), available at the URL listed above. The failed one&amp;rsquo;s says:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; This bug seems to be present in machines upgrading to 0.03
+ from 0.01/0.02 releases.
+ (It has since been fixed in the upcoming 0.031 release.)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which exactly addressed Juerd&amp;rsquo;s original problem.&lt;/p&gt;
+
+&lt;p&gt;Another useful trick is using the &lt;code&gt;o&lt;/code&gt; command in the CPANPLUS Shell to list newer versions of installed modules on CPAN, and check on them all with &lt;code&gt;c *&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; % cpanp
+ CPAN Terminal&amp;gt; o
+ 1   0.14     0.15   DBD::SQLite        MSERGEANT
+ 2   2.1011   2.1014 DBD::mysql         JWIED
+
+ CPAN Terminal&amp;gt; c *
+ [/M/MS/MSERGEANT/DBD-SQLite-0.15.tar.gz]
+     FAIL freebsd 4.5-release i386-freebsd (*)
+     PASS linux 2.2.14-5.0 i686-linux
+     PASS solaris 2.8 sun4-solaris
+ ==&amp;gt; http://testers.cpan.org/search?request=dist&amp;amp;dist=DBD-SQLite
+
+ [/J/JW/JWIED/DBD-mysql-2.1014.tar.gz]
+     FAIL freebsd 4.5-release i386-freebsd (*)
+     PASS freebsd 4.5-release i386-freebsd
+ ==&amp;gt; http://testers.cpan.org/search?request=dist&amp;amp;dist=DBD-mysql
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This way, you can safely upgrade your modules, confident in the knowledge that the newer version won&amp;rsquo;t break the system.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-reporting-test-results-reporting-test-results-span&#34;&gt;&lt;span id=&#34;reporting test results&#34;&gt;Reporting Test Results&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Despite the handy utility of the &lt;code&gt;c&lt;/code&gt; command, there will be no reports if nobody submits them. &lt;strong&gt;CPANPLUS&lt;/strong&gt; allows you to send a report whenever you&amp;rsquo;ve done a &lt;code&gt;make test&lt;/code&gt; in the course of installing a module; to enable this feature, please turn on the &lt;code&gt;cpantest&lt;/code&gt; configuration variable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; CPAN Terminal&amp;gt; s cpantest 1
+ CPAN Terminal&amp;gt; s save
+ Your CPAN++ configuration info has been saved!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Afterward, just use CPANPLUS as usual. You will be prompted during an installation, like below:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; CPAN Terminal&amp;gt; i DBD::SQLite
+ Installing: DBD::SQLite
+ # ...
+ t/30insertfetch....ok
+ t/40bindparam......FAILED test 25
+     Failed 1/28 tests, 96.43% okay
+ t/40blobs..........dubious
+     Test returned status 2 (wstat 512, 0x200)
+     DIED.  FAILED tests 8-11
+     Failed 4/11 tests, 63.64% okay
+ Failed 2/19 test scripts, 89.47% okay.
+ 5/250 subtests failed, 98.00% okay.
+ *** Error code 9
+ Report DBD-SQLite-0.15&#39;s testing result (FAIL)? [y/N]: y
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It always defaults to &lt;code&gt;n&lt;/code&gt;, so you won&amp;rsquo;t send out bogus reports by mistake. If you enter &lt;code&gt;y&lt;/code&gt;, then different actions will happen, depending on the test&amp;rsquo;s outcome:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;For modules that passed their tests, a &lt;code&gt;pass&lt;/code&gt; report is sent out immediately to the &lt;code&gt;cpan-testers&lt;/code&gt; list.&lt;/li&gt;
+&lt;li&gt;For modules that didn&amp;rsquo;t define a test, an &lt;code&gt;unknown&lt;/code&gt; report is sent to the author and &lt;code&gt;cpan-testers&lt;/code&gt;; the report will include a simple test script, encourage the module author to include it in the next release, and contain a URL of Michael Schwern&amp;rsquo;s &lt;strong&gt;Test::Tutorial&lt;/strong&gt; manpage.&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;If the module fails at any point (&lt;code&gt;perl Makefile.PL&lt;/code&gt;, &lt;code&gt;make&lt;/code&gt;, or &lt;code&gt;make test&lt;/code&gt;), then the default editor is launched to edit its &lt;code&gt;fail&lt;/code&gt; report, which includes the point of failure and the captured error buffer.&lt;/p&gt;
+
+&lt;p&gt;You are free to add any text below the &lt;code&gt;Additional comments&lt;/code&gt; line; to cancel a report, just delete everything and save an empty file.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Before sending out a &lt;code&gt;fail&lt;/code&gt; report, be sure to double-check if it is really the module&amp;rsquo;s problem. For example, if there&amp;rsquo;s no &lt;em&gt;libgtk&lt;/em&gt; on your system, then please don&amp;rsquo;t send a report about failing to install &lt;strong&gt;Gtk&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Also, be prepared to follow up with additional information when asked. The author may ask you to apply some patches, or to try out an experimental release; do help the author whenever you can.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-batch-testing-and-cpansmoke-batch-testing-and-cpansmoke-span&#34;&gt;&lt;span id=&#34;batch testing and cpansmoke&#34;&gt;Batch Testing and &lt;em&gt;cpansmoke&lt;/em&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;While regular users can test modules as they install via the &lt;code&gt;cpantest&lt;/code&gt; option, and often provide important first-hand troubleshooting information, we still need dedicated testers &amp;ndash; they can broaden the coverage of available platforms, and may uncover problems previously unforeseen by the author. Dedicated testing and regular reports are complementary to each other.&lt;/p&gt;
+
+&lt;p&gt;Historically, CPAN testers would watch for notices of recent &lt;em&gt;PAUSE&lt;/em&gt; uploads posted on the &lt;code&gt;cpan-testers&lt;/code&gt; list, grab them, test them manually, and run the &lt;em&gt;cpantest&lt;/em&gt; script, as we&amp;rsquo;ve seen in &lt;a href=&#34;#what%20is%20i%3Ccpan%20testers%3E&#34;&gt;What is &lt;em&gt;CPAN Testers&lt;/em&gt;?&lt;/a&gt;. That script is bundled with &lt;strong&gt;CPANPLUS&lt;/strong&gt;; please refer to its POD documentation for additional options.&lt;/p&gt;
+
+&lt;p&gt;However, normally you won&amp;rsquo;t be using it directly, as &lt;strong&gt;CPANPLUS&lt;/strong&gt; offers the &lt;em&gt;cpansmoke&lt;/em&gt; wrapper, which consolidates the &lt;em&gt;download =&amp;gt; test =&amp;gt; copy buffer =&amp;gt; run cpantest =&amp;gt; file report&lt;/em&gt; procedure into a single command:
+     % cpansmoke Mail::Audit Mail::SpamAssassin          # by module
+     % cpansmoke Mail-Audit-2.1 Mail-SpamAssassin-2.20   # by distname
+     % cpansmoke /S/SI/SIMON/Mail-Audit-2.1.tar.gz       # or full name&lt;/p&gt;
+
+&lt;p&gt;Due to the need of testing new distributions as they are uploaded, &lt;em&gt;cpansmoke&lt;/em&gt; will use &lt;a href=&#34;https://www.cpan.org/&#34;&gt;https://www.cpan.org/&lt;/a&gt; as its primary host, instead of the local mirror configured in your &lt;strong&gt;CPANPLUS&lt;/strong&gt; settings. This behavior may be overridden with the &lt;strong&gt;-l&lt;/strong&gt; flag.&lt;/p&gt;
+
+&lt;p&gt;Since &lt;em&gt;cpansmoke&lt;/em&gt; will stop right after &lt;code&gt;make test&lt;/code&gt; rather than installing any modules, it can test modules with different versions than the ones installed on the system. However, since it won&amp;rsquo;t resolve prerequisites by default, you&amp;rsquo;ll need to specify the &lt;strong&gt;-p&lt;/strong&gt; flag to test and report them.&lt;/p&gt;
+
+&lt;p&gt;The &lt;strong&gt;-d&lt;/strong&gt; flag will display previous results before testing each module; similarly, &lt;strong&gt;-s&lt;/strong&gt; will skip testing altogether if the module was already tested on the same platform. The latter should only be used with automated test (to reduce spamming), since the same platform can have different results.&lt;/p&gt;
+
+&lt;p&gt;There are numerous other flags available; please consult &lt;em&gt;cpansmoke&lt;/em&gt;&amp;rsquo;s manpage for further information.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-automatic-testing-automatic-testing-span&#34;&gt;&lt;span id=&#34;automatic testing&#34;&gt;Automatic Testing&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Besides interactive batch-testing, &lt;em&gt;cpansmoke&lt;/em&gt; also provides the capability of &lt;em&gt;unattended testing&lt;/em&gt;; this concept is also covered by Mozilla Project&amp;rsquo;s &lt;strong&gt;Tinderbox&lt;/strong&gt; toolkit, as explained in its homepage:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; There is a flock of dedicated build machines that do
+ nothing but continually check out the source tree and
+ build it, over and over again.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Essentially, if you have a machine with plenty of hard disk space and adequate bandwidth, you can set up &lt;em&gt;cpansmoke&lt;/em&gt; so it tests each new module as it is uploaded.&lt;/p&gt;
+
+&lt;p&gt;The &lt;strong&gt;-a&lt;/strong&gt; option lets &lt;em&gt;cpansmoke&lt;/em&gt; enter the non-interactive mode. In this mode, only failures during &lt;code&gt;make test&lt;/code&gt; are reported, because errors that occured during &lt;code&gt;Makefile.PL&lt;/code&gt; or &lt;code&gt;make&lt;/code&gt; are more likely the machine&amp;rsquo;s problem, not the module&amp;rsquo;s.&lt;/p&gt;
+
+&lt;p&gt;Additionally, you should specify the &lt;em&gt;-s&lt;/em&gt; flag to avoid duplicate reports, and &lt;em&gt;-p&lt;/em&gt; to avoid false-negatives caused by unsatisfied dependencies.&lt;/p&gt;
+
+&lt;p&gt;Setting up an auto-smoking machine is simple, using a mail filtering mechanism; just join the CPAN Testers list by sending an empty email to &lt;em&gt;&lt;a href=&#34;mailto:cpan-testers-subscribe@perl.org&#34;&gt;cpan-testers-subscribe@perl.org&lt;/a&gt;&lt;/em&gt;, and add the lines below to your &lt;a href=&#34;#f4&#34;&gt;&lt;strong&gt;Mail::Audit&lt;/strong&gt; filter&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; fork || exec(&amp;quot;sleep 40000 &amp;amp;&amp;amp; cpansmoke -aps $1 &amp;gt;/dev/null 2&amp;gt;&amp;amp;1&amp;quot;)
+     if $mail-&amp;gt;subject =~ /^CPAN Upload: (.*)$/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This rule will fork out a new &lt;em&gt;cpansmoke&lt;/em&gt; process for each incoming mail about a CPAN upload. Note that it works only if incoming mail arrives no less than once every hour; otherwise it might fork-bomb your system to a grinding halt.&lt;/p&gt;
+
+&lt;p&gt;In case you&amp;rsquo;re wondering, the &lt;code&gt;sleep 40000&lt;/code&gt; line is due to the fact that a PAUSE upload needs several hours to appear on &lt;em&gt;www.cpan.org&lt;/em&gt;. Michael Schwern suggested that using a &lt;em&gt;smoke queue&lt;/em&gt; would be a better solution, since it allows error-checking and logging; implementations are welcome.&lt;/p&gt;
+
+&lt;p&gt;If you are stuck with &lt;strong&gt;procmail&lt;/strong&gt;, then here&amp;rsquo;s the recipe that does the same (but do consider upgrading to &lt;strong&gt;Mail::Audit&lt;/strong&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; :0hc
+ * ^Subject: CPAN Upload:
+ |sh -c &amp;quot;sleep 40000 &amp;amp;&amp;amp; grep Subject|cut -f4 -d&#39; &#39;|xargs cpansmoke -aps &amp;gt;/dev/null 2&amp;gt;&amp;amp;1&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you have suggestions on how to make this work on non-unix systems, please do let me know.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-testingrelated-apis-testing-related-apis-span&#34;&gt;&lt;span id=&#34;testingrelated apis&#34;&gt;Testing-Related APIs&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;A programmable interface is the primary strength of &lt;strong&gt;CPANPLUS&lt;/strong&gt;. All features listed above are available as separate methods of the &lt;strong&gt;CPANPLUS::Backend&lt;/strong&gt; object. Since the module&amp;rsquo;s manpage already contains detailed information, I&amp;rsquo;ll just list some sample snippets below.&lt;/p&gt;
+
+&lt;p&gt;To show all reports of &lt;strong&gt;Acme::*&lt;/strong&gt; on FreeBSD:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use CPANPLUS::Backend;
+ my $cp = CPANPLUS::Backend-&amp;gt;new;
+ my $reports = $cp-&amp;gt;reports( modules =&amp;gt; [ map $_-&amp;gt;{package}, values(
+     %{ $cp-&amp;gt;search(type =&amp;gt; &#39;module&#39;, list =&amp;gt; [&#39;^Acme::\b&#39;]) }
+ ) ] );
+
+ while ( my ($name, $href) = each (%$reports) ) {
+     next unless $href;
+     my @entries = grep { $_-&amp;gt;{platform} =~ /\bfreebsd\b/ } @$href;
+     next unless @entries;
+
+     print &amp;quot;[$name]\n&amp;quot;;
+     for my $rv (@entries) {
+         printf &amp;quot;%8s %s%s\n&amp;quot;, @{$rv}{&#39;grade&#39;, &#39;platform&#39;},
+                              ($rv-&amp;gt;{detail} ? &#39; (*)&#39; : &#39;&#39;);
+     }
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To test all &lt;strong&gt;Acme::*&lt;/strong&gt; modules, but install all needed prerequisites:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use CPANPLUS::Backend;
+ my $cp = CPANPLUS::Backend-&amp;gt;new;
+ $cp-&amp;gt;configure_object-&amp;gt;set_conf( cpantest =&amp;gt; 1 );
+ $cp-&amp;gt;install(
+     modules =&amp;gt; [ map $_-&amp;gt;{package}, values(
+         %{ $cp-&amp;gt;search(type =&amp;gt; &#39;module&#39;, list =&amp;gt; [&#39;^Acme::\b&#39;]) }
+     ) ],
+     target        =&amp;gt; &#39;test&#39;,
+     prereq_target =&amp;gt; &#39;install&#39;,
+ );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you need to fine-tune various aspects during testing (timeout, prerequisite handling, etc.), then please consult the source code of &lt;em&gt;cpansmoke&lt;/em&gt;; most tricks involved are documented in comments.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, the process of editing and sending out reports remains as the only non-programmable part, since the &lt;em&gt;cpantest&lt;/em&gt; script doesn&amp;rsquo;t exist as a module. Although Skud has a &lt;strong&gt;CPAN::Test::Reporter&lt;/strong&gt; on CPAN, its format is sadly out-of-sync with &lt;em&gt;cpantest&lt;/em&gt;, and may generate invalid reports (as of version &lt;code&gt;0.02&lt;/code&gt;). Any offers to back-port the &lt;em&gt;cpantest&lt;/em&gt; script into that module would be greatly appreciated.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;As &lt;a href=&#34;#f5&#34;&gt;&lt;em&gt;purl&lt;/em&gt;&lt;/a&gt; said, ``CPAN is a cultural mechanism.&amp;rdquo; It is not an abstraction filled with code, but rather depends on people caring enough to share code, as well as sharing useful feedback in order to improve each other&amp;rsquo;s code.&lt;/p&gt;
+
+&lt;p&gt;With the advent of &lt;a href=&#34;#f6&#34;&gt;bug-tracking service&lt;/a&gt; and automatic testing, the social collaboration aspect of CPAN is greatly extended, and could be developed further into a full-featured Tinderbox system, or linked with each module&amp;rsquo;s source-control repositories.&lt;/p&gt;
+
+&lt;p&gt;Also, since &lt;strong&gt;CPANPLUS&lt;/strong&gt; is designed to accommodate different package formats and distribution systems, it provides a solid foundation for projects like &lt;strong&gt;Module::Build&lt;/strong&gt; (&lt;code&gt;make&lt;/code&gt;-less installs), &lt;strong&gt;NAPC&lt;/strong&gt; (distributed CPAN) and &lt;strong&gt;ExtUtils::AutoInstall&lt;/strong&gt; (feature-based dependency probing)&amp;hellip; the possibilities are staggering, and you certainly won&amp;rsquo;t be disappointed in finding an interesting project to work on. Happy hacking!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-acknowledgements-acknowledgements-span&#34;&gt;&lt;span id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Although I have done some modest work in integrating &lt;strong&gt;CPANPLUS&lt;/strong&gt; with CPAN testing, the work is really built on contributions from several brilliant individuals:&lt;/p&gt;
+
+&lt;p&gt;First, I&amp;rsquo;d like to dedicate this article to Elaine -HFB- Ashton, for her tireless efforts on Perl advocacy, and for sponsoring my works as described in this article.&lt;/p&gt;
+
+&lt;p&gt;Thanks also goes to Graham Barr and Chris Nandor, for establishing the CPAN Testers at the first place, and coming up with two other important cultural mechanisms: &lt;em&gt;CPAN Search&lt;/em&gt; and &lt;em&gt;Use Perl;&lt;/em&gt; respectively.&lt;/p&gt;
+
+&lt;p&gt;To Jos Boumans, Joshua Boschert, Ann Barcomb and everybody in the &lt;strong&gt;CPANPLUS&lt;/strong&gt; team &amp;ndash; you guys rock! Special thanks for another team member, Michael Schwern, for reminding everybody constantly that &lt;em&gt;Kwalitee Is Job One&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;To Paul Schinder, the greatest tester of all time, who submitted 10551 reports by hand out of 23203 to date, and kept CPAN Testers alive for a long time. And thanks for every fellow CPAN Tester who have committed their valuable time &amp;ndash; I hope &lt;em&gt;cpansmoke&lt;/em&gt; can shoulder your burden a little bit.&lt;/p&gt;
+
+&lt;p&gt;To Simon Cozens, for his swiss-nuke &lt;strong&gt;Mail::Audit&lt;/strong&gt; module, and for keep asking me to write &amp;lsquo;something neat&amp;rsquo; for &lt;em&gt;perl.com&lt;/em&gt;. :-)&lt;/p&gt;
+
+&lt;p&gt;To Jarkko Hietaniemi, for establishing &lt;strong&gt;CPAN&lt;/strong&gt;; and to Andreas J. Koenig, for maintaining &lt;strong&gt;PAUSE&lt;/strong&gt; and showing us what is possible with &lt;strong&gt;CPAN.pm&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, if you decide to follow the steps in this article and participate in the testing process, then you have my utmost gratitude; let&amp;rsquo;s make the world a better place.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-footnotes-footnotes-span&#34;&gt;&lt;span id=&#34;footnotes&#34;&gt;Footnotes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;span id=&#34;f1&#34;&gt;It&amp;rsquo;s an introductory text for the &lt;strong&gt;CPANPLUS&lt;/strong&gt; project, available at&lt;/span&gt;&lt;a href=&#34;http://localhost:1313/pub/2002/03/26/cpanplus.html&#34;&gt;http://www.perl.com/pub/2002/03/26/cpanplus.html&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;f2&#34;&gt;Jos later confessed that these are not exactly Schwern&amp;rsquo;s words; he just made the quote up for dramatic effect.&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;f3&#34;&gt;With ActivePerl on Windows, simply replace all &lt;code&gt;make&lt;/code&gt; with &lt;code&gt;nmake&lt;/code&gt;. If you don&amp;rsquo;t have &lt;em&gt;nmake.exe&lt;/em&gt; in your &lt;code&gt;%PATH&lt;/code&gt;, our &lt;em&gt;Makefile.PL&lt;/em&gt; is smart enough to fetch and install it for you.&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;f5&#34;&gt;Purl, the magnet #perl infobot, is also a cultural mechanism herself; see&lt;/span&gt;&lt;a href=&#34;http://www.infobot.org/&#34;&gt;http://www.infobot.org/&lt;/a&gt; for additional information.&lt;/li&gt;
+&lt;li&gt;&lt;span id=&#34;f6&#34;&gt;That&amp;rsquo;s Jesse Vincent&amp;rsquo;s&lt;/span&gt;&lt;a href=&#34;http://rt.cpan.org/&#34;&gt;http://rt.cpan.org/&lt;/a&gt;, which tracks bugs in every distribution released through CPAN.&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

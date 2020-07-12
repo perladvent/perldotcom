@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Text Xslate on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/text-xslate/</link>
+    <description>Recent content in Text Xslate on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 28 Jan 2018 21:50:37 +0000</lastBuildDate>
+    <atom:link href="/tags/text-xslate/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>When Perl isn&#39;t fast enough</title>
+      <link>http://localhost:1313/article/when-perl-isn-t-fast-enough/</link>
+      <pubDate>Sun, 28 Jan 2018 21:50:37 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/when-perl-isn-t-fast-enough/</guid>
+      <description>
+
+&lt;p&gt;Last year at $work we held a web application &amp;ldquo;bake off&amp;rdquo; competition, in order to find a suitable technology stack for serving some important pages on our website, as fast as possible. Our developers were allowed to compete individually or in a team, and they could use any programming language they wanted.&lt;/p&gt;
+
+&lt;p&gt;The existing solution was based on Perl&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Catalyst&#34;&gt;Catalyst&lt;/a&gt; framework using &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;Template::Toolkit&lt;/a&gt;, and the code had become utterly bloated, to the point at which it took several hundred ms to serve the pages. The issue wasn&amp;rsquo;t with the technology per se: a vanilla Catalyst application can serve responses in under 10ms, the problem was that the application code was shared among several different teams, and as each team added various features and functions, performance degraded.&lt;/p&gt;
+
+&lt;p&gt;The overall aim then, was to see what we could do if we &amp;ldquo;burned it down&amp;rdquo; and started again. The bake off generated a lot of buzz: we were given carte blanche to spend as much time as needed working on it, and it was a lot of fun. We had entries in Python, Go, Java, Haskell, Lua, Node, Elixir and of course, Perl.&lt;/p&gt;
+
+&lt;h1 id=&#34;round-1&#34;&gt;Round 1&lt;/h1&gt;
+
+&lt;p&gt;The goal of the first round was to develop a web application that would respond to certain GET requests by serving a particular template. Much of the template was static, but there was some dynamic logic to it.&lt;/p&gt;
+
+&lt;p&gt;My team built a solution on top of &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt;. We created thin request and response classes in &lt;a href=&#34;https://metacpan.org/pod/Moo&#34;&gt;Moo&lt;/a&gt;, a router coded in C (&lt;a href=&#34;https://metacpan.org/pod/Router::XS&#34;&gt;Router::XS&lt;/a&gt;), and used &lt;a href=&#34;https://metacpan.org/pod/Text::XSlate&#34;&gt;Text::XSlate&lt;/a&gt; for the template. The solution kicked ass - it was able to serve over 10,000 requests per second, and we placed second overall, losing out only to a Java entry.&lt;/p&gt;
+
+&lt;h1 id=&#34;round-2&#34;&gt;Round 2&lt;/h1&gt;
+
+&lt;p&gt;In round 2 things got trickier: our solutions would be required to make several requests to other internal services, in order to formulate the response. Additionally, our solutions would be judged for a &amp;ldquo;joy&amp;rdquo; factor: &lt;em&gt;would developers love working with this stack?&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To satisfy the &amp;ldquo;joy&amp;rdquo; factor, we merged our code with another team&amp;rsquo;s entry, based on &lt;a href=&#34;https://metacpan.org/pod/Kelp&#34;&gt;Kelp&lt;/a&gt;. That gave us a real web framework to develop with, as opposed to the threadbare classes we had developed in round 1.&lt;/p&gt;
+
+&lt;p&gt;The requirement to make several requests to other services hurt us though. The kicker was, we had to make the requests concurrently &lt;em&gt;and&lt;/em&gt; compute concurrently on the responses. This was because the data needed for one request was coming from two separate data stores that could be fetched and processed and rendered concurrently. In other words, we needed threading.&lt;/p&gt;
+
+&lt;p&gt;Perl can do asynchronous programming with modules like &lt;a href=&#34;https://metacpan.org/pod/IO::Async&#34;&gt;IO::Async&lt;/a&gt; or &lt;a href=&#34;https://metacpan.org/pod/Coro&#34;&gt;Coro&lt;/a&gt;, but it&amp;rsquo;s single threaded. You &lt;em&gt;can&lt;/em&gt; compile Perl with &lt;a href=&#34;https://perldoc.perl.org/threads.html&#34;&gt;threads&lt;/a&gt;, which provide multi-threaded computing. They were developed back in the day by Microsoft to enable &lt;a href=&#34;https://perl.apache.org/&#34;&gt;mod_perl&lt;/a&gt; to run on Windows, in lieu of &lt;code&gt;fork()&lt;/code&gt;. Perl&amp;rsquo;s threads work by cloning the Perl interpreter&amp;rsquo;s internal data structures, and passing around a thread context variable to tell Perl which thread is requesting what data. These have predictable drawbacks: they require more system resources because of the cloned data, and each thread runs &lt;em&gt;slower&lt;/em&gt; than a single threaded Perl because of all the thread context checks.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s inability to multi-thread efficiently forced us to stay single-threaded and it really burnt us: the best performing Java and Go entries&amp;rsquo; throughput were within 3% of each other, but our solution was 50% slower.&lt;/p&gt;
+
+&lt;h1 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Perl is such a versatile language: from the terminal, to scripting and application programming, it excels in many areas. We were able to develop a lightning-fast application that competed with, and bested several high performance language competitors. Ultimately though, $work decided to use Go as for this solution we needed a highly scalable, performant stack.&lt;/p&gt;
+
+&lt;p&gt;Perl 6 might be a viable alternative soon. The latest 6.c &lt;a href=&#34;https://perl6.org/downloads/&#34;&gt;release&lt;/a&gt; includes a hybrid (M:N) threading model via a scheduler which comes into play when using &lt;a href=&#34;https://docs.perl6.org/language/concurrency&#34;&gt;higher level constructs&lt;/a&gt;. To bypass the scheduler and get more control, it has a &lt;a href=&#34;https://docs.perl6.org/type/Thread&#34;&gt;Thread&lt;/a&gt; class, for which each instance maps 1:1 with an OS thread. I suspect it is too slow to compete right now, but I will be watching future Perl 6 benchmarks with interest.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+Cover image from &lt;a href=&#34;http://www.psdgraphics.com/psd/rocket-icon-psd/&#34;&gt;psdgraphics.com&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - October 2016</title>
+      <link>http://localhost:1313/article/what-s-new-on-cpan---october-2016/</link>
+      <pubDate>Thu, 03 Nov 2016 03:57:34 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/what-s-new-on-cpan---october-2016/</guid>
+      <description>
+
+&lt;p&gt;Welcome to &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo;, a curated look at last month&amp;rsquo;s new CPAN uploads for your reading and programming pleasure. Enjoy!&lt;/p&gt;
+
+&lt;h3 id=&#34;apis-apps&#34;&gt;APIs &amp;amp; Apps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Retrieve status information about Open Tibia MMORPG Servers with &lt;a href=&#34;https://metacpan.org/pod/Net::OTServ&#34;&gt;Net::OTServ&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Business::TNT::ExpressConnect&#34;&gt;Business::TNT::ExpressConnect&lt;/a&gt; provides an interface to the shipping company&amp;rsquo;s API&lt;/li&gt;
+&lt;li&gt;Tarantool is an in memory no-SQL store, use it with Perl using &lt;a href=&#34;https://metacpan.org/pod/DR::Tnt&#34;&gt;DR::Tnt&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Pandoc&#34;&gt;Pandoc&lt;/a&gt; is a wrapper for the useful document conversion tool&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/stasis&#34;&gt;stasis&lt;/a&gt; is an encrypting archive tool using tar, gpg and Perl. It is also a sneaky indexed package without a .pm file (disclosure - I am the module author).&lt;/li&gt;
+&lt;li&gt;Get subtitles for videos using &lt;a href=&#34;https://metacpan.org/pod/WWW::SubDB&#34;&gt;WWW::SubDB&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;config-devops&#34;&gt;Config &amp;amp; Devops&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Bread::Runner&#34;&gt;Bread::Runner&lt;/a&gt; is a generic app runner for Bread::Board, the Inversion of Control framework&lt;/li&gt;
+&lt;li&gt;Share locks with child processes using &lt;a href=&#34;https://metacpan.org/pod/File::Lock::ParentLock&#34;&gt;File::Lock::ParentLock&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Linux::Netfilter::Log&#34;&gt;Linux::Netfilter::Log&lt;/a&gt; is a Linux netfilter logging (libnetfilter_log) wrapper&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;data&#34;&gt;Data&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/BSON::XS&#34;&gt;BSON::XS&lt;/a&gt; is an XS implementation of MongoDB&amp;rsquo;s BSON serialization&lt;/li&gt;
+&lt;li&gt;Ajv is the premier JavaScript JSON schema validator, now you can use it with &lt;a href=&#34;https://metacpan.org/pod/Data::JSONSchema::Ajv&#34;&gt;Data::JSONSchema::Ajv&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Data::MoneyCurrency&#34;&gt;Data::MoneyCurrency&lt;/a&gt; provides data about countries&amp;rsquo; currencies&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;Templatize&amp;rdquo; data with &lt;a href=&#34;https://metacpan.org/pod/Data::Xslate&#34;&gt;Data::Xslate&lt;/a&gt; - useful for conditional config files and more&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/File::JSON::Slurper&#34;&gt;File::JSON::Slurper&lt;/a&gt; slurps and decodes JSON files in a single step&lt;/li&gt;
+&lt;li&gt;This looks fun; create black and white PNG files from arrays using &lt;a href=&#34;https://metacpan.org/pod/Image::PNG::Write::BW&#34;&gt;Image::PNG::Write::BW&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Test::Postgresql58&#34;&gt;Test::Postgresql58&lt;/a&gt; is a Perl 5.8 compatible version of Test::Postgresql&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;development-version-control&#34;&gt;Development &amp;amp; Version Control&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Distribute tasks among multiple workers with &lt;a href=&#34;https://metacpan.org/pod/Broker::Async&#34;&gt;Broker::Async&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Continual::Process&#34;&gt;Continual::Process&lt;/a&gt; keeps processes running &amp;hellip; forever&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Import::Box&#34;&gt;Import::Box&lt;/a&gt; is a new way to import functions but not pollute the importing namespace&lt;/li&gt;
+&lt;li&gt;Using Test2 and missing &lt;code&gt;explain()&lt;/code&gt;? Then you&amp;rsquo;ll love &lt;a href=&#34;https://metacpan.org/pod/Test2::Tools::Explain&#34;&gt;Test2::Tools::Explain&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/T&#34;&gt;T&lt;/a&gt; encapsulates test imports to avoid polluting main (uses Import::Box)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;hardware&#34;&gt;Hardware&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Device::Chip::HTU21D&#34;&gt;Device::Chip::HTU21D&lt;/a&gt; is a chip driver for HTU21D&lt;/li&gt;
+&lt;li&gt;Control Gqrx (software driven radio) using the Remote Control protocol using &lt;a href=&#34;https://metacpan.org/pod/GQRX::Remote&#34;&gt;GQRX::Remote&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/App::RPi::EnvUI&#34;&gt;App::RPi::EnvUI&lt;/a&gt; is a single page app grow room environment control for Raspberry Pi&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;language-international&#34;&gt;Language &amp;amp; International&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Compute verb actants for Portuguese using &lt;a href=&#34;https://metacpan.org/pod/Lingua::PT::Actants&#34;&gt;Lingua::PT::Actants&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;science-mathematics&#34;&gt;Science &amp;amp; Mathematics&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Conveniently create and consume authenticated and encrypted messages using &lt;a href=&#34;https://metacpan.org/pod/Crypt::EAMessage&#34;&gt;Crypt::EAMessage&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/PDLx::DetachedObject&#34;&gt;PDLx::DetachedObject&lt;/a&gt; enables subclassing the non-standard PDL classes&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/PDLx::Mask&#34;&gt;PDLx::Mask&lt;/a&gt; can mask multiple piddles with automatic two way feedback&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web&#34;&gt;Web&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Don&amp;rsquo;t call it a framework; &lt;a href=&#34;https://metacpan.org/pod/MVC::Neaf&#34;&gt;MVC::Neaf&lt;/a&gt; is a new, minimalist web tool&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

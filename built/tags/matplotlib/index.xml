@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Matplotlib on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/matplotlib/</link>
+    <description>Recent content in Matplotlib on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 24 Aug 2017 15:27:57 +0000</lastBuildDate>
+    <atom:link href="/tags/matplotlib/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Plotting With Perl 6</title>
+      <link>http://localhost:1313/article/plotting-with-perl-6/</link>
+      <pubDate>Thu, 24 Aug 2017 15:27:57 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/plotting-with-perl-6/</guid>
+      <description>
+
+&lt;p&gt;(This chapter originally appeared in &lt;a href=&#34;http://www.apress.com/9781484228982&#34;&gt;Perl 6 Fundamentals: A Primer with
+Examples, Projects, and Case Studies&lt;/a&gt;, by Moritz Lenz, published 2017 by Apress Media, LLC. Reprinted with permission.)&lt;/p&gt;
+
+&lt;p&gt;Occasionally I come across git repositories where I want to know how active
+they are and who the main developers are.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s develop a script that plots the commit history, and explore how to
+use Python modules in Perl 6.&lt;/p&gt;
+
+&lt;h2 id=&#34;extracting-the-stats&#34;&gt;Extracting the Stats&lt;/h2&gt;
+
+&lt;p&gt;We want to plot the number of commits by author and date.
+We can get this information easily by passing some options to &lt;code&gt;git log&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $proc &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; run :out, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;git log &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;date&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;short &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;pretty&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;format:%ad&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;%an&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; (%total, %by&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;author, %dates);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; $proc&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;out&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;lines &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $line {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ( $date, $author ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $line&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;split: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;!&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;
+    %total{$author}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    %by&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;author{$author}{$date}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    %dates{$date}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;run&lt;/code&gt; executes an external command and &lt;code&gt;:out&lt;/code&gt; tells it to capture the
+command&amp;rsquo;s output, making it available as &lt;code&gt;$proc.out&lt;/code&gt;. The command is
+a list, with the first element being the actual executable and the rest of
+the elements are command line arguments to this executable.&lt;/p&gt;
+
+&lt;p&gt;Here &lt;code&gt;git log&lt;/code&gt; gets the options &lt;code&gt;--date short --pretty=format:%ad!%an&lt;/code&gt;, which
+instructs it to produce lines like &lt;code&gt;2017-03-01!John Doe&lt;/code&gt;. This line
+can be parsed with a simple call to &lt;code&gt;$line.split: &#39;!&#39;, 2&lt;/code&gt;, which splits
+on the &lt;code&gt;!&lt;/code&gt; and limits the result to two elements. Assigning it to a
+two-element list &lt;code&gt;( $date, $author )&lt;/code&gt; unpacks it. We then use hashes to
+count commits by author (in &lt;code&gt;%total&lt;/code&gt;), by author and date (&lt;code&gt;%by-author&lt;/code&gt;),
+and finally by date. In the second case, &lt;code&gt;%by-author{$author}&lt;/code&gt; isn&amp;rsquo;t
+even a hash yet and we can still hash-index it. This is due to a feature
+called &lt;em&gt;autovivification&lt;/em&gt;, which automatically creates (&amp;ldquo;vivifies&amp;rdquo;) objects
+where we need them. The use of &lt;code&gt;++&lt;/code&gt; creates integers, &lt;code&gt;{...}&lt;/code&gt; indexing creates
+hashes, &lt;code&gt;[...]&lt;/code&gt; indexing, &lt;code&gt;.push&lt;/code&gt; creates arrays, and so on.&lt;/p&gt;
+
+&lt;p&gt;To get from these hashes to the top contributors by commit count, we can
+sort &lt;code&gt;%total&lt;/code&gt; by value. Since this sorts in ascending order, sorting
+by the negative value returns the list in descending order. The list contains
+&lt;a href=&#34;https://docs.perl6.org/types/Pair&#34;&gt;Pair&lt;/a&gt; objects, where we only want the
+first five, and only their keys:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %total&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sort(&lt;span style=&#34;color:#f92672&#34;&gt;-*.&lt;/span&gt;value)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;head(&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map(&lt;span style=&#34;color:#f92672&#34;&gt;*.&lt;/span&gt;key);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For each author, we can extract the dates of their activity and their
+commit counts like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @dates  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %by&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;author{$author}&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;keys&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sort;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @counts &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %by&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;author{$author}{@dates};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The last line uses &lt;em&gt;slicing&lt;/em&gt;, that is, indexing a hash with a list to return
+a list of elements.&lt;/p&gt;
+
+&lt;h2 id=&#34;plotting-with-python&#34;&gt;Plotting with Python&lt;/h2&gt;
+
+&lt;p&gt;Matplotlib is a very versatile library for all sorts of plotting and
+visualization tasks. It is based on &lt;a href=&#34;http://www.numpy.org/&#34;&gt;NumPy&lt;/a&gt;, a Python library
+for scientific and numeric computing.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://matplotlib.org/&#34;&gt;Matplotlib&lt;/a&gt; is written in Python and for Python programs, but that
+won&amp;rsquo;t stop us from using it in a Perl 6 program.&lt;/p&gt;
+
+&lt;p&gt;But first, let&amp;rsquo;s take a look at a basic plotting example that uses dates
+on the x-axis:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; datetime
+&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; matplotlib.pyplot &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; plt
+
+fig, subplots &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;subplots()
+subplots&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plot(
+    [datetime&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;date(&lt;span style=&#34;color:#ae81ff&#34;&gt;2017&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;), datetime&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;date(&lt;span style=&#34;color:#ae81ff&#34;&gt;2017&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;), datetime&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;date(&lt;span style=&#34;color:#ae81ff&#34;&gt;2017&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;)],
+    [ &lt;span style=&#34;color:#ae81ff&#34;&gt;42&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;23&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;42&lt;/span&gt; ],
+    label&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;An example&amp;#39;&lt;/span&gt;,
+)
+subplots&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;legend(loc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;upper center&amp;#39;&lt;/span&gt;, shadow&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;True)
+fig&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;autofmt_xdate()
+plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show()&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To make this run, you have to install Python 2.7 and matplotlib&lt;sup&gt;&lt;a href=&#34;#python2-only&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;. You can do
+this on Debian-based Linux systems with &lt;code&gt;apt-get install -y python-matplotlib&lt;/code&gt;.
+The package name is the same on RPM-based distributions such as CentOS or SUSE
+Linux. MacOS users are advised to install Python 2.7 through homebrew and
+macports and then use &lt;code&gt;pip2 install matplotlib&lt;/code&gt; or &lt;code&gt;pip2.7 install
+matplotlib&lt;/code&gt; to get the library. Windows installation is probably easiest
+through the &lt;a href=&#34;https://conda.io/docs/&#34;&gt;conda&lt;/a&gt; package manager, which offers
+pre-built binaries of both Python and matplotlib.&lt;/p&gt;
+
+&lt;p&gt;When you run this script with &lt;code&gt;python2.7 dates.py&lt;/code&gt;, it opens a GUI window,
+showing the plot and some controls, which allow you to zoom, scroll, and
+write the plot graphic to a file:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/plotting-with-perl-6/matplotlib-window.png&#34; alt=&#34;Basic matplotlib plotting window&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;bridging-the-gap&#34;&gt;Bridging the Gap&lt;/h2&gt;
+
+&lt;p&gt;The Rakudo Perl 6 compiler comes with a handy &lt;a href=&#34;https://docs.perl6.org/language/nativecall&#34;&gt;library for calling foreign
+functions&lt;/a&gt; &amp;ndash; called &lt;code&gt;NativeCall&lt;/code&gt; &amp;ndash; which allows you to
+call functions written in C, or anything with a compatible binary interface.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://github.com/niner/Inline-Python&#34;&gt;Inline::Python&lt;/a&gt; library uses
+the native call functionality to talk to Python&amp;rsquo;s C API and offers
+interoperability between Perl 6 and Python code. At the time of writing, this
+interoperability is still fragile in places, but can be worth using for
+some of the great libraries that Python has to offer.&lt;/p&gt;
+
+&lt;p&gt;To install &lt;code&gt;Inline::Python&lt;/code&gt;, you must have a C compiler available, and then
+run&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ zef install Inline::Python
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you can start to run Python 2 code in your Perl 6 programs:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Inline::Python;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $py &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Inline::Python&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+$py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;run: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print(&amp;#34;Hello, Perl 6&amp;#34;)&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Besides the &lt;code&gt;run&lt;/code&gt; method, which takes a string of Python code and executes it,
+you can also use &lt;code&gt;call&lt;/code&gt; to call Python routines by specifying the namespace,
+the routine to call, and a list of arguments:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Inline::Python;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $py &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Inline::Python&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+$py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;run(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;import datetime&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $date &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;datetime&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;date&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2017&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;31&lt;/span&gt;);
+$py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;__builtin__&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print&amp;#39;&lt;/span&gt;, $date);    &lt;span style=&#34;color:#75715e&#34;&gt;# 2017-01-31&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The arguments that you pass to &lt;code&gt;call&lt;/code&gt; are Perl 6 objects, such as the three &lt;code&gt;Int&lt;/code&gt;
+objects in this example. &lt;code&gt;Inline::Python&lt;/code&gt; automatically translates them into
+the corresponding Python built-in data structure. It translates numbers,
+strings, arrays, and hashes. Return values are also translated in the opposite
+direction, though since Python 2 does not distinguish properly between
+byte and Unicode strings, Python strings end up as buffers in Perl 6.&lt;/p&gt;
+
+&lt;p&gt;Objects that &lt;code&gt;Inline::Python&lt;/code&gt; cannot translate are handled as opaque objects
+on the Perl 6 side. You can pass them back into Python routines (as shown
+with the &lt;code&gt;print&lt;/code&gt; call above) and you can call methods on them:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;say $date&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;isoformat()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;decode;               &lt;span style=&#34;color:#75715e&#34;&gt;# 2017-01-31&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Perl 6 exposes attributes through methods, so Perl 6 has no syntax for
+accessing attributes from foreign objects directly. For instance, if you try to access
+the &lt;code&gt;year&lt;/code&gt; attribute of &lt;code&gt;datetime.date&lt;/code&gt; through the normal method
+call syntax, you get an error:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;say $date&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;year;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;dies with&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&#39;int&#39; object is not callable
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instead, you have to use the &lt;code&gt;getattr&lt;/code&gt; builtin:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;say $py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;__builtin__&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;getattr&amp;#39;&lt;/span&gt;, $date, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;year&amp;#39;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&#34;using-the-bridge-to-plot&#34;&gt;Using the Bridge to Plot&lt;/h2&gt;
+
+&lt;p&gt;We need access to two namespaces in Python, &lt;code&gt;datetime&lt;/code&gt; and &lt;code&gt;matplotlib.pyplot&lt;/code&gt;,
+so let&amp;rsquo;s start by importing them and writing some short helpers:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $py &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Inline::Python&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+$py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;run(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;import datetime&amp;#39;&lt;/span&gt;);
+$py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;run(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;import matplotlib.pyplot&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;plot&lt;/span&gt;(Str $name, |c) {
+    $py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;matplotlib.pyplot&amp;#39;&lt;/span&gt;, $name, &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;c);
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;pydate&lt;/span&gt;(Str $d) {
+    $py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;datetime&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;date&amp;#39;&lt;/span&gt;, $d&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;split(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map(&lt;span style=&#34;color:#f92672&#34;&gt;*.&lt;/span&gt;Int));
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We can now call &lt;code&gt;pydate(&#39;2017-03-01&#39;)&lt;/code&gt; to create a Python &lt;code&gt;datetime.date&lt;/code&gt;
+object from an ISO-formatted string and call the &lt;code&gt;plot&lt;/code&gt; function to access
+functionality from matplotlib:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($figure, $subplots) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; plot(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;subplots&amp;#39;&lt;/span&gt;);
+$figure&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;autofmt_xdate();
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @dates &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %dates&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;keys&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sort;
+$subplots&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plot:
+    $[@dates&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;pydate)],
+    $[ %dates{@dates} ],
+    label     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Total&amp;#39;&lt;/span&gt;,
+    marker    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;,
+    linestyle &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The Perl 6 call &lt;code&gt;plot(&#39;subplots&#39;)&lt;/code&gt; corresponds to the Python code
+&lt;code&gt;fig, subplots = plt.subplots()&lt;/code&gt;. Passing arrays to Python functions needs
+a bit of extra work, because &lt;code&gt;Inline::Python&lt;/code&gt; flattens arrays. Using an extra &lt;code&gt;$&lt;/code&gt;
+sigil in front of an array puts it into an extra scalar and thus prevents
+the flattening.&lt;/p&gt;
+
+&lt;p&gt;Now we can actually plot the number of commits by author, add a legend, and
+plot the result:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; @top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $author {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @dates &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %by&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;author{$author}&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;keys&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sort;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @counts &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %by&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;author{$author}{@dates};
+    $subplots&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plot:
+        $[ @dates&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;pydate) ],
+        $@counts,
+        label     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $author,
+        marker    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;,
+        linestyle &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+}
+
+
+$subplots&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;legend(loc&lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;upper center&amp;#39;&lt;/span&gt;, shadow&lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;True);
+
+plot(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;title&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Contributions per day&amp;#39;&lt;/span&gt;);
+plot(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;show&amp;#39;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;When run in the &lt;a href=&#34;https://github.com/ugexe/zef&#34;&gt;zef git repository&lt;/a&gt;, it produces
+this plot:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/plotting-with-perl-6/zef-contributors.png&#34; alt=&#34;Contributions to zef, a Perl 6 module installer&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;stacked-plots&#34;&gt;Stacked Plots&lt;/h2&gt;
+
+&lt;p&gt;I am not yet happy with the plot, so I want to explore using stacked
+plots for presenting the same information. In a regular plot, the
+y-coordinate of each plotted value is proportional to its value. In a
+stacked plot, it is the distance to the previous value that is
+proportional to its value. This is nice for values that add up to a
+total that is also interesting.&lt;/p&gt;
+
+&lt;p&gt;Matplotlib offers a &lt;a href=&#34;http://matplotlib.org/devdocs/api/_as_gen/matplotlib.axes.Axes.stackplot.html&#34;&gt;method called
+&lt;code&gt;stackplot&lt;/code&gt;&lt;/a&gt;
+for this task. Contrary to multiple &lt;code&gt;plot&lt;/code&gt; calls on a subplot object, it
+requires a shared x-axis for all data series. Hence we must construct
+one array for each author of git commits, where dates with no value are
+set to zero.&lt;/p&gt;
+
+&lt;p&gt;This time we have to construct an array of arrays where each inner array
+has the values for one author:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @dates &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %dates&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;keys&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sort;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @stack &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $[] xx @top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; @dates &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $d {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; @top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;kv &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $idx, $author {
+        @stack[$idx]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;push: %by&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;author{$author}{$d} &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now plotting becomes a simple matter of a method call, followed by the
+usual commands to add a title and show the plot:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$subplots&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;stackplot($[@dates&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;pydate)], @stack);
+plot(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;title&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Contributions per day&amp;#39;&lt;/span&gt;);
+plot(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;show&amp;#39;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The result (again run on the zef source repository) is this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/plotting-with-perl-6/zef-contributors-stacked-1.png&#34; alt=&#34;Stacked plot of zef contributions over time&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Comparing this to the previous visualization reveals a discrepancy:
+There were no commits in 2014, and yet the stacked plot makes it appear
+this way. In fact, the previous plots would have shown the same
+&amp;ldquo;alternative facts&amp;rdquo; if we had chosen lines instead of points. It comes
+from matplotlib (like nearly all plotting libraries) interpolates
+linearly between data points. But in our case, a date with no data
+points means zero commits happened on that date.&lt;/p&gt;
+
+&lt;p&gt;To communicate this to matplotlib, we must explicitly insert zero values
+for missing dates. This can be achieved by replacing&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @dates &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %dates&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;keys&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sort;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;with the line&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @dates &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %dates&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;keys&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;minmax;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;a href=&#34;https://docs.perl6.org/routine/minmax#class_Any&#34;&gt;&lt;code&gt;minmax&lt;/code&gt; method&lt;/a&gt;
+finds the minimal and maximal values, and returns them in a
+&lt;a href=&#34;https://docs.perl6.org/type/Range&#34;&gt;Range&lt;/a&gt;. Assigning the range to an
+array turns it into an array of all values between the minimal and the
+maximal value. The logic for assembling the &lt;code&gt;@stack&lt;/code&gt; variable already
+maps missing values to zero.&lt;/p&gt;
+
+&lt;p&gt;The result looks a bit better, but still far from perfect:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/plotting-with-perl-6/zef-contributors-stacked-2.png&#34; alt=&#34;Stacked plot of zef contributions over time, with missing dates mapped to zero&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Thinking more about the problem, contributions from separate days should
+not be joined together, because it produces misleading results.
+Matplotlib doesn&amp;rsquo;t support adding a legend automatically to stacked
+plots, so this seems to be to be a dead end.&lt;/p&gt;
+
+&lt;p&gt;Since a dot plot didn&amp;rsquo;t work very well, let&amp;rsquo;s try a different kind of
+plot that represents each data point separately: a bar chart, or more
+specifically, a stacked bar chart. Matplotlib offers the &lt;code&gt;bar&lt;/code&gt; plotting
+method where the named parameter &lt;code&gt;bottom&lt;/code&gt; can be used to generate the
+stacking:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @dates &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %dates&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;keys&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;sort;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @stack &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $[] xx @top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @bottom &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $[] xx @top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; @dates &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $d {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bottom &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; @top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;kv &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $idx, $author {
+        @bottom[$idx]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;push: $bottom;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $value &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; %by&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;author{$author}{$d} &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+        @stack[$idx]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;push: $value;
+        $bottom &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; $value;
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We need to supply color names ourselves and set the edge color of the
+bars to the same color, otherwise the black edge color dominates the
+result:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $width &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @colors &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;red green blue yellow black&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @plots;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; @top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;kv &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $idx, $author {
+    @plots&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;push: plot(
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bar&amp;#39;&lt;/span&gt;,
+        $[@dates&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;pydate)],
+        @stack[$idx],
+        $width,
+        bottom &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; @bottom[$idx],
+        color &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; @colors[$idx],
+        edgecolor &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; @colors[$idx],
+    );
+}
+plot(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;legend&amp;#39;&lt;/span&gt;, $@plots, $@top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors);
+
+plot(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;title&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Contributions per day&amp;#39;&lt;/span&gt;);
+plot(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;show&amp;#39;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This produces the first plot that&amp;rsquo;s actually informative and not
+misleading (provided you&amp;rsquo;re not color blind):&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/plotting-with-perl-6/zef-contributors-bars.png&#34; alt=&#34;Stacked bar plot of zef contributions over time&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;If you want to improve the result further, you could experiment with
+limiting the number of bars by lumping together contributions by week or
+month (or maybe &lt;code&gt;$n&lt;/code&gt;-day period).&lt;/p&gt;
+
+&lt;h2 id=&#34;idiomatic-use-of-inline-python&#34;&gt;Idiomatic Use of Inline::Python&lt;/h2&gt;
+
+&lt;p&gt;Now that the plots look informative and correct, it&amp;rsquo;s time to explore how
+to better emulate the typical Python APIs through &lt;code&gt;Inline::Python&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;types-of-python-apis&#34;&gt;Types of Python APIs&lt;/h3&gt;
+
+&lt;p&gt;Python is an object-oriented language, so many APIs involve method
+calls, which &lt;code&gt;Inline::Python&lt;/code&gt; helpfully automatically translates for us.&lt;/p&gt;
+
+&lt;p&gt;But the objects must come from somewhere and typically this is by
+calling a function that returns an object, or by instantiating a class.
+In Python, those two are really the same under the hood, since
+instantiating a class is the same as calling the class as if it were a
+function.&lt;/p&gt;
+
+&lt;p&gt;An example of this (in Python) would be&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; matplotlib.pyplot &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; subplots
+result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; subplots()&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;But the matplotlib documentation tends to use another, equivalent
+syntax:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; matplotlib.pyplot &lt;span style=&#34;color:#f92672&#34;&gt;as&lt;/span&gt; plt
+result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; plt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;subplots()&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This uses the &lt;code&gt;subplots&lt;/code&gt; symbol (class or function) as a method on the
+module &lt;code&gt;matplotlib.pyplot&lt;/code&gt;, which the import statement aliases to &lt;code&gt;plt&lt;/code&gt;.
+This is a more object-oriented syntax for the same API.&lt;/p&gt;
+
+&lt;h3 id=&#34;mapping-the-function-api&#34;&gt;Mapping the Function API&lt;/h3&gt;
+
+&lt;p&gt;The previous code examples used this Perl 6 code to call the &lt;code&gt;subplots&lt;/code&gt;
+symbol:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $py &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Inline::Python&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+$py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;run(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;import matplotlib.pyplot&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;plot&lt;/span&gt;(Str $name, |c) {
+    $py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;matplotlib.pyplot&amp;#39;&lt;/span&gt;, $name, &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;c);
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($figure, $subplots) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; plot(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;subplots&amp;#39;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If we want to call &lt;code&gt;subplots()&lt;/code&gt; instead of &lt;code&gt;plot(&#39;subplots&#39;)&lt;/code&gt;, and
+&lt;code&gt;bar(args)&lt;/code&gt; instead of &lt;code&gt;plot(&#39;bar&#39;, args)&lt;/code&gt;, we can use a function to
+generate wrapper functions:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $py &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Inline::Python&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;gen&lt;/span&gt;(Str $namespace, *@names) {
+    $py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;run(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;import $namespace&amp;#34;&lt;/span&gt;);
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; @names&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;map: &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $name {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; (|args) {
+            $py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call($namespace, $name, &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;args);
+        }
+    }
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;subplots, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;bar, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;legend, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;title, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;show)
+    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; gen(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;matplotlib.pyplot&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;subplots bar legend title show&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($figure, $subplots) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; subplots();
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# more code here&lt;/span&gt;
+
+legend($@plots, $@top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors);
+title(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Contributions per day&amp;#39;&lt;/span&gt;);
+show();&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This makes the functions&amp;rsquo; usage quite nice, but comes at the cost
+of duplicating their names. One can view this as a
+feature, because it allows the creation of different aliases, or as a
+source for bugs when the order is messed up, or a name misspelled.&lt;/p&gt;
+
+&lt;p&gt;How could we avoid the duplication should we choose to create wrapper
+functions?&lt;/p&gt;
+
+&lt;p&gt;This is where Perl 6&amp;rsquo;s flexibility and introspection abilities pay off.
+There are two key components that allow a nicer solution: the fact that
+declarations are expressions, and that you can introspect variables for
+their names.&lt;/p&gt;
+
+&lt;p&gt;The first part means you can write &lt;code&gt;mysub my ($a, $b)&lt;/code&gt;, which
+declares the variables &lt;code&gt;$a&lt;/code&gt; and &lt;code&gt;$b&lt;/code&gt;, and calls a function with those
+variables as arguments. The second part means that &lt;code&gt;$a.VAR.name&lt;/code&gt; returns
+a string &lt;code&gt;&#39;$a&#39;&lt;/code&gt;, the name of the variable.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s combine this to create a wrapper that initializes subroutines for
+us:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;pysub&lt;/span&gt;(Str $namespace, |args) {
+    $py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;run(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;import $namespace&amp;#34;&lt;/span&gt;);
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; args[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;-&amp;gt;&lt;/span&gt; $sub {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $sub&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;VAR&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;name&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;substr(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+        $sub &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; (|args) {
+            $py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call($namespace, $name, &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;args);
+        }
+    }
+}
+
+pysub &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;matplotlib.pyplot&amp;#39;&lt;/span&gt;,
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;subplots, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;bar, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;legend, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;title, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;show);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This avoids duplicating the name, but forces us to use some lower-level
+Perl 6 features in sub &lt;code&gt;pysub&lt;/code&gt;. Using ordinary variables means that accessing their
+&lt;code&gt;.VAR.name&lt;/code&gt; results in the name of the variable, not the name of the
+variable that&amp;rsquo;s used on the caller side. So we can&amp;rsquo;t use slurpy
+arguments as in&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;pysub&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;Str&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;namespace&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;*@&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;subs&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Instead we must use
+&lt;code&gt;|args&lt;/code&gt; to obtain the rest of the arguments in a
+&lt;a href=&#34;https://docs.perl6.org/type/Capture.html&#34;&gt;Capture&lt;/a&gt;. This doesn&amp;rsquo;t
+flatten the list of variables passed to the function, so when we iterate
+over them, we must do so by accessing &lt;code&gt;args[0]&lt;/code&gt;. By default, loop
+variables are read-only, which we can avoid by using &lt;code&gt;&amp;lt;-&amp;gt;&lt;/code&gt; instead of
+&lt;code&gt;-&amp;gt;&lt;/code&gt; to introduce the signature. Fortunately, that also preserves the
+name of the caller side variable.&lt;/p&gt;
+
+&lt;h3 id=&#34;an-object-oriented-interface&#34;&gt;An Object-Oriented Interface&lt;/h3&gt;
+
+&lt;p&gt;Instead of exposing the functions, we can also create types that emulate
+the method calls on Python modules. For that we can implement a class with a
+method &lt;code&gt;FALLBACK&lt;/code&gt;, which Perl 6 calls for us when calling a method that is not
+implemented in the class:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;class PyPlot is Mu {
+    has $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;.&lt;/span&gt;py;
+    submethod TWEAK {
+        $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;run(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;import matplotlib.pyplot&amp;#39;&lt;/span&gt;);
+    }
+    method FALLBACK($name, &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;args) {
+        $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;matplotlib.pyplot&amp;#39;&lt;/span&gt;, $name, &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;args);
+    }
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pyplot &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; PyPlot&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(:$py);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($figure, $subplots) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $pyplot&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;subplots;
+&lt;span style=&#34;color:#75715e&#34;&gt;# plotting code goes here&lt;/span&gt;
+$pyplot&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;legend($@plots, $@top&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;authors);
+
+$pyplot&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;title(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Contributions per day&amp;#39;&lt;/span&gt;);
+$pyplot&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;show;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Class &lt;code&gt;PyPlot&lt;/code&gt; inherits directly from &lt;code&gt;Mu&lt;/code&gt;, the root of the Perl 6 type
+hierarchy, instead of &lt;code&gt;Any&lt;/code&gt;, the default parent class (which in turn inherits
+from &lt;code&gt;Mu&lt;/code&gt;). &lt;code&gt;Any&lt;/code&gt; introduces a large number of methods that Perl 6 objects
+get by default and since &lt;code&gt;FALLBACK&lt;/code&gt; is only invoked when a method is not
+present, this is something to avoid.&lt;/p&gt;
+
+&lt;p&gt;The method &lt;code&gt;TWEAK&lt;/code&gt; is another method that
+Perl 6 calls automatically for us, after the object has been fully
+instantiated. All-caps method names are reserved for such special purposes.
+It is marked as a &lt;code&gt;submethod&lt;/code&gt;, which means it is not inherited into subclasses.
+Since &lt;code&gt;TWEAK&lt;/code&gt; is called at the level of each class, if it were a regular
+method, a subclass would call it twice implicitly. Note that &lt;code&gt;TWEAK&lt;/code&gt; is only
+supported in Rakudo version 2016.11 and later.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s nothing specific to the Python package &lt;code&gt;matplotlib.pyplot&lt;/code&gt; in class
+&lt;code&gt;PyPlot&lt;/code&gt;, except the namespace name. We could easily generalize it to any
+namespace:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;class PythonModule is Mu {
+    has $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;.&lt;/span&gt;py;
+    has $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;.&lt;/span&gt;namespace;
+    submethod TWEAK {
+        $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;run(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;import $!namespace&amp;#34;&lt;/span&gt;);
+    }
+    method FALLBACK($name, &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;args) {
+        $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call($&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;namespace, $name, &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;args);
+    }
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pyplot &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; PythonModule&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(:$py, :namespace&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;matplotlib.pyplot&amp;gt;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is one Perl 6 type that can represent any Python module. If instead we
+want a separate Perl 6 type for each Python module, we could use roles, which
+are optionally parameterized:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;role PythonModule[Str $namespace] is Mu {
+    has $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;.&lt;/span&gt;py;
+    submethod TWEAK {
+        $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;run(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;import $namespace&amp;#34;&lt;/span&gt;);
+    }
+    method FALLBACK($name, &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;args) {
+        $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;py&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;call($namespace, $name, &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;args);
+    }
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pyplot &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; PythonModule[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;matplotlib.pyplot&amp;#39;&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(:$py);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using this approach, we can create type constraints for Python modules in
+Perl 6 space:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;plot&lt;/span&gt;-histogram(PythonModule[&amp;#39;matplotlib.pyplot&amp;#39;], @data) {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# implementation here&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Passing in any wrapped Python module other than &lt;code&gt;matplotlib.pyplot&lt;/code&gt; results
+in a type error.&lt;/p&gt;
+
+&lt;h2 id=&#34;summary&#34;&gt;Summary&lt;/h2&gt;
+
+&lt;p&gt;We&amp;rsquo;ve explored several ways to represent commit occurrence in plots and
+utilized &lt;code&gt;Inline::Python&lt;/code&gt; to interface with a Python based plotting library.&lt;/p&gt;
+
+&lt;p&gt;A bit of Perl 6 meta programming allowed us to emulate different kinds of
+Python APIs pretty directly in Perl 6 code, allowing a fairly direct
+translation of the original library&amp;rsquo;s documentation into Perl 6 code.&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;
+&lt;a name=&#34;python2-only&#34;&gt;1&lt;/a&gt;: The reason why Python 2.7 has to be used is that, at the time of writing, &lt;code&gt;Inline::Python&lt;/code&gt; does not yet support Python 3.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

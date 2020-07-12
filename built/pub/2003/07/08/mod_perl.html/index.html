@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Integrating mod_perl with Apache 2.1 Authentication </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" Scratching Your Own Itch Some time ago I became intrigued with Digest authentication, which uses the same general mechanism as the familiar Basic authentication scheme but offers significantly more password security without requiring an SSL connection. At the time..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2003/07/08/mod_perl.html/" />
+<meta property="og:title" content="Integrating mod_perl with Apache 2.1 Authentication" />
+<meta property="og:description" content=" Scratching Your Own Itch Some time ago I became intrigued with Digest authentication, which uses the same general mechanism as the familiar Basic authentication scheme but offers significantly more password security without requiring an SSL connection. At the time...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2003-07-07T07:07:07Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2003_07_08_mod_perl/111-modperl_auth.gif" />
+<meta property="og:article:tag" content="apache-2" />
+<meta property="og:article:tag" content="apache-authhandler" />
+<meta property="og:article:tag" content="digest-authentication" />
+<meta property="og:article:tag" content="geoffrey-young" />
+<meta property="og:article:tag" content="mod-perl-2" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Integrating mod_perl with Apache 2.1 Authentication</h1>
+              <p class="blog-post-meta">Jul 8, 2003 by
+              
+              
+                
+                
+                <a href="#author-bio-geoffrey-young">Geoffrey Young</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<h3 id="scratching-your-own-itch">Scratching Your Own Itch</h3>
+
+<p>Some time ago I became intrigued with <a href="ftp://ftp.isi.edu/in-notes/rfc2617.txt">Digest authentication</a>, which uses the same general mechanism as the familiar Basic authentication scheme but offers significantly more password security without requiring an SSL connection. At the time it was really just an academic interest—while some browsers supported Digest authentication, many of the more popular ones did not. Furthermore, even though the standard Apache distribution came with modules to support both Basic and Digest authentication, Apache (and thus mod_perl) only offered an API for interacting with Basic authentication. If you wanted to use Digest authentication, flat files were the only password storage medium available. With both of these restrictions, it seemed impractical to deploy Digest authentication in all but the most limited circumstances.</p>
+
+<p>Fast forward two years. Practically all mainstream browsers now support Digest authentication, and my interest spawned what is now <a href="https://metacpan.org/pod/Apache::AuthDigest">Apache::AuthDigest</a>, a module that gives mod_perl 1.0 developers an API for Digest authentication that is very similar to the Basic API that mod_perl natively supports. The one lingering problem is probably not surprising—Microsoft Internet Explorer. As it turns out, using the Digest scheme with MSIE requires a fully RFC-compliant Digest implementation, and Apache::AuthDigest was patterned after Apache 1.3&rsquo;s <code>mod_digest.c</code>, which is sufficient for most browsers but not MSIE.</p>
+
+<p>In my mind, opening up Digest authentication through mod_perl still needed work to be truly useful, namely full RFC compliance to support MSIE. Wading through RFCs is not how I like to spend my spare time, so I started searching for a shortcut. Because Apache 2.0 did away with <code>mod_digest.c</code> and replaced it with the fully compliant <code>mod_auth_digest.c</code>, I was convinced that there was something in Apache 2.0 I could use to make my life easier. In Apache 2.1, the development version of the next generation Apache server, I found what I was looking for.</p>
+
+<p>In this article, we&rsquo;re going to examine a mod_perl module that provides Perl support for the new authentication provider hooks in Apache 2.1. These authentication providers make writing Basic authentication handlers easier than it has been in the past. At the same time, the new provider mechanism opens up Digest authentication to the masses, making the Digest scheme a real possibility for filling your dynamic authentication needs. While the material is somewhat dense, the techniques we will be looking at are some of the most interesting and powerful in the mod_perl arsenal. Buckle up.</p>
+
+<p>To follow along with <a href="http://www.modperlcookbook.org/~geoff/perl.com/Apache-AuthenHook-2.00_01.tar.gz">the code</a> in this article, you will need at least mod_perl version 1.99_10, which is currently only available from CVS. You will also need <a href="http://httpd.apache.org/dev/">Apache 2.1</a>, which is also only available from CVS. Instructions for obtaining the sources for both can be found <a href="http://perl.apache.org/docs/2.0/user/install/install.html#Getting_Bleeding_Edge_CVS_Sources">here</a>. When compiling Apache, keep in mind that the code presented here only works under the <a href="http://httpd.apache.org/docs-2.0/mpm.html">prefork MPM</a> — making it thread-safe is the next step in the adventure.</p>
+
+<h3 id="authentication-basics">Authentication Basics</h3>
+
+<p>Because there is lots of material to cover, we&rsquo;ll skip over the requisite introductory discussion of HTTP authentication, the Apache request cycle, and other materials that probably already familiar and skip right to the mod_perl authentication API. In both mod_perl 1.0 and mod_perl 2.0, the <code>PerlAuthenHandler</code> represents Perl access to the Apache authentication phase, where incoming user credentials are traditionally matched to those stored within the application. A simple <code>PerlAuthenHandler</code> in mod_perl 2.0 might look like the following.</p>
+
+<pre><code>package My::BasicHandler;
+
+use Apache::RequestRec ();
+use Apache::Access ();
+
+use Apache::Const -compile =&gt; qw(OK DECLINED HTTP_UNAUTHORIZED);
+
+use strict;
+
+sub handler {
+  my $r = shift;
+
+  # get the client-supplied credentials
+  my ($status, $password) = $r-&gt;get_basic_auth_pw;
+
+  # only continue if Apache says everything is OK
+  return $status unless $status == Apache::OK;
+
+  # user1/basic1 is ok
+  if ($r-&gt;user eq 'user1' &amp;&amp; $password eq 'basic1') {
+    return Apache::OK;
+  }
+
+  # user2 is denied outright
+  if ($r-&gt;user eq 'user2') {
+    $r-&gt;note_basic_auth_failure;
+    return Apache::HTTP_UNAUTHORIZED;
+  }
+
+  # all others are passed along to the Apache default
+  # handler, which reads from the AuthUserFile
+  return Apache::DECLINED;
+}
+
+1;
+</code></pre>
+
+<p>Although simple and impractical, this handler illustrates the API nicely. The process begins with a call to <code>get_basic_auth_pw()</code>, which does a few things behind the scenes. If a suitable Basic Authorization header is found, <code>get_basic_auth_pw()</code> will parse and decode the header, populate the user slot of the request record, and return <code>OK</code> along with the user-supplied password in clear text. Any value other than <code>OK</code> should be immediately propagated back to Apache, which effectively terminates the current request.</p>
+
+<p>The next step in the process is where the real authentication logic resides. Our handler is responsible for digging out the username from <code>$r-&gt;user()</code> and applying some criteria for determining whether the user-supplied credentials are acceptable. If they are, the handler simply returns <code>OK</code> and the request is allowed to proceed. If they are not, the handler has a decision to make: either call <code>note_basic_auth_failure()</code> and return <code>HTTP_UNAUTHORIZED</code> (which is the same as the old <code>AUTH_REQUIRED</code>) to indicate failure, or return <code>DECLINED</code> to pass authentication control to the next authentication handler.</p>
+
+<p>For the most part, the mod_perl API is identical to the API Apache offers to C module developers. The benefit that mod_perl adds is the ability to easily extend authentication beyond Apache&rsquo;s default flat-file mechanism to the areas where Perl support is strong, such as relational databases or LDAP. However, despite the versatility and strength programming the authentication phase offered, I never liked the look and feel of the API. While in some respects the process is dictated by the nuances of <a href="ftp://ftp.isi.edu/in-notes/rfc2617.txt">RFC 2617</a> and the HTTP protocol itself, the interface always struck me as somewhat inconsistent and difficult for new users to grasp. Additionally, as already mentioned, the API covers only Basic authentication, which is a real drawback as more and more browsers support the Digest scheme.</p>
+
+<p>Apparently I wasn&rsquo;t alone in some of these feelings. Apache 2.1 has taken steps to improve the overall process for module developers. The result is a new, streamlined API that focuses on a new concept: authentication providers.</p>
+
+<h3 id="authentication-providers-in-apache-2-1">Authentication Providers in Apache 2.1</h3>
+
+<p>While in Apache 2.0 module writers were responsible for a large portion of the authentication logic—calling routines to parse and set authentication headers, digging out the user from the request record, and so on — the new authentication mechanism in Apache 2.1 delegates all HTTP and RFC logic out to two standard modules. <code>mod_auth_basic</code> handles Basic authentication and is enabled in the default Apache build. The standard <code>mod_auth_digest</code>, not enabled by default, handles the very complex world of Digest authentication. Regardless of the authentication scheme you choose to support, these modules are responsible for the details of parsing and interpreting the incoming request headers, as well as generating properly formatted response headers.</p>
+
+<p>Of course, managing authentication on an HTTP level is only part of the story. What <code>mod_auth_basic</code> and <code>mod_auth_digest</code> leave behind is the job of digging out the server-side credentials and matching them to their incoming counterpart. Enter authentication providers.</p>
+
+<p>Authentication providers are modules that supply server-side credential services to <code>mod_auth_basic</code> or <code>mod_auth_digest</code>. For instance, the default <code>mod_authn_file</code> digs the username and password out of the flat file specified by the <code>AuthUserFile</code> directive, similar to the default mechanism in Apache 1.3 and 2.0. An Apache 2.1 configuration that explicitly provides the same flat file behavior as Apache 2.0 would look similar to the following.</p>
+
+<pre><code>&lt;Location /protected&gt;
+  Require valid-user
+  AuthType Basic
+  AuthName realm1
+
+  AuthBasicProvider file
+
+  AuthUserFile realm1
+&lt;/Location&gt;
+</code></pre>
+
+<p>The new part of this configuration is the <code>AuthBasicProvider</code> directive, which is implemented by <code>mod_auth_basic</code> and used to specify the provider responsible for managing server-side credentials. There is also a corresponding <code>AuthDigestProvider</code> directive if you have <code>mod_auth_digest</code> installed.</p>
+
+<p>While it could seem as though Apache 2.1 is merely adding another directive to achieve essentially the same results, the shift to authentication providers adds significant value for module developers: a new API that is far simpler than before. Skipping ahead to the punch line, programming with new Perl API for Basic authentication, which follows the Apache API almost exactly, would look similar to the following.</p>
+
+<pre><code>package My::BasicProvider;
+
+use Apache::Const -compile =&gt; qw(OK DECLINED HTTP_UNAUTHORIZED);
+
+use strict;
+
+sub handler {
+  my ($r, $user, $password) = @_;
+
+  # user1/basic1 is ok
+  if ($user eq 'user1' &amp;&amp; $password eq 'basic1') {
+    return Apache::OK;
+  }
+
+  # user2 is denied outright
+  if ($user eq 'user2') {
+    return Apache::HTTP_UNAUTHORIZED;
+  }
+
+  # all others are passed along to the next provider
+  return Apache::DECLINED;
+}
+
+1;
+</code></pre>
+
+<p>As you can see, not only are the incoming username and password supplied in the argument list, removing the need for <code>get_basic_auth_pw()</code> and its associated checks, but gone is the need to call <code>note_basic_auth_failure()</code> before returning <code>HTTP_UNAUTHORIZED</code>. In essence, all that module writers need to be concerned with is validating the user credentials against whatever back-end datastore they choose. All in all, the API is a definite improvement. To add even more excitement, the API for Digest authentication looks almost exactly the same (but more on that later).</p>
+
+<p>Because the new authentication provider approach represents a significant change in the way Apache handles authentication internally, it is not part of the stable Apache 2.0 tree and is instead being tested in the development tree. Unfortunately, until the provider mechanism is backported to Apache 2.0, or an official Apache 2.2 release, it is unlikely that authentication providers will be supported by core mod_perl 2.0. However, this does not mean that mod_perl developers are out of luck—by coupling mod_perl&rsquo;s native directive handler API with a bit of XS, we can open up the new Apache provider API to Perl with ease. The <a href="https://metacpan.org/pod/Apache::AuthenHook">Apache::AuthenHook</a> module does exactly that.</p>
+
+<h3 id="introducing-apache-authenhook">Introducing Apache::AuthenHook</h3>
+
+<p>Over in the Apache C API, authentication providers have a few jobs to do: they must register themselves by name as a provider while supplying a callback interface for the schemes they wish to support (Basic, Digest, or both). In order to open up the provider API to Perl modules our gateway module Apache::AuthenHook will need to accomplish these tasks as well. Both of these are accomplished at the same time through a call to the official Apache API function <code>ap_register_provider</code>.</p>
+
+<p>Usually, mod_perl provides direct access to the Apache C API for us. For instance, a Perl call to <code>$r-&gt;get_basic_auth_pw()</code> is proxied off to <code>ap_get_basic_auth_pw</code>—but in this case <code>ap_register_provider</code> only exists in Apache 2.1 and, thus, is not supported by mod_perl 2.0. Therefore, part of what Apache::AuthenHook needs to do is open up this API to Perl. One of the great things about mod_perl is the ease at which it allows itself to be extended even beyond its own core functionality. Opening up the Apache API past what mod_perl allows is relatively easy with a dash of XS.</p>
+
+<p>Our module opens with <code>AuthenHook.xs</code>, which is used to expose <code>ap_register_provider</code> through the Perl function <code>Apache::AuthenHook::register_provider()</code>.</p>
+
+<pre><code>#include &quot;EXTERN.h&quot;
+#include &quot;perl.h&quot;
+#include &quot;XSUB.h&quot;
+
+#include &quot;mod_perl.h&quot;
+#include &quot;ap_provider.h&quot;
+#include &quot;mod_auth.h&quot;
+
+...
+
+static const authn_provider authn_AAH_provider =
+{
+  &amp;check_password,
+  &amp;get_realm_hash,
+};
+
+MODULE = Apache::AuthenHook    PACKAGE = Apache::AuthenHook
+
+PROTOTYPES: DISABLE
+
+void
+register_provider(provider)
+  SV *provider
+
+  CODE:
+
+    ap_register_provider(modperl_global_get_pconf(),
+                         AUTHN_PROVIDER_GROUP,
+                         SvPV_nolen(newSVsv(provider)), &quot;0&quot;,
+                         &amp;authn_AAH_provider);
+</code></pre>
+
+<p>Let&rsquo;s start at the top. Any XS module you write will include the first three header files, while any mod_perl XS extension will require at least <code>#include &quot;mod_perl.h&quot;</code>. The remaining two included header files are specific to what we are trying to accomplish—<code>ap_provider.h</code> defines the <code>ap_register_provider</code> function, while <code>mod_auth.h</code> defines the <code>AUTHN_PROVIDER_GROUP</code> constant we will be using, as well as the <code>authn_provider</code> struct that holds our callbacks.</p>
+
+<p>Skipping down a bit, we can see our implementation of <code>Apache::AuthenHook::register_provider()</code>. The <code>MODULE</code> and <code>PACKAGE</code> declarations place <code>register_provider()</code> into the <code>Apache::AuthenHook</code> package. Following that is the definition of the <code>register_provider()</code> function itself.</p>
+
+<p>As you can see, <code>register_provider()</code> accepts a single argument, a Perl scalar representing the name of the provider to register, making its usage something akin to the following.</p>
+
+<pre><code>Apache::AuthenHook::register_provider('My::BasicProvider');
+</code></pre>
+
+<p>The user-supplied name is then used in the call to <code>ap_register_provider</code> from the Apache C API to register <code>My::BasicProvider</code> as an authentication provider.</p>
+
+<p>The twist in the process is that our implementation of <code>ap_register_provider</code> registers Apache::AuthenHook&rsquo;s callbacks (the <code>check_password</code> and <code>get_realm_hash</code> routines not shown here) for each Perl provider. In essence, this means that Apache::AuthenHook will be acting as go-between for Perl providers. Much in the same way that mod_perl proper is called by Apache for each phase and dispatches to different <code>Perl*Handlers</code>, Apache::AuthenHook will be called by Apache&rsquo;s authentication modules and dispatch to the appropriate Perl provider at runtime.</p>
+
+<p>If this boggles your mind a bit, not to worry, it is only being presented to give you a feel for the bigger picture and show how easy it is to open up closed parts of the Apache C API with mod_perl and just a few lines of XS. However, the fun part of Apache::AuthenHook (and the part that you are more likely to use in your own mod_perl modules) is handled over in Perl space.</p>
+
+<h4 id="setting-the-stage">Setting the Stage</h4>
+
+<p>Now that we have the ability to call <code>ap_register_provider</code>, we need to link that into the Apache configuration process somehow. What we do not want to do is replace current <code>PerlAuthenHandler</code> functionality, since that directive is for inserting authentication handler logic in place of Apache&rsquo;s defaults. In our case, we need the default modules to run so they can call our Perl providers. Instead, we want to make it possible for Perl modules to register themselves as authentication providers. While we could have Perl providers call our new <code>register_provider()</code> function directly, Apache::AuthenHook chose to make the process transparent, using mod_perl&rsquo;s directive handler API to call <code>register_provider()</code> silently as <code>httpd.conf</code> is parsed.</p>
+
+<p>Apache::AuthenHook makes sneaky use of directive handlers to extend the default Apache <code>AuthBasicProvider</code> and <code>AuthDigestProvider</code> directives so they register Perl providers on-the-fly. The net result is that Perl providers will be fully registered and configured via standard Apache directives, similar to the following.</p>
+
+<pre><code>AuthBasicProvider My::BasicProvider file
+</code></pre>
+
+<p>At configuration time, Apache::AuthenHook will intercept <code>AuthBasicProvider</code> and register My::BasicProvider. At request time, <code>mod_auth_basic</code> will attempt to authenticate the user, first using My::BasicProvider, followed by the default file provider if My::BasicProvider declines the request.</p>
+
+<p>A nice side effect to this is that through our implementation we will be giving mod_perl developers a feature they have never had before—the ability to interlace Perl handlers and C handlers within the same phase.</p>
+
+<pre><code>AuthDigestProvider My::DigestProvider file My::OtherDigestProvider
+</code></pre>
+
+<p>Exciting, no? Let&rsquo;s take a look at <code>AuthenHook.pm</code> and see how the directive handler API works in mod_perl 2.0.</p>
+
+<h3 id="directive-handlers-with-mod-perl">Directive Handlers with mod_perl</h3>
+
+<p>Directive handlers are a very powerful but little used feature of mod_perl. For the most part, their lack of use probably stems from the complex and intimidating API in mod_perl 1.0. However, in mod_perl 2.0, the API is much simpler and should lend itself to adoption by a larger audience.</p>
+
+<p>The directive handler API allows mod_perl modules to define their own custom configuration directives that are understood by Apache, For example, enabling modules to make use of configuration variables like:</p>
+
+<pre><code>Foo &quot;bar&quot;
+</code></pre>
+
+<p>in <code>httpd.conf</code> requires only a few relatively simple settings you can code directly in Perl.</p>
+
+<p>While using directive handlers simply to replace <code>PerlSetVar</code> behavior might seem a bit flashy, the techniques used by Apache::AuthenHook are some of the most powerful mod_perl has to offer.</p>
+
+<p>As previously mentioned, we will be extending the new <code>AuthBasicProvider</code> and <code>AuthDigestProvider</code> directives to apply to Perl providers as well, silently registering each provider as the directive itself is parsed. To do this, we redefine these core directives, manipulate their configuration data, then disappear and allow Apache to handle the directives as if we were never there.</p>
+
+<p>The code responsible for this is in <code>AuthenHook.pm</code>.</p>
+
+<pre><code>package Apache::AuthenHook;
+
+use 5.008;
+
+use DynaLoader ();
+
+use mod_perl 1.99_10;     # DECLINE_CMD and $parms-&gt;info support
+use Apache::CmdParms ();  # $parms-&gt;info
+
+use Apache::Const -compile =&gt; qw(OK DECLINE_CMD OR_AUTHCFG RAW_ARGS);
+
+use strict;
+
+our @ISA     = qw(DynaLoader);
+our $VERSION = '2.00_01';
+
+__PACKAGE__-&gt;bootstrap($VERSION);
+
+our @APACHE_MODULE_COMMANDS = (
+  { name         =&gt; 'AuthDigestProvider',
+    errmsg       =&gt; 'specify the auth providers for a directory or location',
+    args_how     =&gt; Apache::RAW_ARGS,
+    req_override =&gt; Apache::OR_AUTHCFG,
+    cmd_data     =&gt; 'digest' },
+
+  { name         =&gt; 'AuthBasicProvider',
+    errmsg       =&gt; 'specify the auth providers for a directory or location',
+    args_how     =&gt; Apache::RAW_ARGS,
+    req_override =&gt; Apache::OR_AUTHCFG,
+    func         =&gt; 'AuthDigestProvider',
+    cmd_data     =&gt; 'basic' },
+);
+</code></pre>
+
+<p>At the top of our module we import a few required items, some that are new and some that should already be familiar. DynaLoader and the <code>bootstrap()</code> method are required to pull in the <code>register_provider()</code> function from our XS implementation and, unlike with mod_perl 1.0, have nothing to do with the actual directive handler implementation. The Apache::CmdParms class provides the <code>info()</code> method we will be illustrating shortly, while Apache::Const gives us access to the constants we will need throughout the process.</p>
+
+<p>The <code>@APACHE_MODULE_COMMANDS</code> array is where the real interface for directive handlers begins. <code>@APACHE_MODULE_COMMANDS</code> holds an array of hashes, each of which defines the behavior of an Apache directive. Let&rsquo;s focus on the first directive our handler implements, <code>AuthDigestProvider</code>, forgetting for the moment that mod_auth_digest also defines this directive.</p>
+
+<p>While it should be obvious that the <code>name</code> key specifies the name of the directive, it is not so obvious that it also specifies the default Perl subroutine to call when Apache encounters <code>AuthDigestProvider</code> while parsing <code>httpd.conf</code>. Later on, we will need to implement the <code>AuthDigestProvider()</code> subroutine, which will contain the logic for all the activities we want to perform when Apache sees the <code>AuthDigestProvider</code> directive.</p>
+
+<p>The <code>args_how</code> and <code>req_override</code> are fields that tell Apache specifically how the directive is supposed to behave in the configuration. <code>req_override</code> defines how our directive will interact with the core <a href="http://httpd.apache.org/docs-2.0/mod/core.html#allowoverride"><code>AllowOverride</code></a> directive, in our case allowing <code>AuthDigestProvider</code> in <code>.htaccess</code> files only on directories governed by <code>AllowOverride AuthConfig</code>. Similarly, <code>args_how</code> defines how Apache should interact with our <code>AuthDigestProvider()</code> subroutine when it sees our directive in <code>httpd.conf</code>. In the case of <code>RAW_ARGS</code>, it means that Apache will pass our callback whatever follows the directive as a single string. Other possible values for both of these keys can be found in the documentation pointed to at the end of this article.</p>
+
+<p>The final important key in our first hash is the <code>cmd_data</code> key, in which we can store a string of our choosing. This will become important in a moment.</p>
+
+<p>The second hash in <code>@APACHE_MODULE_COMMANDS</code> defines the behavior of the <code>AuthBasicProvider</code> directive, which for the most part is identical to <code>AuthDigestProvider</code>. The differences are important, however, and begin with the addition of the <code>func</code> key. Although the default Perl subroutine callback for handling directives is the same as the name of the directive, the <code>func</code> key allows us to point to a different subroutine instead. Here we will be reusing <code>AuthDigestProvider()</code> to process both directives. How will we know which directive is actually being parsed? The <code>cmd_data</code> slot will contain <code>digest</code> when processing <code>AuthDigestProvider</code> and <code>basic</code> when processing <code>AuthBasicProvider</code>.</p>
+
+<p>At this point, we have defined what our directives will look like and how they will interact with Apache in <code>httpd.conf</code>. What we have not shown is the logic that sits behind our directives. As we mentioned, both of our directives will be calling the Perl subroutine <code>AuthDigestProvider</code>, defined in <code>AuthenHook.pm</code>.</p>
+
+<pre><code>sub AuthDigestProvider {
+  my ($cfg, $parms, $args) = @_;
+
+  my @providers = split ' ', $args;
+
+  foreach my $provider (@providers) {
+
+    # if the provider looks like a Perl handler...
+    if ($provider =~ m/::/) {
+
+      # save the config for later
+      push @{$cfg-&gt;{$parms-&gt;info}}, $provider;
+
+      # and register the handler as an authentication provider
+      register_provider($provider);
+    }
+  }
+
+  # pass the directive back to Apache &quot;unprocessed&quot;
+  return Apache::DECLINE_CMD;
+}
+</code></pre>
+
+<p>The first argument passed to our directive handler callback, <code>$cfg</code>, represents the configuration object for our module, which we can populate with whatever data we choose and access again at request time. The second argument is an Apache::CmdParms object, which we will use to dig out the string we specified in the <code>cmd_data</code> slot of our configuration hash using the <code>info()</code> method.</p>
+
+<p>While the first two arguments are standard and will be there for any directive handler you write, the third argument can vary somewhat. Because we specified <code>RAW_ARGS</code> as our <code>args_how</code> setting in the configuration hash, <code>$args</code> contains everything on the <code>httpd.conf</code> line following our directive. The standard <code>Auth*Provider</code> directives we are overriding can take more than one argument, so we split on whitespace and break apart the configuration into an array of providers, each of which we then process separately.</p>
+
+<p>Each provider is examined using a cursory check to see whether the specified provider is a Perl provider. If the provider meets our criteria, we call the <code>register_provider()</code> function defined in <code>AuthenHook.xs</code> and keep track of the provider by storing it in our <code>$cfg</code> configuration object.</p>
+
+<p>The final part of our callback brings the entire process together. The constant <code>DECLINE_CMD</code> has special meaning to Apache. Just as you might return <code>DECLINED</code> from a <code>PerlTransHandler</code> to trick Apache into thinking no translation took place, returning <code>DECLINE_CMD</code> from a directive handler tricks Apache into thinking that the directive was unprocessed. So, after our <code>AuthDigestProvider()</code> subroutine runs, Apache will continue along until it finds <code>mod_auth_digest</code>, which will then process the directive as though we were never there.</p>
+
+<p>The one final piece of <code>AuthenHook.pm</code> that we need to discuss is directive merging. In order to deal properly with situations when directives meet, such as when <code>AuthBasicProvider</code> is specified in both an <code>.htaccess</code> file as well as the <code>&lt;Location&gt;</code> that governs the URI, we need to define <code>DIR_CREATE()</code> and <code>DIR_MERGE()</code> subroutines.</p>
+
+<p><code>DIR_CREATE()</code> is called at various times in the configuration process, including when <code>&lt;Location&gt;</code> and related directives are parsed at configuration time, as well as whenever an <code>.htaccess</code> file enters the request cycle. This is where we create the <code>$cfg</code> object our callback uses to store configuration data. While it is not required, <code>DIR_CREATE()</code> is a good place to initialize fields in the object as well, which prevents accidentally dereferencing nonexistent references.</p>
+
+<pre><code>sub DIR_CREATE {
+  return bless { digest =&gt; [],
+                 basic  =&gt; [], }, shift;
+}
+</code></pre>
+
+<p><code>DIR_MERGE</code>, generally called at request time, defines how we handle places where directives collide. The following code is standard for allowing the current configuration (<code>%$base</code>) to inherit only missing parameters from higher configurations (<code>%$add</code>), which is the behavior you are most likely to want.</p>
+
+<pre><code>sub DIR_MERGE {
+  my ($base, $add) = @_;
+
+  my %new = (%$add, %$base);
+
+  return bless \%new, ref($base);
+}
+
+1;
+</code></pre>
+
+<p>Thus ends <code>AuthenHook.pm</code>.</p>
+
+<p>The final result is pretty amazing. By secretly intercepting the <code>AuthDigestProvider</code> directive before <code>mod_auth_digest</code> has the chance to process it, we have provided an interface that makes the presence of Apache::AuthenHook all but undetectable. To enable the new provider mechanism for mod_perl developers, all that is required is to load Apache::AuthenHook using the new <code>PerlLoadModule</code> directive</p>
+
+<pre><code>PerlLoadModule Apache::AuthenHook
+</code></pre>
+
+<p>and their Perl providers will be magically inserted into the authentication phase at the appropriate time.</p>
+
+<h3 id="taking-a-step-back">Taking a Step Back</h3>
+
+<p>Let&rsquo;s recap what we have accomplished so far. <code>AuthenHook.pm</code> redefines <code>AuthDigestProvider</code> and <code>AuthBasicProvider</code> so that any Perl providers listed in the configuration are automagically registered and inserted into the authentication process. At request time, one of the default Apache authentication handlers will call on the configured providers to supply server-side credentials. All registered Perl providers really point to the callbacks in <code>AuthenHook.xs</code> which have the arduous task of proxying the request for server-side credentials to the proper Perl provider. All in all, Apache::AuthenHook covers lots of ground, even if the gory details of what happens over in XS land have been left out.</p>
+
+<p>As we mentioned earlier, Apache::AuthenHook not only the ability to write authentication providers in Perl, but it also follows the Apache API very closely. While diving deep into the XS code that Apache::AuthenHook uses to implement the <code>check_password</code> and <code>get_realm_hash</code> callbacks is far beyond the scope of this article, you may find it interesting that the callback signature for <code>check_password</code></p>
+
+<pre><code>static authn_status check_password(request_rec *r, const char *user,
+                                   const char *password)
+{
+  ...
+}
+</code></pre>
+
+<p>is practically identical to what Apache::AuthenHook passes on to Perl providers supporting the Basic authentication scheme.</p>
+
+<pre><code>sub handler {
+  my ($r, $user, $password) = @_;
+
+  ...
+}
+</code></pre>
+
+<p>If you recall, we started investigating the Apache 2.1 provider mechanism as a way to combine the security of the Digest authentication scheme with the strength of Perl. The signature for the Digest authentication callback, <code>get_realm_hash</code>, is only slightly different than <code>check_password</code>.</p>
+
+<pre><code>static authn_status get_realm_hash(request_rec *r, const char *user,
+                                   const char *realm, char **rethash)
+{
+  ...
+}
+</code></pre>
+
+<p>How does this translate into a Perl API? It is surprisingly simple. As it turns out, the name <code>check_password</code> is significant—for Basic authentication, the provider is expected to take steps to see if the incoming username and password match the username and password stored on the server back-end. For Digest authentication, as the name <code>get_realm_hash</code> might suggest, all a provider is responsible for is retrieving the hash for a user at a given realm. <code>mod_auth_digest</code> does all the heavy lifting.</p>
+
+<h3 id="digest-authentication-for-the-people">Digest Authentication for the People</h3>
+
+<p>While we didn&rsquo;t take the time to explain how Basic authentication over HTTP actually works, briefly explaining Digest authentication is probably worth the time, if only to allow you to appreciate the elegance of the new provider mechanism.</p>
+
+<p>When a request comes in for a resource protected by Digest authentication, the server begins the process by returning a <code>WWW-Authenticate</code> header that contains the authentication scheme, realm, a server generated nonce, and various other bits of information. A fully RFC-compliant <code>WWW-Authenticate</code> header might look like the following.</p>
+
+<pre><code>WWW-Authenticate: Digest realm=&quot;realm1&quot;,
+nonce=&quot;Q9equ9C+AwA=195acc80cf91ce99828b8437707cafce78b11621&quot;,
+algorithm=MD5, qop=&quot;auth&quot;
+</code></pre>
+
+<p>On the client side, the username and password are entered by the end user based on the authentication realm sent from the server. Unlike Basic authentication, in which the client transmits the user&rsquo;s password practically in the clear, Digest authentication never exposes the password over the wire. Instead, both the client and server handle the user&rsquo;s credentials with care. For the client, this means rolling up the user credentials, along with other parts of the request such as the server-generated nonce and request URI, into a single MD5 hash, which is then sent back to the server via the <code>Authorization</code> header.</p>
+
+<pre><code>Authorization: Digest username=&quot;user1&quot;, realm=&quot;realm1&quot;,
+qop=&quot;auth&quot;, algorithm=&quot;MD5&quot;, uri=&quot;/index.html&quot;,
+nonce=&quot;Q9equ9C+AwA=195acc80cf91ce99828b8437707cafce78b11621&quot;,
+nc=00000001, cnonce=&quot;3e4b161902b931710ae04262c31d9307&quot;,
+response=&quot;49fac556a5b13f35a4c5f05c97723b32&quot;
+</code></pre>
+
+<p>The server, of course, needs to have its own copy of the user credentials around for comparison. Now, because the client and server have had (at various points in time) access to the same dataset—the user-supplied username and password, as well as the request URI, authentication realm, and other information shared in the HTTP headers—both ought to be able to generate the same MD5 hash. If the hash generated by the server does not match the one sent by the client in the <code>Authorization</code> header, the difference can be attributed to the one piece of information not mutually agreed upon through the HTTP request: the password.</p>
+
+<p>As you can see from the headers involved, there is quite a lot of information to process and interpret with the Digest authentication scheme. However, if you recall, one of the benefits of the new provider mechanism is that <code>mod_auth_digest</code> takes care of all the intimate details of the scheme internally, relieving you from the burden of understanding it at all.</p>
+
+<p>All a Digest provider is required to do is match the incoming user and realm to a suitable digest, stored in the medium of its choosing, and return it. With the hash in hand, <code>mod_auth_digest</code> will do all the subsequent manipulations and decide whether the hash the provider supplied is indeed sufficient to allow the user to continue on its journey to the resource it is after.</p>
+
+<p>With that background behind us, we can proceed with a sample Perl Digest provider.</p>
+
+<pre><code>package My::DigestProvider;
+
+use Apache::Log;
+
+use Apache::Const -compile =&gt; qw(OK DECLINED HTTP_UNAUTHORIZED);
+
+use strict;
+
+sub handler {
+  my ($r, $user, $realm, $hash) = @_;
+
+  # user1 at realm1 is found - pass to mod_auth_digest
+  if ($user eq 'user1' &amp;&amp; $realm eq 'realm1') {
+    $$hash = 'eee52b97527306e9e8c4613b7fa800eb';
+    return Apache::OK;
+  }
+
+  # user2 is denied outright
+  if ($user eq 'user2' &amp;&amp; $realm eq 'realm1') {
+    return Apache::HTTP_UNAUTHORIZED;
+  }
+
+  # all others are passed along to the next provider
+  return Apache::DECLINED;
+}
+
+1;
+</code></pre>
+
+<p>Note the only slight difference between the interface for Digest authentication as compared to Basic authentication. Because the authentication realm is an essential part of the Digest scheme, it is passed to our <code>handler()</code> subroutine in addition to the request record, <code>$r</code>, and username we received with the Basic scheme.</p>
+
+<p>Knowing the username and authentication realm, our provider can choose whatever method it desires to retrieve the MD5 hash associated with the user. Returning the hash for comparison by <code>mod_auth_digest</code> is simply a matter of populating the scalar referenced by <code>$hash</code> and returning <code>OK</code>. While using references in this way may feel a bit strange, it follows the same pattern as the official Apache C API, so I guess that makes it ok.</p>
+
+<p>If the user cannot be found, the provider can choose to return <code>HTTP_UNAUTHORIZED</code> and deny access to the user, or return <code>DECLINED</code> to pass authority for the user to the next provider. Remember, unlike with the Perl handlers for all the other phases of the request, you can intermix Perl providers with C providers, sandwiching the default file provider with Perl providers of your own choosing.</p>
+
+<p>The one question that remains is how to generate a suitable MD5 digest to pass back to <code>mod_auth_digest</code>. For the default file provider, the return digest is typically generated using the <code>htdigest</code> binary that comes with the Apache installation. However, a Perl one-liner that can be used to generate a suitable MD5 digest for Perl providers would look similar to the following.</p>
+
+<pre><code>$ perl -MDigest::MD5 -e'print Digest::MD5::md5_hex(&quot;user:realm:password&quot;)'
+</code></pre>
+
+<p>That is all there is to it. No hash checking, no header manipulations, no back flips or somersaults. Simply dig out the user credentials and pass them along. At last, Digest authentication for the (Perl) people.</p>
+
+<h3 id="don-t-forget-the-tests">Don&rsquo;t Forget the Tests!</h3>
+
+<p>Of course, no module would be complete without a test suite, and the <a href="https://metacpan.org/pod/Apache::Test">Apache-Test</a> framework introduced <a href="/pub/2003/05/22/testing.html">last time</a> gives us all the tools we need to write a complete set of tests.</p>
+
+<p>For the most part, the tests for Apache::AuthenHook are not that different from those presented before. LWP supports Digest authentication natively, so all our test scripts really need to do is make a request to a protected URI and let LWP do all the work. Here is a snippet from one of the tests.</p>
+
+<pre><code>plan tests =&gt; 10, (have_lwp &amp;&amp;
+                   have_module('mod_auth_digest'));
+
+my $url = '/digest/index.html';
+
+$response = GET $url, username =&gt; 'user1', password =&gt; 'digest1';
+ok $response-&gt;code == 200;
+</code></pre>
+
+<p>When we plan the tests, we first check for the existence of <code>mod_auth_digest</code>—both <code>mod_auth_basic</code> and <code>mod_auth_digest</code> can be enabled or disabled for any given installation, so we need to check for them where appropriate. Passing the username and password credentials is pretty straightforward, using the <code>username</code> and <code>password</code> keys after the URL when formatting the request.</p>
+
+<p>Actually, while the <code>username</code> and <code>password</code> keys have special meaning, you can use the same technique to send any arbitrary headers in the request.</p>
+
+<pre><code># fetch the Last-Modified header from one response...
+my $last_modified = $response-&gt;header('Last-Modified');
+
+# and use it in the next request
+$response = GET $uri, 'If-Modified-Since' =&gt; $last_modified;
+ok ($response-&gt;code == HTTP_NOT_MODIFIED);
+</code></pre>
+
+<p>That&rsquo;s something to note just in case you need that functionality sometime later in your testing life.</p>
+
+<p>One final note about our tests will apply to anyone writing a mod_perl XS extension. Instead of using <code>extra.conf.in</code> to configure Apache, we used <code>extra.last.conf.in</code>. The difference between the two is that <code>extra.last.conf.in</code> is guaranteed to be loaded the last in the configuration order—if our <code>PerlLoadModule</code> directive is processed before mod_perl gets the chance to add the proper <code>blib</code> entries, nothing will work, so ensuring our configuration is loaded after everything else is in place is important.</p>
+
+<h3 id="whew">Whew</h3>
+
+<p>mod_perl is truly exciting. With surprisingly little work, we have managed to open an entire new world within Apache 2.1 to the Perl masses. I know of no other blend of technologies that allow for such remarkable flexibility beyond what each individually brings to the table. Hopefully, this article has not only introduced you to new Apache and authentication concepts, but has also brought to light ways in which you can leverage mod_perl that you never thought of before.</p>
+
+<h3 id="more-information">More Information</h3>
+
+<p>I apologize if this article is a little on the heavy side, teasing you with only cursory introductions to cool concepts while leaving out the finer details. So, if you want to explore these concepts in more detail, I leave you with the following required reading.</p>
+
+<p>A nice overall introduction to the new provider mechanism can be found in <a href="http://www.serverwatch.com/tutorials/article.php/2202671">Safer Apache Driving with AAA</a>. The mechanics of Basic authentication can be found in lots of places, but decent explanations of Digest authentication are harder to find. Both are covered to some level of detail in <a href="http://www.modperlcookbook.org/chapters/ch13.pdf">Chapter 13</a> of the <a href="http://modperlcookbook.org/"><em>mod_perl Developer&rsquo;s Cookbook</em></a>, which is freely available online. Recipe 13.8 in particular includes the code that became the splinter in my mind and eventually this article.</p>
+
+<p>A more detailed explanation of directive handlers in mod_perl 2.0 can be found in the <a href="http://perl.apache.org/docs/2.0/user/config/custom.html">mod_perl 2.0 documentation</a>. Although covering only mod_perl 1.0 directive handlers, whose implementation is very different, <a href="http://modperl.com:9000/book/chapters/ch8.html">Chapter 8</a> in <a href="http://www.modperl.com/"><em>Writing Apache Modules with Perl and C</em></a> and <a href="http://www.modperlcookbook.org/chapters/ch07.pdf">Recipes 7.8 through 7.11</a> in the <em>mod_perl Developer&rsquo;s Cookbook</em> provide excellent explanations of concepts that are universal to both platforms, and are essential reading if you plan on using directive handlers yourself. If you are curious about the intricate details of directive merging, Chapter 21 in <a href="http://www.oreilly.com/catalog/apache3/">Apache: the Definitive Guide</a> presents probably the most comprehensive explanation available.</p>
+
+<p>Finally, if you are interested in the gory details of the XS that really drives Apache::AuthenHook, there is no better single point of reference than <a href="http://www.manning.com/jenness/"><em>Extending and Embedding Perl</em></a>, which was my best friend while writing this module and absolutely deserves a place on your bookshelf.</p>
+
+<h3 id="thanks">Thanks</h3>
+
+<p>Many thanks to Stas Bekman and Philippe Chiasson for their feedback and review of the several patches to mod_perl core that were required for the code in this article, as well as to Jörg Walter, who was kind enough to take the time to review this article and give valuable feedback.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/web">web</a></div>
+                
+                  <div class="tag"><a href="/tags/apache-2">apache-2</a></div>
+                
+                  <div class="tag"><a href="/tags/apache-authhandler">apache-authhandler</a></div>
+                
+                  <div class="tag"><a href="/tags/digest-authentication">digest-authentication</a></div>
+                
+                  <div class="tag"><a href="/tags/geoffrey-young">geoffrey-young</a></div>
+                
+                  <div class="tag"><a href="/tags/mod-perl-2">mod-perl-2</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-geoffrey-young">
+  <div class="col-sm-2">
+    
+    <a href="/authors/geoffrey-young/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/geoffrey-young/"><h3>Geoffrey Young</h3></a>
+    <p></p>
+    <h5><a href="/authors/geoffrey-young/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2003_07_08_mod_perl.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

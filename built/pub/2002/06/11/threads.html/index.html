@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Where Wizards Fear To Tread </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" One of the big new features in perl 5.8 is that we now have real working threads available to us through the threads pragma. However, for us module authors who already have to support our modules on different versions..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2002/06/11/threads.html/" />
+<meta property="og:title" content="Where Wizards Fear To Tread" />
+<meta property="og:description" content=" One of the big new features in perl 5.8 is that we now have real working threads available to us through the threads pragma. However, for us module authors who already have to support our modules on different versions...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2002-06-06T06:06:06Z" />
+<meta property="og:image" content="http://localhost:1313/images/site/avatar.png" />
+<meta property="og:article:tag" content="threads-ithreads-thread-safety" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Where Wizards Fear To Tread</h1>
+              <p class="blog-post-meta">Jun 11, 2002 by
+              
+              
+                
+                
+                <a href="#author-bio-artur-bergman">Artur Bergman</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>One of the big new features in perl 5.8 is that we now have real working threads available to us through the threads pragma.</p>
+
+<p>However, for us module authors who already have to support our modules on different versions of perl and different platforms, we now have to deal with another case: threads! This article will show you how threads relate to modules, how we can take old modules and make them thread-safe, and round off with a new module that alters perl&rsquo;s behavior of the &ldquo;current working directory&rdquo;.</p>
+
+<p>To run the examples I have shown here, you need perl 5.8 RC1 or later compiled with threads. On Unix, you can use <code>Configure -Duseithreads -Dusethreads</code>; On Win32, the default build will always have threading enabled.</p>
+
+<h3 id="span-id-how-do-threads-relate-to-modules-how-do-threads-relate-to-modules-span"><span id="how_do_threads_relate_to_modules">How do threads relate to modules?</span></h3>
+
+<p>Threading in Perl is based on the notion of explicit shared data. That is, only data that is explicitly requested to be shared will be shared between threads. This is controlled by the <code>threads::shared</code> pragma and the &ldquo;<code>: shared</code>&rdquo; attribute. Witness how it works:</p>
+
+<pre><code>     use threads;
+     my $var = 1;
+     threads-&gt;create(sub { $var++ })-&gt;join();
+     print $var;
+</code></pre>
+
+<p>If you are accustomed to threading in most other languages, (Java/C) you would expect $var to contain a 2 and the result of this script to be &ldquo;2&rdquo;. However since Perl does not share data between threads, $var is copied in the thread and only incremented in the thread. The original value in the main thread is not changed, so the output is &ldquo;1&rdquo;.</p>
+
+<p>However if we add in <code>threads::shared</code> and a <code>: shared</code> attribute we get the desired result:</p>
+
+<pre><code>     use threads;
+     use threads::shared;
+     my $var : shared = 1;
+     threads-&gt;create(sub { $var++ })-&gt;join();
+     print $var
+</code></pre>
+
+<p>Now the result will be &ldquo;2&rdquo;, since we declared $var to be a shared variable. Perl will then act on the same variable and provide automatic locking to keep the variable out of trouble.</p>
+
+<p>This makes it quite a bit simpler for us module developers to make sure our modules are thread-safe. Essentially, all pure Perl modules are thread-safe because any global state data, which is usually what gives you thread-safety problems, is by default local to each thread.</p>
+
+<h4 id="span-id-definition-of-threadsafe-levels-definition-of-thread-safe-levels-span"><span id="definition_of_threadsafe_levels">Definition of thread-safe levels</span></h4>
+
+<p>To define what we mean by thread-safety, here are some terms adapted from the Solaris thread-safety levels.</p>
+
+<p><strong><span id="item_thread%2dsafe">thread-safe</span></strong></p>
+
+<p>This module can safely be used from multiple threads. The effect of calling into a safe module is that the results are valid even when called by multiple threads. However, thread-safe modules can still have global consequences; for example, sending or reading data from a socket affects all threads that are working with that socket. The application has the responsibility to act sane with regards to threads. If one thread creates a file with the name <em>file.tmp</em> then another file which tries to create it will fail; this is not the fault of the module.</p>
+
+<p><strong><span id="item_thread%2dfriendly">thread-friendly</span></strong></p>
+
+<p>Thread-friendly modules are thread-safe modules that know about and provide special functions for working with threads or utilize threads by themselves. A typical example of this is the core <code>threads::queue</code> module. One could also imagine a thread-friendly module with a cache to declare that cache to be shared between threads to make hits more likely and save memory.</p>
+
+<p><strong><span id="item_thread%2dunsafe">thread-unsafe</span></strong></p>
+
+<p>This module can not safely be used from different threads; it is up to the application to synchronize access to the library and make sure it works with it the way it is specified. Typical examples here are XS modules that utilize external unsafe libraries that might only allow one thread to execute them.</p>
+
+<p>Since Perl only shares when asked to, most pure Perl code probably falls into the thread-safe category, that doesn&rsquo;t mean you should trust it until you have review the source code or they have been marked with thread-safe by the author. Typical problems include using alarm(), mucking around with signals, working with relative paths and depending on <code>%ENV</code>. However remember that ALL XS modules that don&rsquo;t state anything fall into the definitive thread-unsafe category.</p>
+
+<h3 id="span-id-why-should-i-bother-making-my-module-threadsafe-or-threadfriendly-why-should-i-bother-making-my-module-thread-safe-or-thread-friendly-span"><span id="why_should_i_bother_making_my_module_threadsafe_or_threadfriendly">Why should I bother making my module thread-safe or thread-friendly?</span></h3>
+
+<p>Well, it usually isn&rsquo;t much work and it will make the users of this modules that want to use it in a threaded environment very happy. What? Threaded Perl environments aren&rsquo;t that common you say? Wait until Apache 2.0 and mod_perl 2.0 becomes available. One big change is that Apache 2.0 can run in threaded mode and then mod_perl will have to be run in threaded mode; this can be a huge performance gain on some operating systems. So if you want your modules to work with mod_perl 2.0, taking a look at thread-safety levels is a good thing to do.</p>
+
+<h3 id="span-id-so-what-do-i-do-to-make-my-module-threadfriendly-so-what-do-i-do-to-make-my-module-thread-friendly-span"><span id="so_what_do_i_do_to_make_my_module_threadfriendly">So what do I do to make my module thread-friendly?</span></h3>
+
+<p>A good example of a module that needed a little modification to work with threads is Michael Schwern&rsquo;s most excellent <code>Test::Simple</code> suite (<code>Test::Simple</code>, <code>Test::More</code> and <code>Test::Builder</code>). Surprisingly, we had to change very little to fix it.</p>
+
+<p>The problem was simply that the test numbering was not shared between threads.</p>
+
+<p>For example</p>
+
+<pre><code>     use threads;
+     use Test::Simple tests =&gt; 3;
+     ok(1);
+     threads-&gt;create(sub { ok(1) })-&gt;join();
+     ok(1);
+</code></pre>
+
+<p>Now that will return</p>
+
+<pre><code>     1..3
+     ok 1
+     ok 2
+     ok 2
+</code></pre>
+
+<p>Does it look similar to the problem we had earlier? Indeed it does, seems like somewhere there is a variable that needs to shared.</p>
+
+<p>Now reading the documentation of <code>Test::Simple</code> we find out that all magic is really done inside <code>Test::Builder</code>, opening up <em>Builder.pm</em> we quickly find the following lines of code:</p>
+
+<pre><code>     my @Test_Results = ();
+     my @Test_Details = ();
+     my $Curr_Test = 0;
+</code></pre>
+
+<p>Now we would be tempted to add <code>use threads::shared</code> and <code>:shared</code> attribute.</p>
+
+<pre><code>     use threads::shared;
+     my @Test_Results : shared = ();
+     my @Test_Details : shared = ();
+     my $Curr_Test : shared = 0;
+</code></pre>
+
+<p>However <code>Test::Builder</code> needs to work back to Perl 5.4.4! Attributes were only added in 5.6.0 and the above code would be a syntax error in earlier Perls. And even if someone were using 5.6.0, <code>threads::shared</code> would not be available for them.</p>
+
+<p>The solution is to use the runtime function <code>share()</code> exported by <code>threads::shared</code>, but we only want to do it for 5.8.0 and when threads have been enabled. So, let&rsquo;s wrap it in a <code>BEGIN</code> block and an <code>if</code>.</p>
+
+<pre><code>     BEGIN{
+         if($] &gt;= 5.008 &amp;&amp; exists($INC{'threads.pm'})) {
+             require threads::shared;
+             import threads::shared qw(share);
+             share($Curr_Test);
+             share(@Test_Details)
+             share(@Test_Results);
+         }
+</code></pre>
+
+<p>So, if 5.8.0 or higher and threads has been loaded, we do the runtime equivalent of <code>use threads::shared qw(share);</code> and call <code>share()</code> on the variables we want to be shared.</p>
+
+<p>Now lets find out some examples of where <code>$Curr_Test</code> is used. We find <code>sub ok {}</code> in <code>Test::Builder</code>; I won&rsquo;t include it here, but only a smaller version which contains:</p>
+
+<pre><code>     sub ok {
+         my($self, $test, $name) = @_;
+         $Curr_Test++;
+         $Test_Results[$Curr_Test-1] = 1 unless($test);
+     }
+</code></pre>
+
+<p>Now, this looks like it should work right? We have shared $Curr_Test and <code>@Test_Results</code>. Of course, things aren&rsquo;t that easy; they never are. Even if the variables are shared, two threads could enter <code>ok()</code> at the same time. Remember that not even the statement <code>$CurrTest++</code> is an atomic operation, it is just a shortcut for writing <code>$CurrTest = $CurrTest + 1</code>. So let&rsquo;s say two threads do that at the same time.</p>
+
+<pre><code>     Thread 1: add 1 + $Curr_Test
+     Thread 2: add 1 + $Curr_Test
+     Thread 2: Assign result to $Curr_Test
+     Thread 1: Assign result to $Curr_Test
+</code></pre>
+
+<p>The effect would be that $Curr_Test would only be increased by one, not two! Remember that a switch between two threads could happen at <strong>ANY</strong> time, and if you are on a multiple CPU machine they can run at exactly the same time! Never trust thread inertia.</p>
+
+<p>So how do we solve it? We use the <code>lock()</code> keyword. <code>lock()</code> takes a shared variable and locks it for the rest of the scope, but it is only an advisory lock so we need to find every place that $Curr_Test is used and modified and it is expected not to change. The <code>ok()</code> becomes:</p>
+
+<pre><code>     sub ok {
+         my($self, $test, $name) = @_;
+         lock($Curr_Test);
+         $Curr_Test++;
+         $Test_Results[$Curr_Test-1] = 1 unless($test);
+     }
+</code></pre>
+
+<p>So are we ready? Well, <code>lock()</code> was only added in Perl 5.5 so we need to add an else to the BEGIN clause to define a lock function if we aren&rsquo;t running with threads. The end result would be.</p>
+
+<pre><code>     my @Test_Results = ();
+     my @Test_Details = ();
+     my $Curr_Test = 0;
+     BEGIN{
+         if($] &gt;= 5.008 &amp;&amp; exists($INC{'threads.pm'})) {
+             require threads::shared;
+             import threads::shared qw(share);
+             share($Curr_Test);
+             share(@Test_Details)
+             share(@Test_Results);
+         } else {
+             *lock = sub(*) {};
+         }
+     }
+     sub ok {
+         my($self, $test, $name) = @_;
+         lock($Curr_Test);
+         $Curr_Test++;
+         $Test_Results[$Curr_Test-1] = 1 unless($test);
+     }
+</code></pre>
+
+<p>In fact, this is very like the code that has been added to <code>Test::Builder</code> to make it work nice with threads. The only thing not correct is <code>ok()</code> as I cut it down to what was relevant. There were roughly 5 places where <code>lock()</code> had to be added. Now the test code would print</p>
+
+<pre><code>     1..3
+     ok 1
+     ok 2
+     ok 3
+</code></pre>
+
+<p>which is exactly what the end user would expect. All in all this is a rather small change for this 1291 line module, we change roughly 15 lines in a non intrusive way, the documentation and testcase code makes up most of the patch. The full patch is at <a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2002-06/msg00816.html">http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2002-06/msg00816.html</a></p>
+
+<h3 id="span-id-altering-perls-behavior-to-be-threadsafe-ex-threads-cwd-altering-perls-behavior-to-be-thread-safe-ex-threads-cwd-span"><span id="altering_perls_behavior_to_be_threadsafe,_ex::threads::cwd">Altering Perls behavior to be thread-safe, ex::threads::cwd</span></h3>
+
+<p>Somethings change when you use threads; some things that you or a module might do are not like what they used to be. Most of the changes will be due to the way your operating system treats processes that use threads. Each process has typically a set of attributes, which include the current working directory, the environment table, the signal subsystem and the pid. Since threads are multiple paths of execution inside a single process, the operating system treats it as a single process and you have a single set of these attributes.</p>
+
+<p>Yep. That&rsquo;s right - if you change the current working directory in one thread, it will also change in all the other threads! Whoops, better start using absolute paths everywhere, and all the code that uses your module might use relative paths. Aaargh&hellip;</p>
+
+<p>Don&rsquo;t worry, this is a solvable problem. In fact, it&rsquo;s solvable by a module.</p>
+
+<p>Perl allows us to override functions using the <code>CORE::GLOBAL</code> namespace. This will let us override the functions that deal with paths and set the <code>cwd</code> correctly before issuing the command. So let&rsquo;s start off</p>
+
+<pre><code>     package ex::threads::safecwd;
+
+     use 5.008;
+     use strict;
+     use warnings;
+     use threads::shared;
+     our $VERSION = '0.01';
+</code></pre>
+
+<p>Nothing weird here right? Now, when changing and dealing with the current working directory one often uses the <code>Cwd</code> module, so let us make the cwd module safe first. How do we do that?</p>
+
+<pre><code>  1) use Cwd;
+  2) our $cwd = cwd;  #our per thread cwd, init on startup from cwd
+  3) our $cwd_mutex : shared; # the variable we use to sync
+  4) our $Cwd_cwd = \&amp;Cwd::cwd;
+  5) *Cwd::cwd = *my_cwd;     
+     sub my_cwd {
+  6)     lock($cwd_mutex);
+  7)     CORE::chdir($cwd);
+  8)     $Cwd_cwd-&gt;(@_);
+     }
+</code></pre>
+
+<p>What&rsquo;s going on here? Let&rsquo;s analyze it line by line:</p>
+
+<ol>
+<li>We include <code>Cwd</code>.</li>
+<li>We declare a variable and assign to it the cwd we start in. This variable will not be shared between threads and will contain the cwd of this thread.</li>
+<li>We declare a variable we will be using to lock for synchronizing work.</li>
+<li>Here we take a reference to the <code>&amp;Cwd::cwd</code> and store in <code>$Cwd_cwd</code>.</li>
+<li>Now we hijack <code>Cwd::cwd</code> and assign to it our own <code>my_cwd</code> so whenever someone calls <code>Cwd::cwd</code>, it will call <code>my_cwd</code> instead.</li>
+<li><code>my_cwd</code> starts of by locking $cwd_mutex so no one else will muck. around with the cwd.</li>
+<li>After that we call <code>CORE::chdir()</code> to actually set the cwd to what this thread is expecting it to be.</li>
+<li>And we round off by calling the original <code>Cwd::cwd</code> that we stored in step 4 with any parameters that we were handed to us.</li>
+</ol>
+
+<p>In effect we have hijacked <code>Cwd::cwd</code> and wrapped it around with a lock and a <code>chdir</code> so it will report the correct thing!</p>
+
+<p>Now that <code>cwd()</code> is fixed, we need a way to actually change the directory. To do this, we install our own global <code>chdir</code>, simply like this.</p>
+
+<pre><code>     *CORE::GLOBAL::chdir = sub {
+         lock($cwd_mutex);
+         CORE::chdir($_[0]) || return undef;
+         $cwd = $Cwd_cwd-&gt;();
+     };
+</code></pre>
+
+<p>Now, whenever someone calls <code>chdir()</code> our <code>chdir</code> will be called instead, and in it we start by locking the variable controlling access, then we try to chdir to the directory to see if it is possible, otherwise we do what the real chdir would do, return undef. If it succeeds, we assign the new value to our per thread <code>$cwd</code> by calling the original <code>Cwd::cwd()</code></p>
+
+<p>The above code is actually enough to allow the following to work:</p>
+
+<pre><code>     use threads
+     use ex::threads::safecwd;
+     use Cwd;
+     chdir(&quot;/tmp&quot;);
+     threads-&gt;create(sub { chdir(&quot;/usr&quot;) } )-&gt;join();
+     print cwd() eq '/tmp' ? &quot;ok&quot; : &quot;nok&quot;;
+</code></pre>
+
+<p>Since the <code>chdir(&quot;/usr&quot;);</code> inside the thread will not affect the other thread&rsquo;s <code>$cwd</code> variable, so when <code>cwd</code> is called, we will lock down the thread, <code>chdir()</code> to the location the thread <code>$cwd</code> contains and perform a <code>cwd()</code>.</p>
+
+<p>While this is useful, we need to get along and provide some more functions to extend the functionality of this module.</p>
+
+<pre><code>     *CORE::GLOBAL::mkdir = sub {
+         lock($cwd_mutex);
+         CORE::chdir($cwd);
+         if(@_ &gt; 1) {
+             CORE::mkdir($_[0], $_[1]);
+         } else {
+             CORE::mkdir($_[0]);
+         }
+     };
+
+     *CORE::GLOBAL::rmdir = sub {
+         lock($cwd_mutex);
+         CORE::chdir($cwd);
+         CORE::rmdir($_[0]);
+     };
+</code></pre>
+
+<p>The above snippet does essentially the same thing for both <code>mkdir</code> and <code>rmdir</code>. We lock the $cwd_mutex to synchronize access, then we <code>chdir</code> to <code>$cwd</code> and finally perform the action. Worth noticing here is the check we need to do for <code>mkdir</code> to be sure the prototype behavior for it is correct.</p>
+
+<p>Let&rsquo;s move on with <code>opendir</code>, <code>open</code>, <code>readlink</code>, <code>readpipe</code>, <code>require</code>, <code>rmdir</code>, <code>stat</code>, <code>symlink</code>, <code>system</code> and <code>unlink</code>. None of these are really any different from the above with the big exception of <code>open</code>. <code>open</code> has a weird bit of special case since it can take both a HANDLE and an empty scalar for autovification of an anonymous handle.</p>
+
+<pre><code>     *CORE::GLOBAL::open = sub (*;$@) {
+         lock($cwd_mutex);
+         CORE::chdir($cwd);
+         if(defined($_[0])) {
+             use Symbol qw();
+             my $handle = Symbol::qualify($_[0],(caller)[0]);
+             no strict 'refs';
+             if(@_ == 1) {
+                 return CORE::open($handle);
+             } elsif(@_ == 2) {
+               return CORE::open($handle, $_[1]);
+             } else {
+               return CORE::open($handle, $_[1], @_[2..$#_]);
+             }
+         }
+</code></pre>
+
+<p>Starting off with the usual lock and <code>chdir()</code> we then need to check if the first value is defined. If it is, we have to qualify it to the callers namespace. This is what would happen if a user does <code>open FOO, &quot;+&gt;foo.txt&quot;</code>. If the user instead does <code>open main::FOO, &quot;+&gt;foo.txt&quot;</code>, then Symbol::qualify notices that the handle is already qualified and returns it unmodified. Now since <code>$_[0]</code> is a readonly alias we cannot assign it over so we need to create a temporary variable and then proceed as usual.</p>
+
+<p>Now if the user used the new style <code>open my $foo, &quot;+&gt;foo.txt&quot;</code>, we need to treat it differently. The following code will do the trick and complete the function.</p>
+
+<pre><code>     else {
+             if(@_ == 1) {
+                 return CORE::open($_[0]);
+             } elsif(@_ == 2) {
+                 return CORE::open($_[0], $_[1]);
+             } else {
+                 return CORE::open($_[0], $_[1], @_[2..$#_]);
+             }
+         }
+     };
+</code></pre>
+
+<p>Wonder why we couldn&rsquo;t just assign <code>$_[0]</code> to <code>$handle</code> and unify the code path? You see, <code>$_[0]</code> is an alias to the <code>$foo</code> in <code>open my $foo, &quot;+&gt;foo.txt&quot;</code> so <code>CORE::open</code> will correctly work.</p>
+
+<p>However, if we do <code>$handle = $_[0]</code> we take a copy of the undefined variable and <code>CORE::open</code> won&rsquo;t do what I mean.</p>
+
+<p>So now we have a module that allows the you to safely use relative paths in most of the cases and vastly improves your ability to port code to a threaded environment. The price we pay for this is speed, since every time you do an operation involving a directory you are serializing your program. Typically, you never do those kinds of operations in a hot path anyway. You might do work on your file in a hot path, but as soon as we have gotten the filehandle no more locking is done.</p>
+
+<p>A couple of problems remain. Performance-wise, there is one big problem with <code>system()</code>, since we don&rsquo;t get control back until the <code>CORE::system()</code> returns, so all path operations will hang waiting for that. To solve that we would need to revert to XS and do some magic with regard to the system call. We also haven&rsquo;t been able to override the file test operators (<code>-x</code> and friends), nor can we do anything about <code>qx {}</code>. Solving that problem requires working up and down the optree using <code>B::Generate</code> and <code>B::Utils</code>. Perhaps a future version of the module will attempt that together with a custom op to do the locking.</p>
+
+<h3 id="span-id-conclusion-conclusion-span"><span id="conclusion">Conclusion</span></h3>
+
+<p>Threads in Perl are simple and straight forward, as long as we stay in pure Perl land everything behaves just about how we would expect it to. Converting your modules should be a simple matter of programming without any big wizardly things to be done. The important thing to remember is to think about how your module could possibly take advantage of threads to make it easier to use for the programmer.</p>
+
+<p>Moving over to XS land is altogether different; stay put for the next article that will take us through the pitfalls of converting various kinds of XS modules to thread-safe and thread-friendly levels.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/threads-ithreads-thread-safety">threads-ithreads-thread-safety</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-artur-bergman">
+  <div class="col-sm-2">
+    
+    <a href="/authors/artur-bergman/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/artur-bergman/"><h3>Artur Bergman</h3></a>
+    <p></p>
+    <h5><a href="/authors/artur-bergman/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2002_06_11_threads.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mod Perl Fork on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/mod-perl-fork/</link>
+    <description>Recent content in Mod Perl Fork on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 07 Jan 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/mod-perl-fork/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Improving mod_perl Sites&#39; Performance: Part 6</title>
+      <link>http://localhost:1313/pub/2003/01/07/mod_perl.html/</link>
+      <pubDate>Tue, 07 Jan 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/01/07/mod_perl.html/</guid>
+      <description>
+
+&lt;p&gt;It&amp;rsquo;s desirable to avoid forking under &lt;code&gt;mod_perl&lt;/code&gt;, as when you do, you are forking the entire Apache server &amp;ndash; lock, stock and barrel. Not only is your Perl code and Perl interpreter being duplicated, but so is &lt;code&gt;mod_ssl&lt;/code&gt;, &lt;code&gt;mod_rewrite&lt;/code&gt;, &lt;code&gt;mod_log&lt;/code&gt;, &lt;code&gt;mod_proxy&lt;/code&gt;, &lt;code&gt;mod_speling&lt;/code&gt; (it&amp;rsquo;s not a typo!) or whatever modules you have used in your server, all the core routines.&lt;/p&gt;
+
+&lt;p&gt;Modern operating systems come with a light version of fork, which adds a little overhead when called, since it was optimized to do the absolute minimum of memory pages duplications. The &lt;em&gt;copy-on-write&lt;/em&gt; technique is what allows it to do so. The gist of this technique is as follows: The parent process&amp;rsquo; memory pages aren&amp;rsquo;t immediately copied to the child&amp;rsquo;s space on fork(); this is done only when the child or the parent modifies the data in some memory pages. Before the pages get modified, they get marked as dirty and the child has no choice but to copy the pages that are to be modified since they cannot be shared any more.&lt;/p&gt;
+
+&lt;p&gt;If you need to call a Perl program from your &lt;code&gt;mod_perl&lt;/code&gt; code, then it&amp;rsquo;s better to try to covert the program into a module and call it as a function without spawning a special process to do that. Of course, if you cannot do that or the program is not written in Perl, then you have to call via &lt;code&gt;system()&lt;/code&gt; or its equivalent, which spawns a new process. If the program is written in C, then you can try to write a Perl glue code with help of XS or SWIG architectures, and then the program will be executed as a Perl subroutine.&lt;/p&gt;
+
+&lt;p&gt;Also, by trying to spawn a sub-process, you might be trying to do the &lt;em&gt;&amp;ldquo;wrong thing&amp;rdquo;&lt;/em&gt;. If what you really want is to send information to the browser and then do some post-processing, then look into the &lt;code&gt;PerlCleanupHandler&lt;/code&gt; directive. The latter allows you to tell the child process after request has been processed and user has received the response. This doesn&amp;rsquo;t release the &lt;code&gt;mod_perl&lt;/code&gt; process to serve other requests, but it allows you to send the response to the client faster. If this is the situation and you need to run some cleanup code, then you may want to register this code during the request processing stage like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $r = shift;
+  $r-&amp;gt;register_cleanup(\&amp;amp;do_cleanup);
+  sub do_cleanup{ #some clean-up code here }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But when a long-term process needs to be spawned, there is not much choice but to use fork(). We cannot just run this process within the Apache process because it&amp;rsquo;ll keep the Apache process busy, instead of allowing it to do the job it was designed to do. Also, if Apache stops, then the long-term process might be terminated as well unless coded properly to detach from Apache&amp;rsquo;s process group.&lt;/p&gt;
+
+&lt;p&gt;In the following sections, I&amp;rsquo;m going to discuss how to properly spawn new processes under &lt;code&gt;mod_perl&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-forking-a-new-process-forking-a-new-process-span&#34;&gt;&lt;span id=&#34;forking_a_new_process&#34;&gt;Forking a New Process&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This is a typical way to call &lt;code&gt;fork()&lt;/code&gt; under &lt;code&gt;mod_perl&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  defined (my $kid = fork) or die &amp;quot;Cannot fork: $!\n&amp;quot;;
+  if ($kid) {
+    # Parent runs this block
+  } else {
+    # Child runs this block
+    # some code comes here
+    CORE::exit(0);
+  }
+  # possibly more code here usually run by the parent
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When using fork(), you should check its return value, because if it returns &lt;code&gt;undef&lt;/code&gt;, it means that the call was unsuccessful and no process was spawned; something that can happen when the system is running too many processes and cannot spawn new ones.&lt;/p&gt;
+
+&lt;p&gt;When the process is successfully forked, the parent receives the PID of the newly spawned child as a returned value of the &lt;code&gt;fork()&lt;/code&gt; call and the child receives 0. Now the program splits into two. In the above example, the code inside the first block after &lt;em&gt;if&lt;/em&gt; will be executed by the parent and the code inside the first block after &lt;em&gt;else&lt;/em&gt; will be executed by the child process.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s important not to forget to explicitly call &lt;code&gt;exit()&lt;/code&gt; at the end of the child code when forking - if you don&amp;rsquo;t and there is some code outside the &lt;em&gt;if/else block&lt;/em&gt;, then the child process will execute it as well. But under &lt;code&gt;mod_perl&lt;/code&gt; there is another nuance: You must use &lt;code&gt;CORE::exit()&lt;/code&gt; and not &lt;code&gt;exit()&lt;/code&gt;, which would be automatically overriden by &lt;code&gt;Apache::exit()&lt;/code&gt; if used in conjunction with &lt;code&gt;Apache::Registry&lt;/code&gt; and similar modules. We actually do want the spawned process to quit when its work is done, otherwise, it&amp;rsquo;ll just stay alive, use resources and do nothing.&lt;/p&gt;
+
+&lt;p&gt;The parent process usually completes its execution path and enters the pool of free servers to wait for a new assignment. If the execution path is to be aborted earlier for some reason, then one should use Apache::exit() or die(). In the case of &lt;code&gt;Apache::Registry&lt;/code&gt; or &lt;code&gt;Apache::PerlRun&lt;/code&gt; handlers, a simple &lt;code&gt;exit()&lt;/code&gt; will do the correct thing.&lt;/p&gt;
+
+&lt;p&gt;The child shares with parent its memory pages until it has to modify some of them, which triggers a &lt;em&gt;copy-on-write&lt;/em&gt; process that copies these pages to the child&amp;rsquo;s domain before the child is allowed to modify them. But this all happens afterward. At the moment the &lt;code&gt;fork()&lt;/code&gt; call is executed, the only work to be done before the child process goes on its separate way is to set up the page tables for the virtual memory, which imposes almost no delay at all.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-freeing-the-parent-process-freeing-the-parent-process-span&#34;&gt;&lt;span id=&#34;freeing_the_parent_process&#34;&gt;Freeing the Parent Process&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In the child code, you must also close all pipes to the connection socket that were opened by the parent process (i.e. &lt;code&gt;STDIN&lt;/code&gt; and &lt;code&gt;STDOUT&lt;/code&gt;) and inherited by the child, so the parent will be able to complete the request and free itself for serving other requests. If you need the &lt;code&gt;STDIN&lt;/code&gt; and/or &lt;code&gt;STDOUT&lt;/code&gt; streams, then you should reopen them. You may need to close or reopen the &lt;code&gt;STDERR&lt;/code&gt; filehandle. It&amp;rsquo;s opened to append to the &lt;em&gt;error_log&lt;/em&gt; file as inherited from its parent, so chances are that you will want to leave it untouched.&lt;/p&gt;
+
+&lt;p&gt;Under &lt;code&gt;mod_perl&lt;/code&gt;, the spawned process also inherits a file descriptor that&amp;rsquo;s tied to the socket through which all communication between the server and the client occur. Therefore, we need to free this stream in the forked process. If we don&amp;rsquo;t do that, then the server cannot be restarted while the spawned process is still running. If an attempt is made to restart the server, then you will get the following error:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [Mon Dec 11 19:04:13 2000] [crit]
+  (98)Address already in use: make_sock:
+    could not bind to address 127.0.0.1 port 8000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Apache::SubProcess&lt;/code&gt; comes to our aid and provides a method &lt;code&gt;cleanup_for_exec()&lt;/code&gt;, which takes care of closing this file descriptor.&lt;/p&gt;
+
+&lt;p&gt;So the simplest way to free the parent process is to close all three &lt;code&gt;STD*&lt;/code&gt; streams if we don&amp;rsquo;t need them, and untie the Apache socket. In addition, you may want to change the process&amp;rsquo; current directory to &lt;em&gt;/&lt;/em&gt; so the forked process won&amp;rsquo;t keep the mounted partition busy, if this is to be unmounted at a later time. To summarize all this issues, here is an example of the fork that takes care of freeing the parent process.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Apache::SubProcess;
+  defined (my $kid = fork) or die &amp;quot;Cannot fork: $!\n&amp;quot;;
+  if ($kid) {
+    # Parent runs this block
+  } else {
+    # Child runs this block
+      $r-&amp;gt;cleanup_for_exec(); # untie the socket
+      chdir &#39;/&#39; or die &amp;quot;Can&#39;t chdir to /: $!&amp;quot;;
+      close STDIN;
+      close STDOUT;
+      close STDERR;
+
+    # some code comes here
+
+      CORE::exit(0);
+  }
+  # possibly more code here usually run by the parent
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, between the freeing-parent code and child-process termination, the real code is to be placed.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-detaching-the-forked-process-detaching-the-forked-process-span&#34;&gt;&lt;span id=&#34;detaching_the_forked_process&#34;&gt;Detaching the Forked Process&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now what happens if the forked process is running and we decide that we need to restart the Web server? This forked process will be aborted, since when the parent process dies during the restart, it&amp;rsquo;ll kill its child processes as well. In order to avoid this, we need to detach the process from its parent session by opening a new session. We do this with help of &lt;code&gt;setsid()&lt;/code&gt; system call, provided by the &lt;code&gt;POSIX&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use POSIX &#39;setsid&#39;;
+
+  defined (my $kid = fork) or die &amp;quot;Cannot fork: $!\n&amp;quot;;
+  if ($kid) {
+    # Parent runs this block
+  } else {
+    # Child runs this block
+      setsid or die &amp;quot;Can&#39;t start a new session: $!&amp;quot;;
+      ...
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now the spawned child process has a life of its own, and it doesn&amp;rsquo;t depend on the parent any longer.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-avoiding-zombie-processes-avoiding-zombie-processes-span&#34;&gt;&lt;span id=&#34;avoiding_zombie_processes&#34;&gt;Avoiding Zombie Processes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s talk about zombie processes.&lt;/p&gt;
+
+&lt;p&gt;Normally, every process has its parent. Many processes are children of the &lt;code&gt;init&lt;/code&gt; process, whose &lt;code&gt;PID&lt;/code&gt; is &lt;code&gt;1&lt;/code&gt;. When you fork a process, you must &lt;code&gt;wait()&lt;/code&gt; or &lt;code&gt;waitpid()&lt;/code&gt; for it to finish. If you don&amp;rsquo;t &lt;code&gt;wait()&lt;/code&gt; for it, then it becomes a zombie.&lt;/p&gt;
+
+&lt;p&gt;A zombie is a process that doesn&amp;rsquo;t have a parent. When the child quits, it reports the termination to its parent. If no parent wait()s to collect the exit status of the child, then it gets &lt;em&gt;&amp;ldquo;confused&amp;rdquo;&lt;/em&gt; and becomes a ghost process. This process can be seen as a process, but not killed. It will be killed only when you stop the parent process that spawned it!&lt;/p&gt;
+
+&lt;p&gt;Generally, the &lt;code&gt;ps(1)&lt;/code&gt; utility displays these processes with the &lt;code&gt;&amp;lt;defunct&amp;gt;&lt;/code&gt; tag, and you will see the zombies counter increment when doing top(). These zombie processes can take up system resources and are generally undesirable.&lt;/p&gt;
+
+&lt;p&gt;So the proper way to do a fork is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $r = shift;
+  $r-&amp;gt;send_http_header(&#39;text/plain&#39;);
+
+  defined (my $kid = fork) or die &amp;quot;Cannot fork: $!&amp;quot;;
+  if ($kid) {
+    waitpid($kid,0);
+    print &amp;quot;Parent has finished\n&amp;quot;;
+  } else {
+      # do something
+      CORE::exit(0);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In most cases, the only reason you would want to fork is when you need to spawn a process that will take a long time to complete. So if the Apache process that spawns this new child process has to wait for it to finish, then you have gained nothing. You can neither wait for its completion (because you don&amp;rsquo;t have the time to), nor continue because you will get yet another zombie process. This is called a blocking call, since the process is blocked to do anything else before this call gets completed.&lt;/p&gt;
+
+&lt;p&gt;The simplest solution is to ignore your dead children. Just add this line before the &lt;code&gt;fork()&lt;/code&gt; call:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $SIG{CHLD} = &#39;IGNORE&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you set the &lt;code&gt;CHLD&lt;/code&gt; (&lt;code&gt;SIGCHLD&lt;/code&gt; in C) signal handler to &lt;code&gt;&#39;IGNORE&#39;&lt;/code&gt;, all the processes will be collected by the &lt;code&gt;init&lt;/code&gt; process and are therefore prevented from becoming zombies. This doesn&amp;rsquo;t work everywhere, however. It proved to work at least on the Linux OS.&lt;/p&gt;
+
+&lt;p&gt;Note that you cannot localize this setting with &lt;code&gt;local()&lt;/code&gt;. If you do, then it won&amp;rsquo;t have the desired effect.&lt;/p&gt;
+
+&lt;p&gt;So now the code would look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $r = shift;
+  $r-&amp;gt;send_http_header(&#39;text/plain&#39;);
+
+  $SIG{CHLD} = &#39;IGNORE&#39;;
+
+  defined (my $kid = fork) or die &amp;quot;Cannot fork: $!\n&amp;quot;;
+  if ($kid) {
+    print &amp;quot;Parent has finished\n&amp;quot;;
+  } else {
+      # do something time-consuming
+      CORE::exit(0);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that &lt;code&gt;waitpid()&lt;/code&gt; call is gone. The $SIG{CHLD} = &amp;rsquo;IGNORE&amp;rsquo;; statement protects us from zombies, as explained above.&lt;/p&gt;
+
+&lt;p&gt;Another, more portable but slightly more expensive solution, is to use a double fork approach.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $r = shift;
+  $r-&amp;gt;send_http_header(&#39;text/plain&#39;);
+
+  defined (my $kid = fork) or die &amp;quot;Cannot fork: $!\n&amp;quot;;
+  if ($kid) {
+    waitpid($kid,0);
+  } else {
+    defined (my $grandkid = fork) or die &amp;quot;Kid cannot fork: $!\n&amp;quot;;
+    if ($grandkid) {
+      CORE::exit(0);
+    } else {
+      # code here
+      # do something long lasting
+      CORE::exit(0);
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$grandkid&lt;/code&gt; becomes a &lt;em&gt;&amp;ldquo;child of init&amp;rdquo;&lt;/em&gt;, i.e. the child of the process whose PID is 1.&lt;/p&gt;
+
+&lt;p&gt;Note that the previous two solutions do allow you to know the exit status of the process, but in my example I didn&amp;rsquo;t care about it.&lt;/p&gt;
+
+&lt;p&gt;Another solution is to use a different &lt;em&gt;SIGCHLD&lt;/em&gt; handler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use POSIX &#39;WNOHANG&#39;;
+  $SIG{CHLD} = sub { while( waitpid(-1,WNOHANG)&amp;gt;0 ) {} };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is useful when you &lt;code&gt;fork()&lt;/code&gt; more than one process. The handler could call &lt;code&gt;wait()&lt;/code&gt; as well, but for a variety of reasons involving the handling of stopped processes and the rare event when two children exit at nearly the same moment, the best technique is to call &lt;code&gt;waitpid()&lt;/code&gt; in a tight loop with a first argument of &lt;code&gt;-1&lt;/code&gt; and a second argument of &lt;code&gt;WNOHANG&lt;/code&gt;. Together, these arguments tell &lt;code&gt;waitpid()&lt;/code&gt; to reap the next child that&amp;rsquo;s available, and prevent the call from blocking if there happens to be no child ready for reaping. The handler will loop until &lt;code&gt;waitpid()&lt;/code&gt; returns a negative number or zero, indicating that no additional reapable children remain.&lt;/p&gt;
+
+&lt;p&gt;While you test and debug your code that uses one of the above examples, you might want to write some debug information to the error_log file so you know what happens.&lt;/p&gt;
+
+&lt;p&gt;Read &lt;em&gt;perlipc&lt;/em&gt; manpage for more information about signal handlers.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-complete-fork-example-a-complete-fork-example-span&#34;&gt;&lt;span id=&#34;a_complete_fork_example&#34;&gt;A Complete Fork Example&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s put all the bits of code together and show a well-written fork code that solves all the problems discussed so far. I will use an &amp;lt;Apache::Registry&amp;gt; script for this purpose:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  proper_fork1.pl
+  ---------------
+  use strict;
+  use POSIX &#39;setsid&#39;;
+  use Apache::SubProcess;
+
+  my $r = shift;
+  $r-&amp;gt;send_http_header(&amp;quot;text/plain&amp;quot;);
+
+  $SIG{CHLD} = &#39;IGNORE&#39;;
+  defined (my $kid = fork) or die &amp;quot;Cannot fork: $!\n&amp;quot;;
+  if ($kid) {
+    print &amp;quot;Parent $$ has finished, kid&#39;s PID: $kid\n&amp;quot;;
+  } else {
+      $r-&amp;gt;cleanup_for_exec(); # untie the socket
+      chdir &#39;/&#39;                or die &amp;quot;Can&#39;t chdir to /: $!&amp;quot;;
+      open STDIN, &#39;/dev/null&#39;  or die &amp;quot;Can&#39;t read /dev/null: $!&amp;quot;;
+      open STDOUT, &#39;&amp;gt;/dev/null&#39;
+          or die &amp;quot;Can&#39;t write to /dev/null: $!&amp;quot;;
+      open STDERR, &#39;&amp;gt;/tmp/log&#39; or die &amp;quot;Can&#39;t write to /tmp/log: $!&amp;quot;;
+      setsid or die &amp;quot;Can&#39;t start a new session: $!&amp;quot;;
+
+      select STDERR;
+      local $| = 1;
+      warn &amp;quot;started\n&amp;quot;;
+      # do something time-consuming
+      sleep 1, warn &amp;quot;$_\n&amp;quot; for 1..20;
+      warn &amp;quot;completed\n&amp;quot;;
+
+      CORE::exit(0); # terminate the process
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The script starts with the usual declaration of the strict mode, loading the &lt;code&gt;POSIX&lt;/code&gt; and &lt;code&gt;Apache::SubProcess&lt;/code&gt; modules and importing of the &lt;code&gt;setsid()&lt;/code&gt; symbol from the &lt;code&gt;POSIX&lt;/code&gt; package.&lt;/p&gt;
+
+&lt;p&gt;The HTTP header is sent next, with the &lt;em&gt;Content-type&lt;/em&gt; of &lt;em&gt;text/plain&lt;/em&gt;. The gets ready to ignore the child, to avoid zombies and the fork is called.&lt;/p&gt;
+
+&lt;p&gt;The program gets its personality split after &lt;code&gt;fork&lt;/code&gt; and the &lt;code&gt;if&lt;/code&gt; conditional evaluates to a true value for the parent process, and to a false value for the child process; the first block is executed by the parent and the second by the child.&lt;/p&gt;
+
+&lt;p&gt;The parent process announces his PID and the PID of the spawned process and finishes its block. If there will be any code outside, then it will be executed by the parent as well.&lt;/p&gt;
+
+&lt;p&gt;The child process starts its code by disconnecting from the socket, changing its current directory to &lt;code&gt;/&lt;/code&gt;, opening the STDIN and STDOUT streams to &lt;em&gt;/dev/null&lt;/em&gt;, which in effect closes them both before opening. In fact, in this example we don&amp;rsquo;t need neither of these, so I could just &lt;code&gt;close()&lt;/code&gt; both. The child process completes its disengagement from the parent process by opening the STDERR stream to &lt;em&gt;/tmp/log&lt;/em&gt;, so it could write there, and creating a new session with help of setsid(). Now the child process has nothing to do with the parent process and can do the actual processing that it has to do. In our example, it performs a simple series of warnings, which are logged into &lt;em&gt;/tmp/log&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      select STDERR;
+      local $|=1;
+      warn &amp;quot;started\n&amp;quot;;
+      # do something time-consuming
+      sleep 1, warn &amp;quot;$_\n&amp;quot; for 1..20;
+      warn &amp;quot;completed\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The localized setting of &lt;code&gt;$|=1&lt;/code&gt; is there, so we can see the output generated by the program immediately. In fact, it&amp;rsquo;s not required when the output is generated by warn().&lt;/p&gt;
+
+&lt;p&gt;Finally, the child process terminates by calling:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      CORE::exit(0);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which makes sure that it won&amp;rsquo;t get out of the block and run some code that it&amp;rsquo;s not supposed to run.&lt;/p&gt;
+
+&lt;p&gt;This code example will allow you to verify that indeed the spawned child process has its own life, and its parent is free as well. Simply issue a request that will run this script, watch that the warnings are started to be written into the &lt;em&gt;/tmp/log&lt;/em&gt; file and issue a complete server stop and start. If everything is correct, then the server will successfully restart and the long-term process will still be running. You will know that it&amp;rsquo;s still running if the warnings will still be printed into the &lt;em&gt;/tmp/log&lt;/em&gt; file. You may need to raise the number of warnings to do above 20, to make sure that you don&amp;rsquo;t miss the end of the run.&lt;/p&gt;
+
+&lt;p&gt;If there are only five warnings to be printed, then you should see the following output in this file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  started
+  1
+  2
+  3
+  4
+  5
+  completed
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-starting-a-long-running-external-program-starting-a-long-running-external-program-span&#34;&gt;&lt;span id=&#34;starting_a_long_running_external_program&#34;&gt;Starting a Long-Running External Program&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;But what happens if we cannot just run a Perl code from the spawned process and we have a compiled utility, i.e. a program written in C. Or we have a Perl program that cannot be easily converted into a module, and thus called as a function. Of course, in this case, we have to use system(), exec(), &lt;code&gt;qx()&lt;/code&gt; or &lt;code&gt;``&lt;/code&gt; (back ticks) to start it.&lt;/p&gt;
+
+&lt;p&gt;When using any of these methods and when the &lt;em&gt;Taint&lt;/em&gt; mode is enabled, we must at least add the following code to untaint the &lt;em&gt;PATH&lt;/em&gt; environment variable and delete a few other insecure environment variables. This information can be found in the &lt;em&gt;perlsec&lt;/em&gt; manpage.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $ENV{&#39;PATH&#39;} = &#39;/bin:/usr/bin&#39;;
+  delete @ENV{&#39;IFS&#39;, &#39;CDPATH&#39;, &#39;ENV&#39;, &#39;BASH_ENV&#39;};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now all we have to do is to reuse the code from the previous section.&lt;/p&gt;
+
+&lt;p&gt;First, we move the core program into the &lt;em&gt;external.pl&lt;/em&gt; file, add the shebang first line so the program will be executed by Perl, tell the program to run under &lt;em&gt;Taint&lt;/em&gt; mode (-T) and possibly enable the &lt;em&gt;warnings&lt;/em&gt; mode (-w) and make it executable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  external.pl
+  -----------
+  #!/usr/bin/perl -Tw
+
+  open STDIN, &#39;/dev/null&#39;  or die &amp;quot;Can&#39;t read /dev/null: $!&amp;quot;;
+  open STDOUT, &#39;&amp;gt;/dev/null&#39;
+      or die &amp;quot;Can&#39;t write to /dev/null: $!&amp;quot;;
+  open STDERR, &#39;&amp;gt;/tmp/log&#39; or die &amp;quot;Can&#39;t write to /tmp/log: $!&amp;quot;;
+
+  select STDERR;
+  local $|=1;
+  warn &amp;quot;started\n&amp;quot;;
+  # do something time-consuming
+  sleep 1, warn &amp;quot;$_\n&amp;quot; for 1..20;
+  warn &amp;quot;completed\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we replace the code that moved into the external program with &lt;code&gt;exec()&lt;/code&gt; to call it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  proper_fork_exec.pl
+  -------------------
+  use strict;
+  use POSIX &#39;setsid&#39;;
+  use Apache::SubProcess;
+
+  $ENV{&#39;PATH&#39;} = &#39;/bin:/usr/bin&#39;;
+  delete @ENV{&#39;IFS&#39;, &#39;CDPATH&#39;, &#39;ENV&#39;, &#39;BASH_ENV&#39;};
+
+  my $r = shift;
+  $r-&amp;gt;send_http_header(&amp;quot;text/html&amp;quot;);
+
+  $SIG{CHLD} = &#39;IGNORE&#39;;
+
+  defined (my $kid = fork) or die &amp;quot;Cannot fork: $!\n&amp;quot;;
+  if ($kid) {
+    print &amp;quot;Parent has finished, kid&#39;s PID: $kid\n&amp;quot;;
+  } else {
+      $r-&amp;gt;cleanup_for_exec(); # untie the socket
+      chdir &#39;/&#39;                or die &amp;quot;Can&#39;t chdir to /: $!&amp;quot;;
+      open STDIN, &#39;/dev/null&#39;  or die &amp;quot;Can&#39;t read /dev/null: $!&amp;quot;;
+      open STDOUT, &#39;&amp;gt;/dev/null&#39;
+          or die &amp;quot;Can&#39;t write to /dev/null: $!&amp;quot;;
+      open STDERR, &#39;&amp;gt;&amp;amp;STDOUT&#39;  or die &amp;quot;Can&#39;t dup stdout: $!&amp;quot;;
+      setsid or die &amp;quot;Can&#39;t start a new session: $!&amp;quot;;
+
+      exec &amp;quot;/home/httpd/perl/external.pl&amp;quot; or die &amp;quot;Cannot execute exec: $!&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that &lt;code&gt;exec()&lt;/code&gt; never returns unless it fails to start the process. Therefore, you shouldn&amp;rsquo;t put any code after exec()&amp;ndash;it will be not executed in the case of success. Use &lt;code&gt;system()&lt;/code&gt; or back-ticks instead if you want to continue doing other things in the process. But then you probably will want to terminate the process after the program has finished. So you will have to write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      system &amp;quot;/home/httpd/perl/external.pl&amp;quot; or die &amp;quot;Cannot execute system: $!&amp;quot;;
+      CORE::exit(0);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another important nuance is that we have to close all &lt;code&gt;STD*&lt;/code&gt; streams in the forked process, even if the called program does that.&lt;/p&gt;
+
+&lt;p&gt;If the external program is written in Perl, then you may pass complicated data structures to it using one of the methods to serialize Perl data and then to restore it. The &lt;code&gt;Storable&lt;/code&gt; and &lt;code&gt;FreezeThaw&lt;/code&gt; modules come handy. Let&amp;rsquo;s say that we have program &lt;em&gt;master.pl&lt;/em&gt; calling program &lt;em&gt;slave.pl&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  master.pl
+  ---------
+  # we are within the C&amp;lt;mod_perl&amp;gt; code
+  use Storable ();
+  my @params = (foo =&amp;gt; 1, bar =&amp;gt; 2);
+  my $params = Storable::freeze(\@params);
+  exec &amp;quot;./slave.pl&amp;quot;, $params or die &amp;quot;Cannot execute exec: $!&amp;quot;;
+
+  slave.pl
+  --------
+  #!/usr/bin/perl -w
+  use Storable ();
+  my @params = @ARGV ? @{ Storable::thaw(shift)||[] } : ();
+  # do something
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, &lt;em&gt;master.pl&lt;/em&gt; serializes the &lt;code&gt;@params&lt;/code&gt; data structure with &lt;code&gt;Storable::freeze&lt;/code&gt; and passes it to &lt;em&gt;slave.pl&lt;/em&gt; as a single argument. &lt;em&gt;slave.pl&lt;/em&gt; restores it with &lt;code&gt;Storable::thaw&lt;/code&gt;, by shifting the first value of the &lt;code&gt;ARGV&lt;/code&gt; array if available. The &lt;code&gt;FreezeThaw&lt;/code&gt; module does a similar thing.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-starting-a-short-running-external-program-starting-a-short-running-external-program-span&#34;&gt;&lt;span id=&#34;starting_a_short_running_external_program&#34;&gt;Starting a Short-Running External Program&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Sometimes you need to call an external program and you cannot continue before this program completes its run and optionally returns some result. In this case, the fork solution doesn&amp;rsquo;t help. But we have a few ways to execute this program. First using system():&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  system &amp;quot;perl -e &#39;print 5+5&#39;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We believe that you will never call the Perl interperter for doing this simple calculation, but for the sake of a simple example it&amp;rsquo;s good enough.&lt;/p&gt;
+
+&lt;p&gt;The problem with this approach is that we cannot get the results printed to &lt;code&gt;STDOUT&lt;/code&gt;, and that&amp;rsquo;s where back-ticks or &lt;code&gt;qx()&lt;/code&gt; help. If you use either:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $result = `perl -e &#39;print 5+5&#39;`;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $result = qx{perl -e &#39;print 5+5&#39;};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;the whole output of the external program will be stored in the &lt;code&gt;$result&lt;/code&gt; variable.&lt;/p&gt;
+
+&lt;p&gt;Of course, you can use other solutions, such as opening a pipe (&lt;code&gt;|&lt;/code&gt; to the program) if you need to submit many arguments and more evolved solutions provided by other Perl modules like &lt;code&gt;IPC::Open2&lt;/code&gt;, which allows to open a process for both reading and writing.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-executing-system-or-exec-in-the-right-way-executing-system-or-exec-in-the-right-way-span&#34;&gt;&lt;span id=&#34;executing_system()_or_exec()_in_the_right_way&#34;&gt;Executing &lt;code&gt;system()&lt;/code&gt; or &lt;code&gt;exec()&lt;/code&gt; in the Right Way&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;exec()&lt;/code&gt; and &lt;code&gt;system()&lt;/code&gt; system calls behave identically in the way they spawn a program. For example, let&amp;rsquo;s use &lt;code&gt;system()&lt;/code&gt;. Consider the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  system(&amp;quot;echo&amp;quot;,&amp;quot;Hi&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Perl will use the first argument as a program to execute, find &lt;code&gt;/bin/echo&lt;/code&gt; along the search path, invoke it directly and pass the &lt;em&gt;Hi&lt;/em&gt; string as an argument.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s &lt;code&gt;system()&lt;/code&gt; is &lt;strong&gt;not&lt;/strong&gt; the &lt;code&gt;system(3)&lt;/code&gt; call (from the C-library). This is how the arguments to &lt;code&gt;system()&lt;/code&gt; get interpreted. When there is a single argument to system(), it&amp;rsquo;ll be checked for having shell metacharacters first (like &lt;code&gt;*&lt;/code&gt;,&lt;code&gt;?&lt;/code&gt;), and if there are any&amp;ndash;Perl interpreter invokes a real shell program (/bin/sh -c on Unix platforms). If you pass a list of arguments to system(), then they will be not checked for metacharacters, but split into words if required and passed directly to the C-level &lt;code&gt;execvp()&lt;/code&gt; system call, which is more efficient. That&amp;rsquo;s a &lt;em&gt;very&lt;/em&gt; nice optimization. In other words, only if you do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  system &amp;quot;sh -c &#39;echo *&#39;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will the operating system actually &lt;code&gt;exec()&lt;/code&gt; a copy of &lt;code&gt;/bin/sh&lt;/code&gt; to parse your command. But even then, since &lt;em&gt;sh&lt;/em&gt; is almost certainly already running somewhere, the system will notice that (via the disk inode reference) and replace your virtual memory page table with one pointing to the existing program code plus your data space, thus will not create this overhead.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;mod_perl&lt;/code&gt; site&amp;rsquo;s URL: &lt;a href=&#34;http://perl.apache.org/&#34;&gt;http://perl.apache.org/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Apache::SubProcess&#34;&gt;Apache-SubProcess&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Storable&#34;&gt;Storable&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

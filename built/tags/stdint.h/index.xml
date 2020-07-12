@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Stdint.h on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/stdint.h/</link>
+    <description>Recent content in Stdint.h on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 12 Jan 2018 08:28:40 +0000</lastBuildDate>
+    <atom:link href="/tags/stdint.h/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Writing your own XS functions</title>
+      <link>http://localhost:1313/article/writing-your-own-xs-functions/</link>
+      <pubDate>Fri, 12 Jan 2018 08:28:40 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/writing-your-own-xs-functions/</guid>
+      <description>
+
+&lt;p&gt;In &lt;a href=&#34;http://localhost:1313/article/getting-started-with-xs/&#34;&gt;part one&lt;/a&gt;, we learned the basic components of XS, and integrated
+two C functions into Perl. This chapter is going to show you how to define xsubs
+that accept multiple parameters, and define your own logic, instead of using XS
+as a Foreign Function Interface to a C library.&lt;/p&gt;
+
+&lt;p&gt;You&amp;rsquo;ll need the files from &lt;a href=&#34;http://localhost:1313/article/getting-started-with-xs/&#34;&gt;part one&lt;/a&gt; to execute the code in this article.&lt;/p&gt;
+
+&lt;h3 id=&#34;module-code&#34;&gt;Module Code&lt;/h3&gt;
+
+&lt;p&gt;As before, we&amp;rsquo;ll define the module code to load our XS. This is all that&amp;rsquo;s
+required:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; XS::Tutorial::Two;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; XSLoader;
+
+XSLoader::load();
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That should be saved as &lt;code&gt;lib/XS/Tutorial/Two.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;xs-code&#34;&gt;XS Code&lt;/h3&gt;
+
+&lt;p&gt;The top of the XS file will look similar to the previous chapter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#define PERL_NO_GET_CONTEXT &lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// we&amp;#39;ll define thread context if necessary (faster)
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;#34;EXTERN.h&amp;#34;         // globals/constant import locations&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;#34;perl.h&amp;#34;           // Perl symbols, structures and constants definition&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;#34;XSUB.h&amp;#34;           // xsubpp functions and macros&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;#34;stdint.h&amp;#34;         // portable integer types&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+MODULE &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; XS&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;Tutorial&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;Two  PACKAGE &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; XS&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;Tutorial&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;Two
+PROTOTYPES: ENABLE&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Remember to append any XS code after the &lt;code&gt;PROTOTYPES&lt;/code&gt; line. This should be saved
+as &lt;code&gt;lib/XS/Tutorial/Two.xs&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;adding-numbers&#34;&gt;Adding numbers&lt;/h3&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a simple declaration of an xsub that adds two integers:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;add_ints&lt;/span&gt; (addend1, addend2)
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; addend1
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; addend2
+  CODE:
+    RETVAL &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; addend1 &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; addend2;
+  OUTPUT:
+    RETVAL&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This declares an xsub called &lt;code&gt;add_ints&lt;/code&gt; which accepts two integers and whose
+return type is &lt;code&gt;int&lt;/code&gt;. Note the &lt;a href=&#34;https://stackoverflow.com/questions/1630631/alternative-kr-c-syntax-for-function-declaration-versus-prototypes&#34;&gt;K&amp;amp;R&lt;/a&gt; style of the function definition. This can also be written as:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;add_ints (&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; addend1, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; addend2)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;But you rarely see it done that way in the wild. I don&amp;rsquo;t know if that&amp;rsquo;s a cargo
+cult thing or there are edge cases to the xsub compiler that I&amp;rsquo;m not aware of.
+Just to be safe, I&amp;rsquo;ll keep doing it the way everyone else does (the cult
+persists!).&lt;/p&gt;
+
+&lt;p&gt;Whereas &lt;a href=&#34;http://localhost:1313/article/getting-started-with-xs/&#34;&gt;before&lt;/a&gt; we were essentially mapping C functions like &lt;code&gt;srand&lt;/code&gt; to Perl,
+here we&amp;rsquo;re declaring our own logic: &lt;code&gt;add_ints&lt;/code&gt; isn&amp;rsquo;t imported from anywhere,
+we&amp;rsquo;re declaring it as a new function.&lt;/p&gt;
+
+&lt;p&gt;Since &lt;code&gt;add_ints&lt;/code&gt; is a new function, we need to define the logic of it, and
+that&amp;rsquo;s where the &lt;code&gt;CODE&lt;/code&gt; section comes in. Here we can write C code which
+forms the body of the function. In this example, I add the two subroutine
+parameters together and assign the result to &lt;code&gt;RETVAL&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://perldoc.perl.org/perlxs.html#The-RETVAL-Variable&#34;&gt;RETVAL&lt;/a&gt; (&amp;ldquo;RETurn VALue&amp;rdquo;) is a special variable that is declared by the xsub processor
+(xsubpp). The &lt;code&gt;OUTPUT&lt;/code&gt; section accepts the return variable for the xsub, placing
+it on the stack, so that calling code will receive it.&lt;/p&gt;
+
+&lt;h3 id=&#34;adding-more-than-two-numbers&#34;&gt;Adding more than two numbers&lt;/h3&gt;
+
+&lt;p&gt;Adding two numbers is all well and good, but lists are the lingua franca of
+Perl. Let&amp;rsquo;s update the &lt;code&gt;add_ints&lt;/code&gt; xsub to accept n values:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;int32_t
+&lt;span style=&#34;color:#a6e22e&#34;&gt;add_ints&lt;/span&gt; (...)
+  CODE:
+    uint32_t i;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; items; i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;) {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;SvOK(ST(i)) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;SvIOK(ST(i)))
+        croak(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;requires a list of integers&amp;#34;&lt;/span&gt;);
+
+      RETVAL &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; SvIVX(ST(i));
+    }
+  OUTPUT:
+    RETVAL&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;First off, notice I&amp;rsquo;ve updated the return value. One issue with using &lt;code&gt;int&lt;/code&gt; in
+C is it may be a different size on different machine architectures. &lt;code&gt;int32_t&lt;/code&gt;
+is from the &lt;code&gt;stdint.h&lt;/code&gt; library, and guaranteed to be a 32 bit signed integer.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve replaced the function parameters with &lt;code&gt;...&lt;/code&gt; which indicates the function
+accepts a variable number of arguments, just like in C. In the &lt;code&gt;CODE&lt;/code&gt; section,
+I declare a &lt;code&gt;uint32_t&lt;/code&gt; integer called &lt;code&gt;i&lt;/code&gt; (&lt;code&gt;uint32_t&lt;/code&gt; is a 32 bit unsigned
+integer).&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;for&lt;/code&gt; loop uses the special variable &lt;code&gt;items&lt;/code&gt; (the number of arguments passed
+to the function) to iterate over the arguments. The &lt;code&gt;if&lt;/code&gt; statement calls
+the macro &lt;code&gt;ST&lt;/code&gt; to access the stack variable at position &lt;code&gt;i&lt;/code&gt;. This is used to
+check that the scalar is defined (&lt;code&gt;SvOK&lt;/code&gt;) and that it is an integer (&lt;code&gt;SvIOK&lt;/code&gt;).
+If either test fails, the code calls &lt;code&gt;croak&lt;/code&gt; to throw a fatal exception.&lt;/p&gt;
+
+&lt;p&gt;Otherwise the integer value is extracted from the scalar (&lt;code&gt;SvIVX&lt;/code&gt;) and added
+to &lt;code&gt;RETVAL&lt;/code&gt;. If all of these C macros look strange to you, don&amp;rsquo;t worry, they are
+weird! They are part of the Perl C API, and they&amp;rsquo;re documented in &lt;a href=&#34;https://perldoc.perl.org/perlapi.html&#34;&gt;perlapi&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;edge-cases&#34;&gt;Edge cases&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s probably a good time to write some tests for this function, here&amp;rsquo;s a
+start:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test::More;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; { use_ok &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;XS::Tutorial::Two&amp;#39;&lt;/span&gt; }
+
+cmp_ok XS::Tutorial::Two::add_ints(&lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;==&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;;
+cmp_ok XS::Tutorial::Two::add_ints(&lt;span style=&#34;color:#ae81ff&#34;&gt;1500&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;21000&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;==&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;21500&lt;/span&gt;;
+
+done_testing;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I saved that file as &lt;code&gt;t/two.t&lt;/code&gt;, and run it by building the distribution with
+&lt;code&gt;make&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl Makefile.PL &amp;amp;&amp;amp; make &amp;amp;&amp;amp; make test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Do you know what the return value would be if &lt;code&gt;add_ints&lt;/code&gt; was called with no
+arguments? Maybe &lt;code&gt;undef&lt;/code&gt;, since if there are no arguments, the for loop will
+not have any iterations. Here&amp;rsquo;s a test for that condition:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;ok &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;defined XS::Tutorial::Two::add_ints(), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;empty list returns undef&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Re-building and running the tests with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;make clean &amp;amp;&amp;amp; perl Makefile.PL &amp;amp;&amp;amp;  make &amp;amp;&amp;amp; make test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That test fails, because the return value is zero! This is a quirk of C:
+uninitialized integers can be zero. Let&amp;rsquo;s fix the xsub to return &lt;code&gt;undef&lt;/code&gt; when
+it doesn&amp;rsquo;t receive any arguments:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;SV &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;
+&lt;span style=&#34;color:#a6e22e&#34;&gt;add_ints&lt;/span&gt; (...)
+  PPCODE:
+    uint32_t i;
+    int32_t total &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (items &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; items; i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;) {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;SvOK(ST(i)) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;SvIOK(ST(i)))
+          croak(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;requires a list of integers&amp;#34;&lt;/span&gt;);
+
+        total &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; SvIVX(ST(i));
+      }
+      PUSHs(sv_2mortal(newSViv(total)));
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+      PUSHs(sv_newmortal());
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Woah, quite a few changes! First I&amp;rsquo;ve changed the return type to &lt;code&gt;SV *&lt;/code&gt;, from
+&lt;code&gt;int32_t&lt;/code&gt;. The reason for this will become clear in a moment.  The &lt;code&gt;CODE&lt;/code&gt; section
+is now called &lt;code&gt;PPCODE&lt;/code&gt;, which tells xsubpp that we will be managing the return
+value of xsub ourselves, hence the &lt;code&gt;OUTPUT&lt;/code&gt; section is gone.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve declared a new variable called &lt;code&gt;total&lt;/code&gt; to capture the running total of the
+arguments as they&amp;rsquo;re added. If we received at least one argument, total is copied
+into a new scalar integer value (&lt;code&gt;newSViv&lt;/code&gt;), its reference count is corrected
+(&lt;code&gt;sv_2mortal&lt;/code&gt;) and it is pushed onto the stack pointer (&lt;code&gt;PUSHs&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Otherwise a new &lt;code&gt;undef&lt;/code&gt; scalar is declared with &lt;code&gt;sv_newmortal&lt;/code&gt; and that is pushed
+onto the stack pointer instead. So in both cases we&amp;rsquo;re returning an &lt;code&gt;SV&lt;/code&gt;. And as
+we&amp;rsquo;re returning a Perl type instead of a C type (&lt;code&gt;int32_t&lt;/code&gt;) there is no need for
+xsubpp to cast our return value into a Perl scalar, we&amp;rsquo;re already doing it.&lt;/p&gt;
+
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap up&lt;/h3&gt;
+
+&lt;p&gt;This tutorial has covered some critical skills for writing xsubs: how to accept
+multiple parameters, how to write your own logic, and how to manage the stack
+pointer. If you grok all of these, and the content of &lt;a href=&#34;http://localhost:1313/article/getting-started-with-xs/&#34;&gt;part one&lt;/a&gt;
+you have enough to get started writing your own XS code.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;This documentation and code is on CPAN (&lt;a href=&#34;https://metacpan.org/pod/XS::Tutorial&#34;&gt;XS::Tutorial&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perlxs.html&#34;&gt;perlxs&lt;/a&gt; defines the keywords recognized by &lt;a href=&#34;https://perldoc.perl.org/xsubpp.html&#34;&gt;xsubpp&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perlapi.html&#34;&gt;perlapi&lt;/a&gt; lists the C macros used to interact with Perl data structures (and the interpreter)&lt;/li&gt;
+&lt;li&gt;The &lt;a href=&#34;http://pubs.opengroup.org/onlinepubs/009695399/basedefs/stdint.h.html&#34;&gt;stdint.h&lt;/a&gt; C library provides sets of portable integer types&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,2188 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Testing on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-testing/</link>
+    <description>Recent content in Perl Testing on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 02 Feb 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-testing/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Test-Driving X11 GUIs</title>
+      <link>http://localhost:1313/pub/2006/02/02/x11_gui_testing.html/</link>
+      <pubDate>Thu, 02 Feb 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/02/02/x11_gui_testing.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;driving-x11-guis-using-x11-guitest&#34;&gt;Driving X11 GUIs using X11::GUITest&lt;/h3&gt;
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;Interfaces to GUI applications like &lt;a href=&#34;http://developer.kde.org/documentation/library/kdeqt/kde3arch/dcop.html&#34;&gt;DCOP&lt;/a&gt; or &lt;a href=&#34;http://www.freedesktop.org/Software/dbus&#34;&gt;D-BUS&lt;/a&gt; allow you to interact with GUI applications in order to get at their internal states or set some arbitrary states.&lt;/p&gt;
+
+&lt;p&gt;Sometimes GUIs don&amp;rsquo;t allow for such interaction and you need to &amp;ldquo;click&amp;rdquo; them. If you&amp;rsquo;re writing such an application, you need some sort of regression tests for it to make sure your widget/windows are as accessible as they should be. If this is the case, there is a Perl module to help you: &lt;a href=&#34;https://metacpan.org/pod/X11::GUITest&#34;&gt;X11::GUITest&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Be aware that &lt;code&gt;X11::GUITest&lt;/code&gt; allows you to drive a GUI, but you can&amp;rsquo;t &amp;ldquo;read&amp;rdquo; data written in a widget, such as a button or an edit box. More on this in the Limitations section below.&lt;/p&gt;
+
+&lt;p&gt;To install &lt;code&gt;X11::GUITest&lt;/code&gt;, run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -MCPAN -e &#39;shell&#39;
+install X11::GUITest
+quit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;a-simple-example&#34;&gt;A Simple Example&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve included two example programs. One is &lt;a href=&#34;http://localhost:1313/media/_pub_2006_02_02_x11_gui_testing/tested.pl&#34;&gt;&lt;em&gt;tested.pl&lt;/em&gt;&lt;/a&gt; and it serves as an example GUI. The other is &lt;a href=&#34;http://localhost:1313/media/_pub_2006_02_02_x11_gui_testing/tester.pl&#34;&gt;&lt;em&gt;tester.pl&lt;/em&gt;&lt;/a&gt; that starts and drives the tested program.&lt;/p&gt;
+
+&lt;p&gt;You need Tk installed for the tested GUI. Tk comes as a package in most GNU/Linux distributions or other *NIX OSes. Download both files in the same folder, run &lt;em&gt;./tester.pl&lt;/em&gt;, and watch.&lt;/p&gt;
+
+&lt;p&gt;What are they doing and how do they work?&lt;/p&gt;
+
+&lt;h3 id=&#34;starting-a-gui&#34;&gt;Starting a GUI&lt;/h3&gt;
+
+&lt;p&gt;First thing to do prior to driving a GUI is to start the driven program. While you can use &lt;code&gt;fork&lt;/code&gt; and &lt;code&gt;exec&lt;/code&gt; or any other means, &lt;code&gt;X11::GUITest&lt;/code&gt; comes with a routine of its own.&lt;/p&gt;
+
+&lt;p&gt;Use &lt;code&gt;StartApp( $tested_application );&lt;/code&gt; to start a GUI, which results in starting the desired application in an asynchronous manner.&lt;/p&gt;
+
+&lt;p&gt;If you want to start an application and wait for it to finish before going on, use &lt;code&gt;RunApp&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;finding-a-window&#34;&gt;Finding a Window&lt;/h3&gt;
+
+&lt;p&gt;After having the GUI started, you need to search for it among the other open windows on your desktop. For this, use &lt;code&gt;FindWindowLike()&lt;/code&gt;, &lt;code&gt;WaitWindowLike()&lt;/code&gt;, or &lt;code&gt;WaitWindowViewable()&lt;/code&gt;, depending on what you need. Their names are pretty much self-explanatory.&lt;/p&gt;
+
+&lt;p&gt;Usually you need to have only one instance of the tested application started:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@windows = FindWindowLike( $tested_app_title );
+print &amp;quot;* Number of $tested_app_title windows found: &amp;quot;, scalar @windows, &amp;quot;\n&amp;quot;;
+
+if ( @windows == 1 ) {
+     print &amp;quot;* Only one instance found, going on ...\n&amp;quot;;
+} else {
+    print &amp;quot;* The number of $tested_app_title instances is different than 1\n&amp;quot;;
+    print &amp;quot;exiting ...\n&amp;quot;;
+    exit;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;FindWindowLike()&lt;/code&gt; returns a list of windows that match the search criteria, which is a regular expression to match against the window title. In case there is more than one window that matches the criteria, either you have the same window started multiple times, or the regular expression isn&amp;rsquo;t specific enough.&lt;/p&gt;
+
+&lt;h3 id=&#34;sending-keyboard-events-to-an-application&#34;&gt;Sending Keyboard Events to an Application&lt;/h3&gt;
+
+&lt;p&gt;Having found the window, (when you know that there is only one, you can access it as the first element of &lt;code&gt;@windows&lt;/code&gt;, namely &lt;code&gt;$windows[0]&lt;/code&gt;), you probably want to send it some keystrokes. Use &lt;code&gt;SendKeys()&lt;/code&gt; to do this.&lt;/p&gt;
+
+&lt;p&gt;If you are having a busy X server, or just want your testing to be easy for the human eye to watch, set the delay between the keystrokes (in milliseconds) with &lt;code&gt;SetKeySendDelay()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SetKeySendDelay( $delay );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To send &lt;code&gt;Alt&lt;/code&gt;+&lt;code&gt;O&lt;/code&gt;, followed by a delay of &lt;code&gt;$delay&lt;/code&gt; milliseconds, then &lt;code&gt;e&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SendKeys( &#39;%(o)e&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Besides sending plain text to an application, like sending the infamous &amp;ldquo;Hello World&amp;rdquo; to an editor window, you may have noticed that the previous example sent a combination of keys. Do so by using modifiers. The modifier keys are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;^&lt;/code&gt;, &lt;code&gt;Ctrl&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;%&lt;/code&gt;, &lt;code&gt;Alt&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;+&lt;/code&gt;, &lt;code&gt;Shift&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The &lt;code&gt;X11::GUITest&lt;/code&gt; documentation has a complete list of special keys and their &amp;ldquo;encodings.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;You may also find it useful to use &lt;code&gt;QuoteStringForSendKeys()&lt;/code&gt; in the case of complicated strings.&lt;/p&gt;
+
+&lt;h3 id=&#34;sending-mouse-events-to-an-application&#34;&gt;Sending Mouse Events to an Application&lt;/h3&gt;
+
+&lt;p&gt;Sending keys may be not enough in some situations. Having an application that has keyboard shortcuts is nice, but not all of them support it. Sometimes you may need to send mouse events.&lt;/p&gt;
+
+&lt;p&gt;To get the absolute position of the appropriate window on your desktop:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my ($x, $y, $width, $height) = GetWindowPos($edit_windows[0]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Suppose that you want to click right in the middle of it. First, compute the position of the middle of the window:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$x += $width  / 2;
+$y += $height / 2;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now move the mouse:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;MoveMouseAbs( $x, $y );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then press the right mouse button:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PressMouseButton M_RIGHT;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Do something useful, and then release the mouse button. (Don&amp;rsquo;t forget to do that when you&amp;rsquo;re using &lt;code&gt;PressMouseButton&lt;/code&gt;; otherwise, you may experience &amp;ldquo;strange&amp;rdquo; desktop behavior when your testing application exits.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ReleaseMouseButton M_RIGHT
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You could replace &lt;code&gt;PressMouseButton()&lt;/code&gt; and &lt;code&gt;ReleaseMouseButton()&lt;/code&gt; with &lt;code&gt;ClickMouseButton()&lt;/code&gt; if you don&amp;rsquo;t have anything to do between pressing and releasing the mouse button.&lt;/p&gt;
+
+&lt;p&gt;In the example programs, there&amp;rsquo;s something to do&amp;ndash;navigating the context menu with keystrokes.&lt;/p&gt;
+
+&lt;h3 id=&#34;moving-a-window&#34;&gt;Moving a Window&lt;/h3&gt;
+
+&lt;p&gt;This is a neat and interesting feature: the ability to move windows. While it is useful to impress your friends with having their favorite mail program moving up and down, its utility lies in the fact that you can arrange the tested windows on the desktop so they are all visible.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;MoveWindow( $window_id, $x, $y );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;limitations&#34;&gt;Limitations&lt;/h3&gt;
+
+&lt;p&gt;As you may have noticed reading the example code, there is almost no way of validating the fact that you are indeed interacting with the right widget or window. The functions you can use for this are &lt;code&gt;FindWindow*&lt;/code&gt; or &lt;code&gt;WaitWindow*&lt;/code&gt;, which return a list of windows whose titles match an arbitrary regexp, and the functions that deal with child windows, such as &lt;code&gt;IsChild()&lt;/code&gt; and &lt;code&gt;GetChildWindows()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;While you may pass the window ID to a testing program, using external means to validate the tested application (such as indicating the coordinates on the screen), the problem is that you can&amp;rsquo;t grab a widget&amp;rsquo;s contents.&lt;/p&gt;
+
+&lt;p&gt;Also, while you might be tempted to parse the child tree of an application to get from the main window to one of its children, this doesn&amp;rsquo;t work every time. Plenty of GUIs spawn other windows at the top level, and the spawned windows have as root window the topmost window (which is the desktop).&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s an example of the problem that uses Mozilla Firefox. Before running the test, you must meet some prerequisites:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Back up your preferences before running the tests.&lt;/li&gt;
+&lt;li&gt;Go to Edit -&amp;gt; Preferences -&amp;gt; General -&amp;gt; Connection Settings and set it to &amp;ldquo;Direct connection to the Internet.&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;Click OK, and then OK, and close the browser.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Now run the &lt;em&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2006_02_02_x11_gui_testing/Firefox.pl&#34;&gt;Firefox.pl&lt;/a&gt;&lt;/em&gt; example code.&lt;/p&gt;
+
+&lt;p&gt;The test program assumes that when the Preferences window pops up, the General menu is selected.&lt;/p&gt;
+
+&lt;p&gt;Open Mozilla Firefox again, go to Preferences, select the Web Features menu, click OK, and exit the browser.&lt;/p&gt;
+
+&lt;p&gt;Rerun the &lt;em&gt;Firefox.pl&lt;/em&gt; program, and watch it.&lt;/p&gt;
+
+&lt;p&gt;It has no idea which menu is selected, because every menu component belongs to the same window, having the same title.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-guis-for-testability&#34;&gt;Writing GUIs for Testability&lt;/h3&gt;
+
+&lt;p&gt;Having in mind the strengths and weaknesses of &lt;code&gt;X11::GUITest&lt;/code&gt;, it&amp;rsquo;s critical to design graphical user interfaces that are easy to test. This way, you shorten your maintenance time, as you can have a tester program that can help check that the GUI hasn&amp;rsquo;t lost some of its windows in the development/maintenance process.&lt;/p&gt;
+
+&lt;p&gt;Of course, when displaying a license text when your GUI starts, you don&amp;rsquo;t have the means to check that the contents are unchanged using &lt;code&gt;X11::GUITest&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;What you can do is to ensure that all child windows are &amp;ldquo;in place&amp;rdquo; and that a user can access them in the same way as he/she could in previous versions.&lt;/p&gt;
+
+&lt;p&gt;If you define ways of navigating the GUI using keyboard shortcuts so that you can reach any &amp;ldquo;leaf&amp;rdquo; window starting from the top-level window, then it&amp;rsquo;s trivial for a test program to navigate the same way you do and ensure that all windows are reachable as they were in previous versions.&lt;/p&gt;
+
+&lt;p&gt;Consider the following code based on the tested Tk program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$menu{&#39;OTHER&#39;} = $menu_bar-&amp;gt;cascade(
+    -label   =&amp;gt; &#39;Other&#39;,
+    -tearoff =&amp;gt; 0,
+);
+
+$menu{&#39;OTHER&#39;}-&amp;gt;command(
+    -label   =&amp;gt; &#39;Editor&#39;,
+    -command =&amp;gt; sub {
+        edit_window();
+    }
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It defines a piece of menu from the overall menu of the application. As you may notice, there are no keyboard shortcuts that you can use to access the Editor window.&lt;/p&gt;
+
+&lt;p&gt;Thinking of testability, you could go to some lengths to test this piece of code to ensure that the Editor window is reachable and that it indeed pops up. You could record the application&amp;rsquo;s position on the screen and then click the Other button, then move the mouse over the Editor button and click it. I&amp;rsquo;m sure you can spot some caveats here, among them:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You need to make sure that the application is always on the screen at some known coordinates (use &lt;code&gt;GetWindowPos()&lt;/code&gt;) or maybe that the test always moves the window to the same place (use &lt;code&gt;MoveWindow()&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;You have to take into consideration font size changes, localization, and resolution changes so that you are sure you are clicking in the right place.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This kind of testing is fragile and error-prone. You can make things simpler and more robust: add keyboard shortcuts for each action. You gain two main benefits: you make some users (like me) happier and ease the testing process. You just need to define all the &amp;ldquo;paths&amp;rdquo; that you need to &amp;ldquo;walk&amp;rdquo; and define the child window titles so you know you&amp;rsquo;ve reached them.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a slight adjustment to the tested application so that it provides keyboard shortcuts:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$menu{&#39;OTHER&#39;} = $menu_bar-&amp;gt;cascade(
+    -label   =&amp;gt; &#39;~Other&#39;,
+    -tearoff =&amp;gt; 0,
+);
+
+$menu{&#39;OTHER&#39;}-&amp;gt;command(
+    -label   =&amp;gt; &#39;~Editor&#39;,
+    -command =&amp;gt; sub {
+        edit_window();
+    }
+);
+
+sub edit_window {
+    # some initialization code here ...
+
+    $edit_window = $main_window-&amp;gt;Toplevel();
+
+    # Set the title of the Editor window
+    $edit_window-&amp;gt;title(&amp;quot;This is an edit window&amp;quot;);
+
+    # the rest of the code here ....
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This piece of code is easier to test. Navigate the application until you reach the Editor window:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SendKeys(&#39;%(o)e&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you should have the Editor window spawned. Grab a list of windows having the title matching the Editor window&amp;rsquo;s title:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@edit_windows = FindWindowLike( $edit_title );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Check to see whether the Editor window is present. Also, there should be only one Editor window started:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ( @edit_windows == 1 ) {
+    # code here
+} else {
+    # we have zero or more than one Editor window, so something is not quite
+    # right
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This kind of code is easy to extend, as you can store the application window hierarchy in some external file outside of the program source (in some sort of markup language file, or anything that suits your needs). Having this external definition of the windows&amp;rsquo; hierarchy and their properties, the tester program can read the same file the tested application uses; thus, both know the same keyboard shortcuts and window titles.&lt;/p&gt;
+
+&lt;p&gt;Program logic errors and/or bugs in underlying libraries used are easier to catch before you release the software.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;As you can see, there is no easy way to test an entire GUI application with &lt;code&gt;X11::GUITest&lt;/code&gt;, but you can test the important parts. Also, for some actions you can use a mixed approach, such as initiating an event using the application interface (connecting to a remote server protected with a user/password auth scheme) and picking the results from a log file.&lt;/p&gt;
+
+&lt;p&gt;While the testing done in the previous paragraph is necessary, it is not sufficient. It would be great if there were someone willing to pick up the module and research whether it could be possible for &lt;code&gt;X11::GUITest&lt;/code&gt; to be able to fetch data from the widgets, making it possible to &amp;ldquo;read&amp;rdquo; the contents of a window (from a text widget, for example).&lt;/p&gt;
+
+&lt;p&gt;This kind of testing is more complete than simply driving the GUI.&lt;/p&gt;
+
+&lt;p&gt;Of course, you could also use &lt;code&gt;X11::GUITest&lt;/code&gt; to write a &amp;ldquo;record and playback&amp;rdquo; application. You might only need &lt;code&gt;GetMousePos()&lt;/code&gt;, &lt;code&gt;IsMouseButtonPressed()&lt;/code&gt;, and the other mouse functions. As I said earlier, in my opinion this kind of testing is too fragile.&lt;/p&gt;
+
+&lt;p&gt;The problem is that you can&amp;rsquo;t validate the contents of the windows.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>More Advancements in Perl Programming</title>
+      <link>http://localhost:1313/pub/2006/01/26/more_advanced_perl.html/</link>
+      <pubDate>Thu, 26 Jan 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/01/26/more_advanced_perl.html/</guid>
+      <description>
+
+&lt;p&gt;Around Easter last year, I finished writing the second edition of &lt;a href=&#34;http://www.oreilly.com/catalog/advperl2/&#34;&gt;Advanced Perl Programming&lt;/a&gt;, a task that had been four years in the making. The aim of this new edition was to reflect the way that Perl programming had changed since the first edition. Much of what Sriram wrote in the original edition was still true, but to be honest, not too much of it was useful anymore&amp;ndash;the Perl world has changed dramatically since the original publication.&lt;/p&gt;
+
+&lt;p&gt;The first edition was very much about how to do things yourself; it operated at a very low level by current Perl standards. With the explosion of CPAN modules in the interim, &amp;ldquo;advanced Perl programming&amp;rdquo; now consists of plugging all of the existing components together in the right order, rather than necessarily writing the components from scratch. So the nature of the book had to change a lot.&lt;/p&gt;
+
+&lt;p&gt;However, CPAN is still expanding, and the Perl world continues to change; &lt;em&gt;Advanced Perl Programming&lt;/em&gt; can never be a finished book, but only a snapshot in time. On top of all that, I&amp;rsquo;ve been learning more, too, and discovering more tricks to get work done smarter and faster. Even during the writing of the book, some of the best practices changed and new modules were developed.&lt;/p&gt;
+
+&lt;p&gt;The book is still, I believe, an excellent resource for learning how to master Perl programming, but here, if you like, I want to add to that resource. I&amp;rsquo;ll try to say something about the developments that have happened in each chapter of the book.&lt;/p&gt;
+
+&lt;h3 id=&#34;advanced-perl&#34;&gt;Advanced Perl&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m actually very happy with this chapter. The only thing I left out of the first chapter which may have been useful there is a section on &lt;code&gt;tie&lt;/code&gt;; but this is covered strongly in &lt;em&gt;Programming Perl&lt;/em&gt; anyway.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, although it&amp;rsquo;s not particularly advanced, one of the things I wish I&amp;rsquo;d written about in the book was best practices for creating object-oriented modules. My fellow O&amp;rsquo;Reilly author Damian Conway has already written two books about these topics, so, again, I didn&amp;rsquo;t get too stressed out about having to leave those sections out. That said, the two modules I would recommend for building OO classes don&amp;rsquo;t appear to get a mention in &lt;em&gt;Perl Best Practices&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;First, we all know it&amp;rsquo;s a brilliant idea to create accessors for our data members in a class; however, it&amp;rsquo;s also a pain in the neck to create them yourself. There seem to be hundreds of CPAN modules that automate the process for you, but the easiest is the &lt;a href=&#34;https://metacpan.org/pod/Class::Accessor&#34;&gt;&lt;code&gt;Class::Accessor&lt;/code&gt;&lt;/a&gt; module. With this module, you declare which accessors you want, and it will automatically create them. As a useful bonus, it creates a default &lt;code&gt;new()&lt;/code&gt; method for you if you don&amp;rsquo;t want to write one of those, either.&lt;/p&gt;
+
+&lt;p&gt;Instead of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package MyClass;
+
+sub new { bless { %{@_} }, shift; }
+
+sub name {
+    my $self = shift;
+    if (@_) { $self-&amp;gt;{name} = shift; }
+    $self-&amp;gt;{name}
+}
+
+sub address {
+    my $self = shift;
+    if (@_) { $self-&amp;gt;{address} = shift; }
+    $self-&amp;gt;{address}
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;you can now say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package MyClass;
+use base qw(Class::Accessor);
+
+MyClass-&amp;gt;mk_accessors(qw( name address ));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Class::Accessor&lt;/code&gt; also contains methods for making read-only accessors and for creating separate read and write accessors, and everything is nicely overrideable. Additionally, there are subclasses that extend &lt;code&gt;Class::Accessor&lt;/code&gt; in various ways: &lt;a href=&#34;https://metacpan.org/pod/Class::Accessor::Fast&#34;&gt;&lt;code&gt;Class::Accessor::Fast&lt;/code&gt;&lt;/a&gt; trades off a bit of the extensibility for an extra speed boost, &lt;a href=&#34;https://metacpan.org/pod/Class::Accessor::Chained&#34;&gt;&lt;code&gt;Class::Accessor::Chained&lt;/code&gt;&lt;/a&gt; returns the object when called with parameters, and &lt;a href=&#34;https://metacpan.org/pod/Class::Accessor::Assert&#34;&gt;&lt;code&gt;Class::Accessor::Assert&lt;/code&gt;&lt;/a&gt; does rudimentary type checking on the parameter values. There are many, many modules on the CPAN that do this sort of thing, but this one is, in my opinion, the most flexible and simple.&lt;/p&gt;
+
+&lt;p&gt;Speaking of flexibility, one way to encourage flexibility in your modules and applications is to make them pluggable&amp;ndash;that is, to allow other pieces of code to respond to actions that you define. &lt;a href=&#34;https://metacpan.org/pod/Module::Pluggable&#34;&gt;&lt;code&gt;Module::Pluggable&lt;/code&gt;&lt;/a&gt; is a simple but powerful little module that searches for installed modules in a given namespace. Here&amp;rsquo;s an example of its use in &lt;a href=&#34;https://metacpan.org/pod/Email::FolderType&#34;&gt;&lt;code&gt;Email::FolderType&lt;/code&gt;&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Module::Pluggable 
+    search_path =&amp;gt; &amp;quot;Email::FolderType&amp;quot;, 
+    require     =&amp;gt; 1, 
+    sub_name    =&amp;gt; &#39;matchers&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This looks for all modules underneath the &lt;code&gt;Email::FolderType::&lt;/code&gt; namespace, &lt;code&gt;require&lt;/code&gt;s them, and assembles a list of their classes into the &lt;code&gt;matchers&lt;/code&gt; method. The module later determines the type of an email folder by passing it to each of the recognizers and seeing which of them handles it, with the moral equivalent of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub folder_type {
+    my ($self, $folder) = @_;
+    for my $class ($self-&amp;gt;matchers) {
+        return $class if $class-&amp;gt;match($folder);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This means you don&amp;rsquo;t need to know, when you&amp;rsquo;re writing the code, what folder types you support; you can start off with no recognizers and add them later. If a new type of email folder comes along, the user can install a third-party module from CPAN that deals with it, and &lt;code&gt;Email::FolderType&lt;/code&gt; requires no additional coding to add support for it.&lt;/p&gt;
+
+&lt;h3 id=&#34;parsing&#34;&gt;Parsing&lt;/h3&gt;
+
+&lt;p&gt;Perhaps the biggest change of heart I had between writing a chapter and its publication was in the parsing chapter. That chapter had very little about parsing HTML, and what it did have was not very friendly. Since then, Gisle Aas and Sean Burke&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/HTML::TreeBuilder&#34;&gt;&lt;code&gt;HTML::TreeBuilder&lt;/code&gt;&lt;/a&gt; and the corresponding &lt;a href=&#34;https://metacpan.org/pod/XML::TreeBuilder&#34;&gt;&lt;code&gt;XML::TreeBuilder&lt;/code&gt;&lt;/a&gt; have established themselves as much simpler and more flexible ways to navigate HTML and XML documents.&lt;/p&gt;
+
+&lt;p&gt;The basic concept in &lt;code&gt;HTML::TreeBuilder&lt;/code&gt; is the HTML element, represented as an object of the &lt;code&gt;HTML::Element&lt;/code&gt; class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$a = HTML::Element-&amp;gt;new(&#39;a&#39;, href =&amp;gt; &#39;http://www.perl.com/&#39;);
+$html = $a-&amp;gt;as_HTML;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates a new element that is an anchor tag, with an &lt;code&gt;href&lt;/code&gt; attribute. The HTML equivalent in &lt;code&gt;$html&lt;/code&gt; would be &lt;code&gt;&amp;lt;a href=&amp;quot;http://www.perl.com&amp;quot;/&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now you can add some content to that tag:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$a-&amp;gt;push_content(&amp;quot;The Perl Homepage&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This time, the object represents &lt;code&gt;&amp;lt;a href=&amp;quot;http://www.perl.com&amp;quot;&amp;gt; The Perl Homepage &amp;lt;/a&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;You can ask this element for its tag, its attributes, its content, and so on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tag = $a-&amp;gt;tag;
+$link = $a-&amp;gt;attr(&amp;quot;href&amp;quot;);
+@content = $a-&amp;gt;content_list; # More HTML::Element nodes
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, when you are parsing HTML, you won&amp;rsquo;t be creating those elements manually. Instead, you&amp;rsquo;ll be navigating a tree of them, built out of your HTML document. The top-level module &lt;code&gt;HTML::TreeBuilder&lt;/code&gt; does this for you:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use HTML::TreeBuilder;
+my $tree = HTML::TreeBuilder-&amp;gt;new();
+$tree-&amp;gt;parse_file(&amp;quot;index.html&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now &lt;code&gt;$tree&lt;/code&gt; is a &lt;code&gt;HTML::Element&lt;/code&gt; object representing the &lt;code&gt;&amp;lt;html&amp;gt;&lt;/code&gt; tag and all its contents. You can extract all of the links with the &lt;code&gt;extract_links()&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for (@{ $tree-&amp;gt;extract_links() || [] }) {
+     my($link, $element, $attr, $tag) = @$_;
+     print &amp;quot;Found link to $link in $tag\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Although the real workhorse of this module is the &lt;code&gt;look_down()&lt;/code&gt; method, which helps you pull elements out of the tree by their tags or attributes. For instance, in a search engine indexer, indexing HTML files, I have the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for my $tag ($tree-&amp;gt;look_down(&amp;quot;_tag&amp;quot;,&amp;quot;meta&amp;quot;)) {
+    next unless $tag-&amp;gt;attr(&amp;quot;name&amp;quot;);
+    $hash{$tag-&amp;gt;attr(&amp;quot;name&amp;quot;)} .= $tag-&amp;gt;attr(&amp;quot;content&amp;quot;). &amp;quot; &amp;quot;;
+}
+
+$hash{title} .= $_-&amp;gt;as_text.&amp;quot; &amp;quot; for $tree-&amp;gt;look_down(&amp;quot;_tag&amp;quot;,&amp;quot;title&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This finds all &lt;code&gt;&amp;lt;meta&amp;gt;&lt;/code&gt; tags and puts their attributes as name-value pairs in a hash; then it puts all the text inside of &lt;code&gt;&amp;lt;title&amp;gt;&lt;/code&gt; tags together into another hash element. Similarly, you can look for tags by attribute value, spit out sub-trees as HTML or as text, and much more, besides. For reaching into HTML text and pulling out just the bits you need, I haven&amp;rsquo;t found anything better.&lt;/p&gt;
+
+&lt;p&gt;On the XML side of things, &lt;a href=&#34;https://metacpan.org/pod/XML::Twig&#34;&gt;&lt;code&gt;XML::Twig&lt;/code&gt;&lt;/a&gt; has emerged as the usual &amp;ldquo;middle layer,&amp;rdquo; when &lt;a href=&#34;https://metacpan.org/pod/XML::Simple&#34;&gt;&lt;code&gt;XML::Simple&lt;/code&gt;&lt;/a&gt; is too simple and &lt;a href=&#34;https://metacpan.org/pod/XML::Parser&#34;&gt;&lt;code&gt;XML::Parser&lt;/code&gt;&lt;/a&gt; is, well, too much like hard work.&lt;/p&gt;
+
+&lt;h3 id=&#34;templating&#34;&gt;Templating&lt;/h3&gt;
+
+&lt;p&gt;There&amp;rsquo;s not much to say about templating, although in retrospect, I would have spent more of the paper expended on &lt;a href=&#34;https://metacpan.org/pod/HTML::Mason&#34;&gt;&lt;code&gt;HTML::Mason&lt;/code&gt;&lt;/a&gt; talking about the &lt;a href=&#34;http://www.template-toolkit.org/&#34;&gt;Template Toolkit&lt;/a&gt; instead. Not that there&amp;rsquo;s anything wrong with &lt;code&gt;HTML::Mason&lt;/code&gt;, but the world seems to be moving away from templates that include code in a specific language (say, Perl&amp;rsquo;s) towards separate templating little languages, like &lt;a href=&#34;https://metacpan.org/pod/Template::TAL&#34;&gt;TAL&lt;/a&gt; and Template Toolkit.&lt;/p&gt;
+
+&lt;p&gt;The only thing to report is that Template Toolkit finally received a bit of attention from its maintainer a couple of months ago, but the long-awaited Template Toolkit 3 is looking as far away as, well, Perl 6.&lt;/p&gt;
+
+&lt;h3 id=&#34;natural-language-processing&#34;&gt;Natural Language Processing&lt;/h3&gt;
+
+&lt;p&gt;Who would have thought that the big news of 2005 would be that Yahoo is relevant again? Not only are they coming up with interesting new search technologies such as Y!Q, but they&amp;rsquo;re releasing a lot of the guts behind what they&amp;rsquo;re doing as public APIs. One of those that is particularly relevant for NLP is the &lt;a href=&#34;http://developer.yahoo.net/search/content/V1/termExtraction.html&#34;&gt;Term Extraction web service&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This takes a chunk of text and pulls out the distinctive terms and phrases. Think of this as a step beyond something like &lt;a href=&#34;https://metacpan.org/pod/Lingua::EN::Keywords&#34;&gt;&lt;code&gt;Lingua::EN::Keywords&lt;/code&gt;&lt;/a&gt;, with the firepower of Yahoo behind it. To access the API, simply send a HTTP &lt;code&gt;POST&lt;/code&gt; request to a given URL:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use LWP::UserAgent;
+use XML::Twig;
+my $uri  = &amp;quot;http://api.search.yahoo.com/ContentAnalysisService/V1/termExtraction&amp;quot;;
+my $ua   = LWP::UserAgent-&amp;gt;new();
+my $resp = $ua-&amp;gt;post($uri, {
+    appid   =&amp;gt; &amp;quot;PerlYahooExtractor&amp;quot;,
+    context =&amp;gt; &amp;lt;&amp;lt;EOF
+Two Scottish towns have seen the highest increase in house prices in the
+UK this year, according to new figures. 
+Alexandria in West Dunbartonshire and Coatbridge in North Lanarkshire
+both saw an average 35% rise in 2005. 
+EOF
+});
+if ($resp-&amp;gt;is_success) { 
+    my $xmlt = XML::Twig-&amp;gt;new( index =&amp;gt; [ &amp;quot;Result&amp;quot; ]);
+    $xmlt-&amp;gt;parse($resp-&amp;gt;content);
+    for my $result (@{ $xmlt-&amp;gt;index(&amp;quot;Result&amp;quot;) || []}) {
+        print $result-&amp;gt;text;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This produces:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;north lanarkshire
+scottish towns
+west dunbartonshire
+house prices
+coatbridge
+dunbartonshire
+alexandria
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once I had informed the London Perl Mongers of this amazing discovery, Simon Wistow immediately bundled it up into a Perl module called &lt;a href=&#34;https://metacpan.org/pod/Lingua::EN::Keywords::Yahoo&#34;&gt;&lt;code&gt;Lingua::EN::Keywords::Yahoo&lt;/code&gt;&lt;/a&gt;, coming soon to a CPAN mirror near you.&lt;/p&gt;
+
+&lt;h3 id=&#34;unicode&#34;&gt;Unicode&lt;/h3&gt;
+
+&lt;p&gt;The best news about Unicode over the last year is that you should not have noticed any major changes. By now, the core Unicode support in Perl just works, and most of the CPAN modules that deal with external data have been updated to work with Unicode.&lt;/p&gt;
+
+&lt;p&gt;If you don&amp;rsquo;t see or hear anything about Unicode, that&amp;rsquo;s a good thing: it means it&amp;rsquo;s all working properly.&lt;/p&gt;
+
+&lt;h3 id=&#34;poe&#34;&gt;POE&lt;/h3&gt;
+
+&lt;p&gt;The chapter on POE was a great introduction to how POE works and some of the things that you can do with it, but it focused on using POE for networking applications and for daemons. This is only half the story. Recently a lot of interest has centered on using POE for graphical and command-line applications: Randal Schwartz takes over from the RSS aggregator at the end of the chapter by integrating it with a graphical interface in &amp;ldquo;&lt;a href=&#34;http://www.stonehenge.com/merlyn/PerlJournal/col11.html&#34;&gt;Graphical interaction with POE and Tk&lt;/a&gt;.&amp;rdquo; Here, I want to consider command-line applications.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/Term::Visual&#34;&gt;&lt;code&gt;Term::Visual&lt;/code&gt;&lt;/a&gt; module is a POE component for creating applications with a split-screen interface; at the bottom of the interface, you type your input, and the output appears above a status line. The module handles all of the history, status bar updates, and everything else for you. Here&amp;rsquo;s an application that uses &lt;a href=&#34;https://metacpan.org/pod/Chatbot::Eliza&#34;&gt;&lt;code&gt;Chatbot::Eliza&lt;/code&gt;&lt;/a&gt; to provide therapeutic session with everyone&amp;rsquo;s favorite digital psychiatrist.&lt;/p&gt;
+
+&lt;p&gt;First, set up the chatbot and create a new &lt;code&gt;Term::Visual&lt;/code&gt; object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl -w
+use POE;
+use POSIX qw(strftime);
+use Term::Visual;
+use Chatbot::Eliza;
+my $eliza = Chatbot::Eliza-&amp;gt;new();
+my $vt    = Term::Visual-&amp;gt;new( Alias =&amp;gt; &amp;quot;interface&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now create the window, which will have space on its status bar for a clock:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $window_id = $vt-&amp;gt;create_window(
+   Status =&amp;gt; { 0 =&amp;gt; { format =&amp;gt; &amp;quot;[%8.8s]&amp;quot;, fields =&amp;gt; [&amp;quot;time&amp;quot;] } },
+   Title =&amp;gt; &amp;quot;Eliza&amp;quot; 
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You also need a &lt;a href=&#34;https://metacpan.org/pod/POE::Session&#34;&gt;&lt;code&gt;POE::Session&lt;/code&gt;&lt;/a&gt;, which will do all the work. It will have three states; the first is the &lt;code&gt;_start&lt;/code&gt; state, to tell &lt;code&gt;Term::Visual&lt;/code&gt; what to do with any input it gets from the keyboard and to update the clock:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;POE::Session-&amp;gt;create
+(inline_states =&amp;gt;
+  { _start          =&amp;gt; sub {
+        $_[KERNEL]-&amp;gt;post( interface =&amp;gt; send_me_input =&amp;gt; &amp;quot;got_term_input&amp;quot; );
+        $_[KERNEL]-&amp;gt;yield( &amp;quot;update_time&amp;quot; );
+    },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Updating the clock is simply a matter of setting the &lt;code&gt;time&lt;/code&gt; field declared earlier to the current time, and scheduling another update at the top of the next minute:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    update_time     =&amp;gt; sub {
+        $vt-&amp;gt;set_status_field( $window_id,
+                               time =&amp;gt; strftime(&amp;quot;%I:%M %p&amp;quot;, localtime) );
+        $_[KERNEL]-&amp;gt;alarm( update_time =&amp;gt; int(time() / 60) * 60 + 60 );
+    },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, you need to handle the input from the user. Do that in a separate subroutine to make things a big clearer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    got_term_input  =&amp;gt; \&amp;amp;handle_term_input,
+  }
+);
+
+$poe_kernel-&amp;gt;run();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When &lt;code&gt;Term::Visual&lt;/code&gt; gets a line of text from the user, it passes it to the state declared in the &lt;code&gt;_start&lt;/code&gt; state. The code takes that text, prints it to the terminal as an echo, and then passes it through Eliza:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub handle_term_input {
+  my ($heap, $input) = @_[HEAP, ARG0];
+  if ($input =~ m{^/quit}i) {
+    $vt-&amp;gt;delete_window($window_id); 
+    exit;
+  }
+
+  $vt-&amp;gt;print($window_id, &amp;quot;&amp;gt; $input&amp;quot;);
+  $vt-&amp;gt;print($window_id, $eliza-&amp;gt;transform($input));
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In just a few lines of code you have a familiar interface, similar to many IRC or MUD clients, with POE hiding all of the event handling away.&lt;/p&gt;
+
+&lt;h3 id=&#34;testing&#34;&gt;Testing&lt;/h3&gt;
+
+&lt;p&gt;&lt;em&gt;Advanced Perl Programming&lt;/em&gt; showed how to write tests so that we all can be more sure that our code is doing what it should. How do you know your tests are doing enough? Enter Paul Johnson&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Devel::Cover&#34;&gt;&lt;code&gt;Devel::Cover&lt;/code&gt;&lt;/a&gt;!&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Devel::Cover&lt;/code&gt; makes a record of each time a Perl operation or statement is executed, and then compares this against the statements in your code. So when you&amp;rsquo;re running your tests, you can see which of the code paths in your module get exercised and which don&amp;rsquo;t; if you have big branches of code that never get tested, maybe you should write more tests for them!&lt;/p&gt;
+
+&lt;p&gt;To use it on an uninstalled module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cover -delete
+$ HARNESS_PERL_SWITCHES=-MDevel::Cover make test
+$ cover
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will give you a textual summary of code coverage; &lt;code&gt;cover -report html&lt;/code&gt; produces a colorized, navigable hypertext summary, useful for showing to bosses.&lt;/p&gt;
+
+&lt;p&gt;This ensures that your code works&amp;ndash;or at least, that it does what your tests specify. The next step is to ensure that your code is actually of relatively decent quality. Because &amp;ldquo;quality&amp;rdquo; is a subjective metric when it comes to the art of programming, Perl folk have introduced the objective of &amp;ldquo;Kwalitee&amp;rdquo; instead, which may or may not have any bearing on quality.&lt;/p&gt;
+
+&lt;p&gt;All modules on CPAN have their Kwalitee measured as part of the &lt;a href=&#34;http://cpants.dev.zsi.at/&#34;&gt;CPANTS&lt;/a&gt; (CPAN Testing Service) website. One way to test for and increase your Kwalitee is to use the &lt;a href=&#34;https://metacpan.org/pod/Module::Build::Kwalitee&#34;&gt;&lt;code&gt;Module::Build::Kwalitee&lt;/code&gt;&lt;/a&gt; module; this copies some boilerplate tests into your distribution that ensure that you have adequate and syntactically correct documentation, that you &lt;code&gt;use strict&lt;/code&gt; and &lt;code&gt;warnings&lt;/code&gt;, and so on.&lt;/p&gt;
+
+&lt;p&gt;All of this ought to go a fair way to improving the Kwalitee of your code, if not its actual quality!&lt;/p&gt;
+
+&lt;h3 id=&#34;inline&#34;&gt;Inline&lt;/h3&gt;
+
+&lt;p&gt;One of the things that has come over into Perl 5 from Perl 6 development is the concept of the Native Call Interface (NCI). This hasn&amp;rsquo;t fully been developed yet, but chromatic (yes, the editor of this very site) has been working on it.&lt;/p&gt;
+
+&lt;p&gt;The idea is that, instead of having something like Inline or XS that creates a &amp;ldquo;buffer&amp;rdquo; between Perl and C libraries, you just call those libraries directly. At the moment, you need to compile any XS module against the library you&amp;rsquo;re using. This is particularly awkward for folk on cut-down operating systems that do not ship a compiler, such as Palm OS or Windows.&lt;/p&gt;
+
+&lt;p&gt;The strength of NCI is that it doesn&amp;rsquo;t require a compiler; instead, it uses the operating system&amp;rsquo;s normal means of making calls into libraries. (Hence &amp;ldquo;Native Call.&amp;rdquo;) It uses Perl&amp;rsquo;s &lt;code&gt;DynaLoader&lt;/code&gt; to find libraries, load them, and then find the address of symbols inside of the library. Then it calls a generic &amp;ldquo;thunk&amp;rdquo; function to turn the symbol&amp;rsquo;s address into a call. For instance:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $lib = P5NCI::Library-&amp;gt;new( library =&amp;gt; &#39;nci_test&#39;, package =&amp;gt; &#39;NCI&#39; );
+$lib-&amp;gt;install_function( &#39;double_int&#39;, &#39;ii&#39; );
+
+my $two = NCI::double_int( 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These lines find the &lt;code&gt;nci_test&lt;/code&gt; shared library and get ready to put its functions into the &lt;code&gt;NCI&lt;/code&gt; namespace. It then installs the function &lt;code&gt;double_int&lt;/code&gt;, which is of signature &lt;code&gt;int double_int(int)&lt;/code&gt; (hence &lt;code&gt;ii&lt;/code&gt;). Once this is done, you can call the function from Perl. It&amp;rsquo;s not much trickier than Inline, but without the intermediate step of compilation.&lt;/p&gt;
+
+&lt;p&gt;NCI isn&amp;rsquo;t quite there yet, and it only supports very simple function signatures. However, because of its portability, it&amp;rsquo;s definitely the one to watch for Perl-C interfaces in the future.&lt;/p&gt;
+
+&lt;h3 id=&#34;everything-else&#34;&gt;Everything Else&lt;/h3&gt;
+
+&lt;p&gt;The last chapter is &amp;ldquo;Fun with Perl.&amp;rdquo; Now, much has happened in the world of Perl fun, but much has happened all over Perl. There were many other things I wanted to write about, as well: CPAN best practices for date/time handling and email handling, Perl 6 and Pugs, the very latest web application frameworks such as Catalyst and Jifty, and so on. But all these would fill another book&amp;ndash;and if I ever finished that, it too would require an update like this one. So I hope this is enough for you to be getting on with!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Testing Files and Test Modules</title>
+      <link>http://localhost:1313/pub/2005/12/08/test_files.html/</link>
+      <pubDate>Thu, 08 Dec 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/12/08/test_files.html/</guid>
+      <description>
+
+&lt;p&gt;For the last several years, there has been more and more emphasis on automated testing. No self-respecting CPAN author can post a distribution without tests. Yet some things are hard to test. This article explains how writing &lt;code&gt;Test::Files&lt;/code&gt; gave me a useful tool for validating one module&amp;rsquo;s output and taught me a few things about the current state of Perl testing.&lt;/p&gt;
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;My boss put me to work writing a moderately large suite in Perl. Among many other things, it needed to perform check out and commit operations on CVS repositories. In a quest to build quality tests for that module, I wrote &lt;a href=&#34;https://metacpan.org/pod/Test::Files&#34;&gt;&lt;code&gt;Test::Files&lt;/code&gt;&lt;/a&gt;, which is now on CPAN. This article explains how to use that module and, perhaps more importantly, how it tests itself.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-test-files&#34;&gt;Using &lt;code&gt;Test::Files&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;To use &lt;code&gt;Test::Files&lt;/code&gt;, first use &lt;a href=&#34;https://metacpan.org/pod/Test::More&#34;&gt;&lt;code&gt;Test::More&lt;/code&gt;&lt;/a&gt; and tell it how many tests you want to run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use strict;
+use warnings;
+use Test::More tests =&amp;gt; 5;
+use Test::Files;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After you use the module, there are four things it can help you do:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Compare one file to a string or to another file.&lt;/li&gt;
+&lt;li&gt;Make sure that directories have the files you expect them to have.&lt;/li&gt;
+&lt;li&gt;Compare all the files in one directory to all the files in another directory.&lt;/li&gt;
+&lt;li&gt;Exclude some things from consideration.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;single-files&#34;&gt;Single Files&lt;/h3&gt;
+
+&lt;p&gt;In the simplest case, you have written a file. Now it is time to validate it. That could look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;file_ok($file_name, &amp;quot;This is the\ntext\n&amp;quot;,
+    &amp;quot;file one contents&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;file_ok&lt;/code&gt; function takes two (or optionally, and preferably, three) arguments. The first is the name of the file you want to validate. The second is a text string containing the text that should be in the file. The third is the name of the test. In the rush of writing, I&amp;rsquo;m likely to fail to mention the test names at some point, so let me say up front that all of the tests shown here take a name argument. Including a name makes finding the test easier.&lt;/p&gt;
+
+&lt;p&gt;If the file agrees with the string, the test passes with only an OK message. Otherwise, the test will fail and diagnostic messages will show where the two differed. The diagnostic output is really the reason to use &lt;code&gt;Test::Files&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Some, including myself, prefer to check one file against another. I put one version in the distribution. The other one, my tests write. To compare two files, use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;compare_ok($file1, $file2, $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As with &lt;code&gt;file_ok&lt;/code&gt;, if the files are the same, &lt;code&gt;Test::Files&lt;/code&gt; only reports an OK message. Failure shows where the files differ.&lt;/p&gt;
+
+&lt;h3 id=&#34;directory-structures&#34;&gt;Directory Structures&lt;/h3&gt;
+
+&lt;p&gt;Sometimes, you need to validate that certain files are present in a directory. Other times, you need to make that check exclusive so that only known files are present. Finally, you might want to know that not only is the directory structure is the same, but that the files contain the same data.&lt;/p&gt;
+
+&lt;p&gt;To look for some files in a directory by name, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;dir_contains_ok($dir, [qw(list files here)], $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will succeed, even if the directory has some other files you weren&amp;rsquo;t looking for.&lt;/p&gt;
+
+&lt;p&gt;To ensure that your list is exclusive, add only to the function name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;dir_only_contains_ok($dir, [qw(list all files here)], $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Both of these report a list of absent files if they fail due to them. The exclusive form also reports a list of unexpected files, if it sees any.&lt;/p&gt;
+
+&lt;h3 id=&#34;directory-contents&#34;&gt;Directory Contents&lt;/h3&gt;
+
+&lt;p&gt;If knowing that certain file names are present is not enough, use the &lt;code&gt;compare_dirs_ok&lt;/code&gt; function to check the contents of all files in one directory against files in another directory. A typical module might build one directory during &lt;code&gt;make test&lt;/code&gt;, with the other built ahead of time and shipped with the distribution.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;compare_dirs_ok($test_built, $shipped, $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will generate a separate diagnostic &lt;code&gt;diff&lt;/code&gt; output for each pair of files that differs, in addition to listing files that are missing from either distribution. (If you need to know which files are missing from the built directory, either reverse the order of the directories or use &lt;code&gt;dir_only_contains_ok&lt;/code&gt; in addition to &lt;code&gt;compare_dirs_ok&lt;/code&gt;. This is a bug and might eventually be fixed.) Even though this could yield many diagnostic reports, all of those separate failures only count as one failed test.&lt;/p&gt;
+
+&lt;p&gt;There are many times when testing &lt;em&gt;all&lt;/em&gt; files in the directories is just wrong. In these cases, it is best to use &lt;a href=&#34;https://metacpan.org/pod/File::Find&#34;&gt;&lt;code&gt;File::Find&lt;/code&gt;&lt;/a&gt; or an equivalent, putting an exclusion criterion at the top of your wanted function and a call to &lt;code&gt;compare_ok&lt;/code&gt; at the bottom. This probably requires you to use &lt;code&gt;no_plan&lt;/code&gt; with &lt;code&gt;Test::More&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More qw(no_plan);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Test::More&lt;/code&gt; wants to know the exact number of tests you are about to run. If you tell it the wrong number, the test harness will think something is wrong with your test script, causing it to report failures. To avoid this confusion, use &lt;code&gt;no_plan&lt;/code&gt;&amp;ndash;but keep in mind that plans are there for a reason. If your test dies, the plan lets the harness know how many tests it missed. If you have &lt;code&gt;no_plan&lt;/code&gt;, the harness doesn&amp;rsquo;t always have enough information to keep score. Thus, you should put such tests in separate scripts, so that the harness can count your other tests properly.&lt;/p&gt;
+
+&lt;h3 id=&#34;filtering&#34;&gt;Filtering&lt;/h3&gt;
+
+&lt;p&gt;While the above list of functions seemed sufficient during planning, reality set in as soon as I tried it out on my CVS module. I wanted to compare two CVS repositories: one ready for shipment with the distribution, the other built during testing. As soon as I tried the test it failed, not because the operative parts of the module were not working, but because the CVS timestamps differed between the two versions.&lt;/p&gt;
+
+&lt;p&gt;To deal with cosmetic differences that should not count as failures, I added two functions to the above list: one for single files and the other for directories. These new functions accept a code reference that receives each line prior to comparison. It performs any needed alterations, and then returns a line suitable for comparison. My example function below redacts the offending timestamps. With the filtered versions in place, the tests pass and fail when they should.&lt;/p&gt;
+
+&lt;p&gt;My final tests for the CVS repository directories look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;compare_dirs_filter_ok(
+    &#39;t/cvsroot/CVSROOT&#39;,
+    &#39;t/sampleroot/CVSROOT&#39;,
+    \&amp;amp;chop_dates,
+    &amp;quot;make repo&amp;quot;
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code reference argument comes between the directory names and the test name. The &lt;code&gt;chop_dates&lt;/code&gt; function is not particularly complex. It removes two kinds of dates favored by CVS, as shown in its comments.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub chop_dates {
+    my $line =  shift;
+
+    #  2003.10.15.13.45.57 (year month day hour minute sec)
+    $line    =~ s/\d{4}(.\d\d){5}//;
+
+    #  Thu Oct 16 18:00:28 2003
+    $line    =~ s/\w{3} \w{3} \d\d? \d\d:\d\d:\d\d \d{4}//;
+
+    return $line;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This shows the general behavior of filters. They receive a line of input which they must not directly change. Instead, they must return a new, corrected line.&lt;/p&gt;
+
+&lt;p&gt;In addition to &lt;code&gt;compare_dirs_filter_ok&lt;/code&gt; for whole directory structures, there is also &lt;code&gt;compare_filter_ok&lt;/code&gt;, which works similarly for single file comparisons. (There is no &lt;code&gt;file_filter_ok&lt;/code&gt;, but maybe there should be.)&lt;/p&gt;
+
+&lt;h3 id=&#34;testing-a-test-module&#34;&gt;Testing a Test Module&lt;/h3&gt;
+
+&lt;p&gt;The most interesting part of writing &lt;code&gt;Test::Files&lt;/code&gt; was learning how to test it. Thanks to Schwern, I learned about &lt;a href=&#34;https://metacpan.org/pod/Test::Builder::Tester&#34;&gt;&lt;code&gt;Test::Builder::Tester&lt;/code&gt;&lt;/a&gt;, which eases the problems inherent in testing a Perl test module.&lt;/p&gt;
+
+&lt;p&gt;The difficulty with testing Perl tests has to do with how they normally run. The venerable test harness scheme expects test scripts to produce pass and fail data on standard out and diagnostic help on standard error. This is a great design. The simplicity is exactly what you would expect from a Unix-inspired tool. Yet, it poses a problem for testing test modules.&lt;/p&gt;
+
+&lt;p&gt;When eventual users use the test module, their harness expects it to write quite specific things to standard out and standard error. Among the things that must go to standard out are a sequence of lines such as &lt;code&gt;ok 1&lt;/code&gt;. When you write a test of the test module, its harness also expects to see this sort of data on standard out and standard error. Having two different sources of &lt;code&gt;ok 1&lt;/code&gt; is highly confusing, not least to the harness, which chokes on such duplications.&lt;/p&gt;
+
+&lt;p&gt;Test module writers need a scheme to trap the output from the module being tested, check it for correct content, and report that result onto the actual standard channels for the harness to see. This is tricky, requiring care in diversion of file handles at the right moments without the knowledge of the module whose output is diverted. Doing this by hand is inelegant and prone to error. Further, multiple test scripts might have to recreate home-rolled solutions (introducing the oldest of known coding sins: duplication of code). Finally, the diagnostic output, in the event of failure, from homemade diverters is unlikely to be helpful when tests of the test module fail.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Enter &lt;code&gt;Test::Builder::Tester&lt;/code&gt;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To help us test testers, Mark Fowler collected some code from Schwern, and used it to make &lt;code&gt;Test::Builder::Tester&lt;/code&gt;. With it, tests of test modules are relatively painless and their failure diagnostics are highly informative. Here are two examples from the &lt;code&gt;Test::Files&lt;/code&gt; test suite. The first shows a file comparison that should pass:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;test_out(&amp;quot;ok 1 - passing file&amp;quot;);
+compare_ok(&amp;quot;t/ok_pass.dat&amp;quot;, &amp;quot;t/ok_pass.same.dat&amp;quot;,
+    &amp;quot;passing file&amp;quot;);
+test_test(&amp;quot;passing file&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This test should work, generating &lt;code&gt;ok 1 - passing file&lt;/code&gt; on standard output. To tell &lt;code&gt;Test::Builder::Tester&lt;/code&gt; what the standard output should be, I called &lt;code&gt;test_out&lt;/code&gt;. After the test, I called &lt;code&gt;test_test&lt;/code&gt; with only the name of my test. (To avoid confusion, I made the test names the same.)&lt;/p&gt;
+
+&lt;p&gt;Between the call to &lt;code&gt;test_out&lt;/code&gt; and the one to &lt;code&gt;test_test&lt;/code&gt;, &lt;code&gt;Test::Builder::Tester&lt;/code&gt; diverted the regular output channels so the harness won&amp;rsquo;t see them.&lt;/p&gt;
+
+&lt;p&gt;The second example shows a failed test and how to check both standard out and standard error. The later contains the diagnostic data the module should generate.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;test_out(&amp;quot;not ok 1 - failing file&amp;quot;);
+$line = line_num(+9);
+test_diag(&amp;quot;    Failed test (t/03compare_ok.t at line $line)&amp;quot;,
+&#39;+---+--------------------+-------------------+&#39;,
+&#39;|   |Got                 |Expected           |&#39;,
+&#39;| Ln|                    |                   |&#39;,
+&#39;+---+--------------------+-------------------+&#39;,
+&#39;|  1|This file           |This file          |&#39;,
+&#39;*  2|is for 03ok_pass.t  |is for many tests  *&#39;,
+&#39;+---+--------------------+-------------------+&#39;  );
+compare_ok(&amp;quot;t/ok_pass.dat&amp;quot;, &amp;quot;t/ok_pass.diff.dat&amp;quot;,
+    &amp;quot;failing file&amp;quot;);
+test_test(&amp;quot;failing file&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Two new functions appear here. First, &lt;code&gt;line_num&lt;/code&gt; returns the current line number plus or minus an offset. Because failing tests report the line number of the failure, checking standard error for an exact match requires matching that number. Yet, no one wants his tests to break because he inserted a new line at the top of the script. With &lt;code&gt;line_num&lt;/code&gt;, you can obtain the line number of the test relative to where you are. Here, there are nine lines between the call to &lt;code&gt;line_num&lt;/code&gt; and the actual test.&lt;/p&gt;
+
+&lt;p&gt;The other new function is &lt;code&gt;test_diag&lt;/code&gt;. It allows you to check the standard error output, where diagnostic messages appear. The easiest way to use it is to provide each line of output as a separate parameter.&lt;/p&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;Now you know how to use &lt;code&gt;Test::Files&lt;/code&gt; and how to test modules that implement tests. There is one final way I use &lt;code&gt;Test::Files&lt;/code&gt;. I use it outside of module testing any time I want to know how the contents of text files in two directory hierarchies compare. With this, I can quickly locate differences in archives, for example, enabling me to debug builders of those archives. In one example, I used it compare more than 400 text files in two WebSphere .ear archives. My program had only about 30 operative lines (there were also comments and blank lines) and performed the comparison in under five seconds. This is testament to the leverage of Perl and CPAN.&lt;/p&gt;
+
+&lt;p&gt;(Since doing that comparison, I have moved to a new company. In the process I exchanged WebSphere for &lt;code&gt;mod_perl&lt;/code&gt; and am generally happier with the latter.)&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Automated GUI Testing</title>
+      <link>http://localhost:1313/pub/2005/08/11/win32guitest.html/</link>
+      <pubDate>Thu, 11 Aug 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/08/11/win32guitest.html/</guid>
+      <description>
+
+&lt;p&gt;You use Perl at work. Sometimes you are unhappy because there is one application you always have to click on and fill all those input boxes. It&amp;rsquo;s very boring. Why not let Perl do that while you go grab a coffee? Also, maybe you sometimes feel frustrated that you need to start that nice app and want someone else type in for you. Let Perl do that, too.&lt;/p&gt;
+
+&lt;h3 id=&#34;why-perl&#34;&gt;Why Perl?&lt;/h3&gt;
+
+&lt;p&gt;Simply put: because you like Perl.&lt;/p&gt;
+
+&lt;p&gt;The long story is that there are all sorts of software packages that you may use to automate graphical applications. Are they really good fits for what you want to do?&lt;/p&gt;
+
+&lt;p&gt;Windows has many libraries that help you automate such things, but do the applications you use support those automation libraries? Too many do not. Moreover, is this enough for you to say you have tested a certain GUI feature? If not, read on.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-you-need&#34;&gt;What You Need&lt;/h3&gt;
+
+&lt;p&gt;You need a working installation of Perl, with Perl/Tk included. I recommend &lt;a href=&#34;http://www.activestate.com/&#34;&gt;ActiveState&lt;/a&gt;&amp;rsquo;s ActivePerl. You also need the &lt;a href=&#34;https://metacpan.org/pod/Win32::GuiTest&#34;&gt;Win32::GuiTest&lt;/a&gt; module. Install it from the CPAN or, ideally, through PPM.&lt;/p&gt;
+
+&lt;h3 id=&#34;example-code&#34;&gt;Example Code&lt;/h3&gt;
+
+&lt;p&gt;Download the &lt;a href=&#34;http://localhost:1313/media/_pub_2005_08_11_win32guitest/tester.pl&#34;&gt;&lt;em&gt;tester.pl&lt;/em&gt;&lt;/a&gt; and the &lt;a href=&#34;http://localhost:1313/media/_pub_2005_08_11_win32guitest/tested.pl&#34;&gt;&lt;em&gt;tested.pl&lt;/em&gt;&lt;/a&gt; programs. They need to both be in the same directory. First run the &lt;em&gt;tested.pl&lt;/em&gt; program in order to see the windows it has and how it looks. The program does nothing by itself; it just serves as a &amp;ldquo;run&amp;rdquo; application. &lt;em&gt;tester.pl&lt;/em&gt; is more interesting. It spawns &lt;em&gt;tested.pl&lt;/em&gt; and starts sending it input (mouse moves, mouse clicks, and keystrokes).&lt;/p&gt;
+
+&lt;p&gt;I tested these two programs on Windows 2000 Professional and Windows XP Home Edition using ActiveState&amp;rsquo;s distribution of Perl.&lt;/p&gt;
+
+&lt;p&gt;The &lt;em&gt;tested.pl&lt;/em&gt; program is just a dummy GUI used to demonstrate the examples. It uses Tk, so although it is a Win32 GUI, it isn&amp;rsquo;t a native one. This has the effect that not all of the functions you can use with Win32::GuiTest will work as you would expect them to work against a native Win32 GUI. Fortunately, there are workarounds.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-few-words-about-windows&#34;&gt;A Few Words About Windows&lt;/h3&gt;
+
+&lt;p&gt;Graphical user interfaces manage windows. Windows are just reusable objects with which users can interact. Almost all GUIs have more than just one window. I use &amp;ldquo;window&amp;rdquo; just as a generic term for any graphical object that an application may produce. This means that &amp;ldquo;window&amp;rdquo; is an abstract term after all.&lt;/p&gt;
+
+&lt;p&gt;Windows have common elements that you need to consider before writing a program that interacts with a GUI.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Each window belongs to a window class (making it possible to search them by class).&lt;/li&gt;
+&lt;li&gt;Windows have an organizational hierarchy; every GUI has at least one root window, and every window may have child windows. Windows form a tree. This makes them searchable (by class or not) in depth: start from a root window and search among its siblings.&lt;/li&gt;
+&lt;li&gt;Some windows have text attached to them. This is useful to identify windows.&lt;/li&gt;
+&lt;li&gt;Windows have an numeric ID that uniquely identifies them.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This means that you can identify windows by any of their text, class, and parent window attributes. You can also pinpoint a window by its ID.&lt;/p&gt;
+
+&lt;h3 id=&#34;finding-windows&#34;&gt;Finding Windows&lt;/h3&gt;
+
+&lt;p&gt;When testing a GUI, first make sure the application you want to test has started. To do this, use the Win32::GuiTest exported function named &lt;code&gt;FindWindowLike()&lt;/code&gt;. Remember that hierarchy of Windows? If you search for an &lt;em&gt;Edit&lt;/em&gt; window, you may find it in the wrong place. That There can be multiple different GUIs started that &lt;em&gt;have&lt;/em&gt; editor windows. There should be a way to differentiate between these hypothetical editor windows&amp;ndash;and the hierarchical organization of windows helps.&lt;/p&gt;
+
+&lt;p&gt;First look for the main window of the application, and then descend the hierarchy (that you have to know beforehand) until you reach the desired window.&lt;/p&gt;
+
+&lt;p&gt;How can you know the windows hierarchy? There are two main ways. If you have written the GUI yourself or have access to its sources and have enough experience, you may find out what the hierarchy of windows is. Unfortunately, that&amp;rsquo;s quite tricky and prone to error.&lt;/p&gt;
+
+&lt;p&gt;Another much simpler way to do this on Windows platforms is to use the free &lt;a href=&#34;http://www.catch22.net/software/winspy.asp&#34;&gt;WinSpy++&lt;/a&gt; program. Basically, it allows you to &lt;a href=&#34;http://www.piotrkaluski.com/files/winguitest/docs/ch02.html&#34;&gt;peek at an application&amp;rsquo;s window structure&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;When you use WinSpy++ to look at an application windowing structure, you will notice that every window has a numeric handle, expressed in hex. However, Perl expresses in decimal. This will come up again in a moment.&lt;/p&gt;
+
+&lt;p&gt;The syntax for &lt;code&gt;FindWindowLike&lt;/code&gt; is: &lt;code&gt;FindWindowLike($window,$titleregex,$classregex,$childid,   $maxlevel)&lt;/code&gt;. It returns a list of found windows. The parameters are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$window&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the (numeric) handle of the parent window to search under (remember the hierarchical organization of windows in a GUI). You may use &lt;em&gt;undef&lt;/em&gt; in order to search for all windows.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;$window&lt;/em&gt; should be a decimal value, so if you know the window&amp;rsquo;s hex handle (as displayed by WinSpy++) you need to convert it.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$titleregex&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the most often used parameter. It is a regular expression for &lt;code&gt;FindWindowLike&lt;/code&gt; to match against window titles to find the appropriate window(s).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$classregex&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This matches against a window class. Suppose that you want to find all buttons in an application. Use the function like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @windows = FindWindowLike(undef,&amp;quot;&amp;quot;,&amp;quot;Button&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Note:&lt;/code&gt; if you don&amp;rsquo;t care what the class of the window is, do not omit the &lt;code&gt;$classregex&lt;/code&gt; parameter. Instead, use an empty string.&lt;/p&gt;
+
+&lt;p&gt;Currently the &lt;code&gt;FindWindowLike()&lt;/code&gt; function does not check if &lt;code&gt;$classregex&lt;/code&gt; is undefined, so you will end up with a lot of Perl warnings.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$childid&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;If you pass this argument, then the function will match all windows with this ID.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$maxlevel&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Maximum depth level to match windows.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As you may have noticed, the &lt;code&gt;tested&lt;/code&gt; program has a title that matches the string &amp;ldquo;Tested&amp;rdquo;. Thus, the &lt;code&gt;tester&lt;/code&gt; starts by searching windows matching this title:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@windows = FindWindowLike( undef, &amp;quot;Tested&amp;quot;, &amp;quot;&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;@windows&lt;/em&gt; will contain a list of window IDs that have a title matching the string. The point here is that you probably don&amp;rsquo;t want the &lt;code&gt;tested&lt;/code&gt; program to start more than once simultaneously.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ( @windows &amp;gt; 1 ) {
+     print &amp;quot;* The \&amp;quot;tested\&amp;quot; program is started more than once!\n&amp;quot;;
+     ...
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If there is no &lt;code&gt;tested&lt;/code&gt; application already running, the program can start it and repeat the procedure, searching for windows that match our criteria (they contain the string &amp;ldquo;Tested&amp;rdquo; in their titles). If it&amp;rsquo;s running just once, its ID is &lt;code&gt;$windows[0]&lt;/code&gt;. In fact, this is the root window of the application.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s no point in going further with the program if the GUI hasn&amp;rsquo;t started, so the code checks this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;unless ( @windows ) {
+     print &amp;quot;* The program hasn&#39;t started!\n&amp;quot;;
+     exit 1;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;setting-a-specific-window-to-foreground&#34;&gt;Setting a Specific Window to Foreground&lt;/h3&gt;
+
+&lt;p&gt;Finding a window is sometimes not enough. Often, you need to send some input to the window. Obviously, the window should be in the foreground. The appropriate functions are &lt;code&gt;SetActiveWindow()&lt;/code&gt; and &lt;code&gt;SetForegroundWindow()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Because of the way windows work under Win32, this may be trickier than it seems. Basically, if the caller is not in the foreground, it can not give another window &amp;ldquo;focus.&amp;rdquo; MSDN explains this in the documentation of the &lt;a href=&#34;http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/windows/windowreference/windowfunctions/setforegroundwindow.asp&#34;&gt;&lt;code&gt;SetForegroundWindow&lt;/code&gt;&lt;/a&gt; and &lt;a href=&#34;http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/userinput/keyboardinput/keyboardinputreference/keyboardinputfunctions/setactivewindow.asp&#34;&gt;&lt;code&gt;SetActiveWindow&lt;/code&gt;&lt;/a&gt; functions.&lt;/p&gt;
+
+&lt;p&gt;While this behavior is easy to explain if you consider that you usually don&amp;rsquo;t want applications that run in background to be able to annoy you (at least) by grabbing focus, there is at least one drawback. If you are running a GUI (perhaps remotely) to which you will send sensitive input for some reason, you may send those secrets to another, possibly malicious, application if the tested application does not have focus!&lt;/p&gt;
+
+&lt;p&gt;Another problem is in running tester programs remotely, or at regular intervals. Suppose that your tester program spawns the tested program, then starts sending it events (mouse events and/or keystrokes). If the computer is in a &amp;ldquo;locked&amp;rdquo; state, according to Microsoft documentation, no application can be in the foreground. You may have unexpected results.&lt;/p&gt;
+
+&lt;p&gt;If the GUI you are automating receives sensitive input (such as passwords), you have to find a means to &amp;ldquo;isolate&amp;rdquo; that machine&amp;rsquo;s input/output devices, such as keyboard/mouse/monitor, so that no one unauthorized can peek at what your Perl program is typing in. Good luck.&lt;/p&gt;
+
+&lt;p&gt;In my opinion, every time you send input to a GUI, the Win32::GuiTest program should check if the application is in the foreground. If it isn&amp;rsquo;t, it should try to bring it to the front. If it can&amp;rsquo;t do that, it should fail and not continue.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a sample routine that &lt;em&gt;tester.pl&lt;/em&gt; uses:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub bring_window_to_front {
+     my $window  = shift;
+     my $success = 1;
+
+     if ( SetActiveWindow($window) ) {
+         print &amp;quot;* Successfully set the window id: $window active\n&amp;quot;;
+     }
+     else {
+         print &amp;quot;* Could not set the window id: $window active\n&amp;quot;;
+         $success = 0;
+     }
+     if ( SetForegroundWindow($window) ) {
+         print &amp;quot;* Window id: $window brought to foreground\n&amp;quot;;
+     }
+     else {
+         print &amp;quot;* Window id: $window could not be brought to foreground\n&amp;quot;;
+         $success = 0;
+     }
+
+     return $success;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In case you don&amp;rsquo;t want to bring a window to front but expect it to be in front, use &lt;code&gt;GetForegroundWindow()&lt;/code&gt;. That way, you can just check the return value with a window ID and find out if it is in front.&lt;/p&gt;
+
+&lt;h3 id=&#34;key-pressing&#34;&gt;Key Pressing&lt;/h3&gt;
+
+&lt;p&gt;You have found your window and have made sure that it has focus. What next?&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s time to send data to the window. This is the purpose of the &lt;code&gt;SendKeys()&lt;/code&gt; function. You can send to an application not only basic keypresses, but combinations of keys too. Here&amp;rsquo;s an example from the &lt;em&gt;tester.pl&lt;/em&gt; program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @keys = ( &amp;quot;%{F}&amp;quot;, &amp;quot;{RIGHT}&amp;quot;, &amp;quot;E&amp;quot;, );
+for my $key (@keys) {
+    SendKeys( $key, $pause_between_keypress );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code starts with an array containing the keypresses. Note the format of the first three elements. The keypresses are: &lt;code&gt;Alt&lt;/code&gt;+&lt;code&gt;F&lt;/code&gt;, right arrow, and &lt;code&gt;E&lt;/code&gt;. With the application open, this navigates the menu in order to open the editor.&lt;/p&gt;
+
+&lt;p&gt;For a full listing of &amp;ldquo;special&amp;rdquo; keystrokes or combinations of keys, consult the function&amp;rsquo;s documentation.&lt;/p&gt;
+
+&lt;h3 id=&#34;finding-text-in-your-application&#34;&gt;Finding Text in Your Application&lt;/h3&gt;
+
+&lt;p&gt;You may want to learn how you can &amp;ldquo;read&amp;rdquo; text written in GUI windows. Unfortunately, you can&amp;rsquo;t read everything. You &lt;em&gt;can&lt;/em&gt; read the text written in the title of windows (useful for identifying a window by its title). You can also read text in &lt;code&gt;Edit&lt;/code&gt; class windows; for example, the part of Internet Explorer where you type in a URL, or the list items in a &lt;code&gt;ListBox&lt;/code&gt;. There may be other window classes from where you can fetch text; just verify with WinSpy++ whether you can &amp;ldquo;read&amp;rdquo; from a window, before writing your program, in order to avoid frustration.&lt;/p&gt;
+
+&lt;p&gt;Remember that you can&amp;rsquo;t (at least now) read everything written in a window. Maybe a future version of Win32::GuiTest will provide a means by which to fetch text from a window, no matter what class that window is. In my humble opinion, it would be an awesome feature.&lt;/p&gt;
+
+&lt;p&gt;The two functions useful for grabbing text are &lt;code&gt;GetWindowText()&lt;/code&gt; and &lt;code&gt;WMGetText()&lt;/code&gt;. Both take as a parameter the window ID:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$text = GetWindowText($window);
+$text = WMGetText($window);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;pushing-buttons&#34;&gt;Pushing Buttons&lt;/h3&gt;
+
+&lt;p&gt;Pushing buttons can be tricky. The syntax is &lt;code&gt;PushButton($button[,$delay])&lt;/code&gt;, and the variable &lt;code&gt;$button&lt;/code&gt; can be either the text of the button (its caption) or the button ID. As Piotr Kaluski points out in &amp;ldquo;&lt;a href=&#34;http://www.piotrkaluski.com/files/automation/gui/carfl_pushcb.html&#34;&gt;Be Careful with &lt;code&gt;PushChildButton&lt;/code&gt;&lt;/a&gt;,&amp;rdquo; you sometimes want to specify a button ID, but instead the function matches a button having text like the one you used in the regexp. He posted &lt;a href=&#34;http://groups.yahoo.com/group/perlguitest/message/876?threaded=1&#34;&gt;a patch to the &lt;em&gt;perlguitest&lt;/em&gt; mailing list&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Also note that when using Tk, as I do in this example, you can&amp;rsquo;t identify buttons by their text&amp;ndash;you need to use their IDs (if you know them). With native Win32 applications, you can identify buttons by their text. To check the differences, use WinSpy++ to look at a Tk button&amp;rsquo;s caption and a native Win32 button&amp;rsquo;s caption.&lt;/p&gt;
+
+&lt;p&gt;Although &lt;code&gt;PushButton()&lt;/code&gt; works fine on native Win32 buttons, I couldn&amp;rsquo;t make it work on my Tk application, so in &lt;em&gt;tester.pl&lt;/em&gt;, I use a trick in the &lt;code&gt;push_button()&lt;/code&gt; subroutine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub push_button {
+    my $parent_window_title = shift;
+    my @button;
+    my @window;
+
+    SendKeys(&amp;quot;%{F}&amp;quot;);
+    SendKeys(&amp;quot;O&amp;quot;);
+    sleep 1;
+
+    @window = FindWindowLike( undef, $parent_window_title, &amp;quot;&amp;quot; );
+
+    if ( !bring_window_to_front( $window[0] ) ) {
+        print &amp;quot;* Could not bring to front $window[0]\n&amp;quot;;
+    }
+
+    @button = FindWindowLike( $window[0], &amp;quot;&amp;quot;, &amp;quot;Button&amp;quot; );
+    sleep 1;
+
+    print &amp;quot;* Trying to push button id: $button[0]\n&amp;quot;;
+    PushChildButton( $window[0], $button[0], 0.25 );
+    sleep 1;
+
+    click_on_the_middle_of_window( $button[0] );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that the function depends on the &lt;em&gt;tested.pl&lt;/em&gt; application, as it has hard-coded the way to spawn the &lt;code&gt;Button&lt;/code&gt; window (by navigating the menu using keystrokes). It is easy to adapt it to be more flexible and to be less coupled with the rest of the code.&lt;/p&gt;
+
+&lt;p&gt;After sending the right combination of keys (&lt;code&gt;Alt&lt;/code&gt;+&lt;code&gt;F&lt;/code&gt;, &lt;code&gt;O&lt;/code&gt;), the code expects that the window containing the &lt;code&gt;Button&lt;/code&gt; will pop up. Then it uses &lt;code&gt;FindWindowLike()&lt;/code&gt; again, using as a search item the title of the window containing the button (in this case, &lt;code&gt;here&lt;/code&gt;). Remember what I said about the windows hierarchy?&lt;/p&gt;
+
+&lt;p&gt;Next, it ensures that the &lt;code&gt;Button&lt;/code&gt; window has the focus, although this is not entirely necessary at this point. After bringing the window to the front, the code searches for a button in the window (I already know that there&amp;rsquo;s only one button there).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@button = FindWindowLike( $window[0], &amp;quot;&amp;quot;, &amp;quot;Button&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This narrows down the search: &amp;ldquo;Search for a window of the class &lt;code&gt;Button&lt;/code&gt; under the window that has the ID &lt;code&gt;$window[0]&lt;/code&gt;,&amp;rdquo; the window having the ID in &lt;code&gt;$window[0]&lt;/code&gt; having been previously found by its title.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PushChildButton( $window[0], $button[0], 0.25 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is here just for the power of example, as it doesn&amp;rsquo;t work for the Tk button. It would work for a native Win32 button.&lt;/p&gt;
+
+&lt;p&gt;The trick is that the code can still push it using the mouse! Having the button ID, as returned by &lt;code&gt;FindWindowLike()&lt;/code&gt;, the code calls the &lt;code&gt;click_on_the_middle_of_window&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub click_on_the_middle_of_window {
+    my $window = shift;
+
+    print &amp;quot;* Moving the mouse over the window id: $window\n&amp;quot;;
+
+    my ( $left, $top, $right, $bottom ) = GetWindowRect($window);
+
+    MouseMoveAbsPix( ( $right + $left ) / 2, ( $top + $bottom ) / 2 );
+
+    sleep(1);
+
+    print &amp;quot;* Left Clicking on the window id: $window\n&amp;quot;;
+    SendMouse(&amp;quot;{LeftClick}&amp;quot;);
+    sleep(1);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The function takes a window ID as its parameter, searches its rectangle using &lt;code&gt;GetWindowRect()&lt;/code&gt;, and then moves the mouse pointer right in the middle of it with &lt;code&gt;MouseMoveAbsPix()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;With the pointer over the button, sending &lt;code&gt;LeftClick&lt;/code&gt; presses the button.&lt;/p&gt;
+
+&lt;h3 id=&#34;moving-around-with-the-mouse&#34;&gt;Moving Around with the Mouse&lt;/h3&gt;
+
+&lt;p&gt;As seen earlier, moving the mouse is straightforward: just use &lt;code&gt;MouseMoveAbsPix()&lt;/code&gt;. It takes as parameters the coordinates where you want the pointer to be (horizontal and vertical positions) in pixels.&lt;/p&gt;
+
+&lt;p&gt;It is useful to use other two functions in conjunction: &lt;code&gt;SendMouse()&lt;/code&gt; and &lt;code&gt;GetWindowRect()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;SendMouse&lt;/code&gt; sends a mouse action to the &lt;code&gt;Desktop&lt;/code&gt;. It takes only one parameter: a mouse action such as &lt;code&gt;{LeftDown}&lt;/code&gt;, &lt;code&gt;{LeftUp}&lt;/code&gt;, or &lt;code&gt;{LeftClick}&lt;/code&gt;. For more details, see the function&amp;rsquo;s documentation.&lt;/p&gt;
+
+&lt;p&gt;You can also move the mouse wheel using &lt;code&gt;MouseMoveWheel()&lt;/code&gt;. It takes a positive or a negative argument, indicating the direction of the motion.&lt;/p&gt;
+
+&lt;p&gt;To send an action, you need to know where we send it. Usually you will move the mouse pointer over a window. &lt;code&gt;GetWindowRect()&lt;/code&gt; is useful to find the coordinates of a window.&lt;/p&gt;
+
+&lt;p&gt;It can be simpler to create a wrapper around these three functions in order to move the mouse pointer over a selected window, and then generate a mouse action, as I did with &lt;code&gt;click_on_the_middle_of_window()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;further-reading&#34;&gt;Further Reading&lt;/h3&gt;
+
+&lt;p&gt;Here are some links you may find useful.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Win32::GuiTest&#34;&gt;Win32::GuiTest documentation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Win32::GuiTest::Examples&#34;&gt;Win32::GuiTest::Examples&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;The &lt;a href=&#34;http://groups.yahoo.com/group/perlguitest/&#34;&gt;PerlGuiTest group&lt;/a&gt; on Yahoo; this is quite an active group.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.piotrkaluski.com/files/winguitest/docs/index.html&#34;&gt;Win32::GuiTest extended tutorial&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>An Introduction to Test::MockDBI</title>
+      <link>http://localhost:1313/pub/2005/07/21/test_mockdbi.html/</link>
+      <pubDate>Thu, 21 Jul 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/07/21/test_mockdbi.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;prelude&#34;&gt;Prelude&lt;/h3&gt;
+
+&lt;p&gt;How do you test DBI programs:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Without having to modify your current program code or environment settings?&lt;/li&gt;
+&lt;li&gt;Without having to set up multiple test databases?&lt;/li&gt;
+&lt;li&gt;Without separating your test data from your test code?&lt;/li&gt;
+&lt;li&gt;With tests for every bizarre value your program will ever have to face?&lt;/li&gt;
+&lt;li&gt;With complete control over all database return values, along with all DBI method return values?&lt;/li&gt;
+&lt;li&gt;With an easy, regex-based rules interface?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You test with &lt;a href=&#34;https://metacpan.org/pod/Test::MockDBI&#34;&gt;Test::MockDBI&lt;/a&gt;, that&amp;rsquo;s how. Test::MockDBI provides all of this by using Test::MockObject::Extends to mock up the entire DBI API. Without a solution like Test::MockDBI&amp;ndash;a solution that enables direct manipulation of the DBI&amp;ndash;you&amp;rsquo;ll have to trace DBI methods through a series of test databases.&lt;/p&gt;
+
+&lt;p&gt;You can make test databases work, but:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You&amp;rsquo;ll need multiple (perhaps many) databases when you need multiple sets of mutually inconsistent values for complete test coverage.&lt;/li&gt;
+&lt;li&gt;Some DBI failure modes are impossible to generate through any test database.&lt;/li&gt;
+&lt;li&gt;Depending on the database toolset available, it may be difficult to insert all necessary test values&amp;ndash;for example, Unicode values in ASCII applications, or bizarre file types in a document-manager application.&lt;/li&gt;
+&lt;li&gt;Test databases, by definition, are separate from their corresponding test code. This increases the chance that the test code and the test data will fall out of sync with each other.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Using Test::MockDBI avoids these problems. Read on to learn how Test::MockDBI eases the job of testing DBI applications.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-mock-up-of-the-entire-dbi&#34;&gt;A Mock Up of the Entire DBI&lt;/h3&gt;
+
+&lt;p&gt;Test::MockDBI mocks up the entire DBI API by using &lt;a href=&#34;https://metacpan.org/pod/Test::MockObject::Extends&#34;&gt;Test::MockObject::Extends&lt;/a&gt; to substitute a Test::MockObject::Extends object in place of the &lt;a href=&#34;https://metacpan.org/pod/DBI&#34;&gt;DBI&lt;/a&gt;. A feature of this approach is that if the DBI API changes (and you use that change), you will notice during testing if you haven&amp;rsquo;t upgraded Test::MockDBI, as your program will complain about missing DBI API method(s).&lt;/p&gt;
+
+&lt;p&gt;Mocking up the entire DBI means that you can add the DBI testing code into an existing application without changing the initial application code&amp;ndash;using Test::MockDBI is entirely transparent to the rest of your application, as it neither knows nor cares that it&amp;rsquo;s using Test::MockDBI in place of the DBI. This property of transparency is what drove me to develop Test::MockDBI, as it meant I could add the Test::MockDBI DBI testing code to existing client applications without modifying the existing code (handy, for us consultants).&lt;/p&gt;
+
+&lt;p&gt;Further enhancing Test::MockDBI&amp;rsquo;s transparency is the &lt;code&gt;DBI testing type&lt;/code&gt; class value. Testing is only enabled when the DBI testing type is non-zero, so you can just leave the DBI testing code additions in your production code&amp;ndash;users will not even know about your DBI testing code unless you tell them.&lt;/p&gt;
+
+&lt;p&gt;Mocking up the entire DBI also means that you have complete control of the DBI&amp;rsquo;s behavior during testing. Often, you can simulate a &lt;code&gt;SELECT&lt;/code&gt; DBI transaction with a simple state machine that returns just a few rows from the (mocked up) database. Test::MockDBI lets you use a &lt;code&gt;CODEREF&lt;/code&gt; to supply database return values, so you can easily put a simple state machine into the &lt;code&gt;CODEREF&lt;/code&gt; to supply the necessary database values for testing. You could even put a delay loop into the &lt;code&gt;CODEREF&lt;/code&gt; when you need to perform speed tests on your code.&lt;/p&gt;
+
+&lt;h3 id=&#34;rules-based-dbi-testing&#34;&gt;Rules-Based DBI Testing&lt;/h3&gt;
+
+&lt;p&gt;You control the mocked-up DBI of Test::MockDBI with one or more rules that you insert as Test::MockDBI method calls into your program. The default DBI method values provided by Test::MockDBI make the database appear to have a hole in the bottom of it&amp;ndash;all method calls return OK, but you can&amp;rsquo;t get any data out of the database. Rules for DBI methods that return database values (the &lt;code&gt;fetch*()&lt;/code&gt; and &lt;code&gt;select*()&lt;/code&gt; methods) can use either a value that they return directly for matching method calls, or a &lt;code&gt;CODEREF&lt;/code&gt; called to provide a value each time that rule fires. A rule matches when its DBI testing type is the current testing type and the current SQL matches the rule&amp;rsquo;s regular expression. Rules fire in the order in which you declare them, so usually you want to order your rules from most-specific to least-specific.&lt;/p&gt;
+
+&lt;p&gt;The DBI testing type is an unsigned integer matching &lt;code&gt;/^d+$/&lt;/code&gt;. When the DBI testing type is zero, there will be no DBI testing (or at least, no mocked-up DBI testing) performed, and the program will use the DBI normally. A zero DBI testing type value in a rule means the rule could fire for any non-zero DBI testing type value&amp;ndash;that is, zero is the wildcard DBI testing type value for rules. Set the DBI testing type either by a first command-line argument of the form:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;--dbitest[=DTT]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;where the optional &lt;code&gt;DTT&lt;/code&gt; is the DBI testing type (defaulting to one), or through Test::MockDBI&amp;rsquo;s &lt;code&gt;set_dbi_test_type()&lt;/code&gt; method. Setting the DBI testing type through a first command-line argument has the advantage of requiring no modifications to the code under test, as this command-line processing is done so early (during &lt;code&gt;BEGIN&lt;/code&gt; time for Test::MockDBI) that the code under test should be ignorant of whether this processing ever happened.&lt;/p&gt;
+
+&lt;h3 id=&#34;dbi-return-values&#34;&gt;DBI Return Values&lt;/h3&gt;
+
+&lt;p&gt;Test::MockDBI defaults to returning a success (true) value for all DBI method calls. This fits well with the usual techniques of DBI programming, where the first DBI error causes the program to stop what it is doing. Test::MockDBI&amp;rsquo;s &lt;code&gt;bad_method()&lt;/code&gt; method creates a rule that forces a failure return value on the specified DBI method when the current DBI testing type and SQL match those of the rule. Arbitrary DBI method return value failures like these are difficult (at best) to generate with a test database.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI&amp;rsquo;s &lt;code&gt;set_retval_scalar()&lt;/code&gt; and &lt;code&gt;set_retval_array()&lt;/code&gt; methods create rules for what database values to return. Set rules for scalar return values (&lt;code&gt;arrayrefs&lt;/code&gt; and &lt;code&gt;hashrefs&lt;/code&gt;) with &lt;code&gt;set_retval_scalar()&lt;/code&gt; and for array return value rules with &lt;code&gt;set_retval_array()&lt;/code&gt;. You can supply a value to be returned every time the rule matches, which is good when extracting single rows out of the database, such as configuration parameters. Alternatively, pass a &lt;code&gt;CODEREF&lt;/code&gt; that will be called each time the rule fires to return a new value. Commonly, with &lt;code&gt;SELECT&lt;/code&gt; statements, the DBI returns one or more rows, then returns an empty row to signify the end of the data. A &lt;code&gt;CODEREF&lt;/code&gt; can incorporate a state machine that implements this &amp;ldquo;return 1+ rows, then a terminator&amp;rdquo; behavior quite easily. Having individual state machines for each rule is much easier to develop with than having one master state machine embedded into Test::MockDBI&amp;rsquo;s core. (An early alpha of Test::MockDBI used the master state machine approach, so I have empirical evidence of this result&amp;ndash;I am not emptily theorizing here.)&lt;/p&gt;
+
+&lt;p&gt;Depending on what tools you have for creating your test databases, it may be difficult to populate the test database with all of the values you need to test against. Although it is probably not so much the case today, only a few years ago populating a database with Unicode was difficult, given the national-charset-based tools of the day. Even today, a document management system might be difficult to populate with weird file types. Test::MockDBI makes these kinds of tests much easier to carry out, as you directly specify the data for the mock database to return rather than using a separate test database.&lt;/p&gt;
+
+&lt;p&gt;This ease of database value testing also applies when you need to test against combinations of database values that are unlikely to occur in practice (the old &amp;ldquo;comparing apples to battleships&amp;rdquo; problem). If you need to handle database value corruption&amp;ndash;as in network problems causing the return of partial values from a Chinese database when the program is in the U.S.&amp;ndash;this ability to completely specify the database return values could be invaluable in testing. Test::MockDBI lets you take complete control of your database return values without separating test code and test data.&lt;/p&gt;
+
+&lt;h3 id=&#34;simplicity-test-mockdbi-s-standard-output-based-interface&#34;&gt;Simplicity: Test::MockDBI&amp;rsquo;s Standard-Output-Based Interface&lt;/h3&gt;
+
+&lt;p&gt;This modern incarnation of the age-old stubbed-functions technique also uses the old technique of &amp;ldquo;&lt;code&gt;printf()&lt;/code&gt; and scratch head&amp;rdquo; as its output interface. This being Perl we are working with, and not FORTRAN IV (thank goodness), we have multiple options beyond the use of unvarnished standard output.&lt;/p&gt;
+
+&lt;p&gt;One option that I think integrates well with DBI-using module testing is to redirect standard output into a string using &lt;a href=&#34;https://metacpan.org/pod/IO::String&#34;&gt;IO::String&lt;/a&gt;. You can then match the string against the regex you are looking for. As you have already guessed, use of pure standard output integrates well with command-line program testing.&lt;/p&gt;
+
+&lt;p&gt;What you will look for, irrespective of where your code actually looks, is the output of each DBI method as it executes&amp;ndash;the method name and arguments&amp;ndash;along with anything else your code writes to standard output.&lt;/p&gt;
+
+&lt;h3 id=&#34;bind-test-data-to-test-code&#34;&gt;Bind Test Data to Test Code&lt;/h3&gt;
+
+&lt;p&gt;Because DBI and database return values are bound to your test programs when using Test::MockDBI, there is less risk of test data getting out of sync with the test code. A separate test database introduces another point of failure in your testing process. Multiple test databases add yet another point of failure for each database. Whatever you use to generate the test databases also introduces another point of failure for each database. I can imagine cases where special-purpose programs for generating test databases might create multiple points of failure, especially if the programs have to integrate data from multiple sources to generate the test data (such as a VMS Bill of Materials database and a Solaris PCB CAD file for a test database generation program running on Linux).&lt;/p&gt;
+
+&lt;p&gt;One of the major advances in software engineering is the increasing ability to gather and control related information together&amp;ndash;the 1990s advance of object-oriented programming in common languages is a testimony to this, from which we Perl programmers reap the benefits in our use of CPAN. For many testing purposes, there is no need for separate test databases. Without that need for a separate test database, separating test data from test code only complicates the testing process. Test::MockDBI lets you bind together your test code and test data into one nice, neat package. Binding is even closer than code and comments, as comments can get out of sync with their code, while the test code and test data for Test::MockDBI cannot get out of sync too far without causing their tests to fail unexpectedly.&lt;/p&gt;
+
+&lt;h3 id=&#34;when-to-use-test-mockdbi&#34;&gt;When to Use Test::MockDBI&lt;/h3&gt;
+
+&lt;p&gt;DBI&amp;rsquo;s &lt;code&gt;trace()&lt;/code&gt;, &lt;a href=&#34;https://metacpan.org/pod/DBD::Mock&#34;&gt;DBD::Mock&lt;/a&gt;, and Test::MockDBI are complementary solutions to the problem of testing DBI software. DBI&amp;rsquo;s &lt;code&gt;trace()&lt;/code&gt; is a pure tracing mechanism, as it does not change the data returned from the database or the DBI method return values. DBD::Mock works at level of a database driver, so you have to look at your DBI testing from the driver&amp;rsquo;s point of view, rather than the DBI caller&amp;rsquo;s point of view. DBD::Mock also requires that your code supports configurable DBI DSNs, which may not be the case in all circumstances, especially when you must maintain or enhance legacy DBI software.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI works at the DBI caller&amp;rsquo;s level, which is (IMHO) more natural for testing DBI-using software (possibly a matter of taste: TMTOWTDI). Test::MockDBI&amp;rsquo;s interface with your DBI software is a set of easy-to-program, regex-based rules, which incorporate a lot of power into one or a few lines of code, thereby using Perl&amp;rsquo;s built-in regex support to best advantage. This binds test data and test code tightly together, reducing the chance of synchronization problems between the test data and the test code. Using Test::MockDBI does not require modifying the current code of the DBI software being tested, as you only need additional code to enable Test::MockDBI-driven DBI testing.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI takes additional coding effort when you need to test DBI program performance. It may be that for performance testing, you want to use test databases rather than Test::MockDBI. If you were in any danger of your copy of &lt;em&gt;DBI.pm&lt;/em&gt; becoming corrupted, I don&amp;rsquo;t know whether you could adequately test that condition with Test::MockDBI, depending on the corruption. You would probably have to create a special mock DBI to test corrupted DBI code handling, though you could start building the special mock DBI by inheriting from Test::MockDBI without any problems from Test::MockDBI&amp;rsquo;s design, as it should be inheritance-friendly.&lt;/p&gt;
+
+&lt;h3 id=&#34;some-examples&#34;&gt;Some Examples&lt;/h3&gt;
+
+&lt;p&gt;To make:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh = DBI-&amp;gt;connect(&amp;quot;dbi:AZ:universe&amp;quot;, &amp;quot;mortal&amp;quot;, &amp;quot;(none)&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;fail, add the rule:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;bad_method(&amp;quot;connect&amp;quot;, 1,
+    &amp;quot;CONNECT TO dbi:AZ:universe AS mortal WITH \\(none\\)&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(where &lt;code&gt;$tmd&lt;/code&gt; is the only Test::MockDBI object, which you obtain through Test::MockDBI&amp;rsquo;s &lt;code&gt;get_instance()&lt;/code&gt; method).&lt;/p&gt;
+
+&lt;p&gt;To make a SQL &lt;code&gt;SELECT&lt;/code&gt; failure when using &lt;code&gt;DBI::execute()&lt;/code&gt;, use the rule:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;bad_method(&amp;quot;execute&amp;quot;, 1,
+    &amp;quot;SELECT zip_plus_4 from zipcodes where state=&#39;IN&#39;&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This rule implies that:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;DBI::connect()&lt;/code&gt; &lt;code&gt;succeeded()&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;DBI::prepare()&lt;/code&gt; &lt;code&gt;succeeded()&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;But the &lt;code&gt;DBI::execute()&lt;/code&gt; failed as it should.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A common use of direct scalar return values is returning configuration data, such as a U.S. zip code for an address:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;set_retval_scalar(1,
+ &amp;quot;zip5.*&#39;IN&#39;.*&#39;NOBLESVILLE&#39;.*&#39;170 WESTFIELD RD&#39;&amp;quot;,
+ [ 46062 ]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This demonstrates using a regular expression, as matching SQL could then look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT
+  zip5
+FROM
+  zipcodes
+WHERE
+  state=&#39;IN&#39; AND
+  city=&#39;NOBLESVILLE&#39; AND
+  street_address=&#39;170 WESTFIELD RD&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the rule would match.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;SELECT&lt;/code&gt;s that return one or more rows from the database are the common case:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $counter = 0;                    # name counter
+sub possibly_evil_names {
+    $counter++;
+    if ($counter == 1) {
+        return (&#39;Adolf&#39;, &#39;Germany&#39;);
+    } elsif ($counter == 2) {
+        return (&#39;Josef&#39;, &#39;U.S.S.R.&#39;);
+    } else {
+        return ();
+    }
+}
+$tmd-&amp;gt;set_retval_array(1,
+   &amp;quot;SELECT\\s+name,\\s+country.*possibly_evil_names&amp;quot;,
+   \&amp;amp;possibly_evil_names);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using a &lt;code&gt;CODEREF&lt;/code&gt; (&lt;code&gt;\&amp;amp;possibly_evil_names&lt;/code&gt;) lets you easily add the state machine for implementing a return of two names followed by an empty array (because the code uses &lt;code&gt;fetchrow_array()&lt;/code&gt; to retrieve each row). SQL for this query could look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT
+  name,
+  country
+FROM
+  possibly_evil_names
+WHERE
+  year &amp;lt; 2000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;Albert Einstein once said, &amp;ldquo;Everything should be made as simple as possible, but no simpler.&amp;rdquo; This is what I have striven for while developing Test::MockDBI&amp;ndash;the simplest possible useful module for testing DBI programs by mocking up the entire DBI.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI gives you:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Complete control of DBI return values and database-returned data.&lt;/li&gt;
+&lt;li&gt;Returned database values from either direct value specifications or &lt;code&gt;CODEREF&lt;/code&gt;-generated values.&lt;/li&gt;
+&lt;li&gt;Easy, regex-based rules that govern the DBI&amp;rsquo;s behavior, along with intelligent defaults for the common cases.&lt;/li&gt;
+&lt;li&gt;Complete transparency to other code, so the code under test neither knows nor cares that you are testing it with Test::MockDBI.&lt;/li&gt;
+&lt;li&gt;Test data tightly bound to test code, which promotes cohesiveness in your testing environment, thereby reducing the chance that your tests might silently fail due to loss of synchronization between your test data and your test code.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Test::MockDBI is a valuable addition to the arsenal of DBI testing techniques.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Code Kata: Mocking Objects</title>
+      <link>http://localhost:1313/pub/2005/04/07/mockobject_kata.html/</link>
+      <pubDate>Thu, 07 Apr 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/04/07/mockobject_kata.html/</guid>
+      <description>
+
+&lt;p&gt;The last Perl Code Kata was on &lt;a href=&#34;https://metacpan.org/pod/DBD::Mock&#34;&gt;DBD::Mock&lt;/a&gt;, a mock DBI driver which is useful for &lt;a href=&#34;http://localhost:1313/pub/2005/02/10/database_kata.html&#34;&gt;testing Perl DBI applications&lt;/a&gt;. This Kata delves once again into the world of mock objects, this time using the more general &lt;a href=&#34;https://metacpan.org/pod/Test::MockObject&#34;&gt;Test::MockObject&lt;/a&gt; module.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-are-mock-objects&#34;&gt;What are Mock Objects?&lt;/h3&gt;
+
+&lt;p&gt;Mock objects are exactly what they sound like: &amp;ldquo;mocked&amp;rdquo; or &amp;ldquo;fake&amp;rdquo; objects. Through the power of polymorphism, it&amp;rsquo;s easy to swap one object for another object which implements the same interface. Mock objects take advantage of this fact, allowing you to substitute the &lt;em&gt;most minimally mocked implementation of an object possible&lt;/em&gt; for the real one during testing. This allows a greater degree of isolation within your tests, which is just an all around good thing.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-are-mock-objects-good-for&#34;&gt;What are Mock Objects Good For?&lt;/h3&gt;
+
+&lt;p&gt;Mock objects are primarily useful when writing unit tests. They share a certain similarity with the Null Object pattern in that they are purposefully &lt;em&gt;not&lt;/em&gt; meant to work. Mock objects take things one step further and allow you to mock certain actions or reactions that your mock object should have, so they are especially useful in scenarios usually considered &lt;em&gt;hard to test&lt;/em&gt;. Here is a short list of some scenarios in which mock objects make hard things easy.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests which depend on outside resources such as networks, databases, etc.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;If your code properly encapsulates any outside resources, then it should be possible to substitute a mocked object in its place during testing. This is especially useful when you have little control over the execution environment of your module. The previous Test Code Kata illustrated this by mocking the database itself. You need not stop with databases; you can mock any sufficiently encapsulated resource such as network connections, files, or miscellaneous external devices.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests for which dependencies require a lot of setup.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Sometimes your object will have a dependency which requires a large amount of set-up code. The more non-test code in your tests, the higher the possibility that it will contain a bug which can then corrupt your test results. Many times your code uses only a small portion of this hard-to-setup dependency as well. Mock objects can help simplify things by allowing you to create the most minimally mocked implementation of an object and its dependencies possible, thus removing the burden of the set-up code and reducing the possibility of bugs in your non-test code.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests for failures; in particular, failure edge cases.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Testing for failures can sometimes be very difficult to do, especially when the failure is not immediate, but triggered by a more subtle set of interactions. Using mock objects, it is possible to achieve exacting control over when, where, and why your object will fail. Mock objects often make this kind of testing trivial.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests with optional dependencies.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Good code should be flexible code. Many times this means that your code needs to adapt to many different situations and many different environments based on the resources available at runtime. Requiring the presence of these situations and/or environments in order to test your code can be very difficult to set up or to tear down. Just as with testing failures, it is possible to use mock objects to achieve a high degree of control over your environment and mock the situations you need to test.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;the-problem&#34;&gt;The Problem&lt;/h3&gt;
+
+&lt;p&gt;The example code for this kata illustrates as many points as possible about which mock objects are good at testing. Here is the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Site::Member;
+
+use strict;
+our $VERSION = &#39;0.01&#39;;
+
+sub new { bless { ip_address =&amp;gt; &#39;&#39; }, shift }
+
+sub ip_address { 
+    my ($self, $ip_address) = @_;
+    $self-&amp;gt;{ip_address} = $ip_address if $ip_address;
+    return $self-&amp;gt;{ip_address};
+}
+
+# ...
+
+sub city {
+    my ($self) = @_;
+    eval &amp;quot;use Geo::IP&amp;quot;;
+    if ($@) {
+        warn &amp;quot;You must have Geo::IP installed for this feature&amp;quot;;
+        return;
+    }
+    my $geo = Geo::IP-&amp;gt;open(
+                &amp;quot;/usr/local/share/GeoIP/GeoIPCity.dat&amp;quot;, 
+                Geo::IP-&amp;gt;GEOIP_STANDARD
+            ) || die &amp;quot;Could not create a Geo::IP object with City data&amp;quot;;
+    my $record = $geo-&amp;gt;record_by_addr($self-&amp;gt;ip_address());
+    return $record-&amp;gt;city();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example code comes from a fictional online community software package. Many such sites offer user homepages which can display all sorts of user information. As an optional feature, the software can use the member&amp;rsquo;s IP address along with the &lt;a href=&#34;https://metacpan.org/pod/Geo::IP&#34;&gt;Geo::IP&lt;/a&gt; module to determine the user&amp;rsquo;s city. The reason this feature is optional is that while &lt;code&gt;Geo::IP&lt;/code&gt; and the C library it uses are both free, the city data is not.&lt;/p&gt;
+
+&lt;p&gt;The use cases suggest testing for the following scenarios:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;User does not have &lt;code&gt;Geo::IP&lt;/code&gt; installed.&lt;/li&gt;
+&lt;li&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; installed but does not have the city data.&lt;/li&gt;
+&lt;li&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; and city data installed correctly.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Using &lt;code&gt;Test::MockObject&lt;/code&gt;, take thirty to forty minutes and see if you can write tests which cover all these use cases.&lt;/p&gt;
+
+&lt;h3 id=&#34;tips-tricks-and-suggestions&#34;&gt;Tips, Tricks, and Suggestions&lt;/h3&gt;
+
+&lt;p&gt;Some of the real strengths of &lt;code&gt;Test::MockObject&lt;/code&gt; lie in its adaptability and how simply it adapts. All &lt;code&gt;Test::MockObject&lt;/code&gt; sessions begin with creating an instance.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $mock = Test::MockObject-&amp;gt;new();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even just this much can be useful because a &lt;code&gt;Test::MockObject&lt;/code&gt; instance warns about all un-mocked methods called on it. I have used this &amp;ldquo;feature&amp;rdquo; to help trace calls while writing complex tests.&lt;/p&gt;
+
+&lt;p&gt;The next step is to mock some methods. The simplest approach is to use the &lt;code&gt;mock&lt;/code&gt; method. It takes a method name and a subroutine reference. Every time something calls that method on the object, your &lt;code&gt;$mock&lt;/code&gt; instance will run that sub.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$mock-&amp;gt;mock(&#39;greetings&#39; =&amp;gt; sub {
+    my ($mock, $name) = @_;
+    return &amp;quot;Hello $name&amp;quot;;
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How much simpler could it be?&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Test::MockObject&lt;/code&gt; also offers several pre-built mock method builders, such as &lt;code&gt;set_true&lt;/code&gt;, &lt;code&gt;set_false&lt;/code&gt;, and &lt;code&gt;set_always&lt;/code&gt;. These methods pretty much DWIM.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$mock-&amp;gt;set_true(&#39;foo&#39;); # the foo() method will return true
+$mock-&amp;gt;set_false(&#39;bar&#39;); # the bar() method will return false
+$mock-&amp;gt;set_always(&#39;baz&#39; =&amp;gt; 100); # the bar() method will always return 100
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s even possible for the object to mock not only the methods, but its class as well. The simplest approach is to use the &lt;code&gt;set_isa&lt;/code&gt; method to tell the &lt;code&gt;$mock&lt;/code&gt; object to pretend that it belongs to another class.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$mock-&amp;gt;set_isa(&#39;Foo::Bar&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, any code that calls this mock object&amp;rsquo;s &lt;code&gt;isa()&lt;/code&gt; method will believe that the &lt;code&gt;$mock&lt;/code&gt; is a &lt;code&gt;Foo::Bar&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;p&gt;In many cases, it is enough to substitute a &lt;code&gt;$mock&lt;/code&gt; instance for a real one and let polymorphism do the rest. Other times it is necessary to inject control into the code much earlier than this. This is where the &lt;code&gt;fake_module&lt;/code&gt; method comes in.&lt;/p&gt;
+
+&lt;p&gt;With the &lt;code&gt;fake_module&lt;/code&gt; method, &lt;code&gt;Test::MockObject&lt;/code&gt; can subvert control of an entire package such that it will intercept any calls to that package. The following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Foo::Bar&#39; =&amp;gt; (
+    &#39;import&#39; =&amp;gt; sub { die &amp;quot;Foo::Bar could not be loaded&amp;quot; }
+));
+use_ok(&#39;Foo::Bar&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;actually gives the illusion that the &lt;code&gt;Foo::Bar&lt;/code&gt; module failed to load regardless of whether the user has it installed. These kinds of edge cases can be very difficult to test, but &lt;code&gt;Test::MockObject&lt;/code&gt; simplifies them greatly.&lt;/p&gt;
+
+&lt;p&gt;But wait, that&amp;rsquo;s not all.&lt;/p&gt;
+
+&lt;p&gt;After your tests have run using your mock objects, it is possible to inspect the methods called on them and query the order of their calls. You can even inspect the arguments passed into these methods. There several methods for this, so I refer you to the POD documentation of &lt;code&gt;Test::MockObject&lt;/code&gt; for details.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-solution&#34;&gt;The Solution&lt;/h3&gt;
+
+&lt;p&gt;I designed each use case to illustrate a different capability of &lt;code&gt;Test::MockObject&lt;/code&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;User does not have Geo::IP installed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 4;
+use Test::MockObject;
+
+my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Geo::IP&#39; =&amp;gt; (
+    &#39;import&#39; =&amp;gt; sub { die &amp;quot;Could not load Geo::IP&amp;quot; },
+));
+
+use_ok(&#39;Site::Member&#39;);
+
+my $u = Site::Member-&amp;gt;new();
+isa_ok($u, &#39;Site::Member&#39;);
+
+my $warning;
+local $SIG{__WARN__} = sub { $warning = shift };
+
+ok(!defined($u-&amp;gt;city()), &#39;... this should return undef&#39;);
+like($warning, 
+        qr/^You must have Geo\:\:IP installed for this feature/, 
+        &#39;... and we should have our warning&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This use case illustrates the use of &lt;code&gt;Test::MockObject&lt;/code&gt; to mock the failure of the loading of an optional resource, which in this case is the &lt;code&gt;Geo::IP&lt;/code&gt; module.&lt;/p&gt;
+
+&lt;p&gt;The sample code attempts to load &lt;code&gt;Geo::IP&lt;/code&gt; by calling &lt;code&gt;eval &amp;quot;use Geo::IP&amp;quot;&lt;/code&gt;. Because &lt;code&gt;use&lt;/code&gt; always calls a module&amp;rsquo;s &lt;code&gt;import&lt;/code&gt; method, it is possible to exploit this and mock a &lt;code&gt;Geo::IP&lt;/code&gt; load failure. This is easy to accomplish by using the &lt;code&gt;fake_module&lt;/code&gt; method and making the &lt;code&gt;import&lt;/code&gt; method die. This then triggers the warning code in the &lt;code&gt;city&lt;/code&gt; method, which the &lt;code&gt;$SIG{__WARN__}&lt;/code&gt; handler captures into &lt;code&gt;$warning&lt;/code&gt; for a later test.&lt;/p&gt;
+
+&lt;p&gt;This is an example of a failure edge case which would be difficult to test without &lt;code&gt;Test::MockObject&lt;/code&gt; because it requires control of the Perl libraries installed. Testing this without &lt;code&gt;Test::MockObject&lt;/code&gt; would require altering the &lt;code&gt;@INC&lt;/code&gt; in subtle ways or mocking a &lt;code&gt;Geo::IP&lt;/code&gt; package of your own. &lt;code&gt;Test::MockObject&lt;/code&gt; does that for you, so why bother to re-invent a wheel if you don&amp;rsquo;t need to?&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; installed but does not have the city data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 3;
+use Test::Exception;
+use Test::MockObject;
+
+my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Geo::IP&#39; =&amp;gt; (
+    &#39;open&#39;           =&amp;gt; sub { undef },
+    &#39;GEOIP_STANDARD&#39; =&amp;gt; sub { 0 }
+));
+
+use_ok(&#39;Site::Member&#39;);
+
+my $u = Site::Member-&amp;gt;new();
+isa_ok($u, &#39;Site::Member&#39;);
+
+$u-&amp;gt;ip_address(&#39;64.40.146.219&#39;);
+
+throws_ok {
+    $u-&amp;gt;city()
+} qr/Could not create a Geo\:\:IP object/, &#39;... got the error we expected&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This next use case illustrates the use of &lt;code&gt;Test::MockObject&lt;/code&gt; to mock a dependency relationship, in particular the failure case where &lt;code&gt;Geo::IP&lt;/code&gt; cannot find the specified database file.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Geo::IP&lt;/code&gt; follows the common Perl idiom of returning &lt;code&gt;undef&lt;/code&gt; if the object constructor fails. The example code tests for this case and throws an exception if it comes up. Testing for this failure uses the &lt;code&gt;fake_module&lt;/code&gt; method again to hijack &lt;code&gt;Geo::IP&lt;/code&gt; and install a mocked version of its &lt;code&gt;open&lt;/code&gt; method (the code also fakes the &lt;code&gt;GEOIP_STANDARD&lt;/code&gt; constant here). The mocked &lt;code&gt;open&lt;/code&gt; simply returns &lt;code&gt;undef&lt;/code&gt; which will create the proper conditions to trigger the exception in the example code. The exception is then caught using the &lt;code&gt;throws_ok&lt;/code&gt; method of the &lt;a href=&#34;https://metacpan.org/pod/Test::Exception&#34;&gt;Test::Exception&lt;/a&gt; module.&lt;/p&gt;
+
+&lt;p&gt;This example illustrates that it is still possible to mock objects even if your code is not in the position to pass in a mocked instance itself. Again, to test this without using &lt;code&gt;Test::MockObject&lt;/code&gt; would require control of the outside environment (the &lt;code&gt;Geo::IP database&lt;/code&gt; file), or in some way having control over where &lt;code&gt;Geo::IP&lt;/code&gt; looks for the database file. While well-written and well-architected code would probably allow you to alter the database file path and therefore test this without using mock objects, the mock object version makes no such assumptions and therefore works the same in either case.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; and the Geo-IP city data installed correctly.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 7;
+use Test::MockObject;
+
+my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Geo::IP&#39; =&amp;gt; (
+    &#39;open&#39;           =&amp;gt; sub { $mock },
+    &#39;GEOIP_STANDARD&#39; =&amp;gt; sub { 0 }
+));
+
+my $mock_record = Test::MockObject-&amp;gt;new();
+$mock_record-&amp;gt;set_always(&#39;city&#39;, &#39;New York City&#39;);
+
+$mock-&amp;gt;set_always(&#39;record_by_addr&#39;, $mock_record);
+
+use_ok(&#39;Site::Member&#39;);
+
+my $u = Site::Member-&amp;gt;new();
+isa_ok($u, &#39;Site::Member&#39;);
+
+$u-&amp;gt;ip_address(&#39;64.40.146.219&#39;);
+
+is($u-&amp;gt;city(), &#39;New York City&#39;, &#39;... got the right city&#39;);
+
+cmp_ok($mock-&amp;gt;call_pos(&#39;record_by_addr&#39;), &#39;==&#39;, 0,
+        &#39;... our mock object was called&#39;);
+is_deeply(
+        [ $mock-&amp;gt;call_args(0) ],
+        [ $mock, &#39;64.40.146.219&#39; ],
+        &#39;... our mock was called with the right args&#39;);
+
+cmp_ok($mock_record-&amp;gt;call_pos(&#39;city&#39;), &#39;==&#39;, 0,
+        &#39;... our mock record object was called&#39;);
+is_deeply(
+        [ $mock_record-&amp;gt;call_args(0) ],
+        [ $mock_record ],
+        &#39;... our mock record was called with the right args&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This next case illustrates a success case, where &lt;code&gt;Geo::IP&lt;/code&gt; finds the database file it wants and returns the expected results.&lt;/p&gt;
+
+&lt;p&gt;Once again, the &lt;code&gt;fake_module&lt;/code&gt; method of &lt;code&gt;Test::MockObject&lt;/code&gt; mocks &lt;code&gt;Geo::IP&lt;/code&gt;&amp;rsquo;s &lt;code&gt;open&lt;/code&gt; method, this time returning the &lt;code&gt;$mock&lt;/code&gt; instance itself. The code creates another mock object, this time for the &lt;code&gt;Geo::IP::Record&lt;/code&gt; instance which &lt;code&gt;Geo::IP&lt;/code&gt;&amp;rsquo;s &lt;code&gt;record_by_addr&lt;/code&gt; returns. &lt;code&gt;Test::MockObject&lt;/code&gt;&amp;rsquo;s &lt;code&gt;set_always&lt;/code&gt; method mocks the &lt;code&gt;city&lt;/code&gt; method for the &lt;code&gt;$mock_record&lt;/code&gt; instance. After this, &lt;code&gt;Geo::IP&lt;/code&gt;&amp;rsquo;s &lt;code&gt;record_by_addr&lt;/code&gt; is mocked to return the &lt;code&gt;$mock_record&lt;/code&gt; instance. With all of these mocks in place, the tests then run. After that, inspecting the mock objects ensures that the code called the correct methods on the mocked objects in the correct order and with the correct arguments.&lt;/p&gt;
+
+&lt;p&gt;This example illustrates testing success without needing to worry about the existence of an outside dependency. &lt;code&gt;Test::MockObject&lt;/code&gt; supports taking this test one step further and providing methods for inspecting the details of the interaction between the example code and that of the mocked &lt;code&gt;Geo::IP&lt;/code&gt; module. Accomplishing this test without &lt;code&gt;Test::MockObject&lt;/code&gt; would be almost impossible given the lack of control over the &lt;code&gt;Geo::IP&lt;/code&gt; module and its internals.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Mock objects can seem complex and overly abstract at first, but once grasped they can be a simple, clean way to make hard things easy. I hope to have shown how creating simple and minimal mock object with &lt;code&gt;Test::MockObject&lt;/code&gt; can help in testing cases which might be difficult using more traditional means.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Code Kata: Testing Databases</title>
+      <link>http://localhost:1313/pub/2005/02/10/database_kata.html/</link>
+      <pubDate>Thu, 10 Feb 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/02/10/database_kata.html/</guid>
+      <description>
+
+&lt;p&gt;Testing code that uses a database can be tricky. The most common solution is to set up a test database with test data and run your tests against this. This, of course, requires bookkeeping code to keep your test database in the proper state for all your tests to run without adversely affecting one another. This can range from dropping and recreating the test database for each test, to a more granular adding and deleting at the row level. Either way, you are introducing non-test code into your tests that open up possibilities for contamination. Ultimately, because you have control over the environment in which your tests run, you can manage this despite the occasional headache.&lt;/p&gt;
+
+&lt;p&gt;The real fun only starts when you decide that you should release your masterpiece unto the world at large. As any CPAN author will tell you, it is absolutely impossible to control the environment other people will run your code in once you release it. Testing database code in such a hostile environment can be frustrating for both the module developer and the module installer. A common approach is to allow the user to specify the specific database connection information as either environment variables or command-line arguments, skipping the tests unless those variables are present. Another approach is to use the lightweight and very portable &lt;a href=&#34;http://www.sqlite.org/&#34;&gt;SQLite&lt;/a&gt; as your test database (of course, testing first that the user has installed SQLite). While these solutions do work, they can often be precarious, and in the end will increase the number of possible installation problems you, as module author, could face.&lt;/p&gt;
+
+&lt;p&gt;What is a module author to do?&lt;/p&gt;
+
+&lt;h3 id=&#34;dbd-mock-testing-kata&#34;&gt;DBD::Mock Testing Kata&lt;/h3&gt;
+
+&lt;p&gt;This code kata introduces an alternate approach to testing database code, that of using mock-objects, and specifically of using the &lt;a href=&#34;https://metacpan.org/pod/DBD::Mock&#34;&gt;DBD::Mock&lt;/a&gt; mock DBI driver. Before showing off any code, I want to explain the basic philosophy of Mock Objects as well as where DBD::Mock fits in.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-are-mock-objects&#34;&gt;What are Mock Objects?&lt;/h4&gt;
+
+&lt;p&gt;When writing unit tests, it is best to try to isolate what you are testing as much as possible. You want to be sure that not only are you &lt;em&gt;only&lt;/em&gt; testing the code in question, but that a bug or issue in code outside what you are testing will not introduce false negatives in your tests. Unfortunately, this ideal of a completely decoupled design is just an ideal. In real-world practice, code has dependencies that you cannot remove for testing. This is where Mock Objects come in.&lt;/p&gt;
+
+&lt;p&gt;Mock Objects are exactly what they sound like; they are &amp;ldquo;mocked&amp;rdquo; or &amp;ldquo;fake&amp;rdquo; objects. Good polymorphic thought says that you should be able to swap out one object for another object implementing the same interface. Mock Objects take advantage of this by allowing you to substitute the &lt;em&gt;most minimally mocked implementation of an object possible&lt;/em&gt; for the real one during testing. This allows you to concentrate on the code being tested without worrying about silly things, such as whether your database is still running or if there is a database available to test against.&lt;/p&gt;
+
+&lt;h4 id=&#34;where-does-dbd-mock-fit-in&#34;&gt;Where Does DBD::Mock Fit In?&lt;/h4&gt;
+
+&lt;p&gt;DBD::Mock is a mock DBI Driver that allows you to test code which uses DBI without needing to worry about the who, what, when, and where of a database. DBD::Mock also helps to reduce the amount of database bookkeeping code by doing away with the database entirely, instead keeping a detailed record of all the actions performed by your code through DBI. Of course, database interaction/communication is not only one way, so DBD::Mock also allows you to seed the driver with mock record sets. DBD::Mock makes it possible to fake most (non-vendor specific) database interaction for the purpose of writing tests. For more detailed documentation I suggest reading the DBD::Mock POD documentation itself.&lt;/p&gt;
+
+&lt;h4 id=&#34;sample-dbi-code&#34;&gt;Sample DBI Code&lt;/h4&gt;
+
+&lt;p&gt;In the tradition of past Perl Code katas here is some simplified code to write your tests against. This code should be simple enough to understand, but also complex enough to show the real usefulness of DBD::Mock.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package MyApp::Login;
+
+use DBI;
+
+my $MAX_LOGIN_FAILURES = 3;
+
+sub login {
+  my ($dbh, $u, $p) = @_;
+  # look for the right username and password
+  my ($user_id) = $dbh-&amp;gt;selectrow_array(
+      &amp;quot;SELECT user_id FROM users WHERE username = &#39;$u&#39; AND password = &#39;$p&#39;&amp;quot;
+  );
+  # if we find one, then ...
+  if ($user_id) {
+      # log the event and return success
+      $dbh-&amp;gt;do(
+          &amp;quot;INSERT INTO event_log (event) VALUES(&#39;User $user_id logged in&#39;)&amp;quot;
+      );
+      return &#39;LOGIN SUCCESSFUL&#39;;
+  }
+  # if we don&#39;t find one then ...
+  else {
+      # see if the username exists ...
+      my ($user_id, $login_failures) = $dbh-&amp;gt;selectrow_array(
+          &amp;quot;SELECT user_id, login_failures FROM users WHERE username = &#39;$u&#39;&amp;quot;
+      );
+      # if we do have a username, and the password doesnt match then
+      if ($user_id) {
+          # if we have not reached the max allowable login failures then
+          if ($login_failures &amp;lt; $MAX_LOGIN_FAILURES) {
+              # update the login failures
+              $dbh-&amp;gt;do(qq{
+                  UPDATE users
+                  SET login_failures = (login_failures + 1)
+                  WHERE user_id = $user_id
+              });
+              return &#39;BAD PASSWORD&#39;;
+          }
+          # otherwise ...
+          else {
+              # we must update the login failures, and lock the account
+              $dbh-&amp;gt;do(
+                  &amp;quot;UPDATE users SET login_failures = (login_failures + 1), &amp;quot; .
+                  &amp;quot;locked = 1 WHERE user_id = $user_id&amp;quot;
+              );
+              return &#39;USER ACCOUNT LOCKED&#39;;
+          }
+      }
+      else {
+          return &#39;USERNAME NOT FOUND&#39;;
+      }
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are four distinct paths through this code, each one resulting in one of the four return messages; &lt;code&gt;LOGIN SUCCESSFUL&lt;/code&gt;, &lt;code&gt;BAD PASSWORD&lt;/code&gt;, &lt;code&gt;USER ACCOUNT LOCKED&lt;/code&gt;, and &lt;code&gt;USERNAME NOT FOUND&lt;/code&gt;. See if you can write tests enough to cover all four paths. Feel free to use &lt;a href=&#34;https://metacpan.org/pod/Devel::Cover&#34;&gt;Devel::Cover&lt;/a&gt; to verify this.&lt;/p&gt;
+
+&lt;p&gt;Armed with your knowledge of DBD::Mock, go forth and write tests! The next page describes DBD::Mock in more detail and gives some strategies for writing the appropriate tests. You should spend between 30 and 45 minutes writing the tests before continuing.&lt;/p&gt;
+
+&lt;h3 id=&#34;tips-tricks-and-suggestions&#34;&gt;Tips, Tricks, and Suggestions&lt;/h3&gt;
+
+&lt;p&gt;Because DBD::Mock is an implementation of a DBD driver, its usage is familiar to that of DBI. DBD::Mock is unique in its ability to mock the database interaction. The following is a short introduction to these features of DBD::Mock.&lt;/p&gt;
+
+&lt;p&gt;Fortunately, connecting to the database is the only part of your regular DBI code which needs to be DBD::Mock specific, because DBI chooses the driver based upon the dsn string given it. To do this with DBD::Mock:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because DBI will not actually connecting to a real database here, you need no database name, username, or password. The next thing to do is to seed the database driver with a result set. Do this through the &lt;code&gt;mock_add_resultset&lt;/code&gt; attribute of the &lt;code&gt;$dbh&lt;/code&gt; handle.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_add_resultset} = [
+  [ &#39;user_id&#39;, &#39;username&#39;, &#39;password&#39; ],
+  [ 1, &#39;stvn&#39;, &#39;****&#39; ]
+];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;DBD::Mock will return this particular result set the next time a statement executes on this &lt;code&gt;$dbh&lt;/code&gt;. Note that the first row is the column names, while all subsequent rows are data. Of course, in some cases, this is not specific enough, and so DBD::Mock also allows the binding of a particular SQL statement to a particular result set:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_add_resultset} = {
+  sql     =&amp;gt; &amp;quot;SELECT * FROM user_table WHERE username = &#39;stvn&#39;&amp;quot;,
+  results =&amp;gt; [[ &#39;user_id&#39;, &#39;username&#39;, &#39;password&#39; ],
+              [ 1, &#39;stvn&#39;, &#39;****&#39; ]]
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now whenever the statement &lt;code&gt;SELECT * FROM user_table WHERE username = &#39;stvn&#39;&lt;/code&gt; executes, DBD::Mock will return this result set DBD::Mock can also specify the number of rows affected for &lt;code&gt;UPDATE&lt;/code&gt;, &lt;code&gt;INSERT&lt;/code&gt;, and &lt;code&gt;DELETE&lt;/code&gt; statements using &lt;code&gt;mock_add_resultset&lt;/code&gt; as well. For example, here DBI will see the &lt;code&gt;DELETE&lt;/code&gt; statement as having deleted 3 rows of data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_add_resultset} = {
+  sql     =&amp;gt; &amp;quot;DELETE FROM session_table WHERE active = 0&amp;quot;,
+  results =&amp;gt; [[ &#39;rows&#39; ], [], [], []]
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;DBD::Mock version 0.18 introduced the DBD::Mock::Session object, which allows the scripting of a &lt;code&gt;session&lt;/code&gt; of database interaction &amp;ndash; and DBD::Mock can verify that the session executes properly. Here is an example of DBD::Mock::Session:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_session} = DBD::Mock::Session-&amp;gt;new(&#39;session_reaping&#39; =&amp;gt; (
+  {
+  statement =&amp;gt; &amp;quot;UPDATE session_table SET active = 0 WHERE timeout &amp;lt; NOW()&amp;quot;,
+  results  =&amp;gt; [[ &#39;rows&#39; ], [], [], []]
+  },
+  {
+  statement =&amp;gt; &amp;quot;DELETE FROM session_table WHERE active = 0&amp;quot;,
+  results  =&amp;gt; [[ &#39;rows&#39; ], [], [], []]
+  }
+));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The hash reference given for each statement block in the session should look very similar to the values added with &lt;code&gt;mock_add_resultset&lt;/code&gt;, with the only difference in the substitution of the word &lt;code&gt;statement&lt;/code&gt; for the word &lt;code&gt;sql&lt;/code&gt;. DBD::Mock will assure that the first statement run matches the first statement in the session, raising an error (in the manner specified by &lt;code&gt;PrintError&lt;/code&gt; or &lt;code&gt;RaiseError&lt;/code&gt;) if not. DBD::Mock will then continue through the session until it reaches the last statement, verifying that each statement run matches in the order specified. You can also use regular expression references and code references in the &lt;code&gt;statement&lt;/code&gt; slots of DBD::Mock::Session for even more sophisticated comparisons. See the documentation for more details of how those features work.&lt;/p&gt;
+
+&lt;p&gt;After you seed a &lt;code&gt;$dbh&lt;/code&gt; with result sets, the next step is to run the DBI code which will use those result sets. This is just normal regular everyday DBI code, with nothing unique to DBD::Mock.&lt;/p&gt;
+
+&lt;p&gt;After all the DBI code runs, it is possible to then go through all the statements that have been executed and examine them using the array of DBD::Mock::StatementTrack objects found in the &lt;code&gt;mock_all_history&lt;/code&gt; attribute of your &lt;code&gt;$dbh&lt;/code&gt;. Here is a simple example of printing information about each statement run and the bind parameters used:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $history = $dbh-&amp;gt;{mock_all_history};
+foreach my $s (@{$history}) {
+  print &amp;quot;Statement  : &amp;quot; . $s-&amp;gt;statement() . &amp;quot;\n&amp;quot; .
+        &amp;quot;bind params: &amp;quot; . (join &#39;, &#39;, @{$s-&amp;gt;bound_params()}) . &amp;quot;\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;DBD::Mock::StatementTrack also offers many other bits of statement information. I refer you again to the DBD::Mock POD documentation for more details.&lt;/p&gt;
+
+&lt;p&gt;Now, onto the tests.&lt;/p&gt;
+
+&lt;h3 id=&#34;solutions&#34;&gt;Solutions&lt;/h3&gt;
+
+&lt;p&gt;The saying goes of Perl, &amp;ldquo;there is more than one way to do it&amp;rdquo;, and this is true of DBD::Mock as well. The test code had four distinct paths through the code, and the test solutions will use each one to demonstrate a different technique for writing tests with DBD::Mock.&lt;/p&gt;
+
+&lt;p&gt;The first example is the &lt;code&gt;LOGIN SUCCESSFUL&lt;/code&gt; path. The code uses the array version of &lt;code&gt;mock_add_resultset&lt;/code&gt; to seed the &lt;code&gt;$dbh&lt;/code&gt; and then examines the &lt;code&gt;mock_all_history&lt;/code&gt; to be sure all the statements ran in the correct order.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 4;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;);
+
+$dbh-&amp;gt;{mock_add_resultset} = [[ &#39;user_id&#39; ], [ 1 ]];
+$dbh-&amp;gt;{mock_add_resultset} = [[ &#39;rows&#39; ], []];
+
+is(MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;),
+   &#39;LOGIN SUCCESSFUL&#39;,
+   &#39;... logged in successfully&#39;);
+
+my $history = $dbh-&amp;gt;{mock_all_history};
+
+cmp_ok(@{$history}, &#39;==&#39;, 2, &#39;... we ran 2 statements&#39;);
+
+is($history-&amp;gt;[0]-&amp;gt;statement(),
+   &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39; AND password =
+    &#39;****&#39;&amp;quot;, &#39;... the first statement is correct&#39;);
+
+is($history-&amp;gt;[1]-&amp;gt;statement(),
+   &amp;quot;INSERT INTO event_log (event) VALUES(&#39;User 1 logged in&#39;)&amp;quot;,
+   &#39;... the second statement is correct&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the simplest and most direct use of DBD::Mock. Simply seed the &lt;code&gt;$dbh&lt;/code&gt; with an appropriate number of result sets, run the code, and then test to verify it called the right SQL in the right order. It doesn&amp;rsquo;t come much simpler than that. This approach does have its drawbacks though, the most obvious being that there is no means of associating the SQL directly with the result sets (as would happen in a real database). However, DBD::Mock returns result sets in the order added, so there is an implied sequence of events, verifiable later with &lt;code&gt;mock_all_history&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The next example is the &lt;code&gt;USERNAME NOT FOUND&lt;/code&gt; path. The test code uses the hash version of &lt;code&gt;mock_add_resultset&lt;/code&gt; to seed the &lt;code&gt;$dbh&lt;/code&gt; and the &lt;code&gt;mock_all_history_iterator&lt;/code&gt; to check the statements afterwards.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 4;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;);
+
+$dbh-&amp;gt;{mock_add_resultset} = {
+  sql =&amp;gt; &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39;
+       AND password = &#39;****&#39;&amp;quot;, results =&amp;gt; [[ &#39;user_id&#39; ],
+       [ undef ]]
+};
+$dbh-&amp;gt;{mock_add_resultset} = {
+  sql =&amp;gt; &amp;quot;SELECT user_id, login_failures FROM users WHERE
+       username = &#39;user&#39;&amp;quot;, results =&amp;gt; [[ &#39;user_id&#39;,
+       &#39;login_failures&#39; ], [ undef, undef ]]
+};
+
+is(MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;),
+  &#39;USERNAME NOT FOUND&#39;,
+  &#39;... username is not found&#39;);
+
+my $history_iterator = $dbh-&amp;gt;{mock_all_history_iterator};
+
+is($history_iterator-&amp;gt;next()-&amp;gt;statement(),
+   &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39; AND password = &#39;****&#39;&amp;quot;,
+   &#39;... the first statement is correct&#39;);
+
+is($history_iterator-&amp;gt;next()-&amp;gt;statement(),
+   &amp;quot;SELECT user_id, login_failures FROM users WHERE username = &#39;user&#39;&amp;quot;,
+   &#39;... the second statement is correct&#39;);
+
+ok(!defined($history_iterator-&amp;gt;next()), &#39;... we have no more statements&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach allows the association of a specific SQL statement with a specific result sets. However, it loses the implied ordering of statements, which is one of the benefits of the array version of &lt;code&gt;mock_add_resultset&lt;/code&gt;. You can check this manually using &lt;code&gt;mock_all_history_iterator&lt;/code&gt; (which simply iterates over the array returned by &lt;code&gt;mock_all_history&lt;/code&gt;). One of the nice things about using &lt;code&gt;mock_all_history_iterator&lt;/code&gt; is that if the need arises to add, delete, or reorder your SQL statements, you don&amp;rsquo;t need to change all the &lt;code&gt;$history&lt;/code&gt; array indices in your test. It is also a good idea to check that only the two expected statements ran; do this by exploiting the fact that the iterator returns undefined values when it exhausts its contents.&lt;/p&gt;
+
+&lt;p&gt;The next example is the &lt;code&gt;USER ACCOUNT LOCKED&lt;/code&gt; path. The test code uses the DBD::Mock::Session object to test this path. I recommend to set the &lt;code&gt;$dbh&lt;/code&gt; to &lt;code&gt;RaiseError&lt;/code&gt; so that DBD::Mock::Session will throw an exception if it runs into an issue.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 2;
+use Test::Exception;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;, { RaiseError =&amp;gt; 1, PrintError =&amp;gt; 0 });
+
+my $lock_user_account = DBD::Mock::Session-&amp;gt;new(&#39;lock_user_account&#39; =&amp;gt; (
+  {
+      statement =&amp;gt; &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39; AND
+           password = &#39;****&#39;&amp;quot;, results   =&amp;gt; [[ &#39;user_id&#39; ], [ undef]]
+  },
+  {
+      statement =&amp;gt; &amp;quot;SELECT user_id, login_failures FROM users WHERE
+           username = &#39;user&#39;&amp;quot;, results   =&amp;gt; [[ &#39;user_id&#39;, &#39;login_failures&#39; ],
+           [ 1, 4 ]]
+  },
+  {
+      statement =&amp;gt; &amp;quot;UPDATE users SET login_failures = (login_failures + 1),
+      locked = 1 WHERE user_id = 1&amp;quot;, results   =&amp;gt; [[ &#39;rows&#39; ], []]
+  }
+));
+
+$dbh-&amp;gt;{mock_session} = $lock_user_account;
+my $result;
+lives_ok {
+    $result = MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;)
+} &#39;... our session ran smoothly&#39;;
+is($result,
+  &#39;USER ACCOUNT LOCKED&#39;,
+  &#39;... username is found, but the password is wrong,
+       so we lock the the user account&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The DBD::Mock::Session approach has several benefits. First, the SQL statements are associated with specific result sets (as with the hash version of &lt;code&gt;mock_add_resultset&lt;/code&gt;). Second, there is an explicit ordering of statements (like the array version of &lt;code&gt;mock_add_resultset&lt;/code&gt;). DBD::Mock::Session will verify that the session has been followed properly, and raise an error if it is not. The one drawback of this example is the use of static strings to compare the SQL with. However, DBD::Mock::Session can use other things, as illustrated in the next and final example.&lt;/p&gt;
+
+&lt;p&gt;The next and final example is the &lt;code&gt;BAD PASSWORD&lt;/code&gt; path. The test code demonstrates some of the more complex possibilities of the DBD::Mock::Session object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 2;
+use Test::Exception;
+
+use SQL::Parser;
+use Data::Dumper;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;, { RaiseError =&amp;gt; 1, PrintError =&amp;gt; 0 });
+
+my $bad_password = DBD::Mock::Session-&amp;gt;new(&#39;bad_password&#39; =&amp;gt; (
+{
+  statement =&amp;gt; qr/SELECT user_id FROM users WHERE username = \&#39;.*?\&#39; AND
+       password = \&#39;.*?\&#39;/, results   =&amp;gt; [[ &#39;user_id&#39; ], [ undef]]
+},
+{
+  statement =&amp;gt; qr/SELECT user_id, login_failures FROM users WHERE username =
+  \&#39;.*?\&#39;/, results   =&amp;gt; [[ &#39;user_id&#39;, &#39;login_failures&#39; ], [ 1, 0 ]]
+},
+{
+  statement =&amp;gt; sub {
+      my $parser1 = SQL::Parser-&amp;gt;new(&#39;ANSI&#39;);
+      $parser1-&amp;gt;parse(shift(@_));
+      my $parsed_statement1 = $parser1-&amp;gt;structure();
+      delete $parsed_statement1-&amp;gt;{original_string};
+
+      my $parser2 = SQL::Parser-&amp;gt;new(&#39;ANSI&#39;);
+      $parser2-&amp;gt;parse(&amp;quot;UPDATE users SET login_failures =
+           (login_failures + 1) WHERE user_id = 1&amp;quot;);
+      my $parsed_statement2 = $parser2-&amp;gt;structure();
+      delete $parsed_statement2-&amp;gt;{original_string};
+
+      return Dumper($parsed_statement2) eq Dumper($parsed_statement1);
+  },
+  results   =&amp;gt; [[ &#39;rows&#39; ], []]
+}
+));
+
+$dbh-&amp;gt;{mock_session} = $bad_password;
+
+my $result;
+lives_ok {
+    $result = MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;)
+} &#39;... our session ran smoothly&#39;;
+is($result, &#39;BAD PASSWORD&#39;, &#39;... username is found, but the password is wrong&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach uses DBD::Mock::Session&amp;rsquo;s more flexible means of performing SQL comparisons. The first and second statements are compared using regular expressions, which alleviates the need to hardcode test data into the statement. The third statement uses a subroutine reference to perform the SQL comparison. As you may have noticed in the test code provided, the &lt;code&gt;UPDATE&lt;/code&gt; statement for the &lt;code&gt;BAD PASSWORD&lt;/code&gt; path used Perl&amp;rsquo;s &lt;code&gt;qq()&lt;/code&gt; quoting mechanism to format the SQL in a more freeform manner. This can create complexities when trying to verify the SQL using strings or regular expressions. The test here uses &lt;a href=&#34;https://metacpan.org/pod/SQL::Parser&#34;&gt;SQL::Parser&lt;/a&gt; to determine the &lt;em&gt;functional equivalence&lt;/em&gt; of the test statement and the statement run in the code.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;I hope this kata has illustrated that unit-testing DBI code does not have to be as difficult and dangerous as it might seem. Through the use of Mock Objects in general and specifically the DBD::Mock DBI driver, it is possible to achieve 100% code coverage of your DBI-related code without ever having touched a real database. Here is the Devel::Cover output for the tests above:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; ---------------------------- ------ ------ ------ ------ ------ ------ ------
+ File                           stmt branch   cond    sub    pod   time  total
+ ---------------------------- ------ ------ ------ ------ ------ ------ ------
+ lib/MyApp/Login.pm            100.0  100.0    n/a  100.0    n/a  100.0  100.0
+ Total                         100.0  100.0    n/a  100.0    n/a  100.0  100.0
+ ---------------------------- ------ ------ ------ ------ ------ ------ ------
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;see-also&#34;&gt;See Also &amp;ndash;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.mockobjects.com/&#34;&gt;MockObjects Wiki&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/pub/2002/07/10/tmo.html&#34;&gt;A Test::MockObject Illustrated Example&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>The Phalanx Project</title>
+      <link>http://localhost:1313/pub/2005/01/13/phalanx.html/</link>
+      <pubDate>Thu, 20 Jan 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/01/13/phalanx.html/</guid>
+      <description>
+
+&lt;p&gt;Imagine a city protected by a small army of soldiers. The city&amp;rsquo;s future growth requires a larger force; so a few determined lieutenants go to nearby towns and enlist aid from their police departments. These forces will come to the aid of the larger city when the time comes.&lt;/p&gt;
+
+&lt;p&gt;This is the Phalanx project, but the city is Perl, our soldiers are automated tests, and the nearby towns are the modules of CPAN.&lt;/p&gt;
+
+&lt;p&gt;Flashback to &lt;a href=&#34;http://conferences.oreillynet.com/os2003/&#34;&gt;OSCON 2003&lt;/a&gt;. Larry Wall had just given his &lt;a href=&#34;http://localhost:1313/pub/2003/07/16/soto2003.html&#34;&gt;7th annual State of the Onion&lt;/a&gt; where he&amp;rsquo;d announced the &lt;a href=&#34;http://www.poniecode.org/&#34;&gt;Ponie&lt;/a&gt; project. Ponie is to be Perl 5.10, but running on the new Parrot virtual machine that forms the basis of Perl 6, instead of C.&lt;/p&gt;
+
+&lt;p&gt;I was talking with Leon Brocard about the massive amount of testing that would be necessary to test a new implementation of Perl. Everything we know, and all our assumptions, would change. How would we know that 2+2=4 all the time? How would we know that object inheritance works? Will XS modules work the way they should? We would need a huge test suite, more than Perl has now, to make sure Ponie really is still Perl 5. The CPAN would make a great source of real-world testing.&lt;/p&gt;
+
+&lt;p&gt;Most CPAN modules of any popularity come with a test suite, so it would be easy to add more tests to the distributions. This would help those who worked on Ponie to make sure they had more and more tests to test against, and would help the module author by having more tests written for his code.&lt;/p&gt;
+
+&lt;h2 id=&#34;which-modules&#34;&gt;Which Modules?&lt;/h2&gt;
+
+&lt;p&gt;I didn&amp;rsquo;t imagine that we&amp;rsquo;d run Ponie against all of the CPAN, and wanted to follow the Pareto principle and go after the top 10%. However, with CPAN at about 4,000 modules when Phalanx started (now 6,000), it would have been too large an effort to work on 400 modules. Instead, I picked a nice round 100, or 2.5% of the distributions available.&lt;/p&gt;
+
+&lt;p&gt;What makes a &amp;ldquo;top 100 module&amp;rdquo;? Ideally, I&amp;rsquo;d like to know which modules had the most real-life use, but that&amp;rsquo;s impossible. I decided a relative comparison of the number of downloads of modules would be a close enough approximation. (The astute reader is probably already thinking of problems with this approach, but rest assured that I&amp;rsquo;ve thought of them as well.)&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://qa.perl.org/phalanx/100/&#34;&gt;Phalanx Top 100 Modules&lt;/a&gt; are those most downloaded in 45 days from the main CPAN mirror, with some adjustments. I excluded search engine bots and anything that was apparently mirroring CPAN. I also made the executive decision that any given IP address that downloaded more then 450 modules in 45 days was a bot.&lt;/p&gt;
+
+&lt;h2 id=&#34;why-the-name-phalanx&#34;&gt;Why the Name &amp;ldquo;Phalanx&amp;rdquo;?&lt;/h2&gt;
+
+&lt;p&gt;In ancient Greece, the phalanx was a military formation where hundreds of soldiers formed a shield wall. Each man stood shoulder to shoulder with the men next to him, their shields overlapping. As it is with the shields of the men in the phalanx, it is with the numerous and overlapping tests of the Phalanx project.&lt;/p&gt;
+
+&lt;p&gt;For any set of code, the more automated tests you have, the more protection you have. If you can write a test for something, you probably should. Consider these simple tests of a &lt;code&gt;Project&lt;/code&gt; object&amp;rsquo;s constructor and an accessor, tested with Perl&amp;rsquo;s testing framework:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $project = Project-&amp;gt;new( name =&amp;gt; &amp;quot;Phalanx&amp;quot; );
+isa_ok( $project, &amp;quot;Project&amp;quot; );
+is( $project-&amp;gt;name, &amp;quot;Phalanx&amp;quot;, &amp;quot;Name set correctly&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some might say, &amp;ldquo;It&amp;rsquo;s only an accessor, why should we test it?&amp;rdquo; It&amp;rsquo;s worth testing because when it doesn&amp;rsquo;t work in production, you won&amp;rsquo;t see the error at the point of the accessor. Instead, some piece of code that uses the &lt;code&gt;Project::name&lt;/code&gt; accessor will fail, and you&amp;rsquo;ll spend hours tracing the failure back to the accessor.&lt;/p&gt;
+
+&lt;p&gt;This sort of approach &amp;ndash; strength in numbers, each test building on others &amp;ndash; was the basis of the phalanx. So, too, will it be with Perl&amp;rsquo;s tests.&lt;/p&gt;
+
+&lt;h2 id=&#34;goals&#34;&gt;Goals&lt;/h2&gt;
+
+&lt;p&gt;The primary goal of Phalanx is to increase the quality of a given module&amp;rsquo;s test suite, mostly by increasing the amount of the module&amp;rsquo;s code that the tests cover. However, there are secondary goals because we&amp;rsquo;re working with the code anyway.&lt;/p&gt;
+
+&lt;p&gt;The first sub-goal is to find hidden bugs. As we add tests to modules, we hope to uncover broken functionality. Indeed, the team working on HTML::TreeBuilder uncovered a bug in the module&amp;rsquo;s code while they added tests.&lt;/p&gt;
+
+&lt;p&gt;In addition to adding to the testing, team members should verify the code&amp;rsquo;s documentation and fill in any missing areas. Comparing code to inline documentation may uncover hidden features that only someone reading the code would know about. These should be documented and tested.&lt;/p&gt;
+
+&lt;p&gt;The principle here is this: Code, tests, and documentation must all agree with each other. If the code does one thing, the documentation describes it accurately, but the tests check for a different behavior, then there&amp;rsquo;s a bug. It might even be the two that agree with each other that are wrong. It&amp;rsquo;s possible even to find that all three might disagree with each other. Old code can be like that sometimes.&lt;/p&gt;
+
+&lt;p&gt;Two other sub-goals are about humans. Phalanx provides an easy way for people to wet their feet in the open source process. The very nature of Phalanx is collaborative, where each team working on a module submits patches to the module for review and approval. The module&amp;rsquo;s author still maintains control, but works with the team to decide what direction testing should take.&lt;/p&gt;
+
+&lt;p&gt;Second, Phalanx provides a playground for people with an interest in automated testing who don&amp;rsquo;t know how or where to start. Like &lt;a href=&#34;http://wgz.org/chromatic/&#34;&gt;chromatic&lt;/a&gt;&amp;rsquo;s &lt;a href=&#34;http://www.google.com/search?q=perl+test+kata+site%3Aperl.com&#34;&gt;Perl testing kata&lt;/a&gt;, adding tests to existing code actually exercises each team member&amp;rsquo;s skills.&lt;/p&gt;
+
+&lt;h2 id=&#34;getting-people-to-sign-up&#34;&gt;Getting People to Sign Up&lt;/h2&gt;
+
+&lt;p&gt;Once I&amp;rsquo;d created the Phalanx 100 and the guiding principles, and put up &lt;a href=&#34;http://qa.perl.org/phalanx/&#34;&gt;the Phalanx website&lt;/a&gt;, I had to find some hoplites. (Hoplites are the Greek soldiers that made up the ancient phalanxes.) I announced the project and a dozen eager hoplites volunteered. Each hoplite wrote to the author about his intent, to make sure the author was onboard with the idea. No sense in making changes and preparing patches for an author who will reject them. The author may also have input and suggestions, such as areas in the code that need more attention than others. Once the preparation was complete, the hoplite was to add tests and verify documentation.&lt;/p&gt;
+
+&lt;p&gt;This process turned out to be a dismal failure.&lt;/p&gt;
+
+&lt;p&gt;Twelve different hoplites adopted 12 distributions and produced exactly zero code in the first year. I don&amp;rsquo;t mind pointing fingers, because I was one of the 12. It seems that on projects like this, working solo means motivation is hard to maintain. Each of the hoplites I talked to explained that he started with the best of intentions, but had trouble finding the time to follow through, and the motivation fell by the wayside.&lt;/p&gt;
+
+&lt;p&gt;This year, I tried a different approach, enlisting the support of Perl Mongers groups, starting with my home group, Chicago.pm. I then took to the conference circuit, giving lightning talks at YAPC::NA and OSCON asking for interested parties to join up with the team. Since then, SouthFlorida.pm, London.pm, and Perl Seminar New York have all joined up. We still coordinate with the module author, and also report progress centrally at our new &lt;a href=&#34;http://phalanx.kwiki.org/&#34;&gt;Phalanx wiki&lt;/a&gt;, but now I hope that with a group, it will be easier to keep motivation high.&lt;/p&gt;
+
+&lt;h2 id=&#34;phalanx-tools&#34;&gt;Phalanx Tools&lt;/h2&gt;
+
+&lt;p&gt;Over time, as we&amp;rsquo;ve built up an infrastructure for Phalanx, three tools have proven themselves to be crucial to collaboration.&lt;/p&gt;
+
+&lt;p&gt;First were the triplets of email, web, and wiki, which allow information to be swapped on progress. The &lt;a href=&#34;http://lists.perl.org/showlist.cgi?name=perl-qa&#34;&gt;perl-qa mailing list&lt;/a&gt; hosted at lists.perl.org is home to many Perl folks interested in testing. The &lt;a href=&#34;http://qa.perl.org/phalanx/&#34;&gt;Phalanx webpage&lt;/a&gt; lets me post information for all hoplites to see. The &lt;a href=&#34;http://phalanx.kwiki.org/&#34;&gt;Phalanx wiki&lt;/a&gt; allows hoplites and groups to post project progress.&lt;/p&gt;
+
+&lt;p&gt;Second, centralized version control is crucial since we have multiple collaborators on an individual module,. Fortunately, Robert and Ask of perl.org are graciously hosting a &lt;a href=&#34;http://svn.perl.org/phalanx/&#34;&gt;Subversion repository for the Phalanx teams&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Third, Paul Johnson&amp;rsquo;s excellent &lt;code&gt;Devel::Cover&lt;/code&gt; package has been invaluable in identifying shortcomings of test suites. &lt;code&gt;Devel::Cover&lt;/code&gt; analyzes the running of the tests, and then identifies which lines of code the suite has exercised or &amp;ldquo;covered.&amp;rdquo; If a line of code isn&amp;rsquo;t covered by a test, it provides the hoplites a great place to start, by writing a test case to exercise the uncovered code.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Devel::Cover&lt;/code&gt; presents metrics on percentages of coverage, but Phalanx doesn&amp;rsquo;t try necessarily to increase coverage to 100%. We&amp;rsquo;ve found that there&amp;rsquo;s a level of diminishing returns when exercising extreme corner cases, especially cases based on platform-specific dependencies. What we&amp;rsquo;ve found is that the real value is finding the big areas of neglect and patching those up. Sometimes you can even find big wins, like when I found unused and un-removed code in &lt;code&gt;WWW::Mechanize&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;how-you-can-join&#34;&gt;How You Can Join&lt;/h2&gt;
+
+&lt;p&gt;If automated testing interests you, or you&amp;rsquo;re looking for a way to add to the CPAN, we&amp;rsquo;d love to have you join.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Join the &lt;a href=&#34;http://lists.perl.org/showlist.cgi?name=perl-qa&#34;&gt;perl-qa&lt;/a&gt; list.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;The perl-qa list is the official mailing list of the Phalanx project. Sign up and introduce yourself.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Find a module that interests you.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Find a module that could benefit from your attention. Many hoplites pick modules that they use in day-to-day life. There&amp;rsquo;s also no requirement that the module you work on is from the Phalanx 100.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Find kindred souls.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Phalanx seems to go better when hoplites team up to work together.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can (and should) join our ranks and add to our numbers, as we help take Perl that much closer to Perl 6.&lt;/p&gt;
+
+&lt;h2 id=&#34;other-links&#34;&gt;Other Links&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://qa.perl.org/phalanx/&#34;&gt;Phalanx homepage&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Devel::Cover&#34;&gt;Devel::Cover&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.petdance.com/perl/join-phalanx-lt.pdf&#34;&gt;Transcript of &amp;ldquo;Join the Phalanx Project&amp;rdquo; lighting talk&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://phalanx.kwiki.org/&#34;&gt;Phalanx Wiki&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Code Kata: Testing Imports</title>
+      <link>http://localhost:1313/pub/2004/12/16/import_kata.html/</link>
+      <pubDate>Thu, 16 Dec 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/12/16/import_kata.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/pub/2004/10/21/taint_testing_kata.html&#34;&gt;Perl Taint Test Kata&lt;/a&gt; introduced the idea of Perl Test Kata, small exercises designed to improve your understanding of Perl and your ability to write test-driven code. This article is the second in the series.&lt;/p&gt;
+
+&lt;h3 id=&#34;import-testing-kata&#34;&gt;Import Testing Kata&lt;/h3&gt;
+
+&lt;p&gt;Perl 5 added the ideas of namespaces and modules, making code reusable and easier to maintain. To allow convenience, it also added an importing mechanism to put code from a module into the current namespace.&lt;/p&gt;
+
+&lt;p&gt;Behind the scenes, when you &lt;code&gt;use&lt;/code&gt; a module, Perl loads it from disk and, if successful, calls the special method &lt;code&gt;import()&lt;/code&gt;. By convention, this generally imports functions. Much of the time, &lt;code&gt;import()&lt;/code&gt; mundanely installs subroutines into the current namespace. That&amp;rsquo;s why so many modules use Exporter to provide a default &lt;code&gt;import()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;However, it&amp;rsquo;s also a general module-loading hook that can perform many different types of manipulations. For example, &lt;a href=&#34;https://metacpan.org/pod/Filter::Simple&#34;&gt;Filter::Simple&lt;/a&gt; allows the use of source filters to transform code that looks entirely unlike Perl into valid code in the using module. Other modules change their behavior depending on any arguments passed to &lt;code&gt;import()&lt;/code&gt;. This includes &lt;a href=&#34;https://metacpan.org/pod/Test::More&#34;&gt;Test::More&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Test::Simple&#34;&gt;Test::Simple&lt;/a&gt;, which interpret their arguments as information about how many tests to run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More &#39;no_plan&#39;;
+
+# or
+
+use Test::More tests =&amp;gt; 100;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This feature is both powerful and important. Because of its importance, it needs good tests. Because of its power and flexibility, it may seem difficult to test an &lt;code&gt;import()&lt;/code&gt; well. Here are three sample implementations for you to practice testing.&lt;/p&gt;
+
+&lt;h4 id=&#34;basic-exporting&#34;&gt;Basic Exporting&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;package Basic::Exports;
+
+use strict;
+
+use base &#39;Exporter&#39;;
+use vars &#39;@EXPORT&#39;;
+
+@EXPORT = qw( foo bar );
+
+sub foo { &#39;foo&#39; }
+sub bar { &#39;bar&#39; }
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The tests should check that using Basic::Exports exports &lt;code&gt;foo()&lt;/code&gt; and &lt;code&gt;bar()&lt;/code&gt; to the appropriate namespace and that they return the appropriate values. Another test is that the code &lt;code&gt;use Basic::Exports ();&lt;/code&gt; exports &lt;em&gt;neither&lt;/em&gt; function.&lt;/p&gt;
+
+&lt;h4 id=&#34;optional-exports&#34;&gt;Optional Exports&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;package Optional::Exports;
+
+use strict;
+
+use base &#39;Exporter&#39;;
+use vars &#39;@EXPORT_OK&#39;;
+
+@EXPORT_OK = qw( foo bar baz );
+
+sub foo { &#39;foo&#39; }
+sub bar { &#39;bar&#39; }
+sub baz { &#39;baz&#39; }
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The tests should check that Optional::Exports exports nothing by default and only those functions named, if there are any.&lt;/p&gt;
+
+&lt;h4 id=&#34;load-time-behavior&#34;&gt;Load-time Behavior&lt;/h4&gt;
+
+&lt;p&gt;A few modules have curious behavior. My Pod::ToDemo behaves differently when invoked from the command line versus when used within a module. This makes it substantially more difficult to test. Rather than make you reinvent the tests there, here&amp;rsquo;s a simpler custom &lt;code&gt;import()&lt;/code&gt; that does different things based on its invocation. If invoked from the command line, it prints a message to standard output. If used from a module, it exports the same &lt;code&gt;foo()&lt;/code&gt; subroutine as before.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Export::Weird;
+
+use strict;
+
+sub import
+{
+    my ($package, undef, $line) = caller();
+
+    if ( $line == 0 )
+    {
+        print &amp;quot;Invoked from command-line\n&amp;quot;;
+    }
+    else
+    {
+        no strict &#39;refs&#39;;
+        *{ $package . &#39;::foo&#39; } = sub { &#39;foo&#39; };
+    }
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only really tricky test here must exercise the behavior of the module when invoked from the command line. Assume that the documentation of the module suggests invoking it via:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -MExport::Weird -e 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next page explains some techniques for testing these examples. For best results, spend between 30 and 45 minutes working through the kata on your own before looking at the hints. For more information on how modules, &lt;code&gt;use&lt;/code&gt;, and &lt;code&gt;require&lt;/code&gt; work, see &lt;code&gt;perldoc perlmod&lt;/code&gt; and &lt;code&gt;perldoc perlfunc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;tips-tricks-and-suggestions&#34;&gt;Tips, Tricks, and Suggestions&lt;/h3&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve worked your way through writing tests for the three examples, here are the approaches I would take. They&amp;rsquo;re not the only ways to test these examples, but they do work. First, here is some background information on what&amp;rsquo;s happening.&lt;/p&gt;
+
+&lt;h4 id=&#34;reloading&#34;&gt;Reloading&lt;/h4&gt;
+
+&lt;p&gt;To test &lt;code&gt;import()&lt;/code&gt; properly, you must understand its implications. When Perl encounters a &lt;code&gt;use module;&lt;/code&gt; statement, it executes a two-step process &lt;em&gt;immediately&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;BEGIN
+{
+    require module;
+    module-&amp;gt;import();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can subvert both of these processes. To force Perl to reload a module, you can delete its entry from &lt;code&gt;%INC&lt;/code&gt;. Note that all of the keys of this special hash represent pathnames in Unix format. For example, even if you use Windows or VMS or Mac OS 9 or earlier, loading Filter::Simple successfully should result in &lt;code&gt;%INC&lt;/code&gt; containing a true value for the key of &lt;code&gt;Filter/Simple.pm&lt;/code&gt;. (You may also want to use the &lt;code&gt;delete_package()&lt;/code&gt; function of the Symbol module to clear out the namespace, though beware of the caveats there.) Now you can &lt;code&gt;require&lt;/code&gt; the module again.&lt;/p&gt;
+
+&lt;h4 id=&#34;re-importing&#34;&gt;Re-importing&lt;/h4&gt;
+
+&lt;p&gt;Next, you&amp;rsquo;ll have to call &lt;code&gt;import()&lt;/code&gt; manually. It&amp;rsquo;s a normal class method call, however, so you can provide all of the arguments as you would to a function or method call.&lt;/p&gt;
+
+&lt;p&gt;You can also switch packages, though make sure that you qualify any calls to Test::* module functions appropriately:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Some::Other::Package;
+
+module-&amp;gt;import( @args );
+
+main::ok( 1, &#39;some test label&#39; );
+
+# or 
+
+::ok( 1, &#39;some test label&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;testing-exports&#34;&gt;Testing Exports&lt;/h4&gt;
+
+&lt;p&gt;There are at least two techniques for checking the import of functions. One is the use of the &lt;code&gt;defined&lt;/code&gt; keyword and the other is through the &lt;code&gt;can()&lt;/code&gt; class method. For example, tests for Example #1 might be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use_ok( &#39;Basic::Exports&#39; );
+ok( defined &amp;amp;foo,              &#39;module should export foo()&#39; )
+ok( __PACKAGE__-&amp;gt;can( &#39;bar&#39; ), &#39;... and should export bar()&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To test that these are the right functions, call them as normal and check their return values.&lt;/p&gt;
+
+&lt;p&gt;By the way, the presence of the &lt;code&gt;__PACKAGE__&lt;/code&gt; symbol there allows this test to take place in other namespaces. If you haven&amp;rsquo;t imported the &lt;code&gt;ok()&lt;/code&gt; test function into this namespace, remember to qualify it, import it manually, or alias it so that the test program will itself run. (It may fail, which is fine, but errors in your tests are difficult and embarrassing to fix.)&lt;/p&gt;
+
+&lt;h4 id=&#34;testing-non-exports&#34;&gt;Testing Non-Exports&lt;/h4&gt;
+
+&lt;p&gt;It&amp;rsquo;s difficult to prove a negative conclusively, but if you reverse the condition of a test, you can have good confidence that the module hasn&amp;rsquo;t provided anything unwanted.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use_ok( &#39;Optional::Exports&#39; );
+ok( ! __PACKAGE__-&amp;gt;can( &#39;foo&#39; ),
+    &#39;module should not export foo() by default&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only tricky part of the tests here is in trying to import functions again. Call &lt;code&gt;import()&lt;/code&gt; explicitly as a class method of the module. Switching packages within the test can make this easier; you don&amp;rsquo;t have to unload the module if you do this.&lt;/p&gt;
+
+&lt;h4 id=&#34;testing-weird-exports&#34;&gt;Testing Weird Exports&lt;/h4&gt;
+
+&lt;p&gt;The easist way to test an &lt;code&gt;import()&lt;/code&gt; function that relies on command-line invocation or produces weird side effects that you may not want to handle in your current program is to launch it as a separate program. There are plenty of options for this, from &lt;code&gt;system&lt;/code&gt; to &lt;code&gt;fork&lt;/code&gt; and &lt;code&gt;exec&lt;/code&gt; to tricks with pipes and shell redirection. &lt;a href=&#34;https://metacpan.org/pod/IPC::Open3&#34;&gt;IPC::Open3&lt;/a&gt; is one good approach, if you want to use it in your test suite:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#! perl
+
+use strict;
+use warnings;
+
+use blib;
+use IPC::Open3;
+
+use Test::More tests =&amp;gt; 3;
+
+use_ok( &#39;Export::Weird&#39; );
+
+my $pid = open3(
+    undef, my $reader, undef,
+    $^X, &#39;-Mblib&#39;, &#39;-MExport::Weird&#39;, &#39;-e&#39;, &#39;1&#39;
+);
+
+my @out = &amp;lt;$reader&amp;gt;;
+is( @out,                                1,
+    &#39;cli invocation should print one line&#39; );
+is( $out[0], &amp;quot;Invoked from command-line\n&amp;quot;,
+    &#39;... with the right message&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$^X&lt;/code&gt; represents the path to the Perl binary currently executing this program. The &lt;code&gt;-Mblib&lt;/code&gt; switch loads the &lt;code&gt;blib&lt;/code&gt; module to set &lt;code&gt;@INC&lt;/code&gt; in the program appropriately. Depending on how you&amp;rsquo;ve set up your directories and invoke this program, you may have to change this. The other commands follow the invocation scheme given in Example #3.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;You should now have several ideas on how to test &lt;code&gt;import()&lt;/code&gt; methods of various kinds. For more details, read the tests of &lt;a href=&#34;https://metacpan.org/pod/Pod::ToDemo&#34;&gt;Pod::ToDemo&lt;/a&gt; or &lt;a href=&#34;https://metacpan.org/pod/Test::Builder&#34;&gt;Test::Builder&lt;/a&gt;, which play strange games to achieve good test coverage.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve found a differently workable approach, I&amp;rsquo;d like to hear from you. Also, if you have suggestions for another kata (or would like to write one), please let me know.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;chromatic is the author of &lt;a href=&#34;http://onyxneon.com/books/modern_perl/&#34;&gt;Modern Perl&lt;/a&gt;. In his spare time, he has been working on &lt;a href=&#34;https://trendshare.org/how-to-invest/&#34;&gt;helping novices understand stocks and investing&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Code Kata: Testing Taint</title>
+      <link>http://localhost:1313/pub/2004/10/21/taint_testing_kata.html/</link>
+      <pubDate>Thu, 21 Oct 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/10/21/taint_testing_kata.html/</guid>
+      <description>
+
+&lt;p&gt;To be a better programmer, practice programming.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s not enough to practice, though. You must practice well and persistently. You need to explore branches and ideas and combinations as they come to your attention. Set aside some time to experiment with a new idea to see what you can learn and what you can use in your normal programming.&lt;/p&gt;
+
+&lt;p&gt;How do you find new ideas? One way is through &lt;a href=&#34;https://pragprog.com/pragdave/Practices/CodeKata.rdoc&#34;&gt;code katas&lt;/a&gt;, short pieces of code that start your learning.&lt;/p&gt;
+
+&lt;p&gt;This article is the first in a series of code kata for Perl programmers. All of these exercises take place in the context of writing tests for Perl programs.&lt;/p&gt;
+
+&lt;p&gt;Why give examples in the context of testing? First, to promote the idea of writing tests. One of the best techniques of writing good, simple, and effective software is to practice test-driven development. Second, because writing tests well is challenging. It often pushes programmers to find creative solutions to difficult problems.&lt;/p&gt;
+
+&lt;h3 id=&#34;taint-testing-kata-1&#34;&gt;Taint Testing Kata #1&lt;/h3&gt;
+
+&lt;p&gt;One of Perl&amp;rsquo;s most useful features is the idea of tainting. If you enable taint mode, Perl will mark every piece of data that comes from an insecure source, such as insecure input, with a taint flag. If you want to use a piece of tainted data in a potentially dangerous way, you must untaint the data by verifying it.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/CGI::Untaint&#34;&gt;CGI::Untaint&lt;/a&gt; module family makes this process much easier for web programs — which often need the most taint protection. There are modules to untaint dates, email addresses, and credit card numbers.&lt;/p&gt;
+
+&lt;p&gt;Recently, I wrote &lt;a href=&#34;https://metacpan.org/pod/CGI::Untaint::boolean&#34;&gt;CGI::Untaint::boolean&lt;/a&gt; to untaint data that comes from checkboxes in web forms. It&amp;rsquo;s a simple module, taking fewer than 20 lines of sparse code that untaints any incoming data and translates a form value of &lt;code&gt;on&lt;/code&gt; into a true value and anything else (including a non-existent parameter) into false.&lt;/p&gt;
+
+&lt;p&gt;Writing the tests proved to be slightly more difficult. How could I make sure that the incoming parameter provided to the module was tainted properly? How could I make sure that the module untaints it properly?&lt;/p&gt;
+
+&lt;p&gt;Given the code for CGI::Untaint::boolean, how would you write the tests?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package CGI::Untaint::boolean;
+
+use strict;
+
+use base &#39;CGI::Untaint::object&#39;;
+
+sub _untaint_re { qr/^(on)$/ }
+
+sub is_valid
+{
+    my $self  = shift;
+    my $value = $self-&amp;gt;value();
+
+    return unless $value and $value =~ $self-&amp;gt;_untaint_re();
+
+    $self-&amp;gt;value( $value eq &#39;on&#39; ? 1 : 0 );
+    return 1;
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Your code should check that it passes in a tainted value and that it receives an untainted value. You should also verify that the resulting value, when extracted from the handler, is not tainted, no matter its previous status.&lt;/p&gt;
+
+&lt;p&gt;Write using one of Perl&amp;rsquo;s core test modules. I prefer &lt;a href=&#34;https://metacpan.org/pod/Test::Simple&#34;&gt;Test::Simple&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/CGI::Untaint::boolean&#34;&gt;Test::More&lt;/a&gt;, but if you must use &lt;a href=&#34;https://metacpan.org/pod/Test&#34;&gt;Test&lt;/a&gt;, go ahead. Assume that &lt;a href=&#34;https://metacpan.org/pod/Test::Harness&#34;&gt;Test::Harness&lt;/a&gt; will honor the &lt;code&gt;-T&lt;/code&gt; flag passed on the command line.&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t read the tests that come with CGI::Untaint::boolean unless you&amp;rsquo;re really stuck. The next section has a further explanation of that technique. For best results, spend at least 30 minutes working through the kata on your own before looking at the hints.&lt;/p&gt;
+
+&lt;h3 id=&#34;tips-tricks-suggestions-and-one-solution&#34;&gt;Tips, Tricks, Suggestions, and One Solution&lt;/h3&gt;
+
+&lt;p&gt;To test tainting properly, you must understand its effects. When Perl sees the &lt;code&gt;-T&lt;/code&gt; or &lt;code&gt;-t&lt;/code&gt; flags, it immediately marks some of its data and environment as tainted. This includes the &lt;code&gt;PATH&lt;/code&gt; environment variable.&lt;/p&gt;
+
+&lt;p&gt;Also, taint is sticky. If you use a piece of tainted data in an expression, it will taint the results of that expression.&lt;/p&gt;
+
+&lt;p&gt;Both of those facts make it easy to find a source of taint. CGI::Untaint::boolean&amp;rsquo;s do the following to make tainted data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tainted_on = substr( &#39;off&#39; . $ENV{PATH}, 0, 3 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Concatenating the clean string &lt;code&gt;off&lt;/code&gt; with the tainted value of the &lt;code&gt;PATH&lt;/code&gt; environment variable produces a tainted string. The &lt;code&gt;substr()&lt;/code&gt; expression then returns the equivalent of original string with tainting added.&lt;/p&gt;
+
+&lt;p&gt;How can you tell if a variable holds a tainted value? The Perl FAQ gives one solution that attempts to perform an unsafe operation with tainted data, but I prefer the &lt;a href=&#34;https://metacpan.org/pod/Scalar::Util&#34;&gt;Scalar::Util&lt;/a&gt; module&amp;rsquo;s &lt;code&gt;tainted()&lt;/code&gt; function. It&amp;rsquo;s effectively the same thing, but I don&amp;rsquo;t have to remember any abnormal details.&lt;/p&gt;
+
+&lt;p&gt;This technique does rely on Test::Harness launching the test program with the &lt;code&gt;-T&lt;/code&gt; flag. If that&amp;rsquo;s not an option, the test program itself could launch other programs with that flag, using the &lt;code&gt;$^X&lt;/code&gt; variable to find the path of the currently executing Perl. It may be worthwhile to check that the &lt;code&gt;-T&lt;/code&gt; flag is in effect before skipping the rest of the tests or launching a new process and reporting its results.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;prove&lt;/code&gt; utility included with recent versions of Test::Harness may come in handy; launch the test with &lt;code&gt;prove -T testfile.t&lt;/code&gt; to run under taint mode. See &lt;code&gt;perldoc prove&lt;/code&gt; for more information.&lt;/p&gt;
+
+&lt;p&gt;You could also use this approach to launch programs designed to abort if the untainting fails, checking for exit codes automatically. It seems much easier to use Scalar::Util though.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;This should give you everything you need to solve the problem. Check your code against the tests for CGI::Untaint::boolean.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve found a differently workable approach, I&amp;rsquo;d like to hear from you. Also, if you have suggestions for another kata (or would like to write one), please let me know.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;chromatic is the author of &lt;a href=&#34;http://onyxneon.com/books/modern_perl/&#34;&gt;Modern Perl&lt;/a&gt;. In his spare time, he has been working on &lt;a href=&#34;https://trendshare.org/how-to-invest/&#34;&gt;helping novices understand stocks and investing&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

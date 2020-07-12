@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>P5p on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/p5p/</link>
+    <description>Recent content in P5p on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 23 Jul 2018 09:01:37 +0000</lastBuildDate>
+    <atom:link href="/tags/p5p/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Patching Perl: loading modules that return false</title>
+      <link>http://localhost:1313/article/patching-perl-loading-modules-that-return-false/</link>
+      <pubDate>Mon, 23 Jul 2018 09:01:37 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/patching-perl-loading-modules-that-return-false/</guid>
+      <description>
+
+&lt;p&gt;[&lt;strong&gt;Update&lt;/strong&gt;: this is now &lt;a href=&#34;https://github.com/Perl/perl5/issues/17921&#34;&gt;an issue for Perl 7&lt;/a&gt;]&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve been programming Perl for a while, you&amp;rsquo;ve probably run into this exception: &lt;code&gt;Foo.pm did not return a true value&lt;/code&gt;. This is a peculiar quirk of the &lt;code&gt;require&lt;/code&gt; function: modules &lt;em&gt;must&lt;/em&gt; return a true value else Perl interprets it as a failure:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The file must return true as the last statement to indicate
+successful execution of any initialization code, so it&amp;rsquo;s customary
+to end such a file with &amp;ldquo;1;&amp;rdquo; unless you&amp;rsquo;re sure it&amp;rsquo;ll return true
+otherwise. But it&amp;rsquo;s better just to put the &amp;ldquo;1;&amp;rdquo;, in case you add
+more statements.
+&lt;br /&gt;
+&lt;em&gt;perlfunc&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I don&amp;rsquo;t find this feature useful: if a module fails to initialize, it could call &lt;code&gt;die&lt;/code&gt; with a meaningful error message, instead of returning false and Perl croaking with a generic message. I would wager that the majority of the time this exception is encountered, it&amp;rsquo;s because the programmer &lt;em&gt;forgot&lt;/em&gt; to append a true value to their module code. If one ethos of Perl is optimizing for the common case, croaking on require returning false doesn&amp;rsquo;t seem to fit.&lt;/p&gt;
+
+&lt;p&gt;Many other features of Perl have been adopted by other languages, from its regular expression syntax, to &lt;code&gt;use strict&lt;/code&gt; (hello JavaScript!). But I don&amp;rsquo;t know of any language that has copied this feature - perhaps because it&amp;rsquo;s not very useful?&lt;/p&gt;
+
+&lt;h3 id=&#34;allowing-require-to-return-false&#34;&gt;Allowing require to return false&lt;/h3&gt;
+
+&lt;p&gt;So what could I do about this? In order to allow modules to be loaded that don&amp;rsquo;t return a true value, the Perl source code would need to be changed. I&amp;rsquo;ve dumpster-dived into the source occasionally to help better understand the Perl interpreter API, but I&amp;rsquo;ve never changed the source code before &amp;hellip; until now!&lt;/p&gt;
+
+&lt;p&gt;The first thing I did was fork the Perl &lt;a href=&#34;https://github.com/Perl/perl5&#34;&gt;source code&lt;/a&gt;. I started grepping the code for the exception message &amp;ldquo;did not return a true value&amp;rdquo; and sure enough, I found the function &lt;code&gt;S_pop_eval_context_maybe_croak&lt;/code&gt; in &lt;code&gt;pp_ctl.c&lt;/code&gt;. This function is called when an eval completes (&lt;code&gt;require&lt;/code&gt; evals the code it&amp;rsquo;s trying to load) in order to clean up the stack and optionally, croak if an exception was encountered. It accepts a number between 0 and 2: 0 means &amp;ldquo;don&amp;rsquo;t croak&amp;rdquo;, 1 means &amp;ldquo;croak: require did not return a true value&amp;rdquo;, and 2 means &amp;ldquo;croak: require triggered a compilation error&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;Next I searched for callers to &lt;code&gt;S_pop_eval_context_maybe_croak&lt;/code&gt; and found just one caller that passed a 1 to the function, this was the &amp;ldquo;leave eval&amp;rdquo; op code declaration, that included this logic:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;failed &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;    CxOLD_OP_TYPE(cx) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; OP_REQUIRE
+             &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;(gimme &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; G_SCALAR
+                    &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt; SvTRUE_NN(&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;PL_stack_sp)
+                    &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; PL_stack_sp &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; oldsp);
+
+...
+
+&lt;span style=&#34;color:#75715e&#34;&gt;/* pop the CXt_EVAL, and if a require failed, croak */&lt;/span&gt;
+S_pop_eval_context_maybe_croak(aTHX_ cx, NULL, failed);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Does this C code hurt your eyes? Welcome to the world of Perl internals! What it does is check if the current Perl context is a require op, and then if the return context is scalar, check if the top value on the stack is true or not, else (for list context) it checks that the stack count has increased.&lt;/p&gt;
+
+&lt;p&gt;So I &lt;a href=&#34;https://github.com/dnmfarrell/perl5/commit/a27d5730eca477a85b81f3226c13ba87f52b5857&#34;&gt;deleted&lt;/a&gt; the &lt;code&gt;failed&lt;/code&gt; code block, and changed the call to &lt;code&gt;S_pop_eval_context_maybe_croak&lt;/code&gt; to always pass 0 instead.&lt;/p&gt;
+
+&lt;p&gt;Then I compiled the source:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./Configure -des -Dusedevel -Dprefix&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;$HOME/blead-perl
+$ make -j4&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Finally I created a module called &amp;ldquo;Foo.pm&amp;rdquo; that only contained: &lt;code&gt;0;&lt;/code&gt;. Then I tried to load it with the newly compiled Perl:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./perl -I. -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;require &amp;#34;Foo.pm&amp;#34;&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And I didn&amp;rsquo;t see a &amp;ldquo;Foo.pm did not return a true value&amp;rdquo; error, yay!&lt;/p&gt;
+
+&lt;h3 id=&#34;making-it-a-feature&#34;&gt;Making it a &amp;ldquo;feature&amp;rdquo;&lt;/h3&gt;
+
+&lt;p&gt;I don&amp;rsquo;t think P5P (the group that maintains the Perl source code) would accept my change as-is. For one thing, any code that &lt;em&gt;does&lt;/em&gt; rely on the require returning false feature would be broken by the next Perl release. The preferred way to introduce new behavior these days is to use the &lt;a href=&#34;https://metacpan.org/pod/feature&#34;&gt;feature&lt;/a&gt; pragma. So I removed my previous changes and tried to implement allowing require to return false as a feature.&lt;/p&gt;
+
+&lt;p&gt;The Perl source code has a handy utility called &lt;a href=&#34;https://github.com/dnmfarrell/perl5/blob/66f43943f438f5bc7970dab0b7940e46c84909f5/regen/feature.pl&#34;&gt;regen/feature.pl&lt;/a&gt; which takes care of generating the necessary C and Perl code to implement the feature flag. All you have to do is add the new feature&amp;rsquo;s name to &lt;code&gt;regen/feature.pl&lt;/code&gt;, and then run the script to add it to the Perl source.&lt;/p&gt;
+
+&lt;p&gt;I added the &amp;ldquo;require_false&amp;rdquo; feature to &lt;code&gt;regen/feature.pl&lt;/code&gt; and ran the script, resulting in these &lt;a href=&#34;https://github.com/dnmfarrell/perl5/commit/66f43943f438f5bc7970dab0b7940e46c84909f5#diff-731afc105e527b56f99b7fa4c365e82c&#34;&gt;changes&lt;/a&gt;. This added the macro &lt;code&gt;FEATURE_REQUIRE_FALSE_IS_ENABLED&lt;/code&gt; to &lt;code&gt;header.h&lt;/code&gt;, which I&amp;rsquo;ll use later to check if the feature is enabled or not. Also note because &lt;code&gt;require_false&lt;/code&gt; was the longest feature name in the set, the script also updated the &lt;code&gt;MAX_FEATURE_LEN&lt;/code&gt; macro value so that the Perl&amp;rsquo;s interpreter would compare the right number of bytes when checking feature names.&lt;/p&gt;
+
+&lt;h3 id=&#34;adding-tests&#34;&gt;Adding tests&lt;/h3&gt;
+
+&lt;p&gt;At this stage I&amp;rsquo;ve created a new feature, but don&amp;rsquo;t use it anywhere. This felt like a good time to update the source code tests to check if the feature works: at first it won&amp;rsquo;t, but whilst I&amp;rsquo;m working on the feature I can quickly recompile and run the tests to check.&lt;/p&gt;
+
+&lt;p&gt;Searching through the battery of tests that ship with Perl, I found &lt;a href=&#34;https://github.com/dnmfarrell/perl5/blob/5bad2b3959332943ca48f8b4f44af83effad4314/t/comp/require.t&#34;&gt;t/comp/require.t&lt;/a&gt; which tests that &lt;code&gt;require&lt;/code&gt; does the right thing when loading modules. One interesting thing about the Perl source test suite is they can&amp;rsquo;t use common tools we use for testing like &lt;code&gt;Test::More&lt;/code&gt;, instead they just print TAP output and let the test harness figure it out.&lt;/p&gt;
+
+&lt;p&gt;I updated &lt;a href=&#34;https://github.com/dnmfarrell/perl5/commit/66ee6057c84e8bcb50f73ed1a11c62df60277f58&#34;&gt;t/comp/require.t&lt;/a&gt; to enable the new feature, and test loading a module returning a false value. I also test that compilation errors are not ignored when the feature is enabled. Because pragmas are scoped, I had to write the tests within a block, but also I couldn&amp;rsquo;t use the test helper function &lt;code&gt;do_require&lt;/code&gt; to handle everything for me, as it would be executed in a different scope:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;use feature &amp;#39;require_false;&amp;#39;\n&amp;#34;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;require_false&amp;#39;&lt;/span&gt;;
+    write_file(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bleah.pm&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0;&amp;#39;&lt;/span&gt;);
+    %INC &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ();
+    eval { &lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;bleah.pm&amp;#34;&lt;/span&gt; };
+    $i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;not &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $@ &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/did not return a true value/&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ok $i - require loads module returning 0\n&amp;#34;&lt;/span&gt;;
+    write_file(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bleah.pm&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;die &amp;#34;foobar&amp;#34;;&amp;#39;&lt;/span&gt;);
+    %INC &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ();
+    eval { &lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;bleah.pm&amp;#34;&lt;/span&gt; };
+    $i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;not &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $@ &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/foobar/&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ok $i - require throws compile error\n&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Notice how &lt;code&gt;%INC&lt;/code&gt; is cleared before each test as Perl won&amp;rsquo;t reload a module that it finds in &lt;code&gt;%INC&lt;/code&gt; already. I then recompiled Perl via &lt;code&gt;make&lt;/code&gt; and ran the test with:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./perl -I. -MTestInit t/comp/require.t
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;..60
+ok &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; - require &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;.005 try &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+...
+&lt;span style=&#34;color:#75715e&#34;&gt;# use feature &amp;#39;require_false&amp;#39;;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;not ok &lt;span style=&#34;color:#ae81ff&#34;&gt;59&lt;/span&gt; - require loads module returning &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+ok &lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt; - require throws compile error&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And as expected, the module wasn&amp;rsquo;t loaded. By the way, &lt;code&gt;TestInit&lt;/code&gt; is a useful module to load to avoid running the entire Perl source test suite which can take a long time when you only want to test certain behavior (I ran &lt;code&gt;make -j4 &amp;amp;&amp;amp; ./perl -I. -MTestInit t/comp/require.t&lt;/code&gt; countless times).&lt;/p&gt;
+
+&lt;h3 id=&#34;using-the-feature&#34;&gt;Using the feature&lt;/h3&gt;
+
+&lt;p&gt;In my previous change I updated the &lt;a href=&#34;https://github.com/dnmfarrell/perl5/blob/521634c9fb488f9e3a1310d7eec7ab9a94dc2188/pp_ctl.c#L4506&#34;&gt;leave eval op declaration&lt;/a&gt; in &lt;code&gt;pp_ctl.c&lt;/code&gt; and that would seem like a logical place to add a check that the feature was enabled or not, and tell &lt;code&gt;S_pop_eval_context_maybe_croak&lt;/code&gt; to croak or not. However, I found that this didn&amp;rsquo;t work, and even when the feature was enabled, &lt;code&gt;FEATURE_REQUIRE_FALSE_IS_ENABLED&lt;/code&gt; was always false.&lt;/p&gt;
+
+&lt;p&gt;I think this is because the line beginning &lt;code&gt;PP(pp_leaveval)&lt;/code&gt; is declaring a new op via the &lt;code&gt;PP&lt;/code&gt; macro - it&amp;rsquo;s not a C function declaration. Instead of that, I tried adding the logic to &lt;code&gt;S_pop_eval_context_maybe_croak&lt;/code&gt; itself and it worked. The &lt;a href=&#34;https://github.com/dnmfarrell/perl5/commit/a003a3f0354ba227835a3c1e29141a354aa13e78&#34;&gt;change&lt;/a&gt; turned out to be very simple. I imported &lt;code&gt;feature.h&lt;/code&gt; and then added a logical condition to the &lt;code&gt;do_croak&lt;/code&gt; assignment which checks if &lt;code&gt;FEATURE_REQUIRE_FALSE_IS_ENABLED&lt;/code&gt; is enabled or not. I explained the &lt;code&gt;action&lt;/code&gt; variable earlier: if it has a value of 2 that means there was compilation error, which we still want to allow to croak.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;S_pop_eval_context_maybe_croak(pTHX_ PERL_CONTEXT &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;cx, SV &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;errsv, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; action)
+    ...
+    do_croak &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; action &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; (CxOLD_OP_TYPE(cx) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; OP_REQUIRE) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;
+        (&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;FEATURE_REQUIRE_FALSE_IS_ENABLED &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; action &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;);
+    ...&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All that was left was to re-compile and run the tests again:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./perl -I. -MTestInit t/comp/require.t
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;..60
+ok &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; - require &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;.005 try &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+...
+&lt;span style=&#34;color:#75715e&#34;&gt;# use feature &amp;#39;require_false&amp;#39;;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;ok &lt;span style=&#34;color:#ae81ff&#34;&gt;59&lt;/span&gt; - require loads module returning &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+ok &lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt; - require throws compile error&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All the &lt;code&gt;require&lt;/code&gt; tests pass, woohoo!&lt;/p&gt;
+
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap-up&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m planning on getting feedback from P5P on this change: implementation-wise, I&amp;rsquo;m not sure if I&amp;rsquo;ve violated an unwritten rule by importing &lt;code&gt;feature.h&lt;/code&gt; into &lt;code&gt;pp_ctl.c&lt;/code&gt;. If I have, another way to achieve the same thing would be to declare a new a private flag for the require op, and set it in &lt;code&gt;perly.y&lt;/code&gt; in the sections of the grammar which create a new require op (whenever it encounters &lt;code&gt;require&lt;/code&gt; in Perl code). The flag could then be checked in &lt;code&gt;pp_ctl.c&lt;/code&gt; instead of the feature is enabled macro.&lt;/p&gt;
+
+&lt;p&gt;Whilst this change is relatively safe - modules are free to continue to return a true value if they want to, I worry that it&amp;rsquo;s not useful enough to warrant being a feature. I struggle to imagine users of 5.30 next year eagerly adding this feature to their code. Maybe it&amp;rsquo;s not worth changing?&lt;/p&gt;
+
+&lt;p&gt;Yet another way it could be implemented is to deprecate the exception: &amp;ldquo;Foo.pm did not return a true value. WARNING This behavior is deprecated and will be removed in a future version of Perl&amp;rdquo;. This would have the advantage of not adding a new feature (more code, version complexity), and giving users of the feature advanced warning of its removal. And when the behavior is removed it would result in &lt;em&gt;less&lt;/em&gt; code in the Perl source, which seems like a win to me.&lt;/p&gt;
+
+&lt;p&gt;Working with the Perl source can be intimidating: it&amp;rsquo;s a large collection of advanced C code, which leans heavily on macros. The source&amp;rsquo;s conventions can be opaque too: function, macro and variable names often follow a logical, but unintuitive naming format. Previously I&amp;rsquo;ve found myself unpacking a macro declaration to find it contains &amp;hellip; another macro, and another macro inside that one and so on. It&amp;rsquo;s easy to forget the context and get lost in the code.&lt;/p&gt;
+
+&lt;p&gt;Sometimes I&amp;rsquo;ve had to literally write out call chains on paper to keep track. But it is incredibly satisfying to change Perl&amp;rsquo;s behavior to suit your tastes. Imagine with that power, what would &lt;em&gt;you&lt;/em&gt; change? It might not be an easy road, but things of value rarely come easily, and if nothing else you might learn more about how Perl works internally, and pick up some new C programming tricks along the way.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>P5P update: Smarter Match</title>
+      <link>http://localhost:1313/article/p5p-update-smarter-match/</link>
+      <pubDate>Thu, 22 Feb 2018 08:30:36 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/p5p-update-smarter-match/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;This post will be part of a new communication channel between p5p and the community. We hope to share more with you and keep you up-to-date using this platform.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;On December 20th, 2017, we released Perl 5.27.7, which included a massive change to &lt;a href=&#34;https://perldoc.perl.org/perlop.html#Smartmatch-Operator&#34;&gt;smartmatch&lt;/a&gt;. Since then it has been reverted. What happened?&lt;/p&gt;
+
+&lt;p&gt;Smartmatch has a long history. It was introduced in 5.10 back in December 2007 and significantly revised in 5.10.1. It was a good idea, but ended up causing more harm than good to the point it was deemed unreliable.&lt;/p&gt;
+
+&lt;p&gt;In an unprecedented step, it was marked as &amp;ldquo;experimental&amp;rdquo; in Perl 5.18.0, released in May 2013. Here is the mention of this in &lt;a href=&#34;https://perldoc.perl.org/perl5180delta.html&#34;&gt;perldelta&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Smartmatch, added in v5.10.0 and significantly revised in v5.10.1, has been a regular point of complaint. Although there are some ways in which it is useful, it has also proven problematic and confusing for both users and implementors of Perl. There have been some proposals on how to best address the problem. It is clear that smartmatch is almost certainly either going to change or go away in the future. Relying on its current behavior is not recommended.&lt;/p&gt;
+
+&lt;p&gt;Warnings will now be issued when the parser sees &lt;code&gt;~~&lt;/code&gt;, &lt;code&gt;given&lt;/code&gt;, or &lt;code&gt;when&lt;/code&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Since then, various threads were raised on how to resolve it. The decided approach was to simplify the syntax considerably. It took several rounds of discussions (with some bike-shedding) to settle what to simplify and to reach an agreement on the new behavior.&lt;/p&gt;
+
+&lt;p&gt;Last year we had finally reached an agreement on the significant perspectives. The changes were implemented by Zefram, a core developer. The work was published on a public branch for comments.&lt;/p&gt;
+
+&lt;p&gt;When no objections were filed, Zefram merged the new branch. It was included in the &lt;a href=&#34;https://github.com/Perl/perl5/releases/tag/v5.27.7&#34;&gt;5.27.7&lt;/a&gt; development release.&lt;/p&gt;
+
+&lt;p&gt;Following the release of this development version, issues started popping up with the effect this change made. A fair portion of CPAN was breaking to the point that one of the dedicated Perl testers decided it was unfeasible for them to continue testing. Subsequently, we decided to revert this change.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-went-wrong&#34;&gt;What went wrong?&lt;/h3&gt;
+
+&lt;p&gt;First of all, it was clear that moving smartmatch to experimental did not achieve what we had hoped. Features are marked as experimental to allow us to freely (for some value of &amp;ldquo;freely&amp;rdquo;) adjust and tinker with them until we are comfortable making them stable. The policy is that any experimental feature can be declared stable after two releases with no behavioral change. With smartmatch, it was marked after numerous versions in which it existed as a stable feature.&lt;/p&gt;
+
+&lt;p&gt;Secondly, the change was massive. This in and of itself is not necessarily wrong, but how we handled it leaves room for improvement.&lt;/p&gt;
+
+&lt;p&gt;Thirdly, centering the communication around this change on the core mailing list was insufficient to receive enough feedback and eyes on the problem and the proposed solution. We should have published it off the list and sought more input and comments. We hope to use this platform to accomplish that.&lt;/p&gt;
+
+&lt;p&gt;Fourthly, we could have asked our dedicated testers for help on running additional, specific tests, to view what would break on CPAN and how damaging this change could be.&lt;/p&gt;
+
+&lt;h3 id=&#34;where-do-we-go-from-here&#34;&gt;Where do we go from here?&lt;/h3&gt;
+
+&lt;p&gt;Despite not being the best way to learn from a mistake, there was minimal damage. The new syntax and behavior were only available on a single development release, did not reach any production code, and was reverted within that single release.&lt;/p&gt;
+
+&lt;p&gt;To address smartmatch again, we will need to reflect upon our mistakes and consider approaching it again by communicating the change better and by receiving additional feedback to both offer a useful feature and pleasing syntax. This will take time, and we are not rushing to revisit smartmatch at the moment.&lt;/p&gt;
+
+&lt;p&gt;We apologize for the scare and we appreciate the quick responses to resolve this situation. Thank you.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>An Open Letter to the Perl Community</title>
+      <link>http://localhost:1313/article/an-open-letter-to-the-perl-community/</link>
+      <pubDate>Wed, 17 Jan 2018 08:22:27 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/an-open-letter-to-the-perl-community/</guid>
+      <description>
+
+&lt;p&gt;The past few months I&amp;rsquo;ve been wracking my brain on how to bring &lt;a href=&#34;https://www.perl.org&#34;&gt;Pumpkin Perl&amp;nbsp;5&lt;/a&gt; (or &lt;code&gt;perl&lt;/code&gt;, as in the version of Perl that is maintained by the Perl&amp;nbsp;5 Porters) and &lt;a href=&#34;https://www.perl6.org&#34;&gt;Rakudo Perl&amp;nbsp;6&lt;/a&gt; (or &lt;code&gt;perl6&lt;/code&gt;, as in the implementation of Perl&amp;nbsp;6 based on NQP and &lt;a href=&#34;http://moarvm.org&#34;&gt;MoarVM&lt;/a&gt;) closer together again. Yes, I haven&amp;rsquo;t given up on this idea, although my first attempt (organizing the &lt;a href=&#34;https://szabgab.com/perl-reunification-summit-2012.html&#34;&gt;Perl Reunification Summit in 2012&lt;/a&gt;) hasn&amp;rsquo;t really worked out the way I had hoped it would. But it did have some positive effects, because it brought together people from the Perl community that normally would never have been in a discussion, and some nice advances were made for Perl&amp;nbsp;6.&lt;/p&gt;
+
+&lt;p&gt;I am still interested in getting Perl&amp;nbsp;5 and Perl&amp;nbsp;6 together, because they both share the same Perl Mindset, a mix of just enough DWIM (Do What I Mean) and not too much of &lt;a href=&#34;https://www.destroyallsoftware.com/talks/wat&#34;&gt;WAT&lt;/a&gt; (What is it doing now???).&lt;/p&gt;
+
+&lt;p&gt;I know Perl&amp;nbsp;6 has had a complicated development process. You could argue that Perl&amp;nbsp;6 is the fourth implementation attempt. It is also the first Perl&amp;nbsp;6 implementation that actually works, interfaces seamlessly with &lt;a href=&#34;http://modules.perl6.org/dist/Inline::Perl5:cpan:NINE&#34;&gt;Perl&amp;nbsp;5&lt;/a&gt; and &lt;a href=&#34;https://github.com/niner/Inline-Python/blob/master/README.md&#34;&gt;Python&lt;/a&gt; or any &lt;a href=&#34;https://docs.perl6.org/language/nativecall&#34;&gt;external C library&lt;/a&gt; out of the box, is beating Perl&amp;nbsp;5 on more and more &lt;a href=&#34;http://news.perlfoundation.org/2017/11/perl-6-performance-and-reliabi-4.html&#34;&gt;micro-benchmarks&lt;/a&gt;, and is being used in production, especially in the area of &lt;a href=&#34;http://mi.cro.services&#34;&gt;Micro Services&lt;/a&gt; and &lt;a href=&#34;https://perl6advent.wordpress.com/2017/12/13/&#34;&gt;parsing of non-ASCII languages&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Some consider Perl 6 to be a sister language to Perl 5. Personally, I consider Perl 6 more of a genetically engineered daughter language with the best genes from many parents. A daughter with a difficult childhood, in which she alienated many, who is now getting out of puberty into early adulthood. But I digress.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-butterfly-perl-nbsp-5-project&#34;&gt;The Butterfly Perl&amp;nbsp;5 Project&lt;/h3&gt;
+
+&lt;p&gt;There is no clear upgrade path from Perl&amp;nbsp;5 to Perl&amp;nbsp;6 and this means that there is no chance of combining Perl&amp;nbsp;5 and Perl&amp;nbsp;6 to become more than the sum of their parts. The Perl&amp;nbsp;5 Porters are still adding features that are inspired by Perl&amp;nbsp;6, which further confuses the picture.&lt;/p&gt;
+
+&lt;p&gt;A radical idea would be that the Perl&amp;nbsp;5 Porters would go back to their original goal: &lt;strong&gt;porting&lt;/strong&gt; Perl&amp;nbsp;5. But this time, not to different operating systems, but porting Perl&amp;nbsp;5 to different Virtual Machines. Place a moratorium on new features, with development confined to maintenance on the current runtime. This would safeguard the most valued feature of Perl&amp;nbsp;5, its stability and backwards compatibility. But I digress again.&lt;/p&gt;
+
+&lt;p&gt;Porting Perl&amp;nbsp;5 to NQP (Not Quite Perl, one of the implementation languages of Rakudo Perl&amp;nbsp;6) would provide such a migration path. Basically this would be the revival of the &lt;a href=&#34;https://github.com/rakudo-p5/v5&#34;&gt;&amp;ldquo;use v5&amp;rdquo;&lt;/a&gt; project, which implements a version of Perl&amp;nbsp;5 as a slang (sub-language) of Perl&amp;nbsp;6. Such an effort would provide a clear migration path from the 30 year old &lt;code&gt;perl&lt;/code&gt; interpreter to a modern VM, allowing execution of Perl&amp;nbsp;5 source code on MoarVM, JVM and JavaScript backends. Thus guaranteeing a life for Perl&amp;nbsp;5 as a programming language way into the future, taking advantage of all the multi-processing features that a modern VM provides.&lt;/p&gt;
+
+&lt;p&gt;In the short term, it would still be slower than Perl&amp;nbsp;5, but in the long run it would be running faster. This is because of the Just-In-Time compilation of hot code, which optimizes all source code to machine code on the fly, rather than the path of hand-optimizing hot code into XS. Although I wholeheartedly would support a Butterfly Perl&amp;nbsp;5 Project, I&amp;rsquo;ve also come to the conclusion that it is no longer an itch I would want to scratch personally at this moment.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-cpan-butterfly-plan&#34;&gt;The CPAN Butterfly Plan&lt;/h3&gt;
+
+&lt;p&gt;But what does Perl&amp;nbsp;5 consist of anyway? It&amp;rsquo;s a runtime &lt;a href=&#34;https://github.com/Perl/perl5&#34;&gt;written in C and a Macro language&lt;/a&gt;. But it&amp;rsquo;s also a core &lt;a href=&#34;https://github.com/Perl/perl5/tree/blead/lib&#34;&gt;set of modules&lt;/a&gt; with defined APIs and documentation. To many, the modules on CPAN are an integral part of Perl 5. Many of these modules would need to be ported for a Butterfly Perl&amp;nbsp;5 Project. But porting them would be very useful to Perl&amp;nbsp;6 in and of itself because it would make porting user Perl 5 programs to Perl 6 much easier. Therefore I am starting an effort to mass-migrate Perl&amp;nbsp;5 modules to Perl&amp;nbsp;6, both core modules and others on CPAN.&lt;/p&gt;
+
+&lt;p&gt;We are developing a &amp;ldquo;How to port a Perl&amp;nbsp;5 Module to Perl&amp;nbsp;6&amp;rdquo; guide, covering things like naming conventions, exports, translating Perl&amp;nbsp;5 OO into Perl&amp;nbsp;6 OO, scoping gotchas and threading. Plus notes on various built-in features of Perl&amp;nbsp;6 which may be useful when porting semantics rather than code.&lt;/p&gt;
+
+&lt;p&gt;Next we&amp;rsquo;ll create a website to register contributors who will take responsibility for porting a Perl&amp;nbsp;5 module to Perl&amp;nbsp;6 (e.g. from the &lt;a href=&#34;https://github.com/perl6/perl6-most-wanted&#34;&gt;Most Wanted list&lt;/a&gt;). Contributors will link to a GitHub repo from where they&amp;rsquo;ll write the code, handle Pull Requests and give out commit bits. Ported modules would be uploaded to CPAN as new Perl 6 distributions.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll create a leaderboard which ranks contributors progress. The position on the leaderboard could be defined as the product of:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;size of the original Perl&amp;nbsp;5 module in lines of code + documentation + tests&lt;/li&gt;
+&lt;li&gt;% completion of the migration, to be indicated by the contributor and judged by a jury of peers&lt;/li&gt;
+&lt;li&gt;bonus points if the documentation and/or tests are improved on the fly&lt;/li&gt;
+&lt;li&gt;bonus points if XS code is involved and there is no Pure Perl implementation available&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Sponsors would match migrated code with donations to the &lt;a href=&#34;http://www.perlfoundation.org/perl_6_core_development_fund&#34;&gt;Perl&amp;nbsp;6 Core development fund&lt;/a&gt;, so that contributors not only get to support Perl&amp;nbsp;6 directly, but also indirectly support the further development of the core of Perl&amp;nbsp;6. Something in the order of a cent per converted line of Perl&amp;nbsp;5 code / documentation / tests, to be donated at the moment a jury of peers has decided the converted module is functional enough to be &amp;ldquo;published&amp;rdquo; as a 1.0 version.&lt;/p&gt;
+
+&lt;p&gt;The leaderboard would be backed by a website that that tracks all of this activity, along the lines of &lt;a href=&#34;https://alerts.perl6.org&#34;&gt;alerts.perl6.org&lt;/a&gt;, with an API and social media interface.&lt;/p&gt;
+
+&lt;p&gt;This should make 2018 the year that people really start to migrate their code from Perl&amp;nbsp;5 to Perl&amp;nbsp;6. Be it because they can, they want to try, or just to see how Perl&amp;nbsp;6 will work out for them.&lt;/p&gt;
+
+&lt;h3 id=&#34;winding-down&#34;&gt;Winding down&lt;/h3&gt;
+
+&lt;p&gt;I sincerely hope that enough people will support the CPAN Butterfly Plan, and maybe a Butterfly Perl&amp;nbsp;5 Project. So that we can all start moving forward in one direction, rather than two. If you&amp;rsquo;d like to get involved, please join us on the #perl6-dev channel on &lt;a href=&#34;http://freenode.net&#34;&gt;irc.freenode.net&lt;/a&gt;. If you don&amp;rsquo;t have an IRC app installed, you can talk to us in your browser via the &lt;a href=&#34;http://webchat.freenode.net/?channels=perl6-dev&amp;amp;nick=&#34;&gt;web-interface&lt;/a&gt; instead.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,891 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Robert Spier on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/robert-spier/</link>
+    <description>Recent content in Robert Spier on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 18 Sep 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/robert-spier/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Embedding Web Servers</title>
+      <link>http://localhost:1313/pub/2002/09/17/ewispp.html/</link>
+      <pubDate>Wed, 18 Sep 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/09/17/ewispp.html/</guid>
+      <description>
+
+&lt;p&gt;As with most of my previous articles, this one grew out of a project at my $DAY_JOB. The project du-jour involves large dependency graphs, often containing thousands of nodes and edges. Some of the relationships are automatically generated and can be quite complicated. When something goes wrong, it&amp;rsquo;s useful to be able to visualize the graph.&lt;/p&gt;
+
+&lt;p&gt;Simple Graph:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_09_17_ewispp/graph.gif&#34; alt=&#34;A Simple Graph&#34; /&gt;
+We use &lt;a href=&#34;http://www.graphviz.org&#34;&gt;GraphViz&lt;/a&gt; for rendering the graph, but it falls down on huge graphs. They turn into an unreadable mess of thick lines &amp;ndash; less than useful. To work around this, we trim down the graph to just a segment, centered around one node, and display only n inputs or outputs.&lt;/p&gt;
+
+&lt;p&gt;This works great, except that the startup time to create the graph data can be quite long, because of all the graph processing that is necessary to make sure the information is up to date. (The actually graph rendering is quite fast, for small graphs.)&lt;/p&gt;
+
+&lt;p&gt;The solution? Process the data once, and render it multiple times, using, yes, you guessed it, a Web interface!&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-mechanics-of-http-mechanics-of-http-span&#34;&gt;&lt;span id=&#34;mechanics_of_http&#34;&gt;Mechanics of HTTP&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://www.w3.org/Protocols/rfc2616/rfc2616.html&#34;&gt;Hyper Text Transfer Protocol (HTTP)&lt;/a&gt;, is the protocol on which most of the Web thrives. It is a simple client/server protocol that runs over TCP/IP sockets.&lt;/p&gt;
+
+&lt;p&gt;Extremely oversimplified, it looks like this:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Client sends request to server: &amp;ldquo;Send me document named X&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;Server responds to client: &amp;ldquo;Here&amp;rsquo;s the data you asked for&amp;rdquo; (or &amp;ldquo;Sorry! I don&amp;rsquo;t know what you mean.&amp;rdquo;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In practice, it&amp;rsquo;s not much more complicated:&lt;/p&gt;
+
+&lt;p&gt;We will use &lt;a href=&#34;http://www.wget.org&#34;&gt;wget&lt;/a&gt; to examine a sample HTTP request:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;wget -dq http://www.perl.org/index.shtml&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; ---request begin---
+ GET /index.shtml HTTP/1.0
+ User-Agent: Wget/1.8.1
+ Host: www.perl.org
+ Accept: */*
+ Connection: Keep-Alive
+
+ ---request end---
+ HTTP/1.1 200 OK
+ Date: Tue, 13 Aug 2002 18:12:23 GMT
+ Server: Apache/2.0.40 (Unix)
+ Accept-Ranges: bytes
+ Content-Length: 10494
+ Keep-Alive: timeout=15, max=100
+ Connection: Keep-Alive
+ Content-Type: text/html; charset=ISO-8859-1
+
+ &amp;lt;... data downloaded to a file by wget...&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s a lot of things we don&amp;rsquo;t care about in a simple server - so lets boil it down to the guts.&lt;/p&gt;
+
+&lt;p&gt;Request:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; GET /index.shtml HTTP/1.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;GET&lt;/code&gt; is the type of HTTP action. There are others, but they&amp;rsquo;re beyond the scope of this article.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;/index.shtml&lt;/code&gt; is the name of the page to retrieve.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;HTTP/1.0&lt;/code&gt; is the protocol version supported by your client.&lt;/p&gt;
+
+&lt;p&gt;Response:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; HTTP/1.1 200 OK
+ Content-Type: text/html;
+
+ &amp;lt;data&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first line is the status response. It includes the HTTP protocol version supported by the server, followed by the &lt;a href=&#34;http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10&#34;&gt;status code&lt;/a&gt; and a short text string defining the status.&lt;/p&gt;
+
+&lt;p&gt;For this article, we&amp;rsquo;ll just care about status code 200 (everything is ok, here&amp;rsquo;s the data) and code &amp;lsquo;404&amp;rsquo; (not found).&lt;/p&gt;
+
+&lt;p&gt;The next line is the MIME content type. This is required so that the Web browser knows how to display the data.&lt;/p&gt;
+
+&lt;p&gt;Common Content-Types:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        text/html       a HTML document
+        text/plain      a plain text document
+        image/jpeg      a JPEG image
+        image/gif       a GIF image
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After the above &amp;ldquo;header&amp;rdquo; section, there must be a blank line, and then the bytes containing the data. There&amp;rsquo;s a lot more information that can go into the header block, but for the simple applications we will be developing, they are not needed.&lt;/p&gt;
+
+&lt;p&gt;You can use a telnet client to retrieve data from any Web server. You need to be careful though - many modern Web servers are virtual hosted, which means they require the Host: header in the request to retrieve the appropriate data.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-writing-a-simple-webserver-writing-a-simple-web-server-span&#34;&gt;&lt;span id=&#34;writing_a_simple_webserver&#34;&gt;Writing A Simple Web Server&lt;/span&gt;&lt;/h3&gt;
+
+&lt;h4 id=&#34;span-id-the-basics-the-basics-span&#34;&gt;&lt;span id=&#34;the_basics&#34;&gt;The Basics&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;With the above information, it isn&amp;rsquo;t hard to write your own simple Web server. There are several ways to do this and a few already written on CPAN. We&amp;rsquo;re going to start from first principles though, and pretend, for the moment, we don&amp;rsquo;t know about CPAN.&lt;/p&gt;
+
+&lt;p&gt;A good place to start looking for client/server information is in the &lt;a href=&#34;https://perldoc.perl.org/perlipc.html&#34;&gt;perlipc&lt;/a&gt; document. About &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;3&lt;/sub&gt; of the way through is a section on &amp;ldquo;Internet TCP Clients and Servers&amp;rdquo;. This section shows how to use simple socket commands to setup a simple server. A little further down is the section we&amp;rsquo;re interested in - it demonstrates using the IO::Socket module to write a simple TCP server. I&amp;rsquo;ll replicate that here.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; #!/usr/bin/perl -w
+ use IO::Socket;
+ use Net::hostent;              # for OO version of gethostbyaddr
+
+ $PORT = 9000;                  # pick something not in use
+
+ $server = IO::Socket::INET-&amp;gt;new( Proto     =&amp;gt; &#39;tcp&#39;,
+                                  LocalPort =&amp;gt; $PORT,
+                                  Listen    =&amp;gt; SOMAXCONN,
+                                  Reuse     =&amp;gt; 1);
+
+ die &amp;quot;can&#39;t setup server&amp;quot; unless $server;
+ print &amp;quot;[Server $0 accepting clients at http://localhost:$PORT/]\n&amp;quot;;
+
+ while ($client = $server-&amp;gt;accept()) {
+   $client-&amp;gt;autoflush(1);
+   print $client &amp;quot;Welcome to $0; type help for command list.\n&amp;quot;;
+   $hostinfo = gethostbyaddr($client-&amp;gt;peeraddr);
+   printf &amp;quot;[Connect from %s]\n&amp;quot;, $hostinfo-&amp;gt;name || $client-&amp;gt;peerhost;
+   print $client &amp;quot;Command? &amp;quot;;
+   while ( &amp;lt;$client&amp;gt;) {
+     next unless /\S/;       # blank line
+     if    (/quit|exit/i)    { last; }
+     elsif (/date|time/i)    { printf $client &amp;quot;%s\n&amp;quot;, scalar localtime; }
+     elsif (/who/i )         { print  $client `who 2&amp;gt;&amp;amp;1`; }
+     elsif (/cookie/i )      { print  $client `/usr/games/fortune 2&amp;gt;&amp;amp;1`; }
+     elsif (/motd/i )        { print  $client `cat /etc/motd 2&amp;gt;&amp;amp;1`; }
+     else {
+       print $client &amp;quot;Commands: quit date who cookie motd\n&amp;quot;;
+     }
+   } continue {
+      print $client &amp;quot;Command? &amp;quot;;
+   }
+   close $client;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-httpify-it-httpify-it-span&#34;&gt;&lt;span id=&#34;httpify_it&#34;&gt;HTTPify It&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;That&amp;rsquo;s not a HTTP server by any stretch of the imagination, but with a different inner loop it could easily become one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; while ($client = $server-&amp;gt;accept()) {
+   $client-&amp;gt;autoflush(1);
+
+   my $request = &amp;lt;$client&amp;gt;;
+   if ($request =~ m|^GET /(.+) HTTP/1.[01]|) {
+      if (-e $1) {
+       print $client &amp;quot;HTTP/1.0 200 OK\nContent-Type: text/html\n\n&amp;quot;;
+       open(my $f,&amp;quot;&amp;lt;$1&amp;quot;);
+       while(&amp;lt;$f&amp;gt;) { print $client $_ };
+      } else {
+       print $client &amp;quot;HTTP/1.0 404 FILE NOT FOUND\n&amp;quot;;
+       print $client &amp;quot;Content-Type: text/plain\n\n&amp;quot;;
+       print $client &amp;quot;file $1 not found\n&amp;quot;;
+      }
+   } else {
+     print $client &amp;quot;HTTP/1.0 400 BAD REQUEST\n&amp;quot;;
+     print $client &amp;quot;Content-Type: text/plain\n\n
+     print $client &amp;quot;BAD REQUEST\n&amp;quot;;
+   }
+   close $client;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at the changes piece by piece:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   my $request = &amp;lt;$client&amp;gt;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Retrieve one line from the socket connected to the client. For this to be a valid HTTP request, it must match the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if ($request =~ m|^GET /(.+) HTTP/1.[01]|) {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That checks that it&amp;rsquo;s a HTTP GET request, and is of a protocol version we know about.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      if (-e $1) {
+       print &amp;quot;HTTP/1.0 200 OK\nContent-Type: text/html\n\n&amp;quot;;
+       open(my $f,&amp;quot;&amp;lt;$1&amp;quot;);
+       while(&amp;lt;$f&amp;gt;) { print $client $_ };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the requested file exists, then send back a HTTP header that says that, along with a content type, and then the data. (We are assuming the content type is HTML here. Most http servers figure out the content type from the extension of the file.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      } else {
+       print $client &amp;quot;HTTP/1.0 404 FILE NOT FOUND\n&amp;quot;;
+       print $client &amp;quot;Content-Type: text/plain\n\n&amp;quot;
+       print $client &amp;quot;file $1 not found\n&amp;quot;;
+      }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the file doesn&amp;rsquo;t exist, then send back a 404 error. The content of the error is a description of what went wrong.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   } else {
+     print $client &amp;quot;HTTP/1.0 400 BAD REQUEST\n&amp;quot;;
+     print $client &amp;quot;Content-Type: text/plain\n\n
+     print $client &amp;quot;BAD REQUEST\n&amp;quot;;
+   }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A similar error handler, in case we can&amp;rsquo;t parse the request.&lt;/p&gt;
+
+&lt;p&gt;Almost 50 percent of the code is for error handling, and that doesn&amp;rsquo;t even take into account the error handling we didn&amp;rsquo;t do for I/O issues. But that&amp;rsquo;s the core of a Web server, all in about 15 lines of Perl.&lt;/p&gt;
+
+&lt;p&gt;If you use the above code without modification, it will allow &lt;em&gt;every file on your system&lt;/em&gt; to be read. Generally, this is a bad thing. An explanation of proper security is outside the scope of this article, but generally you want to limit access to a subset of files, located under some directory prefix. &lt;code&gt;File::Spec::canonpath&lt;/code&gt; and &lt;code&gt;Cwd::realpath&lt;/code&gt; are useful functions for testing this.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-single-threaded-non-forking-blocking-single-threaded-nonforking-blocking-span&#34;&gt;&lt;span id=&#34;single_threaded,_non_forking,_blocking&#34;&gt;Single Threaded, Nonforking, Blocking&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The Web server presented above is very simple. It only deals with one request at a time. If a second request is received while the first is being processed, then it will be &lt;strong&gt;blocked&lt;/strong&gt; until the first completes.&lt;/p&gt;
+
+&lt;p&gt;There are two schemes used to take advantage of modern computers&amp;rsquo; ability to multiprocess (run more than one thing at once.) The simplest way is to fork off a Web server process for each incoming request. Because of forking overhead, many servers pre-fork. The second method is to create multiple threads. (Threads are lighter weight than processes.)&lt;/p&gt;
+
+&lt;p&gt;For a simple embedded server, it isn&amp;rsquo;t much more difficult to build a forking server, but the extra work is unnecessary if it&amp;rsquo;s only going to be used by one person or with a low hit-rate. The only advantage to the forking method is that it can serve multiple pages at once. (Taking advantage of modern operating systems ability to multiprocess.)&lt;/p&gt;
+
+&lt;p&gt;More information on forking servers, can be found in the &lt;a href=&#34;https://perldoc.perl.org/perlipc.html&#34;&gt;perlipc&lt;/a&gt; documentation.&lt;/p&gt;
+
+&lt;p&gt;With a simple modification to our loop, we can turn our Web server into a forking client:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; while ($client = $server-&amp;gt;accept()) {
+   my $pid = fork();
+   die &amp;quot;Cannot fork&amp;quot; unless defined $pid;
+   do { close $client; next; } if $pid; # parent
+   # fall through in child
+   $client-&amp;gt;autoflush(1);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-structure-structure-span&#34;&gt;&lt;span id=&#34;structure&#34;&gt;Structure&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The example server above is useful for simple reporting of generated data. Because the accept loop is closed, all processing by the main part of the program needs to be complete before the Web server is run. (Of course, actions from the Web server can trigger other pieces of the program to run.)&lt;/p&gt;
+
+&lt;p&gt;There are other ways to integrate a simple Web server depending on the structure of your program, but for this article, we&amp;rsquo;ll stick with the design above.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-graph-walker-graph-walker-span&#34;&gt;&lt;span id=&#34;graph_walker&#34;&gt;Graph Walker&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Above we mentioned using GraphViz to create an embedded graph viewer. To do that we&amp;rsquo;ll use a Graph class that has some methods that will make our life easier. (There isn&amp;rsquo;t actually a class that does all this, but you can do it with a combination of Graph and GraphViz available on CPAN.)&lt;/p&gt;
+
+&lt;p&gt;It is outside the scope of this article to cover graph operations, but I&amp;rsquo;ve named the methods so that they should be easy to figure out. I am also going to gloss over some of the GraphViz details. They can be picked up from a tutorial.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-three-easy-steps-three-easy-steps-span&#34;&gt;&lt;span id=&#34;three_easy_steps&#34;&gt;Three Easy Steps&lt;/span&gt;&lt;/h4&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_define_the_goal&#34;&gt;Define the Goal&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the easy part.&lt;/p&gt;
+
+&lt;p&gt;To develop a graph browser that allows the user to click on a node to recenter the graph.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_define_the_url_scheme&#34;&gt;Define the URL scheme&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;How is the Web browser going to communicate back to the Web server? The only way it can is by requesting pages (via URLs.) For a graph browser we need two different kinds.&lt;/p&gt;
+
+&lt;p&gt;First, an image representing the graph. Second, a HTML page containing the &lt;strong&gt;IMG&lt;/strong&gt; tag for the graph and the &lt;a href=&#34;http://www.cris.com/~automata/tutorial.shtml&#34;&gt;imagemap&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Since every node has a unique name we can use that to represent which node, and then use an extension to determine whether it is the HTML page or the graphic.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    node1.html - HTML page for graph centered on node1
+    node1.gif  - GIF image for graph centered on node1
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_implement%21&#34;&gt;Implement!&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Now that you know what you&amp;rsquo;re building, you can put it all together and implement it.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;!-- --&gt;
+
+&lt;pre&gt;&lt;code&gt; my $graph = do_something_and_build_a_graph();
+
+ while ($client = $server-&amp;gt;accept()) {
+   $client-&amp;gt;autoflush(1);
+
+   my $request = &amp;lt;$client&amp;gt;;
+   if ($request =~ m|^GET /(.+)\.(html|gif) HTTP/1.[01]|) {
+      if ($graph-&amp;gt;has_node($1)) {
+       if ($2 eq &amp;quot;gif&amp;quot;) {
+         send_gif( $client, $1 );
+       } else { # $2 must be &#39;html&#39;
+         send_html( $client, $1 );
+       }
+      } else {
+       print $client &amp;quot;HTTP/1.0 404 NODE NOT FOUND\n&amp;quot;;
+       print $client &amp;quot;Content-Type: text/plain\n\n&amp;quot;;
+       print $client &amp;quot;node $1 not found\n&amp;quot;;
+      }
+   } else {
+     print $client &amp;quot;HTTP/1.0 400 BAD REQUEST\n&amp;quot;;
+     print $client &amp;quot;Content-Type: text/plain\n\n
+     print $client &amp;quot;BAD REQUEST\n&amp;quot;;
+   }
+   close $client;
+ }
+
+ sub send_html {
+    my ($client, $node) = @_;
+
+    my $subgraph = $graph-&amp;gt;subgraph( $node, 2, 2 );
+
+    my $csimap = $subgraph-&amp;gt;as_csimap( &amp;quot;graphmap&amp;quot; );
+    my $time = scalar localtime;
+
+    print $client &amp;quot;HTTP/1.0 200 OK\nContent-Type: text/html\n\n&amp;quot;;
+
+    print $client&amp;lt;&amp;lt;&amp;quot;EOF&amp;quot;;
+
+    &amp;lt;HTML&amp;gt;
+     &amp;lt;HEAD&amp;gt;
+      &amp;lt;TITLE&amp;gt;Graph centered on $node&amp;lt;/TITLE&amp;gt;
+      $csimap
+     &amp;lt;/HEAD&amp;gt;
+     &amp;lt;BODY&amp;gt;
+     &amp;lt;H1&amp;gt;Graph centered on $node&amp;lt;/H1&amp;gt;
+     &amp;lt;IMG SRC=&amp;quot;/$node.gif&amp;quot; USEMAP=&amp;quot;graphmap&amp;quot; BORDER=0&amp;gt;
+     &amp;lt;HR&amp;gt;
+     &amp;lt;SMALL&amp;gt;Page generated at $time&amp;lt;/SMALL&amp;gt;
+     &amp;lt;/BODY&amp;gt;
+    &amp;lt;/HTML&amp;gt;
+
+  EOF
+     ;
+
+  }
+
+ sub send_gif {
+    my ($client, $node) = @_;
+
+    my $subgraph = $graph-&amp;gt;subgraph( $node, 2, 2 );
+
+    my $gif = $subgraph-&amp;gt;as_gif();
+
+    print $client &amp;quot;HTTP/1.0 200 OK\nContent-Type: text/gif\n\n&amp;quot;;
+
+    print $client $gif;
+
+  }
+
+And that&#39;s it!  We have created a dynamic graph browser.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I will admit that we glossed over some of the HTML and Client Side Imagemap details &amp;ndash; because they&amp;rsquo;re tangential to the issue of embedding a Web server into a tool. An embedded Web server is like merging the Web server, cgi script and source of the data into one program &amp;ndash; sometimes the best way to build one is to start with a standard CGI script and use that.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-more-details-more-details-span&#34;&gt;&lt;span id=&#34;more_details&#34;&gt;More Details&lt;/span&gt;&lt;/h3&gt;
+
+&lt;h4 id=&#34;span-id-query-strings-query-strings-span&#34;&gt;&lt;span id=&#34;query_strings&#34;&gt;Query Strings&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Because our embedded Web server isn&amp;rsquo;t serving actual files off of your hard drive you have lots of flexibility as to how to parse the requested URL. In normal Web servers the common way to pass extra arguments to requested pages/scripts is by using a &lt;strong&gt;query string&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;A URL with a query string looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    http://foo.bar/thepage.html?querystring
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is a convention for passing key/value data in query strings (from HTML FORM&amp;rsquo;s for example):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    http://foo.bar/page.html?keyone=dataone&amp;amp;keytwo=datatwo&amp;amp;keythree=3&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s easy to modify our embedded webserver template to accept query strings. Just add it to the regular expression that parses the request:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if ($request =~ m|^GET /(.+)(?:\?(.*))? HTTP/1.[01]|) {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;$2 will then contain the query string. You can parse it by hand or pass it to CGI.pm or another CGI Module to parse it.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-uri-escaping-uri-escaping-span&#34;&gt;&lt;span id=&#34;uri_escaping&#34;&gt;URI Escaping&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Some characters have special meaning in URIs. (We&amp;rsquo;ve already seen ? and &amp;amp;. Others are &amp;ldquo; (space), %, and #. See the RFC for the full list.) In order to allow them to be passed in requests they need to be escaped. Escaping a URI changes the special characters into their hex representation with a prepended %. For example, &amp;ldquo; becomes %20.&lt;/p&gt;
+
+&lt;p&gt;The easiest way to perform this encoding is to use the URI::Escape module.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use URI::Escape;
+ $safe = uri_escape(&amp;quot;10% is enough\n&amp;quot;);
+  # $safe is &amp;quot;10%25%20is%20enough%0D&amp;quot;;
+ $str  = uri_unescape($safe);
+  # $str is 10% is enough\n
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We will want to unescape any data received from the client:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if ($request =~ m|^GET /(.+)(?:\?(.*))? HTTP/1.[01]|) {
+      my $page = uri_unescape($1);
+      my $querystring = uri_unescape($2);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-more-ideas-more-ideas-span&#34;&gt;&lt;span id=&#34;more_ideas&#34;&gt;More Ideas&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;You might want to embed a Web server into a tool to display the status of a task in a complicated way. Sure, you could just write the file to disk, but that&amp;rsquo;s less fun!&lt;/p&gt;
+
+&lt;p&gt;If a task has multiple possible outputs, then you could use the Web server to allow the user to choose between them visually, or pop up a browser at various states of a project to let the user confirm that things are going according to plan.&lt;/p&gt;
+
+&lt;p&gt;Speaking of popping up, you don&amp;rsquo;t need to make the user do anything to see the results of the page. You can force the browser to do it for you.&lt;/p&gt;
+
+&lt;p&gt;On UNIX systems you can use Mozilla/Netscape&amp;rsquo;s &lt;a href=&#34;http://wp.netscape.com/newsref/std/x-remote.html&#34;&gt;X-Remote protocol&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    system(q[netscape -remote &#39;openURL(&amp;quot;http://localhost:9000/&amp;quot;)&#39; &amp;amp;]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our example code has a port number hardcoded into it. If that port is already being used on your system, then the IO::Socket::INET::new() call will fail. An easy improvement is to loop over a range of ports, or random port numbers, until an available port is found.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-reusable-code-reusable-code-span&#34;&gt;&lt;span id=&#34;reusable_code&#34;&gt;Reusable Code&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In some cases, I&amp;rsquo;ve avoided the use of modules in this article. There are many things that could be done with modules including argument handling (CGI.pm), URI/URL parsing (the URI family of modules), and even the HTTP server itself. (HTTP::Daemon)&lt;/p&gt;
+
+&lt;p&gt;The code we&amp;rsquo;ve presented here tries to go through the behind the scenes process so you know what&amp;rsquo;s going on.&lt;/p&gt;
+
+&lt;p&gt;For quick and dirty servers, HTTP::Daemon is probably easier to use. Here&amp;rsquo;s an example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use HTTP::Daemon;
+ use HTTP::Status;
+ use Pod::Simple::HTML;
+
+ my $file = shift;
+ die &amp;quot;File $file not found&amp;quot; unless -e $file;
+
+ my $d = HTTP::Daemon-&amp;gt;new || die;
+ print &amp;quot;Please contact me at: &amp;lt;URL:&amp;quot;, $d-&amp;gt;url, &amp;quot;&amp;gt;\n&amp;quot;;
+ while (my $c = $d-&amp;gt;accept) {
+   while (my $r = $c-&amp;gt;get_request) {
+     if ($r-&amp;gt;method eq &#39;GET&#39;) {
+       my $rs = new HTTP::Response(RC_OK);
+       $rs-&amp;gt;content( Pod::Simple::HTML-&amp;gt;filter($file) );
+       $c-&amp;gt;send_response($rs);
+     } else {
+       $c-&amp;gt;send_error(RC_FORBIDDEN)
+     }
+   }
+   $c-&amp;gt;close;
+   undef($c);
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The above HTTP::Daemon based server is a simple, single purpose, POD-&amp;gt;HTML converter. I provide it with the name of a pod file to parse, and every time I reload the page, it will pass it through Pod::Simple and display the HTML to the browser.&lt;/p&gt;
+
+&lt;p&gt;You&amp;rsquo;ll note it has the same structure as our hand-made examples, but it handles some of the nitty-gritty work for you by encapsulating it in classes.&lt;/p&gt;
+
+&lt;p&gt;(If you think that HTTP::Daemon is much simpler than the original, then you should see the first version of this article which used the low-level socket calls.)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-in-conclusion-in-conclusion-span&#34;&gt;&lt;span id=&#34;in_conclusion&#34;&gt;In Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Embedded hardware is all the rage these days - but embedded software can be quite useful, too. By embedding a Web server into your software you gain lots of possible output options that were difficult to have before. Tables, graphics and color! (Not to mention, output can be viewed by multiple computers.) Embedded Web servers open a world of opportunities to you.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Optimizing Your Perl</title>
+      <link>http://localhost:1313/pub/2002/02/12/bigo.html/</link>
+      <pubDate>Tue, 12 Feb 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/02/12/bigo.html/</guid>
+      <description>
+
+&lt;p&gt;Is your Perl program taking too long to run? This might be because you&amp;rsquo;ve chosen a data structure or algorithm that takes a long time to run. By rethinking how you&amp;rsquo;ve implemented a function, you might be able to realize huge gains in speed.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-some-simple-complexity-theory-some-simple-complexity-theory-span&#34;&gt;&lt;span id=&#34;some simple complexity theory&#34;&gt;Some Simple Complexity Theory&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Before we can talk about speeding up something, we need a way to describe how long something takes. Because we&amp;rsquo;re talking about algorithms that may have varying amounts of input, the actual &amp;ldquo;time&amp;rdquo; to do something isn&amp;rsquo;t conclusive. Computer scientists and mathematicians use a system called big-O notation to describe the order of magnitude of how long something will take. Big-O notation represents a worst-case analysis. There are other notations to represent the magnitude of minimum and actual runtimes.&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t let the talk of computer scientists and mathematicians scare you. The next few paragraphs talk about a way to describe the difference between orders of magnitude such as a second, minute, hour or day. Or 1, 10, 100 and 1,000. You don&amp;rsquo;t need to know any fancy or scary math to understand it.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s simple. If the runtime of a function is constant, then this is written as O(1). (Note the capital or &amp;ldquo;big&amp;rdquo; O.) Constant means that no matter how much data is processed, (i.e., how much input there is) the time doesn&amp;rsquo;t change.&lt;/p&gt;
+
+&lt;p&gt;If the runtime is directly related to the amount of input (a.k.a. linear), then this is O(n). If there is twice as much input, then the algorithm will take twice as long to run. Some functions are &lt;code&gt;O(n^2)&lt;/code&gt; (quadratic) or &lt;code&gt;O(n^3)&lt;/code&gt; (cubic) or even worse.&lt;/p&gt;
+
+&lt;p&gt;Because we are only looking at orders of magnitude (is the operation going to take one minute or one hour) we can ignore constant factors and smaller terms. &lt;code&gt;O(2n)&lt;/code&gt; and &lt;code&gt;O(n)&lt;/code&gt; are equivalent. As are &lt;code&gt;O(n+1)&lt;/code&gt; and &lt;code&gt;O(n)&lt;/code&gt; or &lt;code&gt;O(n^2+n)&lt;/code&gt; and &lt;code&gt;O(n^2)&lt;/code&gt;. The smaller term is insignificant compared to the larger.&lt;/p&gt;
+
+&lt;p&gt;There are rules for analyzing code and determining its big-O, but the simplest way is to look at how many times you iterate over the data. if you don&amp;rsquo;t iterate, then it&amp;rsquo;s O(1). If you iterate over it once, then it&amp;rsquo;s O(n). If you have two nested loops, then it&amp;rsquo;s probably O(n^2).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_02_12_bigo/graph-orders.jpg&#34; alt=&#34;Orders&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-example-1-graphing-example-1-graphing-span&#34;&gt;&lt;span id=&#34;example #1: graphing&#34;&gt;Example #1: Graphing&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I developed a new graph module for a project at my day job, because the &lt;a href=&#34;https://metacpan.org/pod/Graph&#34;&gt;existing one&lt;/a&gt; was overkill, yet did not support a feature I needed. It was easy to implement and worked very well, until the graph got very big. I needed flattened subgraphs to do dependency checks, but it was taking more than two minutes to compute (on a 1Ghz P3) for a 1,000 node graph. I needed the computation to be much faster, or my users would get mad.&lt;/p&gt;
+
+&lt;p&gt;My initial Graph module looked like this. (Simplified to only show relevant parts.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; package Graph; # for Directed Graphs
+ use strict;
+ sub new {
+  my $this = { edges =&amp;gt; [],
+               vertices =&amp;gt; {} };
+  bless $this, &amp;quot;Graph&amp;quot;;
+ }
+ sub add_edge { # from x to y
+  my ($this,$x,$y) = @_;
+  $this-&amp;gt;{vertices}{$x}++;
+  $this-&amp;gt;{vertices}{$y}++;
+  push @{$this-&amp;gt;{edges}},[$x=&amp;gt;$y];
+ }
+ sub in_edges {
+  my ($this,$v) = @_;
+  grep { $_-&amp;gt;[1] eq $v } @{$this-&amp;gt;{edges}};
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The add_edge method is &lt;code&gt;O(1)&lt;/code&gt; because it will always take the same amount of time no matter how many nodes/edges are in the graph. The in_edges method is &lt;code&gt;O(n)&lt;/code&gt; because it has to iterate over each edge in the graph. (The iteration is &amp;ldquo;inside&amp;rdquo; the grep.)&lt;/p&gt;
+
+&lt;p&gt;The problematic section of the code looked like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub flat_subgraph {
+    my ($graph,$start) = @_;
+    my %seen;
+    my @worklist = ($start);
+    while (@worklist) {
+      my $x = shift @worklist;
+      push @worklist, $graph-&amp;gt;in_edges($x)
+         unless $seen{$x}++;
+    }
+    return keys %seen;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And I actually needed to do that for multiple vertices;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my %dependencies;
+  for (keys %{$graph-&amp;gt;{vertices}}) {
+   $dependencies{$_} = [ flat_subgraph( $graph, $_ ) ];
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This would make the entire flattening operation O(n^3). ( The dependency loop is O(n), flat_subgraph is effectively O(n), and in_edges is O(n)). That means that it takes much longer to compute as the Graph becomes bigger. (Imagine a curve with the following values: 1,8,27,64&amp;hellip;, that&amp;rsquo;s the curve of relative times.)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-caching-caching-span&#34;&gt;&lt;span id=&#34;caching&#34;&gt;Caching&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;With my users expecting instant feedback, something had to be done. The first thing I tried was to cache the in_edges computation.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub in_edges {
+  my ($this,$v) = @_;
+  if (exists $this-&amp;gt;{cache}{in_edges}{$v}) {
+      return @{$this-&amp;gt;{cache}{in_edges}{$v}};
+  } else {
+    my @t = grep { $_-&amp;gt;[1] eq $v } @{$this-&amp;gt;{edges}};
+    $this-&amp;gt;{cache}{in_edges}{$v} = [@t];
+    return @t;
+   }
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This helped, but not as much as I had hoped. The in_edges calculation was still expensive when it wasn&amp;rsquo;t cached. It&amp;rsquo;s still &lt;code&gt;O(n)&lt;/code&gt; in the worst case, but becomes &lt;code&gt;O(1)&lt;/code&gt; when cached. On average, that means the entire flattening operation is somewhere between &lt;code&gt;O(n^2)&lt;/code&gt; and &lt;code&gt;O(n^3)&lt;/code&gt;, which is still potentially slow.&lt;/p&gt;
+
+&lt;p&gt;In situations where the same functions are called with the same arguments, caching can be useful. Mark-Jason Dominus has written a module called Memoize, which makes it easy to write caching functions. See his Web site &lt;a href=&#34;http://perl.plover.com/MiniMemoize/&#34;&gt;http://perl.plover.com/MiniMemoize/&lt;/a&gt; for more information.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-change-the-structure-change-the-structure-span&#34;&gt;&lt;span id=&#34;change the structure&#34;&gt;Change the Structure&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The next thing I tried was to change the Graph data structure. When I originally designed it, my goal was simplicity, not necessarily speed. Now speed was becoming important and I had to make changes.&lt;/p&gt;
+
+&lt;p&gt;I modified graph so that in_edges were calculated when the new edge was being added.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; package Graph; # for Directed Graphs
+ use strict;
+ sub new {
+  my $this = { edges =&amp;gt; [],
+               vertices =&amp;gt; {},
+               in_edges =&amp;gt; {} };
+  bless $this, &amp;quot;Graph&amp;quot;;
+ }
+ sub add_edge { # from x to y
+  my ($this,$x,$y) = @_;
+  $this-&amp;gt;{vertices}{$x}++;
+  $this-&amp;gt;{vertices}{$y}++;
+  push @{$this-&amp;gt;{in_edges}{$y}}, $x;
+  push @{$this-&amp;gt;{edges}},[$x=&amp;gt;$y];
+ }
+ sub in_edges {
+  my ($this,$v) = @_;
+  return @{$this-&amp;gt;{in_edges}{$v}};
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;add_edge remains &lt;code&gt;O(1)&lt;/code&gt; - it still executes in a constant time. in_edges is &lt;code&gt;O(1)&lt;/code&gt; as well now; its runtime will not vary based on the number of edges.&lt;/p&gt;
+
+&lt;p&gt;This was the solution I needed, getting a full flattening down from more than four minutes to only six seconds.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-importance-of-good-interfaces-the-importance-of-good-interfaces-span&#34;&gt;&lt;span id=&#34;the importance of good interfaces&#34;&gt;The Importance of Good Interfaces&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One of the things that made this fiddling possible was a good design for the Graph module&amp;rsquo;s interface. The interface hid all the details of the internals from me, so that different implementations could be plugged in. (This is actually how I did the testing, I had a regular Graph, a Graph::Cached, and a Graph::Fast. Once I decided that I liked Graph::Fast the best, I renamed it to just Graph.)&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m glad I designed Graph the way I did. I put simplicity and design first. There is a phrase you might have heard: &amp;ldquo;Premature optimization is the root of all evil.&amp;rdquo; If I had optimized the Graph module first, then I might have ended up with more complicated code that didn&amp;rsquo;t work in all cases. My initial cut of Graph was slow, but worked consistently. Optimization happened later, after I had a baseline I could return to, to guarantee proper operation.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-example-2-duplicate-message-filter-example-2-duplicate-message-filter-span&#34;&gt;&lt;span id=&#34;example #2: duplicate message filter&#34;&gt;Example #2: Duplicate Message Filter&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;You don&amp;rsquo;t always need to try and optimize code to the fullest extent. Optimizing code takes your time and energy, and it isn&amp;rsquo;t always worth it. If you spend two days to shave two seconds off a program, then it&amp;rsquo;s probably not worth it. (Unless of course, that program is running hundreds of times each day.) If a program is &amp;ldquo;fast enough&amp;rdquo;, then making it faster isn&amp;rsquo;t worth it.&lt;/p&gt;
+
+&lt;p&gt;Our second example is a duplicate message filter for e-mail. This filter is useful when you receive cc&amp;rsquo;s of messages also sent to mailing lists you are on, but you don&amp;rsquo;t want to see both.&lt;/p&gt;
+
+&lt;p&gt;The general idea behind this filter is simple.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  skip $message if seen $message-&amp;gt;id;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s only the seen function that interests us. It searches some form of cache of id&amp;rsquo;s. How we implement it can have a large effect on the speed of our mailfilter. (For more information on filtering mail with perl, take a look at &lt;a href=&#34;https://metacpan.org/pod/Mail::Audit&#34;&gt;Mail::Audit&lt;/a&gt;.)&lt;/p&gt;
+
+&lt;p&gt;The two most obvious methods that come to mind for implementing seen are a simple linear search (O(n)) or the use of a persistent database/hash table to do the lookup. O(1). I&amp;rsquo;ll ignore the cost of maintaining the database, eliminating old Message-Id&amp;rsquo;s, etc.&lt;/p&gt;
+
+&lt;p&gt;A linear approach writes out the message id&amp;rsquo;s with some sort of separator. Some programs use null bytes, others use newlines.&lt;/p&gt;
+
+&lt;p&gt;The database/hash method stores the message id&amp;rsquo;s in a binary database like a DBM or Berkeley DB file. At the expense of using more disk space, lookups are generally faster.&lt;/p&gt;
+
+&lt;p&gt;But - there&amp;rsquo;s one more factor to take into account - overhead. The linear search has little overhead, while the DB file has a large overhead. (Overhead here means time to open the file and initialize the appropriate data structures.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; TABLE: Comparison
+
+  Records | Comment
+  -----------------
+    100   | linear is 415% faster
+    250   | linear is 430% faster
+    500   | hash is 350% faster
+   1000   | hash is 690% faster
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I performed a set of timings with a rough example implementation on my P2/400, and received the above results. The hash lookup speeds remained constant, while the linear lookup dropped off rapidly after 250 items in the cache.&lt;/p&gt;
+
+&lt;p&gt;Returning to the big picture, we need to take our message-id cache size into account when determining the method to use. For this kind of cache, there&amp;rsquo;s usually not a reason to keep a huge amount of entries around, only two or three days worth should catch most duplicate messages. (And probably even one day&amp;rsquo;s worth in most cases.)&lt;/p&gt;
+
+&lt;p&gt;For this problem, an &lt;code&gt;O(1)&lt;/code&gt; solution is possible, but the constant time it takes might be higher than an &lt;code&gt;O(n)&lt;/code&gt; solution. Both cases are trivial to implement, but in some situations it will be difficult to implement &lt;code&gt;O(1)&lt;/code&gt; - and not worth it either.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Perl is a powerful language, but it doesn&amp;rsquo;t prevent the programmer from making poor decisions and shooting him/herself in the foot. One mistake is to choose the wrong data structure or algorithm for the job. By using a little bit of complexity theory, it&amp;rsquo;s possible to optimize your code and get huge speed gains.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve only touched the surface of big-O notation and complexity theory. It&amp;rsquo;s a highly researched topic that delves into the deep dark corners of math and computers. But, hopefully there&amp;rsquo;s enough here to give you a basic tool set.&lt;/p&gt;
+
+&lt;p&gt;As the second example showed, you don&amp;rsquo;t necessarily want to spend too much time thinking about optimization. Over-optimization isn&amp;rsquo;t always worth it.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-for-more-information-for-more-information-span&#34;&gt;&lt;span id=&#34;for more information&#34;&gt;For More Information&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Google&#34;&gt;Google&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; http://www.google.com/search?q=big-O+complexity
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Introduction_to_the_Theory_of_Computation&#34;&gt;Introduction to the Theory of Computation&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Part Three of Sipser, Michael. &amp;ldquo;Introduction to the Theory of Computation&amp;rdquo;. PWS Publishing Company. Boston, MA. 1997.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Algorithms_and_Complexity%2C_Internet_Edition&#34;&gt;Algorithms and Complexity, Internet Edition&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.cis.upenn.edu/%7Ewilf/AlgComp3.html&#34;&gt;http://www.cis.upenn.edu/~wilf/AlgComp3.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-special-thanks-special-thanks-span&#34;&gt;&lt;span id=&#34;special thanks&#34;&gt;Special Thanks&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Walt Mankowski&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Request Tracker</title>
+      <link>http://localhost:1313/pub/2001/11/28/request.html/</link>
+      <pubDate>Wed, 28 Nov 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/11/28/request.html/</guid>
+      <description>
+
+&lt;p&gt;If you&amp;rsquo;ve ever had to do user support, then you&amp;rsquo;ll be familiar with the following scenario: A question comes in from a user, and you write an e-mail reply. However, by the time you&amp;rsquo;ve hit &amp;ldquo;send,&amp;rdquo; another member of your team has already dealt with the problem. Or maybe you&amp;rsquo;re fortunate enough not to have to support end-users, but you have a terrible time managing the various projects that you&amp;rsquo;re working on. Or maybe you just can&amp;rsquo;t remember what you have to do today. How can Perl help here?&lt;/p&gt;
+
+&lt;p&gt;Enter Request Tracker. Request Tracker is a free trouble ticketing system written in Perl. It is used widely for everything from bug tracking and customer support to personal project management and to-do lists.&lt;/p&gt;
+
+&lt;p&gt;Some of you may be familiar with the first edition of Request Tracker, RT1. RT1 was successful, but internally, it was a bit crufty. RT2 is a complete rewrite designed to be much more capable, flexible and extensible.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-overview-overview-span&#34;&gt;&lt;span id=&#34;overview&#34;&gt;Overview&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So what is it?&lt;/p&gt;
+
+&lt;p&gt;On the simplest level, RT tracks requests - &lt;strong&gt;tickets&lt;/strong&gt; - and correspondence about them. If you aren&amp;rsquo;t already familiar with such systems, consider sending a support request to your ISP. It might go something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        You: My e-mail isn&#39;t working.
+
+        ISP: Have you looked at the FAQ list?  
+        Can you be more specific about what isn&#39;t working.
+
+        You: When I hit send in mumble mailer, it says 
+        &amp;quot;Cannot connect to server&amp;quot;
+
+        ISP: Please make sure you have your SMTP server configured 
+        as documented ...
+
+        You: Thanks!  That did it!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This exchange most likely won&amp;rsquo;t happen all at once, and could happen over the span of several days involving several technicians from your ISP. Each technician will want to know the specifics of what the previous technician told you, and your response. The ISP will also want to know who is handling a particular ticket, how long it&amp;rsquo;s been open, how many total tickets are open, what category your ticket falls into (&amp;ldquo;e-mail problems&amp;rdquo;), etc. This is the problem that RT was built to solve. Some companies use tools such as &amp;ldquo;Remedy&amp;rdquo; or &amp;ldquo;Clarify&amp;rdquo; for similar purposes, but RT is a free and open-source solution.&lt;/p&gt;
+
+&lt;p&gt;RT isn&amp;rsquo;t only for help-desk situations. The same system can be used to track bugs in software, outstanding action items or any other issue. In this domain, RT overlaps with programs such as Bugzilla and Gnats. In fact, RT&amp;rsquo;s being used by the Perl 6 developers to track what they need to work on.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-presentation-and-interface-presentation-and-interface-span&#34;&gt;&lt;span id=&#34;presentation and interface&#34;&gt;Presentation and Interface&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;RT provides the most natural way of displaying exchanges such as the one in the example above. Every &lt;strong&gt;request&lt;/strong&gt; is displayed as a sequence of &lt;strong&gt;transactions&lt;/strong&gt;, starting with the initial message that created it. A transaction can also represent a change in metadata - for instance, the person who is working on a ticket may change as another member of the team takes over, or the ticket may be re-prioritized; it can change its status to reflect whether it&amp;rsquo;s new, open, resolved or waiting for more input from the requestor.&lt;/p&gt;
+
+&lt;p&gt;Requests live in &lt;strong&gt;queue&lt;/strong&gt;s, where a queue provides a loose grouping of both what the ticket is about and who is likely to respond to it. For instance, queries to the Web master of a site could end up in the &amp;ldquo;web&amp;rdquo; queue, whereas each development team would have a queue per project they were working on.&lt;/p&gt;
+
+&lt;p&gt;There are a bunch of ways to get data into RT. The two most popular are the Web interface and the e-mail interface. You can also have RT automatically insert data from CVS commit logs, via command-line interface or through more specialist tools.&lt;/p&gt;
+
+&lt;p&gt;The e-mail interface is easy to use and uses a simple tag in the subject line to determine what to do with a message. This tag will generally look like &lt;code&gt;[site #40]&lt;/code&gt; where &amp;ldquo;site&amp;rdquo; is a special tag identifying your RT setup and the number (40) is the ticket number. All e-mails sent to RT with that information in the subject will be appended to the appropriate request. Most RT systems are configured so that an e-mail without a recognized tag in the subject line automatically creates a new request.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    From: John Doe &amp;lt;john@doe.com&amp;gt;
+    To: rt@myisp.com
+    Subject: Re: [myisp #3120] Email doesn&#39;t work
+    Date: Tue Nov 27 21:57:58 PST 2001
+
+    I tried to configure Netscape Communicator as your instructions
+    said, but I&#39;m still getting the same error as before.  What else
+    would you suggest?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Web interface allows for more flexible display of the information about a ticket. You can enter new information about a ticket or change its metadata.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_11_28_request/rt-display.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-metadata-meta-data-span&#34;&gt;&lt;span id=&#34;metadata&#34;&gt;Meta-data&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;RT stores lots of information about each ticket. By default, it maintains information about the requestor, owner, (the person who&amp;rsquo;s currently working on the ticket) status, subject, creation date, due date, priority, queue, links to other tickets, as well as the people who are interested in that particular ticket.&lt;/p&gt;
+
+&lt;p&gt;This information is important for sorting, categorization and reporting. RT also allows for custom meta-data to be added to a ticket in the form of keywords. Returning to our ISP example, they might configure their RT setup to record the platform and software being used. One reason to do this is so that specialists can be assigned to focus on issues in their areas of specialization. Similarly, you can gather statistics on, say, the number of users reporting problems using Outlook Express.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;As a side note, it&amp;rsquo;s important to note that it&amp;rsquo;s impossible to present all the possible configurations of RT in this article. As we&amp;rsquo;ll continue to see later, it&amp;rsquo;s extremely flexible and each organization will need to configure it for their particular needs.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;span-id-scrips-and-templates-scrips-and-templates-span&#34;&gt;&lt;span id=&#34;scrips and templates&#34;&gt;Scrips and Templates&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;As configured &amp;ldquo;out of the box,&amp;rdquo; RT does not send any e-mail by default. The end user needs to use the Web interface to configure RT&amp;rsquo;s &amp;ldquo;scrips.&amp;rdquo; Scrips are a way of telling RT to trigger certain actions based on when something happens.&lt;/p&gt;
+
+&lt;p&gt;For example, one important scrip would be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   When a new ticket is opened, send an e-mail to the person who created it.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This way, your requestor would get an autoresponse telling them that their query was being looked at. Another useful scrip would be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   When someone e-mails new information into a ticket, send that information
+   to everyone who is interested in the ticket.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_11_28_request/rt-scrips.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-correspondence-and-comments-correspondence-and-comments-span&#34;&gt;&lt;span id=&#34;correspondence and comments&#34;&gt;Correspondence and Comments&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One important aspect of RT is how it differentiates between &lt;strong&gt;correspondence&lt;/strong&gt; and &lt;strong&gt;comments&lt;/strong&gt;. Correspondence is something that is sent by one of the RT users to the requestor, to solicit further information or inform them of developments; comments are normally set up to be internal to RT users, and never sent to the end-user. Think of it as being the support team&amp;rsquo;s chance to be rude to the end-user behind their back.&lt;/p&gt;
+
+&lt;p&gt;RT is smart. When correspondence is e-mailed out to the user, it appears as if the author had written it, but has a tweaked From: line so that replies are also sent back into RT and added to the ticket.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-isp-using-rt-the-isp-using-rt-span&#34;&gt;&lt;span id=&#34;the isp, using rt&#34;&gt;The ISP, using RT&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Here is the above ISP example, as it might look as an RT ticket:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Ticket #3120
+ Opened: Nov 17, 2001.
+ Subject: Email problems
+ Requestor: John Doe &amp;lt;john@doe.com&amp;gt;
+ Owner: Stef
+ Current Status: Resolved
+
+ Correspondence from John Doe &amp;lt;john@doe.com&amp;gt; on Nov 17, 2001 3pm
+ &amp;gt; My Email Isn&#39;t Working
+
+ Taken by Stef at Nov 17, 2001, 3:48pm
+
+ Status Changed from New to Open by Stef at Nov 17, 2001, 3:49pm
+
+ Correspondence from Stef Murky &amp;lt;stef@userfriendly.comic&amp;gt; on Nov 17, 2001 4:00pm
+ &amp;gt; Have you looked at the FAQ list?  Can you be more specific
+   about what isn&#39;t working.
+
+ Correspondence from John Doe &amp;lt;john@doe.com&amp;gt; on Nov 18, 2001 1:00pm
+ &amp;gt; When I hit send in mumble mailer, it says &amp;quot;Cannot connect to
+   server&amp;quot;
+
+ Comment from Stef Murky &amp;lt;stef@userfriendly.comic&amp;gt; on Nov 18, 2001 3:15pm
+ &amp;gt; Looked at our records, it appears that John uses Netscape under windows.
+
+ Correspondence from Stef Murky &amp;lt;stef@userfriendly.comic&amp;gt; on Nov 18, 2001 3:19pm
+ &amp;gt; Please make sure you have your SMTP server configured as
+   documented at ...
+
+ Correspondence from John Doe &amp;lt;john@doe.com&amp;gt; on Nov 19, 2001 9:05am
+ &amp;gt; Thanks!  That did it!
+
+ Status Changed from Open to Resolved by Stef
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-the-guts-the-guts-span&#34;&gt;&lt;span id=&#34;the guts&#34;&gt;The Guts&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;You may be thinking that RT is a horribly complicated piece of software, impossible to understand, use and extend. If you are, you&amp;rsquo;re completely wrong. Through extensive modularization and a well thought out architecture and design, RT is quite easy to understand, use and extend.&lt;/p&gt;
+
+&lt;p&gt;RT2 is built upon standard modules that many people use. There isn&amp;rsquo;t anything esoteric used; in fact, you may already be using many of the modules on which it depends.&lt;/p&gt;
+
+&lt;p&gt;But you might think that installing all the dependent modules might be a chore. Again, RT is smart. It comes with a script that uses the CPAN.pm module to retrieve and install the correct versions of everything it needs.&lt;/p&gt;
+
+&lt;p&gt;This is probably the hardest part of installing RT. (Assuming you have CPAN.pm configured properly.) You run &amp;ldquo;make fixdeps,&amp;rdquo; and it all happens for you. It may be necessary to run it multiple times or install one or two modules by hand, but that&amp;rsquo;s easy compared to manually installing almost 30 modules.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; DBI DBIx::DataSource DBIx::SearchBuilder HTML::Entities MLDBM
+ Net::Domain Net::SMTP Params::Validate HTML::Mason CGI::Cookie
+ Apache::Cookie Apache::Session Date::Parse Date::Format MIME::Entity
+ Mail::Mailer Getopt::Long Tie::IxHash Text::Wrapper Text::Template
+ File::Spec Errno FreezeThaw File::Temp Log::Dispatch DBD::mysql or DBD::Pg
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The most important module is probably &lt;code&gt;DBIx::SearchBuilder&lt;/code&gt;. It provides a standard mechanism for persistent object-oriented storage. By using it, RT doesn&amp;rsquo;t need to worry about the details of the SQL queries to access its database. The details of &lt;code&gt;DBIx::SearchBuilder&lt;/code&gt; are beyond the scope of this article - in fact, they&amp;rsquo;ll be covered in a future perl.com article - but in a nutshell, your classes will subclass the &lt;code&gt;SearchBuilder&lt;/code&gt; class, and the module will take care of the persistence for you. &lt;code&gt;SearchBuilder&lt;/code&gt; also makes it easy to port RT to your SQL backend of choice; since it&amp;rsquo;s all done through the &lt;code&gt;DBI&lt;/code&gt;, the architecture is completely database-independent.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-configurability-extensibility-configurability-extensibility-span&#34;&gt;&lt;span id=&#34;configurability &amp; extensibility&#34;&gt;Configurability &amp;amp; Extensibility&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Ninety-five percent of RT is configured via the Web interface. Once the system is up and running, most changes can be made through the Configuration menu. Everything from adding users to configuring automatic e-mail responses can be done there.&lt;/p&gt;
+
+&lt;p&gt;Because the Web interface is created using &lt;code&gt;HTML::Mason&lt;/code&gt;, it&amp;rsquo;s easy to extend RT using the internal API. Whole pages or just individual Mason elements can be easily overridden or updated. Common customizations include specialized reports, user interface tweaks or new authentication systems. Any trouble ticketing system will need adapting to the needs of the local users, and RT makes it easy to do this. The API by which the Mason site accesses the ticketing database is the same thing that all of the interfaces use natively, so it&amp;rsquo;s possible to completely re-implement any interface from scratch - in fact, you can write your own tools to access the system quickly and easily by using the &lt;code&gt;RT::*&lt;/code&gt; modules in your own code.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-more-configuration-examples-more-configuration-examples-span&#34;&gt;&lt;span id=&#34;more configuration examples&#34;&gt;More Configuration Examples&lt;/span&gt;&lt;/h3&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;p&gt;&lt;span id=&#34;for more information:&#34;&gt;rt.cpan.org&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;Recently, to demonstrate the strength of RT as well as to provide a needed service to the community, Jesse Vincent, the author of RT, set up an RT instance for all perl modules on CPAN.&lt;/p&gt;
+&lt;p&gt;rt.cpan.org showcases many features of RT.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Scalability&lt;/strong&gt;&lt;br /&gt;
+There are thousands of modules on CPAN and thousands of users&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_Access_Control&#34;&gt;Access Control&lt;/span&gt;&lt;/strong&gt;&lt;br /&gt;
+Module Authors can only manage requests for their own projects&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_External_Authentication&#34;&gt;External Authentication&lt;/span&gt;&lt;/strong&gt;&lt;br /&gt;
+rt.cpan.org authenticates authors from PAUSE (Perl Authors Upload Service)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_Regular_Data_Import&#34;&gt;Regular Data Import&lt;/span&gt;&lt;/strong&gt;&lt;br /&gt;
+As items are added to CPAN, rt.cpan.org must stay up to date. Jesse has written scripts to take the CPAN data and keep the RT synced.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_Custom_User_Interface&#34;&gt;Custom User Interface&lt;/span&gt;&lt;/strong&gt;&lt;br /&gt;
+rt.cpan.org shares the search.cpan.org design motif.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;For more information on rt.cpan.org, visit it, or see &lt;a href=&#34;http://use.perl.org/news/01/11/07/190224.shtml&#34;&gt;this article on use.perl&lt;/a&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Currently, I&amp;rsquo;m using RT for several different projects. Here are a few more details about each RT setup to provide you with more ideas and examples.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_Bug_Tracking&#34;&gt;Bug Tracking&lt;/span&gt;&lt;/strong&gt;
+As mentioned above, the perl 6 project is using RT to track bugs and todo items. Right now the Parrot project has one queue set up; this is a little slow at the moment, but will be ramping up as Parrot stabilizes. A custom report was written to show only items marked with the &amp;ldquo;Todo&amp;rdquo; keyword, so that we can update a Web page listing the things that need doing. The scrips are configured to keep the requestor in the loop with the progress of their issue.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_Help%2DDesk&#34;&gt;Help-Desk&lt;/span&gt;&lt;/strong&gt;
+perl.org maintains many mailing lists, which means dealing with lots of users who have trouble subscribing, or more likely unsubscribing from lists. The &lt;a href=&#34;mailto:list-owner@perl.org&#34;&gt;list-owner@perl.org&lt;/a&gt; e-mail address is filtered into RT, where a ticket is created automatically. Thus, each user&amp;rsquo;s case can be tracked. For this, we wrote a special template system that allows us to easily insert common answers into correspondence.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_Project_Management&#34;&gt;Project Management&lt;/span&gt;&lt;/strong&gt;
+This is similar to bug tracking, but doesn&amp;rsquo;t require the same kind of notification or categorization. At perl.org we use our RT setup to track the status of a variety of internal projects, such as our CVS server and Web site development.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_Personal_Todo_and_Information_Store&#34;&gt;Personal Todo and Information Store&lt;/span&gt;&lt;/strong&gt;
+At home, I use RT as &amp;ldquo;yet another TODO list&amp;rdquo; and information store. Instead of cluttering my e-mail inbox, or stuffing things into folders where I might forget about them, I open tickets in my &amp;ldquo;personal RT.&amp;rdquo; I can then categorize them and add comments to them. There are a range of different things I stick into RT, ranging from &amp;ldquo;Remember to look at this Web site&amp;rdquo; to &amp;ldquo;Get new cellphone.&amp;rdquo; For the latter, I add comments that include the details of my research. I can easily access this from work or anywhere there is Web access.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;span-id-more-more-span&#34;&gt;&lt;span id=&#34;more!&#34;&gt;More!&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There&amp;rsquo;s a lot more to RT than I&amp;rsquo;ve covered in this article. Some things I&amp;rsquo;ve glossed over include:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_Access_control&#34;&gt;Access control&lt;/span&gt;&lt;/strong&gt;
+RT has a sophisticated access control system that supports different levels of access to tickets based on a user&amp;rsquo;s identity, group memberships or role. You can grant permissions globally or per queue. It&amp;rsquo;s possible to configure read-only access or only allow someone to see tickets they requested.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_Command_Line_Interface&#34;&gt;Command Line Interface&lt;/span&gt;&lt;/strong&gt;
+There is a full-featured command line interface that allows you to do almost anything. This provides another way to script and customize things.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_Scalability&#34;&gt;Scalability&lt;/span&gt;&lt;/strong&gt;
+Request Tracker is very scalable and is being used in production environments with several tens of thousands of tickets in the database. (Not on a 486, of course.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;span-id-future-directions-future-directions-span&#34;&gt;&lt;span id=&#34;future directions&#34;&gt;Future Directions&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The current version of RT2 is 2.0.9. The 2.1 development series will be starting soon leading toward 2.2. While nothing has been finalized, items on the table for 2.2 include better ACL support, more flexible keywords, asset trackin, and several other cool things.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-best-practical-best-practical-span&#34;&gt;&lt;span id=&#34;best practical&#34;&gt;Best Practical&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Commercial Support for Request Tracker is available from Best Practical Solutions, LLC. Best Practical Solutions was formed by RT&amp;rsquo;s author, Jesse Vincent, to sell support and custom development for RT. They do all sorts of customization, interfaces, and custom import tools.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-other-urls-other-urls-span&#34;&gt;&lt;span id=&#34;other urls&#34;&gt;Other URLS&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://bestpractical.com/rt/&#34;&gt;http://bestpractical.com/rt/&lt;/a&gt; - RT Site
+&lt;a href=&#34;mailto:sales@bestpractical.com&#34;&gt;mailto:sales@bestpractical.com&lt;/a&gt; - Support and customization inquiries
+&lt;a href=&#34;http://www.masonhq.com/&#34;&gt;http://www.masonhq.com/&lt;/a&gt; - HTML::Mason Site
+&lt;a href=&#34;http://rt.cpan.org/&#34;&gt;http://rt.cpan.org/&lt;/a&gt; - RT for every module in CPAN&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

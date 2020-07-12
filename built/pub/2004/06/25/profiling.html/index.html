@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Profiling Perl </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Update: Perl Profiling has evolved since this article was written, please see http://www.perl.org/about/whitepapers/perl-profiling.html for the latest information. Everyone wants their Perl code to run faster. Unfortunately, without understanding why the code is taking so long to start with, it&#39;s impossible..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2004/06/25/profiling.html/" />
+<meta property="og:title" content="Profiling Perl" />
+<meta property="og:description" content="Update: Perl Profiling has evolved since this article was written, please see http://www.perl.org/about/whitepapers/perl-profiling.html for the latest information. Everyone wants their Perl code to run faster. Unfortunately, without understanding why the code is taking so long to start with, it&#39;s impossible...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2004-06-06T06:06:06Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2004_06_25_profiling/111-profiling.gif" />
+<meta property="og:article:tag" content="optimization" />
+<meta property="og:article:tag" content="profiler" />
+<meta property="og:article:tag" content="profiling" />
+<meta property="og:article:tag" content="speed" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Profiling Perl</h1>
+              <p class="blog-post-meta">Jun 24, 2004 by
+              
+              
+                
+                
+                <a href="#author-bio-simon-cozens">Simon Cozens</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p><strong>Update:</strong> <a href="http://www.perl.org/about/whitepapers/perl-profiling.html">Perl Profiling</a> has evolved since this article was written, please see <a href="http://www.perl.org/about/whitepapers/perl-profiling.html">http://www.perl.org/about/whitepapers/perl-profiling.html</a> for the latest information.</p>
+
+<p>Everyone wants their Perl code to run faster. Unfortunately, without understanding why the code is taking so long to start with, it&rsquo;s impossible to know where to start optimizing it. This is where &ldquo;profiling&rdquo; comes in; it lets us know what our programs are doing.</p>
+
+<p>We&rsquo;ll look at why and how to profile programs, and then what to do with the profiling information once we&rsquo;ve got it.</p>
+
+<h3 id="span-id-why-profile-why-profile-span"><span id="Why_Profile?">Why Profile?</span></h3>
+
+<p>There&rsquo;s nothing worse than setting off a long-running Perl program and then not knowing what it&rsquo;s doing. I&rsquo;ve recently been working on a new, mail-archiving program for the <code>perl.org</code> mailing lists, and so I&rsquo;ve had to import a load of old email into the database. Here&rsquo;s the code I used to do this:</p>
+
+<pre><code>    use File::Slurp;
+    use Email::Store &quot;dbi:SQLite:dbname=mailstore.db&quot;;
+    use File::Find::Rule;
+
+    for (File::Find::Rule-&gt;file-&gt;name(qr/\d+/)-&gt;in(&quot;perl6-language&quot;)) {
+        Email::Store::Mail-&gt;store(scalar read_file($_));
+    }
+</code></pre>
+
+<p>It&rsquo;s an innocent little program &ndash; it looks for all the files in the <em>perl6-language</em> directory whose names are purely numeric (this is how messages are stored in an ezmlm archive), reads the contents of the files into memory with <code>File::Slurp::read_file</code>, and then uses <a href="https://metacpan.org/pod/Email::Store"><code>Email::Store</code></a> to put them into a database. You start it running, and come back a few hours later and it&rsquo;s done.</p>
+
+<p>All through, though, you have this nervous suspicion that it&rsquo;s not doing the right thing; or at least, not doing it very quickly. Sure there&rsquo;s a lot of mail, but should it really be taking this long? What&rsquo;s it actually spending its time doing? We can add some <code>print</code> statements to help us feel more at ease:</p>
+
+<pre><code>    use File::Slurp;
+    use Email::Store &quot;dbi:SQLite:dbname=mailstore.db&quot;;
+    use File::Find::Rule;
+
+    print &quot;Starting run...\n&quot;;
+    $|++;
+    for (File::Find::Rule-&gt;file-&gt;name(qr/\d+/)-&gt;in(&quot;perl6-language&quot;)) {
+        print &quot;Indexing $_...&quot;;
+        Email::Store::Mail-&gt;store(scalar read_file($_));
+        print &quot; done\n&quot;;
+    }
+</code></pre>
+
+<p>Now we can at least see more progress, but we still don&rsquo;t know if this program is working to full efficiency, and the reason for this is that there&rsquo;s an awful lot going on in the underlying modules that we can&rsquo;t immediately see. Is it the <code>File::Find::Rule</code> that&rsquo;s taking up all the time? Is it the storing process? Which part of the storing process? By profiling the code we&rsquo;ll identify, and hopefully smooth over, some of the bottlenecks.</p>
+
+<h3 id="span-id-simple-profiling-simple-profiling-span"><span id="Simple_Profiling">Simple Profiling</span></h3>
+
+<p>The granddaddy of Perl profiling tools is <a href="https://metacpan.org/pod/Devel::DProf"><code>Devel::DProf</code></a>. To profile a code run, add the <code>-d:DProf</code> argument to your Perl command line and let it go:</p>
+
+<pre><code>    % perl -d:DProf store_archive
+</code></pre>
+
+<p>The run will now take slightly longer than normal as Perl collects and writes out information on your program&rsquo;s subroutine calls and exits, and at the end of your job, you&rsquo;ll find a file called <em>tmon.out</em> in the current directory; this contains all the profiling information.</p>
+
+<p>A couple of notes about this:</p>
+
+<ul>
+<li>It&rsquo;s important to control the length of the run; in this case, I&rsquo;d probably ensure that the mail archive contained about ten or fifteen mails to store. (I used seven in this example.) If your run goes on too long, you will end up processing a vast amount of profiling data, and not only will it take a lot time to read back in, it&rsquo;ll take far too long for you to wade through all the statistics. On the other hand, if the run&rsquo;s too short, the main body of the processing will be obscured by startup and other &ldquo;fixed costs.&rdquo;</li>
+<li>The other problem you might face is that <code>Devel::DProf</code>, being somewhat venerable, occasionally has problems keeping up on certain recent Perls, (particularly the 5.6.x series) and may end up segfaulting all over the place. If this affects you, download the <a href="https://metacpan.org/pod/Devel::Profiler"><code>Devel::Profiler</code></a> module from CPAN, which is a pure-Perl replacement for it.</li>
+</ul>
+
+<p>The next step is to run the preprocessor for the profiler output, <code>dprofpp</code>. This will produce a table of where our time has been spent:</p>
+
+<pre><code>  Total Elapsed Time = 13.89525 Seconds
+    User+System Time = 9.765255 Seconds
+  Exclusive Times
+  %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+   24.1   2.355  4.822     38   0.0620 0.1269  File::Find::_find_dir
+   20.5   2.011  2.467  17852   0.0001 0.0001  File::Find::Rule::__ANON__
+   7.82   0.764  0.764    531   0.0014 0.0014  DBI::st::execute
+   4.73   0.462  0.462  18166   0.0000 0.0000  File::Spec::Unix::splitdir
+   2.92   0.285  0.769    109   0.0026 0.0071  base::import
+   2.26   0.221  0.402    531   0.0004 0.0008  Class::DBI::transform_sql
+   2.09   0.204  0.203   8742   0.0000 0.0000  Class::Data::Inheritable::__ANON__
+   1.72   0.168  0.359  18017   0.0000 0.0000  Class::DBI::Column::name_lc
+   1.57   0.153  0.153  18101   0.0000 0.0000  Class::Accessor::get
+   1.42   0.139  0.139     76   0.0018 0.0018  Cwd::abs_path
+</code></pre>
+
+<p>The first two lines tell us how long the program ran for: around 14 seconds, but it was actually only running for about 10 of those &ndash; the rest of the time other programs on the system were in the foreground.</p>
+
+<p>Next we have a table of subroutines, in descending order of time spent; perhaps surprisingly, we find that <code>File::Find</code> and <code>File::Find::Rule</code> are the culprits for eating up 20% of running time each. We&rsquo;re also told the number of &ldquo;exclusive seconds,&rdquo; which is the amount of time spent in one particular subroutine, and &ldquo;cumulative seconds.&rdquo; This might better be called &ldquo;inclusive seconds,&rdquo; since it&rsquo;s the amount of time the program spent in a particular subroutine and all the other routines called from it.</p>
+
+<p>From the statistics above, we can guess that <code>File::Find::_find_dir</code> itself took up 2 seconds of time, but during its execution, it called an anonymous subroutine created by <code>File::Find::Rule</code>, and this subroutine also took up 2 seconds, making a cumulative time of 4 seconds. We also notice that we&rsquo;re making an awful lot of calls to <code>File::Find::Rule</code>, <code>splitdir</code>, and some <code>Class::DBI</code> and <code>Class::Accessor</code> routines.</p>
+
+<h3 id="span-id-what-to-do-now-what-to-do-now-span"><span id="What_to_do_now">What to Do Now</span></h3>
+
+<p>Now we have some profiling information, and we see a problem with <code>File::Find::Rule</code>. &ldquo;Aha,&rdquo; we might think, &ldquo;Let&rsquo;s replace our use of <code>File::Find::Rule</code> with a simple globbing operation, and we can shave 4 seconds off our runtime!&ldquo;. So, just for an experiment, we try it:</p>
+
+<pre><code>    use File::Slurp;
+    use Email::Store &quot;dbi:SQLite:dbname=mailstore.db&quot;;
+    $|=1;
+    for (&lt;perl6-language/archive/0/*&gt;) {
+        next unless /\d+/;
+        print &quot;$_ ...&quot;;
+        Email::Store::Mail-&gt;store(scalar read_file($_));
+        print &quot;\n&quot;;
+    }
+</code></pre>
+
+<p>Now this looks a bit better:</p>
+
+<pre><code> Total Elapsed Time = 9.559537 Seconds
+   User+System Time = 5.329537 Seconds
+ Exclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  13.1   0.703  0.703    531   0.0013 0.0013  DBI::st::execute
+  5.54   0.295  0.726    109   0.0027 0.0067  base::import
+  5.52   0.294  0.294  18101   0.0000 0.0000  Class::Accessor::get
+  3.45   0.184  1.930  19443   0.0000 0.0001  Class::Accessor::__ANON__
+  3.13   0.167  0.970    531   0.0003 0.0018  DBIx::ContextualFetch::st::_untain
+                                              t_execute
+  3.10   0.165  1.324   1364   0.0001 0.0010  Class::DBI::get
+  2.98   0.159  0.376    531   0.0003 0.0007  Class::DBI::transform_sql
+  2.61   0.139  0.139     74   0.0019 0.0019  Cwd::abs_path
+  2.23   0.119  0.119   8742   0.0000 0.0000  Class::Data::Inheritable::__ANON__
+  2.06   0.110  0.744   2841   0.0000 0.0003  Class::DBI::__ANON__
+  1.95   0.104  0.159   2669   0.0000 0.0001  Class::DBI::ColumnGrouper::group_cols
+</code></pre>
+
+<p>Now to be honest, I would never have guessed that removing <code>File::Find::Rule</code> would shave 4 seconds off my code run. This is the first rule of profiling: You actually need to profile before optimizing, because <strong>you never know where the hotspots are going to turn out to be.</strong> We&rsquo;ve also exercised the second rule of profiling: <strong>Review what you&rsquo;re using.</strong> By using another technique instead of <code>File::Find::Rule</code>, we&rsquo;ve reduced our running time by a significant amount.</p>
+
+<p>This time, it looks as though we&rsquo;re doing reasonably well &ndash; the busiest thing is writing to a database, and that&rsquo;s basically what this application does, so that&rsquo;s fair enough. There&rsquo;s also a lot of busy calls that are to do with <code>Class::DBI</code>, and we know that we use <code>Class::DBI</code> as a deliberate tradeoff between convenience and efficiency. If we were being ruthlessly determined to make this program faster, we&rsquo;d start looking at using plain <code>DBI</code> instead of <code>Class::DBI</code>, but that&rsquo;s a tradeoff I don&rsquo;t think is worth making at the moment.</p>
+
+<p>This is the third rule of profiling: <strong>Hotspots happen.</strong> If you got rid of all the hotspots in your code, it wouldn&rsquo;t do anything. There are a certain reasonable number of things that your program should be doing for it to be useful, and you simply can&rsquo;t get rid of them; additionally there are any number of tradeoffs that we deliberately or subconsciously make in order to make our lives easier at some potential speed cost &ndash; for instance, writing in Perl or C instead of machine code.</p>
+
+<h3 id="span-id-from-exclusive-to-inclusive-from-exclusive-to-inclusive-span"><span id="From_exclusive_to_inclusive">From Exclusive to Inclusive</span></h3>
+
+<p>The default report produced by <em>dprofpp</em> is sorted by exclusive subroutine time, and is therefore good at telling us about individual subroutines that are called a lot and take up disproportionate amounts of time. This can be useful, but it doesn&rsquo;t actually give us an overall view of what our code is doing. If we want to do that, we need to move from looking at exclusive to looking at inclusive times, and we do this by adding the <code>-I</code> option to <em>dprofpp</em>. This produces something like this:</p>
+
+<pre><code> Total Elapsed Time = 9.559537 Seconds
+   User+System Time = 5.329537 Seconds
+ Inclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  83.8   0.009  4.468      7   0.0013 0.6383  Email::Store::Mail::store
+  80.8   0.061  4.308     35   0.0017 0.1231  Module::Pluggable::Ordered::__ANON
+                                              __
+  46.3       -  2.472      3        - 0.8239  main::BEGIN
+  43.4       -  2.314      7        - 0.3306  Mail::Thread::thread
+  43.4       -  2.314      7        - 0.3305  Email::Store::Thread::on_store
+  36.2   0.184  1.930  19443   0.0000 0.0001  Class::Accessor::__ANON__
+  28.9   0.006  1.543    531   0.0000 0.0029  Email::Store::Thread::Container::_
+                                              _ANON__
+  27.3   0.068  1.455    105   0.0006 0.0139  UNIVERSAL::require
+</code></pre>
+
+<p>This tells us a number of useful facts. First, we find that 84% of the program&rsquo;s runtime is spent in the <code>Email::Store::Mail::store</code> subroutine and its descendants, which is the main, tight loop of the program. This means, quite logically, that 16% is not spent in the main loop, and that&rsquo;s a good sign &ndash; this means that we have a 1-second fixed cost in starting up and loading the appropriate modules, and this will amortize nicely against a longer run than 10 seconds. After all, if processing a massive amount of mail takes 20 minutes, the first 1-second startup becomes insignificant. It means we can pretty much ignore everything outside the main loop.</p>
+
+<p>We also find that threading the emails is costly; threading involves a lot of manipulation of <code>Email::Store::Thread::Container</code> objects, which are database backed. This means that a lot of the database stores and executes that we saw in the previous, exclusive report are probably something to do with threading. After all, we now spend 2 seconds out of our 4 seconds of processing time on threading in <code>Mail::Thread::thread</code>, and even though we only call this seven times, we do 531 things with the container objects. This is bad.</p>
+
+<p>Now, I happen to know (because I wrote the module) that <code>Email::Store::Thread::Container</code> uses a feature of <code>Class::DBI</code> called <code>autoupdate</code>. This means that while we do a lot of fetches and stores that we could conceivably do in memory and commit to the database once we&rsquo;re done, we instead hit the database every single time.</p>
+
+<p>So, just as an experiment, we do two things to optimize <code>Email::Store::Thread::Container</code>. First, we know that we&rsquo;re going to be doing a lot of database fetches, sometimes of the same container multiple times, so we cache the fetch. We turn this:</p>
+
+<pre><code>    sub new { 
+        my ($class, $id) = @_;
+        $class-&gt;find_or_create({ message =&gt; $id });
+    }
+</code></pre>
+
+<p>Into this:</p>
+
+<pre><code>    my %container_cache = ();
+    sub new {
+        my ($class, $id) = @_;
+        $container_cache{$id} 
+            ||= $class-&gt;find_or_create({ message =&gt; $id });
+    }
+</code></pre>
+
+<p>This is a standard caching technique, and will produce another tradeoff: we trade memory (in filling up <code>%container_cache</code> with a bunch of objects) for speed (in not having to do as many costly database fetches).</p>
+
+<p>Then we turn <code>autoupdate</code> off, and provide a way of updating the database manually. The reason we wanted to turn off <code>autoupdate</code> is that because all these containers form a tree structure (since they represent mails in a thread which, naturally, form a tree structure), it&rsquo;s a pain to traverse the tree and update all the containers once we&rsquo;re done.</p>
+
+<p>However, with this cache in place, we know that we already have a way to get at all the containers in one go: we just look at the values of <code>%container_hash</code>, and there are all the objects we&rsquo;ve used. So we can now add a <code>flush</code> method:</p>
+
+<pre><code>    sub flush {
+        (delete $container_cache{$_})-&gt;update for keys %container_cache;
+    }
+</code></pre>
+
+<p>This both empties the cache and updates the database. The only remaining problem is working out where to call <code>flush</code>. If we&rsquo;re dealing with absolutely thousands of emails, it might be worth calling <code>flush</code> after every <code>store</code>, or else <code>%container_hash</code> will get huge. However, since we&rsquo;re not, we just call <code>flush</code> in an <code>END</code> block to catch the container objects before they get destroyed by the garbage collector:</p>
+
+<pre><code>    END { Email::Store::Thread::Container-&gt;flush; }
+</code></pre>
+
+<p>Running <em>dprofpp</em> again:</p>
+
+<pre><code> Total Elapsed Time = 7.741969 Seconds
+   User+System Time = 3.911969 Seconds
+ Inclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  65.4       -  2.559      7        - 0.3656  Email::Store::Mail::store
+  62.9   0.014  2.461     35   0.0004 0.0703  Module::Pluggable::Ordered::__ANON
+                                              __
+  56.2   0.020  2.202      3   0.0065 0.7341  main::BEGIN
+  31.8   0.028  1.247    105   0.0003 0.0119  UNIVERSAL::require
+  29.4   0.004  1.150      7   0.0006 0.1642  Email::Store::Entity::on_store
+  22.7   0.025  0.890    100   0.0003 0.0089  Class::DBI::create
+  21.0   0.031  0.824    100   0.0003 0.0082  Class::DBI::_create
+  18.3   0.235  0.716    109   0.0022 0.0066  base::import
+  15.1       -  0.594    274        - 0.0022  DBIx::ContextualFetch::st::execute
+  15.1       -  0.592      7        - 0.0846  Mail::Thread::thread
+  15.1       -  0.592      7        - 0.0845  Email::Store::Thread::on_store
+</code></pre>
+
+<p>We find that we&rsquo;ve managed to shave another second-and-a-half off, and we&rsquo;ve also swapped a per-mail cost (of updating the threading containers every time) to a once-per-run fixed cost (of updating them all at the end of the run). This has taken the business of threading down from two-and-a-half seconds per run to half a second per run, and it means that 35% of our running time is outside the main loop; again, this will amortize nicely on large runs.</p>
+
+<p>We started with a program that runs for 10 seconds, and now it runs for 4. Through judicious use of the profiler, we&rsquo;ve identified the hotspots and eliminated the most troublesome ones. We&rsquo;ve looked at both exclusive and inclusive views of the profiling data, but there are still a few other things that <em>dprofpp</em> can tell us. For instance, the <code>-S</code> option gives us a call tree, showing what gets called from what. These trees can be incredibly long and tedious, but if the two views we&rsquo;ve already looked at haven&rsquo;t identified potential trouble spots, then wading through the tree might be your only option.</p>
+
+<h3 id="span-id-writing-your-own-profiler-writing-your-own-profiler-span"><span id="Writing_your_own_profiler">Writing your Own Profiler</span></h3>
+
+<p>At least, that is, if you want to use <em>dprofpp</em>; until yesterday, that was the only way of reading profiling data. Yesterday, however, I released <a href="https://metacpan.org/pod/Devel::DProfPP"><code>Devel::DProfPP</code></a>, which provides an event-driven interface to reading <em>tmon.out</em> files. I intended to use it to write a new version of <em>dprofpp</em> because I find the current profiler intolerably slow; ironically, though, I haven&rsquo;t profiled it yet.</p>
+
+<p>Anyway, <code>Devel::DProfPP</code> allows you to specify callbacks to be run every time the profiling data shows Perl entering or exiting a subroutine, and provides access to the same timing and call stack information used by <em>dprofpp</em>.</p>
+
+<p>So, for instance, I like visualization of complicated data. I&rsquo;d prefer to see what&rsquo;s calling what as a graph that I can print out and pore over, rather than as a listing. So, I pull together <code>Devel::DProfPP</code> and the trusty <a href="https://metacpan.org/pod/GraphViz"><code>Graphviz</code></a> module, and create my own profiler:</p>
+
+<pre><code> use GraphViz;
+ use Devel::DProfPP;
+
+ my $graph = GraphViz-&gt;new();
+ my %edges = ();
+ Devel::DProfPP-&gt;new(enter =&gt; sub {
+     my $pp = shift;
+     my @stack = $pp-&gt;stack;
+     my $to = $stack[-1]-&gt;sub_name;
+     my $from = @stack &gt; 1 ? $stack[-2]-&gt;sub_name : &quot;MAIN BODY&quot;;
+     $graph-&gt;add_edge($from =&gt; $to) unless $edges{$from.&quot; -&gt; &quot;.$to}++;
+ })-&gt;parse;
+
+ print $graph-&gt;as_png;
+</code></pre>
+
+<p>Every time we enter a subroutine, we look at the call stack so far. We pick the top frame of the stack, and ask for its subroutine name. If there&rsquo;s another subroutine on the stack, we take that off too; otherwise we&rsquo;re being called from the main body of the code. Then we add an edge on our graph between the two subroutines, unless we&rsquo;ve already got one. Finally, we print out the graph as a PNG file for me to print out and stick on the wall.</p>
+
+<p>There are any number of other things you can do with <code>Devel::DProfPP</code> if the ordinary profiler doesn&rsquo;t suit your needs for some reason; but as we&rsquo;ve seen, just judicious application of profiling and highlighting hotspots in your code can cut the running time of a long-running Perl program by 50% or so, and can also help you to understand what your code is spending all its time doing.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/optimization">optimization</a></div>
+                
+                  <div class="tag"><a href="/tags/profiler">profiler</a></div>
+                
+                  <div class="tag"><a href="/tags/profiling">profiling</a></div>
+                
+                  <div class="tag"><a href="/tags/speed">speed</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-simon-cozens">
+  <div class="col-sm-2">
+    
+    <a href="/authors/simon-cozens/"><div class="circle-avatar" style="background-image:url(/images/author/simon-cozens.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/simon-cozens/"><h3>Simon Cozens</h3></a>
+    <p></p>
+    <h5><a href="/authors/simon-cozens/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2004_06_25_profiling.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

@@ -1,0 +1,698 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sam Tregar on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/sam-tregar/</link>
+    <description>Recent content in Sam Tregar on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 30 Sep 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/sam-tregar/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Don&#39;t Be Afraid to Drop the SOAP</title>
+      <link>http://localhost:1313/pub/2004/09/30/drop_the_soap.html/</link>
+      <pubDate>Thu, 30 Sep 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/09/30/drop_the_soap.html/</guid>
+      <description>
+
+&lt;p&gt;SOAP has great hype; portable, simple, efficient, flexible, and open, SOAP has it all. According to many intelligent people, writing a web service with SOAP should be a snap, and the results will speak for themselves. So they do, although what they have to say isn&amp;rsquo;t pretty.&lt;/p&gt;
+
+&lt;p&gt;Two years ago I added a SOAP interface to the &lt;a href=&#34;http://bricolage.cc/&#34;&gt;Bricolage&lt;/a&gt; open source content management system. I had high expectations. SOAP would give me a flexible and efficient control system, one that would be easy to develop and simple to debug. What&amp;rsquo;s more, I&amp;rsquo;d be out on the leading edge of cool XML tech.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately the results haven&amp;rsquo;t lived up to my hopes. The end result is fragile and a real resource hog. In this article I&amp;rsquo;ll explore what went wrong and why.&lt;/p&gt;
+
+&lt;p&gt;Last year, I led the development of a new content-management system called &lt;a href=&#34;http://krang.sf.net/&#34;&gt;Krang&lt;/a&gt;, and I cut SOAP out of the mix. Instead, I created a custom XML file-format based on TAR. Performance is up, development costs are down, and debugging is a breeze. I&amp;rsquo;ll describe this system in detail at the end of the article.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;div class=&#34;secondary&#34;&gt;
+&lt;h3 id=&#34;what-is-soap&#34;&gt;What is SOAP?&lt;/h3&gt;
+&lt;p&gt;In case you&#39;ve been out to lunch, SOAP (Simple Object Access Protocol) is a relatively new RPC (Remote Procedure Call) system that works by exchanging XML messages over a network connection, usually over HTTP. In an RPC system, a server offers routines (procedures) that clients may call over a network connection. SOAP surpasses its direct predecessor, XML-RPC, with an enhanced type system and an improved error-handling system. Despite the name, SOAP is neither particularly simple nor object-oriented.&lt;/p&gt;
+&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&#34;bricolage-gets-soap&#34;&gt;Bricolage Gets SOAP&lt;/h3&gt;
+
+&lt;p&gt;When I joined the Bricolage project, it lacked a good way to control the application aside from the browser-based GUI. In particular, we needed a way to import data and trigger publish runs. Bricolage is a network application, and some useful tasks require interaction with multiple Bricolage servers. SOAP seemed like an obvious choice. I read &amp;ldquo;Programming Web Services with Perl&amp;rdquo; and I was ready to go.&lt;/p&gt;
+
+&lt;p&gt;I implemented the Bricolage SOAP interface as a set of classes that map SOAP requests to method calls on the underlying objects, with some glue code to handle XML serialization and deserialization. I used XML Schema to describe an XML vocabulary for each object type, which we used to validate input and output for the SOAP methods during testing.&lt;/p&gt;
+
+&lt;p&gt;By far the most important use-case for this new system was data import. Many of our customers were already using content management systems (CMSs) and we needed to move their data into Bricolage. A typical migration involved processing a database dump from the client&amp;rsquo;s old system and producing XML files to load in Bricolage via SOAP requests.&lt;/p&gt;
+
+&lt;p&gt;The SOAP interface could also move content from one system to another, most commonly when moving completed template changes into production. Finally, SOAP helped to automate publish runs and other system maintenance tasks.&lt;/p&gt;
+
+&lt;p&gt;To provide a user interface to the SOAP system, I wrote a command-line client called &lt;code&gt;bric_soap&lt;/code&gt;. The &lt;code&gt;bric_soap&lt;/code&gt; script is a sort of Swiss Army knife for the Bricolage SOAP interface; it can call any available method and pipe the results from command to command. For example, to find and export all the story objects with the word &lt;code&gt;foo&lt;/code&gt; in their title:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ bric_soap story list_ids --search &amp;quot;title=%foo%&amp;quot; |
+    bric_soap story export - &amp;gt; stories.xml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Later we wrote several single-purpose SOAP clients, including &lt;code&gt;bric_republish&lt;/code&gt; for republishing stories and &lt;code&gt;bric_dev_sync&lt;/code&gt; for moving templates and elements between systems.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-went-right&#34;&gt;What Went Right&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The well-documented XML format for Bricolage objects made developing data import systems straightforward. Compared to previous projects that attempted direct-to-SQL imports, the added layer of abstraction and validation was an advantage.&lt;/li&gt;
+&lt;li&gt;The interface offered by the Bricolage SOAP classes is simpler and more regular than the underlying Bricolage object APIs. This, coupled with the versatile &lt;code&gt;bric_soap&lt;/code&gt; client, allowed developers to easily script complex automations.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&#34;what-went-wrong&#34;&gt;What Went Wrong&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;SOAP is difficult to debug. The SOAP message format is verbose even by XML standards, and decoding it by hand is a great way to waste an afternoon. As a result, development took almost twice as long as anticipated.&lt;/li&gt;
+&lt;li&gt;The fact that all requests happened live over the network further hampered debugging. Unless the user was careful to log debugging output to a file it was difficult to determine what went wrong.&lt;/li&gt;
+&lt;li&gt;SOAP doesn&amp;rsquo;t handle large amounts of data well. This became immediately apparent as we tried to load a large data import in a single request. Since SOAP requires the entire request to travel in one XML document, SOAP implementations usually load the entire request into memory. This required us to split large jobs into multiple requests, reducing performance and making it impossible to run a complete import inside a transaction.&lt;/li&gt;
+&lt;li&gt;SOAP, like all network services, requires authentication to be safe against remote attack. This means that each call to &lt;code&gt;bric_soap&lt;/code&gt; required at least two SOAP requests — one to login and receive a cookie and the second to call the requested method. Since the overhead of a SOAP request is sizable, this further slowed things down. Later we added a way to save the cookie between requests, which helped considerably.&lt;/li&gt;
+&lt;li&gt;Network problems affected operations that needed to access multiple machines, such as the program responsible for moving templates and elements — &lt;code&gt;bric_dev_sync&lt;/code&gt;. Requests would frequently timeout in the middle, sometimes leaving the target system in an inconsistent state.&lt;/li&gt;
+&lt;li&gt;At the time, there was no good Perl solution for validating object XML against an XML Schema at runtime. For testing purposes I hacked together a way to use a command-line verifier using Xerces/C++. Although not a deficiency in SOAP itself, not doing runtime validation led to bad data passing through the SOAP interface and ending up in the database where we often had to perform manual cleanup.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;round-two-krang&#34;&gt;Round Two: Krang&lt;/h3&gt;
+
+&lt;p&gt;When I started development on Krang, our new content management system, I wanted to find a better way to meet our data import and automation needs. After searching in vain for better SOAP techniques, I realized that the problems were largely inherent in SOAP itself. SOAP is a network system, tuned for small messages and it carries with it complexity that resists easy debugging.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, when I considered the XML aspects of the Bricolage system, I found little to dislike. XML is easy to understand and is sufficiently flexible to represent all the data handled by the system. In particular, I wanted to reuse my hard-won XML Schema writing skills, although I knew that I&amp;rsquo;d need runtime validation.&lt;/p&gt;
+
+&lt;p&gt;In designing the new system I took a big step back from the leading edge. I based the new system on the TAR archive file format, which dates back to the mid-70s!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_09_30_drop_the_soap/KDS.jpg&#34; width=&#34;206&#34; height=&#34;294&#34; /&gt;
+&lt;em&gt;Figure 1.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;I named the file format &amp;ldquo;Krang Data Set&amp;rdquo; (KDS). A KDS file is a TAR archive containing a set of XML files. A special file, &lt;em&gt;index.xml&lt;/em&gt;, contains data about all the files contained in the KDS file, providing class names and IDs. To reduce their size, it&amp;rsquo;s possible to compress KDS files using &lt;code&gt;gzip&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I wrote two scripts, &lt;code&gt;krang_import&lt;/code&gt; and &lt;code&gt;krang_export&lt;/code&gt;, to read and write KDS files. Each object type has its own XML Schema document describing its structure. Krang classes implement their own &lt;code&gt;deserialize_xml()&lt;/code&gt; and &lt;code&gt;serialize_xml()&lt;/code&gt; methods. For example, to export all templates into a file called &lt;em&gt;templates.kds&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ krang_export --templates --output templates.kds
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To import those templates, possibly on a different machine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ krang_import templates.kds
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the object being exported has any dependencies, the KDS file will include them. In this way a KDS file generated by &lt;code&gt;krang_export&lt;/code&gt; is guaranteed to import successfully.&lt;/p&gt;
+
+&lt;p&gt;By using a disk-based system for importing and exporting data I cut the network completely out of the picture. This alone accomplishes a major reduction in complexity and a sizable performance increase. Recently we completed a very large import into Krang comprising 12,000 stories and 160,000 images. This took around 4 hours to complete, which may seem like a long time but it&amp;rsquo;s a big improvement over the 28 hours the same import required using SOAP and Bricolage!&lt;/p&gt;
+
+&lt;p&gt;For system automation such as running publish jobs from &lt;code&gt;cron&lt;/code&gt;, I decided to code utilities directly to Krang&amp;rsquo;s Perl API. This means these tools must run on the target machine, but in practice this is usually how people used the Bricolage tools. When an operation must run across multiple machines, perhaps when moving templates from beta to production, the administrator simply uses &lt;code&gt;scp&lt;/code&gt; to transfer the KDS files.&lt;/p&gt;
+
+&lt;p&gt;I also took the opportunity to write XML::Validator::Schema, a pure-Perl XML Schema validator. It&amp;rsquo;s far from complete, but it supports all the schema constructs I needed for Krang. This allows Krang to perform runtime schema validation on KDS files.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-went-right-1&#34;&gt;What Went Right&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The new system is fast. Operating on KDS files on disk is many times faster than SOAP network transfers.&lt;/li&gt;
+&lt;li&gt;Capacity is practically unlimited. Since KDS files separate objects into individual XML files, Krang never has to load them all into memory at once. This means that a KDS file containing 10,000 objects is just as easy to process as one containing 10.&lt;/li&gt;
+&lt;li&gt;Debugging is much easier. When an import fails the user simply sends me the KDS file and I can easily examine the XML files or attempt an import on my own system. I don&amp;rsquo;t have to wade through SOAP XML noise or try to replicate network operations to reproduce a bug. Separating each object into a single XML file made working on the data much easier because each file is small enough to load into Emacs.&lt;/li&gt;
+&lt;li&gt;Runtime schema validation helps find bugs faster and prevents bad data from ending up in the database.&lt;/li&gt;
+&lt;li&gt;Because Krang&amp;rsquo;s design accounted for the XML system from the start it has a much closer integration with the overall system. This gives it greater coverage and stability.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&#34;what-went-wrong-1&#34;&gt;What Went Wrong&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Operations across multiple machines require the user to manually transfer KDS files across the network.&lt;/li&gt;
+&lt;li&gt;Users who have developed expertise in using the Bricolage SOAP clients must learn a new technology.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;SOAP isn&amp;rsquo;t a bad technology, but it does have limits. My experience developing a SOAP interface for Bricolage taught me some important lessons that I&amp;rsquo;ve tried to apply to Krang. So far the experiment is a success, but Krang is young and problems may take time to appear.&lt;/p&gt;
+
+&lt;p&gt;Does this mean you shouldn&amp;rsquo;t use SOAP for your next project? Not necessarily. It does mean that you should take a close look at your requirements and consider whether an alternative implementation would help you avoid some of the pitfalls I&amp;rsquo;ve described.&lt;/p&gt;
+
+&lt;p&gt;The best candidates for SOAP applications are lightweight network applications without significant performance requirements. If your application doesn&amp;rsquo;t absolutely require network interaction, or if it will deal with large amounts of data then you should avoid SOAP. Maybe you can use TAR instead!&lt;/p&gt;
+
+&lt;h3 id=&#34;resources&#34;&gt;Resources&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://krang.sf.net/&#34;&gt;Krang&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://bricolage.cc/&#34;&gt;Bricolage&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://bricolage.cc/docs/current/api/Bric/SOAP.html&#34;&gt;Bricolage SOAP documentation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.w3.org/TR/SOAP/&#34;&gt;SOAP&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.soaplite.com/&#34;&gt;SOAP::Lite&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://xml.apache.org/xerces-c/&#34;&gt;Xerces/C++&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.w3.org/XML/Schema&#34;&gt;XML Schema&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/XML::Validator::Schema&#34;&gt;XML::Validator::Schema&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/pwebserperl/&#34;&gt;Programming Web Services with Perl&lt;/a&gt; by Randy J. Ray and Pavel Kulchenko&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Going Up?</title>
+      <link>http://localhost:1313/pub/2002/09/04/threads.html/</link>
+      <pubDate>Wed, 04 Sep 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/09/04/threads.html/</guid>
+      <description>
+
+&lt;p&gt;Perl 5.8.0 is the first version of Perl with a stable threading implementation. Threading has the potential to change the way we program in Perl, and even the way we think about programming. This article explores Perl&amp;rsquo;s new threading support through a simple toy application - an elevator simulator.&lt;/p&gt;
+
+&lt;p&gt;Until now, Perl programmers have had a single mechanism for parallel processing - the venerable &lt;code&gt;fork()&lt;/code&gt;. When a program forks, an entirely new process is created. It runs the same code as the parent process, but exists in its own memory space with no access to the parent process&amp;rsquo; memory. Communication between forked processes is possible but it&amp;rsquo;s not at all convenient, requiring pipes, sockets, shared memory or other clumsy mechanisms.&lt;/p&gt;
+
+&lt;p&gt;In contrast, multiple threads exist inside a single process, in the same memory space as the creating thread. This allows threads to communicate much more easily than separate processes. The potential exists for threads to work together in ways that are virtually impossible for normal processes.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_09_04_threads/figure1.gif&#34; alt=&#34;figure1&#34; /&gt;
+Additionally, threads are faster to create and use less memory than full processes (to what degree depends on your operating system). Perl&amp;rsquo;s current threading implementation doesn&amp;rsquo;t do a good job of realizing these gains, but improvements are expected. If you learn to thread now, then you&amp;rsquo;ll be ready to take advantage of the extra speed when it arrives. But even if it never gets here, thread programming is still a lot of fun!&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-building-a-threading-perl-building-a-threading-perl-span&#34;&gt;&lt;span id=&#34;building a threading perl&#34;&gt;Building a Threading Perl&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;To get started with threads you&amp;rsquo;ll need to compile Perl 5.8.0 (&lt;a href=&#34;http://cpan.org/src/stable.tar.gz&#34;&gt;http://cpan.org/src/stable.tar.gz&lt;/a&gt;) with threads enabled. You can do that with this command in the unpacked source directory:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sh Configure -Dusethreads
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Also, it&amp;rsquo;s a good idea to install your thread-capable Perl someplace different than your default install as enabling threading will slow down even nonthreaded programs. To do that, use the &lt;code&gt;-Dprefix&lt;/code&gt; argument to configure. You&amp;rsquo;ll also need to tell Configure not to link this new Perl as &lt;code&gt;/usr/bin/perl&lt;/code&gt; with &lt;code&gt;-Uinstallusrbinperl&lt;/code&gt;. Thus, a good Configure line for configuring a threaded Perl might be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sh Configure -Dusethreads -Dprefix=~/myperl -Uinstallusrbinperl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you can &lt;code&gt;make&lt;/code&gt; and &lt;code&gt;make install&lt;/code&gt;. The resulting Perl binary will be ready to run the simulator in Listing 1, so go ahead and give it a try. When you get back, I&amp;rsquo;ll explain how it works.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-an-elevator-simulator-an-elevator-simulator-span&#34;&gt;&lt;span id=&#34;an elevator simulator&#34;&gt;An Elevator Simulator&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;The elevator simulator&amp;rsquo;s design was inspired by an assignment from Professor Robert Dewar&amp;rsquo;s class in programming languages at New York University. The objective of that assignment was to learn how to use the threading features of Ada. The requirements are simple:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Each elevator and each person must be implemented as a separate thread.&lt;/li&gt;
+&lt;li&gt;People choose a random floor and ride up to it from the ground floor. They wait there for a set period of time and then ride back down to the ground floor.&lt;/li&gt;
+&lt;li&gt;At the end of the simulation, the user receives a report showing the efficiency of the elevator algorithm based on the waiting and riding time of the passengers.&lt;/li&gt;
+&lt;li&gt;Basic laws of physics must be respected. No teleporting people allowed!&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The class assignment also required students to code a choice of elevator algorithms, but I&amp;rsquo;ve left that part as an exercise for the reader. (See how lazy I can get without a grade hanging over my head?)&lt;/p&gt;
+
+&lt;p&gt;When you run the simulator you&amp;rsquo;ll see output like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $ ./elevator.pl
+  Elevator 0 stopped at floor 0.
+  Elevator 1 stopped at floor 0.
+  Elevator 2 stopped at floor 0.
+  Person 0 waiting on floor 0 for elevator to floor 11.
+  Person 0 riding elevator 0 to floor 11.
+  Elevator 0 going up to floor 11.
+  Person 1 waiting on floor 0 for elevator to floor 1.
+  Person 2 waiting on floor 0 for elevator to floor 14.
+  Person 2 riding elevator 1 to floor 14.
+  Person 1 riding elevator 1 to floor 1.
+  Elevator 1 going up to floor 1.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And when the simulation finishes, you&amp;rsquo;ll get some statistics:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Average Wait Time:   1.62s
+  Average Ride Time:   4.43s
+
+  Longest Wait Time:   3.95s
+  Longest Ride Time:  10.09s
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;span-id-perl-s-threading-flavor-perl-s-threading-flavor-span&#34;&gt;&lt;span id=&#34;perl&#39;s threading flavor&#34;&gt;Perl&amp;rsquo;s Threading Flavor&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Before jumping headlong into the simulator code I would like to introduce you to Perl&amp;rsquo;s particular threading flavor. There are a wide variety of threading models living in the world today - POSIX threads, Java threads, Linux threads, Windows threads, and many more. Perl&amp;rsquo;s threads are none of these; they are of an entirely new variety. This means that you may have to set aside some of your assumptions about how threads work before you can truly grok Perl threads.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Note that Perl&amp;rsquo;s threads are not 5.005 threads. In Perl 5.005 an experimental threading model was created. Now known as 5.005 threads, this system is deprecated and should not be used by new code.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;In Perl&amp;rsquo;s threading model, variables are &lt;em&gt;not&lt;/em&gt; shared by default unless explicitly marked to be shared. This is important, and also different from most other threading models, so allow me to repeat myself. Unless you mark a variable as shared it will be treated as a private thread-local variable. The downside of this approach is that Perl has to clone all of the nonshared variables each time a new thread is created. This takes memory and time. The upside is that most nonthreaded Perl code will ``just work&amp;rdquo; with threads. Since nonthreaded code doesn&amp;rsquo;t declare any shared variables there&amp;rsquo;s no need for locking and little possibility for problems.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s threading model can be described as low-level, particularly compared to the threading models of Java and Ada. Perl offers you the ability to create threads, join them and yield processor time to other threads. For communication between threads you can mark variables as shared, lock shared variables, wait for signals on shared variables, and send signals on shared variables. That&amp;rsquo;s it!&lt;/p&gt;
+
+&lt;p&gt;Most higher-level features, like Ada&amp;rsquo;s entries or Java&amp;rsquo;s synchronized methods, can be built on top of these basic features. I expect to see plenty of development happening on CPAN in this direction as more Perl programmers get into threads.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-preamble-preamble-span&#34;&gt;&lt;span id=&#34;preamble&#34;&gt;Preamble&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Enough abstraction, let&amp;rsquo;s see this stuff work! The elevator simulator in Listing 1 starts with a section of POD documentation describing how to use the program. After that comes a block of &lt;code&gt;use&lt;/code&gt; declarations:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use 5.008;             # 5.8 required for stable threading
+  use strict;            # Amen
+  use warnings;          # Hallelujah
+  use threads;           # pull in threading routines
+  use threads::shared;   # and variable sharing routines
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first line makes sure that Perl version 5.8.0 or later is used to run the script. It isn&amp;rsquo;t written &lt;code&gt;use 5.8.0&lt;/code&gt; because that&amp;rsquo;s a syntax error with older Perls and the whole point is to produce a friendly message telling the user to upgrade. The next lines are the obligatory &lt;code&gt;strict&lt;/code&gt; and &lt;code&gt;warnings&lt;/code&gt; lines that will catch many of the errors to which my fingers are prone.&lt;/p&gt;
+
+&lt;p&gt;Next comes the &lt;code&gt;use threads&lt;/code&gt; call that tells Perl I&amp;rsquo;ll be using multiple threads. This must come as early as possible in your programs and always before the next line, &lt;code&gt;use threads::shared&lt;/code&gt;. The &lt;code&gt;threads::shared&lt;/code&gt; module allows variables to be shared between threads, making communication between threads possible.&lt;/p&gt;
+
+&lt;p&gt;Finally, GetOpt::Long is used to load parameters from the command line. Once extracted, the parameter values are stored in global variables with names in all caps (&lt;code&gt;$NUM_ELEVATORS&lt;/code&gt;, &lt;code&gt;$PEOPLE_FREQ&lt;/code&gt;, and so on).&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-building-state-building-state-span&#34;&gt;&lt;span id=&#34;building state&#34;&gt;Building State&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;The building is represented in the simulation with three shared variables, &lt;code&gt;%DOOR&lt;/code&gt;, &lt;code&gt;@BUTTON&lt;/code&gt; and &lt;code&gt;%PANEL&lt;/code&gt;. These variables are declared as shared using the &lt;code&gt;shared&lt;/code&gt; attribute:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Building State
+  our %DOOR   : shared; # a door for each elevator on each floor
+  our @BUTTON : shared; # a button for each floor to call the elevators
+  our %PANEL  : shared; # a panel of buttons in each elevator for each floor
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When a variable is marked as shared its state will be synchronized between threads. If one thread makes a change to a shared variable then all the other threads will see that change. This means that threads will need to lock the variable in order to access it safely, as I&amp;rsquo;ll demonstrate below.&lt;/p&gt;
+
+&lt;p&gt;The building state is initialized in the &lt;code&gt;init_building()&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # initialize building state
+  sub init_building {
+      # set all indicators to 0 to start the simulation
+      for my $floor (0 .. $NUM_FLOORS - 1) {
+          $BUTTON[$floor] = 0;
+          for my $elevator (0 .. $NUM_ELEVATORS - 1) {
+              $PANEL{&amp;quot;$elevator.$floor&amp;quot;} = 0;
+              $DOOR{&amp;quot;$elevator.$floor&amp;quot;}  = 0;
+          }
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The buttons on each floor are set to 0 to indicate that they are ``off.&amp;rdquo; When a person wants to summon the elevator to a floor they will set the button for that floor to 1 (&lt;code&gt;$BUTTON[$floor] = 1&lt;/code&gt;).For each elevator there are a set of panel buttons and a set of doors, one for each floor. These are all cleared to 0 at the start of the simulation. When an elevator reaches a floor it will open the door by setting the appropriate item in &lt;code&gt;%DOOR&lt;/code&gt; to 1 (&lt;code&gt;$DOOR{&amp;quot;$elevator.$floor&amp;quot;} = 1&lt;/code&gt;). Similarly, people tell the elevators where to go by setting entries in &lt;code&gt;%PANEL&lt;/code&gt; to 1 (&lt;code&gt;$PANEL{&amp;quot;$elevator.$floor&amp;quot;} = 1&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Figure 2 shows a single-elevator building with four floors and three people. Don&amp;rsquo;t worry if this doesn&amp;rsquo;t make much sense yet, you&amp;rsquo;ll see it in action later.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_09_04_threads/figure2.gif&#34; alt=&#34;figure2&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-thread-creation-thread-creation-span&#34;&gt;&lt;span id=&#34;thread creation&#34;&gt;Thread Creation&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;After calling &lt;code&gt;init_building()&lt;/code&gt; to initialize the shared building state variables, the program creates the elevator threads inside &lt;code&gt;init_elevator()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # create elevator threads
+  sub init_elevator {
+      our @elevators;
+      for (0 .. $NUM_ELEVATORS - 1) {
+          # pass each elevator thread a unique elevator id
+          push @elevators, threads-&amp;gt;new(\&amp;amp;Elevator::run,
+                                        id =&amp;gt; $_);
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Threads are created by calling &lt;code&gt;threads-&amp;gt;new()&lt;/code&gt;. The first argument to &lt;code&gt;threads-&amp;gt;new()&lt;/code&gt; is a subroutine reference where the new thread will begin execution. In this case, it is the &lt;code&gt;Elevator::run()&lt;/code&gt; subroutine declared later in the program. Anything after the first argument is passed as an argument to this subroutine. In this case each elevator is given a unique ID starting at 0.&lt;/p&gt;
+
+&lt;p&gt;The return value from &lt;code&gt;threads-&amp;gt;new()&lt;/code&gt; is an object representing the created thread. This is saved in a global variable, &lt;code&gt;@elevators&lt;/code&gt;, for use later in shutting down the simulation.&lt;/p&gt;
+
+&lt;p&gt;After the elevators are created the simulation is ready to send in people with the &lt;code&gt;init_people()&lt;/code&gt; routine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # create people threads
+  sub init_people {
+      our @people;
+      for (0 .. $NUM_PEOPLE - 1) {
+          # pass each person thread a unique person id and a random
+          # destination
+          push @people, threads-&amp;gt;new(\&amp;amp;Person::run,
+                                     id   =&amp;gt; $_,
+                                     dest =&amp;gt; int(rand($NUM_FLOORS - 2)) + 1);
+
+          # pause if we&#39;ve launched enough people this second
+          sleep 1 unless $_ % $PEOPLE_FREQ;
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This routine creates &lt;code&gt;$PEOPLE_FREQ&lt;/code&gt; people and then sleeps for one second before continuing. If this wasn&amp;rsquo;t done, then all the people would arrive at the building at the same time and the simulation would be rather boring. Notice that while the main thread sleeps the simulation is proceeding in the elevator and people threads.&lt;/p&gt;
+
+&lt;p&gt;The people threads start at &lt;code&gt;Person::run()&lt;/code&gt;, which will be described later. &lt;code&gt;Person::run()&lt;/code&gt; receives two parameters - a unique ID and a randomly chosen destination floor. Each person will board an elevator at the ground floor, ride to this floor, wait there for a set period of time and then ride an elevator back down.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-the-elevator-class-the-elevator-class-span&#34;&gt;&lt;span id=&#34;the elevator class&#34;&gt;The Elevator Class&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Each elevator thread contains an object of the Elevator class. The &lt;code&gt;Elevator::run()&lt;/code&gt; routine creates this object as its first activity:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # run an Elevator thread, takes a numeric id as an argument and
+  # creates a new Elevator object
+  sub run {
+      my $self = Elevator-&amp;gt;new(@_);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that since &lt;code&gt;$self&lt;/code&gt; is &lt;em&gt;not&lt;/em&gt; marked shared it is a thread-local variable. Thus, each elevator has its own private &lt;code&gt;$self&lt;/code&gt; object. The &lt;code&gt;new()&lt;/code&gt; method just sets up a hash with some useful state variables and returns a blessed object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # create a new Elevator object
+  sub new {
+      my $pkg = shift;
+      my $self = { state =&amp;gt; STARTING,
+                   floor =&amp;gt; 0,
+                   dest  =&amp;gt; 0,
+                   @_,
+                 };
+      return bless($self, $pkg);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;All elevators start at the ground floor (floor 0) with no destination. The &lt;code&gt;state&lt;/code&gt; attribute is set to &lt;code&gt;STARTING&lt;/code&gt; which comes from this set of constants used to represent the state of the elevator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # state enumeration
+  use constant STARTING   =&amp;gt; 0;
+  use constant STOPPED    =&amp;gt; 1;
+  use constant GOING_UP   =&amp;gt; 2;
+  use constant GOING_DOWN =&amp;gt; 3;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After setting up the object, the elevator thread enters an infinite loop looking for button presses that will cause it to travel to a floor. At the top of the loop &lt;code&gt;$self-&amp;gt;next_dest()&lt;/code&gt; is called to determine where to go:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # run until simulation is finished
+    while (1) {
+        # get next destination
+        $self-&amp;gt;{dest} = $self-&amp;gt;next_dest;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;next_dest()&lt;/code&gt; method examines the shared array &lt;code&gt;@BUTTON&lt;/code&gt; to determine if any people are waiting for an elevator. It also looks at &lt;code&gt;%PANEL&lt;/code&gt; to see if there are people inside the elevator heading to a particular floor. Since &lt;code&gt;next_dest()&lt;/code&gt; accesses shared variables it starts with a call to &lt;code&gt;lock()&lt;/code&gt; for each shared variable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # choose the next destination floor by looking at BUTTONs and PANELs
+  sub next_dest {
+      my $self = shift;
+      my ($id, $state, $floor) = @{$self}{(&#39;id&#39;, &#39;state&#39;, &#39;floor&#39;)};
+      lock @BUTTON;
+      lock %PANEL;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s &lt;code&gt;lock()&lt;/code&gt; is an advisory locking mechanism, much like &lt;code&gt;flock()&lt;/code&gt;. When a thread locks a variable it will wait for any other threads to release their locks before proceeding. The lock obtained by &lt;code&gt;lock()&lt;/code&gt; is lexical - that is, it lasts until the enclosing scope is exited. There is no &lt;code&gt;unlock()&lt;/code&gt; call, so it&amp;rsquo;s important to carefully scope your calls to &lt;code&gt;lock()&lt;/code&gt;. In this case the locks on &lt;code&gt;@BUTTON&lt;/code&gt; and &lt;code&gt;%PANEL&lt;/code&gt; last until &lt;code&gt;next_dest()&lt;/code&gt; returns.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;next_dest()&lt;/code&gt;&amp;rsquo;s logic is simple, and largely uninteresting for the purpose of learning about thread programming. It does a simple scan across &lt;code&gt;@BUTTON&lt;/code&gt; and &lt;code&gt;%PANEL&lt;/code&gt; looking for &lt;code&gt;1&lt;/code&gt;s and takes the first one it finds.&lt;/p&gt;
+
+&lt;p&gt;Once &lt;code&gt;next_dest()&lt;/code&gt; returns the elevator has its marching orders. By comparing the current floor (&lt;code&gt;$self-&amp;gt;{floor}&lt;/code&gt;) to the destination the elevator now knows whether it should stop, or travel up or down. First, let&amp;rsquo;s look at what happens when the elevator decides to stop:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   # stopped?
+   if ($self-&amp;gt;{dest} == $self-&amp;gt;{floor}) {
+        # state transition to STOPPED?
+        if ($self-&amp;gt;{state} != STOPPED) {
+            print &amp;quot;Elevator $id stopped at floor $self-&amp;gt;{dest}.\n&amp;quot;;
+            $self-&amp;gt;{state} = STOPPED;
+        }
+
+        # wait for passengers
+        $self-&amp;gt;open_door;
+        sleep $ELEVATOR_WAIT;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code starts by printing a message and changing the state attribute if the elevator was previously moving. Then it calls the &lt;code&gt;open_door()&lt;/code&gt; method and sleeps for &lt;code&gt;$ELEVATOR_WAIT&lt;/code&gt; seconds.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;open_door()&lt;/code&gt; method opens the elevator door. This allows waiting people to board to elevator.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # open the elevator doors
+  sub open_door {
+      my $self = shift;
+      lock %DOOR;
+      $DOOR{&amp;quot;$self-&amp;gt;{id}.$self-&amp;gt;{floor}&amp;quot;} = 1;
+      cond_broadcast(%DOOR);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Like &lt;code&gt;next_dest()&lt;/code&gt;, &lt;code&gt;open_door()&lt;/code&gt; manipulates a shared variable so it starts with a call to &lt;code&gt;lock()&lt;/code&gt;. It then sets the elevator door for the elevator on this floor to open by assigning &lt;code&gt;1&lt;/code&gt; to the appropriate entry in &lt;code&gt;%DOOR&lt;/code&gt;. Then it wakes up all waiting person threads by calling &lt;code&gt;cond_broadcast()&lt;/code&gt; on &lt;code&gt;%DOOR&lt;/code&gt;. I&amp;rsquo;ll go into more detail about &lt;code&gt;cond_broadcast()&lt;/code&gt; when I show you the Person class later on. For now suffice it to say that the people threads wait on the &lt;code&gt;%DOOR&lt;/code&gt; variable and will be woken up by this call.&lt;/p&gt;
+
+&lt;p&gt;The other states, for going up and going down, are handled similarly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  } elsif ($self-&amp;gt;{dest} &amp;gt; $self-&amp;gt;{floor}) {
+      # state transition to GOING UP?
+      if ($self-&amp;gt;{state} != GOING_UP) {
+          print &amp;quot;Elevator $id going up to floor $self-&amp;gt;{dest}.\n&amp;quot;;
+          $self-&amp;gt;{state} = GOING_UP;
+          $self-&amp;gt;close_door;
+      }
+
+      # travel to next floor up
+      sleep $ELEVATOR_SPEED;
+      $self-&amp;gt;{floor}++;
+
+  } else {
+      # state transition to GOING DOWN?
+      if ($self-&amp;gt;{state} != GOING_DOWN) {
+          print &amp;quot;Elevator $id going down to floor $self-&amp;gt;{dest}.\n&amp;quot;;
+          $self-&amp;gt;{state} = GOING_DOWN;
+          $self-&amp;gt;close_door;
+      }
+
+      # travel to next floor down
+      sleep $ELEVATOR_SPEED;
+      $self-&amp;gt;{floor}--;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The elevator looks at the last value for &lt;code&gt;$self-&amp;gt;{state}&lt;/code&gt; to determine whether it was already heading up or down. If not, then it prints a message and calls &lt;code&gt;$self-&amp;gt;close_door()&lt;/code&gt;. Then it sleeps for &lt;code&gt;$ELEVATOR_SPEED&lt;/code&gt; seconds as it travels between floors and adjusts its current floor accordingly.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;close_door()&lt;/code&gt; method simply does the inverse of &lt;code&gt;open_door()&lt;/code&gt;, but without the call to &lt;code&gt;cond_broadcast()&lt;/code&gt; since there&amp;rsquo;s no point waking people up if they can&amp;rsquo;t get on the elevator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # close the elevator doors
+  sub close_door {
+      my $self = shift;
+      lock %DOOR;
+      $DOOR{&amp;quot;$self-&amp;gt;{id}.$self-&amp;gt;{floor}&amp;quot;} = 0;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, at the bottom of the elevator loop there is a check on the shared variable &lt;code&gt;$FINISHED&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # simulation over?
+  { lock $FINISHED; return if $FINISHED; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since the elevator threads are in an infinite loop the main thread needs a way to tell them when the simulation is over. It uses the shared variable &lt;code&gt;$FINISHED&lt;/code&gt; for this purpose. I&amp;rsquo;ll go into more detail about why this is necessary later.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s all there is to the Elevator class code. Elevators simply travel from floor to floor opening and closing doors in response to buttons being pushed by people.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-the-person-class-the-person-class-span&#34;&gt;&lt;span id=&#34;the person class&#34;&gt;The Person Class&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Now that we&amp;rsquo;ve looked at the machinery, let&amp;rsquo;s turn our attention to the inhabitants of this building, the people. Each person thread is created with a goal - ride an elevator up to the assigned floor, wait a bit and then ride an elevator back down. Person threads are also responsible for keeping track of how long they wait for the elevator and how long they ride. When they finish they report this information back to the main thread where it is output for your edification.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Person::run()&lt;/code&gt; starts the same way as &lt;code&gt;Elevator::run()&lt;/code&gt;, by creating a new object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # run a Person thread, takes an id and a destination floor as
+  # arguments.  Creates a Person object.
+  sub run {
+      my $self = Person-&amp;gt;new(@_);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Inside &lt;code&gt;Person::new()&lt;/code&gt; two attributes are setup to keep track of the person&amp;rsquo;s progress, floor and elevator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # create a new Person object
+  sub new {
+      my $pkg = shift;
+      my $self = { @_,
+                   floor    =&amp;gt; 0,
+                   elevator =&amp;gt; 0 };
+      return bless($self, $pkg);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Back in &lt;code&gt;Person::run()&lt;/code&gt; the person thread begins waiting for the elevator by calling &lt;code&gt;$self-&amp;gt;wait()&lt;/code&gt;. The calls to &lt;code&gt;time()&lt;/code&gt; will be used later to report on how long the person waited.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # wait for elevator going up
+  my $wait_start1 = time;
+  $self-&amp;gt;wait;
+  my $wait1 = time - $wait_start1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;wait()&lt;/code&gt; method is responsible for waiting until an elevator arrives and opens its doors on this floor:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # wait for an elevator
+  sub wait {
+      my $self = shift;
+
+      print &amp;quot;Person $self-&amp;gt;{id} waiting on floor 1 for elevator &amp;quot;,
+        &amp;quot;to floor $self-&amp;gt;{dest}.\n&amp;quot;;
+
+      while(1) {
+          $self-&amp;gt;press_button();
+          lock(%DOOR);
+          cond_wait(%DOOR);
+          for (0 .. $NUM_ELEVATORS - 1) {
+              if ($DOOR{&amp;quot;$_.$self-&amp;gt;{floor}&amp;quot;}) {
+                  $self-&amp;gt;{elevator} = $_;
+                  return;
+              }
+          }
+      }
+  }
+
+  # signal an elevator to come to this floor
+  sub press_button {
+      my $self = shift;
+      lock @BUTTON;
+      $BUTTON[$self-&amp;gt;{floor}] = 1;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After printing out a message, the code enters an infinite loop waiting for the elevator. At the top of the loop, the &lt;code&gt;press_button()&lt;/code&gt; method is called. &lt;code&gt;press_button()&lt;/code&gt; locks &lt;code&gt;@BUTTON&lt;/code&gt; and sets &lt;code&gt;$BUTTON[$self-&amp;gt;{floor}]&lt;/code&gt; to &lt;code&gt;1&lt;/code&gt;. This will tell the elevators that a person is waiting on the ground floor.&lt;/p&gt;
+
+&lt;p&gt;The code then locks &lt;code&gt;%DOOR&lt;/code&gt; and calls &lt;code&gt;cond_wait(%DOOR)&lt;/code&gt;. This has the effect of releasing the lock on &lt;code&gt;%DOOR&lt;/code&gt; and putting the thread to sleep until another thread does a &lt;code&gt;cond_broadcast(%DOOR)&lt;/code&gt; (or &lt;code&gt;cond_signal(%DOOR)&lt;/code&gt;, a variant of &lt;code&gt;cond_broadcast()&lt;/code&gt; that just wakes a single thread). When the thread wakes up again it re-acquires the lock on &lt;code&gt;%DOOR&lt;/code&gt; and then checks to see if the door that just opened is on this floor. If it is the person notes the elevator and returns from &lt;code&gt;wait()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If there&amp;rsquo;s no elevator on the floor where the person is waiting, the loop is run again. The person presses the button again and then goes back to sleep waiting for the elevator. You might be wondering why the call to &lt;code&gt;press_button()&lt;/code&gt; is inside the loop instead of outside. The reason is that it is possible for the person to wake up from &lt;code&gt;cond_wait()&lt;/code&gt; but have to wait so long to re-acquire the lock on &lt;code&gt;%DOOR&lt;/code&gt; that the elevator is already gone.&lt;/p&gt;
+
+&lt;p&gt;Once the elevator arrives, control returns to &lt;code&gt;run()&lt;/code&gt; and the person boards the elevator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # board the elevator, wait for arrival at destination floor and get off
+    my $ride_start1 = time;
+    $self-&amp;gt;board;
+    $self-&amp;gt;ride;
+    $self-&amp;gt;disembark;
+    my $ride1 = time - $ride_start1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;board()&lt;/code&gt; method is simple enough. It just turns off the &lt;code&gt;@BUTTON&lt;/code&gt; entry used to summon the elevator and presses the appropriate button inside the elevator&amp;rsquo;s &lt;code&gt;%PANEL&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # get on an elevator
+  sub board {
+      my $self = shift;
+      lock @BUTTON;
+      lock %PANEL;
+      $BUTTON[$self-&amp;gt;{floor}] = 0;
+      $PANEL{&amp;quot;$self-&amp;gt;{elevator}.$self-&amp;gt;{dest}&amp;quot;} = 1;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, the &lt;code&gt;run()&lt;/code&gt; code calls &lt;code&gt;ride()&lt;/code&gt; which does another &lt;code&gt;cond_wait()&lt;/code&gt; on &lt;code&gt;%DOOR&lt;/code&gt;, this time waiting for the door in the elevator to open on the destination floor:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # ride to the destination
+  sub ride {
+      my $self = shift;
+
+      print &amp;quot;Person $self-&amp;gt;{id} riding elevator $self-&amp;gt;{elevator} &amp;quot;,
+        &amp;quot;to floor $self-&amp;gt;{dest}.\n&amp;quot;;
+
+      lock %DOOR;
+      cond_wait(%DOOR) until $DOOR{&amp;quot;$self-&amp;gt;{elevator}.$self-&amp;gt;{dest}&amp;quot;};
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the elevator arrives, &lt;code&gt;ride()&lt;/code&gt; will return and the person thread calls &lt;code&gt;disembark()&lt;/code&gt;, which clears the entry in &lt;code&gt;%PANEL&lt;/code&gt; for this floor and sets the current floor in &lt;code&gt;$self-&amp;gt;{floor}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # get off the elevator
+  sub disembark {
+      my $self = shift;
+
+
+      print &amp;quot;Person $self-&amp;gt;{id} getting off elevator $self-&amp;gt;{elevator} &amp;quot;,
+        &amp;quot;at floor $self-&amp;gt;{dest}.\n&amp;quot;;
+
+
+      lock %PANEL;
+      $PANEL{&amp;quot;$self-&amp;gt;{elevator}.$self-&amp;gt;{dest}&amp;quot;} = 0;
+      $self-&amp;gt;{floor} = $self-&amp;gt;{dest};
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After reaching the destination floor, the person thread waits for &lt;code&gt;$PEOPLE_WAIT&lt;/code&gt; seconds and then heads back down by repeating the steps again with &lt;code&gt;$self-&amp;gt;{dest}&lt;/code&gt; set to 0:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # spend some time on the destination floor and then head back
+    sleep $PEOPLE_WAIT;
+    $self-&amp;gt;{dest} = 0;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When this is complete the person has arrived at the ground floor. The thread ends by returning the recorded timing data with &lt;code&gt;return&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # return wait and ride times
+    return ($wait1, $wait2, $ride1, $ride2);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;span-id-the-grand-finale-the-grand-finale-span&#34;&gt;&lt;span id=&#34;the grand finale&#34;&gt;The Grand Finale&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;While the simulation is running the main thread is sitting in &lt;code&gt;init_people()&lt;/code&gt; creating person threads periodically. Once this task is complete the &lt;code&gt;finish()&lt;/code&gt; routine is called.&lt;/p&gt;
+
+&lt;p&gt;The first task of &lt;code&gt;finish()&lt;/code&gt; is to collect statistics from the people threads as they complete:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # finish the simulation - join all threads and collect statistics
+  sub finish {
+      our (@people, @elevators);
+
+
+      # join the people threads and collect statistics
+      my ($total_wait, $total_ride, $max_wait, $max_ride) = (0,0,0,0);
+      foreach my $person (@people) {
+          my ($wait1, $wait2, $ride1, $ride2) = $person-&amp;gt;join;
+          $total_wait += $wait1 + $wait2;
+          $total_ride += $ride1 + $ride2;
+          $max_wait    = $wait1 if $wait1 &amp;gt; $max_wait;
+          $max_wait    = $wait2 if $wait2 &amp;gt; $max_wait;
+          $max_ride    = $ride1 if $ride1 &amp;gt; $max_ride;
+          $max_ride    = $ride2 if $ride2 &amp;gt; $max_ride;
+      }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To extract return values from a finished thread the &lt;code&gt;join()&lt;/code&gt; method must be called on the thread object. This method will wait for the thread to end, which means that this loop won&amp;rsquo;t finish until the last person reaches the ground floor.&lt;/p&gt;
+
+&lt;p&gt;Once all the people are processed, the simulation is over. To tell the elevators to shutdown the shared variable &lt;code&gt;$FINISHED&lt;/code&gt; is set to 1 and the elevators are joined:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # tell the elevators to shut down
+  { lock $FINISHED; $FINISHED = 1; }
+  $_-&amp;gt;join for @elevators;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If this code were omitted the simulation would still end but Perl would print a warning because the main thread exited with other threads still running.&lt;/p&gt;
+
+&lt;p&gt;Finally, &lt;code&gt;finish()&lt;/code&gt; prints out the statistics collected from the person threads:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # print out statistics
+  print &amp;quot;\n&amp;quot;, &amp;quot;-&amp;quot; x 72, &amp;quot;\n\nSimulation Complete\n\n&amp;quot;, &amp;quot;-&amp;quot; x 72, &amp;quot;\n\n&amp;quot;;
+  printf &amp;quot;Average Wait Time: %6.2fs\n&amp;quot;,   ($total_wait / ($NUM_PEOPLE * 2));
+  printf &amp;quot;Average Ride Time: %6.2fs\n\n&amp;quot;, ($total_ride / ($NUM_PEOPLE * 2));
+  printf &amp;quot;Longest Wait Time: %6.2fs\n&amp;quot;,   $max_wait;
+  printf &amp;quot;Longest Ride Time: %6.2fs\n\n&amp;quot;, $max_ride;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The end!&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-a-few-wrinkles-a-few-wrinkles-span&#34;&gt;&lt;span id=&#34;a few wrinkles&#34;&gt;A Few Wrinkles&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Overall, the simulator was a fun project with few major stumbling blocks. However, there were a few problems or near problems that you would do well to avoid.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Deadlock&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;All parallel programs are susceptible to deadlock, but, by virtue of higher levels of inter-activity, threads suffer it more frequently. Deadlock occurs when independent threads (or processes) each need a resource the other has.&lt;/p&gt;
+
+&lt;p&gt;In the elevator simulator I avoided deadlock by always performing multiple locks in the same order. For example, &lt;code&gt;Elevator::next_dest()&lt;/code&gt; begins with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  lock @BUTTON;
+  lock %PANEL;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And in &lt;code&gt;Person::board()&lt;/code&gt; the same sequence is repeated:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  lock @BUTTON;
+  lock %PANEL;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the lock calls in &lt;code&gt;Person::board()&lt;/code&gt; were reversed then the following could occur:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Elevator 2 locks &lt;code&gt;@BUTTON&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Person 3 locks &lt;code&gt;%PANEL&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Elevator 2 tries to lock &lt;code&gt;%PANEL&lt;/code&gt; and blocks waiting for Person 3&amp;rsquo;s lock.&lt;/li&gt;
+&lt;li&gt;Person 3 tries to lock &lt;code&gt;@BUTTON&lt;/code&gt; and blocks waiting for Elevator 2&amp;rsquo;s lock.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Deadlock!&lt;/em&gt; Neither thread can proceed and the simulation will never end.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;Modules&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;In general, unless a module has been specifically vetted as thread safe it cannot be used in a threaded program. Most pure Perl modules should be thread safe but most XS modules are not. This goes for core modules too!&lt;/p&gt;
+
+&lt;p&gt;An earlier version of the elevator simulator used Time::HiRes to allow for fractional &lt;code&gt;sleep()&lt;/code&gt; times. This really helped speed up the simulation since it meant that elevators could traverse more than one floor per second. However, on further investigation (and advice from Nick Ing-Simmons) I realized that Time::HiRes is not necessarily thread safe. Although it seemed to work fine on my machine there&amp;rsquo;s no reason to believe that would be the case elsewhere, or even that it wouldn&amp;rsquo;t blow up at some random point in the future. The problem with thread safety is that it&amp;rsquo;s virtually impossible to test for; either you can prove you have it or you must assume you don&amp;rsquo;t!&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Synchronized &lt;code&gt;rand()&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The first version of the simulator I wrote had the people threads calling &lt;code&gt;rand()&lt;/code&gt; inside &lt;code&gt;Person::run()&lt;/code&gt; to choose the destination floor. I also had a call to &lt;code&gt;srand()&lt;/code&gt; in the main thread, not realizing that Perl now calls &lt;code&gt;srand()&lt;/code&gt; with a good seed automatically. The combination resulted in every person choosing the same destination floor. Yikes!&lt;/p&gt;
+
+&lt;p&gt;The reason for this is that by calling &lt;code&gt;srand()&lt;/code&gt; in the main thread I set the random seed. Then when the threads were created that seed was copied into each thread. The call to &lt;code&gt;rand()&lt;/code&gt; then generated the same first value in each thread.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-resources-resources-span&#34;&gt;&lt;span id=&#34;resources&#34;&gt;Resources&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Perl comes with copious threading documentation. You can read these docs by following the links below or by using the &lt;code&gt;perldoc&lt;/code&gt; program that comes with Perl.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2002_09_04_threads/elevator.pl&#34;&gt;elevator.pl&lt;/a&gt; - Sample code from this article.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perlthrtut.html&#34;&gt;perlthrtut&lt;/a&gt; - a threading tutorial&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/threads&#34;&gt;threads&lt;/a&gt; - the reference for the threads module&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/threads::shared&#34;&gt;threads::shared&lt;/a&gt; -the reference for the threads::shared module&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

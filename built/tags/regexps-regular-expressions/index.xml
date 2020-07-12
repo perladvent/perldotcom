@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Regexps Regular Expressions on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/regexps-regular-expressions/</link>
+    <description>Recent content in Regexps Regular Expressions on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 01 Jul 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/regexps-regular-expressions/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Power Regexps, Part II</title>
+      <link>http://localhost:1313/pub/2003/07/01/regexps.html/</link>
+      <pubDate>Tue, 01 Jul 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/07/01/regexps.html/</guid>
+      <description>
+
+&lt;p&gt;In the previous article, we looked at some of the more intermediate features of regular expressions, including multiline matching, quoting, and interpolation. This time, we&amp;rsquo;re going to look at more-advanced features. We&amp;rsquo;ll also look at some modules that can help us handle regular expressions.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-look-forward-look-back-look-forward-look-back-span&#34;&gt;&lt;span id=&#34;look_forward,_look_back&#34;&gt;Look Forward, Look Back&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Perhaps the most misunderstood facility of regular expressions are the lookahead and lookbehind operators; let&amp;rsquo;s begin with the simplest, the positive lookahead operator.&lt;/p&gt;
+
+&lt;p&gt;This operator, spelled &lt;code&gt;(?= )&lt;/code&gt;, attempts to match a pattern, and if successful, promptly forgets all about it. As its name implies, it peeks forward into the string to see whether the next part of the string matches the pattern. For instance:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $a=&amp;quot;13.15    Train to London&amp;quot;; 
+    $a=~ /(?=.*London)([\d\.]+)/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is perhaps an inefficient way of writing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $a =~ /([\d\.]+).*London/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and it can be read as &amp;ldquo;See if this string has &amp;lsquo;London&amp;rsquo; in it somewhere, and if so, capture a series of digits or periods.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s an example of it in real-life code; I want to turn some file names into names of Perl modules. I&amp;rsquo;ll have a name like &lt;em&gt;/Library/Perl/Mail/Miner/Recogniser/Phone.pm&lt;/em&gt; - this is part of my &lt;code&gt;Mail::Miner&lt;/code&gt; module, so I can guarantee that the name of the module will start with &lt;code&gt;Mail/Miner&lt;/code&gt; - and I want to get &lt;code&gt;Mail::Miner::Recogniser::Phone&lt;/code&gt;. Here&amp;rsquo;s the code that does it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    our @modules = map {
+        s/.pm$//;
+        s{.*(?=Mail/Miner)}{};
+        join &amp;quot;::&amp;quot;, splitdir($_)
+    } @files;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We look at each of our files, and first take off the &lt;code&gt;.pm&lt;/code&gt; from the end. Now what we need to do is remove everything before the &lt;code&gt;Mail/Miner&lt;/code&gt; portion, stripping off &lt;em&gt;/Library/Perl&lt;/em&gt; or whatever our path happens to be. Now we could write this as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    s{.*Mail/Miner}{Mail/Miner};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;removing everything which appears before &lt;code&gt;Mail/Miner&lt;/code&gt; and then the text &lt;code&gt;Mail/Miner&lt;/code&gt; itself, and then replacing all that with &lt;code&gt;Mail/Miner&lt;/code&gt; again. This is obviously horribly long-winded, and it&amp;rsquo;s much more natural to think of this in turns of &amp;ldquo;get rid of everything but stop when you see &lt;code&gt;Mail/Miner&lt;/code&gt;&amp;rdquo;. In most cases, you can think of &lt;code&gt;(?= )&lt;/code&gt; as meaning &amp;ldquo;up to&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;Similar but subtly different is the negative counterpart &lt;code&gt;(?! )&lt;/code&gt;. This again peeks forward into the string, but ensures that it &lt;strong&gt;doesn&amp;rsquo;t&lt;/strong&gt; match the pattern. A good way to think of this is &amp;ldquo;so long as you don&amp;rsquo;t see&amp;rdquo;. Damian Conway&amp;rsquo;s &lt;code&gt;Text::Autoformat&lt;/code&gt; contains some code for detecting quoted lines of text, such as may be found in an e-mail message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % Will all this regular expression scariness go away in 
+    % Perl 6?
+
+    Yes, definitely; we&#39;re replacing it with a completely different set
+    of scariness.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here the first two lines are quoted, and the expressions that check for this look like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $quotechar = qq{[!#%=|:]};
+    my $quotechunk = qq{(?:$quotechar(?![a-z])|[a-z]*&amp;gt;+)};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$quotechar&lt;/code&gt; contains the characters that we consider signify a quotation, and &lt;code&gt;$quotechunk&lt;/code&gt; has two options for what a quotation looks like. The second is most natural: a greater-than sign, possibly preceded by some initials, such as produced by the popular Supercite &lt;code&gt;emacs&lt;/code&gt; package:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    SC&amp;gt; You&#39;re talking nonsense, you odious little gnome!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The left-hand side of the alternation in &lt;code&gt;$quotechunk&lt;/code&gt; is a little more interesting. We look for one of our quotation characters, such as &lt;code&gt;%&lt;/code&gt; as in the example above, but then we make sure that the next character we see is not alphabetic; this may be a quotation:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % I think that all right-thinking people...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;but this almost certainly isn&amp;rsquo;t&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    %options = ( verbose =&amp;gt; 1, debug =&amp;gt; 0 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;(?!)&lt;/code&gt; acts as a &amp;ldquo;make sure you don&amp;rsquo;t see&amp;rdquo; directive.&lt;/p&gt;
+
+&lt;p&gt;The mistake everyone makes at least once with this is to assume you can say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    /(?!foo)bar/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and wonder why it matches against &lt;code&gt;foobar&lt;/code&gt;. After all, we&amp;rsquo;ve made sure we didn&amp;rsquo;t see a &lt;code&gt;foo&lt;/code&gt; before the &lt;code&gt;bar&lt;/code&gt;, right? Well, not exactly. These are lookahead operators, and so can&amp;rsquo;t be used to find things &amp;ldquo;before&amp;rdquo; anything at all; they&amp;rsquo;re only used to determine what we can or can&amp;rsquo;t see after the current position. To understand why this is wrong, imagine what it would mean if it were a positive assertion:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    /(?=foo)bar/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This means &amp;ldquo;are the next three characters we see &lt;code&gt;foo&lt;/code&gt;? If so, the next three characters we see are &lt;code&gt;bar&lt;/code&gt;&amp;rdquo;. This is obviously never going to happen, since a string can&amp;rsquo;t contain both &lt;code&gt;foo&lt;/code&gt; and &lt;code&gt;bar&lt;/code&gt; at the same position and the same time. (Although I believe Damian has a paper on that.) So the negative version means &amp;ldquo;are the next three characters we see &lt;strong&gt;not&lt;/strong&gt; &lt;code&gt;foo&lt;/code&gt;? Then match &lt;code&gt;bar&lt;/code&gt;&amp;rdquo;. &lt;code&gt;foo&lt;/code&gt; is not &lt;code&gt;bar&lt;/code&gt;, so this matches any &lt;code&gt;bar&lt;/code&gt;. What was probably meant was a lookbehind assertion, which we will look at imminently.&lt;/p&gt;
+
+&lt;p&gt;Now we&amp;rsquo;ve seen the two forward-facing assertions, we can turn (ha, ha) to the backward-facing assertions, positive and negative lookbehind. There&amp;rsquo;s one important difference between these and their forward-facing counterparts; while lookahead operators can contain more or less any kind of regular expression pattern, for reasons of implementation the lookbehind operators must have a fixed width computable at compile time. That is, you&amp;rsquo;re not allowed to use any indefinite quantifiers in your subpatterns.&lt;/p&gt;
+
+&lt;p&gt;The positive lookbehind assertion is &lt;code&gt;(?&amp;lt;=)&lt;/code&gt;, and the only thing you need to know about it is that it&amp;rsquo;s so rare I can&amp;rsquo;t remember the last time I saw it in real code. I don&amp;rsquo;t think I&amp;rsquo;ve ever used it, except possibly in error. If you think you want to use one of these, then you almost certainly need to rethink your strategy. Here&amp;rsquo;s a quick example, though, from &lt;code&gt;IPC::Open3&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $@ =~ s/(?&amp;lt;=value attempted) at .*//s;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The context for this is that we&amp;rsquo;ve just done the equivalent of&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    eval { $_[0] = ... };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and if someone maliciously passes a constant value to the subroutine, we want to through the &lt;code&gt;Modification of a read-only value attempted&lt;/code&gt; error back in their face. We check we&amp;rsquo;re seeing the error we expect, then strip off the &lt;code&gt;at .../IPC/Open3.pm, line 154&lt;/code&gt; part of the message so that it can be fed to &lt;code&gt;croak&lt;/code&gt;. The less Tom-Christianseny way to do this would be something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    croak &amp;quot;You fed me bogus parameters&amp;quot; if $@ =~ /attempted/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The negative lookbehind assertion, on the other hand, is considerably more common; this is the answer to our &amp;ldquo;&lt;code&gt;bar&lt;/code&gt; not preceded by &lt;code&gt;foo&lt;/code&gt;&amp;rdquo; problem of the previous section.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    /(?!&amp;lt;foo)bar/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will match &lt;code&gt;bar&lt;/code&gt;, peeking backward into the string to make sure it doesn&amp;rsquo;t see &lt;code&gt;foo&lt;/code&gt; first. To take another example, suppose we&amp;rsquo;re preparing some text for sending over the network, and we want to make sure that all the line feeds (&lt;code&gt;\n&lt;/code&gt;) have carriage returns (&lt;code&gt;\r&lt;/code&gt;) before them. Here&amp;rsquo;s the truly lazy way to do it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Make sure there&#39;s an \r in there somewhere
+    s{\n}  {\r\n}g;
+    # And then strip out duplicates
+    s{\r\r}{\r}  g;
+
+This is fine (if somewhat inefficient) unless it&#39;s OK for two carriage
+returns to appear without a line feed in the way. Here&#39;s the finesse:
+
+    s/(?&amp;lt;!\r)\n/\r\n/g;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you see a line feed that is &lt;strong&gt;not&lt;/strong&gt; preceded by a carriage return, then stick a carriage return in there &amp;ndash; much cleaner, and much more efficient.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-split-g-and-other-shenanigans-split-g-and-other-shenanigans-span&#34;&gt;&lt;span id=&#34;split,_//g_and_other_shenanigans&#34;&gt;&lt;code&gt;split&lt;/code&gt;, &lt;code&gt;//g&lt;/code&gt; and other shenanigans&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;In the previous article, we had a nice piece of multiline, formatted data, such as one might expect to parse with Perl:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Name: Mark-Jason Dominus
+    Occupation: Perl trainer
+    Favourite thing: Octopodes
+
+    Name: Simon Cozens
+    Occupation: Hacker
+    Favourite thing: Sleep
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, there&amp;rsquo;s a boring way to parse this. If you&amp;rsquo;re coming from a C or Java background, then you might try:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $record = {}
+    my @records;
+    for (split /\n/, $text {
+        chomp;
+        if (/([^:]+): (.*)/) {
+            $record-&amp;gt;{$1} = $2;
+        } elsif ($_ =~ /^\s*$/) {
+            # Blank line =&amp;gt; end of current record
+            push @records, $record;
+            $record = {};
+        } else {
+            die &amp;quot;Wasn&#39;t expecting to see &#39;$_&#39; here&amp;quot;;
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And, of course, this will work. But there&amp;rsquo;s several more Perl-ish solutions that this. When you know the fields provided by your data, it&amp;rsquo;s rather nice to have a regular expression that reflects the data structure:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    while ($data =~ /Name:\s(.*)\n
+                     Occupation:\s(.*)\n 
+                     Favourite.*:\s(.*)/gx) {
+        push @records, { name =&amp;gt; $1, occupation =&amp;gt; $2, favourite =&amp;gt; $3 }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we use the &lt;code&gt;/g&lt;/code&gt; modifier, which allows us to resume the match from where it last left off.&lt;/p&gt;
+
+&lt;p&gt;If we don&amp;rsquo;t know the fields while we&amp;rsquo;re writing our program, then we&amp;rsquo;ll have to break the process up into two stages. First, we extract individual records: records are delimited by a blank line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @texts = split /\n\s*\n/, $text;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then for each record, we can either use the &lt;code&gt;/g&lt;/code&gt; trick again, or simply split each record into lines. I prefer the latter, for reasons you&amp;rsquo;ll see in a second:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (@texts) {
+        my $record = {};
+        for (split /\n/, $_) {
+            /([^:]+): (.*)/;
+            $record-&amp;gt;{$1} = $2;
+        }
+        push @records, $record;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is not dissimilar from the initial solution, but it allows us to make some interesting improvements. For starters, when you see code that transforms data with a &lt;code&gt;for&lt;/code&gt; loop, you should wonder whether it could be better written with a &lt;code&gt;map&lt;/code&gt; statement. This goes double if you&amp;rsquo;re using &lt;code&gt;push&lt;/code&gt; inside the &lt;code&gt;for&lt;/code&gt; loop as we are here. So this version is a natural evolution:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @records = map {
+        my $record = {};
+        for (split /\n/, $_) { 
+            /([^:]+): (.*)/;
+            $record-&amp;gt;{$1} = $2;
+        }
+        $record;
+    } split /\n\s*\n/, $text;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And we can actually do away with the inner &lt;code&gt;for&lt;/code&gt; loop too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @records = map {
+        {
+            map { /([^:]+): (.*)/ and ($1 =&amp;gt; $2) } split /\n/, $_
+        }
+    } split /\n\s*\n/, $text;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But if we&amp;rsquo;re prepared to be a little lax about trailing whitespace, there&amp;rsquo;s actually an even nicer way to do it, using the one thing that everyone forgets about &lt;code&gt;split&lt;/code&gt;: if your &lt;code&gt;split&lt;/code&gt; pattern contains parentheses, then the captured text is inserted into the list returned by &lt;code&gt;split&lt;/code&gt;. That is, the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    split( /(\W+)/, &amp;quot;perl-5.8.0.tar.gz&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will produce the list&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    (&amp;quot;perl&amp;quot;, &amp;quot;-&amp;quot;, &amp;quot;5&amp;quot;, &amp;quot;.&amp;quot;, &amp;quot;8&amp;quot;, &amp;quot;.&amp;quot;, &amp;quot;0&amp;quot;, &amp;quot;.&amp;quot;, &amp;quot;tar&amp;quot;, &amp;quot;.&amp;quot;, &amp;quot;gz&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we can actually use the field name, colon and space at the start of each line as the &lt;code&gt;split&lt;/code&gt; expression itself:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    split /^([^:]+):\s*/m
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is a slight problem with this idea - because the first thing in each record is delimeter we&amp;rsquo;re looking for, the first thing returned by &lt;code&gt;split&lt;/code&gt; will be an empty string. But we can easily get around this by adding another &lt;code&gt;undef&lt;/code&gt; to provide a fake &lt;code&gt;undef =&amp;gt; &#39;&#39;&lt;/code&gt; hash element. This allows us to reduce the parser code to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @records = map { 
+                     { undef, split /^([^:]+):\s*/m, $_ } 
+                   } split /\n\s*\n/, $text;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It may not be pretty, but it&amp;rsquo;s quick and it works.&lt;/p&gt;
+
+&lt;p&gt;Of course, you may also use lookahead and lookbehind assertions with &lt;code&gt;split&lt;/code&gt;; I sometimes use the following code to break a string into tokens:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    split /(?&amp;lt;=\W)|(?=\W)/, $string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is almost the same as&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    split /(\W)/, $string
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;but with a subtle difference. Again, as Perl wants to see a nonword character as a delimiter, it will return an empty string between two adjacent nonwords:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    split /(\W)/, &#39;$foo := $bar&#39;;
+    # &#39;&#39;, &#39;$&#39;, &#39;foo&#39;, &#39; &#39;, &#39;&#39;, &#39;:&#39;, &#39;&#39;, &#39;=&#39;, &#39;&#39;, &#39; &#39;, &#39;&#39;, &#39;$&#39;, &#39;bar&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Splitting on a word boundary goes too much the other way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    split /\b/, &#39;$foo := $bar&#39;;
+    # &#39;$&#39;, &#39;foo&#39;, &#39; := $&#39;, &#39;bar&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And so it turns out that we want to cleave the string where we&amp;rsquo;ve just seen a nonword character, or if we&amp;rsquo;re about to see one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    split /(?&amp;lt;=\W)|(?=\W)/, $string;
+    # &#39;$&#39;, &#39;foo&#39;, &#39; &#39;, &#39;:&#39;, &#39;=&#39;, &#39; &#39;, &#39;$&#39;, &#39;bar&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And this gives us the sort of tokenisation we want.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-regexp-modules-regexp-modules-span&#34;&gt;&lt;span id=&#34;regexp_modules&#34;&gt;Regexp Modules&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Now, though, we are getting into the sort of regular expressions that are not written lightly, and we may need some help constructing and debugging these expressions. Thankfully, there are plenty of modules which make regexp handling much easier for us.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-re-re-span&#34;&gt;&lt;span id=&#34;re&#34;&gt;re&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;re&lt;/code&gt; module is as invaluable as it is obscure. It&amp;rsquo;s one of those hidden treasures of the Perl core that Casey was talking about last month. As well as turning on two features of the regular expression engine, tainting subexpressions and evaluated assertions, it provides a debugging facility that allows you to watch your expression being compiled and executed.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a relative simple expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $a =~ /([^:]+):\s*(.*)/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When this code is run under &lt;code&gt;-Mre=debug&lt;/code&gt;, then the following will be printed when the regexp is compiled:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Compiling REx `([^:]+):\s*(.*)&#39;
+    size 25 first at 4
+       1: OPEN1(3)
+       3:   PLUS(13)
+       4:     ANYOF[\0-9;-\377](0)
+      13: CLOSE1(15)
+      15: EXACT &amp;lt;:&amp;gt;(17)
+      17: STAR(19)
+      18:   SPACE(0)
+      19: OPEN2(21)
+      21:   STAR(23)
+      22:     REG_ANY(0)
+      23: CLOSE2(25)
+      25: END(0)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This tells us the instructions for the little machine that the regular expression compiler creates: it should first open a bracket, then go into a loop (&lt;code&gt;PLUS&lt;/code&gt;) finding characters that are &lt;code&gt;ANYOF&lt;/code&gt; character zero through to &lt;code&gt;9&lt;/code&gt; and &lt;code&gt;;&lt;/code&gt; through to character 255 - that is, everything apart from a &lt;code&gt;:&lt;/code&gt;. Then we close the bracket, look for a specific character, and so on. The numbers in brackets after each instruction are the line number to jump to on completion; then the &lt;code&gt;PLUS&lt;/code&gt; loop exits, it should go on to line 13, &lt;code&gt;CLOSE1&lt;/code&gt; and so on.&lt;/p&gt;
+
+&lt;p&gt;Next when we try to run this match against some text:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $a = &amp;quot;Name: Mark-Jason Dominus&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It will first tell us something about the optimizations it performs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Guessing start of match, REx `([^:]+):\s*(.*)&#39; against `Name: ...&#39;
+    Found floating substr `:&#39; at offset 4...
+    Does not contradict STCLASS...
+    Guessed: match at offset 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What this means is that it has found the constant element &lt;code&gt;:&lt;/code&gt; in the regular expression, and tries to locate that in the string, and then work backward to find out where it should start the match. Since the &lt;code&gt;:&lt;/code&gt; is at position four in our string, it will go on to deduce that the match should start at the beginning and&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Matching REx `([^:]+):\s*(.*)&#39; against `Name: Mark-Jason Dominus&#39;
+    Setting an EVAL scope, savestack=3
+    0 &amp;lt;&amp;gt; &amp;lt;Name: Mark-J&amp;gt;    |  1:  OPEN1
+    0 &amp;lt;&amp;gt; &amp;lt;Name: Mark-J&amp;gt;    |  3:  PLUS
+    ANYOF[\0-9;-\377] can match 4 times out of 32767...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;[^:]&lt;/code&gt; can match four times, since it knows there are four things that are not colons there.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;re&lt;/code&gt; module is absolutely essential for heavy-duty study of how the regular expression engine works, and why it doesn&amp;rsquo;t do what you think it should.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-yape-regex-explain-yape-regex-explain-span&#34;&gt;&lt;span id=&#34;yape::regex::explain&#34;&gt;YAPE::Regex::Explain&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The description given by &lt;code&gt;re&lt;/code&gt; is a little low-level for some people; well, most people. &lt;code&gt;YAPE::Regex::Explain&lt;/code&gt; aims to put the explanation at a much higher level; for instance,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     % perl -MYAPE::Regex::Explain -e &#39;print 
+       YAPE::Regex::Explain-&amp;gt;new(qr/(?&amp;lt;=\W)|(?=\W)/)-&amp;gt;explain&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will produce quite a verbose explanation of the regular expression like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ----------------------------------------------------------------------
+    (?-imsx:                 group, but do not capture (case-sensitive)
+                             (with ^ and $ matching normally) (with . not
+                             matching \n) (matching whitespace and #
+                             normally):
+    ----------------------------------------------------------------------
+      (?&amp;lt;=                     look behind to see if there is:
+    ----------------------------------------------------------------------
+        \W                       non-word characters (all but a-z, A-Z,
+                                 0-9, _)
+    ----------------------------------------------------------------------
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-graphviz-regex-graphviz-regex-span&#34;&gt;&lt;span id=&#34;graphviz::regex&#34;&gt;GraphViz::Regex&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I find that one of the best ways to debug and understand a complex procedure is to draw a picture. &lt;code&gt;GraphViz::Regex&lt;/code&gt; uses the &lt;code&gt;graphviz&lt;/code&gt; visualization library to draw a state machine diagram for a given regular expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use GraphViz::Regex;
+
+    my $regex = &#39;(([abcd0-9])|(foo))&#39;;
+
+    my $graph = GraphViz::Regex-&amp;gt;new($regex);
+    print $graph-&amp;gt;as_png;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-regexp-common-regexp-common-span&#34;&gt;&lt;span id=&#34;regexp::common&#34;&gt;Regexp::Common&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So much for explaining complicated regular expressions; what about generating them? The &lt;code&gt;Regexp::Common&lt;/code&gt; module aims to be a repository for all kinds of commonly needed regular expressions, such as URIs, balanced texts, domain names and IP addresses. The interface is a little freaky, but it can hugely help to clarify complex regexps:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $ts = qr/\d+:\d+:\d+\.\d+/;
+    $tcpdump =~ /$ts ($RE{net}{IPv4}) &amp;gt; ($RE{net}{IPv4}) : (tcp|udp) (\d+)/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-text-balanced-text-balanced-span&#34;&gt;&lt;span id=&#34;text::balanced&#34;&gt;Text::Balanced&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Finally, one particularly common family of things to match for are quoted, parenthesised or tagged text. Damian&amp;rsquo;s &lt;code&gt;Text::Balanced&lt;/code&gt; module helps produce both regular expressions and subroutines to match and extract balanced text sequences. For instance, we can create a regular expression for matching double-quoted strings like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Text::Balanced qw(gen_delimited_pat);
+    $pat = gen_delimited_pat(q{&amp;quot;})
+    # (?:\&amp;quot;(?:[^\\\&amp;quot;]*(?:\\.[^\\\&amp;quot;]*)*)\&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This pattern will match quoted text, but will also be aware of escape sequences like &lt;code&gt;\&amp;quot;&lt;/code&gt; and &lt;code&gt;\\&lt;/code&gt;, and hence not break off in the middle of&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;\&amp;quot;So\&amp;quot;, he said, \&amp;quot;How about lunch?\&amp;quot;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Text::Balanced&lt;/code&gt; also contains routines for extracting tagged text, finding balanced pairs of parentheses, and much more.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-summary-summary-span&#34;&gt;&lt;span id=&#34;summary&#34;&gt;Summary&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;We&amp;rsquo;ve looked at some slightly more-complex features of regular expressions, and shown how we can use these to slice and dice text with Perl. As these regexes get more complicated, the need for tools to help us debug them increases; and so we&amp;rsquo;ve looked also at &lt;code&gt;re&lt;/code&gt;, &lt;code&gt;YAPE&lt;/code&gt; and &lt;code&gt;GraphViz::Regex&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, the &lt;code&gt;Regexp::Common&lt;/code&gt; and &lt;code&gt;Text::Balanced&lt;/code&gt; modules help us create complex regular expressions of our own.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Regexp Power</title>
+      <link>http://localhost:1313/pub/2003/06/06/regexps.html/</link>
+      <pubDate>Fri, 06 Jun 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/06/06/regexps.html/</guid>
+      <description>
+
+&lt;p&gt;Everyone knows that Perl works particularly well as a text processing language, and that it has a great many tools to help the programmer slice and dice text files. Most people know that Perl&amp;rsquo;s regular expressions are the mainstay of its text processing capabilities, but do you know about &lt;strong&gt;all&lt;/strong&gt; of the features which regexps provide in order to help you do your job?&lt;/p&gt;
+
+&lt;p&gt;In this short series of two articles, we&amp;rsquo;ll take a look through some of the less well-known or less understood parts of the regular expression language, and see how they can be used to solve problems with more power and less fuss.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re not too familiar with the basics of the regexp language, a good place to start is &lt;a href=&#34;https://perldoc.perl.org/perlretut.html&#34;&gt;perlretut&lt;/a&gt;, which comes as part of the Perl distribution. We&amp;rsquo;re going to assume that you know about anchors, character classes, repetition, bracketing, and alternation. Where can we go from here?&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-multiline-strings-multi-line-strings-span&#34;&gt;&lt;span id=&#34;multiline_strings&#34;&gt;Multi-line strings&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Matching multi-line strings is one thing that I have to admit confuses me every time. I remember that it has something to do with the &lt;code&gt;/m&lt;/code&gt; and &lt;code&gt;/s&lt;/code&gt; modifiers, so when I think my strings will contain embedded newlines, I just slap both &lt;code&gt;/ms&lt;/code&gt; on the end of my regular expression and hope for the best.&lt;/p&gt;
+
+&lt;p&gt;This is inexcusable behavior, especially since the distinction is pretty simple. &lt;code&gt;/m&lt;/code&gt; has to do with anchors. &lt;code&gt;/s&lt;/code&gt; has to do with dots. Let&amp;rsquo;s start by looking at &lt;code&gt;/s&lt;/code&gt;. The ``any&amp;rdquo; character, &lt;code&gt;.&lt;/code&gt;, does not actually match any character; by default, it matches any character except for a newline. So for instance, this won&amp;rsquo;t match:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;This is my\nmulti-line string&amp;quot; =~ /This.*string/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Don&amp;rsquo;t just take my word for it. Get into the habit of trying out these things for yourself; with Perl&amp;rsquo;s &lt;code&gt;-e&lt;/code&gt; switch, it&amp;rsquo;s very easy to make up a quick test of regular expression behavior if you&amp;rsquo;re unsure:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % perl -e &#39;print &amp;quot;Matched!&amp;quot; if &amp;quot;This is my\nmulti-line string&amp;quot; =~
+        /This.*string/;&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As predicted, it doesn&amp;rsquo;t print &lt;code&gt;Matched!&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This newline-phobia only relates to the &lt;code&gt;.&lt;/code&gt; operator. It&amp;rsquo;s nothing to do with regular expressions in general. If we use something other than a &lt;code&gt;.&lt;/code&gt; to match the stuff in the middle, it will work:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;This is my\nmulti-line string&amp;quot; =~ /This\D+string/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This matches the first &lt;code&gt;This&lt;/code&gt;, then more than one thing that isn&amp;rsquo;t a digit, and then &lt;code&gt;string&lt;/code&gt;. Because &lt;code&gt;\n&lt;/code&gt; isn&amp;rsquo;t a digit - and nor is anything else between &lt;code&gt;This&lt;/code&gt; and &lt;code&gt;string&lt;/code&gt; - the regular expression will match.&lt;/p&gt;
+
+&lt;p&gt;So the dot operator won&amp;rsquo;t match a newline. If we want to change the behavior of the dot operator, we can use the &lt;code&gt;/s&lt;/code&gt; modifier to the regular expression.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;This is my\nmulti-line string&amp;quot; =~ /This.*string/s;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This time, it matches. If you&amp;rsquo;re using the &lt;code&gt;.&lt;/code&gt; operator in your regular expressions and you want it to be able to cross over newline boundaries, use the &lt;code&gt;/s&lt;/code&gt; modifier. However, you can sometimes get the same result without using &lt;code&gt;/s&lt;/code&gt; by choosing another way of matching&lt;/p&gt;
+
+&lt;p&gt;What about anchors? Well, there are two possible things that we might want anchors to do with a multi-line string. We might them to match the start or end of any line in the string, or we might want them to match the start or end of the whole thing. Let&amp;rsquo;s back up a little, and then see how the &lt;code&gt;/m&lt;/code&gt; modifier can be used to choose between these two possible behaviors.&lt;/p&gt;
+
+&lt;p&gt;First, let&amp;rsquo;s try something we know that doesn&amp;rsquo;t work.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;This is my\nmulti-line string&amp;quot; =~ /^(.*)$/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This wants to match the start of the string, any amount of stuff that&amp;rsquo;s not a newline and the end of the string. But we know that there is a newline between the start of the string and the end, so it won&amp;rsquo;t match. We could, of course, allow &lt;code&gt;.&lt;/code&gt; to match a newline using the &lt;code&gt;/s&lt;/code&gt; trick we&amp;rsquo;ve just learnt, and then we can capture the whole lot:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     % perl -e &#39;print $1 if &amp;quot;This is my\nmulti-line string&amp;quot; =~ /^(.*)$/s&#39;
+     This is my
+     multi-line string
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But instead, we could use the &lt;code&gt;/m&lt;/code&gt; modifier. Let&amp;rsquo;s see what happens if we do that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     % perl -e &#39;print $1 if &amp;quot;This is my\nmulti-line string&amp;quot; =~ /^(.*)$/m&#39;
+     This is my
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Aha! This time, we&amp;rsquo;ve changed the meanings of the anchors - instead of matching just the start and end of the string, they now match the start of any line in the string.&lt;/p&gt;
+
+&lt;p&gt;What happens when Perl runs this regular expression? Let&amp;rsquo;s pretend we&amp;rsquo;re the regular expression engine for a brief, mad moment.&lt;/p&gt;
+
+&lt;p&gt;We start at the beginning of the string. The &lt;code&gt;^&lt;/code&gt; anchor tells us to match the beginning of a line, which is handy, since we&amp;rsquo;re at one of those right now. Now we match and capture any amount of stuff - so long as it isn&amp;rsquo;t a newline. This takes us up to &lt;code&gt;This is my&lt;/code&gt;, and as the next character is a newline, that is where we must stop. Next, we have the &lt;code&gt;$&lt;/code&gt; anchor. Now without the &lt;code&gt;/m&lt;/code&gt; modifier, this would want to find the end of the string. We&amp;rsquo;re not at the end of the string - there&amp;rsquo;s &lt;code&gt;\nmulti-line string&lt;/code&gt; left to go - so without the &lt;code&gt;/m&lt;/code&gt; modifier this match would fail. That&amp;rsquo;s what happened just above.&lt;/p&gt;
+
+&lt;p&gt;However, this time we do have the &lt;code&gt;/m&lt;/code&gt; modifier, so the meaning of &lt;code&gt;$&lt;/code&gt; has changed. This time, it means the end of any line in the string. As we&amp;rsquo;ve had to stop at the &lt;code&gt;\n&lt;/code&gt;, that would mean we&amp;rsquo;re at the end of a line. So &lt;strong&gt;that&lt;/strong&gt; means that our &lt;code&gt;$&lt;/code&gt; matches, and the whole expression matches and all is well.&lt;/p&gt;
+
+&lt;p&gt;What if we use both the &lt;code&gt;/m&lt;/code&gt; and &lt;code&gt;/s&lt;/code&gt; modifiers here? Let&amp;rsquo;s see:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % perl -e &#39;print $1 if &amp;quot;This is my\nmulti-line string&amp;quot; =~ /^(.*)$/ms&#39;
+    This is my
+    multi-line string
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Well, it looks the same as when we had just used &lt;code&gt;/s&lt;/code&gt;. Why? Because we do have &lt;code&gt;/s&lt;/code&gt;, the &lt;code&gt;.*&lt;/code&gt; can eat up absolutely everything right up to the end of the string. Now our &lt;code&gt;/m&lt;/code&gt;-enabled &lt;code&gt;$&lt;/code&gt; matches the end of any line in the string, and indeed we are at the end of the second line in the string, so this matches too. In this case, the &lt;code&gt;/m&lt;/code&gt; is superfluous.&lt;/p&gt;
+
+&lt;p&gt;Another trick to avoid confusion is to use explicit newlines in your expression. For instance, if you&amp;rsquo;re dealing with data like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Name: Mark-Jason Dominus
+    Occupation: Perl trainer
+    Favourite thing: Octopodes
+
+    Name: Simon Cozens
+    Occupation: Hacker
+    Favourite thing: Sleep
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then you can split it up with a newline-embedded regexp like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    /^Name: (.*)\nOccupation: (.*)\nFavourite thing: (.*)/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This time we don&amp;rsquo;t need any modifiers at all - we want the &lt;code&gt;.*&lt;/code&gt; to stop before the newline, and then the explicit newlines themselves obviate the need for start-of-line or end-of-line anchors. In our next article, we&amp;rsquo;ll see how to use the &lt;code&gt;/g&lt;/code&gt; modifier to read in multiple records.&lt;/p&gt;
+
+&lt;p&gt;So those are the two rules for dealing with multi-line strings: &lt;code&gt;/s&lt;/code&gt; changes the behavior of the dot operator. Without &lt;code&gt;/s&lt;/code&gt;, &lt;code&gt;.&lt;/code&gt; will not match a newline. With &lt;code&gt;/s&lt;/code&gt;, &lt;code&gt;.&lt;/code&gt; truly matches anything. On the other hand &lt;code&gt;/m&lt;/code&gt; changes the behavior of the anchors &lt;code&gt;^&lt;/code&gt; and &lt;code&gt;$&lt;/code&gt;; without &lt;code&gt;/m&lt;/code&gt;, these anchors only match the start and end of the whole string. With &lt;code&gt;/m&lt;/code&gt;, they match the start or end of any line inside the string.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-spacing-commenting-and-quoting-regexps-spacing-commenting-and-quoting-regexps-span&#34;&gt;&lt;span id=&#34;spacing,_commenting_and_quoting_regexps&#34;&gt;Spacing, Commenting and Quoting Regexps&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Another modifier like &lt;code&gt;/s&lt;/code&gt; and &lt;code&gt;/m&lt;/code&gt; is &lt;code&gt;/x&lt;/code&gt;; &lt;code&gt;/x&lt;/code&gt; changes the behavior of whitespace inside a regular expression. Without &lt;code&gt;/x&lt;/code&gt;, a literal space inside a regex matches a space in the string. This makes sense:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;A string&amp;quot; =~ /A string/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You would expect this to match, and without &lt;code&gt;/x&lt;/code&gt;, it does match. Phew. With &lt;code&gt;/x&lt;/code&gt;, however, the match fails. Why is this? &lt;code&gt;/x&lt;/code&gt; strips literal whitespace of any meaning. If we want to match &lt;code&gt;A string&lt;/code&gt;, we have to use either the &lt;code&gt;\s&lt;/code&gt; whitespace character class or some other shenanigans:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;A string&amp;quot; =~ /A\sstring/x;
+    &amp;quot;A string&amp;quot; =~ /A[ ]string/x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How can this conceivably be useful? Well, for a start, by removing the meaning of white space inside a regular expression, we can use whitespace at will; this is particularly useful to help us space out complicated expressions. The rather unpleasant&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ($postcode) =
+        ($address =~
+    /([A-Z]{1,2}\d{1,3}[ \t]+\d{1,2}[A-Z][A-Z]|[A-Z][A-Z][\t ]+\d{5})/);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;becomes the slightly more managable&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ($postcode) =
+        ($address =~
+    /(
+          [A-Z]{1,2}\d{1,3} [ \t]+ \d{1,2} [A-Z][A-Z]
+        | [A-Z][A-Z] [\t ]+ \d{5}
+    )/x);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Without &lt;code&gt;/x&lt;/code&gt;, we would be looking for literal spaces, tabs and carriage returns inside our postcode, which really wouldn&amp;rsquo;t work out as we want.&lt;/p&gt;
+
+&lt;p&gt;Another advantage of using &lt;code&gt;/x&lt;/code&gt; is that it allows us to add comments to our regular expression, helping to make the example above even more maintainable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ($postcode) =
+        ($address =~
+    /(
+        # UK Postcode:
+          [A-Z]{1,2} # Post town
+          \d{1,3}    # Area
+          [ \t]+
+          \d{1,2}    # Region
+          [A-Z][A-Z] # Street part
+        |
+        # US Postcode:
+          [A-Z][A-Z]   # State
+          [\t ]+
+          \d{5}        # ZIP+5
+    )/x);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, to make it still tidier, we can put regular expression components into variables:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $post_town = &#39;[A-Z]{1,2}&#39;;
+    my $area      = &#39;\d{1,3};
+    my $space     = &#39;[ \t]+&#39;;
+    my $region    = &#39;\d{1,2}&#39;;
+    my $street    = &#39;[A-Z][A-Z]&#39;;
+
+    my $uk_postcode = &amp;quot;$post_town $area $space $region $street&amp;quot;;
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because variables are interpolated inside regular expressions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ($postcode) =
+        ($address =~ /($uk_postcode|$us_postcode)/x);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Perl 5.6.0 introduced the ability to package up regular expressions into variables using the &lt;code&gt;qr//&lt;/code&gt; operator. This acts just like &lt;code&gt;q//&lt;/code&gt; except that it follows the quoting, escaping and interpolation rules of the regular expression match operator. In our example above, we had to use single quotes for the ``basic&amp;rdquo; components, and then double quotes to get the interpolation when we wanted to string them all together into &lt;code&gt;$uk_postcode&lt;/code&gt;. Now, we can use the same &lt;code&gt;qr//&lt;/code&gt; operator for all the parts of our regular expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $post_town = qr/[A-Z]{1,2}/;
+    my $area      = qr/\d{1,3}/;
+    my $space     = qr/[ \t]+/;
+    my $region    = qr/\d{1,2}/;
+    my $street    = qr/[A-Z][A-Z]/;
+
+And we can also add modifiers to parts of a quoted regular expression:
+
+    my $uk_postcode = qr/$post_town $area $space $region $street/x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because the modifiers are packaged up inside their own little component, we can ``mix and match&amp;rdquo; modifiers inside a single regular expression. If, for instance, we want to match part of it case-insensitively and some case-sensitively:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $prefix = qr/zip code: /i;
+    my $code   = qr/[A-Z][A-Z][ \t]+\d{5}/;
+
+    $address =~ /$prefix $code/x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example, the prefix part ``knows&amp;rdquo; that it has to match case-insensitively and the code part ``knows&amp;rdquo; that it should match case-sensitively like any other normal regular expression.&lt;/p&gt;
+
+&lt;p&gt;Another boon of using quoted regular expressions is a little off-the-wall. We can actually use them to create recursive regular expressions. For instance, an old chestnut is the question ``How do I extract parenthesized text?&amp;ldquo;. Well, such a simple problem turns out to be quite nasty to solve using regular expressions. Here&amp;rsquo;s a simple-minded approach:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $paren = qr/ \( [^)]+ \) /x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This simple approach works in simple cases:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;Some (parenthesized) text&amp;quot; =~ /($paren)/;
+    print $1; # parenthesized
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But fails in complex cases:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;Some (parenthesised and (gratuitously) sub-parenthesised text&amp;quot;
+        =~ /($paren)/;
+    print $1; # parenthesized and (gratuitously
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Oops. Our expression sees the first closing paren and stops. We need to find a way to tell it to count the number of opening and closing parens and make sure they&amp;rsquo;re balanced before finishing. This actually turns out to be tremendously difficult, and the solution is too messy to show here. Regular expressions are not meant for iterative solutions.&lt;/p&gt;
+
+&lt;p&gt;Regular expressions aren&amp;rsquo;t &lt;strong&gt;really&lt;/strong&gt; meant for recursive solutions either, but if we have recursive regular expressions, we can define our balanced-paren expression like this: first match an opening paren; then match a series of things that can be non-parens or an another balanced-paren group; then a closing paren. Turned into Perl code, this becomes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $paren = qr/
+      \(
+        (
+           [^()]+  # Not parens
+         |
+           $paren  # Another balanced group
+        )*
+      \)
+    /x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is almost there, but it&amp;rsquo;s not quite correct. Because &lt;code&gt;qr//&lt;/code&gt; compiles a regular expression, it does the interpolation right there and then. And when our expression is compiled &lt;code&gt;$paren&lt;/code&gt; isn&amp;rsquo;t defined yet, so it&amp;rsquo;s interpolated as an empty string, and we don&amp;rsquo;t get the recursion.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s OK. We can tell the expression not to interpolate the &lt;code&gt;$paren&lt;/code&gt; quite yet with the super-secret regular expression ``don&amp;rsquo;t interpolate this bit yet&amp;rdquo; operator: &lt;code&gt;(??{ })&lt;/code&gt;. (It has two question marks to remind you that it&amp;rsquo;s doubly secret.) Now we have&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $paren = qr/
+      \(
+        (
+           [^()]+  # Not parens
+         |
+           (??{ $paren })  # Another balanced group (not interpolated yet)
+        )*
+      \)
+    /x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When this is run on some text like &lt;code&gt;(lambda (x) (append x &#39;(hacker)))&lt;/code&gt;, the following happens: we see our opening paren, so all is well. Then we see some things which are not parens (&lt;code&gt;lambda&lt;/code&gt;) and all is still well. Now we see &lt;code&gt;(&lt;/code&gt;, which definitely is a paren. Our first alternative fails, we try the second alternative. Now it&amp;rsquo;s finally time to interpolate what&amp;rsquo;s inside the double-secret operator, which just happens to be &lt;code&gt;$paren&lt;/code&gt;. And what does &lt;code&gt;$paren&lt;/code&gt; tell us to match? First, an open paren - ooh, we seem to have one of those handy. Then some things which are not parens, such as &lt;code&gt;x&lt;/code&gt;, and then we can finish this part of the match by matching a close paren. This polishes off the sub-expression, so we can go back to looking for more things that aren&amp;rsquo;t parens, and so on.&lt;/p&gt;
+
+&lt;p&gt;Of course, if we need to get this confusing, you might wonder why we&amp;rsquo;re using a regular expression at all. Thankfully, there&amp;rsquo;s a much easier way of doing things: the &lt;a href=&#34;https://metacpan.org/pod/Text::Balanced&#34;&gt;the Text::Balanced manpage&lt;/a&gt; module helps extract all kinds of balanced, quoted and tagged texts, and this is one of the things we&amp;rsquo;ll look at in our next article, next month.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-in-conclusion-in-conclusion-span&#34;&gt;&lt;span id=&#34;in_conclusion&#34;&gt;In Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Regular expressions are like a microcosm of the Perl language itself: it&amp;rsquo;s simple to use them to do simple things with, and most of the time you only need to do simple things with them. But sometimes you need to do more complex things, and you have to start digging around in the dark corners of the language to pull out the slightly more complex tools.&lt;/p&gt;
+
+&lt;p&gt;Hopefully this article has shed a little light on some of the dark corners: for dealing with multi-line strings and making expressions more readable with quoting and interpolation. In the next article, we&amp;rsquo;ll look at the dreaded look-ahead and look-behind operators, splitting up text with more than just &lt;code&gt;split&lt;/code&gt;, and some CPAN modules to help you get all this done.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

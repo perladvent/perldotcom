@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Screen Scraping Web Mechanize on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/screen-scraping-web-mechanize/</link>
+    <description>Recent content in Screen Scraping Web Mechanize on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 22 Jan 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/screen-scraping-web-mechanize/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Screen-scraping with WWW::Mechanize</title>
+      <link>http://localhost:1313/pub/2003/01/22/mechanize.html/</link>
+      <pubDate>Wed, 22 Jan 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/01/22/mechanize.html/</guid>
+      <description>&lt;p&gt;Screen-scraping is the process of emulating an interaction with a Web site - not just downloading pages, but filling out forms, navigating around the site, and dealing with the HTML received as a result. As well as for traditional lookups of information - like the example we&amp;rsquo;ll be exploring in this article - we can use screen-scraping to enhance a Web service into doing something the designers hadn&amp;rsquo;t given us the power to do in the first place. Here&amp;rsquo;s an example:&lt;/p&gt;
+
+&lt;p&gt;I do my banking online, but get quickly bored with having to go to my bank&amp;rsquo;s site, log in, navigate around to my accounts and check the balance on each of them. One quick Perl module (&lt;a href=&#34;https://metacpan.org/pod/Finance::Bank::HSBC&#34;&gt;&lt;code&gt;Finance::Bank::HSBC&lt;/code&gt;&lt;/a&gt;) later, and now I can loop through each of my accounts and print their balances, all from a shell prompt. Some more code, and I can do something the bank&amp;rsquo;s site doesn&amp;rsquo;t ordinarily let me - I can treat my accounts as a whole instead of individual accounts, and find out how much money I have, could possibly spend, and owe, all in total. Another step forward would be to schedule a &lt;em&gt;crontab&lt;/em&gt; every day to use the HSBC option to download a copy of my transactions in Quicken&amp;rsquo;s QIF format, and use Simon Cozens&amp;rsquo; &lt;a href=&#34;https://metacpan.org/pod/Finance::QIF&#34;&gt;&lt;code&gt;Finance::QIF&lt;/code&gt;&lt;/a&gt; module to interpret the file and run those transactions against a budget, letting me know whether I&amp;rsquo;m spending too much lately. This takes a simple Web-based system from being merely useful to being automated and bespoke; if you can think of how to write the code, then you can do it. (It&amp;rsquo;s probably wise for me to add the caveat, though, that you should be extremely careful working with banking information programatically, and even more careful if you&amp;rsquo;re storing your login details in a Perl script somewhere.)&lt;/p&gt;
+
+&lt;p&gt;Back to screen-scrapers, and introducing &lt;a href=&#34;https://metacpan.org/pod/WWW::Mechanize&#34;&gt;&lt;code&gt;WWW::Mechanize&lt;/code&gt;&lt;/a&gt;, written by Andy Lester and based on Skud&amp;rsquo;s [](https://metacpan.org/pod/WWW::Automate)&lt;code&gt;WWW::Automate&lt;/code&gt;. Mechanize allows you to go to a URL and explore the site, following links by name, taking cookies, filling in forms and clicking &amp;ldquo;submit&amp;rdquo; buttons. We&amp;rsquo;re also going to use &lt;a href=&#34;https://metacpan.org/pod/HTML::TokeParser&#34;&gt;&lt;code&gt;HTML::TokeParser&lt;/code&gt;&lt;/a&gt; to process the HTML we&amp;rsquo;re given back, which is a process I&amp;rsquo;ve written about &lt;a href=&#34;http://localhost:1313/pub/2001/11/15/creatingrss.html&#34;&gt;previously&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The site I&amp;rsquo;ve chosen to demonstrate on is the BBC&amp;rsquo;s &lt;a href=&#34;http://www.radiotimes.beeb.com&#34;&gt;Radio Times&lt;/a&gt; site, which allows users to create a &amp;ldquo;Diary&amp;rdquo; for their favorite TV programs, and will tell you whenever any of the programs is showing on any channel. Being a &lt;a href=&#34;http://london.pm.org/&#34;&gt;London Perl M[ou]nger&lt;/a&gt;, I have an obsession with Buffy the Vampire Slayer. If I tell this to the BBC&amp;rsquo;s site, then it&amp;rsquo;ll tell me when the next episode is, and what the episode name is - so I can check whether it&amp;rsquo;s one I&amp;rsquo;ve seen before. I&amp;rsquo;d have to remember to log into their site every few days to check whether there was a new episode coming along, though. Perl to the rescue! Our script will check to see when the next episode is and let us know, along with the name of the episode being shown.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -w
+  use strict;
+
+  use WWW::Mechanize;
+  use HTML::TokeParser;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you&amp;rsquo;re going to run the script yourself, then you should register with the Radio Times site and create a diary, before giving the e-mail address you used to do so below.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $email = &amp;quot;;
+  die &amp;quot;Must provide an e-mail address&amp;quot; unless $email ne &amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We create a WWW::Mechanize object, and tell it the address of the site we&amp;rsquo;ll be working from. The Radio Times&amp;rsquo; front page has an image link with an ALT text of &amp;ldquo;My Diary&amp;rdquo;, so we can use that to get to the right section of the site:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $agent = WWW::Mechanize-&amp;gt;new();
+  $agent-&amp;gt;get(&amp;quot;http://www.radiotimes.beeb.com/&amp;quot;);
+  $agent-&amp;gt;follow(&amp;quot;My Diary&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The returned page contains two forms - one to allow you to choose from a list box of program types, and then a login form for the diary function. We tell WWW::Mechanize to use the second form for input. (Something to remember here is that WWW::Mechanize&amp;rsquo;s list of forms, unlike an array in Perl, is indexed starting at 1 rather than 0. Our index is, therefore,&amp;lsquo;2.&amp;rsquo;)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $agent-&amp;gt;form(2);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can fill in our e-mail address for the &amp;lsquo;&amp;lt;INPUT name=&amp;ldquo;email&amp;rdquo; type=&amp;ldquo;text&amp;rdquo;&amp;gt;&amp;rsquo; field, and click the submit button. Nothing too complicated.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $agent-&amp;gt;field(&amp;quot;email&amp;quot;, $email);
+  $agent-&amp;gt;click();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;WWW::Mechanize moves us to our diary page. This is the page we need to process to find the date details from. Upon looking at the HTML source for this page, we can see that the HTML we need to work through is something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;input&amp;gt;
+  &amp;lt;tr&amp;gt;&amp;lt;td&amp;gt;&amp;lt;/td&amp;gt;&amp;lt;/tr&amp;gt;
+  &amp;lt;tr&amp;gt;&amp;lt;td&amp;gt;&amp;lt;/td&amp;gt;&amp;lt;td&amp;gt;&amp;lt;/td&amp;gt;&amp;lt;td class=&amp;quot;bluetext&amp;quot;&amp;gt;Date of episode&amp;lt;/td&amp;gt;&amp;lt;/tr&amp;gt;
+  &amp;lt;td&amp;gt;&amp;lt;/td&amp;gt;&amp;lt;td&amp;gt;&amp;lt;/td&amp;gt;
+  &amp;lt;td class=&amp;quot;bluetext&amp;quot;&amp;gt;&amp;lt;b&amp;gt;Time of episode&amp;lt;/b&amp;gt;&amp;lt;/td&amp;gt;&amp;lt;/tr&amp;gt;
+  &amp;lt;a href=&amp;quot;page_with_episode_info&amp;quot;&amp;gt;&amp;lt;/a&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This can be modeled with &lt;code&gt;HTML::TokeParser&lt;/code&gt; as below. The important methods to note are &lt;code&gt;get_tag&lt;/code&gt; - which will move the stream on to the next opening for the tag given - and &lt;code&gt;get_trimmed_text&lt;/code&gt;, which returns the text between the current and given tags. For example, for the HTML code &amp;ldquo;&amp;lt;b&amp;gt;Bold text here&amp;lt;/b&amp;gt;&amp;rdquo;, &lt;code&gt;my $tag = get_trimmed_text(&amp;quot;/b&amp;quot;)&lt;/code&gt; would return &lt;code&gt;&amp;quot;Bold text here&amp;quot;&lt;/code&gt; to &lt;code&gt;$tag&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Also note that we&amp;rsquo;re initializing HTML::TokeParser on &amp;lsquo;\$agent-&amp;gt;{content}&amp;rsquo; - this is an internal variable for WWW::Mechanize, exposing the HTML content of the current page.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $stream = HTML::TokeParser-&amp;gt;new(\$agent-&amp;gt;{content});
+  my $date;
+
+  # &amp;lt;input&amp;gt;
+  $stream-&amp;gt;get_tag(&amp;quot;input&amp;quot;);
+
+  # &amp;lt;tr&amp;gt;&amp;lt;td&amp;gt;&amp;lt;/td&amp;gt;&amp;lt;/tr&amp;gt;&amp;lt;tr&amp;gt;
+  $stream-&amp;gt;get_tag(&amp;quot;tr&amp;quot;); $stream-&amp;gt;get_tag(&amp;quot;tr&amp;quot;);
+
+  # &amp;lt;td&amp;gt;&amp;lt;/td&amp;gt;&amp;lt;td&amp;gt;&amp;lt;/td&amp;gt;
+  $stream-&amp;gt;get_tag(&amp;quot;td&amp;quot;); $stream-&amp;gt;get_tag(&amp;quot;td&amp;quot;);
+
+  # &amp;lt;td class=&amp;quot;bluetext&amp;quot;&amp;gt;Date of episode&amp;lt;/td&amp;gt;&amp;lt;/tr&amp;gt;
+  my $tag = $stream-&amp;gt;get_tag(&amp;quot;td&amp;quot;);
+  if ($tag-&amp;gt;[1]{class} and $tag-&amp;gt;[1]{class} eq &amp;quot;bluetext&amp;quot;) {
+      $date = $stream-&amp;gt;get_trimmed_text(&amp;quot;/td&amp;quot;);
+      # The date contains &#39;&amp;amp;nbsp;&#39;, which we&#39;ll translate to a space.
+      $date =~ s/\xa0/ /g;
+  }
+
+  # &amp;lt;td&amp;gt;&amp;lt;/td&amp;gt;&amp;lt;td&amp;gt;&amp;lt;/td&amp;gt;
+  $stream-&amp;gt;get_tag(&amp;quot;td&amp;quot;);
+
+  # &amp;lt;td class=&amp;quot;bluetext&amp;quot;&amp;gt;&amp;lt;b&amp;gt;Time of episode&amp;lt;/b&amp;gt;  
+  $tag = $stream-&amp;gt;get_tag(&amp;quot;td&amp;quot;);
+
+  if ($tag-&amp;gt;[1]{class} eq &amp;quot;bluetext&amp;quot;) {
+      $stream-&amp;gt;get_tag(&amp;quot;b&amp;quot;);
+      # This concatenates the time of the showing to the date.
+      $date .= &amp;quot;, from &amp;quot; . $stream-&amp;gt;get_trimmed_text(&amp;quot;/b&amp;quot;);
+  }
+
+  # &amp;lt;/td&amp;gt;&amp;lt;/tr&amp;gt;&amp;lt;a href=&amp;quot;page_with_episode_info&amp;quot;&amp;gt;&amp;lt;/a&amp;gt;
+  $tag = $stream-&amp;gt;get_tag(&amp;quot;a&amp;quot;);
+
+  # Match the URL to find the page giving episode information.
+  $tag-&amp;gt;[1]{href} =~ m!src=(http://.*?)&#39;!;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We have a scalar, $date, containing a string that looks something like &amp;ldquo;Thursday 23 January, from 6:45pm to 7:30pm.&amp;ldquo;, and we have an URL, in $1, that will tell us more about that episode. We tell WWW::Mechanize to go to the URL:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $agent-&amp;gt;get($1);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The navigation we want to perform on this page is far less complex than on the last page, so we can avoid using a TokeParser for it - a regular expression should suffice. The HTML we want to parse looks something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;br&amp;gt;&amp;lt;b&amp;gt;Episode&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;  The Episode Title&amp;lt;br&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We use a regex delimited with &amp;lsquo;!&amp;rsquo; in order to avoid having to escape the slashes present in the HTML, and store any number of alphanumeric characters after some whitespace, all between &amp;lt;br&amp;gt; tags after the Episode header:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $agent-&amp;gt;{content} =~ m!&amp;lt;br&amp;gt;&amp;lt;b&amp;gt;Episode&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;\s+?(\w+?)&amp;lt;br&amp;gt;!;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;$1 now contains our episode, and all that&amp;rsquo;s left to do is print out what we&amp;rsquo;ve found:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $episode = $1;
+  print &amp;quot;The next Buffy episode ($episode) is on $date.\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And we&amp;rsquo;re all set. We can run our script from the shell:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $ perl radiotimes.pl
+  The next Buffy episode (Gone) is Thursday Jan. 23, from 6:45 to 7:30 p.m.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I hope this gives a light-hearted introduction to the usefulness of the modules involved. As a note for your own experiments, WWW::Mechanize supports cookies - in that the requestor is a normal LWP::UserAgent object - but they aren&amp;rsquo;t enabled by default. If you need to support cookies, then your script should call &amp;ldquo;&lt;code&gt;use HTTP::Cookies;&lt;/code&gt; &lt;code&gt;$agent-&amp;gt;cookie_jar(HTTP::Cookies-&amp;gt;new)&lt;/code&gt;;&amp;rdquo; on your agent object in order to enable session-volatile cookies for your own code.&lt;/p&gt;
+
+&lt;p&gt;Happy screen-scraping, and may you never miss a Buffy episode again.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl 6 Modules on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-6-modules/</link>
+    <description>Recent content in Perl 6 Modules on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 28 Jul 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-6-modules/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Porting Test::Builder to Perl 6</title>
+      <link>http://localhost:1313/pub/2005/07/28/test_builder_p6.html/</link>
+      <pubDate>Thu, 28 Jul 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/07/28/test_builder_p6.html/</guid>
+      <description>
+
+&lt;p&gt;Perl 6 development now proceeds in two directions. The first is from the bottom up, with the creation and evolution of &lt;a href=&#34;http://www.parrotcode.org/&#34;&gt;Parrot&lt;/a&gt; and underlying code, including the Parrot Grammar Engine. The goal there is to build the structure Perl 6 will need. The second direction is from the top down, with the &lt;a href=&#34;http://www.pugscode.org/&#34;&gt;Pugs&lt;/a&gt; project implementing Perl 6 initially separate from Parrot, though recent additions allow an embedded Parrot to run the parsed code and to emit valid Parrot PIR code.&lt;/p&gt;
+
+&lt;p&gt;Both projects are important and both help the design of Perl 6 and its implementation. Parrot is valuable in that it demonstrates a solid foundation for Perl 6 (and other similar languages); a far better foundation than the internals of Perl 5 have become. Pugs is important because it allows people to use Perl 6 productively now, with more features every day.&lt;/p&gt;
+
+&lt;h3 id=&#34;motivation-and-design&#34;&gt;Motivation and Design&lt;/h3&gt;
+
+&lt;p&gt;Perl culture values testing very highly. Several years ago, at the suggestion of Michael Schwern, I extracted the code that would become &lt;a href=&#34;https://metacpan.org/pod/Test::Builder&#34;&gt;Test::Builder&lt;/a&gt; from &lt;a href=&#34;https://metacpan.org/pod/Test::More&#34;&gt;Test::More&lt;/a&gt; and unified &lt;a href=&#34;https://metacpan.org/pod/Test::Simple&#34;&gt;Test::Simple&lt;/a&gt; and Test::More to share that back end. Now dozens of other testing modules, built upon Test::Builder, work together seamlessly.&lt;/p&gt;
+
+&lt;p&gt;Pugs culture also values testing. However, there was no corresponding Test::Builder for Perl 6 yet&amp;ndash;there was only a single &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test/lib/Test.pm&#34;&gt;&lt;em&gt;Test.pm&lt;/em&gt;&lt;/a&gt; module that did most of what the early version of Test::More did in Perl 5.&lt;/p&gt;
+
+&lt;p&gt;Schwern and I have discussed updates and refactorings of Test::Builder for the past couple of years. We made some mistakes in the initial design. As Perl 6 offers the chance to clean up Perl 5, so does a port of Test::Builder to Perl 6 offer the chance to clean up some of the design decisions we would make differently now.&lt;/p&gt;
+
+&lt;p&gt;Internally, Test::Builder provides a few testing and reporting functions and keeps track of some test information. Most importantly, it contains a plan consisting of the number of tests expected to run. It also holds a list of details of every test it has seen. The testing and reporting functions add information to this list of test details. Finally, the module contains functions to report the test details in the standard &lt;a href=&#34;https://metacpan.org/pod/TAP::Base&#34;&gt;TAP&lt;/a&gt; format, so that tools such as &lt;a href=&#34;https://metacpan.org/pod/Test::Harness&#34;&gt;Test::Harness&lt;/a&gt; can interpret the results correctly.&lt;/p&gt;
+
+&lt;p&gt;Test::Builder needs to do all of these things, but there are several ways to design the module&amp;rsquo;s internals. Some ways are better than others.&lt;/p&gt;
+
+&lt;p&gt;The original Perl 5 version mashed all of this behavior together into one object-oriented module. To allow the use of multiple testing modules without confusing the count or the test details, &lt;code&gt;Test::Builder::new()&lt;/code&gt; always returns a singleton. All test modules call the constructor to receive the singleton object and call the test reporting methods to add details of the tests they handle.&lt;/p&gt;
+
+&lt;p&gt;This works, but it&amp;rsquo;s a little inelegant. In particular, modules that test test modules have to go to a lot of trouble to work around the design. A more flexible design would make things like &lt;a href=&#34;https://metacpan.org/pod/Test::Builder::Tester&#34;&gt;Test::Builder::Tester&lt;/a&gt; much easier to write.&lt;/p&gt;
+
+&lt;p&gt;The biggest change that Schwern and I have discussed is to separate the varying responsibilities into separate modules. The &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder.pm&#34;&gt;new Test::Builder object in Perl 6&lt;/a&gt; itself contains a &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/TestPlan.pm&#34;&gt;Test::Builder::TestPlan&lt;/a&gt; object that represents the plan (the number of tests to run), a &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/Output.pm&#34;&gt;Test::Builder::Output&lt;/a&gt; object that contains the filehandles to which to write TAP and diagnostic output, and an array of tests&amp;rsquo; results (all &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/Test.pm&#34;&gt;Test::Builder::Test&lt;/a&gt; instances).&lt;/p&gt;
+
+&lt;p&gt;The default constructor, &lt;code&gt;new()&lt;/code&gt;, still returns a singleton by default. However, modules that use Test::Builder can create their own objects, which perform the Test::Builder::TestPlan or Test::Builder::Output roles and pass them to the constructor to override the default objects created internally for the singleton. If a test module really needs a separate Test::Builder object, the alternate &lt;code&gt;create()&lt;/code&gt; method creates a new object that no other module will share.&lt;/p&gt;
+
+&lt;p&gt;This strategy allows the Perl 6 version of &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/Tester.pm&#34;&gt;Test::Builder::Tester&lt;/a&gt; to create its own Test::Builder object that reports tests as normal and then creates the shared singleton with output going to filehandles it can read instead of &lt;code&gt;STDOUT&lt;/code&gt; and &lt;code&gt;STDERR&lt;/code&gt;. The design appears to be sound; it took less than two hours to go from the idea of T::B::T to a fully working implementation&amp;ndash;counting a break to eat ice cream.&lt;/p&gt;
+
+&lt;h3 id=&#34;first-attempts&#34;&gt;First Attempts&lt;/h3&gt;
+
+&lt;p&gt;Translating Perl 5 OO code into Perl 6 OO code was mostly straightforward, despite my never having written any runnable Perl 6 OO code. (Also, Pugs was not far enough along that objects worked.)&lt;/p&gt;
+
+&lt;h4 id=&#34;what-went-right&#34;&gt;What Went Right&lt;/h4&gt;
+
+&lt;p&gt;One nice revelation is that opaque objects are actually easier to work with than blessed references. Even better, Perl 6&amp;rsquo;s improved function signatures reduce the necessity to write lots of boring boilerplate code.&lt;/p&gt;
+
+&lt;p&gt;Breaking Test::Builder into separate pieces gave the opportunity for several other refactorings. One of my favorite is &amp;ldquo;Replace Condititional with Polymorphism&amp;rdquo;. There are four different types of tests that have different reporting styles: &lt;code&gt;pass&lt;/code&gt;, &lt;code&gt;fail&lt;/code&gt;, &lt;code&gt;SKIP&lt;/code&gt;, and &lt;code&gt;TODO&lt;/code&gt;. It made sense to create separate classes for each of those, giving each the responsibility and knowledge to produce the correct TAP output. Thus I wrote Test::Builder::Test, a façade factory class with a very smart constructor that creates and returns the correct test object based on the given arguments. When Test::Builder receives one of these test objects, it asks it to return the TAP string, passes that message to its contained Test::Builder::TestOutput object, and stores the test object in the list of run tests.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://conferences.oreillynet.com/os2005/&#34;&gt;&lt;img src=&#34;http://conferences.oreillynet.com/images/os2005/banners/468x60.gif&#34; alt=&#34;O&amp;#39;Reilly Open Source Convention 2005.&#34; width=&#34;468&#34; height=&#34;60&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;what-went-wrong&#34;&gt;What Went Wrong&lt;/h4&gt;
+
+&lt;p&gt;Writing the base for all (or at least many) possible test modules is tricky. In this case, it was trebly so. Not only was this the first bit of practical OO Perl 6 code I&amp;rsquo;d written, but I had no way to test it, either by hand (how I tested the Perl 5 version, before Schwern and I worked out a way to write automated tests for it), or with automated tests. Pugs didn&amp;rsquo;t even have object support when I wrote this, though checking in this code pushed OO support higher on the schedule.&lt;/p&gt;
+
+&lt;h5 id=&#34;infinite-loops-in-construction&#34;&gt;Infinite Loops in Construction&lt;/h5&gt;
+
+&lt;p&gt;Originally, I thought all test classes would inherit from Test::Builder::Test. As Damian Conway pointed out, my technique created an infinite loop. (He suggested that &amp;ldquo;Don&amp;rsquo;t make a façade factory class an ancestor of the instantiable classes&amp;rdquo; is a design mistake akin to &amp;ldquo;Don&amp;rsquo;t get involved in a land war in Asia&amp;rdquo; and mumbled something else about battles of wits and Sicilians.) The code looked something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  class Test::Builder::Test
+  {
+      my Test::Builder::Test $:singleton is rw;
+
+      has Bool $.passed;
+      has Int  $.number;
+      has Str  $.diagnostic;
+      has Str  $.description;
+
+      method new (Test::Builder::Test $class, *@args)
+      {
+          return $:singleton if $:singleton;
+          $:singleton = $class.create( @args );
+          return $:singleton;
+      }
+
+      method create(
+          $number, 
+          $passed       =  1,
+          ?$skip        =  0,
+          ?$todo        =  0,
+          ?$reason      = &#39;&#39;,
+          ?$description = &#39;&#39;,
+      )
+      {
+          return Test::Builder::Test::TODO.new(
+              description =&amp;gt; $description, reason =&amp;gt; $reason, passed =&amp;gt; $passed,
+          ) if $todo;
+
+          return Test::Builder::Test::Skip.new(
+              description =&amp;gt; $description, reason =&amp;gt; $reason, passed =&amp;gt; 1,
+          ) if $skip;
+
+          return Test::Builder::Test::Pass.new(
+              description =&amp;gt; $description, passed =&amp;gt; 1,
+          ) if $passed;
+
+          return Test::Builder::Test::TODO.new(
+              description =&amp;gt; $description, passed =&amp;gt; 0,
+          ) if $todo;
+      }
+  }
+
+  class Test::Builder::Test::Pass is Test::Builder::Test {}
+  class Test::Builder::Test::Fail is Test::Builder::Test {}
+  class Test::Builder::Test::Skip is Test::Builder::Test { ... }
+  class Test::Builder::Test::TODO is Test::Builder::Test { ... }
+
+  # ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Why is this a singleton? I have no idea; I typed that code into the &lt;em&gt;wrong&lt;/em&gt; module and continued writing code a few minutes later, thinking that I knew what I was doing. The infinite loop stands out in my mind very clearly now. Because all of the concrete test classes inherit from Test::Builder::Test, they inherit its &lt;code&gt;new()&lt;/code&gt; method; none of them override it. Thus, they&amp;rsquo;ll all call &lt;code&gt;create()&lt;/code&gt; again (and none of them override &lt;em&gt;that&lt;/em&gt; either).&lt;/p&gt;
+
+&lt;h5 id=&#34;confusing-initialization&#34;&gt;Confusing Initialization&lt;/h5&gt;
+
+&lt;p&gt;I also struggled with the various bits and pieces of creating and building objects in Perl 6. There are a lot of hooks and overrides available, making the object system very flexible. However, without any experience or examples or guidance, choosing between &lt;code&gt;new()&lt;/code&gt;, &lt;code&gt;BUILD()&lt;/code&gt;, and &lt;code&gt;BUILDALL()&lt;/code&gt; is difficult.&lt;/p&gt;
+
+&lt;p&gt;I realized I had no idea how to handle the singleton in Test::Builder. At least, when I realized that (for now) Test::Builder could remain a singleton, I didn&amp;rsquo;t know how or where to create it.&lt;/p&gt;
+
+&lt;p&gt;I finally settled on putting it in &lt;code&gt;new()&lt;/code&gt;, with code much like that in the broken version of Test::Builder::Test previously. &lt;code&gt;new()&lt;/code&gt; eventually allocates space for, creates, and returns an opaque object. &lt;code&gt;BUILD()&lt;/code&gt; initializes it. This led me to write code something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  class Test::Builder;
+
+  # ...
+
+  has Test::Builder::Output   $.output;
+  has Test::Builder::TestPlan $.plan;
+
+  has @:results;
+
+  submethod BUILD ( Test::Builder::Output ?$output, ?$TestPlan )
+  {
+      $.plan   = $TestPlan if $TestPlan;
+      $.output = $output ?? $output :: Test::Builder::Output.new();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s a difference here because most uses of Test::Builder set the test plan explicitly later, after receiving the Test::Builder object. I added a &lt;code&gt;plan()&lt;/code&gt; method, too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  method plan ( $self:, Str ?$explanation, Int ?$num )
+  {
+      die &amp;quot;Plan already set!&amp;quot; if $self.plan;
+
+      if ($num)
+      {
+          $self.plan = Test::Builder::TestPlan.new( expect =&amp;gt; $num );
+      }
+      elsif $explanation ~~ &#39;no_plan&#39;
+      {
+          $self.plan = Test::Builder::NullPlan.new();
+      }
+      else
+      {
+          die &amp;quot;Unknown plan&amp;quot;;
+      }
+
+      $self.output.write( $self.plan.header() );
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are some stylistic errors in the previous code. First, when declaring an invocant, there&amp;rsquo;s a colon but no comma. Second, &lt;code&gt;fail&lt;/code&gt; is much better than &lt;code&gt;die&lt;/code&gt; (an assertion Damian made that I take on faith, having researched more serious issues instead). Third, the parenthesization of the cases in the &lt;code&gt;if&lt;/code&gt; statement is inconsistent.&lt;/p&gt;
+
+&lt;h3 id=&#34;final-ha-version&#34;&gt;Final (Ha!) Version&lt;/h3&gt;
+
+&lt;p&gt;Shortly after I checked in the example code, Stevan Little began work on a test suite (using &lt;em&gt;Test.pm&lt;/em&gt;). I knew that Pugs didn&amp;rsquo;t support many of the necessary language constructs, but this allowed Pugs hackers to identify necessary features and me to identify legitimate bugs and mistakes in the code. (It&amp;rsquo;s tricky to bootstrap test-driven development.)&lt;/p&gt;
+
+&lt;p&gt;After filling out the test suite, fixing all of the known bugs in my code, talking other Pugs hackers into adding features I needed, and implementing those I couldn&amp;rsquo;t pawn off on others, Test::Builder works completely in Pugs right now. There is one remaining nice feature: splatty args in method calls. But I&amp;rsquo;m ready to port &lt;em&gt;Test.pm&lt;/em&gt; to the new back end and then write many, many more useful testing modules&amp;ndash;starting with a port of Mark Fowler&amp;rsquo;s Test::Builder::Tester written the night before this article went public!&lt;/p&gt;
+
+&lt;p&gt;The singleton creation in &lt;code&gt;Test::Builder&lt;/code&gt; now looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  class Test::Builder-0.2.0;
+
+  use Test::Builder::Test;
+  use Test::Builder::Output;
+  use Test::Builder::TestPlan;
+
+  my  Test::Builder           $:singleton;
+  has Test::Builder::Output   $.output handles &#39;diag&#39;;
+  has Test::Builder::TestPlan $.testplan;
+  has                         @:results;
+
+  method new ( Test::Builder $Class: ?$plan, ?$output )
+  {
+      return $:singleton //= $Class.SUPER::new(
+          testplan =&amp;gt; $plan, output =&amp;gt; $output
+      );
+  }
+
+  method create ( Test::Builder $Class: ?$plan, ?$output )
+  {
+      return $Class.new( testplan =&amp;gt; $plan, output =&amp;gt; $output );
+  }
+
+  submethod BUILD
+  (
+      Test::Builder::TestPlan ?$.testplan,
+      Test::Builder::Output   ?$.output = Test::Builder::Output.new()
+  )
+  {}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Those test modules that want to use the default &lt;code&gt;$Test&lt;/code&gt; object directly can call &lt;code&gt;Test::Builder::new()&lt;/code&gt; to return the singleton, creating it if necessary. Test modules that need different output or plan objects should call &lt;code&gt;Test::Builder::create()&lt;/code&gt;. (The test suite actually does this.)&lt;/p&gt;
+
+&lt;p&gt;Having removed the &lt;code&gt;Test::Builder&lt;/code&gt; code from &lt;code&gt;Test::Builder::Test&lt;/code&gt;, I revised the latter, as well:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  class Test::Builder::Test-0.2.0
+  {
+      method new (
+          $number,     
+          ?$passed      = 1,
+          ?$skip        = 0,
+          ?$todo        = 0,
+          ?$reason      = &#39;&#39;, 
+          ?$description = &#39;&#39;,
+      )
+      {
+          return ::Test::Builder::Test::TODO.new(
+              description =&amp;gt; $description, passed =&amp;gt; $passed, reason =&amp;gt; $reason
+          ) if $todo;
+
+          return ::Test::Builder::Test::Skip.new(
+              description =&amp;gt; $description, passed =&amp;gt;       1, reason =&amp;gt; $reason
+          ) if $skip;
+
+          return ::Test::Builder::Test::Pass.new(
+              description =&amp;gt; $description, passed =&amp;gt;       1,
+          ) if $passed;
+
+          return ::Test::Builder::Test::Fail.new(
+              description =&amp;gt; $description, passed =&amp;gt;       0,
+          );
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s it. I moved the object attributes into roles. &lt;code&gt;Test::Builder::Test::Base&lt;/code&gt; is the basis for all tests, encapsulating all of the attributes that tests share and providing the important methods:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  role Test::Builder::Test::Base
+  {
+      has Bool $.passed;
+      has Int  $.number;
+      has Str  $.diagnostic;
+      has Str  $.description;
+
+      submethod BUILD (
+          $.description,
+          $.passed,
+          ?$.number     =     0,
+          ?$.diagnostic = &#39;???&#39;,
+      ) {}
+
+      method status returns Hash
+      {
+          return
+          {
+              passed      =&amp;gt; $.passed,
+              description =&amp;gt; $.description,
+          };
+      }
+
+      method report returns Str
+      {
+          my $ok          = $.passed ?? &#39;ok&#39; :: &#39;not ok&#39;;
+          my $description = &amp;quot;- $.description&amp;quot;;
+          return join( &#39; &#39;, $ok, $.number, $description );
+      }
+
+  }
+
+  class Test::Builder::Test::Pass does Test::Builder::Test::Base {}
+  class Test::Builder::Test::Fail does Test::Builder::Test::Base {}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Test::Builder::Test::WithReason&lt;/code&gt; forms the basis for &lt;code&gt;TODO&lt;/code&gt; and &lt;code&gt;SKIP&lt;/code&gt; tests, adding the reason why the developer marked the test as either:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  role Test::Builder::Test::WithReason does Test::Builder::Test::Base
+  {
+      has Str $.reason;
+
+      submethod BUILD ( $.reason ) {}
+
+      method status returns Hash ( $self: )
+      {
+          my $status        = $self.SUPER::status();
+          $status{&amp;quot;reason&amp;quot;} = $.reason;
+          return $status;
+      }
+  }
+
+  class Test::Builder::Test::Skip does Test::Builder::Test::WithReason { ... }
+  class Test::Builder::Test::TODO does Test::Builder::Test::WithReason { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;what-s-hard&#34;&gt;What&amp;rsquo;s Hard&lt;/h4&gt;
+
+&lt;p&gt;The two greatest difficulties I encountered in this porting effort were in mapping my design to the new Perl 6 way of thinking and in working around Pugs bugs and unsupported features. The former is interesting; it may suggest places where other people will run into difficulties.&lt;/p&gt;
+
+&lt;p&gt;One of the trickiest parts of Perl 6&amp;rsquo;s OO model to understand is the interaction of the &lt;code&gt;new()&lt;/code&gt;, &lt;code&gt;BUILD()&lt;/code&gt;, and &lt;code&gt;BUILDALL()&lt;/code&gt; methods. Perl 5 provides very little in the way of object support beyond &lt;code&gt;bless&lt;/code&gt;. Though having finer-grained control over object creation, initialization, and initializer dispatch will be very useful, remembering the purposes of each method is very important, lest you override the wrong one and end up with an infinite loop or partially initialized object.&lt;/p&gt;
+
+&lt;p&gt;From rereading the design documents, experimenting, picking the brains of other @Larry members, and thinking hard, my rules are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Leave &lt;code&gt;new()&lt;/code&gt; alone.&lt;/p&gt;
+
+&lt;p&gt;This method creates the opaque object. Override it when you don&amp;rsquo;t want to return a new object of this class every time. Don&amp;rsquo;t do initialization here. Don&amp;rsquo;t forget to call &lt;code&gt;SUPER::new()&lt;/code&gt; if you actually want an object.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Override &lt;code&gt;BUILD()&lt;/code&gt; to add initialize attributes for objects of &lt;em&gt;this&lt;/em&gt; class.&lt;/p&gt;
+
+&lt;p&gt;Think of this as an initializer, not a constructor.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Override &lt;code&gt;BUILDALL()&lt;/code&gt; when you want to change the order of initialization.&lt;/p&gt;
+
+&lt;p&gt;I haven&amp;rsquo;t needed this yet and don&amp;rsquo;t expect to.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Pugs-wise, find a good Haskell tutorial, find a really fast machine that can run GHC 6.4, and look for lambdacamel mentors on &lt;em&gt;#pugs&lt;/em&gt;. (My productivity increased when Autrijus told me about Haskell&amp;rsquo;s &lt;code&gt;trace&lt;/code&gt; function. He called it a refreshing desert in the oasis of referential transparency.)&lt;/p&gt;
+
+&lt;h4 id=&#34;what-s-easy&#34;&gt;What&amp;rsquo;s Easy&lt;/h4&gt;
+
+&lt;p&gt;Was this exercise valuable? Absolutely! It reinforced my belief that Perl 6 is not only Perlish, but that it&amp;rsquo;s a fantastic revolution of Perl 5 in several ways:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The object system is much better. Attributes and accessors require almost no syntax, and that only in their declarations. Using attributes feels Perlish, even if it&amp;rsquo;s not manipulating hash keys.&lt;/li&gt;
+&lt;li&gt;Function signatures eliminate a lot of code. My initializers do a lot of work, but they don&amp;rsquo;t take much code. Some even have empty method bodies. This is a big win, except for the poor souls who had to implement the underlying binding code in Pugs. (That took a while.)&lt;/li&gt;
+&lt;li&gt;Roles are fantastic. Sure, I believed in them already, but being able to use them without the hacks required in Perl 5 was even better.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h4&gt;
+
+&lt;p&gt;Schwern and I did put a lot of thought into the Perl 5 redesign we never really did, and my code here really benefits from the lessons I learned from the previous version. Still, even though I wrote code to a moving project that didn&amp;rsquo;t yet support all of the features I wanted, it was a great exercise. &lt;code&gt;Test::Builder&lt;/code&gt; is simpler, shorter, cleaner, and more flexible; it&amp;rsquo;s ready for everything the Perl 6 QA group can throw at it.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Test::Builder&lt;/code&gt; isn&amp;rsquo;t the only Perl 5 module being ported to Perl 6. Other modules include ports of HTTP::Server::Simple, Net::IRC, LWP, and &lt;code&gt;CGI&lt;/code&gt;. There are even ports underway for Catalyst and Maypole.&lt;/p&gt;
+
+&lt;p&gt;Perl 6 isn&amp;rsquo;t ready yet, but it&amp;rsquo;s closer every day. Now&amp;rsquo;s a great time to port some of your code to see how Perl 6 is still Perlish, but a revolutionary step in refreshing new directions.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;chromatic is the author of &lt;a href=&#34;http://onyxneon.com/books/modern_perl/&#34;&gt;Modern Perl&lt;/a&gt;. In his spare time, he has been working on &lt;a href=&#34;http://trendshare.org/how-to-invest/&#34;&gt;helping novices understand stocks and investing&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

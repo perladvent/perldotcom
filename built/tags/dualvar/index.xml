@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Dualvar on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/dualvar/</link>
+    <description>Recent content in Dualvar on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 03 Dec 2018 09:10:38 +0000</lastBuildDate>
+    <atom:link href="/tags/dualvar/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Validating untrusted input: numbers</title>
+      <link>http://localhost:1313/article/validating-untrusted-input-numbers/</link>
+      <pubDate>Mon, 03 Dec 2018 09:10:38 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/validating-untrusted-input-numbers/</guid>
+      <description>
+
+&lt;p&gt;Validating untrusted input safely is critical for application security: SQL injection, XSS and malicious file upload are common attacks which succeed because the user&amp;rsquo;s input is not vetted correctly.&lt;/p&gt;
+
+&lt;p&gt;Numbers are problematic: negative numbers (&amp;ldquo;the sales price was -$500&amp;rdquo;), very large numbers (&amp;ldquo;my account balance is 9,223,372,036,854,775,807&amp;rdquo;) or not-a-number (&amp;ldquo;rm -rf /&amp;rdquo;) can all wreak havoc if not handled with care.&lt;/p&gt;
+
+&lt;p&gt;Fortunately, Perl has robust capabilities for validating input but there are some edge cases to be aware of that make answering &amp;ldquo;is $x a number?&amp;rdquo; more difficult than you might think it would be.&lt;/p&gt;
+
+&lt;h2 id=&#34;pattern-matching&#34;&gt;Pattern matching&lt;/h2&gt;
+
+&lt;p&gt;Part of the problem of course, is that numbers come in more varieties than we commonly assume there to be. Regexes are a natural fit for common cases like decimal integer validation: for example &lt;code&gt;/^\d+$/&lt;/code&gt; would confirm the input contains only digits. That might be enough for your application but be aware that it doesn&amp;rsquo;t handle all permutations of integers. What if you want to accept negative numbers?&lt;/p&gt;
+
+&lt;p&gt;You could update the regex to accept an optional minus:  &lt;code&gt;/^-?\d+$/&lt;/code&gt; or use a standardized regex from &lt;a href=&#34;https://metacpan.org/pod/Regexp::Common::number&#34;&gt;Regexp::Common::number&lt;/a&gt;, which also has patterns for matching decimal places, thousands separators and other common-but-tricky things to match.&lt;/p&gt;
+
+&lt;p&gt;Large integers may also fail to match &lt;code&gt;\d&lt;/code&gt;. Perl has three different ways to store numbers: as native C integers, as 8 byte floating point, or as decimal strings in &amp;ldquo;e&amp;rdquo; notation (see &lt;a href=&#34;https://perldoc.perl.org/perlnumber.html&#34;&gt;perlnumber&lt;/a&gt;). On my machine, Perl stores &lt;code&gt;123456789012345678905&lt;/code&gt; as the decimal string &lt;code&gt;1.23456789012346e+20&lt;/code&gt;, which doesn&amp;rsquo;t match an integer-only regex. 8 byte floating point and decimal strings are imprecise, so if you need to accept integers larger than your machine architecture (32bit or 64 bit), you should use a module like &lt;a href=&#34;https://metacpan.org/pod/Math::BigInt&#34;&gt;Math::BigInt&lt;/a&gt; instead.&lt;/p&gt;
+
+&lt;p&gt;If you have Perl&amp;rsquo;s &lt;a href=&#34;https://perldoc.perl.org/perlsec.html&#34;&gt;taint mode&lt;/a&gt; enabled, regex captures are the correct way to &amp;ldquo;de-taint&amp;rdquo; input, in which case you&amp;rsquo;ll have no choice but to use them.&lt;/p&gt;
+
+&lt;h2 id=&#34;looks-like-a-number&#34;&gt;Looks like a number&lt;/h2&gt;
+
+&lt;p&gt;A complementary technique to using a regex is to use the function &lt;code&gt;looks_like_number&lt;/code&gt; from &lt;a href=&#34;https://metacpan.org/pod/Scalar::Util&#34;&gt;Scalar::Util&lt;/a&gt;. This is a boolean function which returns true if the variable looks like a number to the Perl interpreter.&lt;/p&gt;
+
+&lt;p&gt;Unlike simple regexes, it recognizes negative numbers and decimal strings just fine, but it has its own quirks that you should know about. For example, all of these strings &amp;ldquo;look like numbers&amp;rdquo;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;NaN
+-nan
+inf
+infinity
+-infinity
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Uh oh!&lt;/p&gt;
+
+&lt;p&gt;The other quirk of &lt;code&gt;looks_like_number&lt;/code&gt; exists in older versions of Scalar::Util (up to v1.38, which shipped with Perl 5.20): its return value changes depending on the value of the variable being checked:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -MScalar::Util=looks_like_number -e &#39;print looks_like_number($_), &amp;quot;\n&amp;quot; for (1,&amp;quot;5&amp;quot;,&amp;quot;5e60&amp;quot;)&#39;
+16842752
+1
+4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is because &lt;code&gt;looks_like_number&lt;/code&gt; is returning the Perl interpreter&amp;rsquo;s C function return value which may include a binary ORing of several different flags Perl keeps for each variable (&lt;a href=&#34;https://stackoverflow.com/questions/19201234/behavior-of-scalarutillooks-like-number-in-perl/19202153#19202153&#34;&gt;stackoverflow&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;All of these &lt;em&gt;are&lt;/em&gt; true values, so it shouldn&amp;rsquo;t be a problem if you don&amp;rsquo;t write conditions expecting the return value to be 1:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Scalar::Util &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;looks_like_number&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# wrong&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (looks_like_number($foo) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# right!&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (looks_like_number($foo)) &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&#34;the-observer-effect&#34;&gt;The Observer Effect&lt;/h2&gt;
+
+&lt;p&gt;Another edge case in Perl is that the act of observing a scalar&amp;rsquo;s value can change the scalar&amp;rsquo;s type from number to string.&lt;/p&gt;
+
+&lt;p&gt;Perl scalars can contain different types like strings, integers and floating point numbers. This is usually convenient: if you need to print a number, you don&amp;rsquo;t have to cast it to a string first because Perl tries to Do the Right Thing™. Scalars are &lt;a href=&#34;https://www.effectiveperlprogramming.com/2011/12/create-your-own-dualvars/&#34;&gt;dualvars&lt;/a&gt;, for efficiency, the Perl interpreter casts the number to a string and stores it in the scalar&amp;rsquo;s struct string slot, so if the scalar is interpolated a second time, Perl doesn&amp;rsquo;t need to cast it to a string again.&lt;/p&gt;
+
+&lt;p&gt;A common way this issue manifests itself is when serializing a Perl data structure to JSON. Scalars which contain numbers when stringified, are then serialized to JSON as strings, instead of integers:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -MJSON -E &#39;my $n = 1; say encode_json([$n]); say &amp;quot;$n&amp;quot;; say encode_json([$n])&#39;
+[1]
+1
+[&amp;quot;1&amp;quot;]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Interpolating a number in a string or matching it against a regex both cause the number to string conversion. Depending on your requirements, this might not matter, but if it does, when validating number input, make a local copy of the variable first so that your validation routines don&amp;rsquo;t subtly change the variable type.&lt;/p&gt;
+
+&lt;h2 id=&#34;combining-techniques&#34;&gt;Combining techniques&lt;/h2&gt;
+
+&lt;p&gt;Combining these ideas into a sub:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Scalar::Util &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;looks_like_number&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;is_number&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $num &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; looks_like_number($num) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $num &lt;span style=&#34;color:#f92672&#34;&gt;!~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/inf|nan/i&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve defined the sub &lt;code&gt;is_number&lt;/code&gt; as a boolean function which accepts a value and returns true if it looks like a number to Perl, and isn&amp;rsquo;t infinity or not-a-number. It copies the variable and does not change its type. This will work for a wide-range of number types, including the really-large numbers Perl converts to decimal string (of dubious benefit!).&lt;/p&gt;
+
+&lt;p&gt;Your application&amp;rsquo;s requirements determine which types of numbers you should accept, just keep in mind that the more varieties of number you accept, the more complicated the validation becomes. If you&amp;rsquo;re familiar with these edge cases however, the task becomes a little easier.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

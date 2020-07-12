@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Debugging and Profiling mod_perl Applications </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" Because of the added complexity of being inside of the Apache web server, debugging mod_perl applications is often not as straightforward as it is with regular Perl programs or CGIs. Is the problem with your code, Apache, a CPAN..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2006/02/09/debug_mod_perl.html/" />
+<meta property="og:title" content="Debugging and Profiling mod_perl Applications" />
+<meta property="og:description" content=" Because of the added complexity of being inside of the Apache web server, debugging mod_perl applications is often not as straightforward as it is with regular Perl programs or CGIs. Is the problem with your code, Apache, a CPAN...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2006-02-02T02:02:02Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2006_02_09_debug_mod_perl/111-mod_perl_debug.gif" />
+<meta property="og:article:tag" content="apache-db" />
+<meta property="og:article:tag" content="apache-dprof" />
+<meta property="og:article:tag" content="apache-smallprof" />
+<meta property="og:article:tag" content="mod-perl" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Debugging and Profiling mod_perl Applications</h1>
+              <p class="blog-post-meta">Feb 9, 2006 by
+              
+              
+                
+                
+                <a href="#author-bio-frank-wiles">Frank Wiles</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>Because of the added complexity of being <em>inside</em> of the Apache web server, debugging <a href="http://perl.apache.org/"><code>mod_perl</code></a> applications is often not as straightforward as it is with regular Perl programs or CGIs. Is the problem with your code, Apache, a CPAN module you are using, or within <code>mod_perl</code> itself? How do you tell? Sometimes traditional debugging techniques will not give you enough information to find your problem.</p>
+
+<p>Perhaps, instead, you&rsquo;re baffled as to why some code you just wrote is running so slow. You&rsquo;re probably asking yourself, &ldquo;Isn&rsquo;t this <code>mod_perl</code> stuff supposed to improve my code&rsquo;s performance?&rdquo; Don&rsquo;t worry, slow code happens even to the best of us. How do you profile your code to find the problem?</p>
+
+<p>This article shows how to use the available CPAN modules to debug and profile your <code>mod_perl</code> applications.</p>
+
+<h3 id="traditional-debugging-methods">Traditional Debugging Methods</h3>
+
+<p>The tried-and-true <code>print</code> statement is the debugger&rsquo;s best friend. Used wisely this, can be the easiest and fastest way of figuring out what is amiss in your program. Can&rsquo;t figure out why your sales tax subroutine is always off by 14 cents? Add several <code>print</code> statements just before, just after, and all around inside of that particular subroutine. Use them to show the value of key variables at each step in the process. You can direct the output straight onto the page in your browser, or if you prefer, into hidden HTML comments. Typically this is all that you need to spot your problems. It&rsquo;s flexible and easy to implement and understand.</p>
+
+<p>Another common approach is to place <code>die()</code> and/or <code>warn()</code> statements as you trace through your code, isolating the problem. <code>die()</code> is especially useful if you do not want your program to continue executing, possibly because the errors will corrupt your otherwise valid testing data. The main benefit of using <code>warn</code> over a simple <code>print</code> statement is that the output goes instead to the appropriate Apache <em>error_log</em>. This keeps your debugging information out of the user interface and gives you the ability to log and spot errors long after they occurred for the user. Simply <code>tail</code> your <em>error_log</em> in another window and you can watch it all day long. If you&rsquo;re into that sort of thing.</p>
+
+<p>For example, if you had some code like:</p>
+
+<pre><code>sub handler {
+    my $r   =   shift;
+
+    # Set content type
+    $r-&gt;content_type( 'text/html' );
+
+    my $req = Apache2::Request-&gt;new($r);
+
+    # Compute sales tax if we are told to do so
+    my $tax = 0;
+    if( $req-&gt;param('compute_sales_tax') ) {
+        my $tax = compute_sales_tax($r, $req-&gt;param('total_amount');
+    }
+
+    # Code to display results to the browser....
+}
+</code></pre>
+
+<p>&hellip; you might find a problem during testing. Your initial search leads you to believe that either the code never calls the <code>compute_sales_tax()</code> function or the function always returns zero. You can add some simple debugging statements:</p>
+
+<pre><code>sub handler {
+    my $r   =   shift;
+
+    # Set content type
+    $r-&gt;content_type( 'text/html' );
+
+    my $req = Apache2::Request-&gt;new($r);
+
+    # Compute sales tax if we are told to do so
+    my $tax = 0;
+
+    # Debugging statements
+    warn(&quot;Tax at start '$tax'&quot;);
+    warn('compute_sales_tax ' . $req-&gt;param('compute_sales_tax') );
+
+    if( $req-&gt;param('compute_sales_tax') ) {
+
+        # Debugging
+        warn(&quot;Tax before sub '$tax'&quot;);
+        my $tax = compute_sales_tax($r, $req-&gt;param('total_amount');
+        warn(&quot;Tax after sub '$tax'&quot;);
+    }
+
+    warn(&quot;Tax after if '$tax'&quot;);
+
+    # Code to display results to the browser....
+}
+</code></pre>
+
+<p>Assuming that the page that directs the user to this code has set <code>compute_sales_tax</code> to a <code>true</code> value, you will see something similar to:</p>
+
+<pre><code>Tax at start '0' at line 5
+compute_sales_tax 1 at line 6
+Tax before sub '0' at line 12
+Tax after sub '1.36' at line 14
+Tax after if '0' at line 17
+</code></pre>
+
+<p>If you read through this, you see that <code>compute_sales_tax()</code> is indeed being called, otherwise you would not see the &ldquo;Tax before/after&rdquo; <code>warn</code> outputs. Directly after the subroutine call you can see that <code>$tax</code> holds a suitable value. However, after the <code>if</code> block, <code>$tax</code> reverts back to zero. Upon closer examination, you might find that the bug is the <code>my</code> before the call to <code>compute_sales_tax()</code>. This creates a locally scoped variable named <code>$tax</code> and does not assign it to the <code>$tax</code> variable in the outer block, which causes it to stay zero and makes it seem that <code>compute_sales_tax()</code> was never called.</p>
+
+<h3 id="when-to-use-apache-db">When to Use <code>Apache::DB</code></h3>
+
+<p>Using <code>print</code>, <code>die</code>, and <code>warn</code> statements in your code will help you find and fix 99 percent of the bugs you may run across when building <code>mod_perl</code> applications. Too bad there is still that pesky remaining 1 percent that will make you tear your hair out in clumps and wish you had gone into selling insurance instead of programming. Luckily there is <a href="https://metacpan.org/pod/Apache::DB">Apache::DB</a> to help keep the glare off our collective heads at next year&rsquo;s Perl conference to a minimum.</p>
+
+<p>Sometime, despite all of your attempts to see what is going wrong, you will find yourself in a situation where:</p>
+
+<ul>
+<li>Your code causes Apache to segfault and you can&rsquo;t for the life of you figure out why.</li>
+<li>It appears that your code segfaults inside of a subroutine or method you are calling in a CPAN module you are using.</li>
+<li>You have more debugging statements than actual code.</li>
+</ul>
+
+<p>You could spend time hacking up your other installed modules, such as those from CPAN, with debugging statements&ndash;but this only means you will have to return later and remove all of it. You could take an easier route and debug your <code>mod_perl</code> application with a real source debugger.</p>
+
+<p>Using the Perl debugger allows you to see directly into what is happening to your code and data. You can step through your code line by line, as Perl executes it. Because you are following the same <em>flow</em>, there is no chance that you are making any bad assumptions. You might even consider it WYSIWYG, albeit without a GUI.</p>
+
+<h3 id="using-apache-db">Using <code>Apache::DB</code></h3>
+
+<p>While <code>Apache::DB</code> works with both <code>mod_perl</code> 1.x and <code>mod_perl</code> 2.x, all of the examples in this article use <code>mod_perl</code> 2.0. Once you have installed <code>Apache::DB</code> from CPAN, using it is fairly simple. It does, however, require that you make a few Apache configuration changes. Assuming you have a <code>mod_perl</code> handler installed at <code>/modperl/</code> on your system, your configuration needs to resemble this:</p>
+
+<pre><code>&lt;Location /modperl&gt;
+  SetHandler perl-script
+  PerlResponseHandler My::Modperl::Handler
+  PerlFixupHandler +Apache::DB
+&lt;/Location&gt;
+</code></pre>
+
+<p>You also need to modify either the appropriate <code>&lt;Perl&gt;&lt;/Perl&gt;</code> section or your <em>startup.pl</em> file to include:</p>
+
+<pre><code>use APR::Pool ();
+use Apache::DB ();
+Apache::DB-&gt;init();
+</code></pre>
+
+<p>If you are working in a <code>mod_perl</code> 1.0 environment, the only change is that you should not include the <code>use APR::Pool ();</code> directive.</p>
+
+<p>Note that you must call <code>Apache::DB-&gt;init();</code> prior to whatever code you are attempting to debug. To be safe, I always just put it as the very first thing in my <em>startup.pl</em>.</p>
+
+<p>Once you have modified your configuration, the last step is to launch your Apache server with the <code>-X</code> command-line option. This option tells Apache to launch only one back-end process and to not fork into the background. If you don&rsquo;t use this option, you can&rsquo;t guarantee that your debugger has connected to same Apache child as your browser.</p>
+
+<p>With this Apache daemon tying up your command prompt, simply browse to your application. As you will see, the shell running <code>httpd</code> has been replaced with a Perl debugging session. This debugging session is tied directly to your application and browser. If you look at your browser it will appear to hang waiting for a response; this is due to the fact your Apache server is waiting on you to work with the debugger.</p>
+
+<p>Perl&rsquo;s debugger is very similar to other debuggers you may have used. You can step through your code line by line, skip entire subroutines, set break points, and display and/or change the value of variables with it.</p>
+
+<p>It might be useful to read through <a href="https://perldoc.perl.org/perldebtut.html"><code>man perldebtut</code></a>, a introductory tutorial on using the debugger. For a more complete reference to all of the available commands, see <a href="https://perldoc.perl.org/perldebug.html"><code>man perldebug</code></a>. This list should be just enough to get you started:</p>
+
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>p expression</code></td>
+<td>This prints out the value of an expression or variable, just like the <code>print</code> directive in Perl.</td>
+</tr>
+
+<tr>
+<td><code>x expression</code></td>
+<td>This evaluates an expression and prettily prints it for you. Use it to make complex data structures readable.</td>
+</tr>
+
+<tr>
+<td><code>s</code></td>
+<td>This tells the debugger to take a single <em>step</em>. A step is a single statement. If the next statement is a subroutine, the debugger will treat it as only one statement; you will not be able to step through each statement of that subroutine and the flow will continue without descending into it.</td>
+</tr>
+
+<tr>
+<td><code>n</code></td>
+<td>This tells the debugger to go to the next statement. If the next statement is a subroutine, you will descend into it and be able to step through each line of that subroutine.</td>
+</tr>
+
+<tr>
+<td><code>l line</code></td>
+<td>Display a particular line of source code.</td>
+</tr>
+
+<tr>
+<td><code>M</code></td>
+<td>Display all loaded modules.</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="code-profiling-with-apache-dprof">Code Profiling with <code>Apache::DProf</code></h3>
+
+<p><a href="https://metacpan.org/pod/Apache::DProf"><code>Apache::DProf</code></a> provides the necessary hooks for you to get some coarse profiling information about your code. By coarse, I mean only information on a subroutine level. It will show you the number of times a subroutine is called along with duration information.</p>
+
+<p>Essentially, <code>Apache::DProf</code> wraps <a href="https://metacpan.org/pod/Devel::DProf"><code>Devel::DProf</code></a> for you, making your life much easier. It is <em>possible</em> to use <code>Devel::DProf</code> by itself, but it assumes that you are running a normal Perl program from the command line and not in a persistent <code>mod_perl</code> environment. This isn&rsquo;t optimal, because while you can shoehorn <code>Devel::DProf</code> into working, you&rsquo;ll end up profiling all of the code used at server startup when you really only care about the runtime code.</p>
+
+<p>Using <code>Apache::DProf</code> is relatively straightforward. All you need to do is include <code>PerlModule Apache::DProf</code> in your <em>httpd.conf</em> and restart your server.</p>
+
+<p>As an example, here&rsquo;s a small application to profile. This code, while not all that useful, will help illustrate the major differences between these two profiling modules:</p>
+
+<pre><code>package PerlTest;
+
+sub handler {
+    my $r = shift;
+
+    $r-&gt;content_type( 'text/plain' );
+
+    handle_request($r);
+
+    return( Apache2::Const::OK );
+}
+
+sub handle_request {
+    my $r = shift;
+
+    $r-&gt;print( &quot;Handling request....\n&quot; );
+
+    cleanup_request($r);
+
+}
+
+sub cleanup_request {
+    my $r = shift;
+
+    $r-&gt;print( &quot;Cleaning up request....\n&quot; );
+
+    sleep(5);     # Take some time in this section
+}
+
+1;
+</code></pre>
+
+<p>When you profile a module with <code>Apache::Dprof</code>, it will create a directory named <em>dprof/</em> in your server&rsquo;s <em>logs/</em> directory. Under this directory will be subdirectories named after the PID of each Apache child your server has. This allows you to profile code over a long period of time on a production system to see where your real bottlenecks are. Often, <em>faking</em> a typical user session does not truly represent how your users interact with your application and having the real data is beneficial.</p>
+
+<p>After your server has run for a while, you need to stop it and revert your configuration, removing the <code>PerlModule Apache::DProf</code> you just inserted. This is due to the fact that <code>Apache::DProf</code> does not write its data to disk until the server child ends.</p>
+
+<p>Viewing the profiling data is exactly the same as with <code>Devel::DProf</code>. Choose a particular Apache child directory in <em>$SERVER_ROOT/logs/dprof/</em> and run <code>dprofpp</code> on the corresponding <em>tmon.out</em> file.</p>
+
+<p>After beating on the code sample above for awhile with <code>ab</code>, here are the results <code>Apache::DProf</code> gave me:</p>
+
+<pre><code>Total Elapsed Time = 1082.402 Seconds
+  User+System Time =        0 Seconds
+Exclusive Times
+%Time ExclSec CumulS #Calls sec/call Csec/c  Name
+ 0.00   0.004  0.001    687   0.0000 0.0000  RevSys::PerlTest::cleanup_request
+ 0.00       - -0.000      1        -      -  warnings::import
+ 0.00       - -0.000      1        -      -  APR::Pool::DESTROY
+ 0.00       - -0.000      1        -      -  strict::import
+ 0.00       - -0.000      1        -      -  Apache2::XSLoader::load
+ 0.00       - -0.000      3        -      -  Apache2::RequestIO::BEGIN
+ 0.00       - -0.000      2        -      -  RevSys::PerlTest::BEGIN
+ 0.00       - -0.003    687        -      -  Apache2::RequestRec::content_type
+ 0.00       - -0.006   1374        -      -  Apache2::RequestRec::print
+ 0.00       - -0.012    687        -      -  RevSys::PerlTest::handle_request
+ 0.00       - -0.024    687        -      -  RevSys::PerlTest::handler
+</code></pre>
+
+<p>As expected, <code>cleanup_request()</code> shows the most time used per call. The report also shows stats for the other function calls you would expect as well as the ones that happen <em>behind the scenes</em>.</p>
+
+<h3 id="code-profiling-with-apache-smallprof">Code Profiling with <code>Apache::SmallProf</code></h3>
+
+<p>While <code>Apache::DProf</code> will show you which subroutines use the most system resources, sometimes that is not enough information. <a href="https://metacpan.org/pod/Apache::SmallProf"><code>Apache::SmallProf</code></a> gives you fine-grained details in a line-by-line profile of your code.</p>
+
+<p>Setup is similar to both of two previous modules. Add into a <code>&lt;Perl&gt;</code> section or your <em>startup.pl</em> file the code:</p>
+
+<pre><code>use APR::Pool ();
+use Apache::DB ();
+Apache::DB-&gt;init();
+</code></pre>
+
+<p>You also need to add <code>PerlFixupHandler Apache::SmallProf</code> into the <code>&lt;Directory&gt;</code> or <code>&lt;Location&gt;</code> block that refers to your <code>mod_perl</code> code.</p>
+
+<p>Like <code>Apache::DProf</code>, <code>Apache::SmallProf</code> writes all of the profiling data into <em>$SERVER_ROOT/logs/smallprof/</em>. One interesting difference between <code>Apache::DProf</code> and <code>Apache::SmallProf</code> is that the latter writes a profile for each module in use. This is helpful because you already know which subroutines are slow and which packages they are in, from your first round of profiling with <code>Apache::DProf</code>. By focusing on those modules you can find your troubled code much faster.</p>
+
+<p>Viewing <code>Apache::SmallProf</code> data is, however, a little different from <code>Apache::DProf</code>. A module profile looks like this:</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>&lt;number&gt;</code></td>
+<td><code>&lt;wall time&gt;</code></td>
+<td><code>&lt;cpu time&gt;</code></td>
+<td><code>&lt;line number&gt;</code></td>
+<td><code>&lt;source line&gt;</code></td>
+</tr>
+</tbody>
+</table>
+
+<p><code>&lt;number&gt;</code> is the number of times this particular line was executed, <code>&lt;wall time&gt;</code> is the actual time passed, and <code>&lt;cpu time&gt;</code> is the amount of time the CPU spent working on that line. The remaining two pieces of data are the line number in the file and the actual source on that line.</p>
+
+<p>You can just open up the profiles generated by <code>Apache::SmallProf</code> and look at the results. However, this doesn&rsquo;t get to the heart of the matter very quickly. Sorting the profile by the amount of time spent on each line gets you where you want to go:</p>
+
+<pre><code>$ sort -nrk 2 logs/smallprof/MyHandler.pm | more
+</code></pre>
+
+<p>This command sorts the profile for <code>MyHandler.pm</code> by the wall time of each line. If you use this same sort on the output from <code>Apache::SmallProf</code> on the example code, you will see something similar to this:</p>
+
+<pre><code># sort -nrk 2 PerlTest.pm.prof | more
+    1 5.000785 0.000000         29:    sleep( 5 );
+    1 0.008177 0.000000         13:    return( Apache2::Const::OK );
+    1 0.007431 0.010000         21:    cleanup_request( $r );
+    3 0.001343 0.000000          4:use Apache2::RequestIO;
+    1 0.000176 0.000000         33:1;
+    3 0.000164 0.000000          3:use Apache2::RequestRec;
+    1 0.000093 0.000000         19:    $r-&gt;print( &quot;Handling request......\n&quot; );
+    1 0.000067 0.000000         11:    handle_request( $r );
+    1 0.000058 0.000000          9:    $r-&gt;content_type( 'text/plain' );
+    1 0.000058 0.000000         28:    $r-&gt;print( &quot;Cleaning up request......\n&quot; );
+</code></pre>
+
+<p>As you can see, <code>Apache::SmallProf</code> has zeroed right in on our <code>sleep()</code> call as the source of our performance problems.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>Hopefully, this article has given you enough of an introduction to these modules that you can begin using them in your development efforts. The next time you face a seemingly unsolvable bug or performance issue, you have a few more weapons in your arsenal.</p>
+
+<p>If you have trouble getting any of these three modules to work, please don&rsquo;t hesitate to contact me directly. If you need <code>mod_perl</code> help in general, I strongly suggest you join the <code>mod_perl</code> mailing list. You can often get an answer to your <code>mod_perl</code> question in a few hours, if not minutes.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/web">web</a></div>
+                
+                  <div class="tag"><a href="/tags/apache-db">apache-db</a></div>
+                
+                  <div class="tag"><a href="/tags/apache-dprof">apache-dprof</a></div>
+                
+                  <div class="tag"><a href="/tags/apache-smallprof">apache-smallprof</a></div>
+                
+                  <div class="tag"><a href="/tags/mod-perl">mod-perl</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-frank-wiles">
+  <div class="col-sm-2">
+    
+    <a href="/authors/frank-wiles/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/frank-wiles/"><h3>Frank Wiles</h3></a>
+    <p></p>
+    <h5><a href="/authors/frank-wiles/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2006_02_09_debug_mod_perl.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

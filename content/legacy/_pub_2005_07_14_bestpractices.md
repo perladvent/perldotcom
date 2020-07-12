@@ -63,18 +63,18 @@ Writing tests always seems like a chore, and an unproductive chore at that: you 
        'box'           => 'boxes',
        'ox'            => 'oxen',
        'goose'         => 'geese',
-       'mongoose'      => 'mongooses', 
+       'mongoose'      => 'mongooses',
        'law'           => 'laws',
        'mother-in-law' => 'mothers-in-law',
     );
-     
+
     # For each of them, print both the expected result and the actual inflection...
 
     for my $word ( keys %plural_of ) {
        my $expected = $plural_of{$word};
        my $computed = inflect( "PL_N($word)" );
-     
-       print "For $word:\n", 
+
+       print "For $word:\n",
              "\tExpected: $expected\n",
              "\tComputed: $computed\n";
     }
@@ -95,7 +95,7 @@ Instead of hacking together a driver program, it's easier to write a test progra
        'ox'            => 'oxen',
        'box'           => 'boxes',
        'goose'         => 'geese',
-       'mongoose'      => 'mongooses', 
+       'mongoose'      => 'mongooses',
        'law'           => 'laws',
        'mother-in-law' => 'mothers-in-law',
     );
@@ -124,7 +124,7 @@ The `Test::Simple` program is slightly more concise and readable than the origin
     ok 7 - mouse -> mice
     ok 8 - box -> boxes
     1..8
-    # Looks like you failed 2 tests of 8. 
+    # Looks like you failed 2 tests of 8.
 
 More importantly, this version requires far less effort to verify the correctness of each test. You just scan down the left margin looking for a `not` and a comment line.
 
@@ -139,7 +139,7 @@ You might prefer to use the [Test::More]({{<mcpan "Test::More" >}}) module inste
        'ox'            => 'oxen',
        'box'           => 'boxes',
        'goose'         => 'geese',
-       'mongoose'      => 'mongooses', 
+       'mongoose'      => 'mongooses',
        'law'           => 'laws',
        'mother-in-law' => 'mothers-in-law',
     );
@@ -307,7 +307,7 @@ This also means they're likely to be inconsistent with the unique ad hoc sets of
 
     > orchestrate source.txt -to interim.orc
 
-    > remonstrate +interim.rem -interim.orc 
+    > remonstrate +interim.rem -interim.orc
 
     > fenestrate  --src=interim.rem --dest=final.wdw
     Invalid input format
@@ -442,7 +442,7 @@ There is now an excellent code formatter available for Perl: [`perltidy`](http:/
 Using `perltidy`, you can convert code like this:
 
     if($sigil eq '$'){
-       if($subsigil eq '?'){ 
+       if($subsigil eq '?'){
            $sym_table{substr($var_name,2)}=delete $sym_table{locate_orig_var($var)};
            $internal_count++;$has_internal{$var_name}++
        } else {
@@ -537,7 +537,7 @@ Note, however, that the contents of paragraphs are only of secondary importance 
 
 ### 8. Throw Exceptions Instead of Returning Special Values or Setting Flags
 
-Returning a special error value on failure, or setting a special error flag, is a very common error-handling technique. Collectively, they're the basis for virtually all error notification from Perl's own built-in functions. For example, the built-ins `eval`, `exec`, `flock`, `open`, `print`, `stat`, and `system` all return special values on error. Unfortunately, they don't all use the same special value. Some of them also set a flag on failure. Sadly, it's not always the same flag. See the [`perlfunc`](http://perldoc.perl.org/perlfunc.html) manpage for the gory details.
+Returning a special error value on failure, or setting a special error flag, is a very common error-handling technique. Collectively, they're the basis for virtually all error notification from Perl's own built-in functions. For example, the built-ins `eval`, `exec`, `flock`, `open`, `print`, `stat`, and `system` all return special values on error. Unfortunately, they don't all use the same special value. Some of them also set a flag on failure. Sadly, it's not always the same flag. See the [perlfunc]({{</* perldoc "perlfunc" */>}}) manpage for the gory details.
 
 Apart from the obvious consistency problems, error notification via flags and return values has another serious flaw: developers can silently ignore flags and return values, and ignoring them requires absolutely no effort on the part of the programmer. In fact, in a void context, ignoring return values is Perl's default behavior. Ignoring an error flag that has suddenly appeared in a special variable is just as easy: you simply don't bother to check the variable.
 
@@ -697,9 +697,9 @@ Don't try to fix the problem straight away, though. Instead, immediately add tho
        'ox'            => 'oxen',
        'box'           => 'boxes',
        'goose'         => 'geese',
-       'mongoose'      => 'mongooses', 
+       'mongoose'      => 'mongooses',
        'law'           => 'laws',
-       'mother-in-law' => 'mothers-in-law', 
+       'mother-in-law' => 'mothers-in-law',
 
        # Sascha's bug, reported 27 August 2004...
        'man'           => 'men',
@@ -735,15 +735,15 @@ This approach to debugging is most effective when the test suite covers the full
        'ox'            => 'oxen',
        'box'           => 'boxes',
        'goose'         => 'geese',
-       'mongoose'      => 'mongooses', 
+       'mongoose'      => 'mongooses',
        'law'           => 'laws',
-       'mother-in-law' => 'mothers-in-law', 
+       'mother-in-law' => 'mothers-in-law',
 
        # Sascha's bug, reported 27 August 2004...
        'man'           => 'men',
        'woman'         => 'women',
        'human'         => 'humans',
-       'man-at-arms'   => 'men-at-arms', 
+       'man-at-arms'   => 'men-at-arms',
        'lan'           => 'lans',
        'mane'          => 'manes',
        'moan'          => 'moans',

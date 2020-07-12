@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Import Base on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/import-base/</link>
+    <description>Recent content in Import Base on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 30 Nov 2016 08:47:58 +0000</lastBuildDate>
+    <atom:link href="/tags/import-base/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How to build a base module</title>
+      <link>http://localhost:1313/article/how-to-build-a-base-module/</link>
+      <pubDate>Wed, 30 Nov 2016 08:47:58 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/how-to-build-a-base-module/</guid>
+      <description>
+
+&lt;p&gt;When working on large Perl projects, a base module is a nice way to setup a standard set of imported routines for the other modules in the project. With a base module you can configure a logger, turn on pragmas and import any other useful routines. Instead of typing:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Dumper&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Log::Log4perl &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;get_logger&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and so on, you can type:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; MyBase;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This saves typing all those boilerplate &lt;code&gt;use&lt;/code&gt; statements at the top of every module in the project, and it establishes a consistent base so that all modules all start by operating under the same pragmas and so on. And it also provides a central location to configure application paths and other global compile-time essentials.&lt;/p&gt;
+
+&lt;h3 id=&#34;building-your-own-base-module&#34;&gt;Building your own base module&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ll write an example base module called &lt;code&gt;MyBase.pm&lt;/code&gt; to show you how I do it. There are three basic cases I need to be able to export: pragmas, symbols defined in the MyBase namespace and symbols from other namespaces. In Perl a symbol is usually a reference to a variable or a subroutine. This is my starting code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt; {}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In Perl the &lt;code&gt;import&lt;/code&gt; subroutine is important: it&amp;rsquo;s called every time the module is imported via &lt;code&gt;use&lt;/code&gt;, so that will be my trigger for importing the pragmas and code I want from the base module.&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-pragmas&#34;&gt;Handling pragmas&lt;/h3&gt;
+
+&lt;p&gt;Take a look at the &lt;a href=&#34;https://metacpan.org/pod/Modern::Perl&#34;&gt;Modern::Perl&lt;/a&gt; &lt;a href=&#34;https://metacpan.org/source/CHROMATIC/Modern-Perl-1.20150127/lib/Modern/Perl.pm#L30&#34;&gt;source&lt;/a&gt;. The &lt;code&gt;import&lt;/code&gt; subroutine just calls &lt;code&gt;import&lt;/code&gt; on the pragmas &lt;em&gt;it&lt;/em&gt; wants to import. Clever and easy!&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt; {
+  warnings&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  strict&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  feature&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:5.10&amp;#39;&lt;/span&gt;);
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now any module that includes &lt;code&gt;use MyBase;&lt;/code&gt; will get warnings, strict and all of the Perl 5.10 features imported (e.g. &lt;code&gt;say&lt;/code&gt;, &lt;code&gt;state&lt;/code&gt; and so on).&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-foreign-symbols&#34;&gt;Handling foreign symbols&lt;/h3&gt;
+
+&lt;p&gt;By foreign symbols I mean subroutines and variables declared in other modules, like &lt;code&gt;Data::Dumper::Dumper&lt;/code&gt;. That&amp;rsquo;s a subroutine that&amp;rsquo;s always handy to have available:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt; {
+  warnings&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  strict&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  feature&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:5.10&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# get the importing package name&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $caller &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; strict &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;refs&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:Dumper&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Data\:\:Dumper\:\:Dumper&amp;#34;&lt;/span&gt;};
+  };
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here I&amp;rsquo;ve added &lt;code&gt;use Data::Dumper;&lt;/code&gt; to import the module. Later within &lt;code&gt;import()&lt;/code&gt; I save the calling package name in &lt;code&gt;$caller&lt;/code&gt;, and then within a &lt;code&gt;do&lt;/code&gt; block I copy the &lt;code&gt;Dumper&lt;/code&gt; subroutine from Data::Dumper into the caller&amp;rsquo;s namespace. I escape the semicolons in the package reference because some versions of Perl might need that, but I can&amp;rsquo;t remember which ones - modern Perls don&amp;rsquo;t. If you find the symbol table copying syntax confusing, chapters 7 &amp;amp; 8 of &lt;a href=&#34;https://www.amazon.com/Mastering-Perl-Creating-Professional-Programs/dp/144939311X&#34;&gt;Mastering Perl&lt;/a&gt; has an in-depth explanation of how it works.&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-local-symbols&#34;&gt;Handling local symbols&lt;/h3&gt;
+
+&lt;p&gt;There are many types of local symbols that might be useful to export: global config hashrefs (maybe one for dev and another for production), accessors for singletons like loggers and queues and so on. My application uses &lt;a href=&#34;https://metacpan.org/pod/Log::Log4perl&#34;&gt;Log::Log4perl&lt;/a&gt;, so I&amp;rsquo;ll export a subroutine to get the logger:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Log::Log4perl;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $default_conf &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;q(
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.logger.Root           = DEBUG, Root
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root         = Log::Log4perl::Appender::Screen
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.stderr  = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.utf8    = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout  = PatternLayout
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout.ConversionPattern = %C %m%n
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  )&lt;/span&gt;;
+  Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;init(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$default_conf);
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;logger&lt;/span&gt; { Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_logger(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Root&amp;#39;&lt;/span&gt;) }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt; {
+  warnings&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  strict&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  feature&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:5.10&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# get the importing package name&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $caller &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; strict &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;refs&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:Dumper&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Data\:\:Dumper\:\:Dumper&amp;#34;&lt;/span&gt;};
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:logger&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;MyBase\:\:logger&amp;#34;&lt;/span&gt;};
+  };
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve imported the Log::Log4perl module, and initialized it within a &lt;code&gt;BEGIN&lt;/code&gt; block (so it happens at compile time). I&amp;rsquo;ve added a new subroutine, &lt;code&gt;logger&lt;/code&gt; which is later copied into the symbol table of caller within the &lt;code&gt;import&lt;/code&gt; sub. Now any module which uses &lt;code&gt;MyBase&lt;/code&gt; can simply call &lt;code&gt;logger&lt;/code&gt; to get the Log4perl object.&lt;/p&gt;
+
+&lt;p&gt;One thing to consider when adding functionality like this is to do the initialization outside of &lt;code&gt;import&lt;/code&gt; if possible. That&amp;rsquo;s because the module code is loaded once, but &lt;code&gt;import&lt;/code&gt; is called every time &lt;code&gt;MyBase&lt;/code&gt; is used. So keep the code inside &lt;code&gt;import&lt;/code&gt; to the minimum required - you don&amp;rsquo;t want to initialize Log4perl over and over!&lt;/p&gt;
+
+&lt;p&gt;Scalars are easy too, here&amp;rsquo;s how I might export the project version:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;${&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:VERSION&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;MyBase\:\:VERSION&amp;#34;&lt;/span&gt;};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Notice that the first character of that line has changed from an asterisk (for typeglob) to a dollar sign (for scalar).&lt;/p&gt;
+
+&lt;h3 id=&#34;enable-stack-traces&#34;&gt;Enable stack traces&lt;/h3&gt;
+
+&lt;p&gt;Perl has pretty helpful error messages, but I like to see stack traces to figure out what caused an exception. This is easy to add to a base module using the &lt;code&gt;confess&lt;/code&gt; subroutine from the &lt;a href=&#34;https://metacpan.org/pod/Carp&#34;&gt;Carp&lt;/a&gt; module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Log::Log4perl;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;confess&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; {
+  $SIG{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;__DIE__&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { confess(@_) };
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $default_conf &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;q(
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.logger.Root           = DEBUG, Root
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root         = Log::Log4perl::Appender::Screen
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.stderr  = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.utf8    = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout  = PatternLayout
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout.ConversionPattern = %C %m%n
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  )&lt;/span&gt;;
+  Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;init(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$default_conf);
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;logger&lt;/span&gt; { Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_logger(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Root&amp;#39;&lt;/span&gt;) }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt; {
+  warnings&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  strict&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  feature&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:5.10&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# get the importing package name&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $caller &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; strict &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;refs&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:Dumper&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Data\:\:Dumper\:\:Dumper&amp;#34;&lt;/span&gt;};
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:logger&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;MyBase\:\:logger&amp;#34;&lt;/span&gt;};
+  };
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve added a line to import the Carp module, and within the &lt;code&gt;BEGIN&lt;/code&gt; block I install a signal handler for the pseudo-signal &lt;code&gt;__DIE__&lt;/code&gt;. This will be called any time the application throws an exception. The handler is an anonymous subroutine which calls &lt;code&gt;confess&lt;/code&gt; on the exception. This prints a stack trace and exits.&lt;/p&gt;
+
+&lt;h3 id=&#34;consider-using-import-base&#34;&gt;Consider using Import::Base&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m not sure my code handles all edge cases. It works for my needs, but if you&amp;rsquo;re sharing the project code, consider using &lt;a href=&#34;https://metacpan.org/pod/Import::Base&#34;&gt;Import::Base&lt;/a&gt; which can do all of this for you. Here&amp;rsquo;s what my base module looks like, re-written to use Import::Base:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; base &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Import::Base&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Log::Log4perl;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;confess&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; {
+  $SIG{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;__DIE__&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { confess(@_) };
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $default_conf &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;q(
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.logger.Root           = DEBUG, Root
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root         = Log::Log4perl::Appender::Screen
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.stderr  = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.utf8    = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout  = PatternLayout
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout.ConversionPattern = %C %m%n
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  )&lt;/span&gt;;
+  Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;init(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$default_conf);
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;logger&lt;/span&gt; { Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_logger(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Root&amp;#39;&lt;/span&gt;) }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;our&lt;/span&gt; @IMPORT_MODULES &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;warnings&amp;#39;&lt;/span&gt;,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;strict&amp;#39;&lt;/span&gt;,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;feature&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:5.10&amp;#39;&lt;/span&gt;],
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Data::Dumper&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Dumper&amp;#39;&lt;/span&gt;],
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;MyBase&amp;#39;&lt;/span&gt;,
+);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;our&lt;/span&gt; @EXPORT &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;logger&amp;#39;&lt;/span&gt; );
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

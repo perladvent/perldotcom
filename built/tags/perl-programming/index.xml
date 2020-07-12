@@ -1,0 +1,1679 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Programming on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-programming/</link>
+    <description>Recent content in Perl Programming on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 10 Jan 2020 13:37:00 +0000</lastBuildDate>
+    <atom:link href="/tags/perl-programming/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Porting a Dancer plugin to Dancer2</title>
+      <link>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</link>
+      <pubDate>Fri, 10 Jan 2020 13:37:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</guid>
+      <description>
+
+&lt;p&gt;In my &lt;a href=&#34;https://metacpan.org/pod/Dancer2&#34;&gt;Dancer2&lt;/a&gt; web application, I want to know which requests come from smartphones.  There’s a plugin for that — but only in the older &lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer (v1)&lt;/a&gt; framework.  I’m no expert, but even I was easily able to port the Dancer plugin, &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::MobileDevice&#34;&gt;Dancer::Plugin::MobileDevice&lt;/a&gt;, to Dancer2!  In this article, we’ll explore Dancer2 and the way it handles plugins.  We’ll get our hands dirty working with the framework, and examine the main changes I made to port the plugin from Dancer to Dancer2.  By the end of this article, you’ll be ready to rock &lt;em&gt;and&lt;/em&gt; you’ll have a handy reference to use when porting plugins yourself.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-dancer2-web-framework&#34;&gt;The Dancer2 web framework&lt;/h2&gt;
+
+&lt;p&gt;Dancer2 applications run on a Web server and process requests from a browser.  The application’s Perl code uses keywords in Dancer2’s domain-specific language (DSL) to access information about a request.&lt;/p&gt;
+
+&lt;p&gt;Try it out: Install &lt;a href=&#34;https://metacpan.org/pod/Task::Dancer2&#34;&gt;Task::Dancer2&lt;/a&gt;.  Then, save this as &lt;code&gt;app.psgi&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hello, &amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; (query_parameters&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;world&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;!&amp;#39;&lt;/span&gt;;
+};
+to_app;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and run &lt;code&gt;plackup&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Enter the URL &lt;code&gt;http://localhost:5000&lt;/code&gt; in a browser and you will see “Hello, world!”, or visit &lt;code&gt;http://localhost:5000/?name=genius&lt;/code&gt; to see “Hello, genius!”.  The “genius” comes from &lt;code&gt;query_parameters&lt;/code&gt;, a DSL keyword that returns the values after the &lt;code&gt;?&lt;/code&gt; in the URL.  You can use those values when building a response to a request.&lt;/p&gt;
+
+&lt;h2 id=&#34;dancer-and-dancer2-plugins&#34;&gt;Dancer and Dancer2 plugins&lt;/h2&gt;
+
+&lt;p&gt;Dancer and Dancer2 plugins define new DSL keywords for the plugin’s users.  They also install “hooks,” subroutines that run while Dancer processes a request.  The hooks collect information for the DSL keywords to access.&lt;/p&gt;
+
+&lt;p&gt;For example, a hook in Dancer::Plugin::MobileDevice detects whether a request is coming from a mobile device.  The plugin defines the &lt;code&gt;is_mobile_device&lt;/code&gt; DSL keyword so your code can react appropriately. To port the plugin, I changed code for the keyword, the hooks, and the test suite.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-keywords&#34;&gt;Porting keywords&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins use the Dancer DSL and a &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin&#34;&gt;plugin-specific DSL&lt;/a&gt; to define DSL keywords. In Dancer (v1), the &lt;code&gt;is_mobile_device&lt;/code&gt; keyword is created with the &lt;code&gt;register&lt;/code&gt; plugin-DSL function (code examples simplified to focus on the porting):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;register &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+};
+register_plugin;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 plugins are &lt;a href=&#34;https://metacpan.org/pod/Moo&#34;&gt;Moo&lt;/a&gt; objects, and new DSL keywords are member functions on those objects.  Therefore, I changed &lt;code&gt;is_mobile_device()&lt;/code&gt; to a member function:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;is_mobile_device&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;       &lt;span style=&#34;color:#75715e&#34;&gt;# get the plugin’s object instance&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ($self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; ;
+}
+plugin_keywords &lt;span style=&#34;color:#e6db74&#34;&gt;qw(is_mobile_device)&lt;/span&gt;;   &lt;span style=&#34;color:#75715e&#34;&gt;# replaces register_plugin()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the body of the function, the Dancer plugin directly accessed the DSL keyword &lt;code&gt;request&lt;/code&gt;.  The Dancer2 plugin instead accesses the request via &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;request&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-hooks&#34;&gt;Porting hooks&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins add hooks using the DSL &lt;code&gt;hook&lt;/code&gt; keyword.  For example, this &lt;code&gt;before_template&lt;/code&gt; hook makes &lt;code&gt;is_mobile_device&lt;/code&gt; available in templates:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;hook before_template &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; is_mobile_device();
+};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 handles hooks very differently.  The plugin’s Moo constructor, &lt;code&gt;BUILD&lt;/code&gt;, is called when a plugin instance is created.  In &lt;code&gt;BUILD&lt;/code&gt;, the plugin registers the hook.  I added &lt;code&gt;BUILD&lt;/code&gt; and called
+&lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; to add the hook:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;BUILD&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;hook( before_template_render &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+        $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{is_mobile_device} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $plugin&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;is_mobile_device;
+    });
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If your hook functions are too long to move into &lt;code&gt;BUILD&lt;/code&gt;, you can leave them where they are and say &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook( hook_name =&amp;gt; \&amp;amp;sub_name );&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-the-tests&#34;&gt;Porting the tests&lt;/h2&gt;
+
+&lt;p&gt;Dancer::Plugin::MobileDevice has a full test suite.  These tests are extremely useful to developers, as they allow you to to see if a Dancer2 port behaves the same as the Dancer original. That said, you have to port the tests themselves before you can use them to test your ported plugin! We’ll look at the Dancer way, then I’ll show you the Dancer2 changes.&lt;/p&gt;
+
+&lt;p&gt;The Dancer tests define a simple Web application using the plugin.  They exercise that application using helpers in &lt;a href=&#34;https://metacpan.org/pod/Dancer::Test&#34;&gt;Dancer::Test&lt;/a&gt;.  For example (simplified from &lt;code&gt;t/01-is-mobile-device.t&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;{   &lt;span style=&#34;color:#75715e&#34;&gt;# The simple application&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Plugin::MobileDevice;
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Test;
+
+$ENV{HTTP_USER_AGENT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dancer_response GET &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;# dancer_response() is from Dancer::Test&lt;/span&gt;
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{content}, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2, on the other hand, uses the &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt; ecosystem for testing instead of its own helpers.  To work in that ecosystem, I changed the
+above test as described in the
+&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Manual#TESTING&#34;&gt;Dancer2 manual’s “testing” section&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Plack::Test;                        &lt;span style=&#34;color:#75715e&#34;&gt;# Additional testing modules&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; HTTP::Request::Common;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; TestApp;     &lt;span style=&#34;color:#75715e&#34;&gt;# Still a simple application, but now with a name&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2::Plugin::MobileDevice;
+
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dut &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Plack::Test&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;create(TestApp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_app);     &lt;span style=&#34;color:#75715e&#34;&gt;# a fake Web server&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $dut&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request(GET &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;User-Agent&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;);
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;content, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 tests use more boilerplate than Dancer tests, but Dancer2 tests are more modular and flexible than Dancer tests.  With Plack, you don’t have to use the global state (&lt;code&gt;%ENV&lt;/code&gt;) any more, and you can test more than one application or use case per &lt;code&gt;.t&lt;/code&gt; file.  Seeing the tests pass is good indication that your porting job is done.&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;I am a newbie at Dancer2, and have never used Dancer.  But I was able to port Dancer::Plugin::MobileDevice to Dancer2 in less than a day — including time to read the documentation and figure out how!  When you need a Dancer function in Dancer2, grab the quick reference below and you’ll be off and running!&lt;/p&gt;
+
+&lt;h2 id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/h2&gt;
+
+&lt;p&gt;My thanks to Kelly Deltoro-White for her insights, and to the authors of Dancer::Plugin::MobileDevice and Dancer2 for a strong foundation to build on.&lt;/p&gt;
+
+&lt;h2 id=&#34;more-information-on-dancer2-plugins&#34;&gt;More information on Dancer2 plugins&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;“&lt;a href=&#34;http://advent.perldancer.org/2016/22&#34;&gt;The new Dancer2 plugin system&lt;/a&gt;” by Sawyer X, for an overview&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Plugin&#34;&gt;Dancer2::Plugin&lt;/a&gt;, for details&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;quick-reference-porting-plugins-from-dancer-to-dancer2&#34;&gt;Quick reference: porting plugins from Dancer to Dancer2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Port keywords:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Make keywords freestanding &lt;code&gt;sub&lt;/code&gt;s, not arguments of &lt;code&gt;register&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Access data through &lt;code&gt;$self&lt;/code&gt; rather than DSL keywords&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;register_plugin&lt;/code&gt; to &lt;code&gt;plugin_keywords&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port hooks:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Add a &lt;code&gt;BUILD&lt;/code&gt; function&lt;/li&gt;
+&lt;li&gt;Move the hook functions into &lt;code&gt;BUILD&lt;/code&gt;, or refer to them from &lt;code&gt;BUILD&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Wrap each hook function in a &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; call&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port tests:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Import &lt;a href=&#34;https://metacpan.org/pod/Plack::Test&#34;&gt;Plack::Test&lt;/a&gt; and
+&lt;a href=&#34;https://metacpan.org/pod/HTTP::Request::Common&#34;&gt;HTTP::Request::Common&lt;/a&gt;
+instead of Dancer::Test&lt;/li&gt;
+&lt;li&gt;Give the application under test a &lt;code&gt;package&lt;/code&gt; statement&lt;/li&gt;
+&lt;li&gt;Create a Plack::Test instance representing the application&lt;/li&gt;
+&lt;li&gt;Create requests using HTTP::Request::Common methods&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;$response-&amp;gt;{content}&lt;/code&gt; to &lt;code&gt;$response-&amp;gt;content&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Inside Perl 5.12</title>
+      <link>http://localhost:1313/pub/2010/04/inside-perl-512.html/</link>
+      <pubDate>Tue, 20 Apr 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/04/inside-perl-512.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;http://news.perlfoundation.org/2010/04/perl-512-released.html&#34;&gt;Perl 5.12 has just come out&lt;/a&gt;. A rejuvenated development process helps ensure a bright future for Perl as it enters its third decade of making easy things easy and hard things possible. Here&amp;rsquo;s what you can expect when you upgrade to the latest release.&lt;/p&gt;
+
+&lt;h2 id=&#34;release-schedule&#34;&gt;&lt;strong&gt;Release Schedule&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The largest change in Perl 5.12 isn&amp;rsquo;t code. It&amp;rsquo;s the new release schedule. Perl 5 now has monthly development releases on the 20th of every month. Perl 5.13.0 is almost out, as of the time of writing. These monthly releases are snapshots of the development process. They represent points at which people interested in what will become Perl 5.14 can test against their most important code.&lt;/p&gt;
+
+&lt;p&gt;The current plan is to release Perl 5.14 in a year. Sometime around March, the release manager will put together release candidates and start the countdown for final testing and release blocking bugs. The process will repeat.&lt;/p&gt;
+
+&lt;p&gt;The Perl 5.12.x family will have several new releases in the next year as well, though they will have only a few changes. Jesse Vincent described &lt;a href=&#34;http://www.nntp.perl.org/group/perl.perl5.porters/2010/04/msg158635.html&#34;&gt;the policy for what changes will go into Perl 5.12.x maintenance releases&lt;/a&gt; in a message to the Perl 5 Porters. 5.12.1 will come out in May 2010. It will contain fixes for bugs found in 5.12.0, but it will contain no new features or behaviors. 5.12.2 will follow in three months, and so on. It&amp;rsquo;s not clear if 5.12.4 (February 2011) will be the final release of the 5.12.x family.&lt;/p&gt;
+
+&lt;p&gt;These plans are subject to change, but the monthly releases have gone well, and the release process for 5.12 had little controversy. It&amp;rsquo;s likely the next year will proceed similarly.&lt;/p&gt;
+
+&lt;h2 id=&#34;improved-package-version-syntax&#34;&gt;&lt;strong&gt;Improved Package Version Syntax&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;In previous versions of Perl 5, individual packages set their version numbers by manipulating the package global variable &lt;code&gt;$VERSION&lt;/code&gt;. There were few rules for what this variable contained or how to parse this version number, and toolchain modules such as &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker&#34;&gt;ExtUtils::MakeMaker&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Module::Build&#34;&gt;Module::Build&lt;/a&gt; have to perform several contortions to parse them with any degree of accuracy. David Golden&amp;rsquo;s &lt;a href=&#34;http://www.dagolden.com/index.php/369/version-numbers-should-be-boring/&#34;&gt;Version Numbers Should Be Boring&lt;/a&gt; gives copious detail on how to do version numbers right, if you can&amp;rsquo;t use 5.12.&lt;/p&gt;
+
+&lt;p&gt;An addition to the core &lt;a href=&#34;https://metacpan.org/pod/version&#34;&gt;version&lt;/a&gt; module enables a feature called &amp;ldquo;strict version numbers&amp;rdquo;, where these numbers conform to a few guidelines. The most important rule is that version numbers must be standard numbers with one decimal point (&lt;code&gt;1.23&lt;/code&gt;&amp;rdquo; &amp;gt;}}) &lt;em&gt;or&lt;/em&gt; version strings (&lt;code&gt;v1.234.5&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;You may only use strict version numbers with the new package version syntax:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Perl::Improved 1.23;
+
+    package Perl::Improved v1.23.45;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Internally, Perl will parse these the same way as it does:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Perl::Improved 1.23;
+
+    use Perl::Improved v1.23.45;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; which is a benefit for consistency. As well, toolchain utilities can find and parse these version numbers with little effort, thanks in no small part to a canonical set of version number parsing regular expressions now found in &lt;a href=&#34;https://metacpan.org/pod/version&#34;&gt;version&lt;/a&gt;.
+&amp;ldquo; &amp;gt;}}
+Sadly, there&amp;rsquo;s currently no mechanism by which to add this syntax to 5.10, but in a couple of years this may be the preferred way of specifying version numbers in Perl 5.&lt;/p&gt;
+
+&lt;h2 id=&#34;strictures-by-default&#34;&gt;&lt;strong&gt;Strictures by Default&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Several CPAN modules enable features such as &lt;a href=&#34;https://metacpan.org/pod/strict&#34;&gt;strict&lt;/a&gt; when you use them, including &lt;a href=&#34;https://metacpan.org/pod/Moose&#34;&gt;Moose&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/perl5i&#34;&gt;perl5i&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Modern::Perl&#34;&gt;Modern::Perl&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Mojolicious&#34;&gt;Mojolicious&lt;/a&gt;. Perl 5.12 also enables strictures when it encounters &lt;code&gt;use 5.012;&lt;/code&gt;, along with other new language syntax features such as the &lt;code&gt;say&lt;/code&gt; and &lt;code&gt;given&lt;/code&gt;/&lt;code&gt;when&lt;/code&gt; keywords.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;use 5.012&lt;/code&gt; does &lt;em&gt;not&lt;/em&gt; enable warnings.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;-E&lt;/code&gt; flag &lt;em&gt;does&lt;/em&gt; enable new language features, but it does &lt;em&gt;not&lt;/em&gt; enable strictures.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;-M5.012&lt;/code&gt; flag &lt;em&gt;does&lt;/em&gt; enable strictures and new language features.&lt;/p&gt;
+
+&lt;h2 id=&#34;y2038-safety&#34;&gt;&lt;strong&gt;Y2038 Safety&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;While Perl itself did not have a Y2K problem, many programs written in Perl made assumptions that produced apparent Y2K problems. Unfortunately, Perl&amp;rsquo;s time handling relies on system libraries, and many of those systems exhaust their available capabilities when dealing with dates and times in the year 2038. (Developers who think they have decades to solve this problem should consider financial instruments such as 30-year mortgages.)&lt;/p&gt;
+
+&lt;p&gt;Perl 5.12 extends support for time and date handling in the core &lt;code&gt;localtime&lt;/code&gt; and &lt;code&gt;gmtime&lt;/code&gt; functions to manage dates beyond 2038 without overflow or truncation problems. Replacement libraries for earlier versions of Perl are available from the CPAN as &lt;a href=&#34;https://metacpan.org/pod/Time::y2038&#34;&gt;Time::y2038&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;core-support-for-language-mutation-extensions&#34;&gt;&lt;strong&gt;Core Support for Language Mutation Extensions&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Devel::Declare&#34;&gt;Devel::Declare&lt;/a&gt; is the basis for a handful of CPAN distributions which add new features to Perl 5 without the drawbacks of source filters. &lt;a href=&#34;https://metacpan.org/pod/signatures&#34;&gt;signatures&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/MooseX::Declare&#34;&gt;MooseX::Declare&lt;/a&gt; are two prime examples; they simplify common tasks in a very Perlish way and demonstrate how a few syntactic additions can remove a lot of repetitive code.
+&amp;ldquo; &amp;gt;}}
+Unlike source filters, they compose together well and don&amp;rsquo;t interfere with external code.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Devel::Declare&lt;/code&gt; works by hijacking part of the Perl 5 parsing process. Though this has required poking in Perl&amp;rsquo;s internals, Perl 5.12 includes a few APIs to make this behavior cleaner and better supported. In other words, it&amp;rsquo;s not only &lt;em&gt;okay&lt;/em&gt; for &lt;code&gt;Devel::Declare&lt;/code&gt; to exist, but it&amp;rsquo;s &lt;em&gt;important&lt;/em&gt; that it exist and work and continue to work.&lt;/p&gt;
+
+&lt;p&gt;Some developers have discussed the idea of bringing &lt;code&gt;Devel::Declare&lt;/code&gt; into the core in one form or another. This may or may not happen for Perl 5.14. Regardless, the process gives modules such as &lt;code&gt;signatures&lt;/code&gt; and &lt;code&gt;MooseX::Declare&lt;/code&gt; a further stability and support, and it provides opportunities for further syntax-bending extensions, some of which may enter the core themselves as new features.&lt;/p&gt;
+
+&lt;h2 id=&#34;deprecation-warnings-by-default&#34;&gt;&lt;strong&gt;Deprecation Warnings by Default&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Perl 5 development makes a priority of supporting syntactic constructs found in older versions of Perl, even going as far as to deprecate but not remove some. As a minor compatibility change in Perl 5.12, deprecated features now give warnings when you use them, even if you haven&amp;rsquo;t explicitly enabled deprecated warnings with &lt;code&gt;use warnings &#39;deprecated&#39;;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;You may still disable deprecated warnings with &lt;code&gt;no warnings &#39;deprecated&#39;;&lt;/code&gt;&amp;ndash;they&amp;rsquo;re still lexical warnings&amp;ndash;but now these deprecations will be more obvious to developers who upgrade to and test their existing code against new releases of Perl 5.&lt;/p&gt;
+
+&lt;p&gt;Deprecations do not necessarily imply any timeframe for removal of the deprecated feature, except as otherwise expressed explicitly in the appropriate release delta. See &lt;a href=&#34;https://perldoc.perl.org/perl5120delta.html&#34;&gt;perl5120delta&lt;/a&gt; for more details about specific deprecations in this release.
+&amp;ldquo; &amp;gt;}}&lt;/p&gt;
+
+&lt;h2 id=&#34;inc-reorganized&#34;&gt;&lt;strong&gt;@INC Reorganized&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Several of the core modules distributed with Perl 5 have dual lives on the CPAN. It&amp;rsquo;s possible (and often worthwhile) to update them separately from the rest of Perl 5. If you do, Perl has to be able to find the updated versions instead of the core versions. When you compile Perl 5 itself, &lt;code&gt;@INC&lt;/code&gt; contains a handful of default directories in which to look for modules. Some of these directories will contain core modules. Others contain modules you&amp;rsquo;ll install later (likely through a CPAN client).&lt;/p&gt;
+
+&lt;p&gt;A reorganization of the order of these directories in the default &lt;code&gt;@INC&lt;/code&gt; in Perl 5.12 makes Perl 5 prefer to load user-installed modules over core-supplied modules. This will make it easier to manage dual-lived modules, and should help distributions which package and redistribute Perl 5 to manage their installation paths appropriately. Unless you&amp;rsquo;re a Perl 5 distributor, you should see no difference except for the lack of strange problems.&lt;/p&gt;
+
+&lt;h2 id=&#34;deprecations&#34;&gt;&lt;strong&gt;Deprecations&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;A handful of core modules are now deprecated: &lt;a href=&#34;https://metacpan.org/pod/Class::ISA&#34;&gt;Class::ISA&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Pod::Plainer&#34;&gt;Pod::Plainer&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Switch&#34;&gt;Switch&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Shell&#34;&gt;Shell&lt;/a&gt;. They remain available from the CPAN, though consider using &lt;code&gt;given&lt;/code&gt;/&lt;code&gt;when&lt;/code&gt; (introduced in Perl 5.10.0&amp;rdquo; &amp;gt;}}) instead of &lt;code&gt;Switch&lt;/code&gt;. There&amp;rsquo;s no deprecation category quite strong enough to describe the recommendation against it.&lt;/p&gt;
+
+&lt;p&gt;The core has also included several libraries written in the Perl 4 era. They are now available from the CPAN in the &lt;a href=&#34;https://metacpan.org/pod/Perl4::CoreLibs&#34;&gt;Perl4::CoreLibs&lt;/a&gt; distribution. Though they are not &lt;em&gt;quite&lt;/em&gt; deprecated yet, they will be in Perl 5.14. In almost every case, Perl 5 era replacements exist under active maintenance.
+&amp;ldquo; &amp;gt;}}&lt;/p&gt;
+
+&lt;h2 id=&#34;unicode-improvements&#34;&gt;&lt;strong&gt;Unicode Improvements&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;As the Unicode standards change, so must Perl 5&amp;rsquo;s Unicode handling. The biggest change in Perl 5.12 is an update to support the latest standards and definitions, specifically Unicode properties, property values, and regular expression matches using Unicode properties.&lt;/p&gt;
+
+&lt;h2 id=&#34;miscellaneous&#34;&gt;&lt;strong&gt;Miscellaneous&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Many bugs have been fixed. Several performance improvements are present. More tests are available. Dual-lived modules have been updated. More documentation is available (including &lt;a href=&#34;https://perldoc.perl.org/perlperf.html&#34;&gt;perlperf&lt;/a&gt;, a detailed discussion of profiling and optimizing Perl 5 programs&amp;rdquo; &amp;gt;}}). Some 200 people have changed 750,000 lines in more than 3,000 files.&lt;/p&gt;
+
+&lt;p&gt;Even with all of those changes, Perl 5 remains a vibrant, powerful programming language. Programs written a decade ago will still run with few, if any, necessary changes, and almost all of the CPAN is ready to run on it.&lt;/p&gt;
+
+&lt;p&gt;Yet development still continues. Perl 5.13.0 will come out on 20 April 2010, with all of the concomitant possibilities for improvements, bug fixes, and even more practical pragmatism. Perl 5.12.1 and 5.13.1 will follow next month, with more bugs fixed, documentation improved, core modules updated, and the language always a little bit nicer to use.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>A Website in a Minute Using Dancer, the Effortless Web Framework</title>
+      <link>http://localhost:1313/pub/2010/04/a-website-in-a-minute-using-dancer-the-effortless-web-framework.html/</link>
+      <pubDate>Tue, 06 Apr 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/04/a-website-in-a-minute-using-dancer-the-effortless-web-framework.html/</guid>
+      <description>
+
+&lt;p&gt;While Perl has a few heavy hitters in the web framework world (&lt;a href=&#34;https://metacpan.org/pod/Catalyst&#34;&gt;Catalyst&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Jifty&#34;&gt;Jifty&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/CGI::Application&#34;&gt;CGI::App&lt;/a&gt;), sometimes they can seem like overkill. When writing a light web service or a high-end but not-as-complex website, you might want something smaller and simpler. This is where &lt;a href=&#34;http://www.perldancer.org/&#34;&gt;Dancer&lt;/a&gt; comes in.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt; is a web framework whose purpose is to let you get a website up and running within a minute, if not sooner. It started as a port of Ruby&amp;rsquo;s &lt;a href=&#34;http://www.sinatrarb.com/&#34;&gt;Sinatra&lt;/a&gt; but has since took its own path.&lt;/p&gt;
+
+&lt;p&gt;Dancer supports &lt;a href=&#34;http://plackperl.org/&#34;&gt;Plack&lt;/a&gt;/&lt;a href=&#34;http://plackperl.org/&#34;&gt;PSGI&lt;/a&gt; from an early version and has a built-in scaffolding script to help you get up and running within seconds. It creates deployment scripts for you, includes a guide for deployment situations to help you configure your webserver (whether &lt;a href=&#34;http://www.danga.com/perlbal&#34;&gt;Perlbal&lt;/a&gt;, &lt;a href=&#34;http://httpd.apache.org/&#34;&gt;Apache&lt;/a&gt;, &lt;a href=&#34;http://www.lighttpd.net/&#34;&gt;Lighttpd&lt;/a&gt; or anything else you might care to use) and has a default clean design to help you prototype your website faster.&lt;/p&gt;
+
+&lt;h2 id=&#34;dancing&#34;&gt;&lt;strong&gt;Dancing&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The best way to learn, understand, and fall in love with Dancer is to get on the dance floor:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ cpan Dancer # or cpanp, or cpanm
+    $ dancer -a MyApp
+    + ./MyApp
+    + MyApp/views
+    + MyApp/views/index.tt
+    + MyApp/views/layouts
+    + MyApp/views/layouts/main.tt
+    + MyApp/environments
+    + MyApp/environments/development.yml
+    + MyApp/environments/production.yml
+    + MyApp/config.yml
+    + MyApp/app.psgi
+    + MyApp/MyApp.pm
+    + MyApp/MyApp.pl
+    + MyApp/public
+    + MyApp/public/css
+    + MyApp/public/css/style.css
+    + MyApp/public/css/error.css
+    + MyApp/public/images
+    + MyApp/public/404.html
+    + MyApp/public/dispatch.fcgi
+    + MyApp/public/dispatch.cgi
+    + MyApp/public/500.html
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;dancer&lt;/code&gt; application creates a &lt;em&gt;views&lt;/em&gt; folder, which contains layout and templates. It contains sane defaults you can use to start. It also creates a &lt;em&gt;config.yaml&lt;/em&gt; file and an &lt;em&gt;environments&lt;/em&gt; folder for environment-specific configurations. &lt;em&gt;MyApp.pm&lt;/em&gt; and &lt;em&gt;MyApp.pl&lt;/em&gt; are the main application files. &lt;em&gt;MyApp.pl&lt;/em&gt; includes a built-in webserver for the development (or even deployment!) of your application. The &lt;em&gt;public&lt;/em&gt; folder contains default CSS and images.&lt;/p&gt;
+
+&lt;p&gt;This directory tree includes a few other interesting files; these are dispatchers for various backends. The PSGI dispatcher is &lt;em&gt;app.psgi&lt;/em&gt;. The CGI and FCGI dispatchers are &lt;em&gt;public/dispatch.cgi&lt;/em&gt; and &lt;em&gt;public/dispatch.fcgi&lt;/em&gt;, respectively.&lt;/p&gt;
+
+&lt;p&gt;Look in &lt;em&gt;MyApp/MyApp.pm&lt;/em&gt;. Dancing really is this simple!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package MyApp;
+    use Dancer;
+
+    get &#39;/&#39; =&amp;gt; sub {
+        template &#39;index&#39;;
+    };
+
+    true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What does this all mean?&lt;/p&gt;
+
+&lt;h2 id=&#34;routes&#34;&gt;&lt;strong&gt;Routes&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer uses the notion of &lt;em&gt;routes&lt;/em&gt; to specify the paths your users might take in your website. All you need in order to write a Dancer application is to define routes. Routes are not only simple, but concise and versatile. They support variables (named matching, wildcard matching), regular expressions and even conditional matching.&lt;/p&gt;
+
+&lt;p&gt;Here are a few examples:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/&#39; =&amp;gt; sub {
+        return &#39;hello world!&#39;;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This route defines the root path of the application. If someone reaches &lt;a href=&#34;http://example.com/&#34;&gt;http://example.com/&lt;/a&gt;, it will match this route.&lt;/p&gt;
+
+&lt;p&gt;The word &lt;code&gt;get&lt;/code&gt; signifies the HTTP method (GET) for which the path exists. If you use a web form, you need a route for a POST method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    post &#39;/user/add/&#39; =&amp;gt; sub {
+        # create a user using the data from the form
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are a few more methods (&lt;strong&gt;del&lt;/strong&gt; for &lt;em&gt;DELETE&lt;/em&gt;, &lt;strong&gt;put&lt;/strong&gt; for &lt;em&gt;PUT&lt;/em&gt;). You can also use &lt;code&gt;any&lt;/code&gt; to provide a single route for all HTTP methods or for several specific methods:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    any [&#39;get&#39;, &#39;post&#39;] =&amp;gt; sub {
+        # both post and get will reach here!
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Variables are clean and simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/user/view/:username/&#39; =&amp;gt; sub {
+        my $username = params-&amp;gt;{username};
+        template &#39;users&#39; =&amp;gt; { username =&amp;gt; $username };
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This route matches &lt;a href=&#34;http://example.com/user/view/variable/&#34;&gt;http://example.com/user/view/variable/&lt;/a&gt;, while &lt;em&gt;variable&lt;/em&gt; can be of any type.&lt;/p&gt;
+
+&lt;p&gt;Of course, you can write a more complex wildcard matching:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/download/*.*&#39; =&amp;gt; sub {
+        # we extract the wild card matching using splat
+        my ( $file, $ext ) = splat;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you feel rambunctious, you can define a regular expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get r( &#39;/hello/([\w]+)&#39; ) =&amp;gt; sub {
+        my ($name) = splat;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that in these examples, the &lt;code&gt;splat&lt;/code&gt; keyword returns the values that the wildcards (the &lt;code&gt;*&lt;/code&gt; used in routes) or regular expressions (declared with &lt;code&gt;r()&lt;/code&gt;) match. As a convenience, note also that you do &lt;em&gt;not&lt;/em&gt; have to escape the forward slash regex delimiters used in &lt;code&gt;r()&lt;/code&gt;; Dancer escapes them for you.&lt;/p&gt;
+
+&lt;h2 id=&#34;multiple-routes&#34;&gt;&lt;strong&gt;Multiple Routes&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;When writing many routes, you might find it easier to separate them to different files according to their prefixes. Dancer provides &lt;code&gt;prefix&lt;/code&gt; and &lt;code&gt;load&lt;/code&gt; to help you with that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # in main Dancer application:
+    load &#39;UserRoutes.pm&#39;;
+
+    # in UserRoutes.pm:
+    use Dancer &#39;:syntax&#39;; # importing just the syntax to create routes
+    prefix &#39;/user&#39;;
+
+    get &#39;/view/&#39;   =&amp;gt; sub { ... };
+    get &#39;/edit/&#39;   =&amp;gt; sub { ... };
+    get &#39;/delete/&#39; =&amp;gt; sub { ... };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These will match &lt;a href=&#34;http://example.com/user/view/&#34;&gt;http://example.com/user/view/&lt;/a&gt;, &lt;a href=&#34;http://example.com/user/edit/&#34;&gt;http://example.com/user/edit/&lt;/a&gt; and &lt;a href=&#34;http://example.com/user/delete/&#34;&gt;http://example.com/user/delete/&lt;/a&gt;, respectively.&lt;/p&gt;
+
+&lt;h2 id=&#34;built-for-scalability&#34;&gt;&lt;strong&gt;Built for scalability&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer has a built-in route caching mechanism, making sure that even when you have a lot of routes, it will be able to serve them at almost the same speed as though you had only a few routes. This means that even if you have 600 routes, you do not have to worry about your application being slow!&lt;/p&gt;
+
+&lt;h2 id=&#34;variables&#34;&gt;&lt;strong&gt;Variables&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer supports internal variables. Declare them with &lt;code&gt;var&lt;/code&gt;, and you can later fetch them inside your routes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    var waiter =&amp;gt; &#39;sawyer&#39;;
+
+    get &#39;/welcome/&#39; =&amp;gt; sub {
+        my $name = vars-&amp;gt;{waiter};
+        return &amp;quot;Hi, I&#39;m $name and I&#39;ll be your waiter this evening.&amp;quot;;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;filters&#34;&gt;&lt;strong&gt;Filters&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Sometimes you want to be able to specify code to run before any route. &lt;a href=&#34;https://metacpan.org/pod/KiokuDB&#34;&gt;KiokuDB&lt;/a&gt;, for example, requires you to make a scope whenever you want to work with the database. This is easy to automate with the &lt;code&gt;before&lt;/code&gt; filter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    before sub {
+        var scope =&amp;gt; $dir-&amp;gt;new_scope;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another common technique is to verify a session:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    before sub {
+        if ( !session(&#39;user&#39;) &amp;amp;&amp;amp; request-&amp;gt;path_info !~ m{^/login} ) {
+            # Pass the original path requested along to the handler:
+            var requested_path =&amp;gt; request-&amp;gt;path_info;
+            request-&amp;gt;path_info(&#39;/login&#39;);
+        }
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;templates&#34;&gt;&lt;strong&gt;Templates&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer will return to the user agent whatever you return from a route, just like PSGI does. &amp;ldquo;Hello, world!&amp;rdquo; in Dancer is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/&#39; =&amp;gt; sub { &#39;Hello, world!&#39; };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Plain text isn&amp;rsquo;t always what you want, so Dancer has powerful support for templates. There are various template engines available (&lt;a href=&#34;https://metacpan.org/pod/Template&#34;&gt;Template::Toolkit&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Template::Tiny&#34;&gt;Template::Tiny&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Tenjin&#34;&gt;Tenjin&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Text::Haml&#34;&gt;Text::Haml&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Mason&#34;&gt;Mason&lt;/a&gt;, to name a few). Dancer also provides a default simple template engine called &lt;a href=&#34;https://metacpan.org/pod/Dancer::Template::Simple&#34;&gt;Dancer::Template::Simple&lt;/a&gt;. This gives you a simple self-contained template engine at no additional cost!&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;template&lt;/code&gt; keyword allows you to specify which template to process and which variables to pass to the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/user/view/:name&#39; =&amp;gt; sub {
+        my $name = params-&amp;gt;{name};
+
+        # Dancer adds .tt automatically, but this is configurable
+        template &#39;show_user&#39; =&amp;gt; {
+            name =&amp;gt; $name,
+            user =&amp;gt; get_user($name),
+        };
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Dancer automatically supplies you an encompassing layout for your templates, much like &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;Template&lt;/a&gt;&amp;rsquo;s &lt;code&gt;WRAPPER&lt;/code&gt; option. This built-in template means you can use the layout with other template engines, such as &lt;a href=&#34;https://metacpan.org/pod/Template::Tiny&#34;&gt;Template::Tiny&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Dancer accomplishes this by rendering two templates: the one you provided and a (configurable) layout template. The layout template gets the output of rendering your template as a &lt;code&gt;content&lt;/code&gt; variable, then embeds that content in the general page layout.&lt;/p&gt;
+
+&lt;p&gt;The default templates that come with Dancer demonstrate this point very well. Here&amp;rsquo;s &lt;em&gt;main.tt&lt;/em&gt;, the default layout:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;!-- some default css --&amp;gt;&amp;lt;/head&amp;gt;
+    &amp;lt;body&amp;gt;
+    &amp;lt;% content %&amp;gt;
+    &amp;lt;/body&amp;gt;
+    &amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;serializers-make-resting-easier&#34;&gt;&lt;strong&gt;Serializers make RESTing easier&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Serializers are a new feature in Dancer (available since version 1.170). They allow automatic serialization for your output in various forms (&lt;a href=&#34;https://metacpan.org/pod/Data::Dumper&#34;&gt;Data::Dumper&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/YAML&#34;&gt;YAML&lt;/a&gt;, or &lt;a href=&#34;https://metacpan.org/pod/JSON&#34;&gt;JSON&lt;/a&gt;) to shorten the amount of code you have to write in your application.&lt;/p&gt;
+
+&lt;p&gt;When programming a RESTful service, the JSON serializer cuts down much of your code by automatically serializing your output. This makes your server-side AJAX code much more efficient and less boilerplate code for you to write.&lt;/p&gt;
+
+&lt;h2 id=&#34;file-uploads-are-fun&#34;&gt;&lt;strong&gt;File uploads are fun&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;File uploads exist since version 1.170. Within a route, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # several files
+    my @files = request-&amp;gt;upload();
+
+    # single file
+    my $file  = request-&amp;gt;upload();
+
+    # then you can do several things with that file
+    $file-&amp;gt;copy_to(&#39;/my/upload/folder&#39;);
+    my $fh       = $file-&amp;gt;file_handle;
+    my $content  = $file-&amp;gt;content;
+    my $filename = $file-&amp;gt;filename;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;easy-configuration&#34;&gt;&lt;strong&gt;Easy configuration&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;You can configure everything (logging, session handling, template layout, file locations) in Dancer using the main configuration file (&lt;em&gt;appdir/config.yml&lt;/em&gt;). There are configuration files for your specific environment (&lt;em&gt;production&lt;/em&gt; and &lt;em&gt;development&lt;/em&gt;) and you can provide environment-specific configurations in the corresponding file (&lt;em&gt;appdir/environments/development.yml&lt;/em&gt;, for example).&lt;/p&gt;
+
+&lt;h2 id=&#34;summary&#34;&gt;&lt;strong&gt;Summary&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;While Dancer is still evolving, it is already a production-ready simple-yet-powerful web framework lets you get from zero to web in record time. Put on your dancing shoes, define your steps, and bust a move!&lt;/p&gt;
+
+&lt;p&gt;Dancer is available on the CPAN (&lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt;), and &lt;a href=&#34;http://github.com/sukria/Dancer&#34;&gt;Dancer development takes place on Github&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>perl5i Makes More Simple Things Simple</title>
+      <link>http://localhost:1313/pub/2010/03/perl5i-makes-more-simple-things-simple.html/</link>
+      <pubDate>Tue, 23 Mar 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/perl5i-makes-more-simple-things-simple.html/</guid>
+      <description>&lt;p&gt;Suppose that you want to load a module dynamically (you have the name in a scalar), then alias a function from that module to a new name in another class. In other words, you want a renaming import. How do you do that in Perl 5?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+    no strict &#39;refs&#39;;
+    eval qq{require $class} or die $@;
+    *{$other_class.&amp;quot;::&amp;quot;.$alias} = $class-&amp;gt;can($func);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s a lot of magic going on there. Aliasing requires using symbolic refs which means turning off &lt;code&gt;strict&lt;/code&gt;. Because you want &lt;code&gt;strict&lt;/code&gt; off in as small a hunk of code as possible you have to enclose it in braces. Then, &lt;code&gt;require Class&lt;/code&gt; and &lt;code&gt;require $class&lt;/code&gt; work differently, so you have to trick &lt;code&gt;require&lt;/code&gt; into seeing a bareword by &lt;code&gt;eval&lt;/code&gt;ing it. Don&amp;rsquo;t forget to catch and rethrow the error! Finally, to do the aliasing you need to get a code ref with &lt;code&gt;can()&lt;/code&gt; and assign it to the symbol table via the magic of typeglobs.&lt;/p&gt;
+
+&lt;p&gt;Guh. There&amp;rsquo;s an idea in interface design called &lt;a href=&#34;http://www.usabilityfirst.com/glossary/gulf-of-execution/&#34;&gt;The Gulf of Execution&lt;/a&gt; which measures the distance between the user&amp;rsquo;s goal and the actions she must take to achieve that goal. The goals here are to:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Load a class from a variable.&lt;/li&gt;
+&lt;li&gt;Alias a function in that class.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The actions are:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Enclose the code in a block.&lt;/li&gt;
+&lt;li&gt;Turn off &lt;code&gt;strict&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;require $class&lt;/code&gt; in an &lt;code&gt;eval&lt;/code&gt; block to turn it into a bareword.&lt;/li&gt;
+&lt;li&gt;Catch and rethrow any error which might result.&lt;/li&gt;
+&lt;li&gt;Use &lt;code&gt;can()&lt;/code&gt; to get a reference to the function.&lt;/li&gt;
+&lt;li&gt;Construct a fully qualified name for the alias.&lt;/li&gt;
+&lt;li&gt;Turn that into a typeglob.&lt;/li&gt;
+&lt;li&gt;Assign the code ref to the typeglob.&lt;/li&gt;
+&lt;li&gt;Drink.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Try explaining that to a non-Perl guru.&lt;/p&gt;
+
+&lt;p&gt;Now consider the &lt;a href=&#34;https://metacpan.org/pod/perl5i&#34;&gt;perl5i&lt;/a&gt; (specifically perl5i::2) way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$class-&amp;gt;require
+      -&amp;gt;can($func)
+      -&amp;gt;alias($other_class, $alias);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Release the breath you&amp;rsquo;ve been holding in for the last 15 years of Perl 5.&lt;/p&gt;
+
+&lt;p&gt;Through the magic of &lt;a href=&#34;https://metacpan.org/pod/autobox&#34;&gt;autoboxing&lt;/a&gt;, perl5i lets you call methods on unblessed scalars, hashes, arrays, regexes, references&amp;hellip; anything. It also implements some handy methods. Some, like &lt;code&gt;require()&lt;/code&gt;, are core functions redone as methods. Others, like &lt;code&gt;alias()&lt;/code&gt;, should be core functions never made it in for whatever reason. autoboxing gives perl5i the freedom to add handy features without polluting the global function/method namespace with new keywords.&lt;/p&gt;
+
+&lt;p&gt;Recall the goals:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Load a class from a variable.&lt;/li&gt;
+&lt;li&gt;Alias a function in that class.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&amp;hellip; and consider perl5i&amp;rsquo;s actions:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Call &lt;code&gt;require()&lt;/code&gt; to load the class.&lt;/li&gt;
+&lt;li&gt;Call &lt;code&gt;can()&lt;/code&gt; to get a reference to the function.&lt;/li&gt;
+&lt;li&gt;Call &lt;code&gt;alias()&lt;/code&gt; on that reference to alias it to the other class.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The gulf has narrowed to a stream you can hop over while hardly getting your feet wet.&lt;/p&gt;
+
+&lt;p&gt;The goal of perl5i is to bring modern conveniences back to Perl 5. In the 15 years since the release of Perl 5, we&amp;rsquo;ve learned a lot. Our views of good practices have changed. 15 years ago, aliasing a function was black magic available only to the wildest of gurus. Now it&amp;rsquo;s a technique many module authors take advantage of. Why should it remain complicated and error prone?&lt;/p&gt;
+
+&lt;p&gt;Autoboxing is a big part of perl5i, allowing it to add convenience methods without having to add new keywords. Adding new keywords&amp;ndash;which contracts the function names available to programmers&amp;ndash;is a big thing holding Perl 5 back! Every potential new keyword is a debate over compatibility. Autoboxing eliminates that debate. It takes off the brakes.&lt;/p&gt;
+
+&lt;p&gt;Some other examples: &lt;a href=&#34;https://perldoc.perl.org/perlfaq4.html#How-do-I-determine-whether-a-scalar-is-a-number/whole/integer/float?&#34;&gt;How do I check if a scalar contains a number, an integer, or a float?&lt;/a&gt; The Perl FAQ entry on the subject is two pages long offering five different possibilities, two of which require pasting code. Code in FAQs tends to rot, and perlfaq is no exception; without testing nobody noticed that those venerable regexes fail to catch &amp;ldquo;+1.23&amp;rdquo;. How does perl5i do it?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;say &amp;quot;It&#39;s a number&amp;quot;   if $thing-&amp;gt;is_number;
+say &amp;quot;It&#39;s an integer&amp;quot; if $thing-&amp;gt;is_integer;
+say &amp;quot;It&#39;s a decimal&amp;quot;  if $thing-&amp;gt;is_decimal;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s clear, simple, fast, and tested. TMTOWTDI is great and all, but FAQs are about getting things done, not about writing dissertations on the subject. perl5i picks one way that&amp;rsquo;s pretty good and makes it available with no fuss.&lt;/p&gt;
+
+&lt;p&gt;The bar for what is &amp;ldquo;simple&amp;rdquo; has moved since Perl 5 first came out. perl5i takes the goal of &amp;ldquo;simple things should be simple&amp;rdquo; and helps us all catch up.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Idioms, or How to Write Perlish Perl</title>
+      <link>http://localhost:1313/pub/2010/03/idioms-or-how-to-write-perlish-perl.html/</link>
+      <pubDate>Tue, 16 Mar 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/idioms-or-how-to-write-perlish-perl.html/</guid>
+      <description>
+
+&lt;p&gt;Any language—programming or natural—develops &lt;em&gt;idioms&lt;/em&gt;, or common patterns of expression. The earth revolves, but we speak of the sun rising or setting. We talk of clever hacks and nasty hacks and slinging code. We ping each other on IRC to discuss spaghetti code, and we factor and refactor away the artifacts of copy pasta.&lt;/p&gt;
+
+&lt;p&gt;As you learn Perl 5 in more detail, you will begin to see and understand common idioms. They&amp;rsquo;re not quite language features—you don&amp;rsquo;t &lt;em&gt;have&lt;/em&gt; to use them—and they&amp;rsquo;re not quite large enough that you can encapsulate them away behind functions and methods. They&amp;rsquo;re something more than habits. They&amp;rsquo;re mannerisms. They&amp;rsquo;re our shared jargon of code. They&amp;rsquo;re ways of writing Perl with a Perlish accent.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-object-as-self&#34;&gt;&lt;strong&gt;The Object as &lt;code&gt;$self&lt;/code&gt;&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://learnperl.scratchcomputing.com/tutorials/objects/&#34;&gt;Perl 5&amp;rsquo;s object system&lt;/a&gt; treats the invocant of a method as a mundane parameter. The invocant of a class method (a string containing the name of the class) is that method&amp;rsquo;s first parameter. The invocant of an object or instance method, the object itself, is that method&amp;rsquo;s first parameter. You are free to use or ignore it as you see fit.&lt;/p&gt;
+
+&lt;p&gt;Idiomatic Perl 5 uses &lt;code&gt;$class&lt;/code&gt; as the name of the class method and &lt;code&gt;$self&lt;/code&gt; for the name of the object invocant. This is a convention not enforced by the language itself, but it is a convention strong enough that useful extensions such as &lt;a href=&#34;https://metacpan.org/pod/MooseX::Method::Signatures&#34;&gt;MooseX::Method::Signatures&lt;/a&gt; assume you will use &lt;code&gt;$self&lt;/code&gt; as the name of the invocant by default.&lt;/p&gt;
+
+&lt;p&gt;This is true even if you use &lt;a href=&#34;http://moose.perl.org/&#34;&gt;Moose&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;named-parameters&#34;&gt;&lt;strong&gt;Named Parameters&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Without a module such as &lt;a href=&#34;https://metacpan.org/pod/signatures&#34;&gt;signatures&lt;/a&gt; or &lt;a href=&#34;https://metacpan.org/pod/MooseX::MultiMethods&#34;&gt;MooseX::Multimethods&lt;/a&gt;, Perl 5&amp;rsquo;s argument passing mechanism is simple: all arguments flatten into a single list accessible through &lt;code&gt;@_&lt;/code&gt; (function_parameters). While this simplicity is occasionally too simple—named parameters can be very useful at times—it does not preclude the use of idioms to provide named parameters.&lt;/p&gt;
+
+&lt;p&gt;The list context evaluation and assignment of &lt;code&gt;@_&lt;/code&gt; allows you to unpack named parameters pairwise. Even though this function call is equivalent to passing a comma-separated or &lt;code&gt;qw//&lt;/code&gt;-created list, arranging the arguments as if they were true pairs of keys and values makes the caller-side look like the function supports named parameters:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    make_ice_cream_sundae(
+        whipped_cream =&amp;gt; 1,
+        sprinkles     =&amp;gt; 1,
+        banana        =&amp;gt; 0,
+        ice_cream     =&amp;gt; &#39;mint chocolate chip&#39;,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The callee side can unpack these parameters into a hash and treate the hash as if it were a single argument:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub make_ice_cream_sundae
+    {
+        my %args = @_;
+
+        my $ice_cream = get_ice_cream( $args{ice_cream}) );
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://books.google.com/books?id=yMMRnPQ7CSMC&#34;&gt;Perl Best Practices&lt;/a&gt; suggests passing a hash reference instead. This has one benefit of performing hash construction checking on the caller side, where it&amp;rsquo;s most likely you&amp;rsquo;ll make mistakes and another benefit of minimizing copying and memory use. The former benefit is compelling, if somewhat less common in practice.&lt;/p&gt;
+
+&lt;p&gt;This technique works well with &lt;a href=&#34;https://perldoc.perl.org/functions/import.html&#34;&gt;import()&lt;/a&gt;; you can process as many parameters as you like before slurping the remainder into a hash:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub import
+    {
+        my ($class, %args)  = @_;
+        my $calling_package = caller();
+
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note how this idiom falls naturally out of list assignment; that makes this idiom Perlish.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-schwartzian-transform&#34;&gt;&lt;strong&gt;The Schwartzian Transform&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;People new to Perl sometimes overlook the importance of lists and list processing as a fundamental component of expression evaluation (footnote: People explaining its importance in this fashion do not help). Put more simply, the ability for Perl programmers to chain expressions which evaluate to variable-length lists gives them countless ways to manipulate data effectively.&lt;/p&gt;
+
+&lt;p&gt;The &lt;em&gt;Schwartzian transform&lt;/em&gt; is an elegant demonstration of that principle as an idiom handily borrowed from the Lisp family of languages. (&lt;a href=&#34;http://groups.google.com/group/comp.unix.shell/browse_frm/thread/31da%0A970cebb30c6d?hl=en&amp;amp;pli=1&#34;&gt;Randal Schwartz&amp;rsquo;s initial posting of the Schwartzian transform&lt;/a&gt; mentions &amp;ldquo;Speak[ing] with a lisp in Perl.&amp;ldquo;)&lt;/p&gt;
+
+&lt;p&gt;Suppose you have a Perl hash which associates the names of your co-workers with their phone extensions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use 5.010;
+
+    my %extensions =
+    (
+        1004 =&amp;gt; &#39;Jerryd&#39;,
+        1005 =&amp;gt; &#39;Rudy&#39;,
+        1006 =&amp;gt; &#39;Juwan&#39;,
+        1007 =&amp;gt; &#39;Brandon&#39;,
+        1010 =&amp;gt; &#39;Joel&#39;,
+        1012 =&amp;gt; &#39;LaMarcus&#39;,
+        1021 =&amp;gt; &#39;Marcus&#39;,
+        1024 =&amp;gt; &#39;Andre&#39;,
+        1023 =&amp;gt; &#39;Martell&#39;,
+        1052 =&amp;gt; &#39;Greg&#39;,
+        1088 =&amp;gt; &#39;Nic&#39;,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Suppose you want to print a list of extensions and co-workers sorted by their names, not their extensions. In other words, you need to sort a hash by its keys. Sorting the values of the hash in string order is easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @sorted_names = sort values %extensions;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; but that loses the association of names with extensions. The beauty of the Schwartzian transform is that it solves this problem almost trivially. All you have to do is transform the data before and after sorting it to preserve the necessary information. This is most obvious when explained in multiple steps. First, convert the hash into a list of data structures which contain the vital information in sortable fashion. In this case, converting the hash pairs into two-element anonymous arrays will help:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @pairs = map { [ $_, $extensions{$_} ] } keys %extensions;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reversing the hash &lt;em&gt;in place&lt;/em&gt; would work if no one had the same name. In this case, that is no problem, but defensive coding anticipates data changes.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;sort&lt;/code&gt; gets the list of anonymous arrays and can compare the second elements (the names) with a stringwise comparison:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @sorted_pairs = sort { $a-&amp;gt;[1] cmp $b-&amp;gt;[1] } @pairs;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Given &lt;code&gt;@sorted_pairs&lt;/code&gt;, a second &lt;code&gt;map&lt;/code&gt; operation can convert the data structure to a more usable form:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @formatted_exts = map { &amp;quot;$_-&amp;gt;[1], ext. $_-&amp;gt;[0]&amp;quot; } @sorted_pairs;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and now you can print the whole thing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    say for @formatted_exts;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, this uses several temporary variables (with admittedly bad names). It&amp;rsquo;s a worthwhile technique and good to understand, but the real magic is in the combination:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    say for
+        map  { &amp;quot; $_-&amp;gt;[1], ext. $_-&amp;gt;[0]&amp;quot;          }
+        sort {   $a-&amp;gt;[1] cmp   $b-&amp;gt;[1]           }
+        map  { [ $_      =&amp;gt;    $extensions{$_} ] }
+            keys %extensions;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Read the expression from right to left, in the order of evaluation. For each key in the extensions hash, make a two-item anonymous array containing the key and the value from the hash. Sort that list of anonymous arrays by their second elements, the values from the hash. Create a nicely formatted string of output from those sorted arrays.&lt;/p&gt;
+
+&lt;p&gt;The Schwartzian transform is this pipeline of &lt;code&gt;map&lt;/code&gt;-&lt;code&gt;sort&lt;/code&gt;-&lt;code&gt;map&lt;/code&gt; where you transform a data structure into another form easier for sorting and then transform it back into your preferred form for modification.&lt;/p&gt;
+
+&lt;p&gt;In this case the transformation is relatively simple. Consider the case where calculating the right value to sort is expensive in time or memory, such as calculating a cryptographic hash for a large file. In that case, the Schwartzian transform is also useful because you can perform those expensive operations once (in the rightmost &lt;code&gt;map&lt;/code&gt;), compare them repeatedly from a de-facto cache in the &lt;code&gt;sort&lt;/code&gt;, and then remove them in the leftmost &lt;code&gt;map&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The original example in the comp.lang.perl.misc shows an effective use of the transform, and a good programming technique in general. When the data you have isn&amp;rsquo;t in the optimal form for what you want to do with it, first transform it into that optimal form, then manipulate it.&lt;/p&gt;
+
+&lt;p&gt;Phrased that way, the technique is so obvious as to seem trivial&amp;hellip; but what is an idiom but a brilliant idea made vulgar by its ubiquity?&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>More Code, Less Cruft: Managing Distributions with Dist::Zilla</title>
+      <link>http://localhost:1313/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html/</link>
+      <pubDate>Tue, 09 Mar 2010 16:14:12 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html/</guid>
+      <description>
+
+&lt;p&gt;Every software distribution is a bunch of files written and maintained by programmers. The files are of three types: code, documentation, and crap—though this distinction is too subtle. Much of the documentation and code is crap, too. It&amp;rsquo;s pointless. It&amp;rsquo;s boring to write and to maintain, but convention dictates that it exist.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s killer feature is the CPAN, and &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla&#34;&gt;Dist::Zilla&lt;/a&gt; is a tool for packaging code to release to the CPAN. The central notion of Dzil is that no programmer should ever have to waste his or her precious time on boring things like &lt;em&gt;README&lt;/em&gt; files, prerequisite accounting, duplicated license statements, or anything else other than solving real problems.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s worth noting, too, that the &amp;ldquo;CPAN distribution&amp;rdquo; format is useful even if your code never escapes to the CPAN. Libraries packaged &lt;em&gt;in any way&lt;/em&gt; are much easier to manage than their unpackaged counterpart, and any libraries package the CPAN way can interact with all the standard CPAN tools. As long are you&amp;rsquo;re going to package up your code, you might as well use the same tools as everyone else in the game.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-step-by-step-conversion&#34;&gt;&lt;strong&gt;A Step-by-Step Conversion&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Switching your old code to use Dist::Zilla is easy. You can be conservative and work in small steps, or you can go whole hog. This article demonstrates the process with one of my distributions, &lt;a href=&#34;https://metacpan.org/pod/Number::Nary&#34;&gt;Number::Nary&lt;/a&gt;. To follow along, clone its git repository and start with the commit tagged &lt;code&gt;pre-dzil&lt;/code&gt;. If you don&amp;rsquo;t want to use &lt;code&gt;git&lt;/code&gt;, that&amp;rsquo;s fine. You&amp;rsquo;ll still be able to see what&amp;rsquo;s going on.&lt;/p&gt;
+
+&lt;h4 id=&#34;replacing-makefile-pl&#34;&gt;&lt;strong&gt;Replacing Makefile.PL&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;The first thing to do is to replace &lt;em&gt;Makefile.PL&lt;/em&gt;, the traditional program for building and installing distributions (or &lt;em&gt;dists&lt;/em&gt;). If you started with a &lt;a href=&#34;https://metacpan.org/pod/Module::Build&#34;&gt;Module::Build&lt;/a&gt;-based distribution, you&amp;rsquo;d replace &lt;em&gt;Build.PL&lt;/em&gt;, instead. Dist::Zilla will build those files for you in the dist you ship so that installing users have them, but you&amp;rsquo;ll never need to think about them again.&lt;/p&gt;
+
+&lt;p&gt;I packaged &lt;code&gt;Number::Nary&lt;/code&gt; with &lt;a href=&#34;https://metacpan.org/pod/Module::Install&#34;&gt;Module::Install&lt;/a&gt;, the library that inspired me to build &lt;code&gt;Dist::Zilla&lt;/code&gt;. Its &lt;em&gt;Makefile.PL&lt;/em&gt; looked like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use inc::Module::Install;
+  all_from(&#39;lib/Number/Nary.pm&#39;);
+  requires(&#39;Carp&#39;            =&amp;gt; 0);
+  requires(&#39;Test::More&#39;      =&amp;gt; 0);
+  requires(&#39;List::MoreUtils&#39; =&amp;gt; 0.09);
+  requires(&#39;Sub::Exporter&#39;   =&amp;gt; 0.90);
+  requires(&#39;UDCode&#39;          =&amp;gt; 0);
+  auto_manifest;
+  extra_tests;
+  WriteAll;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If I&amp;rsquo;d used &lt;code&gt;ExtUtils::MakeMaker&lt;/code&gt;, it might&amp;rsquo;ve looked something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use ExtUtils::MakeMaker;
+
+  WriteMakefile(
+    NAME      =&amp;gt; &#39;Number::Nary&#39;,
+    DISTNAME  =&amp;gt; &#39;Number-Nary&#39;,
+    AUTHOR    =&amp;gt; &#39;Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;&#39;,
+    ABSTRACT  =&amp;gt; &#39;encode and decode numbers as n-ary strings&#39;,
+    VERSION   =&amp;gt; &#39;0.108&#39;,
+    LICENSE   =&amp;gt; &#39;perl&#39;,
+    PREREQ_PM =&amp;gt; {
+      &#39;Carp&#39;                =&amp;gt; 0
+      &#39;List::MoreUtils&#39;     =&amp;gt; &#39;0.09&#39;,
+      &#39;Sub::Exporter&#39;       =&amp;gt; 0,
+      &#39;Test::More&#39;          =&amp;gt; 0,
+      &#39;UDCode&#39;              =&amp;gt; 0,
+    }
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Delete that file and replace it with the file &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  name    = Number-Nary
+  version = 0.108
+  author  = Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;
+  license = Perl_5
+  copyright_holder = Ricardo Signes
+
+  [AllFiles]
+  [MetaYAML]
+  [MakeMaker]
+  [Manifest]
+
+  [Prereq]
+  Carp            = 0
+  Test::More      = 0
+  List::MoreUtils = 0.09
+  Sub::Exporter   = 0.90
+  UDCode          = 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yes, this file contains &lt;em&gt;more&lt;/em&gt; lines than the original version, but don&amp;rsquo;t worry—that won&amp;rsquo;t last long.&lt;/p&gt;
+
+&lt;p&gt;Most of this should be self-explanatory, but the cluster of square-bracketed names isn&amp;rsquo;t. Each line enables a Dzil plugin, and every plugin helps with part of the well-defined process of building your dist. The plugins I&amp;rsquo;ve used here enable the absolute minimum behavior needed to replace &lt;em&gt;Makefile.PL&lt;/em&gt;: they pull in all the files in your checkout. When you build the dist, they add the extra files you need to ship.&lt;/p&gt;
+
+&lt;p&gt;At this point, you can build a releasable tarball by running &lt;code&gt;dzil build&lt;/code&gt; (instead of &lt;code&gt;perl Makefile.PL &amp;amp;&amp;amp; make dist&lt;/code&gt;). There are more savings on the way, too.&lt;/p&gt;
+
+&lt;h4 id=&#34;eliminating-pointless-packaging-files&#34;&gt;&lt;strong&gt;Eliminating Pointless Packaging Files&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;The &lt;em&gt;MANIFEST.SKIP&lt;/em&gt; file tells other packaging tools which files to exclude when building a distribution. You can keep using it (with the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::ManifestSkip&#34;&gt;ManifestSkip&lt;/a&gt; plugin), but you can almost always just drop the file and use the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PruneCruft&#34;&gt;PruneCruft&lt;/a&gt; plugin instead. It prunes all the files people usually put in their skip file.&lt;/p&gt;
+
+&lt;p&gt;The CPAN community has a tradition of shipping lots of good documentation written in Pod. Even so, several tools expect you also to provide a plain &lt;em&gt;README&lt;/em&gt; file. The &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::Readme&#34;&gt;Readme&lt;/a&gt; plugin will generate one for you.&lt;/p&gt;
+
+&lt;p&gt;Downstream distributors (like Linux distributions) like to see really clear license statements, especially in the form of a &lt;em&gt;LICENSE&lt;/em&gt; file. Because your &lt;em&gt;dist.ini&lt;/em&gt; knows the details of your license, the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::License&#34;&gt;License&lt;/a&gt; plugin can generate this file for you.&lt;/p&gt;
+
+&lt;p&gt;All three of these plugins are part of the &lt;code&gt;Dist::Zilla&lt;/code&gt; distribution. Thus you can delete three whole files—&lt;em&gt;MANIFEST.SKIP&lt;/em&gt;, &lt;em&gt;LICENSE&lt;/em&gt;, and *README*—at the cost of a couple of extra lines in &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [PruneCruft]
+  [License]
+  [Readme]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s not bad, especially when you remember that now when you edit your dist version, license, or abstract, these generated files will &lt;em&gt;always&lt;/em&gt; contain the new data.&lt;/p&gt;
+
+&lt;h4 id=&#34;stock-tests&#34;&gt;&lt;strong&gt;Stock Tests&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;People expect CPAN authors to run several tests before releasing a distribution to the public. &lt;code&gt;Number::Nary&lt;/code&gt; had three of them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  xt/release/perl-critic.t
+  xt/release/pod-coverage.t
+  xt/release/pod-syntax.t
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Storing them under the &lt;em&gt;./xt/release&lt;/em&gt; directory indicates that only people interested in testing a new release should run them.)&lt;/p&gt;
+
+&lt;p&gt;These files are pretty simple, but the last thing you want is to find out that you&amp;rsquo;ve copied and pasted a slightly buggy version of the file around. Instead, you can generate these files as needed. If there&amp;rsquo;s a bug, fix the plugin once and everything gets the fix on the next rebuild. Once again, you can delete those three files in favor of three plugins:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [ExtraTests]
+  [CriticTests]
+  [PodTests]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;CriticTests&lt;/code&gt; and &lt;code&gt;PodTests&lt;/code&gt; add test files to your &lt;em&gt;./xt&lt;/em&gt; directory. &lt;code&gt;ExtraTests&lt;/code&gt; rewrites them to live in &lt;em&gt;./t&lt;/em&gt;, but only under the correct circumstances, such as during release testing.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve customized your Pod coverage tests to consider certain methods trusted despite having no docs, you can move that configuration into your Pod itself. Add a line like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  =for Pod::Coverage some_method some_other_method this_is_covered_too
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::CriticTests&#34;&gt;CriticTests&lt;/a&gt; plugin, by the way, does not come with &lt;code&gt;Dist::Zilla&lt;/code&gt;. It&amp;rsquo;s a third party plugin, written by Jerome Quelin. There are a bunch of those on the CPAN, and they&amp;rsquo;re easy to install. &lt;code&gt;[CriticTests]&lt;/code&gt; tells &lt;code&gt;Dist::Zilla&lt;/code&gt; to load Dist::Zilla::Plugin::CriticTests. Install it with &lt;em&gt;cpan&lt;/em&gt; or your package manager and you&amp;rsquo;re ready to use the plugin.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-classic-bundle-and-cutting-releases&#34;&gt;&lt;strong&gt;The @Classic Bundle and Cutting Releases&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Because most of the time you want to use the same config everywhere, &lt;code&gt;Dist::Zilla&lt;/code&gt; makes it easy to reuse configuration. The current &lt;em&gt;dist.ini&lt;/em&gt; file is very close to the &amp;ldquo;Classic&amp;rdquo; old-school plugin bundle shipped with &lt;code&gt;Dist::Zilla&lt;/code&gt;. You ca replace all the plugin configuration (except for Prereq) with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [CriticTests]
+  [@Classic]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;which makes for a nice, small config file.&lt;/p&gt;
+
+&lt;p&gt;Classic enables a few other plugins, most of which aren&amp;rsquo;t worth mentioning right now. A notable exception is &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::UploadToCPAN&#34;&gt;UploadToCPAN&lt;/a&gt;. It enables the command &lt;code&gt;dzil release&lt;/code&gt;, which will build a tarball and upload it to the CPAN, assuming you have a &lt;em&gt;~/.dzil/config.ini&lt;/em&gt; which resembles:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [!release]
+  user     = rjbs
+  password = PeasAreDelicious
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;letting-dist-zilla-alter-your-modules&#34;&gt;&lt;strong&gt;Letting Dist::Zilla Alter Your Modules&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;So far, this &lt;code&gt;Dist::Zilla&lt;/code&gt; configuration builds extra files like tests and packaging files. You can get a lot more out of &lt;code&gt;Dist::Zilla&lt;/code&gt; if you also let it mess around with your library files.&lt;/p&gt;
+
+&lt;p&gt;Add the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PkgVersion&#34;&gt;PkgVersion&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PodVersion&#34;&gt;PodVersion&lt;/a&gt; plugins to let &lt;code&gt;Dist::Zilla&lt;/code&gt; take care of setting the version in every library file. They find &lt;em&gt;.pm&lt;/em&gt; files and add a &lt;code&gt;our $VERSION = ...&lt;/code&gt; declaration and a &lt;code&gt;=head1 VERSION&lt;/code&gt; section to the Pod—which means you can delete all those lines from the code and not worry about keeping them up to date anymore.&lt;/p&gt;
+
+&lt;h4 id=&#34;prereq-detection&#34;&gt;&lt;strong&gt;Prereq Detection&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now the &lt;em&gt;dist.ini&lt;/em&gt; looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  name    = Number-Nary
+  version = 0.108
+  author  = Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;
+  license = Perl_5
+  copyright_holder = Ricardo Signes
+
+  [CriticTests]
+  [PodVersion]
+  [PkgVersion]
+  [@Classic]
+
+  [Prereq]
+  Carp            = 0
+  Test::More      = 0
+  List::MoreUtils = 0.09
+  Sub::Exporter   = 0.90
+  UDCode          = 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Way too much of this file handles prerequisites. &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::AutoPrereq&#34;&gt;AutoPrereq&lt;/a&gt; fixes all of that by analyzing the code to determine all of the necessary dependencies and their versions. Install this third-party plugin (also by Jerome Quelin!) and replace &lt;code&gt;Prereq&lt;/code&gt; with &lt;code&gt;AutoPrereq&lt;/code&gt;. This plugin requires the use of the &lt;code&gt;use MODULE VERSION&lt;/code&gt; form for modules which require specific versions. This is actually a &lt;em&gt;very good&lt;/em&gt; thing, because it means that your code will no longer even &lt;em&gt;compile&lt;/em&gt; if Perl cannot meet those prerequisites. It also keeps code and installation data in sync. (Make sure that you&amp;rsquo;re requiring the right version in your code. Many dists require one version in the code and one in the prereq listing. Now that you have only one place to list the required version, make sure you get it right.)&lt;/p&gt;
+
+&lt;p&gt;You don&amp;rsquo;t have to modify &lt;em&gt;all&lt;/em&gt; &lt;code&gt;use&lt;/code&gt; statements to that form. In this example, it&amp;rsquo;s only necessary for &lt;code&gt;List::MoreUtils&lt;/code&gt; and &lt;code&gt;Sub::Exporter&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;pod-rewriting&#34;&gt;&lt;strong&gt;Pod Rewriting&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now it&amp;rsquo;s time to bring out some heavy guns. &lt;a href=&#34;https://metacpan.org/pod/Pod::Weaver&#34;&gt;Pod::Weaver&lt;/a&gt; is a system for rewriting documentation. It can add sections, rejigger existing sections, or even translate non-Pod syntax into Pod as needed. Its basic built-in configuration can take the place of PodVersion, which allows you to delete gobs of boring boilerplate Pod. For example, you can get rid of all the NAME sections. All you need to do is provide an abstract in a comment. If your library says:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Number::Nary;
+  # ABSTRACT: encode and decode numbers as n-ary strings
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; then you&amp;rsquo;ll get a &lt;code&gt;NAME&lt;/code&gt; section containing that abstract. You can document methods and attributes and functions with &lt;code&gt;=method&lt;/code&gt; and &lt;code&gt;=attr&lt;/code&gt; and &lt;code&gt;=func&lt;/code&gt; respectively. &lt;code&gt;Pod::Weaver&lt;/code&gt; will gather them up, put them under a top-level heading, and make them into real Pod.&lt;/p&gt;
+
+&lt;p&gt;You can delete your &amp;ldquo;License and Copyright&amp;rdquo; sections. &lt;code&gt;Pod::Weaver&lt;/code&gt; will generate those just like &lt;code&gt;Dist::Zilla&lt;/code&gt; generates a &lt;em&gt;LICENSE&lt;/em&gt; file. It&amp;rsquo;ll generate an &lt;code&gt;AUTHOR&lt;/code&gt; section, so you can drop that too.&lt;/p&gt;
+
+&lt;h4 id=&#34;release-automation&#34;&gt;&lt;strong&gt;Release Automation&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now you&amp;rsquo;re in the home stretch, ready to understand the &amp;ldquo;maximum overkill&amp;rdquo; approach to using Dist::Zilla. First, get rid of the version setting in the &lt;em&gt;dist.ini&lt;/em&gt; and load the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::AutoVersion&#34;&gt;AutoVersion&lt;/a&gt; plugin. It will set a new version per day, or use any other sort of scheme you configure. Then add &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::NextRelease&#34;&gt;NextRelease&lt;/a&gt;, which will update the changelog with every new release. In other words, the changelog file now starts with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  {{$NEXT}}
+            updated distribution to use Dist::Zilla
+            expect lots more releases now that it&#39;s so easy!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you next run &lt;code&gt;dzil release&lt;/code&gt;, the distribution will pick a new version number and build a dist using it. It will replace &lt;code&gt;{{$NEXT}}&lt;/code&gt; with that version number (and the date and time of the build). After it has uploaded the release, it will update the changelog on disk to replace the marker with the release that was made and re-add it above, making room for notes on the next release.&lt;/p&gt;
+
+&lt;h4 id=&#34;version-control&#34;&gt;&lt;strong&gt;Version Control&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Finally, you can tie the whole thing into your version control system. I use Git. (That&amp;rsquo;s convenient, because it&amp;rsquo;s the only VCS with a &lt;code&gt;Dist::Zilla&lt;/code&gt; plugin so far.) Add a single line to &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [@Git]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Git plugin bundle will refuse to cut a release if there are uncommitted changes in the working tree. Once the tree is clean for a release, Dzil will commit the changes to the changelog, tag the release, and push the changes and the new tag to the remote origin.&lt;/p&gt;
+
+&lt;p&gt;Like the CriticTests, the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::PluginBundle::Git&#34;&gt;Dzil Git plugins&lt;/a&gt; aren&amp;rsquo;t bundled with Dist::Zilla (thank Jerome Quelin one more time). The at sign in the plugin name indicates that it&amp;rsquo;s a &lt;em&gt;bundle&lt;/em&gt; of Dzil plugins, but you can load or install the whole thing at once. To install it, install &lt;code&gt;Dist::Zilla::PluginBundle::Git&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;total-savings&#34;&gt;&lt;strong&gt;Total Savings?&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Switching this little dist to Dist::Zilla entirely eliminated seven files from the repository. It cleaned out a lot of garbage Pod that was a drag to maintain. It improved the chances that every dist will have consistent data throughout, and it made cutting a new release as easy as running &lt;code&gt;dzil release&lt;/code&gt;. That release command will do absolutely everything needed to make a pristine, installable CPAN distribution, apart from the actual programming.&lt;/p&gt;
+
+&lt;p&gt;All told, it takes under half an hour to upgrade a dist to Dist::Zilla, depending on the number of files from which you have to delete cruft. Once you&amp;rsquo;ve converted a few, explore some Dzil plugins. When you see how easy it is to write one, you&amp;rsquo;ll probably want make a few of your own. Pretty soon you may find your &lt;em&gt;dist.ini&lt;/em&gt; files contain exactly as much configuration as mine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [@RJBS]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s the best kind of lazy.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Charting Data at the Bottom of the World</title>
+      <link>http://localhost:1313/pub/2006/05/04/charting-data.html/</link>
+      <pubDate>Thu, 04 May 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/05/04/charting-data.html/</guid>
+      <description>
+
+&lt;p&gt;I have an odd job: I&amp;rsquo;m the only programmer for about 500 miles. I look after experiments on &lt;a href=&#34;http://www.bas.ac.uk/Living_and_Working/Stations/Halley/index.php&#34;&gt;a remote Antarctic research station&lt;/a&gt; and look after the data they produce. As well as the scientific stuff knocking about, we have between 20 and 70 people, most of them keen on the weather. Either because we can&amp;rsquo;t work if its windy, or can enjoy a spot of kite skiing if it&amp;rsquo;s just windy enough, everyone here wants to know what&amp;rsquo;s going on outside.&lt;/p&gt;
+
+&lt;p&gt;Luckily we have a few climate science experiments running, including a weather station. For a few years now, data from the weather station has been available on people&amp;rsquo;s computers through a Perl Tk application and some slightly baroque shuttling of records between three different data servers and the network the office computers run on. All is well and good, and we leave it well alone, as it&amp;rsquo;s worked well. Recently, a new experiment installed on the station provides an up-to-the-minute profile of wind speeds over the first 30 meters of the air. It&amp;rsquo;s there to support research into interactions between snow and air in Antarctica, but it&amp;rsquo;s also crucial information if you want to head out and whiz about behind a kite.&lt;/p&gt;
+
+&lt;p&gt;The data from this mast goes to a remote machine that allows users to VNC in to check its health, and logs this data to a binary format of its own making. People around the station have taken to logging in to this machine before heading out, which is probably not the best way keep the data rolling in without interruption. Rather than forbidding access to this useful source of local data, we decided to upgrade our weather display system to include the major parameters recorded by the mast.&lt;/p&gt;
+
+&lt;p&gt;Alas, while fairly nice to use, Tk is a bit fiddly and not exactly my cup of tea. Adding new displays to an existing application can be time-consuming, as you must re-learn the relations among each different widget, pane, and button. Added to this programming burden, even if we could find every copy of the application scattered around our network, we&amp;rsquo;d have to do so every time we added some other source of data. We settled instead on a complete rewrite as a CGI script and some automatically generated graphs. A fancier man than me might call that a three-tier application, but then, he&amp;rsquo;d probably be selling you something at the same time.&lt;/p&gt;
+
+&lt;h3 id=&#34;mountains-of-data&#34;&gt;Mountains of Data&lt;/h3&gt;
+
+&lt;p&gt;Before you can see what the weather is doing (beyond looking out of the window), you need to get at the raw numbers somehow. Ours are provided by state-of-the-art scientific instruments in state-of-the-art data formats; that is to say, partly as lines of ASCII data in columns, and partly as fixed-length records in a binary file. No matter, though. Perl and some friends from CPAN make fast work of building meaning from tumbled piles of data.&lt;/p&gt;
+
+&lt;p&gt;Before doing anything, I set up a couple of objects to hold some data values. Each set of observations has a class corresponding to the experiment that generated it. The classes also contain &lt;code&gt;read_file&lt;/code&gt; factory methods that read a file and produce a list of observations. To make things as quick (to write) as possible, I used &lt;a href=&#34;https://metacpan.org/pod/Class::Accessor&#34;&gt;&lt;code&gt;Class::Accessor&lt;/code&gt;&lt;/a&gt; to autogenerate &lt;code&gt;get&lt;/code&gt; and &lt;code&gt;set&lt;/code&gt; methods for my objects:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; # Current weather data
+ package Z::Weather;
+ use base qw(Class::Accessor);
+ Z::Weather-&amp;gt;mk_accessors( qw(time temp pressure wind dir) );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This automatically creates a &lt;code&gt;new()&lt;/code&gt; method for &lt;code&gt;Z::Weather&lt;/code&gt;. Call it as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $weather = Z::Weather-&amp;gt;new({time =&amp;gt; $time,
+                                temp =&amp;gt; $temp,
+                                pressure =&amp;gt; $pres,
+                                wind =&amp;gt; $wind,
+                                dir
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It also generates &lt;code&gt;get&lt;/code&gt; and &lt;code&gt;set&lt;/code&gt; accessors for each field:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; # set
+ $weather-&amp;gt;temp(30);
+
+ # get
+ my $temp = $weather-&amp;gt;temp();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(The &amp;ldquo;codename&amp;rdquo; used when shipping items to our station is &lt;code&gt;Z&lt;/code&gt;, so I&amp;rsquo;ve used that as my little local namespace, too.)&lt;/p&gt;
+
+&lt;p&gt;From our mast, we have a number of observations taken at different heights, so I wanted a slightly more complicated representation, using a class to represent the mast and another to represent each level on the mast.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; package Z::Mast;
+ use base qw(Class::Accessor);
+
+ Z::Mast-&amp;gt;mk_accessors(qw(time values));
+
+ package Z::Mast::Level;
+ use base qw(Class::Accessor);
+ Z::Mast::Level-&amp;gt;mk_accessors(qw(wind dir level));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember that &lt;code&gt;Z::Mast::values&lt;/code&gt; will set and get a reference to an array of &lt;code&gt;::Level&lt;/code&gt; objects. If I wanted to enforce that, I could override the methods provided by &lt;code&gt;Class::Accessor&lt;/code&gt;, but that would create work that I can get away without doing for this simple case.&lt;/p&gt;
+
+&lt;p&gt;Now that I know what the data will look like in Perl, I can wrench it from the covetous hands of our data loggers and turn it into something I can use.&lt;/p&gt;
+
+&lt;p&gt;First, I decided to deal with the plain ASCII file. This contains single lines, with the time of observation first, then white-space-separated values for temperature, pressure, wind speed, direction, and a few others that I don&amp;rsquo;t care about. &lt;code&gt;Z::Weather&lt;/code&gt; needs to use a couple of modules and add a couple of methods:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use IO::All;
+
+ sub from_file {
+     my $class = shift;
+     my $io    = io(shift);
+     my @recs  = ();
+
+     while (my $line = $io-&amp;gt;readline()) {
+         chomp($line);
+         push @recs, $class-&amp;gt;_line($line);
+     }
+     return @recs;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I expect to call this as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my @weather_records = Z::Weather-&amp;gt;fromfile(&amp;quot;weather.data&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using the &lt;a href=&#34;https://metacpan.org/pod/IO::All&#34;&gt;&lt;code&gt;IO::All&lt;/code&gt;&lt;/a&gt; module to access the files both makes it very easy to read the file and also allows &lt;em&gt;calling&lt;/em&gt; code to instead supply an &lt;code&gt;IO::All&lt;/code&gt; object of its own, or to call this method with a filehandle already opened to the data source. This will make it easy to obtain data from some other source; for instance, if the experiment changes to provide a socket from which to read the current values.&lt;/p&gt;
+
+&lt;p&gt;Parsing the data is the responsibility of another method, &lt;code&gt;_line()&lt;/code&gt;, which expects lines like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 2006 02 06 01 25  -10.4  983.2  23.5 260.1
+
+ use DateTime;
+ sub _line {
+     my ($class, $line) = @_;
+     my @vals = split /\s+/, $line;
+
+     # extract time fields and turn into DateTime object
+     my($y, $m, $d, $h, $min)
+        = $line =~ /^(\d{4}) (\d\d) (\d\d) (\d\d) (\d\d)/;
+
+     my $t = DateTime-&amp;gt;new(year=&amp;gt;$y,month=&amp;gt;$m,day=&amp;gt;$d,hour=&amp;gt;$h,minute=&amp;gt;$min);
+
+     # return a new Z::Weather record, using the magic new() method
+     return $class-&amp;gt;new({time =&amp;gt; $t,
+                         temp     =&amp;gt; $vals[5],
+                         pressure =&amp;gt; $vals[6],
+                         wind     =&amp;gt; $vals[7],
+                         dir      =&amp;gt; $vals[8],  });
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;split&lt;/code&gt; and Perl&amp;rsquo;s magic make sense of the data points, and the &lt;a href=&#34;https://metacpan.org/pod/DateTime&#34;&gt;&lt;code&gt;DateTime&lt;/code&gt;&lt;/a&gt; module take cares of the details of when the record was produced. I find it much easier to turn any time-related value into a &lt;code&gt;DateTime&lt;/code&gt; object at the soonest possible moment, so that the rest of my code can expect &lt;code&gt;DateTime&lt;/code&gt; objects. It becomes easier to reuse in other projects. If you find yourself writing code to handle leap years every other day, then make using &lt;code&gt;DateTime&lt;/code&gt; your number one new habit.&lt;/p&gt;
+
+&lt;p&gt;I deal with the mast data in a similar way, except that the other format is fixed-length binary records. The time of the recording is stored in the first four bytes as the number of seconds into an arbitrary epoch. I correct this into Unix time when creating its &lt;code&gt;DateTime&lt;/code&gt; object. Values are stored as two-byte, network-endian unsigned shorts stored as hundredths of the recorded values. &lt;code&gt;unpack()&lt;/code&gt; comes to my aid here.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub from_file {
+   my $class = shift;
+   my $io    = io(shift);
+   my ($rec, @recs);
+
+   while ($io-&amp;gt;read($rec, 62) == 62) {
+     push @recs, $class-&amp;gt;_record($rec);
+   }
+   return @recs;
+ }
+
+ # map height of reading to offsets in binary record
+ our %heights = qw(1 24  2 28 4 32  8 36  15 40  30 44);
+ use constant MAST_EPOCH =&amp;gt; 2082844800;
+
+ sub _record {
+   my ($class, $rec) = @_;
+
+   # extract the time as a 4 byte network order integer, and correct epoch
+   my $crazy_time = unpack(&amp;quot;N&amp;quot;, $rec);
+   my $time       = DateTime-&amp;gt;from_epoch(epoch=&amp;gt;$crazy_time-MAST_EPOCH);
+
+   # then a series of (speed, dir) 2 byte pairs further into the record
+   my @vals;
+   foreach my $offset (sort values %heights) {
+     my ($speed, $dir) = unpack(&amp;quot;nn&amp;quot;, substr($rec, $offset));
+     push @vals,
+       Z::Mast::Level-&amp;gt;new({wind=&amp;gt;$speed*100,
+                            dir =&amp;gt; $dir*100,
+                            level=&amp;gt;$heights{$offset}});
+   }
+   return $class-&amp;gt;new({time =&amp;gt; $time,
+                       values =&amp;gt; \@vals});
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Again, I can call this using any one of the types supported by &lt;code&gt;IO::All&lt;/code&gt;. Again, I wield &lt;code&gt;DateTime&lt;/code&gt; to my advantage to turn a time stored in an unusual epoch quickly into an object which anything or anyone else can understand. There are a few magic numbers here, but that&amp;rsquo;s what you end up with when you deal with other people&amp;rsquo;s crazy file formats. The key thing is to record magic numbers in one place, to allow other people to change them if they need to, both in your code and from their own code (hence the &lt;code&gt;our&lt;/code&gt; variable), and finally, to let values pass from undocumented darkness into visible, named objects as soon as possible.&lt;/p&gt;
+
+&lt;h3 id=&#34;displaying-data&#34;&gt;Displaying Data&lt;/h3&gt;
+
+&lt;p&gt;I now have hold of the weather data and have forced it into a form that I can follow. Now I get to show it to someone else. I did this in two different ways: as raw data through a web page and as a pre-generated chart embedded in the page.&lt;/p&gt;
+
+&lt;p&gt;In each case, the code has to read in files to obtain the necessary data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my @weather_records = Z::Weather-&amp;gt;from_file(&#39;weather.data.dat&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then it needs to produce the web page:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Template;
+ my $template = Template-&amp;gt;new();
+
+ print &amp;quot;Content-type: text/html\n\n&amp;quot;;
+
+ $template-&amp;gt;process(\*DATA, {
+                       now =&amp;gt; $weather_records[-1],
+                       records =&amp;gt; \@weather_records,
+                             })
+    || die &amp;quot;Could not process template: &amp;quot;.$template-&amp;gt;error().&amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This isn&amp;rsquo;t really all that interesting. In fact, it looks almost like this does nothing at all. I&amp;rsquo;ve pulled in the &lt;code&gt;Template&lt;/code&gt; module, told it to build and output a template defined after the &lt;code&gt;__END__&lt;/code&gt; of the script, and given it two template variables to play with. The template looks something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; __END__
+ &amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;Weather&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+ &amp;lt;body&amp;gt;
+ &amp;lt;h2&amp;gt;Latest weather data at [% now.time %]&amp;lt;a name=&amp;quot;/h2&amp;quot;&amp;gt;
+
+ &amp;lt;P&amp;gt;T: [% now.temp %] &amp;amp;deg;C
+    P: [% now.pressure %] kPa
+    W: [% now.wind %] kts
+    D: [% now.dir %] &amp;amp;deg;&amp;lt;/p&amp;gt;
+
+ &amp;lt;P&amp;gt;&amp;lt;img src=&amp;quot;/weather_chart.png&amp;quot;&amp;gt;&amp;lt;br&amp;gt;
+    &amp;lt;img src=&amp;quot;/mast_chart.png&amp;quot;&amp;lt;/p&amp;gt;
+
+ &amp;lt;table&amp;gt;
+ &amp;lt;tr&amp;gt;&amp;lt;th&amp;gt; Time &amp;lt;/th&amp;gt;&amp;lt;th&amp;gt; Temp &amp;lt;/th&amp;gt;&amp;lt;th&amp;gt; Wind &amp;lt;/th&amp;gt;&amp;lt;/tr&amp;gt;
+ [% FOREACH rec IN records %]
+ &amp;lt;tr&amp;gt;
+  &amp;lt;td&amp;gt;[% rec.time %]&amp;lt;/td&amp;gt;
+  &amp;lt;td&amp;gt;[% rec.temp %]&amp;lt;/td&amp;gt;
+  &amp;lt;td&amp;gt;[% rec.wind %]&amp;lt;/td&amp;gt;
+ &amp;lt;/tr&amp;gt;
+ [% END %]
+ &amp;lt;/table&amp;gt;
+ &amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The template uses the syntax of the &lt;a href=&#34;http://www.template-toolkit.org/&#34;&gt;&lt;code&gt;Template-Toolkit&lt;/code&gt;&lt;/a&gt;, a general-purpose templating framework. It&amp;rsquo;s useful because it allows the separation of display and formatting of data from the code that generates it. There&amp;rsquo;s no Perl code in the template, and no HTML will appear in any of my Perl code. While the output generated now is ugly and basic, it will be easy to make it flashy later, once I have the program working, without having to change anything in the program itself to do so. As I&amp;rsquo;ve prepared our data carefully as objects with sensible methods, I can just hand a bunch of these over to the template and let it suck out whatever it wants to show.&lt;/p&gt;
+
+&lt;h3 id=&#34;pretty-pictures&#34;&gt;Pretty Pictures&lt;/h3&gt;
+
+&lt;p&gt;Producing the charts is, again, a simple business (by now, the theme of this article should be emerging). Gone are the days when you&amp;rsquo;d have to scratch your head figuring out how to draw lines and plot points; gone even are the days when you have to bang your head hard against the confused API of some long-forgotten module. Taking the mast values as an example, I first need to read in the data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my @mast_values = Z::Mast-&amp;gt;from_file(&#39;mast.data.dat&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because old weather is old news, I throw away any values older than three hours, using &lt;code&gt;DateTime&lt;/code&gt; and &lt;a href=&#34;https://metacpan.org/pod/DateTime::Duration&#34;&gt;&lt;code&gt;DateTime::Duration&lt;/code&gt;&lt;/a&gt; methods in a &lt;code&gt;grep&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use DateTime;
+ use DateTime::Duration;
+
+ my $now = DateTime-&amp;gt;now();
+ my $age = DateTime::Duration-&amp;gt;new(hours =&amp;gt; 3);
+
+ @mast_values = grep { $_-&amp;gt;time + $age &amp;gt; $now } @mast_values;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is so, so much easier than fiddling around with epochs and &lt;code&gt;3*3600&lt;/code&gt; all over the place. If you find yourself writing 3600 anywhere in your code, you should be using &lt;code&gt;DateTime::Duration&lt;/code&gt; instead. Next, I feed the data points into the &lt;a href=&#34;https://metacpan.org/pod/Chart::Lines&#34;&gt;&lt;code&gt;Chart::Lines&lt;/code&gt;&lt;/a&gt; module, a part of the &lt;a href=&#34;https://metacpan.org/pod/Chart&#34;&gt;&lt;code&gt;Chart&lt;/code&gt;&lt;/a&gt; distribution. I use this in three phases. First, I create a new &lt;code&gt;Chart&lt;/code&gt; and specify how large the resulting graphic should be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Chart::Lines;
+ my $chart = Chart::Lines-&amp;gt;new($x_size, $y_size);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then I set up a few options to tweak how the chart will display:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $chart-&amp;gt;set(
+    legend          =&amp;gt; &#39;none&#39;,
+    xy_plot         =&amp;gt; &#39;true&#39;,
+    grey_background =&amp;gt; 0,
+    y_label         =&amp;gt; &#39;Wind kts&#39;,
+    x_label         =&amp;gt; &#39;Hours ago&#39;,
+    colors          =&amp;gt; {
+      y_label    =&amp;gt; [0xff, 0xee, 0xee],
+      text       =&amp;gt; [0xff,0xee,0xff],
+      dataset0   =&amp;gt; [0xff,0,0],
+      dataset1   =&amp;gt; [0,0xff,0xff],
+      dataset2   =&amp;gt; [0,0,0xff],
+      background =&amp;gt; [0x55, 0x00, 0x55],
+                },
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These are mostly self-explanatory; the &lt;code&gt;Chart&lt;/code&gt; documentation covers them in detail. I set &lt;code&gt;xy_plot&lt;/code&gt; to &lt;code&gt;true&lt;/code&gt; so that the module will use the first dataset as the &lt;code&gt;x&lt;/code&gt; values and all of the other datasets as the &lt;code&gt;y&lt;/code&gt; values for a line. I set a bunch of rather bright colors, to keep my avid customers cheerful, and set the text used to label the chart.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my @labels = map {($now-&amp;gt;epoch - $_-&amp;gt;time-&amp;gt;epoch) / 60} @mast_values;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, I used a series of &lt;code&gt;map&lt;/code&gt; expressions to extract &lt;code&gt;x&lt;/code&gt; and &lt;code&gt;y&lt;/code&gt; values from the data. One turns the &lt;code&gt;DateTime&lt;/code&gt; times into a number of minutes ago. These values are the &lt;code&gt;x&lt;/code&gt; values. &lt;code&gt;y&lt;/code&gt; values are the appropriate parameters extracted from the nested &lt;code&gt;Z::Mast&lt;/code&gt; and &lt;code&gt;Z::Mast::Label&lt;/code&gt; objects. The rest of the code provides the data to the plotting method of the chart, directing it to write out a .png file (Figure 1).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $chart-&amp;gt;png(&amp;quot;mast.png&amp;quot;,
+               [ \@labels,
+                [map {$_-&amp;gt;values()-&amp;gt;[0]-&amp;gt;wind} @mast_values],
+                [map {$_-&amp;gt;values()-&amp;gt;[1]-&amp;gt;wind} @mast_values],
+                [map {$_-&amp;gt;values()-&amp;gt;[2]-&amp;gt;wind} @mast_values],
+                  ]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2006_05_04_charting-data/mast.png&#34; alt=&#34;the resulting chart&#34; width=&#34;500&#34; height=&#34;260&#34; /&gt;
+&lt;em&gt;Figure 1. The resulting chart&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;All I need now is a working HTTP server and a &lt;code&gt;crontab&lt;/code&gt; entry or two to run the graphic generation programs. It is possible to use the &lt;code&gt;Chart&lt;/code&gt; modules to generate CGI output directly using the &lt;code&gt;Chart::cgi&lt;/code&gt; method, but I found that this was too slow once lots of different clients accessed the weather data at the same time. It was a simple task to instead switch to a &lt;code&gt;crontab&lt;/code&gt;-based approach for the graphs, with a CGI script still providing real-time access to the current values.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusions&#34;&gt;Conclusions&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;Chart&lt;/code&gt; family of modules provides more than just an &lt;code&gt;x&lt;/code&gt;-&lt;code&gt;y&lt;/code&gt; plot. Pie, bar, Pareto, and mountain charts, amongst others, are available through the same API as I discussed in this article. They are just as easy to whip into being to satisfy even the most demanding of data consumers.&lt;/p&gt;
+
+&lt;p&gt;The Template Toolkit is used mainly for more complicated websites and content management systems, but it will simplify the production of simple sites and pages, allowing you to concentrate on the detail of the problem by separating data and its presentation. Even though a problem is simple and allows a fast solution, you can reach your goal faster still by pulling in big tools to do little jobs.&lt;/p&gt;
+
+&lt;p&gt;As for the &lt;code&gt;DateTime&lt;/code&gt; module, I simply wouldn&amp;rsquo;t go anywhere without it. These days, I find myself automatically typing &lt;code&gt;use DateTime;&lt;/code&gt; along with &lt;code&gt;warnings&lt;/code&gt; and &lt;code&gt;strict&lt;/code&gt; at the head of every Perl program I write.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Class::Accessors&lt;/code&gt; makes the creation of data representation objects faster than typing in a C struct, provides some level of documentation about what the data you&amp;rsquo;re dealing with, and allows for reuse. You could just stick everything into layers of nested hashes and arrays, but this is a certain path to eventual confusion. &lt;code&gt;Class::Accessors&lt;/code&gt; will keep you sane and save your fingers at the same time.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;IO::All&lt;/code&gt; should be a part of your day-to-day toolkit; the new idioms it provides will soon see you using it everywhere, even in one-liners.&lt;/p&gt;
+
+&lt;p&gt;One of the many joys of programming lies in the satisfaction we receive when we make someone&amp;rsquo;s life that little bit better. Perl makes it easy, fast, and fun for us to tread that path. Perl&amp;rsquo;s greatest strength, the rock upon which its greatness is founded, is the speed with which we can take a problem, or a cool idea, and structure our half-formed thoughts into a soundly built solution.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2006_05_04_charting-data/purple_code.pl&#34;&gt;Download the example code&lt;/a&gt; for this article.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Design Patterns, Part 3</title>
+      <link>http://localhost:1313/pub/2003/08/15/design3.html/</link>
+      <pubDate>Fri, 15 Aug 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/08/15/design3.html/</guid>
+      <description>
+
+&lt;p&gt;This is the third (and final) article in a series which form one Perl programmer&amp;rsquo;s response to the book &lt;em&gt;Design Patterns&lt;/em&gt; (also known as the Gang of Four book or simply as GoF, because four authors wrote it). As I showed in the &lt;a href=&#34;http://localhost:1313/pub/2003/08/07/design2.html&#34;&gt;second article&lt;/a&gt;, Perl provides the types needed to implement many patterns. The Strategy and Template Method patterns can be implemented with code references. Builder usually builds a structure based on references to some combination of hashes and lists. Interpreters can be implemented with simple tools like &lt;code&gt;split&lt;/code&gt; or with the king: &lt;code&gt;Parse::RecDescent&lt;/code&gt;, which brings the best of yacc into your Perl script (albeit with somewhat less efficiency than yacc).&lt;/p&gt;
+
+&lt;p&gt;This article continues my treatment by considering patterns which rely on objects. As such, this article&amp;rsquo;s patterns bears the most resemblance to the GoF book. Before presenting some patterns, I&amp;rsquo;ll give you my two cents about object applicability.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-when-are-objects-good-when-are-objects-good-span&#34;&gt;&lt;span id=&#34;when_are_objects_good&#34;&gt;When Are Objects Good?&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;As Larry Wall reminds us about all programming constructs, you should use objects when they make sense and not when they don&amp;rsquo;t. So when do they make sense? This is partly a matter of taste. This subsection gives you my tastes.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s easier to say when objects are bad, which they are in these cases:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;div class=&#34;secondary&#34;&gt;
+&lt;h4 id=&#34;more-on-perl-design-patterns&#34;&gt;More on Perl Design Patterns:&lt;/h4&gt;
+&lt;p&gt;• &lt;a href=&#34;http://localhost:1313/pub/2003/06/13/design1.html&#34;&gt;Perl Design Patterns, Part 1&lt;/a&gt;&lt;br /&gt;
+• &lt;a href=&#34;http://localhost:1313/pub/2003/08/07/design2.html&#34;&gt;Perl Design Patterns, Part 2&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;ol&gt;
+&lt;li&gt;There is only data, the methods are either trivial or non-existent. Data containers (also called nodes) are like this. For example, I should not need an object to return three numbers and a string to my caller.&lt;/li&gt;
+&lt;li&gt;There are only methods. The Java Math class is like this. It won&amp;rsquo;t even let you make a Math object. Clearly its methods should just be built-in functions of the language.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Seeing the poor uses of objects gives insight into their effective use. Use objects when complexity is high and data is tightly coupled to the methods which act on it. High complexity makes these chief advantages of objects more important: separate namespaces, inheritance, and polymorphism.&lt;/p&gt;
+
+&lt;p&gt;Now that I&amp;rsquo;ve spoken my peace, I&amp;rsquo;ll go on to the patterns which use objects.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-abstract-factory-abstract-factory-span&#34;&gt;&lt;span id=&#34;abstract_factory&#34;&gt;Abstract Factory&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you want to build platform independent programs, you need a way to access the underlying systems without having to recode for each one&amp;rsquo;s API. This is where a factory comes into play. The source code asks for an instance of a class, the class delivers a subclass instance suitable for use on the current platform. That class is called an abstract factory (or simply a factory). As we will see below, the platform might be a database. So the factory would return an object suitable for use with a particular database, but all the objects would have the same API.&lt;/p&gt;
+
+&lt;p&gt;To show the basic idea, here is an example which delivers one of two types. There are four code files in this example. The first two are the greeters.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Greet::Repeat;
+
+sub new {
+    my $class    = shift;
+    my $self     = {
+        greeting =&amp;gt; shift,
+        repeat   =&amp;gt; shift,
+    };
+    return bless $self, $class;
+}
+
+sub greet {
+    my $self = shift;
+    print ($self-&amp;gt;{greeting} x $self-&amp;gt;{repeat});
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This greeter&amp;rsquo;s constructor expects a greeting and a repeat count. It stores these in a hash, returning a blessed reference to it. When asked to greet, it prints the greeting repeatedly (hence the name). (I didn&amp;rsquo;t say this example was practical, but it is small.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Greet::Stamp;
+    use strict; use warnings;
+
+    sub new {
+        my $class    = shift;
+        my $greeting = shift;
+        return bless \$greeting, $class;
+    }
+
+    sub greet {
+        my $greeting = shift;
+        my $stamp    = localtime();
+        print &amp;quot;$stamp $$greeting&amp;quot;;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This greeter only expects a greeting string, so it blesses a reference to the one it receives. When asked to greet, it prints the current time followed by the greeting.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the factory:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package GreetFactory;
+    use strict; use warnings;
+
+    sub instantiate {
+        my $self           = shift;
+        my $requested_type = shift;
+        my $location       = &amp;quot;Greet/$requested_type.pm&amp;quot;;
+        my $class          = &amp;quot;Greet::$requested_type&amp;quot;;
+
+        require $location;
+
+        return $class-&amp;gt;new(@_);
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A Perl factory looks a lot like factories in other languages. This one has only one method. It returns the requested type to the caller. It uses the caller&amp;rsquo;s requested type as the name of the class to instantiate and as the name of the Perl module in which the class lives.&lt;/p&gt;
+
+&lt;p&gt;Finally, you can use this factory with a script like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use GreetFactory;
+
+    my $greeter_n = GreetFactory-&amp;gt;instantiate(&amp;quot;Repeat&amp;quot;, &amp;quot;Hello\n&amp;quot;, 3);
+    $greeter_n-&amp;gt;greet();
+
+    my $greeter_stamp = GreetFactory-&amp;gt;instantiate(&amp;quot;Stamp&amp;quot;, &amp;quot;Good-bye\n&amp;quot;);
+    $greeter_stamp-&amp;gt;greet();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make each greeter, call the &lt;code&gt;instantiate&lt;/code&gt; method of &lt;code&gt;GreetFactory&lt;/code&gt;, passing it the name of the class you want and any arguments that class&amp;rsquo;s constructor is expecting.&lt;/p&gt;
+
+&lt;p&gt;This example shows you the basic idea. It is simple on purpose. But it does show how the factory can be ignorant of the underlying classes. Any new greeter added to the system must have a name of the form &lt;code&gt;Greet::Name&lt;/code&gt; and be placed into a &lt;code&gt;Greet&lt;/code&gt; subdirectory of an &lt;code&gt;@INC&lt;/code&gt; path member as &lt;code&gt;Name.pm&lt;/code&gt;. Then callers can use it without changing the factory. Now that you have seen a simple example, here is a more useful one.&lt;/p&gt;
+
+&lt;p&gt;The Perl DBI (DataBase Interface) provides an excellent example of a factory. Each call to &lt;code&gt;DBI-&lt;/code&gt;connect&amp;gt;, expects the type of database and whatever information that database needs to establish a connection. This is a classic factory. It will load any DBD (DataBase Driver) you have installed on your system, upon request. Additional DBD&amp;rsquo;s can be added at any time. Once they are installed, any client can use them through the same DBI API. Here&amp;rsquo;s an example use of DBI:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use DBI;
+    my $dbh      =
+        DBI-&amp;gt;connect(&amp;quot;dbi:mysql:mydb:localhost&amp;quot;, &amp;quot;user&amp;quot;, &amp;quot;password&amp;quot;);
+    ...
+    my $sth      = $dbh-&amp;gt;prepare(&#39;select * from table&#39;);
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once the database handle is obtained (which is usually called &lt;code&gt;$dbh&lt;/code&gt;), it can be used almost without regard to the underlying engine. If you later move to Oracle, you would merely change the connect call. If a new database comes on the scene, some smart person in contact with Tim Bunce will implement a class for it. You can install and switch to it as soon as they finish their work. You might even be the implementer, but I doubt I will be.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-composite-composite-span&#34;&gt;&lt;span id=&#34;composite&#34;&gt;Composite&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This pattern shows how to use the fully OO composite pattern. If you are interested in a simpler non-OO implementation see the Builder Pattern in Part 2 of this article series.&lt;/p&gt;
+
+&lt;p&gt;Many applications require hierarchies of related items linked into a tree by relationship. Many people see a hierarchy of this type: a directory structure. At the top is the root directory. In the simplest case it includes two types of items: files and subdirectories. Each subdirectory is like the root directory. Note that this definition of the structure is recursive, which is typical of composites.&lt;/p&gt;
+
+&lt;p&gt;One of the most popular examples of a composite structure today is an XML file. These files have a root element which contains various types of subelements, including tags and comments. Tags have attributes and some can contain subelements. This makes the classic composite tree. There are two important steps for a composite structure. The first is building it. The second is using it. We&amp;rsquo;ll see simple examples of both here.&lt;/p&gt;
+
+&lt;p&gt;For the genuine pattern, there must be methods that act on both regular and composite elements (the elements with children are called composite elements). Invoking such a method on the root of a composite tree, or subtree, causes that root to do work on its own data AND to forward the request to its children. Those children do the same, collecting their own data and that of their children, until the bottom of the tree is reached. The return value is a collection of all this data.&lt;/p&gt;
+
+&lt;p&gt;For a practical example consider using the DOM model to process XML. (You may obtain the &lt;code&gt;XML::DOM&lt;/code&gt; module from CPAN.) To find all the paragraphs in a document we could do something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use XML::DOM;
+    my $parser = XML::DOM::Parser-&amp;gt;new();
+    my $doc    = $parser-&amp;gt;parsefile(&amp;quot;file.xml&amp;quot;);
+    foreach my $paragraph ($doc-&amp;gt;getElementsByTagName(&amp;quot;paragraph&amp;quot;)) {
+        print &amp;quot;&amp;lt;p&amp;gt;&amp;quot;;
+        foreach my $child ($paragraph-&amp;gt;getChildNodes) {
+            print $child-&amp;gt;getNodeValue if ($child-&amp;gt;getNodeType eq TEXT_NODE);
+        }
+    }
+    $doc-&amp;gt;dispose();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The call to &lt;code&gt;getElementsByTagName&lt;/code&gt; begins at the root (since I called it through &lt;code&gt;$doc&lt;/code&gt;). The root returns any of its children which are paragraphs, but it also forwards the request to all of its tag elements asking them to return their paragraphs. They do the same.&lt;/p&gt;
+
+&lt;p&gt;An unrelated note: Notice that the above example ends with a call to dispose. &lt;code&gt;XML::DOM&lt;/code&gt; composite structures have references from parents to children and from children to parents. We usually call these circular links. Perl 5 garbage collection cannot harvest such structures. We must call dispose to break the extra links so the structure&amp;rsquo;s memory can be recovered. If you build structures with circular links, you must break those links yourself, otherwise your program will leak memory.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ve seen how useful a well crafted composite structure can be, but how could we build one for ourselves? The objects in the structure must all respond to the methods meant to walk the composite. They may return undef immediately, but they must exist. Further, the version of those methods in the composite objects (the ones which can have children), must take care to pass the message along to their children.&lt;/p&gt;
+
+&lt;p&gt;To make this concrete, consider a non-binary tree (as we have been all along). Suppose we want to know how many nodes are in the tree. We can ask the root to &lt;code&gt;count_nodes&lt;/code&gt;. It should count itself and add that to the sum of &lt;code&gt;count_nodes&lt;/code&gt; calls to each child. Nodes which are not composite (i.e. have no children) return one. Composite nodes, return one plus the sums from their children. The code follows.&lt;/p&gt;
+
+&lt;p&gt;There are four pieces of code: (1) A base class for tree nodes: &lt;code&gt;Node.pm&lt;/code&gt;, (2) A class for nodes that could have children: &lt;code&gt;Composite.pm&lt;/code&gt;, (3) A class for nodes that can&amp;rsquo;t have children: &lt;code&gt;Regular.pm&lt;/code&gt;, and (4) a driver to demonstrate that the system works: &lt;code&gt;comp&lt;/code&gt;. I&amp;rsquo;ll show these one at a time, in the order listed above.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Node;
+    use strict; use warnings;
+
+    sub count_nodes {
+        my $self       = shift;
+        my $class_name = ref $self;
+        die &amp;quot;$class_name does not implement count_nodes\n&amp;quot;;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only method here is &lt;code&gt;count_nodes&lt;/code&gt;. This serves as an implementation requirement (also called an abstract method). Attempting to use a Node subclass which doesn&amp;rsquo;t provide count_nodes results in a fatal run-time error. Every subclass should have an appropriate test to make sure this error never happens to users.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Regular;
+
+    use Node;
+    @ISA = qw(Node);
+
+    use strict; use warnings;
+
+    sub new {
+        my $class = shift;
+        my $name  = shift;
+        return bless \$name, $class;
+    }
+
+    sub count_nodes {
+        return 1;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Regular nodes are blessed references to their names. They always count as a single node. (An unrelated note: it is sometimes convenient to turn on &lt;code&gt;strict&lt;/code&gt; after the preamble of a package, here that let&amp;rsquo;s me use &lt;code&gt;@ISA&lt;/code&gt; without qualifying it.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Composite;
+
+    use Node;
+    @ISA = qw(Node);
+
+    use strict; use warnings;
+
+    sub new {
+        my $class = shift;
+        my $name  = shift;
+        my $self  = { name =&amp;gt; $name, children =&amp;gt; [] };
+        return bless $self, $class;
+    }
+
+    sub add_child {
+        my $self      = shift;
+        my $new_child = shift;
+
+        push @{$self-&amp;gt;{children}}, $new_child;
+        return $new_child;
+    }
+
+    sub count_nodes {
+        my $self  = shift;
+        my $count = 1;
+
+        foreach my $child (@{$self-&amp;gt;{children}}) {
+            $count += $child-&amp;gt;count_nodes();
+        }
+        return $count;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This class is similar to &lt;code&gt;Regular&lt;/code&gt;, but it needs a way to keep track of children. Since it also keeps its name, I used a hash for the object type. New children are just pushed onto a list. Counting includes one for the parent node, plus the total for each child. Since leaves of the tree also implement &lt;code&gt;count_nodes&lt;/code&gt;, we can process all &lt;code&gt;Node&lt;/code&gt; types together. This is the polymorphism advantage of objects and the heart of the Composite Pattern.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use Composite;
+    use Regular;
+
+    my $root     = Composite-&amp;gt;new(&amp;quot;Root&amp;quot;);
+
+    my $eldest   = $root-&amp;gt;add_child(Composite-&amp;gt;new(&amp;quot;Jim&amp;quot;));
+    my $middle   = $root-&amp;gt;add_child(Composite-&amp;gt;new(&amp;quot;Jane&amp;quot;));
+                   $root-&amp;gt;add_child(Regular-&amp;gt;new(&amp;quot;Bob&amp;quot;));
+    my $youngest = $root-&amp;gt;add_child(Composite-&amp;gt;new(&amp;quot;Joe&amp;quot;));
+
+                   $eldest-&amp;gt;add_child(Regular-&amp;gt;new(&amp;quot;JII&amp;quot;));
+    my $kayla    = $eldest-&amp;gt;add_child(Composite-&amp;gt;new(&amp;quot;Kayla&amp;quot;));
+                   $kayla-&amp;gt;add_child(Regular-&amp;gt;new(&amp;quot;Max&amp;quot;));
+
+    my $count = $root-&amp;gt;count_nodes();
+
+    print &amp;quot;count: $count\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This contrived example manually builds a simple tree, then asks for a node count. The correct answer is 8.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-proxy-proxy-span&#34;&gt;&lt;span id=&#34;proxy&#34;&gt;Proxy&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In GoF the proxy pattern example shows a way to delay loading expensive components until the user actually wants them. In the course of the example they show a genuine proxy. Proxies refer all requests to some other object. Think of it like an intermediary for the mob. You make your request to your local thug, as if he could do the thing himself. He passes that on to someone else you never meet who actually does the job. (Note to John Ashcroft: I am only imaging this process, having NO personal experience with it. Honest.)&lt;/p&gt;
+
+&lt;p&gt;Suppose an application could use several large files, but usually only needs one or two. Instead of reading all these files, I will delay loading the file until the caller wants to see it. The usual warning applies: this is contrived to explain the concept.&lt;/p&gt;
+
+&lt;p&gt;Here is the class that actually stores and prints the files:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package File;
+    use strict; use warnings;
+
+    sub new {
+        my $class = shift;
+        my $file  = shift;
+        open FILE, &amp;quot;$file&amp;quot; or die &amp;quot;Couldn&#39;t read $file: $!\n&amp;quot;;
+        my @data  = &amp;lt;FILE&amp;gt;;
+        close FILE;
+        return bless \@data, $class;
+    }
+
+    sub print_file {
+        my $data = shift;
+        print @$data;
+    }
+
+    sub DESTROY { }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the &lt;code&gt;File&lt;/code&gt; constructor is called, it reads the file into an array for later use, returning a blessed reference to the data to the caller. When asked to print, it sends the data to the currently selected output handle (usually standard out).&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;DESTROY&lt;/code&gt; subroutine is called by Perl whenever a blessed reference is about to go out of scope. This allows us to perform clean-up which is guaranteed to happen. In this case, there is no necessary clean-up, but the approach I&amp;rsquo;m about to show for the proxy class ends up calling this method explicitly. That explicit call offends Perl so much that it complains to the screen. To avoid the warning, I included the stub.&lt;/p&gt;
+
+&lt;p&gt;There is nothing special about the &lt;code&gt;File&lt;/code&gt; class shown above. The proxy follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package FileProxy;
+    use strict; use warnings;
+
+    use File;
+
+    sub new {
+        my $class = shift;
+        my $self  = {
+            params         =&amp;gt; \@_,
+            wrapped_object =&amp;gt; undef,
+        };
+        return bless $self, $class;
+    }
+
+    sub AUTOLOAD {
+        my $self    = shift;
+        my $command = our $AUTOLOAD;
+        $command    =~ s/.*://;
+
+        unless (defined $self-&amp;gt;{wrapped_object}) {
+            $self-&amp;gt;{wrapped_object} = File-&amp;gt;new(@{$self-&amp;gt;{params}});
+        }
+        $self-&amp;gt;{wrapped_object}-&amp;gt;$command(@_);
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The constructor for the proxy takes the things necessary to build an actual &lt;code&gt;File&lt;/code&gt; object (namely the file name) and stores them as its &lt;code&gt;params&lt;/code&gt; attribute. The other attribute will eventually hold the wrapped &lt;code&gt;File&lt;/code&gt; object. The attributes are stored in hash, the hash&amp;rsquo;s reference is blessed and returned to the caller.&lt;/p&gt;
+
+&lt;p&gt;Whenever Perl has no where else to go with a method call, it calls &lt;code&gt;AUTOLOAD&lt;/code&gt; (if there is one). So, the &lt;code&gt;AUTOLOAD&lt;/code&gt; in FileProxy handles all requests except &lt;code&gt;new&lt;/code&gt; and &lt;code&gt;DESTROY&lt;/code&gt;, which appear explicitly. &lt;code&gt;AUTOLOAD&lt;/code&gt; is all caps to remind us that Perl calls it for us. While making this call, Perl sets the package global variable &lt;code&gt;$AUTOLOAD&lt;/code&gt; to the name of the method the caller invoked. The regular expression strips off the package names from &lt;code&gt;$AUTOLOAD&lt;/code&gt;, leaving only the method name.&lt;/p&gt;
+
+&lt;p&gt;If the object is not yet defined, &lt;code&gt;AUTOLOAD&lt;/code&gt; calls File-&amp;gt;new passing it the arguments stored during construction. After that, the object is defined, so &lt;code&gt;AUTOLOAD&lt;/code&gt; calls the requested method on the wrapped object. The beauty of this mechanism is that the &lt;code&gt;FileProxy&lt;/code&gt; class only knows that the constructor is called &lt;code&gt;new&lt;/code&gt;. It does not need to change as changes to &lt;code&gt;File.pm&lt;/code&gt; are made. Any errors, such as no such method, will be fatal as usual.&lt;/p&gt;
+
+&lt;p&gt;To use this proxied scheme we might employ a caller like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use FileProxy;
+
+    my $file1 = FileProxy-&amp;gt;new(&amp;quot;art1&amp;quot;);
+    my $file2 = FileProxy-&amp;gt;new(&amp;quot;art2&amp;quot;);
+
+    $file1-&amp;gt;print_file();
+    $file1-&amp;gt;print_file();
+    $file2-&amp;gt;print_file();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With a couple of changes we could use this for any class. Here&amp;rsquo;s the new generic version:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package DelayLoad;
+    use strict; use warnings;
+
+    our %proxied_classes;
+
+    sub import {
+        shift;  # discard class name
+
+        %proxied_classes = @_;
+
+        foreach my $class (keys %proxied_classes) {
+            require &amp;quot;$class.pm&amp;quot;;
+        }
+    }
+
+    sub new {
+        my $class = shift;
+        my $self  = {
+            type           =&amp;gt; shift,
+            constructor    =&amp;gt; shift,
+            params         =&amp;gt; \@_,
+            wrapped_object =&amp;gt; undef,
+        };
+        return bless $self, $class;
+    }
+
+    sub AUTOLOAD {
+        my $self    = shift;
+        my $command = our $AUTOLOAD;
+        $command    =~ s/.*://;
+
+        if ($proxied_classes{$command}) {
+            return $self-&amp;gt;new($command, $proxied_classes{$command}, @_);
+        }
+        else {
+            unless (defined $self-&amp;gt;{wrapped_object}) {
+                my $proxied_class       = $self-&amp;gt;{type};
+                my $constructor         = $self-&amp;gt;{constructor};
+                $self-&amp;gt;{wrapped_object} = $proxied_class
+                                        -&amp;gt;$constructor(@{$self-&amp;gt;{params}});
+            }
+            $self-&amp;gt;{wrapped_object}-&amp;gt;$command(@_);
+        }
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first change is cosmetic: the name now reflects the nature of the proxy. Other changes include a new method: import. Even though its name is lower case, Perl calls it whenever the caller says &lt;code&gt;use DelayLoad&lt;/code&gt; (see below). It does two things. First, it stores the name of each proxied class in the &lt;code&gt;%proxied_classes&lt;/code&gt; package global. Second, it requires each module. &lt;code&gt;require&lt;/code&gt; is like use, but it happens at run time instead of compile time. (use also imports symbols, but then your object oriented module shouldn&amp;rsquo;t be exporting anything anyway.)&lt;/p&gt;
+
+&lt;p&gt;The constructor now stores a bit more information. In addition to saving room for the wrapped object and storing the &lt;code&gt;params&lt;/code&gt;, it also records the name of the class and of that class&amp;rsquo;s constructor. These will be used in &lt;code&gt;AUTOLOAD&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The only other changes are in the &lt;code&gt;AUTOLOAD&lt;/code&gt; method. There are two changes. The easiest one is to look up the class and constructor names in the &lt;code&gt;DelayLoad&lt;/code&gt; object instead of just calling File-&amp;gt;new.&lt;/p&gt;
+
+&lt;p&gt;The other change is used during construction. My explanation of it will make more sense, if you see the new caller first.&lt;/p&gt;
+
+&lt;p&gt;The new version requires a couple of changes to the caller. One change is on the use line which becomes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use DelayLoad &amp;quot;File&amp;quot; =&amp;gt; &amp;quot;new&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This uses &lt;code&gt;DelayLoad&lt;/code&gt;, tells it we want to be able to delay loads for &lt;code&gt;File&lt;/code&gt; objects, and that &lt;code&gt;File&lt;/code&gt;&amp;rsquo;s constructor is called &lt;code&gt;new&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The other change is in how we construct the delayed object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $file1 = DelayLoad-&amp;gt;File(&amp;quot;art1&amp;quot;);
+    my $file2 = DelayLoad-&amp;gt;File(&amp;quot;art2&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This explains the unexplained piece in &lt;code&gt;AUTOLOAD&lt;/code&gt; above. When the user calls the &lt;code&gt;File&lt;/code&gt; method, &lt;code&gt;AUTOLOAD&lt;/code&gt; notices that this ``method&amp;rdquo; is really the name of a delay loaded class. When the &lt;code&gt;if&lt;/code&gt; in &lt;code&gt;AUTOLOAD&lt;/code&gt; is true (i.e. the method is really a key in &lt;code&gt;%proxied_classes&lt;/code&gt;), the caller is given a new &lt;code&gt;DelayLoad&lt;/code&gt; object primed for later use. When the &lt;code&gt;if&lt;/code&gt; fails, &lt;code&gt;DelayLoad&lt;/code&gt; works like &lt;code&gt;FileLoad&lt;/code&gt;: it constructs the object, if needed and calls the requested method.&lt;/p&gt;
+
+&lt;p&gt;The fundamental point of this example is that Perl allows us to implement proxies without knowing very much about the underlying class. In this case, &lt;code&gt;import&lt;/code&gt; receives the necessary information from the caller, &lt;code&gt;AUTOLOAD&lt;/code&gt; takes care of the rest. Making the caller work is not always a good idea. Here it makes sense. If she knows she wants to delay loading objects until they are really needed, she must at least know the API for those objects. In the API is the name of the constructor, which she mentions in the use statement so Perl can pass to &lt;code&gt;DelayLoad::import&lt;/code&gt; for her.&lt;/p&gt;
+
+&lt;p&gt;Keep in mind that &lt;code&gt;AUTOLOAD&lt;/code&gt; is not designed for this sort of work. Its real purpose in life is to load subroutines on demand for the current package. It can&amp;rsquo;t do that here, since changing the subroutines affects all instances of a class. Here we are &lt;code&gt;AUTOLOAD&lt;/code&gt;ing data, not routines. By suitably adjusting &lt;code&gt;import&lt;/code&gt; and &lt;code&gt;AUTOLOAD&lt;/code&gt;, you can make the proxy do many other things.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-summary-summary-span&#34;&gt;&lt;span id=&#34;summary&#34;&gt;Summary&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In this article, I have finally shown object oriented patterns. We saw how to implement a Factory so our callers can choose their favorite driver, how to build composite structures and routines that traverse them (without explicit &lt;code&gt;first_child&lt;/code&gt; and &lt;code&gt;next&lt;/code&gt; pointers that would be needed in languages without quality built-in lists), and how to stand as a proxy between a caller and a class with &lt;code&gt;import&lt;/code&gt; and &lt;code&gt;AUTOLOAD&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-author-s-note-author-s-note-span&#34;&gt;&lt;span id=&#34;author&#39;s_note&#34;&gt;Author&amp;rsquo;s Note&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This is the final article in this series, but look for a book, &lt;em&gt;Design Patterns in Perl&lt;/em&gt; from Apress at your favorite bookseller in the near future.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

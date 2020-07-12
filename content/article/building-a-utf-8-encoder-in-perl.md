@@ -72,7 +72,7 @@ sub codepoint_to_bytes {
 }
 ```
 
-The first is the easiest: if the codepoint is between 0x00 and 0x7F, no transformation is required, so I just [pack](http://perldoc.perl.org/functions/pack.html) the codepoint as-is. The byte value of a character is the same as the codepoint (e.g. `'U' == 56 == 0x38 == 00111000`).
+The first is the easiest: if the codepoint is between 0x00 and 0x7F, no transformation is required, so I just [pack]({{</* perlfunc "pack" */>}}) the codepoint as-is. The byte value of a character is the same as the codepoint (e.g. `'U' == 56 == 0x38 == 00111000`).
 
 For the second scenario I have to populate the bitmask `110xxxxx 10xxxxxx` with the codepoint, which means I need to return two bytes. This is how I do it:
 
@@ -80,7 +80,7 @@ For the second scenario I have to populate the bitmask `110xxxxx 10xxxxxx` with 
 2. Use bitwise OR to set the two most significant bits to one (`xxxxxxxx | 11000000 == 11xxxxxx`). I'm using Perl's inline binary notation (`0b...`) which makes it easy to compare the binary numbers with the bitmask.
 4. For the second byte use bitwise AND to set the two most significant bits to zero (`xxxxxxxx & 00111111 == 00xxxxxx`).
 5. Use bitwise OR to set the most significant bit to 1 (`xxxxxxxx | 10000000 == 1xxxxxxx`).
-6. Use [pack](http://perldoc.perl.org/functions/pack.html) to combine the bytes into a scalar and return it.
+6. Use [pack]({{</* perlfunc "pack" */>}}) to combine the bytes into a scalar and return it.
 
 The process for three byte and four byte encoding follows the same approach, with the rules updated according to the UTF-8 scheme.
 
@@ -114,7 +114,7 @@ sub bytes_to_codepoint {
 }
 ```
 
-In the subroutine `bytes_to_codepoint` I use `encode()` to populate `$input` with the bytes passed to it. Next I use the `length` function to return the number of bytes in `$input` - this is different from its usual behavior which returns the number of characters; this is the effect of using `encode()` to convert the scalar to bytes. Finally I use [unpack](http://perldoc.perl.org/functions/unpack.html) to extract the bytes from `$input`.
+In the subroutine `bytes_to_codepoint` I use `encode()` to populate `$input` with the bytes passed to it. Next I use the `length` function to return the number of bytes in `$input` - this is different from its usual behavior which returns the number of characters; this is the effect of using `encode()` to convert the scalar to bytes. Finally I use [unpack]({{</* perlfunc "unpack" */>}}) to extract the bytes from `$input`.
 
 Now I know the number of bytes passed to `bytes_to_codepoint`, it's just a matter of reversing the binary operations from the encoding process:
 

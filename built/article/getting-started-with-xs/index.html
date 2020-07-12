@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Getting started with XS </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A gentle introduction to Perl&#39;s C interface"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/getting-started-with-xs/" />
+<meta property="og:title" content="Getting started with XS" />
+<meta property="og:description" content="A gentle introduction to Perl&#39;s C interface">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2017-05-05T05:05:05Z" />
+<meta property="og:image" content="http://localhost:1313/images/author/david-farrell.jpg" />
+<meta property="og:article:tag" content="xs" />
+<meta property="og:article:tag" content="extutils-makemaker" />
+<meta property="og:article:tag" content="stdlib.h" />
+<meta property="og:article:tag" content="rand" />
+<meta property="og:article:tag" content="perlapi" />
+<meta property="og:article:tag" content="xsubpp" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Getting started with XS</h1>
+              <p class="blog-post-meta">May 3, 2017 by
+              
+              
+                
+                
+                <a href="#author-bio-david-farrell">David Farrell</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>eXtendable Subroutines (XS) are subroutines written in C that are callable from
+Perl code. There are two common reasons you&rsquo;d want to use XS: there is a C
+library you&rsquo;d like to use with Perl, or you want to make a subroutine faster
+by processing it in C instead of Perl.</p>
+
+<p>This tutorial will walk you through all the components needed to get up and
+running with a basic XS example. There will be a lot of new terms and concepts:</p>
+
+<blockquote>
+<p>If you want to write XS, you have to learn it. Learning XS is very difficult</p>
+
+<p>Steven W. McDougall</p>
+</blockquote>
+
+<p>Try not to get discouraged if things don&rsquo;t click right away: I promise you that
+learning XS can be hugely rewarding: you&rsquo;ll develop the power to write lightning
+fast code; get a better understanding of how Perl internals work, and be able to
+integrate any C library you choose and use it from Perl.</p>
+
+<h3 id="components">Components</h3>
+
+<p>There are a few basic components needed to write an xsub. The first is a Perl
+module that will provide the namespace for any XS functions. This is all that&rsquo;s
+needed:</p>
+
+<pre><code>package XS::Tutorial::One;
+require XSLoader;
+
+XSLoader::load();
+1;
+</code></pre>
+
+<p>This file should be saved as <code>lib/XS/Tutorial/One.pm</code>. <code>XSLoader::load</code> by
+default searches for XS code that matches the package name it is called from*.</p>
+
+<p>Let&rsquo;s create a main distribution module too:</p>
+
+<pre><code>package XS::Tutorial;
+BEGIN { our $VERSION = 0.01 }
+1;
+
+=encoding utf8
+
+=head1 NAME
+
+XS::Tutorial - documentation with examples for learning Perl XS
+
+=cut
+</code></pre>
+
+<p>That file should be saved as <code>lib/XS/Tutorial.pm</code>.</p>
+
+<p>The next thing we need is a .xs file which defines the xsubs to be loaded by
+<code>XS::Tutorial::One</code>:</p>
+
+<pre><code>#define PERL_NO_GET_CONTEXT // we'll define thread context if necessary (faster)
+#include &quot;EXTERN.h&quot;         // globals/constant import locations
+#include &quot;perl.h&quot;           // Perl symbols, structures and constants definition
+#include &quot;XSUB.h&quot;           // xsubpp functions and macros
+#include &lt;stdlib.h&gt;         // rand()
+
+// additional c code goes here
+
+MODULE = XS::Tutorial::One  PACKAGE = XS::Tutorial::One
+PROTOTYPES: ENABLE
+
+ # XS code goes here
+
+ # XS comments begin with &quot; #&quot; to avoid them being interpreted as pre-processor
+ # directives
+
+unsigned int
+rand()
+</code></pre>
+
+<p>This file should be saved as <code>lib/XS/Tutorial/One.xs</code>. The top half of the file
+is pure C code. The line beginning <code>MODULE = XS::Tutorial::One</code> indicates the
+start of the XS code. This section will be parsed and compiled into C code by
+<code>xsubpp</code>.</p>
+
+<p>The <code>MODULE</code> and <code>PACKAGE</code> directives define the Perl module and package which
+will load any xsubs we define. The line <code>PROTOTYPES: ENABLE</code> tells <code>xsubpp</code>
+to define subroutine prototypes for any xsubs we create. This is usually what
+you want: prototypes can help Perl catch compile time errors.</p>
+
+<p>The last two lines of the file are an xsub:</p>
+
+<pre><code>unsigned int
+rand()
+</code></pre>
+
+<p>The first line defines the return type. The second line does two things: it
+indicates the name of the C function to be called <em>and</em> it defines the
+signature of the xsub.</p>
+
+<p>In this case we&rsquo;re calling <code>rand</code> and accepting no parameters. This isn&rsquo;t
+Perl&rsquo;s built-in rand function, <em>this</em> rand comes from stdlib.h.</p>
+
+<p>The final thing we need is a <code>Makefile.PL</code> script - as XS code is compiled, we
+need a tool to build it before we can use it:</p>
+
+<pre><code>use 5.008005;
+use ExtUtils::MakeMaker 7.12; # for XSMULTI option
+
+WriteMakefile(
+  NAME           =&gt; 'XS::Tutorial',
+  VERSION_FROM   =&gt; 'lib/XS/Tutorial.pm',
+  PREREQ_PM      =&gt; { 'ExtUtils::MakeMaker' =&gt; '7.12' },
+  ABSTRACT_FROM  =&gt; 'lib/XS/Tutorial.pm',
+  AUTHOR         =&gt; 'David Farrell',
+  CCFLAGS        =&gt; '-Wall -std=c99',
+  OPTIMIZE       =&gt; '-O3',
+  LICENSE        =&gt; 'freebsd',
+  XSMULTI        =&gt; 1,
+);
+</code></pre>
+
+<p>The ExtUtils::MakeMaker <a href="https://metacpan.org/pod/ExtUtils::MakeMaker">docs</a> explain these options.</p>
+
+<p>But let&rsquo;s talk about <code>XSMULTI</code>. This is a relatively new feature which allows
+you to have separate .xs files for modules. By default EUMM assumes the xs
+file matches the distribution name. In this case that would mean having a single
+Tutorial.xs file, with multiple xs <code>MODULE</code> and <code>PACKAGE</code> declarations in it.
+By using <code>XSMULTI</code>, we can have multiple XS files, one for each module in the
+distribution instead.</p>
+
+<p>*Actually it searches for compiled C code but the effect is the same.</p>
+
+<h3 id="building">Building</h3>
+
+<p>Now we should have four files:</p>
+
+<pre><code>lib/XS/Tutorial.pm
+lib/XS/Tutorial/One.pm
+lib/XS/Tutorial/One.xs
+Makefile.PL
+</code></pre>
+
+<p>The following commands will build the distribution:</p>
+
+<pre><code>$ perl Makefile.PL
+$ make
+</code></pre>
+
+<h3 id="a-minor-essay-to-understand-xsubpp-generated-c">A minor essay to understand xsubpp generated C</h3>
+
+<p><code>make</code> creates a bunch of files, but take a look at <code>lib/XS/Tutorial/One.c</code>.
+This is the output of <code>xsubpp</code>. If you look closely enough, you can find the
+lines of C code from <code>lib/XS/Tutorial/One.xs</code> in there. But checkout what
+happened to our <code>rand</code> xsub:</p>
+
+<pre><code>XS_EUPXS(XS_XS__Tutorial__One_rand); /* prototype to pass -Wmissing-prototypes */
+XS_EUPXS(XS_XS__Tutorial__One_rand)
+{
+    dVAR; dXSARGS;
+    if (items != 0)
+       croak_xs_usage(cv,  &quot;&quot;);
+    {
+  unsigned int        RETVAL;
+  dXSTARG;
+
+  RETVAL = rand();
+  XSprePUSH; PUSHu((UV)RETVAL);
+    }
+    XSRETURN(1);
+}
+</code></pre>
+
+<p><code>xsubpp</code> has replaced our XS code with some rather ugly C macros! These macros
+are part of the Perl interpreter&rsquo;s C API. Many are documented in <a href="https://perldoc.perl.org/perlapi.html">perlapi</a>
+and they are usually defined in <code>XSUB.h</code> or <code>perl.h</code> in the Perl source code.</p>
+
+<p>So what are these macros doing? At a high level, <code>dVAR</code> and <code>dXSARGS</code> setup
+the global pointer stack and some local variables. <code>items</code> is a count of the
+arguments supplied to the xsub. As <code>rand</code> is a void function, if this isn&rsquo;t
+zero, it croaks. <code>croak_xs_usage</code> takes a coderef and an args string. In this
+context <code>cv</code> is the xsub, and there are no args so the string is empty.</p>
+
+<p>Next the code declares <code>RETVAL</code>, the return value of the xsub. <code>dXTARG</code>
+initializes the <code>TARG</code> pointer. Next <code>rand()</code> is called its return value
+assigned to <code>RETVAL</code>. <code>XSprePUSH</code> moves the stack pointer back one,
+and <code>PUSHu</code> copies <code>RETVAL</code> into <code>TARG</code> and pushes it onto the global stack
+pointer. <code>XSRETURN</code> returns from the xsub, indicating how many arguments it
+added to the stack, which in this case, is one.</p>
+
+<p>Writing XS, you usually don&rsquo;t need to study the generated C code, but it&rsquo;s
+helpful to have an awareness of the process.</p>
+
+<h3 id="installing">Installing</h3>
+
+<p>Now the code is compiled, install it with:</p>
+
+<pre><code>$ make install
+</code></pre>
+
+<p>If you&rsquo;re using system Perl, you may need to use <code>sudo</code> to install. Now we can
+test the module using a one liner:</p>
+
+<pre><code>$ perl -MXS::Tutorial::One -E 'say XS::Tutorial::One::rand()'
+1804289383
+</code></pre>
+
+<p>It works! Did you try running it twice though?</p>
+
+<pre><code>$ perl -MXS::Tutorial::One -E 'say XS::Tutorial::One::rand()'
+1804289383
+</code></pre>
+
+<p>We get the same pseudorandom sequence each time&hellip; We need to call <code>srand</code> to
+seed the sequence. That function is already provided by <code>stdlib.h</code>, so all we
+need to do is append the following text to <code>lib/XS/Tutorial/One.xs</code>:</p>
+
+<pre><code>void
+srand(seed)
+  unsigned int seed
+</code></pre>
+
+<p>This xsub is different to the first one: its return type is <code>void</code> which
+means it returns nothing. It also includes a parameter called <code>seed</code> in its
+signature, and the last line defines it as an unsigned int.</p>
+
+<p>Rebuild and install the distribution:</p>
+
+<pre><code>$ make &amp;&amp; make install
+</code></pre>
+
+<p>Now we can seed the pseudorandom sequence by calling <code>srand</code> before <code>rand</code>:</p>
+
+<pre><code>$ perl -MXS::Tutorial::One -E 'XS::Tutorial::One::srand(777);\
+say XS::Tutorial::One::rand()'
+947371799
+</code></pre>
+
+<p>We used a lucky (777) seed number, and <code>rand</code> emitted a different number, yay!</p>
+
+<h3 id="did-we-beat-perl">Did we beat Perl?</h3>
+
+<p>As you know by now, xsubs are often faster than pure Perl code. We&rsquo;ve built two
+xsubs for <code>rand</code> and <code>srand</code>, which are also available as built-in functions
+in Perl. Do you think the xsubs are faster? Here&rsquo;s a benchmark from my machine:</p>
+
+<pre><code>              Rate xs_rand bi_rand
+xs_rand 15691577/s      --    -64%
+bi_rand 43095739/s    175%      --
+</code></pre>
+
+<p>Oh no! Despite our <code>rand</code> xsub directly calling the C <code>stdlib</code> function, it&rsquo;s
+miles slower than Perl&rsquo;s built-in <code>rand</code>. This isn&rsquo;t because xsubs are slow,
+rather that Perl&rsquo;s built-in functions are really fast. There is an overhead
+associated with calling xsubs which built-in functions do not pay.</p>
+
+<h3 id="tests">Tests</h3>
+
+<p>Instead of running one liners to check our code works, we can write unit tests.
+Here&rsquo;s a basic script:</p>
+
+<pre><code>#!/usr/bin/perl
+use Test::More;
+
+BEGIN { use_ok 'XS::Tutorial::One' }
+
+ok my $rand = XS::Tutorial::One::rand(), 'rand()';
+like $rand, qr/^\d+$/, 'rand() returns a number';
+
+ok !defined XS::Tutorial::One::srand(5), 'srand()';
+ok $rand ne XS::Tutorial::One::rand(), 'after srand, rand returns different number';
+done_testing;
+</code></pre>
+
+<p>Save this file as <code>t/one.t</code>. Assuming you built and installed the distribution
+already, you can just do:</p>
+
+<pre><code>$ perl t/one.t
+ok 1 - use XS::Tutorial::One;
+ok 2 - rand()
+ok 3 - rand() returns a number
+ok 4 - srand()
+ok 5 - after srand, rand returns different number
+1..5
+</code></pre>
+
+<p>Now when building the distribution in the future, you should do:</p>
+
+<pre><code>$ perl Makefile.PL &amp;&amp; make &amp;&amp; make test
+</code></pre>
+
+<p>This will rebuild and test the distribution. Because XS code is compiled,
+writing tests and using that one liner, you can quickly cycle through coding
+and testing.</p>
+
+<p>Don&rsquo;t forget to add Test::More to the <code>PREREQ_PM</code> entry in <code>Makefile.PL</code>. When
+you don&rsquo;t have a specific minimum version, you can just use 0:</p>
+
+<pre><code>PREREQ_PM =&gt; { 'Test::More' =&gt; 0, 'ExtUtils::MakeMaker' =&gt; '7.12' },
+</code></pre>
+
+<h3 id="cleanup">Cleanup</h3>
+
+<p>Building distributions generates a lot of temporary files. ExtUtils::MakeMaker
+provides a realclean routine:</p>
+
+<pre><code>$ make realclean
+</code></pre>
+
+<p>This will delete all the build files and reset the working directory to normal.</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+<li>This article and code are on CPAN as <a href="https://metacpan.org/pod/XS::Tutorial::One">XS::Tutorial::One</a></li>
+<li>XS Mechanics by Steven W. McDougall is my second favorite :) XS <a href="http://world.std.com/~swmcd/steven/perl/pm/xs/intro/">tutorial</a></li>
+<li><a href="https://perldoc.perl.org/perlxs.html">perlxs</a> defines the keywords recognized by <a href="https://perldoc.perl.org/xsubpp.html">xsubpp</a></li>
+<li><a href="https://perldoc.perl.org/perlapi.html">perlapi</a> : C macros used to interact with Perl data structures (and the interpreter)</li>
+<li>The <a href="http://pubs.opengroup.org/onlinepubs/9699919799/">stdlib.h</a> man page defines the C standard library functions and types</li>
+<li>For writing Makefile.PL files: ExtUtils::MakeMaker <a href="https://metacpan.org/pod/ExtUtils::MakeMaker">docs</a> are invaluable</li>
+<li>Perl&rsquo;s built-in <a href="https://perldoc.perl.org/functions/rand.html">rand</a> and <a href="https://perldoc.perl.org/functions/srand.html">srand</a> functions</li>
+</ul>
+
+<p><br />
+<em>This article was originally posted on <a href="http://perltricks.com">PerlTricks.com</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/tutorials">tutorials</a></div>
+                
+                  <div class="tag"><a href="/tags/xs">xs</a></div>
+                
+                  <div class="tag"><a href="/tags/extutils-makemaker">extutils-makemaker</a></div>
+                
+                  <div class="tag"><a href="/tags/stdlib.h">stdlib.h</a></div>
+                
+                  <div class="tag"><a href="/tags/rand">rand</a></div>
+                
+                  <div class="tag"><a href="/tags/perlapi">perlapi</a></div>
+                
+                  <div class="tag"><a href="/tags/xsubpp">xsubpp</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-david-farrell">
+  <div class="col-sm-2">
+    
+    <a href="/authors/david-farrell/"><div class="circle-avatar" style="background-image:url(/images/author/david-farrell.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/david-farrell/"><h3>David Farrell</h3></a>
+    <p>David is the editor of Perl.com. An organizer of the <a href="http://www.meetup.com/The-New-York-Perl-Meetup-Group/">New York Perl Meetup</a>, he works for ZipRecruiter as a software developer, and sometimes <a href="https://twitter.com/perltricks">tweets</a> about Perl and Open Source.</p>
+    <h5><a href="/authors/david-farrell/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/getting-started-with-xs.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

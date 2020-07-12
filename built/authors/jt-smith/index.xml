@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Jt Smith on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/jt-smith/</link>
+    <description>Recent content in Jt Smith on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 31 Dec 2012 06:00:01 -0800</lastBuildDate>
+    <atom:link href="/authors/jt-smith/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Consuming RESTful Services with Perl</title>
+      <link>http://localhost:1313/pub/2012/12/consuming-restful-services-with-perl.html/</link>
+      <pubDate>Mon, 31 Dec 2012 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2012/12/consuming-restful-services-with-perl.html/</guid>
+      <description>
+
+&lt;p&gt;In my previous article I described &lt;a href=&#34;http://localhost:1313/pub/2012/11/designing-board-games-with-perl.html&#34;&gt;how to create board game images using &lt;code&gt;Image::Magick&lt;/code&gt;&lt;/a&gt;, thus allowing you to design board games using Perl. This time I want to show you how to upload those images to &lt;a href=&#34;https://www.thegamecrafter.com/&#34;&gt;The Game Crafter&lt;/a&gt; so you get get a professional copy of the game manufactured.&lt;/p&gt;
+
+&lt;p&gt;In the last article I &lt;a href=&#34;https://www.thegamecrafter.com/games/lacuna-expanse:-a-new-empire&#34;&gt;created a board game version&lt;/a&gt; of the video game called &lt;a href=&#34;http://www.lacunaexpanse.com&#34;&gt;The Lacuna Expanse&lt;/a&gt;. This time I&amp;rsquo;ll show how to upload those images to the site to create a custom board game. Don&amp;rsquo;t worry if you&amp;rsquo;re not ready to create a board game or if you&amp;rsquo;ll never be ready; the principles of designing a useful API and using it apply to all sorts of services you might want to use, from weather tracking to stocks to medical systems. I picked games for two reasons. One, me and I team just built this system, so it&amp;rsquo;s shiny and new and I&amp;rsquo;ve learned a lot. Two, games are more fun (and visual) than showing how to record invoice information in a RESTful ERP application.&lt;/p&gt;
+
+&lt;h2 id=&#34;getting-ready&#34;&gt;Getting Ready&lt;/h2&gt;
+
+&lt;p&gt;First, get yourself a copy of &lt;a href=&#34;https://metacpan.org/pod/TheGameCrafter::Client&#34;&gt;TheGameCrafter::Client&lt;/a&gt;. It&amp;rsquo;s a Perl module that makes it trivial to interact with The Game Crafter&amp;rsquo;s RESTful web service API. When you &lt;code&gt;use TheGameCrafter::Client;&lt;/code&gt; it imports &lt;code&gt;tgc_get()&lt;/code&gt;, &lt;code&gt;tgc_post()&lt;/code&gt;, &lt;code&gt;tgc_put()&lt;/code&gt;, and &lt;code&gt;tgc_delete()&lt;/code&gt; into your program for easy use. &lt;em&gt;Good APIs are descriptive and obvious.&lt;/em&gt; From there you can have a look at The Game Crafter&amp;rsquo;s &lt;a href=&#34;https://www.thegamecrafter.com/developer/&#34;&gt;developer documentation&lt;/a&gt; to do any custom stuff you want. &lt;em&gt;Good APIs have useful documentation.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;You&amp;rsquo;ll also need to activate the &lt;a href=&#34;https://www.thegamecrafter.com/account&#34;&gt;developer setting in your TGC account&lt;/a&gt;, and &lt;a href=&#34;https://www.thegamecrafter.com/account/apikeys&#34;&gt;request an API key&lt;/a&gt;. &lt;em&gt;Good APIs demonstrate security in authorization and authentication.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;a-little-about-the-game-crafter-s-api&#34;&gt;A Little about The Game Crafter&amp;rsquo;s API&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;TheGameCrafter::Client&lt;/code&gt; is just a tiny wrapper around our RESTful web services. I designed the web services atop &lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/DBIx::Class&#34;&gt;DBIx::Class&lt;/a&gt;. My goal with this was to build a very reliable and consistent API not only for external use but internal. You see, the &lt;em&gt;entire&lt;/em&gt; TGC web site actually runs off these web services. Not only that, but these web services tie directly into our manufacturing facility, so they are controlling the physical world in addition to the virtual. &lt;em&gt;Good APIs allow you to build multiple clients with different uses.&lt;/em&gt; (They don&amp;rsquo;t &lt;em&gt;require&lt;/em&gt; multiple clients, but they don&amp;rsquo;t forbid it and do enable it.)&lt;/p&gt;
+
+&lt;p&gt;With Lacuna, I built &lt;a href=&#34;https://metacpan.org/pod/JSON::RPC::Dispatcher&#34;&gt;JSON::RPC::Dispatcher&lt;/a&gt; (JRD), which is a JSON-RPC 2.0 web service handler on top of &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt;. I love JRD, but it has two weaknesses, one of them fatal. One weakness is that you must format parameters using JSON, which means that it&amp;rsquo;s not easy to just call a URL and get a result with something like &lt;code&gt;curl&lt;/code&gt;. (&lt;em&gt;Good RESTful APIs allow multiple clients.&lt;/em&gt; If you can&amp;rsquo;t use &lt;code&gt;curl&lt;/code&gt;, you probably have a problem.) The fatal weakness of JSON-RPC 2.0 is that there is no way to do file uploads within the spec. The Game Crafter is all about file uploads, so that meant I either needed to handle those separately (aka inconsistently), or develop something new. I opted for the latter.&lt;/p&gt;
+
+&lt;p&gt;With TGC&amp;rsquo;s web services I decided to adopt some of the things I really liked about JSON-RPC, namely the way it handles responses whether they be result sets or errors. So you always get a consistent return:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{ &amp;quot;result&amp;quot; : { ... } }
+
+{
+   &amp;quot;error&amp;quot; : {
+        &amp;quot;code&amp;quot; : 404,
+        &amp;quot;message&amp;quot; : &amp;quot;File not found.&amp;quot;,
+        &amp;quot;data&amp;quot; : &amp;quot;file_id&amp;quot;
+   }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With TGC I also wanted a consistent and easy way of turning &lt;code&gt;DBIx::Class&lt;/code&gt; into web services through Dancer. I looked into things like &lt;a href=&#34;https://metacpan.org/pod/AutoCRUD&#34;&gt;AutoCRUD&lt;/a&gt;, but I&amp;rsquo;m not a fan of Catalyst, and it also took too much configuration (in my opinion) to get it working. I wanted something simpler and faster, so I decided to roll my own. The result was a thin layer of glue between Dancer and &lt;code&gt;DBIx::Class&lt;/code&gt; that allows you to define your web service interface in your normal &lt;code&gt;DBIx::Class&lt;/code&gt; declarations. It automatically then generates the web services, databases tables, web form handling, and more for you. This little glue layer is now in use in all web app development within &lt;a href=&#34;http://www.plainblack.com/&#34;&gt;Plain Black&lt;/a&gt;, and eventually we&amp;rsquo;ll be releasing it onto CPAN for all to use for free. The best part of that is that you know you&amp;rsquo;re getting a production-ready system because it&amp;rsquo;s been running The Game Crafter and other sites for over a year now. (&lt;em&gt;Good APIs are often extracted from working systems.&lt;/em&gt;) More on that in a future article.&lt;/p&gt;
+
+&lt;h2 id=&#34;let-s-do-this-thing-already&#34;&gt;Let&amp;rsquo;s Do This Thing Already&lt;/h2&gt;
+
+&lt;p&gt;Before you can make any API calls, you need to authenticate.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $session = tgc_post(&#39;session&#39;,{
+   username    =&amp;gt; &#39;me&#39;,
+   password    =&amp;gt; &#39;123qwe&#39;,
+   api_key_id  =&amp;gt; &#39;abcdefhij&#39;,
+ });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Before you can start uploading, fetch your user account information. This contains several pieces of info that you can use.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $user = tgc_get(&#39;user&#39;, {
+   session_id    =&amp;gt; $session-&amp;gt;{id},           # using our session to do stuff
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Think of TGC projects like filesystems: you have folders which contain folders and files. First create a folder, then upload a file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $folder = tgc_post(&#39;folder&#39;, {
+  session_id  =&amp;gt; $session-&amp;gt;{id},
+  name        =&amp;gt; &#39;Lacuna&#39;,
+  user_id     =&amp;gt; $user-&amp;gt;{id},
+  parent_id   =&amp;gt; $user-&amp;gt;{root_folder_id},  # putting this in the home folder
+ });
+
+ my $file = tgc_post(&#39;file&#39;, {
+  session_id  =&amp;gt; $session-&amp;gt;{id},
+  name        =&amp;gt; &#39;Mayhem Training&#39;,
+  file        =&amp;gt; [&#39;mayhem.png&#39;],         # the array ref signifies this is a file path
+  folder_id   =&amp;gt; $folder-&amp;gt;{id},       # putting it in the just-created folder
+ });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Assuming at this point you&amp;rsquo;ve uploaded all of your files, you can now build out your game. The Game Crafter has this notion of a &amp;ldquo;Designer&amp;rdquo;, which is sort of like your very own publishing company. Games are attached to the designer, so first you must create the designer, then the game.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $designer = tgc_post(&#39;designer&#39;, {
+  session_id  =&amp;gt; $session-&amp;gt;{id},
+  user_id     =&amp;gt; $user-&amp;gt;{id},
+  name        =&amp;gt; &#39;Lacuna Expanse Corp&#39;,
+ });
+
+ my $game = tgc_post(&#39;game&#39;, {
+  session_id  =&amp;gt; $session-&amp;gt;{id},
+  designer_id =&amp;gt; $designer-&amp;gt;{id},
+  name        =&amp;gt; &#39;Lacuna Expanse: A New Empire&#39;,
+ });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With a game created and assets uploaded, you can now create a deck of cards. This is pretty straight forward just like before.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $deck = tgc_post(&#39;minideck&#39;, {
+  session_id =&amp;gt; $session-&amp;gt;{id},
+  name       =&amp;gt; &#39;Planet&#39;,
+  game_id    =&amp;gt; $game-&amp;gt;{id},
+ });
+
+ my $card = tgc_post(&#39;minicard&#39;, {
+  session_id =&amp;gt; $session-&amp;gt;{id},
+  name       =&amp;gt; &#39;Mayhem Training&#39;,
+  face_id    =&amp;gt; $file-&amp;gt;{id},
+  deck_id    =&amp;gt; $deck-&amp;gt;{id},
+ });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You have probably noticed already how closely this resembles CRUD operations, because it does. Behind the scenes, who knows what TGC does with this information? (I do, but that&amp;rsquo;s because I wrote it.) It doesn&amp;rsquo;t matter to the API, because all of those details are hidden behind a good API. *Good APIs expose only the necessary details*—in this case, the relationships between folders and files and between designers and games.&lt;/p&gt;
+
+&lt;p&gt;You can also see that the API is as stateless as possible, where the session identifier is part of every API call. It&amp;rsquo;s easy to imagine a more complicated API which hides this, but I stuck with the bare-bones REST for at least two reasons: it&amp;rsquo;s simple, and it&amp;rsquo;s easy to see what&amp;rsquo;s happening. Someone could build over the top of this API if desired. &lt;em&gt;Good APIs allow extension and further abstraction.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Just like that, you&amp;rsquo;ve created a game and added a deck of cards to it. There are of course lots of other fancy things you can do with the API, but this should get you started. I wouldn&amp;rsquo;t leave you hanging there, however. I&amp;rsquo;ve &lt;a href=&#34;https://github.com/plainblack/Lacuna-Board-Game&#34;&gt;open sourced the actual code&lt;/a&gt; I used to create &lt;a href=&#34;https://www.thegamecrafter.com/games/lacuna-expanse:-a-new-empire&#34;&gt;the Lacuna Expanse board game&lt;/a&gt; so you&amp;rsquo;d have something to reference. There&amp;rsquo;s also a &lt;a href=&#34;https://community.thegamecrafter.com/forums/developers&#34;&gt;developer&amp;rsquo;s forum&lt;/a&gt; if you have any questions. Good luck to you, and happy gaming!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Designing Board Games With Perl</title>
+      <link>http://localhost:1313/pub/2012/11/designing-board-games-with-perl.html/</link>
+      <pubDate>Fri, 30 Nov 2012 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2012/11/designing-board-games-with-perl.html/</guid>
+      <description>
+
+&lt;p&gt;Board games are hotter than they&amp;rsquo;ve ever been. In fact, &lt;a href=&#34;http://www.icv2.com/articles/news/24066.html&#34;&gt;the board game market has grown 25% in the past year while the video game market shrank 20%&lt;/a&gt;. But you&amp;rsquo;re a Perl hacker, not an Adobe Illustrator, so how can you design a board game? Well, that&amp;rsquo;s exactly what I aim to show you in this article.&lt;/p&gt;
+
+&lt;p&gt;First, you need an idea. You can turn literally anything into a game. &lt;a href=&#34;https://www.thegamecrafter.com/games/adventurelings&#34; title=&#34;Adventurelings&#34;&gt;Whether&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/plague-the-card-game&#34; title=&#34;Plague&#34;&gt;you&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/merc&#34; title=&#34;MERC&#34;&gt;just&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/the-decktet-firmament-&#34; title=&#34;The Decktet&#34;&gt;want&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/zombiezone&#34; title=&#34;ZombieZone&#34;&gt;to&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/surviving-design-projects&#34; title=&#34;Surviving Design Projects&#34;&gt;design&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/rejection-therapy-the-game&#34; title=&#34;Rejection Therapy&#34;&gt;your&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/hackers-agents&#34; title=&#34;Hackers
+    and Agents&#34;&gt;own&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/the-tarat&#34; title=&#34;The
+    TaRat&#34;&gt;custom&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/wild-pursuit-&#34; title=&#34;Wild
+    Pursuit&#34;&gt;playing&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/jump-gate&#34; title=&#34;Jump
+    Gate&#34;&gt;cards&lt;/a&gt;, &lt;a href=&#34;https://www.thegamecrafter.com/games/sandwich-city&#34; title=&#34;Sandwich
+    City&#34;&gt;or&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/shake-out-&#34; title=&#34;Shake Out&#34;&gt;you&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/trade-fleet&#34; title=&#34;Trade
+    Fleet&#34;&gt;want&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/diggity&#34; title=&#34;Diggity&#34;&gt;to&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/elemental-clash:-the-basic-set&#34; title=&#34;Elemental Clash&#34;&gt;make&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/black-and-red&#34; title=&#34;Black and
+    Red Playing Cards&#34;&gt;a&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/frogs-&#34; title=&#34;Frogs!&#34;&gt;full&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/phytocats&#34; title=&#34;Phytocats&#34;&gt;on&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/city-of-gears&#34; title=&#34;City of
+    Gears&#34;&gt;custom&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/gibs&#34; title=&#34;Gibs&#34;&gt;board&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/dr-pergias-race&#34; title=&#34;Doctor
+    Pergaias&#39; Race Across The Continent&#34;&gt;or&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/goblin-warlord&#34; title=&#34;Goblin
+    Warlord&#34;&gt;card&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/braaaaains-&#34; title=&#34;Braaaaains!&#34;&gt;game&lt;/a&gt;, &lt;a href=&#34;https://www.thegamecrafter.com/games/the-great-race1&#34; title=&#34;The
+    Great Race&#34;&gt;the&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/road-to-magnate&#34; title=&#34;Road to
+    Magnate&#34;&gt;options&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/zerpang-&#34; title=&#34;Zerpang!&#34;&gt;are&lt;/a&gt; &lt;a href=&#34;https://www.thegamecrafter.com/games/angels-elements&#34; title=&#34;Angels
+    Elements&#34;&gt;limitless&lt;/a&gt;. (Full disclosure: I&amp;rsquo;m one of the owners of &lt;a href=&#34;https://www.thegamecrafter.com/&#34;&gt;The Game Crafter&lt;/a&gt;, which itself is written entirely in Perl. )&lt;/p&gt;
+
+&lt;p&gt;For the purposes of this article, I&amp;rsquo;m going to make &lt;a href=&#34;https://www.thegamecrafter.com/games/lacuna-expanse:-a-new-empire&#34;&gt;a board game version&lt;/a&gt; of the popular Perl-based web game &lt;a href=&#34;http://www.lacunaexpanse.com&#34;&gt;The Lacuna Expanse&lt;/a&gt;. (I&amp;rsquo;m also one of the owners of Lacuna.) I chose this because I already have some artwork for it, albeit not in board game form. However, &lt;a href=&#34;https://community.thegamecrafter.com/publish/file-preparation/art-resources&#34;&gt;you can get free art from various sites around the web&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;My Lacuna-based board game will be a tile placement game where all the players work together cooperatively to fend off an alien invasion.&lt;/p&gt;
+
+&lt;h2 id=&#34;let-s-get-to-the-perl-already&#34;&gt;Let&amp;rsquo;s Get To The Perl Already!&lt;/h2&gt;
+
+&lt;p&gt;There are several great image manipulation libraries on the CPAN, but my personal favorite is &lt;a href=&#34;https://metacpan.org/pod/Image::Magick&#34;&gt;Image::Magick&lt;/a&gt;. I started by creating a base image which I could manipulate in any way that I wanted. (I based my choice off of &lt;a href=&#34;https://www.thegamecrafter.com/publish/pricing&#34;&gt;The Game Crafter&amp;rsquo;s list of component sizes and prices&lt;/a&gt;.) I decided to use &lt;a href=&#34;https://community.thegamecrafter.com/publish/templates/cards/mini-cards&#34;&gt;mini cards&lt;/a&gt;, because the table would fill up too quickly with full poker-sized cards; there&amp;rsquo;ll be a lot of cards on the table!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $card = Image::Magick-&amp;gt;new(size=&amp;gt;&#39;600x825&#39;);
+ say $card-&amp;gt;ReadImage(&#39;canvas:white&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that I used &lt;code&gt;say&lt;/code&gt; in front of the &lt;code&gt;ReadImage&lt;/code&gt; call. &lt;code&gt;Image::Magick&lt;/code&gt; will emit a textual exception on each call if anything goes wrong. I could easily wrap that with better error handling, but for now printing to the screen is sufficient for my needs.
+When printing things (really &lt;em&gt;printing&lt;/em&gt; them, with ink and all) you also have to take into account something called &lt;a href=&#34;http://youtu.be/NqZSFpmS2dM&#34;&gt;bleed and cut lines&lt;/a&gt;. It&amp;rsquo;s easy to draw the cut line on the card in red as the boundary of the printable image content.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; say $card-&amp;gt;Draw(stroke=&amp;gt;&#39;red&#39;, fill =&amp;gt; &#39;none&#39;, strokewidth=&amp;gt;1, primitive=&amp;gt;&#39;rectangle&#39;, points=&amp;gt;&#39;38,38 562,787&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2012_11_designing-board-games-with-perl/blank.jpg&#34; alt=&#34;blank with cut lines&#34; /&gt;
+So far so good. The next step is to give this card a background so that it starts to look like a card. For this I&amp;rsquo;ll take one of the planet surface images from the Lacuna Expanse and rotate it and stretch it to fit the shape of the card.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $surface = Image::Magick-&amp;gt;new;
+ say $surface-&amp;gt;ReadImage(&#39;surface-p17.jpg&#39;);
+ say $surface-&amp;gt;Rotate(90);
+ say $surface-&amp;gt;Resize(&#39;600x825!&#39;);
+ say $card-&amp;gt;Composite(compose =&amp;gt; &#39;over&#39;, image =&amp;gt; $surface, x =&amp;gt; 0, y =&amp;gt; 0);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note the exclamation point (&lt;strong&gt;!&lt;/strong&gt;) on the &lt;code&gt;Resize&lt;/code&gt; command. That tells &lt;code&gt;Image::Magick&lt;/code&gt; to distort the native aspect ratio of the image. In other words, stretch the image to fill the size I&amp;rsquo;ve specified.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2012_11_designing-board-games-with-perl/background.jpg&#34; alt=&#34;background&#34; /&gt;
+You may have noticed that this image looks enormous. That&amp;rsquo;s because it&amp;rsquo;s for print (on paper!) rather than screens. Print has more &lt;a href=&#34;http://proshooter.com/article_whatisa300dpiJPeg.htm&#34;&gt;pixels per inch/centimeter&lt;/a&gt; than screens, thus the image looks bigger when you display it on a screen.&lt;/p&gt;
+
+&lt;p&gt;Now the card needs a title. Adding text to the image is straightforward.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $card-&amp;gt;Annotate(text =&amp;gt; &#39;Mayhem Training&#39;, font =&amp;gt; &#39;ALIEN5.ttf&#39;, y =&amp;gt; -275, fill =&amp;gt; &#39;white&#39;, pointsize =&amp;gt; 70, gravity =&amp;gt; &#39;Center&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2012_11_designing-board-games-with-perl/title.jpg&#34; alt=&#34;title&#34; /&gt;
+As you can see I&amp;rsquo;ve used a custom font. &lt;code&gt;Image::Magick&lt;/code&gt; is capable of using nearly any OpenType or TrueType font.&lt;/p&gt;
+
+&lt;p&gt;With a background and a title, the next step is to overlay the card with a picture of the Mayhem Training building from the video game.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $image = Image::Magick-&amp;gt;new;
+ say $image-&amp;gt;ReadImage(&#39;mayhemtraining9.png&#39;);
+ say $card-&amp;gt;Composite(compose =&amp;gt; &#39;over&#39;, image =&amp;gt; $image, x =&amp;gt; 100, y =&amp;gt; 165);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2012_11_designing-board-games-with-perl/image.jpg&#34; alt=&#34;added image&#34; /&gt;
+Now we&amp;rsquo;re finally getting somewhere! This is really starting to look like a card. Use the same technique to overlay an icon onto the card. As in so many games, these icons symbolize an ability that the card grants the player who uses it. You can get free icons from all over the web; one of my favorite libraries is &lt;a href=&#34;http://www.glyphish.com&#34;&gt;Glyphish&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $icon = Image::Magick-&amp;gt;new;
+ say $icon-&amp;gt;ReadImage(&#39;target.png&#39;);
+ say $card-&amp;gt;Composite(compose =&amp;gt; &#39;over&#39;, image =&amp;gt; $icon, x =&amp;gt; 100, y =&amp;gt; 570);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2012_11_designing-board-games-with-perl/icon.jpg&#34; alt=&#34;added icon&#34; /&gt;
+You can&amp;rsquo;t get away with icons all the time; a little text will explain things to new players. Adding some explanation to the card would be really tricky, if it weren&amp;rsquo;t for &lt;a href=&#34;http://www.imagemagick.org/discourse-server/viewtopic.php?f=7&amp;amp;t=3708&#34;&gt;some really neat code that Gabe Schaffer contributed to the ImageMagick forums a long time ago&lt;/a&gt;. Basically without this code you&amp;rsquo;d have to make the text wrap at word boundaries yourself, but with it, you can just do a simple &lt;code&gt;Annotate&lt;/code&gt; call like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $card-&amp;gt;Set(font =&amp;gt; &#39;promethean.ttf&#39;, pointsize =&amp;gt; 35);
+ my $text = &#39;Demolish one of your buildings to use this ability.&#39;;
+ my $text_wrapped = wrap($text, $card, 400);
+ say $card-&amp;gt;Annotate(text =&amp;gt; $text_wrapped, x =&amp;gt; 100, y =&amp;gt; 690, font =&amp;gt; &#39;promethean.ttf&#39;, fill =&amp;gt; &#39;white&#39;, pointsize =&amp;gt; 35);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2012_11_designing-board-games-with-perl/text.jpg&#34; alt=&#34;added text&#34; /&gt;
+A game like this wouldn&amp;rsquo;t be very interesting if you could place any card anywhere you want. To solve this, I want to to add something to the card to indicate how other cards can connect to it. This is the most challenging part yet, because I want to make a half-circle/half-rectangle connector. Because this is a bit more complicated and I want to use it for drawing connection points on various sides of the card, I&amp;rsquo;ll turn it into a subroutine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub draw_connection_point {
+   my ($card, $color, $rotation, $x, $y) = @_;
+
+   # draw a half circle, it&#39;s a half cuz we&#39;re drawing outide the image
+   my $half_circle  = Image::Magick-&amp;gt;new(size=&amp;gt;&#39;70x35&#39;);
+   say $half_circle-&amp;gt;ReadImage(&#39;canvas:transparent&#39;);
+   say $half_circle-&amp;gt;Draw(stroke =&amp;gt; $color, fill =&amp;gt; $color, strokewidth=&amp;gt;1, primitive=&amp;gt;&#39;circle&#39;, points=&amp;gt;&#39;35,35, 35,70&#39;);
+
+   # create the connection point image
+   my $connection = Image::Magick-&amp;gt;new(size=&amp;gt;&#39;70x85&#39;);
+   say $connection-&amp;gt;ReadImage(&#39;canvas:transparent&#39;);
+
+   # add the half circle to the connection point
+   say $connection-&amp;gt;Composite(compose =&amp;gt; &#39;over&#39;, image =&amp;gt; $half_circle, x =&amp;gt; 0, y =&amp;gt; 0);
+
+   # extend the connection point the the edge
+   say $connection-&amp;gt;Draw(stroke=&amp;gt;$color, fill =&amp;gt; $color, strokewidth=&amp;gt;1, primitive=&amp;gt;&#39;rectangle&#39;, points=&amp;gt;&#39;0,35 70,85&#39;);
+
+   # orient the connection point for its position
+   say $connection-&amp;gt;Rotate($rotation);
+
+   # apply the connection point to the image
+   say $card-&amp;gt;Composite(compose =&amp;gt; &#39;over&#39;, image =&amp;gt; $connection, x =&amp;gt; $x, y =&amp;gt; $y);
+ }
+
+ draw_connection_point($card, &#39;purple&#39;, 0, 265, 740);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2012_11_designing-board-games-with-perl/connection.jpg&#34; alt=&#34;connection added&#34; /&gt;
+Sometimes it&amp;rsquo;s nice to give players hints about stuff so they can form better strategies. To that end, I added a series of pips above the title to indicate how many copies of this card are in the deck. In this case, this card is unique.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $quantity = 1;
+ my $pips = &#39;.&#39; x $quantity;
+ say $card-&amp;gt;Annotate(text =&amp;gt; $pips, y =&amp;gt; -340, fill =&amp;gt; &#39;white&#39;, pointsize =&amp;gt; 70, gravity =&amp;gt; &#39;Center&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2012_11_designing-board-games-with-perl/finished.jpg&#34; alt=&#34;finished&#34; /&gt;
+Remember to remove the cut line before you save the file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; #say $card-&amp;gt;Draw(stroke=&amp;gt;&#39;red&#39;, fill =&amp;gt; &#39;none&#39;, strokewidth=&amp;gt;1, primitive=&amp;gt;&#39;rectangle&#39;, points=&amp;gt;&#39;38,38 562,787&#39;);
+ say $card-&amp;gt;Write(&#39;mayhem.png&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2012_11_designing-board-games-with-perl/cut-line-removed.jpg&#34; alt=&#34;cut lines removed&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;rationale&#34;&gt;Rationale&lt;/h2&gt;
+
+&lt;p&gt;Now that I&amp;rsquo;ve shown you how to create a card, you may have one question. Why would you go through the work of coding it rather than just using Photoshop or the Gimp? There are lots of reasons to code it including things like you don&amp;rsquo;t know how to use image editors. However the really important reason is the same reason you write code to do anything&amp;hellip; automation! A game isn&amp;rsquo;t made of just one card. Likewise, games aren&amp;rsquo;t designed in just one try. It takes lots of play testing and revisions. If you design your board game using code you can whip out a new revision as easily as changing a config file.&lt;/p&gt;
+
+&lt;p&gt;Of course, automatic image generation isn&amp;rsquo;t only for games&amp;hellip;.&lt;/p&gt;
+
+&lt;h2 id=&#34;next-time&#34;&gt;Next Time&lt;/h2&gt;
+
+&lt;p&gt;I&amp;rsquo;ve shown you how to create the images for a game. If you&amp;rsquo;re like me, the next thing you want to do is print your game. You could do this at home, but it will cost you a lot of time and money (ink jet ink costs more than human blood). You could take it to Kinkos, but you won&amp;rsquo;t get a nice quality product because they don&amp;rsquo;t specialize in making games. Instead, you can upload your files to &lt;a href=&#34;https://www.thegamecrafter.com&#34;&gt;The Game Crafter&lt;/a&gt;, where you&amp;rsquo;ll get a custom game that looks like it game from the game store. There&amp;rsquo;s a nice easy to use web interface to do this, but you&amp;rsquo;re a Perl programmer. Why do something manually if you can automate it?&lt;/p&gt;
+
+&lt;p&gt;Besides that, it&amp;rsquo;s a real-world example of interacting with a web service written completely in Perl—on both sides. Who wouldn&amp;rsquo;t be interested in that?&lt;/p&gt;
+
+&lt;h2 id=&#34;for-the-impatient&#34;&gt;For The Impatient&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.thegamecrafter.com/games/lacuna-expanse:-a-new-empire&#34;&gt;The Lacuna Expanse Board Game&lt;/a&gt; is available for purchase now if you&amp;rsquo;re interested. Also, I&amp;rsquo;ve &lt;a href=&#34;https://github.com/plainblack/Lacuna-Board-Game&#34;&gt;released the code I wrote to develop it via this public GitHub repository&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Writing on Walls with Facebook::Graph</title>
+      <link>http://localhost:1313/pub/2011/04/writing-on-walls-with-facebookgraph.html/</link>
+      <pubDate>Mon, 04 Apr 2011 18:03:13 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/04/writing-on-walls-with-facebookgraph.html/</guid>
+      <description>&lt;p&gt;In my first article about &lt;a href=&#34;https://metacpan.org/pod/Facebook::Graph&#34;&gt;Facebook::Graph&lt;/a&gt;, I showed you how to &lt;a href=&#34;http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html&#34;&gt;use Facebook as an authentication mechanism for your site&lt;/a&gt;. This time let me show you how to build on that authentication to post something to a user&amp;rsquo;s Facebook wall.&lt;/p&gt;
+
+&lt;p&gt;First things first. The application needs additional permissions from the user. The previous app requested only basic rights to view the most basic of information about the user. Any app that wants to post to auser&amp;rsquo;s wall needs to ask the user for permission to post to their wall. Replace the existing login method with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb
+        -&amp;gt;authorize
+        -&amp;gt;extend_permissions( qw(publish_stream) )
+        -&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only difference between this version and the original is the &lt;code&gt;extend_permissions&lt;/code&gt; line which asks for &lt;code&gt;publish_stream&lt;/code&gt; access. Facebook maintains &lt;a href=&#34;http://developers.facebook.com/docs/authentication/permissions/&#34;&gt;a table of Facebook application permissions&lt;/a&gt; and their implications.&lt;/p&gt;
+
+&lt;p&gt;When a user grants this additional permission, the application can post almost anything to the user&amp;rsquo;s wall. For example, if you have a shop of some kind, you could post something to a user&amp;rsquo;s wall after a purchase:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+$fb-&amp;gt;add_post
+  -&amp;gt;set_message(&#39;I just bought Widget X from The Cool Shop for only $4.99.&#39;)
+  -&amp;gt;publish;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or more descriptive:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$fb-&amp;gt;add_post
+  -&amp;gt;set_message(&#39;I just bought Widget X from The Cool Shop for only $4.99.&#39;)
+  -&amp;gt;set_picture_uri(&#39;http://images.coolshop.com/widgetx.jpg&#39;),
+  -&amp;gt;link_uri(&#39;http://www.coolshop.com/products/widget-x&#39;),
+  -&amp;gt;link_caption(&#39;Widget X&#39;)
+  -&amp;gt;publish;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you publish links, do yourself a favor by making sure the page you are linking uses &lt;a href=&#34;http://ogp.me/&#34;&gt;Open Graph Protocol&lt;/a&gt; meta tags. Facebook can refer to these tags, and will therefore link that metadata into your post, which means if anybody posts your link &lt;em&gt;&lt;a href=&#34;http://www.coolshop.com/products/widget-x&#34;&gt;http://www.coolshop.com/products/widget-x&lt;/a&gt;&lt;/em&gt; into a Facebook post, it will automatically pull in images, description, and other things.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Make sure whatever you post abides by &lt;a href=&#34;http://developers.facebook.com/policy/&#34;&gt;Facebook&amp;rsquo;s Platform Polices&lt;/a&gt;. If you don&amp;rsquo;t, Facebook can and will ban your application.&lt;/p&gt;
+
+&lt;p&gt;This works well for posting something to Facebook when a logged-in user performs an action in your application, but but what if you want to post something &lt;em&gt;not&lt;/em&gt; as the result of a direct user action? Maybe your site isn&amp;rsquo;t a shop. Maybe it&amp;rsquo;s a reminders site that posts stuff like &amp;ldquo;Happy Birthday Maggie!&amp;rdquo; or a random quote of the day. To post on behalf of the user even when they aren&amp;rsquo;t logged in to your site, you must request offline access. This requires another update to the login page:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb
+        -&amp;gt;authorize
+        -&amp;gt;extend_permissions( qw(offline_access publish_stream) )
+        -&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see the &lt;code&gt;offline_access&lt;/code&gt; permission in addition to &lt;code&gt;publish_stream&lt;/code&gt; this time. Another necessary change is to store the resulting access token in something more robust than a Dancer session this time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/postback/&#39; =&amp;gt; sub {
+    my $params = request-&amp;gt;params;
+    my $fb     = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;request_access_token($params-&amp;gt;{code});
+    session access_token =&amp;gt; $fb-&amp;gt;access_token;
+
+    my $user = $fb-&amp;gt;fetch(&#39;me&#39;);
+
+    database-&amp;gt;quick_insert( &#39;facebook&#39;, {
+        uid          =&amp;gt; $user-&amp;gt;{uid},=20
+        name         =&amp;gt; $user-&amp;gt;{name},=20
+        access_token =&amp;gt; $fb-&amp;gt;access_token,
+       }
+    );
+    redirect &#39;/&#39;;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In addition to storing the &lt;code&gt;access_token&lt;/code&gt; in a Dancer session, the code also stores it in a database table for future reference (using &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::Database&#34;&gt;Dancer::Plugin::Database&lt;/a&gt;, which is a wrapper around &lt;a href=&#34;https://metacpan.org/pod/DBI&#34;&gt;DBI&lt;/a&gt;). This sort of thing can be good for other reasons too. For example, Facebook recommends caching data that you fetch from it for faster response times. If you want to display the user&amp;rsquo;s name on every page, it&amp;rsquo;s much faster to pull it out of the local database based upon the access token you have in your Dancer session than it is to request it from Facebook again.&lt;/p&gt;
+
+&lt;p&gt;As you can see, &lt;code&gt;Facebook::Graph&lt;/code&gt; makes it quite easy to post to Facebook on behalf of your users. Stay tuned for Part III, where I&amp;rsquo;ll show you how to publish calendar events and RSVP to them.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Facebook Authentication with Perl and Facebook::Graph</title>
+      <link>http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html/</link>
+      <pubDate>Tue, 15 Mar 2011 10:17:51 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html/</guid>
+      <description>&lt;p&gt;Basic integration of software and web sites with Facebook, Twitter, and other social networking systems has become a litmus test for business these days. Depending on the software or site you might need to fetch some data, make a post, create events, upload photos, or use one or more of the social networking sites as a single sign-on system. This series will show you how to do exactly those things on Facebook using &lt;a href=&#34;https://metacpan.org/pod/Facebook::Graph&#34;&gt;Facebook::Graph&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This first article starts small by using Facebook as an authentication mechanism. There are certainly simpler things to do, but this is one of the more popular things people want to be able to do. Before you can do anything, you need to have a Facebook account. Then &lt;a href=&#34;http://apps.facebook.com/developer&#34;&gt;register your new application&lt;/a&gt; (Figure 1).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_03_facebook-authentication-with-perl-and-facebookgraph/register_app.png&#34; alt=&#34;registering a Facebook application&#34; width=&#34;696&#34; height=&#34;209&#34; /&gt;
+&lt;em&gt;Figure 1. Registering a Facebook application.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Then fill out the &amp;ldquo;Web Site&amp;rdquo; section of your new app (Figure 2).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_03_facebook-authentication-with-perl-and-facebookgraph/register_website.png&#34; alt=&#34;registering your application&amp;#39;s web site&#34; width=&#34;740&#34; height=&#34;224&#34; /&gt;
+&lt;em&gt;Figure 2. Registering your application&amp;rsquo;s web site.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Registering an application with Facebook gives you a unique identifier for your application as well as a secret key. This allows your app to communicate with Facebook and use its API. Without it, you can&amp;rsquo;t do much (besides screen scraping and hoping).&lt;/p&gt;
+
+&lt;p&gt;Now you&amp;rsquo;re ready to start creating your app. I&amp;rsquo;ve used the &lt;a href=&#34;http://perldancer.org/&#34;&gt;Dancer web app framework&lt;/a&gt;, but feel free to use your favorite. Start with a basic Dancer module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package MyFacebook;
+
+use strict;
+use Dancer &#39;:syntax&#39;;
+use Facebook::Graph;
+
+get &#39;/&#39; =&amp;gt; sub {
+  template &#39;home.tt&#39;
+};
+
+true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s sufficient to give the app a home page. The next step is to force people to log in if they haven&amp;rsquo;t already:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;before sub {
+    if (request-&amp;gt;path_info !~ m{^/facebook}) {
+        if (session-&amp;gt;{access_token} eq &#39;&#39;) {
+            request-&amp;gt;path_info(&#39;/facebook/login&#39;)
+        }
+    }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This little bit of Dancer magic says that if the path is not &lt;code&gt;/facebook&lt;/code&gt; and the user has no access_token attached to their session, then redirect them to our login page. Speaking of our login page, create that now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb-&amp;gt;authorize-&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates a page that will redirect the user to Facebook, and ask them if it&amp;rsquo;s ok for the app to use their basic Facebook information. That code passes &lt;code&gt;Facebook::Graph&lt;/code&gt; some configuration information, so remember to add a section to Dancer&amp;rsquo;s &lt;em&gt;config.yml&lt;/em&gt; to keep track of that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;facebook:
+    postback: &amp;quot;http://www.madmongers.org/facebook/postback/&amp;quot;
+    app_id: &amp;quot;XXXXXXXXXXXXXXXX&amp;quot;
+    secret: &amp;quot;XXXXXXXXXXXXXXXXXXXXXXXXXXX&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember, you get the app_id and the secret from Facebook&amp;rsquo;s developer application after you create the app. The postback tells Facebook where to post back to after the user has granted the app authorization. Note that Facebook requires a slash (/) on the end of the URL for the postback. With Facebook ready to post to a URL, it&amp;rsquo;s time to create it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/postback/&#39; =&amp;gt; sub {
+    my $authorization_code = params-&amp;gt;{code};
+    my $fb                 = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;request_access_token($authorization_code);
+    session access_token =&amp;gt; $fb-&amp;gt;access_token;
+    redirect &#39;/&#39;;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;NOTE: I know it&amp;rsquo;s called a postback, but for whatever reason Facebook does the &lt;code&gt;POST&lt;/code&gt; as a &lt;code&gt;GET&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Facebook&amp;rsquo;s postback passes an authorization code—a sort of temporary password. Use that code to ask Facebook for an access token (like a session id). An access token allows you to request information from Facebook &lt;em&gt;on behalf of the user&lt;/em&gt;, so all of those steps are, essentially, your app logging in to Facebook. However, unless you store that access token to use again in the future, the next request to Facebook will log you out. Therefore, the example shoves the access token into a Dancer session to store it for future use before redirecting the user back to the front page of the site.&lt;/p&gt;
+
+&lt;p&gt;NOTE: The access token we have will only last for two hours. After that, you have to request it again.&lt;/p&gt;
+
+&lt;p&gt;Now you can update the front page to include a little bit of information from Facebook. Replace the existing front page with this one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;access_token(session-&amp;gt;{access_token});
+
+    my $response = $fb-&amp;gt;query-&amp;gt;find(&#39;me&#39;)-&amp;gt;request;
+    my $user     = $response-&amp;gt;as_hashref;
+    template &#39;home.tt&#39;, { name =&amp;gt; $user-&amp;gt;{name} }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code fetches the access token back out of the session and uses it to find out some information about the current user. It passes the name of that user into the home template as a template parameter so that the home page can display the user&amp;rsquo;s name. (How do you know what to request and what responses you get? See the &lt;a href=&#34;http://developers.facebook.com/docs/reference/api/&#34;&gt;Facebook Graph API documentation&lt;/a&gt;.)&lt;/p&gt;
+
+&lt;p&gt;While there is a bit of a trick to using Facebook as an authentication system, it&amp;rsquo;s not terribly difficult. Stay tuned for Part II where I&amp;rsquo;ll show you how to post something to a user&amp;rsquo;s wall.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

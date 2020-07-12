@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Identify slow code with Devel::Timer </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How timing statements can help you pinpoint bottlenecks"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/identify-slow-code-with-devel--timer/" />
+<meta property="og:title" content="Identify slow code with Devel::Timer" />
+<meta property="og:description" content="How timing statements can help you pinpoint bottlenecks">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2016-08-08T08:08:08Z" />
+<meta property="og:image" content="http://localhost:1313/images/identify-slow-code-with-devel--timer/thumb_stopwatch.png" />
+<meta property="og:article:tag" content="devel-timer" />
+<meta property="og:article:tag" content="benchmark" />
+<meta property="og:article:tag" content="refactor" />
+<meta property="og:article:tag" content="optimize" />
+<meta property="og:article:tag" content="speed" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Identify slow code with Devel::Timer</h1>
+              <p class="blog-post-meta">Aug 17, 2016 by
+              
+              
+                
+                
+                <a href="#author-bio-david-farrell">David Farrell</a>
+              
+              </p>
+              <img alt="" src="/images/identify-slow-code-with-devel--timer/stopwatch.png"/>
+                
+
+<p>Program speed is an important factor in programming. No one wants their program to execute more slowly. As a general purpose programming language, Perl is usually fast enough for most things, and when it isn&rsquo;t, we have some great tools to help us make it faster. We can use the <a href="https://metacpan.org/pod/Benchmark">Benchmark</a> module to compare code and <a href="https://metacpan.org/pod/Devel::NYTProf">Devel::NYTProf</a> to produce detailed analyses of our programs.</p>
+
+<p>This article is about <a href="https://metacpan.org/pod/Devel::Timer">Devel::Timer</a>, another module I like to use when I want to optimize an existing subroutine, and I&rsquo;m not sure how long each statement within the subroutine takes to execute. It&rsquo;s very easy to setup, so if you haven&rsquo;t used it before, once you&rsquo;ve read this article you&rsquo;ll have another tool in your toolbox for optimizing code.</p>
+
+<h3 id="use-devel-timer-to-get-a-timing-report">Use Devel::Timer to get a timing report</h3>
+
+<p>Let&rsquo;s say I have a subroutine which is far too slow, but I&rsquo;m not sure what&rsquo;s slowing it down. The (fictional) subroutine looks like this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">foo</span> {
+  <span style="color:#66d9ef">my</span> $args <span style="color:#f92672">=</span> shift;
+
+  die <span style="color:#e6db74">&#39;foo() requires an hashref of args&#39;</span>
+    <span style="color:#66d9ef">unless</span> $args <span style="color:#f92672">&amp;&amp;</span> ref $args <span style="color:#f92672">eq</span> <span style="color:#e6db74">&#39;HASH&#39;</span>;
+
+  <span style="color:#66d9ef">my</span> %parsed_args <span style="color:#f92672">=</span> validate_args($args);
+
+  <span style="color:#66d9ef">my</span> $user        <span style="color:#f92672">=</span> find_user($parsed_args{username});
+
+  <span style="color:#66d9ef">my</span> $location    <span style="color:#f92672">=</span> get_location($parsed_args{req_address});
+
+  <span style="color:#66d9ef">my</span> $bar         <span style="color:#f92672">=</span> register_request($user, $location);
+
+  <span style="color:#66d9ef">return</span> $bar;
+}</code></pre></div>
+<p>I can use Devel::Timer to time each statement in the subroutine, and tell me how long each one took:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Devel::Timer;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">foo</span> {
+  <span style="color:#66d9ef">my</span> $args <span style="color:#f92672">=</span> shift;
+  <span style="color:#66d9ef">my</span> $timer <span style="color:#f92672">=</span> Devel::Timer<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>();
+
+  die <span style="color:#e6db74">&#39;foo() requires an hashref of args&#39;</span>
+    <span style="color:#66d9ef">unless</span> $args <span style="color:#f92672">&amp;&amp;</span> ref $args <span style="color:#f92672">eq</span> <span style="color:#e6db74">&#39;HASH&#39;</span>;
+  $timer<span style="color:#f92672">-&gt;</span>mark(<span style="color:#e6db74">&#39;check $args is hashref&#39;</span>);
+
+  <span style="color:#66d9ef">my</span> %parsed_args <span style="color:#f92672">=</span> validate_args($args);
+  $timer<span style="color:#f92672">-&gt;</span>mark(<span style="color:#e6db74">&#39;validate_args()&#39;</span>);
+
+  <span style="color:#66d9ef">my</span> $user        <span style="color:#f92672">=</span> find_user($parsed_args{username});
+  $timer<span style="color:#f92672">-&gt;</span>mark(<span style="color:#e6db74">&#39;find_user()&#39;</span>);
+
+  <span style="color:#66d9ef">my</span> $location    <span style="color:#f92672">=</span> get_location($parsed_args{req_address});
+  $timer<span style="color:#f92672">-&gt;</span>mark(<span style="color:#e6db74">&#39;get_location()&#39;</span>);
+
+  <span style="color:#66d9ef">my</span> $bar         <span style="color:#f92672">=</span> register_request($user, $location);
+  $timer<span style="color:#f92672">-&gt;</span>mark(<span style="color:#e6db74">&#39;register_request()&#39;</span>);
+
+  $timer<span style="color:#f92672">-&gt;</span>report();
+  <span style="color:#66d9ef">return</span> $bar;
+}</code></pre></div>
+<p>I&rsquo;ve updated the code to import Devel::Timer and construct a new <code>$timer</code> object. After every statement I want to time, I call the <code>mark</code> method which adds an entry to the timer, like recording split times on a stopwatch. Finally I call <code>report</code> which prints out a table listing the time spent between every <code>mark</code> call.</p>
+
+<pre><code>Devel::Timer Report -- Total time: 0.0515 secs
+Interval  Time    Percent
+----------------------------------------------
+02 -&gt; 03  0.0328  63.68%  validate_args() -&gt; find_user()
+04 -&gt; 05  0.0095  18.44%  get_location() -&gt; register_request()
+03 -&gt; 04  0.0081  15.72%  find_user() -&gt; get_location()
+06 -&gt; 07  0.0010   0.19%  register_request() -&gt; END
+01 -&gt; 02  0.0001   0.00%  check $args is hashref -&gt; validate_args()
+00 -&gt; 01  0.0000   0.00%  INIT -&gt; check $args is hashref
+</code></pre>
+
+<p>By default the table is printed in descending order of duration. The output shows that the subroutine took 515ms to execute, and the time between the <code>validate_args()</code> mark and the <code>find_user()</code> mark took a whopping 63.68% of the runtime. So if I was going to refactor this subroutine, I would start with the <code>find_user()</code> function.</p>
+
+<p>In my experience, this is a typical distribution of timings. It&rsquo;s rare to find every statement in a subroutine takes the same amount of time. Usually there just are one or two culprits, and if you can refactor those, the subroutine runtime can improve by an order of magnitude or more.</p>
+
+<h3 id="a-common-pitfall">A common pitfall</h3>
+
+<p>One thing to watch out for with Devel::Timer is lazy evaluation. This is when code is written to only execute when it&rsquo;s required. Sometimes the first call to a subroutine may be slow, as objects are created, caches initialized or whatever. But subsequent calls are much faster. An easy way to check for this is to call the subroutine multiple times in the same process, and check the Devel::Timer reports to confirm the timings.</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+<li>This article is about <a href="https://metacpan.org/pod/Devel::Timer">Devel::Timer</a></li>
+<li><a href="https://metacpan.org/pod/Benchmark::Stopwatch">Benchmark::Stopwatch</a> is another timer module, similar to Devel::Timer</li>
+<li><a href="https://metacpan.org/pod/Devel::NYTProf">Devel::NYTProf</a> is a code profiler for Perl. Tim Bunce regularly gives <a href="https://www.youtube.com/watch?v=SDWoCQf53Ck">talks</a> about it</li>
+<li>The <a href="https://metacpan.org/pod/Benchmark">Benchmark</a> module comes with Perl</li>
+</ul>
+
+<p><br />
+<em>This article was originally posted on <a href="http://perltricks.com">PerlTricks.com</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/devel-timer">devel-timer</a></div>
+                
+                  <div class="tag"><a href="/tags/benchmark">benchmark</a></div>
+                
+                  <div class="tag"><a href="/tags/refactor">refactor</a></div>
+                
+                  <div class="tag"><a href="/tags/optimize">optimize</a></div>
+                
+                  <div class="tag"><a href="/tags/speed">speed</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-david-farrell">
+  <div class="col-sm-2">
+    
+    <a href="/authors/david-farrell/"><div class="circle-avatar" style="background-image:url(/images/author/david-farrell.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/david-farrell/"><h3>David Farrell</h3></a>
+    <p>David is the editor of Perl.com. An organizer of the <a href="http://www.meetup.com/The-New-York-Perl-Meetup-Group/">New York Perl Meetup</a>, he works for ZipRecruiter as a software developer, and sometimes <a href="https://twitter.com/perltricks">tweets</a> about Perl and Open Source.</p>
+    <h5><a href="/authors/david-farrell/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/identify-slow-code-with-devel--timer.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

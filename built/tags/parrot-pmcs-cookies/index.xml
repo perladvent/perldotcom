@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Parrot Pmcs Cookies on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/parrot-pmcs-cookies/</link>
+    <description>Recent content in Parrot Pmcs Cookies on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 30 Jan 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/parrot-pmcs-cookies/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Beginning PMCs</title>
+      <link>http://localhost:1313/pub/2002/01/30/pmcs.html/</link>
+      <pubDate>Wed, 30 Jan 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/01/30/pmcs.html/</guid>
+      <description>
+
+&lt;p&gt;One of the best things about Parrot is that it&amp;rsquo;s not just for Perl implementors. Parrot 0.0.3 came with support for extensible data types that can be used to implement the types used in your favorite language. The mechanism by which these types are extensible is called the &lt;strong&gt;PMC&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;The PMC, or Parrot Magic Cookie, type is a special data container for user-defined data types. Because these user-defined types are essentially implementations of a set of methods, we refer to them as PMC classes. Currently, the legal PMC classes are the &lt;code&gt;PerlInt&lt;/code&gt;, &lt;code&gt;PerlNum&lt;/code&gt;, &lt;code&gt;PerlString&lt;/code&gt;, &lt;code&gt;PerlArray&lt;/code&gt;, and &lt;code&gt;PerlHash&lt;/code&gt; types. The &lt;code&gt;PerlInt&lt;/code&gt;, &lt;code&gt;PerlNum&lt;/code&gt; and &lt;code&gt;PerlString&lt;/code&gt; data types combine to form the PerlScalar data type.&lt;/p&gt;
+
+&lt;p&gt;PMC registers, unlike the basic Integer, Number, and String registers, must be specially allocated with the &lt;code&gt;new P0, PMCType&lt;/code&gt; instruction. Other operations like &lt;code&gt;set P0,5&lt;/code&gt; are handled by special functions that are implemented by the PMC class. The rest of this article is about how to create your own PMC class implementation, alongside the &lt;code&gt;PerlInt&lt;/code&gt; and &lt;code&gt;PerlHash&lt;/code&gt; data types.&lt;/p&gt;
+
+&lt;p&gt;For our example, we&amp;rsquo;re going to implement a simple queue data structure. Our queue will be a set of integers; the queue will grow when an integer is assigned to it, and will shrink when an integer is read from it. We&amp;rsquo;ll use the &lt;code&gt;PerlInt&lt;/code&gt; class as a basis, so it may be helpful to look at some examples of operations that use it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  new P0, PerlInt  # Create a new PMC in the &#39;PerlInt&#39; class
+  set P0, 1234     # Set the value of the PMC to 1234
+  set P0, &amp;quot;4567&amp;quot;   # Set the value of the PMC to 4567
+  set P0, 12.34    # Set the value of the PMC to 12
+  set I0, P0       # Set I0 to the current value of the PMC
+  print P0
+  print &amp;quot;n&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that no special instructions like &lt;code&gt;set_string&lt;/code&gt; or &lt;code&gt;set_float&lt;/code&gt; were required to assign data of different types to the PMC. Each instruction does the Right Thing given the initial type of the PMC. This has several important consequences when designing new data types, the largest of which is that it generally isn&amp;rsquo;t necessary to add special instructions to access data contained within a PMC.&lt;/p&gt;
+
+&lt;p&gt;On the other side, this means that PMCs should attempt to behave rationally in all situations. It&amp;rsquo;s not an onerous requirement, but in some cases, rational behavior is hard to define. Queues are fairly simple to define though, in terms of behavior. A queue has one way to get data in and one way to get data out.&lt;/p&gt;
+
+&lt;p&gt;Since we can use one instruction for multiple classes, we&amp;rsquo;ll use &lt;code&gt;set Pn,In&lt;/code&gt; to add an integer to the queue, and &lt;code&gt;set In,Pn&lt;/code&gt; to get an element out of the queue. The last operation we need to perform on a queue is to determine whether the queue is empty. The PerlArray class uses &lt;code&gt;set In,Pn&lt;/code&gt; to return the length of the array into &lt;code&gt;In&lt;/code&gt;, but we&amp;rsquo;ve already decided to use that to get an integer out of the queue.&lt;/p&gt;
+
+&lt;p&gt;Instead of &lt;code&gt;set In,Pn&lt;/code&gt; to determine how many elements are in the queue, all we really need to know is whether the queue is empty or in use. For that, we can use the handy boolean operator, &lt;code&gt;if Pn,In&lt;/code&gt;. Here, the integer register is actually the number of instructions to skip over if the condition is true. We&amp;rsquo;ll have it branch if the queue is empty.&lt;/p&gt;
+
+&lt;p&gt;So, our &lt;code&gt;IntQueue&lt;/code&gt; data type will implement three instructions. First, the &lt;code&gt;set Pn,In&lt;/code&gt; instruction will add an integer to the queue. Second, when the queue is empty, &lt;code&gt;if Pn,In&lt;/code&gt; will branch to the appropriate offset. Finally, &lt;code&gt;set In,Pn&lt;/code&gt; will dequeue the last integer in the queue and place it into the appropriate integer register.&lt;/p&gt;
+
+&lt;p&gt;Some sample source using &lt;code&gt;IntQueue&lt;/code&gt; may come in handy at this time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  new P0, IntQueue   # Create the queue
+  set P0, 7          # Enqueue 7
+  set P0, -43        # Enqueue -43
+  set I0, P0         # Dequeue 7
+  print I0           # Should print &#39;7&#39;.
+  if P0, QUEUE_emPTY # Goto label &#39;QUEUE_emPTY&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;core-operations&#34;&gt;Core Operations&lt;/h3&gt;
+
+&lt;p&gt;Before forging ahead with the &lt;code&gt;IntQueue&lt;/code&gt;, let&amp;rsquo;s take a look at the core operations file. Within your CVS tarball, open &lt;em&gt;parrot/core.ops&lt;/em&gt; and search for the &lt;code&gt;set&lt;/code&gt; operations. While there are files such as &lt;em&gt;parrot/core_ops.c&lt;/em&gt; and &lt;em&gt;parrot/Parrot/OpLib/core_ops.pm&lt;/em&gt;, this is the master file. Changes in &lt;em&gt;parrot/core_ops.c&lt;/em&gt; will be overwritten the next time you build, so make your edits to &lt;em&gt;parrot/core.ops&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Having said that, let&amp;rsquo;s look at a sample PMC operation.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  inline op set(out PMC, in NUM) {
+    $1-&amp;gt;vtable-&amp;gt;set_number(interpreter,$1,$2);
+    goto NEXT();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since &lt;em&gt;core.ops&lt;/em&gt; is split into a Perl and C source file, the syntax is, of necessity, a mixture of Perl and C. The &amp;lsquo;inline&amp;rsquo; declaration is a hint to the JIT compiler, which is beyond the scope of the article. Parameters also have hints for the JIT compiler, but the most important bits here are the &lt;code&gt;PMC&lt;/code&gt; and &lt;code&gt;NUM&lt;/code&gt; tags, because these let the compiler know what types this operation can take.&lt;/p&gt;
+
+&lt;p&gt;When preprocessing into Perl, the prototype is the only piece of interest, as the assembler only needs to know the name and parameter list in order to build the assembly code.&lt;/p&gt;
+
+&lt;p&gt;C preprocessing is a bit more complicated, but still fairly straightforward. Tokens like &lt;code&gt;$2&lt;/code&gt; are replaced with the appropriate code to access the declared parameter, and a few keywords like &lt;code&gt;NEXT()&lt;/code&gt; are replaced with code to return the next instruction in the stream.&lt;/p&gt;
+
+&lt;p&gt;With the exception of those tags, the rest of the code is pure C, with access to all of the Parrot internals. Of course, you shouldn&amp;rsquo;t access such things as the register internals, but the rest of the C API is available, the most common APIs being located in &lt;em&gt;parrot/include/parrot/string.h&lt;/em&gt; and &lt;em&gt;parrot/include/parrot/key.h&lt;/em&gt;, the latter primarily being used for aggregate data structures.&lt;/p&gt;
+
+&lt;p&gt;The preprocessor, while slightly confusing, is much more flexible than the current system of nested &lt;code&gt;CPP&lt;/code&gt; macros that Perl currently uses, and hopefully easier to understand.&lt;/p&gt;
+
+&lt;h3 id=&#34;virtual-tables&#34;&gt;Virtual Tables&lt;/h3&gt;
+
+&lt;p&gt;The code above used a curious construct:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $1-&amp;gt;vtable-&amp;gt;set_number(INTERP,$1,$2);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Parameter &lt;code&gt;$1&lt;/code&gt; is a PMC, and since these are user-defined types, the code simply can&amp;rsquo;t assign &lt;code&gt;$2&lt;/code&gt; to &lt;code&gt;$1&lt;/code&gt;, as the non-PMC operations would do. Instead, each PMC has a table of function pointers assigned to it, and the interpreter calls the appropriate function.&lt;/p&gt;
+
+&lt;p&gt;For example, assuming that the &lt;code&gt;P0&lt;/code&gt; register is being initialized by the &lt;code&gt;new P0,IntQueue&lt;/code&gt; instruction, the above code would run the &lt;code&gt;set_number&lt;/code&gt; member of the &lt;code&gt;IntQueue&lt;/code&gt; class. Since the type of &lt;code&gt;P0&lt;/code&gt; is decided on at runtime, the dispatch mechanism is completely independent of the parameter type. What this means in the case of the &lt;code&gt;IntQueue&lt;/code&gt; type is that no modifications need to be made to the &lt;em&gt;parrot/core.ops&lt;/em&gt; file.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-parrot-class-files-parrot-class-files-span&#34;&gt;&lt;span id=&#34;parrot class files&#34;&gt;Parrot Class Files&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;em&gt;parrot/classes&lt;/em&gt; contains all of the PMC classes used by Parrot. Like the &lt;em&gt;parrot/core.ops&lt;/em&gt; file, this too is preprocessed before final compilation, so all edits should be made to the &lt;em&gt;parrot/classes/*.pmc&lt;/em&gt; files.&lt;/p&gt;
+
+&lt;p&gt;Creating a new class file from scratch is somewhat daunting, so we&amp;rsquo;ll use an existing class file to base &lt;code&gt;IntQueue&lt;/code&gt; on. While &lt;code&gt;IntQueue&lt;/code&gt; is an aggregate type like &lt;code&gt;PerlHash&lt;/code&gt;, the interface matches &lt;code&gt;PerlInt&lt;/code&gt; closest, in that it only deals with one element at a time.&lt;/p&gt;
+
+&lt;p&gt;Start by copying &lt;em&gt;parrot/classes/PerlInt.pmc&lt;/em&gt; to &lt;em&gt;parrot/classes/IntQueue.pmc&lt;/em&gt;, and replace all instances of &lt;code&gt;PerlInt&lt;/code&gt; with &lt;code&gt;IntQueue&lt;/code&gt;. There will be some additional C code necessary that will be available in the sample source at the end of the article, but not discussed beyond the API.&lt;/p&gt;
+
+&lt;p&gt;Registering the &lt;em&gt;parrot/classes/IntQueue.pmc&lt;/em&gt; is done in two files. Add the appropriate lines to &lt;em&gt;parrot/global_setup.c&lt;/em&gt; to initialize the new PMC type, and add the new vtable entry to &lt;em&gt;parrot/include/parrot/pmc.h&lt;/em&gt;. This is only done in the case of types that are intended to be part of Parrot itself; when Parrot has the ability to dynamically load PMC classes at runtime, a more flexible mechanism will be derived for registering classes, but for now, we&amp;rsquo;ll pretend that &lt;code&gt;IntQueue&lt;/code&gt; is going to be a core interpreter data type.&lt;/p&gt;
+
+&lt;p&gt;Within &lt;em&gt;parrot/core.ops&lt;/em&gt;, the instructions the &lt;code&gt;IntQueue&lt;/code&gt; type uses look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  op new(out PMC, in INT) {
+    PMC* newpmc;
+    if ($2 &amp;lt;0 || $2 &amp;gt;= enum_class_max) {
+      abort(); /* Deserve to lose */
+    }
+    newpmc = pmc_new(interpreter, $2);
+    $1 = newpmc;
+    goto NEXT();
+  }
+
+  inline op set(out PMC, in INT) {
+    $1-&amp;gt;vtable-&amp;gt;set_integer_native(interpreter, $1, $2);
+    goto NEXT();
+  }
+
+  inline op set(out INT, in PMC) {
+    $1 = $2-&amp;gt;vtable-&amp;gt;get_integer(interpreter, $2);
+    goto NEXT();
+  }
+
+  op if(in PMC, in INT) {
+    if ($1-&amp;gt;vtable-&amp;gt;get_bool(interpreter, $1)) {
+      goto OFFSET($2);
+    }
+    goto NEXT();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Naturally, each of these call PMC vtable entries, and each one of these has to be implemented. As of this writing, the appropriate vtable entries as they are in &lt;em&gt;parrot/classes/perlint.pmc&lt;/em&gt; look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    void init () { /* This is called from pmc_new() */
+        SELF-&amp;gt;cache.int_val = 0;
+    }
+
+    void set_integer_native (INTVAL value) {
+        SELF-&amp;gt;cache.int_val = value;
+    }
+
+    INTVAL get_integer () {
+        return SELF-&amp;gt;cache.int_val;
+    }
+
+    BOOLVAL get_bool () {
+        return pmc-&amp;gt;cache.int_val != 0;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Any code before the &lt;code&gt;pmclass&lt;/code&gt; declaration in a &lt;em&gt;parrot/classes/*.pmc&lt;/em&gt; file is literally copied into the C source, so we&amp;rsquo;ll use this area to store our data structures and APIs. In order to make matters simple, we&amp;rsquo;ll assume that the following API is available for our use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  static CONTAINER* new_container ( void );
+  static void enqueue ( CONTAINER* container, INTVAL value );
+  static INTVAL dequeue ( CONTAINER* container );
+  static INTVAL queue_length ( CONTAINER* container );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The API should be fairly straightforward to use. Initializing the container is done with &lt;code&gt;new_container&lt;/code&gt;, which returns a pointer to our new queue data type. Adding a new queue element is done with &lt;code&gt;enqueue&lt;/code&gt;, and deleting an element is done with &lt;code&gt;dequeue&lt;/code&gt;. The queue&amp;rsquo;s length can be found with &lt;code&gt;queue_length&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;CONTAINER&lt;/code&gt; data type has to be stored somewhere, and we look into &lt;em&gt;parrot/include/parrot/pmc.h&lt;/em&gt; to find out where to store it. We find the definition of the PMC structure to be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    struct PMC {
+      VTABLE *vtable;
+      INTVAL flags;
+      DPOINTER *data;
+      union {
+        INTVAL int_val;
+        FLOATVAL num_val;
+        DPOINTER *struct_val;
+      } cache;
+      SYNC *synchronize;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are two areas we can store data: &lt;code&gt;data&lt;/code&gt; is used as a general dumping ground for a data type&amp;rsquo;s internal data structures, and the &lt;code&gt;cache&lt;/code&gt; union is used for fast access to simpler data structures. &lt;code&gt;data&lt;/code&gt; is the right place to hang our &lt;code&gt;CONTAINER&lt;/code&gt; structure.&lt;/p&gt;
+
+&lt;p&gt;Like most of the other files within Parrot, the &lt;code&gt;IntQueue&lt;/code&gt; class is also preprocessed. The major preprocessing done here is to replace the &lt;code&gt;SELF&lt;/code&gt; tag with a reference to the current PMC. In the rare case that you need a reference to the current interpreter, that tag is &lt;code&gt;INTERP&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Initializing the &lt;code&gt;IntQueue&lt;/code&gt; class is done with the &lt;code&gt;init&lt;/code&gt; member. Since we&amp;rsquo;re storing our queue in the &lt;code&gt;data&lt;/code&gt;, we&amp;rsquo;ll let the &lt;code&gt;new_container&lt;/code&gt; function hand us a pointer to our new queue, and save that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    void init () {
+        SELF-&amp;gt;data = new_container();
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Getting an integer out of the queue is done with the &lt;code&gt;get_integer&lt;/code&gt; member. This isn&amp;rsquo;t meant to be production-quality, so we won&amp;rsquo;t worry about error checking. So, we&amp;rsquo;ll simply return the integer from the container.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    INTVAL get_integer () {
+        return dequeue((CONTAINER*)SELF-&amp;gt;data);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Adding an integer to the queue is done with the &lt;code&gt;set_integer_native&lt;/code&gt; member. We&amp;rsquo;ll simply use the &lt;code&gt;enqueue&lt;/code&gt; function to place the integer onto the queue like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    void set_integer_native (INTVAL value) {
+        enqueue(SELF-&amp;gt;data,value);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The final function we need to support is being able to determine whether the queue is empty, and we use the &lt;code&gt;queue_length&lt;/code&gt; function for that. The PMC member function that does this is &lt;code&gt;get_bool&lt;/code&gt;, and the code to access this is pretty straightforward:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    BOOLVAL get_bool () {
+        return queue_length(SELF-&amp;gt;data) != 0;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code has been checked in to the Parrot CVS, so feel free to look at the full version there. We&amp;rsquo;ve now walked through the major files needed to implement a Parrot Magic Cookie. Next time, we&amp;rsquo;ll explore the functions needed to implement aggregate data types like hashes and arrays, and learn about the new garbage collection system.&lt;/p&gt;
+
+&lt;p&gt;In the meantime, if you want to play with implementing your own data types for Parrot, then take a look at &lt;em&gt;docs/vtables.pod&lt;/em&gt; in the Parrot source tree for more information about the members that you can implement and how to design your own classes from scratch.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

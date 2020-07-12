@@ -60,7 +60,7 @@ Save the script code above into a text file saved as 'uninstall\_perl\_module.pl
 $ perl uninstall_perl_module.pl Acme::Dot
 ```
 
-and the script will remove the module for you. It will **retain non-empty directories**, as it uses [rmdir](http://perldoc.perl.org/functions/rmdir.html).
+and the script will remove the module for you. It will **retain non-empty directories**, as it uses [rmdir]({{</* perlfunc "rmdir" */>}}).
 
 ```perl
 removing /home/sillymoose/perl5/perlbrew/perls/perl-5.14.2/man/man3/Acme::Dot.3

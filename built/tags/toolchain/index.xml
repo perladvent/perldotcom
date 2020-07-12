@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Toolchain on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/toolchain/</link>
+    <description>Recent content in Toolchain on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 14 Nov 2016 10:37:03 +0000</lastBuildDate>
+    <atom:link href="/tags/toolchain/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How to upload a script to CPAN</title>
+      <link>http://localhost:1313/article/how-to-upload-a-script-to-cpan/</link>
+      <pubDate>Mon, 14 Nov 2016 10:37:03 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/how-to-upload-a-script-to-cpan/</guid>
+      <description>
+
+&lt;p&gt;If you&amp;rsquo;ve got a Perl script that does something useful, you might want to put it on CPAN. Becoming a CPAN author is a rite-of-passage for Perl programmers, you&amp;rsquo;ll learn about the CPAN infrastructure and sharing code is a nice thing to do. Within a few minutes of uploading a distribution to CPAN, it&amp;rsquo;s indexed and installable by anyone with a CPAN client, which is pretty incredible.&lt;/p&gt;
+
+&lt;p&gt;So let&amp;rsquo;s say I&amp;rsquo;ve got this Perl script:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; DateTime;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bar&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dt &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; DateTime&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;now;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($dt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;mon &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $dt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;day &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;31&lt;/span&gt;) {
+   $text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; reverse $text;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$text\n&amp;#34;&lt;/span&gt;;
+exit &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It usually prints &amp;ldquo;bar&amp;rdquo;, but on January 31, &lt;a href=&#34;https://www.daysoftheyear.com/days/backward-day/&#34;&gt;National Backward day&lt;/a&gt;, it prints &amp;ldquo;rab&amp;rdquo;. I&amp;rsquo;ll take you step-by-step through the process of putting it on CPAN.&lt;/p&gt;
+
+&lt;h3 id=&#34;setup-your-distribution-directory&#34;&gt;Setup your distribution directory&lt;/h3&gt;
+
+&lt;p&gt;An upload to CPAN is called a distribution, and each one contains several files, so I need to make a directory to contain all of the files I&amp;rsquo;m going to create. As most applications are uploaded under the namespace &lt;code&gt;App&lt;/code&gt;, that&amp;rsquo;s what I&amp;rsquo;ll use too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ mkdir App-foo
+$ cd App-foo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the root project directory. Now I&amp;rsquo;m going to make a few subdirectories:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ mkdir script
+$ mkdir -p lib/App
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;lib/App&lt;/code&gt; is a parent directory for the stub module that we&amp;rsquo;ll create shortly. The &lt;code&gt;script&lt;/code&gt; directory is where I&amp;rsquo;ll place the &lt;code&gt;foo&lt;/code&gt; script.&lt;/p&gt;
+
+&lt;h3 id=&#34;prepare-the-script-for-cpan&#34;&gt;Prepare the script for CPAN&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ll copy my script to &lt;code&gt;script/foo&lt;/code&gt;. One change I like to make my CPAN scripts is the shebang line. For my personal scripts I typically use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/env perl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The advantage of this is by calling &lt;code&gt;env&lt;/code&gt; the Perl that is executed can be changed by updating my &lt;code&gt;PATH&lt;/code&gt;. This is great when you&amp;rsquo;re running perlbrew or plenv. However not everyone manages multiple installations of Perl this way. Instead, I like to use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!perl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the distribution is installed, the shebang line is automatically changed to the absolute path of the Perl executable used to install the distribution, like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can also use &lt;code&gt;#!/usr/bin/perl&lt;/code&gt; and it will be overwritten by the install process. One reason I like &lt;code&gt;#!perl&lt;/code&gt; is that it won&amp;rsquo;t work without either installing the script or specifying the perl to run it with. This avoids mistakes like accidentally running the script with system Perl.&lt;/p&gt;
+
+&lt;p&gt;I should also add some documentation, so the final script looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; DateTime;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bar&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dt &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; DateTime&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;now;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($dt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;mon &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $dt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;day &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;31&lt;/span&gt;) {
+   $text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; reverse $text;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$text\n&amp;#34;&lt;/span&gt;;
+exit &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;=head1 NAME
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;foo - print bar, usually
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 DESCRIPTION
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;A simple script which usually prints C&amp;lt;bar&amp;gt;. On national backwards day
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;(January 31), it prints C&amp;lt;rab&amp;gt;. This distribution is used to show others
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;how to prepare a script for CPAN.
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 SYNOPSIS
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  $ foo
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  bar
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 AUTHOR
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;David Farrell
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 LICENSE
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;FreeBSD
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 INSTALLATION
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;Using C&amp;lt;cpan&amp;gt;:
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;    $ cpan App::foo
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;Manual install:
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;    $ perl Makefile.PL
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;    $ make
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;    $ make install
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=cut&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve included installation instructions here, you&amp;rsquo;ll see why later.&lt;/p&gt;
+
+&lt;h3 id=&#34;make-a-stub-module&#34;&gt;Make a stub module&lt;/h3&gt;
+
+&lt;p&gt;The CPAN toolchain requires at least one package in every distribution&lt;sup&gt;1&lt;/sup&gt;, so I&amp;rsquo;m going to make a stub &lt;code&gt;lib/App/foo.pm&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; App::foo;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;our&lt;/span&gt; $VERSION &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0.01&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;=head1 NAME
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;App::foo - an app that usually prints &amp;#34;bar&amp;#34;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 DESCRIPTION
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;This is a stub module, see F&amp;lt;script/foo&amp;gt; for details of the app.
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 AUTHOR
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;David Farrell
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 LICENSE
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;FreeBSD
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=cut&lt;/span&gt;
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This stub module does a couple of important things: having the package means CPAN can index the module and it will be searchable on &lt;a href=&#34;https://metacpan.org/&#34;&gt;metacpan&lt;/a&gt; and installable by CPAN clients like &lt;code&gt;cpan&lt;/code&gt; and &lt;code&gt;cpanm&lt;/code&gt;. It sets the distribution version number and it includes some basic documentation to point users towards the &lt;code&gt;foo&lt;/code&gt; script, which is the meat and potatoes of this distribution.&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;sup&gt;1&lt;/sup&gt; You can trick CPAN by editing the META files and not providing a Perl module. Check out &lt;a href=&#34;https://metacpan.org/pod/stasis&#34;&gt;stasis&lt;/a&gt; for an example of this. The downside is it&amp;rsquo;s not clear what other tools in the Perl toolchain might break without a real package. Not recommended.&lt;/p&gt;
+
+&lt;h3 id=&#34;create-a-makefile-pl&#34;&gt;Create a Makefile.PL&lt;/h3&gt;
+
+&lt;p&gt;The other file we need is &lt;code&gt;Makefile.PL&lt;/code&gt;. This is a Perl script which will create the Makefile that builds, tests and installs the module. Later I&amp;rsquo;ll use some of the built-in routines in the Perl toolchain to use our Makefile.PL to do a bit more than that.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.008004&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; ExtUtils::MakeMaker;
+
+WriteMakefile(
+  NAME             &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;App::foo&amp;#39;&lt;/span&gt;,
+  VERSION_FROM     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;lib/App/foo.pm&amp;#39;&lt;/span&gt;,
+  ABSTRACT_FROM    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;lib/App/foo.pm&amp;#39;&lt;/span&gt;,
+  AUTHOR           &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;David Farrell&amp;#39;&lt;/span&gt;,
+  LICENSE          &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;freebsd&amp;#39;&lt;/span&gt;,
+  MIN_PERL_VERSION &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;5.008004&amp;#39;&lt;/span&gt;,
+  EXE_FILES        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;script/foo&amp;#39;&lt;/span&gt;],
+  PREREQ_PM        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;strict&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;warnings&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DateTime&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0.37&amp;#39;&lt;/span&gt;,
+  },
+  (eval { ExtUtils::MakeMaker&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;VERSION(&lt;span style=&#34;color:#ae81ff&#34;&gt;6.46&lt;/span&gt;) } ? (META_MERGE &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;meta-spec&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; { version &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; },
+      resources &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+          repository &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+              type &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;git&amp;#39;&lt;/span&gt;,
+              url  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;https://github.com/dnmfarrell/foo.git&amp;#39;&lt;/span&gt;,
+              web  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;https://github.com/dnmfarrell/foo&amp;#39;&lt;/span&gt;,
+          },
+      }})
+   : ()
+  ),
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This &lt;code&gt;Makefile.PL&lt;/code&gt; script uses &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker&#34;&gt;ExtUtils::MakeMaker&lt;/a&gt;. Right at the top of the script the statement &lt;code&gt;use 5.008004&lt;/code&gt; ensures this script can only be run by Perl version 5.8.4 or higher. The &lt;code&gt;MINIMUM_PERL_VERSION&lt;/code&gt; entry is there so CPAN clients and services like CPAN testers will know what minimum Perl version is required to use the distribution.&lt;/p&gt;
+
+&lt;p&gt;You can see I&amp;rsquo;ve set the version and abstract text to come from the stub module. I&amp;rsquo;ve set the license to be FreeBSD, but there are many &lt;a href=&#34;https://metacpan.org/pod/CPAN::Meta::Spec#license&#34;&gt;others&lt;/a&gt; that are accepted. Both the license and minimum Perl version entries are newer options that may generate warnings in older versions of ExtUtils::MakeMaker - that&amp;rsquo;s fine, they&amp;rsquo;ll be ignored and the build can continue regardless.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;EXE_FILES&lt;/code&gt; line is important; it will make sure the script is copied to an executable directory on installation. &lt;code&gt;PREREQ_PM&lt;/code&gt; is a hashref of the runtime modules used by the script. In this case the first version of &lt;a href=&#34;https://metacpan.org/pod/DateTime&#34;&gt;DateTime&lt;/a&gt; that supported the &lt;code&gt;mon()&lt;/code&gt; method used in the script was 0.37 (technically &lt;code&gt;mon()&lt;/code&gt; is an alias that I could switch to &lt;code&gt;month()&lt;/code&gt; but that would make for a less interesting example). For the strict and warnings pragmas, there is no minimum version so I can just use zero.&lt;/p&gt;
+
+&lt;p&gt;The final part of the script begins with the &lt;code&gt;eval&lt;/code&gt; and it&amp;rsquo;s a little odd. Older versions of ExtUtils::MakeMaker didn&amp;rsquo;t support version 2 of the CPAN meta specification, so using &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker#META_MERGE&#34;&gt;META_MERGE&lt;/a&gt; this will only be included if being built with a modern version. This optional entry can be used if the distribution code is in a repository like GitHub, otherwise it&amp;rsquo;s not needed. Sites like MetaCPAN will include a link to the repo on GitHub if this is present.&lt;/p&gt;
+
+&lt;h3 id=&#34;create-a-readme&#34;&gt;Create a README&lt;/h3&gt;
+
+&lt;p&gt;I like to cheat for this one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perldoc -u script/foo &amp;gt; README.pod
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This writes the raw POD out of the script into &lt;code&gt;README.pod&lt;/code&gt;. One thing to remember is to include installation instructions in this file. This is why I included it in the script POD.&lt;/p&gt;
+
+&lt;h3 id=&#34;add-a-license-file&#34;&gt;Add a LICENSE file&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve already specified this distribution&amp;rsquo;s software license as FreeBSD in the makefile, so I should include a copy of the license in the distribution. This is easy with &lt;a href=&#34;https://metacpan.org/pod/App::Software::License&#34;&gt;App::Software::License&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ software-license --holder &#39;David Farrell&#39; --license FreeBSD --type fulltext &amp;gt; LICENSE
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates a FreeBSD license in my name and writes it to the &lt;code&gt;LICENSE&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;h3 id=&#34;build-the-distribution-tarball&#34;&gt;Build the distribution tarball&lt;/h3&gt;
+
+&lt;p&gt;Ok now the fun begins!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl Makefile.PL
+Generating a Unix-style Makefile
+Writing Makefile for App::foo
+Writing MYMETA.yml and MYMETA.json
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates the &lt;code&gt;Makefile&lt;/code&gt; but also META files which define the metadata of the distribution. These is used by the CPAN toolchain for things like indexing, version control and dependency management (&lt;a href=&#34;https://metacpan.org/pod/CPAN::Meta::Spec&#34;&gt;CPAN::Meta::Spec&lt;/a&gt; describes the metadata specification).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ make manifest
+&amp;quot;/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0&amp;quot; &amp;quot;-MExtUtils::Manifest=mkmanifest&amp;quot; -e mkmanifest
+Added to MANIFEST: lib/App/foo.pm
+Added to MANIFEST: LICENSE
+Added to MANIFEST: Makefile.PL
+Added to MANIFEST: MANIFEST
+Added to MANIFEST: README.pod
+Added to MANIFEST: script/foo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will create the &lt;code&gt;MANIFEST&lt;/code&gt; file, which lists all of the files in a distribution.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ make
+cp lib/App/foo.pm blib/lib/App/foo.pm
+cp README.pod blib/lib/App/README.pod
+cp script/foo blib/script/foo
+&amp;quot;/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0&amp;quot; -MExtUtils::MY -e &#39;MY-&amp;gt;fixin(shift)&#39; -- blib/script/foo
+Manifying 1 pod document
+Manifying 2 pod documents
+
+$ make install
+Manifying 1 pod document
+Manifying 2 pod documents
+Installing /home/dfarrell/.plenv/versions/5.22.0/lib/perl5/site_perl/5.22.0/App/foo.pm
+Installing /home/dfarrell/.plenv/versions/5.22.0/lib/perl5/site_perl/5.22.0/App/README.pod
+Installing /home/dfarrell/.plenv/versions/5.22.0/man/man1/foo.1
+Installing /home/dfarrell/.plenv/versions/5.22.0/man/man3/App::README.3
+Installing /home/dfarrell/.plenv/versions/5.22.0/man/man3/App::foo.3
+Installing /home/dfarrell/.plenv/versions/5.22.0/bin/foo
+Appending installation info to /home/dfarrell/.plenv/versions/5.22.0/lib/perl5/5.22.0/x86_64-linux/perllocal.pod
+cp lib/App/foo.pm blib/lib/App/foo.pm
+cp script/foo blib/script/foo
+&amp;quot;/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0&amp;quot; -MExtUtils::MY -e &#39;MY-&amp;gt;fixin(shift)&#39; -- blib/script/foo
+Manifying 1 pod document
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These commands build the distribution and install it on my computer. I can test run the script now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ foo
+bar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That works, so I&amp;rsquo;ll create the distribution tarball:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ make dist
+rm -rf App-foo-0.01
+&amp;quot;/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0&amp;quot; &amp;quot;-MExtUtils::Manifest=manicopy,maniread&amp;quot; \
+        -e &amp;quot;manicopy(maniread(),&#39;App-foo-0.01&#39;, &#39;best&#39;);&amp;quot;
+mkdir App-foo-0.01
+mkdir App-foo-0.01/lib
+mkdir App-foo-0.01/lib/App
+mkdir App-foo-0.01/script
+Generating META.yml
+Generating META.json
+tar cvf App-foo-0.01.tar App-foo-0.01
+App-foo-0.01/
+App-foo-0.01/script/
+App-foo-0.01/script/foo
+App-foo-0.01/Makefile.PL
+App-foo-0.01/lib/
+App-foo-0.01/lib/App/
+App-foo-0.01/lib/App/foo.pm
+App-foo-0.01/META.json
+App-foo-0.01/META.yml
+App-foo-0.01/MANIFEST
+App-foo-0.01/README.pod
+rm -rf App-foo-0.01
+gzip --best App-foo-0.01.tar
+Created App-foo-0.01.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Almost done, I&amp;rsquo;ll use the Makefile to clean up the build files:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ make clean
+rm -f \
+foo.bso foo.def \
+foo.exp foo.x \
+ blib/arch/auto/App/foo/extralibs.all \
+blib/arch/auto/App/foo/extralibs.ld Makefile.aperl \
+*.a *.o \
+*perl.core MYMETA.json \
+MYMETA.yml blibdirs.ts \
+core core.*perl.*.? \
+core.[0-9] core.[0-9][0-9] \
+core.[0-9][0-9][0-9] core.[0-9][0-9][0-9][0-9] \
+core.[0-9][0-9][0-9][0-9][0-9] libfoo.def \
+mon.out perl \
+perl perl.exe \
+perlmain.c pm_to_blib \
+pm_to_blib.ts so_locations \
+tmon.out
+rm -rf \
+  blib
+mv Makefile Makefile.old &amp;gt; /dev/null 2&amp;gt;&amp;amp;1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;upload-to-cpan&#34;&gt;Upload to CPAN&lt;/h3&gt;
+
+&lt;p&gt;I already have a PAUSE account, so I can skip this step. Otherwise prospective CPAN authors need to &lt;a href=&#34;http://pause.perl.org/pause/query?ACTION=request_id&#34;&gt;register&lt;/a&gt; for a PAUSE account. Don&amp;rsquo;t skip on the &amp;ldquo;A short description of why you would like a PAUSE ID&amp;rdquo; entry - this is one way the PAUSE admins identify human versus bot requests, and you don&amp;rsquo;t want to be mistaken for a bot!&lt;/p&gt;
+
+&lt;p&gt;Once I &lt;a href=&#34;https://pause.perl.org/pause/authenquery&#34;&gt;login&lt;/a&gt; to PAUSE, I can upload the distribution from the &lt;a href=&#34;https://pause.perl.org/pause/authenquery?ACTION=add_uri&#34;&gt;uploads page&lt;/a&gt;. These days I like to do it from the command line with &lt;a href=&#34;https://metacpan.org/pod/CPAN::Uploader&#34;&gt;CPAN::Uploader&lt;/a&gt;. That would work like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpan-upload -u DFARRELL App-foo-0.01.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;cpan-upload&lt;/code&gt; will then prompt for my PAUSE password, and confirm the upload was successful.&lt;/p&gt;
+
+&lt;p&gt;Within a few minutes, I&amp;rsquo;ll receive two emails from PAUSE: one confirms the uploaded distribution file, the other confirms it was indexed. Depending on how fast the CPAN mirrors update their index, users can now install the module at their command line with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpan App::foo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap-up&lt;/h3&gt;
+
+&lt;p&gt;It may seem like a lot of work at first, but I only had to create the stub module and the Makefile.PL, both of which can be copied from elsewhere, and edited. The other files were generated. All the files described in this article are available in the GitHub &lt;a href=&#34;https://github.com/dnmfarrell/App-foo&#34;&gt;repo&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Chapter 12 of &lt;a href=&#34;https://www.amazon.com/Intermediate-Perl-Beyond-Basics-Learning/dp/1449393098&#34;&gt;Intermediate Perl&lt;/a&gt; describes how to create a Perl distribution in greater detail. &lt;a href=&#34;https://perldoc.perl.org/perlnewmod.html&#34;&gt;perlnewmod&lt;/a&gt; is a brief overview of how create a module and prepare it for CPAN.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How to install any* Perl module</title>
+      <link>http://localhost:1313/article/200/2015/11/28/How-to-install-any--Perl-module/</link>
+      <pubDate>Sat, 28 Nov 2015 00:11:17 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/200/2015/11/28/How-to-install-any--Perl-module/</guid>
+      <description>&lt;p&gt;It&amp;rsquo;s our 200th article! Installing CPAN modules can be a pain, particularly for users not familiar with the Perl toolchain. To try something different, I&amp;rsquo;m uploading the article as an image file under creative commons. Feel free to share it, use it, whatever. If you use Perl at your office, maybe print it out for reference. You can download a copy &lt;a href=&#34;http://localhost:1313/images/200/chart.png&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/200/chart.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;[*] You can install any Perl module, but it may not be a good idea™&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

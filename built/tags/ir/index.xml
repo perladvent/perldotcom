@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ir on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/ir/</link>
+    <description>Recent content in Ir on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 08 Mar 2016 08:37:00 +0000</lastBuildDate>
+    <atom:link href="/tags/ir/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Controlling insanity by parsing IR codes with Linux::IRPulses</title>
+      <link>http://localhost:1313/article/controlling-insanity-by-parsing-ir-codes-with-linux--irpulses/</link>
+      <pubDate>Tue, 08 Mar 2016 08:37:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/controlling-insanity-by-parsing-ir-codes-with-linux--irpulses/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Sending information with pulsing invisible light can be surprisingly complex.
+Disentangle the problem with LIRC and Linux::IRPulses.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Infrared remotes are one of those things where every manufacturer thinks they have the
+One True Way&amp;trade; of doing it. You would think that there&amp;rsquo;s only one or two straightforward
+ways to pulse a little IR light. Clearly, we&amp;rsquo;re all wrong, because the home entertainment
+industry invents new ones all the time. That&amp;rsquo;s not even counting the other sectors and
+hobbyist projects that come up with entirely different methods.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://www.lirc.org&#34;&gt;Linux Infrared Remote Control&lt;/a&gt; (LIRC) project has
+produced mappings for a lot of remotes out there. That doesn&amp;rsquo;t help
+with some of the more fringe devices. Also, some of the components at the top of the stack
+are geared towards executing a program after detecting a valid series of pulses.&lt;/p&gt;
+
+&lt;p&gt;If we would rather take the pulses and handle them within our own program, then
+we need to ignore the top layers of LIRC and parse the pulse data directly. That is
+what &lt;a href=&#34;https://metacpan.org/pod/Linux::IRPulses&#34;&gt;Linux::IRPulses&lt;/a&gt; does.&lt;/p&gt;
+
+&lt;p&gt;We first need the hardware to detect the pulses. On a regular computer, there are many
+modules available which can be plugged in to a USB port. On a single board
+computer like the Raspberry Pi, we have General Purpose Input/Output (GPIO) pins,
+which can read the timing of the pulses.&lt;/p&gt;
+
+&lt;h3 id=&#34;setting-up-the-raspberry-pi&#34;&gt;Setting up the Raspberry Pi&lt;/h3&gt;
+
+&lt;p&gt;Skip this section if you&amp;rsquo;re using a regular IR device. If you want to set up a
+module on the Raspberry Pi&amp;rsquo;s GPIO pins, then read on.&lt;/p&gt;
+
+&lt;p&gt;First, you need a module of the right frequency for the IR data you&amp;rsquo;re trying to
+receive. If you&amp;rsquo;re using a remote from an old TV, then searching around for
+&amp;ldquo;&lt;manufacturer&gt; IR protocol&amp;rdquo; should get you the right answer. 38 KHz is a common
+frequency, but this is just the first thing that manufacturers all did differently.&lt;/p&gt;
+
+&lt;p&gt;The TSOP38138 is an IR remote receiver that runs at 38KHz. It&amp;rsquo;s part of a family of
+devices that run at different frequencies, any of which are likely adequate.&lt;/p&gt;
+
+&lt;p&gt;IR receivers for picking up remote data have three pins: power, ground, and data.
+Connect power to a +3.3V pin on the Raspberry Pi, ground to ground, and data to
+GPIO 23. See &lt;a href=&#34;https://www.raspberrypi.org/documentation/usage/gpio-plus-and-raspi2/&#34;&gt;the Raspberry Pi GPIO documentation&lt;/a&gt; for the location of the pins.&lt;/p&gt;
+
+&lt;p&gt;Now we need to configure LIRC. Start with a simple installation of the package with
+&lt;code&gt;apt-get install lirc&lt;/code&gt;. Next, we need to load the kernel module,
+tell LIRC where to find the pin, and also configure some Raspberry Pi boot options.&lt;/p&gt;
+
+&lt;p&gt;In &lt;code&gt;/etc/modules-load.d/modules.conf&lt;/code&gt;, put:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;lirc_dev
+lirc_rpi gpio_in_pin&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;23&lt;/span&gt; gpio_out_pin&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;22&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That will make GPIO 23 as your input pin. LIRC can also be setup to send IR data, so
+we set GPIO 22 for that as long as we&amp;rsquo;re here. Next, modify &lt;code&gt;/etc/lirc/hardware.conf&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# /etc/lirc/hardware.conf&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Arguments which will be used when launching lircd&lt;/span&gt;
+LIRCD_ARGS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;--uinput&amp;#34;&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;#Don&amp;#39;t start lircmd even if there seems to be a good config file&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#START_LIRCMD=false&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;#Don&amp;#39;t start irexec, even if a good config file seems to exist.&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#START_IREXEC=false&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;#Try to load appropriate kernel modules&lt;/span&gt;
+LOAD_MODULES&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;true
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Run &amp;#34;lircd --driver=help&amp;#34; for a list of supported drivers.&lt;/span&gt;
+DRIVER&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;default&amp;#34;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# usually /dev/lirc0 is the correct setting for systems using udev&lt;/span&gt;
+DEVICE&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/dev/lirc0&amp;#34;&lt;/span&gt;
+MODULES&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;lirc_rpi&amp;#34;&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Default configuration files for your hardware if any&lt;/span&gt;
+LIRCD_CONF&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;
+LIRCMD_CONF&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The particularly important things to note here are &lt;code&gt;DEVICE&lt;/code&gt; for the
+device path, and &lt;code&gt;MODULES&lt;/code&gt; for the Raspberry Pi GPIO driver.&lt;/p&gt;
+
+&lt;p&gt;Finally, edit &lt;code&gt;/boot/config.txt&lt;/code&gt; and add this somewhere in the file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;dtoverlay&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;lirc&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;rpi,gpio_in_pin&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;23&lt;/span&gt;,gpio_out_pin&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;22&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And then reboot. Once you&amp;rsquo;re back up, you can test it by plugging in your IR module
+to the right pins and pointing a remote at it. Using &lt;code&gt;mode2 -d /dev/lirc0&lt;/code&gt;,
+you should see the &lt;code&gt;pulse&lt;/code&gt; and &lt;code&gt;space&lt;/code&gt; data being sent.&lt;/p&gt;
+
+&lt;h3 id=&#34;decoding-the-undecodable&#34;&gt;Decoding the undecodable&lt;/h3&gt;
+
+&lt;p&gt;Sony runs their remotes at 40KHz. It starts by sending a header of a 2400μs pulse and
+600μs space. After the header, a 1 bit is sent by a 1200μs pulse, and a zero with a
+600μs. Between those ones and zeros are 600μs spaces. Codes could be 12, 15, or 20
+bits long depending on the remote. This is about as straightforward as things get.&lt;/p&gt;
+
+&lt;p&gt;NEC uses a 38KHz carrier frequency. There&amp;rsquo;s a 9000μs header followed by a 4500μs space.
+A 1 bit is sent by a 562.5μs pulse. A 0 bit is sent by a 562.5μs pulse. Wait, what? No,
+that&amp;rsquo;s not a typo. NEC differentiates ones and zeros by the length of the space that
+comes after the pulse: 1687.5μs for 1, and 562.5μs for 0.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.easyracelaptimer.com&#34;&gt;EasyRaceLapTimer&lt;/a&gt; (an Open Source
+quadcopter race timer system) is on a 38KHz frequency. It sends a 300μs pulse followed
+by a 300μs space. It then alternates sending pulses and spaces, with a 1 bit being
+600μs, and a 0 bit being 300μs.&lt;/p&gt;
+
+&lt;p&gt;All the timing numbers above are big fat lies. The noisy, analog nature of the world
+means the actual values coming from the IR receiver will be different from the
+specified values, perhaps by as much as 15%. It&amp;rsquo;s safe to assume that reverse
+engineered specifications are only guessing at the actual values that the manufacturer
+intended.&lt;/p&gt;
+
+&lt;p&gt;All that is to say that we have a complicated job on our hands, and the above only
+covers a few of the examples out there.&lt;/p&gt;
+
+&lt;h3 id=&#34;linux-irpulses&#34;&gt;Linux::IRPulses&lt;/h3&gt;
+
+&lt;p&gt;The goal of this module is to simplify the process reading these pulses and spaces
+while tolerating the numbers being off.&lt;/p&gt;
+
+&lt;p&gt;At present, the module works by parsing the output of LIRC&amp;rsquo;s &lt;code&gt;mode2&lt;/code&gt;
+program. This may change to reading directly from &lt;code&gt;/dev/lirc0&lt;/code&gt; in the future.
+For now, we&amp;rsquo;ll start by opening a pipe to &lt;code&gt;mode2&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $in, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-|&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;mode2 -d /dev/lirc0&amp;#39;&lt;/span&gt; ) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Can&amp;#39;t exec mode2: $!\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We now need to define the protocol to Linux::IRPluses&amp;rsquo;s constructor. To help with this,
+adding a &lt;code&gt;use Linux::IRPulses&lt;/code&gt; will export the subroutines &lt;code&gt;pulse()&lt;/code&gt;,
+&lt;code&gt;space()&lt;/code&gt;, and &lt;code&gt;pulse_or_space()&lt;/code&gt;.  These are used to specify what you
+expect to come in for pulses or spaces.&lt;/p&gt;
+
+&lt;p&gt;For instance, we know that NEC sends a 9000μs pulse and 4500μs space for its header.
+We tell the constructor this with:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Linux::IRPulses&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;({
+    header &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [ pulse &lt;span style=&#34;color:#ae81ff&#34;&gt;9000&lt;/span&gt;, space &lt;span style=&#34;color:#ae81ff&#34;&gt;4500&lt;/span&gt; ],
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The parser goes through each entry in the array, checking off that the given pulse or
+space data is what we expect. Once it reaches the end of the header array, it marks the
+header as good and then looks for valid data for ones and zeros. We specify those in
+much the same way. We&amp;rsquo;ll add in the other constructor parameters here, as well:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Linux::IRPulses&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;({
+    header &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [ pulse &lt;span style=&#34;color:#ae81ff&#34;&gt;9000&lt;/span&gt;, space &lt;span style=&#34;color:#ae81ff&#34;&gt;4500&lt;/span&gt; ],
+    zero &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [ pulse &lt;span style=&#34;color:#ae81ff&#34;&gt;563&lt;/span&gt;, space &lt;span style=&#34;color:#ae81ff&#34;&gt;563&lt;/span&gt; ],
+    one &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [ pulse &lt;span style=&#34;color:#ae81ff&#34;&gt;563&lt;/span&gt;, space &lt;span style=&#34;color:#ae81ff&#34;&gt;1688&lt;/span&gt; ],
+    bit_count &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;,
+    callback &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($args) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $code &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{code};
+        say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Received code $code&amp;#34;&lt;/span&gt;;
+    },
+});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The parser will continue looking for ones and zeros until it&amp;rsquo;s collected enough for the
+given &lt;code&gt;bit_count&lt;/code&gt;. Once the right number has been met, it calls the subref
+specified in &lt;code&gt;callback&lt;/code&gt; with a hashref. The hashref contains keys for
+&lt;code&gt;code&lt;/code&gt; (the IR code that was detected) and &lt;code&gt;pulse_obj&lt;/code&gt; (the
+Linux::IRPulses object). All the length numbers are checked with a tolerance of 20%.&lt;/p&gt;
+
+&lt;p&gt;We don&amp;rsquo;t promise you will keep your sanity after working with IR data, but hopefully
+&lt;code&gt;Linux::IRPulses&lt;/code&gt; can help you go mad with dignity.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;(Original photo CC-BY 2.0 by Stefanus Ming at &lt;a href=&#34;https://flic.kr/p/7djHYP&#34;&gt;https://flic.kr/p/7djHYP&lt;/a&gt;)&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

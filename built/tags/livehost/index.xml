@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Livehost on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/livehost/</link>
+    <description>Recent content in Livehost on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 01 Jul 2015 12:51:31 +0000</lastBuildDate>
+    <atom:link href="/tags/livehost/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Basic network hacking with Perl</title>
+      <link>http://localhost:1313/article/179/2015/7/1/Basic-network-hacking-with-Perl/</link>
+      <pubDate>Wed, 01 Jul 2015 12:51:31 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/179/2015/7/1/Basic-network-hacking-with-Perl/</guid>
+      <description>
+
+&lt;p&gt;Recently I&amp;rsquo;ve been reading &lt;a href=&#34;https://www.packtpub.com/networking-and-servers/penetration-testing-perl-raw&#34;&gt;Penetration Testing With Perl&lt;/a&gt; by Douglas Berdeaux. The book was released late last year, and whilst Dave Cross gave it a fairly scathing &lt;a href=&#34;http://perlhacks.com/2015/02/penetration-testing-perl/&#34;&gt;review&lt;/a&gt; I&amp;rsquo;ve found it interesting so far. I&amp;rsquo;ve been coding and refactoring the scripts presented in the book in a GitHub &lt;a href=&#34;https://github.com/dnmfarrell/Penetration-Testing-With-Perl&#34;&gt;repo&lt;/a&gt; as I go. Here is some of the stuff I&amp;rsquo;ve learned so far.&lt;/p&gt;
+
+&lt;h3 id=&#34;livehost-detection&#34;&gt;Livehost Detection&lt;/h3&gt;
+
+&lt;p&gt;If you&amp;rsquo;re connected to a network, it&amp;rsquo;s helpful to know the IP addresses of all of the other hosts on the same network. This &lt;a href=&#34;https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/livehost_scanner&#34;&gt;script&lt;/a&gt; starts by detecting the network device name (or accepting it as an argument) and initializing a packet capture object:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::ARP;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Address::IP::Local;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Frame::Device;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Frame::Dump::Online;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Frame::Simple;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Netmask;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Pcap ();
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $network_device_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $ARGV[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; @ARGV;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; ($network_device_name)
+{
+  $network_device_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::Pcap::pcap_lookupdev(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $error_msg);
+  die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;pcap device lookup failed &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; ($error_msg &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $error_msg &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; defined $network_device_name;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $device &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::Frame::Device&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(dev &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $network_device_name);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pcap &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::Frame::Dump::Online&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(
+  dev &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $network_device_name,
+  filter &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;arp and dst host &amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $device&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;ip,
+  promisc &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+  unlinkOnStop &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+  timeoutOnNext &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It then detects the gateway IP (the Ip address of the network controller) and sends a broadcast packet to every IP address in the subnet. The packet capture object &lt;code&gt;$pcap&lt;/code&gt; will detect any responses. It then prints out the respondent&amp;rsquo;s IP and MAC address.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Gateway IP: %s\nStarting scan\n&amp;#34;&lt;/span&gt;, $device&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;gatewayIp;
+
+$pcap&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;start;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ip_address (Net::Netmask&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($device&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;subnet)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;enumerate)
+{
+  Net::ARP::send_packet(
+    $network_device_name,
+    $device&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;ip,
+    $ip_address,
+    $device&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;mac,
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ff:ff:ff:ff:ff:ff&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#75715e&#34;&gt;# broadcast&lt;/span&gt;
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;request&amp;#34;&lt;/span&gt;,
+  );
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;until&lt;/span&gt; ($pcap&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;timeout)
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $next &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $pcap&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt;)
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $frame &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::Frame::Simple&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;newFromDump($next);
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $local_ip &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::Address::IP::Local&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;public;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $frame_ip &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $frame&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;ref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ARP}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;srcIp;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $frame_mac &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $frame&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;ref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ARP}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;src;
+    say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$frame_ip $frame_mac&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; ($local_ip &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; $frame_ip ? &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; (this machine)&amp;#39;&lt;/span&gt; : &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;);
+  }
+}
+&lt;span style=&#34;color:#66d9ef&#34;&gt;END&lt;/span&gt; { say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Exiting.&amp;#34;&lt;/span&gt;; $pcap&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;stop }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If I run this script on my home network, I get the following output&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) livehost_scanner
+Gateway IP: &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.1&lt;/span&gt;
+Starting scan
+Gateway IP: &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.1&lt;/span&gt;
+Starting scan
+&lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.1&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;d:7f:81:31:c2
+&lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.2&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;c:c5:d4:47:0a:13 (this machine)
+&lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.3&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;68&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;09&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;27&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;03&lt;/span&gt;:d0:35
+Exiting&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;From this I can deduce that there is one other machine connected to the network at &lt;code&gt;192.168.1.4&lt;/code&gt;, in addition to the router at &lt;code&gt;192.168.1.1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;fingerprinting&#34;&gt;Fingerprinting&lt;/h3&gt;
+
+&lt;p&gt;Now I&amp;rsquo;ve identified the addresses of two hosts on my network, if I was an attacker I would want to try and identify the types of hosts they are, in order to determine which types of attacks to use against them.&lt;/p&gt;
+
+&lt;p&gt;One way to fingerprint a host is using their &lt;a href=&#34;https://en.wikipedia.org/wiki/MAC_address&#34;&gt;MAC address&lt;/a&gt;. The first half of the address is the Organisationally Unique Identifier (OUI). The IEEE provide a &lt;a href=&#34;http://standards-oui.ieee.org/oui.txt&#34;&gt;file&lt;/a&gt; that lists all authorized OUIs and their manufacturer. So to identify the Manufacturer of the network device of the host, all we have to do is lookup their OUI in the file. This &lt;a href=&#34;https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/id_target&#34;&gt;script&lt;/a&gt; does that:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target_mac &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Usage\n\t./id_target \n&amp;#34;&lt;/span&gt;;
+
+printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Address: %s, MAC Manufacturer: %s\n&amp;#34;&lt;/span&gt;,
+  $target_mac, oui_lookup($target_mac);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;oui_lookup&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $mac_address &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  $mac_address &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/:/-/g&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $oui &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; substr $mac_address, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;;
+
+  open (&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $oui_file, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;data/oui.txt&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $line &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$oui_file&amp;gt;&lt;/span&gt;)
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;($line &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$oui/i&lt;/span&gt;)
+    {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($address, $manufacturer_name) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\t+/&lt;/span&gt;, $line;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$manufacturer_name&amp;#34;&lt;/span&gt;;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;last&lt;/span&gt;;
+    }
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Unknown&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If I run this script on the Gateway MAC address, I can identify the access point manufacturer:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;id_target &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;d:7f:81:31:c2
+Address: &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;d:7f:81:31:c2, MAC Manufacturer: NETGEAR INC&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;,&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Aha! so the access point is made by Netgear. There was another host detected on my network at address &lt;code&gt;192.168.1.3&lt;/code&gt;. I can try and fingerprint them too:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;id_target &lt;span style=&#34;color:#ae81ff&#34;&gt;68&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;09&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;27&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;03&lt;/span&gt;:d0:35
+Address: &lt;span style=&#34;color:#ae81ff&#34;&gt;68&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;09&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;27&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;03&lt;/span&gt;:d0:35, MAC Manufacturer: Apple&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It&amp;rsquo;s an Apple machine. With this data I can either try to fingerprint the hosts further, or I can start testing them for weaknesses, using a port scan or a known vulnerability. A good source of vulnerabilities is &lt;a href=&#34;http://www.exploit-db.com&#34;&gt;exploit-db.com&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

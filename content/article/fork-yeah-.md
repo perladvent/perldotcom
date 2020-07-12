@@ -19,7 +19,7 @@
 
 Recently at work I had to speed up a Perl script that processed files. Perl can spawn multiple processes with the `fork` function, but things can go awry unless you manage the subprocesses correctly. I added forking to the script and was able to improve the script's throughput rate nearly 10x, but it took me a few attempts to get it right. In this article I'm going to show you how to use `fork` safely and avoid some common mistakes.
 
-N.B. Windows users: as the `fork` system call is unavailable on Windows, these examples may not work as described, as the behavior is [emulated](https://perldoc.perl.org/perlfork.html) by Perl.
+N.B. Windows users: as the `fork` system call is unavailable on Windows, these examples may not work as described, as the behavior is [emulated]({{</* perldoc "perlfork" */>}}) by Perl.
 
 A simple example
 ----------------

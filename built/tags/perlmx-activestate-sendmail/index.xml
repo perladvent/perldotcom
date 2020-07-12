@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perlmx Activestate Sendmail on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perlmx-activestate-sendmail/</link>
+    <description>Recent content in Perlmx Activestate Sendmail on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 10 Oct 2001 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perlmx-activestate-sendmail/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Filtering Mail with PerlMx</title>
+      <link>http://localhost:1313/pub/2001/10/10/perlmx.html/</link>
+      <pubDate>Wed, 10 Oct 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/10/10/perlmx.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;PerlMx is a utility by ActiveState that allows Perl programs to interface with Sendmail connections. It&amp;rsquo;s quite a powerful tool, and once installed, it&amp;rsquo;s very easy to use. This article will detail how to install and setup PerlMx, and provide an overview both of what you can do with PerlMx, and how to do it. This overview will be based on spamNX, the anti-spam code I developed, available at &lt;a href=&#34;https://sourceforge.net/projects/spamnx&#34;&gt;https://sourceforge.net/projects/spamnx&lt;/a&gt;. My next PerlMx article will go through spamNX in depth, to demonstrate how to harness the power of PerlMx.&lt;/p&gt;
+
+&lt;h3 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h3&gt;
+
+&lt;p&gt;PerlMx is made possible by the excellent Milter code provided in Sendmail versions 8.10.0 and higher. This code, when compiled into Sendmail, allows external programs to hook into the Sendmail connection process via C callbacks. PerlMx passes these C hooks to the Perl interpreter, where you can access the information with a simple &lt;code&gt;shift&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Versions 8.12 and higher of Sendmail enable Milter by default. In prior versions, you must first enable the code in Sendmail. To do so, go to the &lt;code&gt;devtools/site&lt;/code&gt; directory off of the Sendmail source code. Add the following lines to your &lt;code&gt;site.config.m4&lt;/code&gt; file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;dnl Milter
+APPENDDEF(`conf_sendmail_ENVDEF&#39;, `-D_FFR_MILTER=1&#39;)
+APPENDDEF(`conf_libmilter_ENVDEF&#39;, `-D_FFR_MILTER=1&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now compile and install Sendmail. Once installed, add the following lines to your &lt;code&gt;config.mc&lt;/code&gt; file (again, for Sendmail below version 8.12):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;define(`_FFR_MILTER&#39;,&#39;1&#39;)dnl
+INPUT_MAIL_FILTER(`&amp;lt;filter_name&amp;gt;&#39;, `S=inet:3366@localhost, F=T&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Be warned that if you enable Milter in your configuration file, all Sendmail connections will fail unless PerlMx is running. So wait until your code is ready to go before you change your config file.&lt;/p&gt;
+
+&lt;p&gt;Your Sendmail installation is now ready to go. PerlMx also needs Perl 5.6.0 or higher, with ithreads enabled, and cannot have big integer (nor really big) support enabled. Prior to 5.6.1, PerlMx will also need the File-Temp module installed. With Perl properly configured, run the installation program provided by ActiveState.&lt;/p&gt;
+
+&lt;p&gt;Once PerlMx is installed and your code is ready to go, run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;pmx &amp;lt;package&amp;gt; &amp;amp;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To launch PerlMx. At this point, you can safely turn on the Milter code in your Sendmail configuration. There are a few command-line options available for PerlMx. Most are unnecessary, but I&amp;rsquo;ve found I need to allow more than the default five threads. To do so, run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;pmx -r &amp;lt;# of threads&amp;gt; &amp;lt;package&amp;gt; &amp;amp;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can read about all the available options by running &lt;code&gt;pmx -h&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://aspn.activestate.com/ASPN/Reference/Products/PerlMx/FAQ.html&#34;&gt;ActiveState has an FAQ available&lt;/a&gt; if you run into any trouble or have questions that aren&amp;rsquo;t covered here.&lt;/p&gt;
+
+&lt;p&gt;Sendmail, Perl, and PerlMx should now be installed and ready to go. The following section provides an overview of how to write PerlMx code.&lt;/p&gt;
+
+&lt;h3 id=&#34;programming-overview&#34;&gt;Programming Overview&lt;/h3&gt;
+
+&lt;p&gt;PerlMx allows you to hook into the connection at many stages of the connection, which are called by PerlMx from your code. I&amp;rsquo;ll now go through an outline of spamNX, to show how to start using PerlMx.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package spamNX;
+use strict;
+use PerlMx;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The basic building blocks: give your package a name, and tell it to use PerlMx. Code executed here is only run once, so you can open a database connection or perform similar operations here.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub new {
+  return bless {
+    NAME    =&amp;gt; &amp;quot;spamNX&amp;quot;,
+    CONNECT =&amp;gt; \&amp;amp;cb_connect,
+    HELO    =&amp;gt; \&amp;amp;cb_helo,
+    ENVFROM =&amp;gt; \&amp;amp;cb_from,
+    ENVRCPT =&amp;gt; \&amp;amp;cb_rcpt,
+    HEADER  =&amp;gt; \&amp;amp;cb_header,
+    BODY    =&amp;gt; \&amp;amp;cb_body,
+    EOM     =&amp;gt; \&amp;amp;cb_eom,
+    ABORT   =&amp;gt; \&amp;amp;cb_abort,
+    CLOSE   =&amp;gt; \&amp;amp;cb_close,
+  }, shift;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This sub returns a blessed instance of your package&amp;rsquo;s subroutines. Each key in the hash relates to a specific point in the SMTP connection, and the associated function is called at that point in the connection. Your program may define any or all of the above functions; if it isn&amp;rsquo;t defined in your blessed return, PerlMx won&amp;rsquo;t try to run any code.&lt;/p&gt;
+
+&lt;p&gt;Upon each function call, an object reference and relevant information are passed to the function via the argument list. The object reference allows calls to various methods and is stateful, allowing you to store information for use later in the connection. The information provided ranges from the name of the connecting host to the body of the message. These functions, and their associated arguments, are discussed below, in order of when they&amp;rsquo;re called. The &lt;code&gt;cb_helo&lt;/code&gt; function, which is relatively simple, will be discussed in detail to familiarize you with how a PerlMx function is written.&lt;/p&gt;
+
+&lt;p&gt;The first function called is &lt;code&gt;cb_connect&lt;/code&gt;. This function is called for every Sendmail connection, and is passed the standard object reference, the name that the connecting host claims to be, and the real IP address of the host.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cb_connect {
+  # Standard object reference
+  my $ctx = shift;
+  # (Possibly faked) name of the connecting host
+  my $host = shift;
+  # IP address of the connectin host
+  my $ip = shift;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is followed by &lt;code&gt;cb_helo&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cb_helo {
+  # Standard object reference
+  my $ctx = shift;
+  # Connecting host&#39;s HELO
+  my $helo = shift;
+  # Get the name of the host from the $ctx object reference
+  my $host = $ctx-&amp;gt;{host};
+  # Store the HELO in the ctx object for any future reference
+  $ctx-&amp;gt;{helo} = $helo;
+
+  # Compare the host&#39;s real name to what they provide in the HELO
+  if ($host =~ /$helo/) {
+    # Since the RFC spec&#39;s that the HELO should be the connecting 
+    # host&#39;s domain name, reject the mail if the HELO doesn&#39;t at 
+    # all match the hostname
+    return SMFIS_REJECT;
+  }
+
+  # Continue with the connection, including any further function calls
+  return SMFIS_CONTINUE;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The preceding code looks at the value the connecting host provides for a HELO. If that value does not appear in the host&amp;rsquo;s actual name, then the mail is rejected. Otherwise, the connection continues. Note that there are other possible return values. They are:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;SMFIS_ACCEPT&lt;/code&gt; &amp;ndash; accept the message without perfoming any further PerlMx checks.
+&lt;code&gt;SMFIS_TEMPFAIL&lt;/code&gt; &amp;ndash; returns a temporary failure, for cases such as hostname lookup failure.
+&lt;code&gt;SMFIS_DISCARD&lt;/code&gt; &amp;ndash; accepts the message, but silently drops it in the bit bucket. Not usually a good idea.
+Related to the SMFIS returns, the &lt;code&gt;$ctx-&amp;gt;setreply($code, $xcode, $message)&lt;/code&gt; method is available to each callback, that sets the response code to &lt;code&gt;$code&lt;/code&gt;, the extended response to &lt;code&gt;$xcode&lt;/code&gt;, and the response message to &lt;code&gt;$message&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The next function called is &lt;code&gt;cb_from&lt;/code&gt;, which processes the sender&amp;rsquo;s &lt;code&gt;MAIL FROM&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cb_from {
+  # Object ref
+  my $ctx = shift;
+  # MAIL FROM value
+  my $from = shift
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next is &lt;code&gt;cb_rcpt&lt;/code&gt;, which is called once per recipient. Each call is passed the value of one &lt;code&gt;RCPT TO&lt;/code&gt; call. To keep track of every recipient, create an array in the &lt;code&gt;ctx&lt;/code&gt; object reference with each recipient&amp;rsquo;s address.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cb_rcpt {
+  # Object ref
+  my $ctx = shift;
+  # Recipient, a la RCPT TO: line
+  my $rcpt = shift;
+
+  # Store the recipient&#39;s name
+  push(@{$ctx-&amp;gt;{rcpts}}, $rcpt);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next code block, &lt;code&gt;cb_header&lt;/code&gt;, is the first part of code that doesn&amp;rsquo;t deal directly with the connection or an SMTP protocol field. This code is called during the &lt;code&gt;DATA&lt;/code&gt; portion of the SMTP connection, prior to the blank line that seperates headers from body. This function is called once per header. As the &lt;code&gt;Received&lt;/code&gt; lines are often multi-lined, the value that you are passed may be folded. You can use &lt;code&gt;Mail::Header&lt;/code&gt;, by Graham Barr, to unfold multi-lined headers into one line.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cb_header {
+  # Object ref
+  my $ctx = shift;
+  # The header name (e.g. &amp;quot;Cc&amp;quot; or &amp;quot;Received&amp;quot;)
+  my $name = shift;
+  # The header value (i.e. the latter half of XYZ: abc)
+  my $value = shift;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We next come to &lt;code&gt;cb_body&lt;/code&gt;, which is also called during the DATA block, after the headers have finished. The code here processes the actual text of the email message &amp;ndash; very useful for virus scanning or natural language searches. &lt;code&gt;cb_body&lt;/code&gt; may be called repeatedly for large bodies of text. A caveat to keep in mind for the future: the built-in &lt;code&gt;replacebody&lt;/code&gt; function, which replaces the text of a message, behaves similarly. On the first call, the message body is replaced. On all following calls, the text is appended to the new message. More on this potentially frustrating feature in my second article.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cb_body {
+  # Object ref
+  my $ctx = shift;
+  # Message body
+  my $body = shift;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After the text of the message is sent, the SMTP connection is complete, and &lt;code&gt;cb_eom&lt;/code&gt; is called. This block of code is not passed any special variables outside of the standard object reference, however there are a few functions available here that are not available at any other point in the code &amp;ndash; the &lt;code&gt;replacebody&lt;/code&gt; function, for example. The special functions are:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;$ctx-&amp;gt;replacebody($body)&lt;/code&gt; &amp;ndash; Replaces the body of a message with given text. As noted above, can be called multiple times for large chunks of data.
+&lt;code&gt;$ctx-&amp;gt;addrcpt($recipient)&lt;/code&gt; &amp;ndash; Adds a message recipient.
+&lt;code&gt;$ctx-&amp;gt;delrcpt($recipient)&lt;/code&gt; &amp;ndash; Removes a message recipient.
+&lt;code&gt;$ctx-&amp;gt;addheader($name, $value)&lt;/code&gt; &amp;ndash; Adds a header to the message.
+&lt;code&gt;$ctx-&amp;gt;chgheader($name, $index, $value)&lt;/code&gt; &amp;ndash; Changes the (1-based) Nth occurence of the named header to the given value.
+    sub cb_eom {
+      # Object ref
+      my $ctx = shift;
+    }&lt;/p&gt;
+
+&lt;p&gt;After the connection is completed, and &lt;code&gt;cb_eom&lt;/code&gt; finishes, the &lt;code&gt;cb_close&lt;/code&gt; function is called. This call does not get passed anything aside from the object ref, and simply provides a means to clean up the &lt;code&gt;ctx&lt;/code&gt; object reference and anything else you may have done during the connection. &lt;code&gt;cb_close&lt;/code&gt; is virtually identical to &lt;code&gt;cb_abort&lt;/code&gt; (which I won&amp;rsquo;t detail, since they&amp;rsquo;re essentially the same); the only difference is that &lt;code&gt;cb_abort&lt;/code&gt; is called when a connection is prematurely closed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cb_close {
+  # Object ref
+  my $ctx = shift;
+
+  # Don&#39;t keep a reference to previous recipients
+  undef $ctx-&amp;gt;{rcpts};
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ve now walked through an outline of a complete PerlMx program, and seen how to configure Sendmail and Perl to use PerlMx. In my next article, I&amp;rsquo;ll walk through the interesting bits of my spamNX code, to demonstrate the power of PerlMx and some tricks that are available to programmers.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

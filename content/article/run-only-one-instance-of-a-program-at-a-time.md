@@ -27,10 +27,10 @@ Programs can use the lock file principle to prevent multiple instances of themse
 
 ### File locking in Perl
 
-Perl provides the [flock](http://perldoc.perl.org/functions/flock.html) function for file locking. It takes a filehandle and a constant value for the lock type. So to get an exclusive lock on a file, I could do:
+Perl provides the [flock]({{</* perlfunc "flock" */>}}) function for file locking. It takes a filehandle and a constant value for the lock type. So to get an exclusive lock on a file, I could do:
 
 ```perl
-open my $file, ">", "app.lock" or die $!; 
+open my $file, ">", "app.lock" or die $!;
 flock $file, 2 or die "Unable to lock file $!";
 # we have the lock
 ```
@@ -39,7 +39,7 @@ This code starts by opening a write filehandle to the file `app.lock`. If succes
 
 ```perl
 use Fcntl qw(:flock);
-open my $file, ">", "app.lock" or die $!; 
+open my $file, ">", "app.lock" or die $!;
 flock $file, LOCK_EX or die "Unable to lock file $!";
 # we have the lock
 ```
@@ -52,7 +52,7 @@ So far so good but we have a problem. If the file is locked, `flock` will block 
 
 ```perl
 use Fcntl qw(:flock);
-open my $file, ">", "app.lock" or die $!; 
+open my $file, ">", "app.lock" or die $!;
 flock $file, LOCK_EX|LOCK_NB or die "Unable to lock file $!";
 # we have the lock
 ```
@@ -66,7 +66,7 @@ I'm going to put this locking code into a quick script so I can test the lock fu
 ```perl
 #!/usr/bin/env perl
 use Fcntl qw(:flock);
-open my $file, ">", "app.lock" or die $!; 
+open my $file, ">", "app.lock" or die $!;
 flock $file, LOCK_EX|LOCK_NB or die "Unable to lock file: $!";
 
 sleep(60);

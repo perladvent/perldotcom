@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Reading Code on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/reading-code/</link>
+    <description>Recent content in Reading Code on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 07 Oct 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/reading-code/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Why Review Code?</title>
+      <link>http://localhost:1313/pub/2004/10/07/code_reviews.html/</link>
+      <pubDate>Thu, 07 Oct 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/10/07/code_reviews.html/</guid>
+      <description>
+
+&lt;p&gt;Richard Gabriel of Sun Microsystems suggests that &lt;a href=&#34;http://java.sun.com/features/2002/11/gabriel_qa.html&#34;&gt;beginning programmers should study the source code for great works of software&lt;/a&gt; as part of a &lt;a href=&#34;http://www.dreamsongs.com/MFASoftware.html&#34;&gt;Master of Fine Arts course in software&lt;/a&gt;. Prominent Extreme Programmers talk about finding the &lt;a href=&#34;http://c2.com/cgi/wiki?QualityWithoutaName&#34;&gt;Quality Without a Name&lt;/a&gt; in software, listening to your code, and reworking your code when it &amp;ldquo;smells.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;With this in mind, this article contains a review of one of the &amp;ldquo;base&amp;rdquo; Perl modules, available from CPAN but also included as part of any distribution of Perl. It&amp;rsquo;s a module that I particularly like (with algorithms that I can more or less understand); I aim to show why I like it and what you can learn from it.&lt;/p&gt;
+
+&lt;h3 id=&#34;code-and-communication&#34;&gt;Code and Communication&lt;/h3&gt;
+
+&lt;p&gt;Reviewing (even reading) source code is not always easy. Most software doesn&amp;rsquo;t have human readability as a primary goal — just compilers or interpreters. The exception is software written as examples or to help others learn. This code is primarily of interest in itself and not for what it does. As far as a computer cares, software would have the same behavior if it had no comments and all variables named as &lt;code&gt;a1, a2, ...&lt;/code&gt; &amp;ndash; as the obfuscated programming contests prove. They also prove that we humans then find it difficult to read. Most literature (including poems, essays, short stories, novels), on the other hand, has the primary purpose of communicating with other people, and so is often easier to understand.&lt;/p&gt;
+
+&lt;p&gt;Nonetheless, code reviews are still useful. Projects that perform them usually do so to find bugs or to suggest improvements; they exist for the benefit of the code writer or tester. Here, we seek to learn from the code, to take away from it lessons that we can apply to our own code. These are lessons, or patterns, but not design patterns; the patterns discussed here appear at a lower level and are more of the order of tips and tricks.&lt;/p&gt;
+
+&lt;p&gt;As mentioned above, there are parts of software programs that do exist to communicate: comments as well as variable and function (or method) names are all about communicating (with other people). The challenge for the considerate &lt;a href=&#34;#codemaintainer&#34;&gt;[1]&lt;/a&gt; software developer (who thinks beyond the short term) is to use comments and names to tell the story of the software: what it is, what it should do, and why the developers made certain choices. Ideally, the form of software should match its function &lt;a href=&#34;#camel&#34;&gt;[2]&lt;/a&gt;: comments and names should explain and clarify the rest of the code, rather than disagreeing with it, repeating what it says, or being irrelevant. Source code reviews are part of this process. They further explain the code to a wider audience, telling its story in a broader and hopefully deeper way.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-review-itself&#34;&gt;The Review Itself&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Math::Complex&#34;&gt;Math::Complex&lt;/a&gt; is an open source Perl package that is part of the core Perl distribution. It provides methods for complex arithmetic (and overloading of operators).&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://c2.com/cgi/wiki?RaphaelManfredi&#34;&gt;Raphael Manfredi&lt;/a&gt; created the module in 1996. Since then, first &lt;a href=&#34;http://www.hut.fi/~jhi/&#34;&gt;Jarkko Hietaniemi&lt;/a&gt; and, currently, &lt;a href=&#34;http://www.prairienet.org/~dslewart/&#34;&gt;Daniel S. Lewart&lt;/a&gt; have maintained it (according to its own comments). My comments below relate to version 1.34.&lt;/p&gt;
+
+&lt;p&gt;I should explain that while I&amp;rsquo;ve been using Perl for maybe three years, it&amp;rsquo;s mostly been for test automation and text processing; my day-to-day programming is primarily in C. I tend to notice the things about Perl that are difficult (at times verging on impossible) to do in C.&lt;/p&gt;
+
+&lt;p&gt;Early on in the &lt;a href=&#34;https://metacpan.org/pod/Math::Complex&#34;&gt;Math::Complex&lt;/a&gt; package, a huge (and often reused) regular expression &lt;code&gt;$gre&lt;/code&gt; appears:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Regular expression for floating point numbers.
+my $gre =
+qr&#39;\s*([\+\-]?(?:(?:(?:\d+(?:_\d+)*(?:\.\d*(?:_\d+)*)?|\.\d+(?:_\d+)*)(?:[eE][\+\-]?\d+(?:_\d+)*)?)))&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This regular expression captures floating-point numbers (which may include isolated underscores) in a single reference. It thus provides flexibility and robustness (key motivations for using regular expressions) without repetition. It also uses &lt;code&gt;?:&lt;/code&gt; within the brackets to cluster parts of the regular expression without providing back references; this means that the whole regular expression provides one back reference rather than five or six.&lt;/p&gt;
+
+&lt;p&gt;This regular expression may be easier to understand when refactored into smaller chunks. The test I used when refactoring was quite simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @testexpressions = (&#39;100&#39;, &#39;100.12&#39;, &#39;100.12e-13&#39;, &#39;100_000.545_123&#39;,
+    &#39;1e-3&#39;, &#39;.1&#39;, &#39;-100_000.545_123e+11_12&#39;);
+foreach my $expr (@testexpressions)
+{
+   if ($expr =~ m/$gre/)
+   {
+      print &amp;quot;$expr matches gre\n&amp;quot;;
+   }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The same test code can run against the refactored regular expression to make sure that it still matches the same strings. Here, working from the inside out, I extracted some common expressions. For each expression extracted and captured by the quote-like operator &lt;code&gt;qr&lt;/code&gt;, I also removed the &lt;code&gt;?:&lt;/code&gt; clustering. &lt;code&gt;$gre&lt;/code&gt; above is equivalent to &lt;code&gt;$newgre&lt;/code&gt; below:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $underscoredigits = qr/_\d+/;
+my $digitstring      = qr/\d+$underscoredigits*/;
+my $fractional       = qr/\.\d*$underscoredigits*/;
+my $mantissa         = qr/$digitstring$fractional?|\.$digitstring/;
+my $exponent         = qr/[eE][\+\-]?$digitstring/;
+my $newgre           = qr/\s*([\+\-]?$mantissa$exponent?)/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For example, &lt;code&gt;$underscoredigits&lt;/code&gt; matches &lt;code&gt;_123&lt;/code&gt;; &lt;code&gt;$digitstring&lt;/code&gt; matches &lt;code&gt;545_123&lt;/code&gt;; &lt;code&gt;$fractional&lt;/code&gt; matches &lt;code&gt;.545_123&lt;/code&gt;; &lt;code&gt;$mantissa&lt;/code&gt; matches either &lt;code&gt;100_000.545_123&lt;/code&gt; or &lt;code&gt;.1&lt;/code&gt;; &lt;code&gt;$exponent&lt;/code&gt; matches &lt;code&gt;e+11_12&lt;/code&gt;; and finally &lt;code&gt;$newgre&lt;/code&gt; matches the whole string &lt;code&gt;-100_000.545_123e+11_12&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The construction method &lt;code&gt;make&lt;/code&gt; is, again, flexible and robust. The author has extracted part of its complexity to different methods to avoid repetition. For example, the module uses the &lt;code&gt;_cannot_make&lt;/code&gt; function internally to report errors, calling it from several places in &lt;code&gt;make&lt;/code&gt;. It looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Die on bad *make() arguments.
+
+sub _cannot_make {
+    die &amp;quot;@{[(caller(1))[3]]}: Cannot take $_[0] of $_[1].\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In turn, it calls the built-in &lt;code&gt;caller&lt;/code&gt; function to refer back to the original code (similar to an &lt;code&gt;assert&lt;/code&gt; in C, or a lightweight version of the &lt;code&gt;cluck&lt;/code&gt; or &lt;code&gt;confess&lt;/code&gt; functions in the &lt;a href=&#34;https://perldoc.perl.org/Carp.html&#34;&gt;Carp&lt;/a&gt; package).&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;make&lt;/code&gt; also calls the the &lt;code&gt;remake&lt;/code&gt; function, if &lt;code&gt;make&lt;/code&gt; receives only one argument (for example, a string such as &lt;code&gt;&amp;quot;1 + 2i&amp;quot;&lt;/code&gt;) and must deduce the real and/or imaginary parts:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub _remake {
+    my $arg = shift;
+    my ($made, $p, $q);
+
+    if ($arg =~ /^(?:$gre)?$gre\s*i\s*$/) {
+        ($p, $q) = ($1 || 0, $2);
+        $made = &#39;cart&#39;;
+    } elsif ($arg =~ /^\s*\[\s*$gre\s*(?:,\s*$gre\s*)?\]\s*$/) {
+        ($p, $q) = ($1, $2 || 0);
+        $made = &#39;exp&#39;;
+    }
+
+    if ($made) {
+        $p =~ s/^\+//;
+        $q =~ s/^\+//;
+    }
+
+    return ($made, $p, $q);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The regular expression &lt;code&gt;$gre&lt;/code&gt; appears here as part of a larger regular expression, to interpret not only &lt;code&gt;&amp;quot;1 + 2i&amp;quot;&lt;/code&gt; but also &lt;code&gt;&amp;quot;2i&amp;quot;&lt;/code&gt; by itself. The expression &lt;code&gt;$1 || 0&lt;/code&gt;, used here and elsewhere, replaces the &lt;code&gt;undef&lt;/code&gt; value of Perl (treated as 0 in a Boolean context) with 0, while leaving other values unchanged.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;plus&lt;/code&gt; function, one of the several binary operators provided in the package, also has some interesting features:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#
+# (plus)
+#
+# Computes z1+z2.
+#
+sub plus {
+        my ($z1, $z2, $regular) = @_;
+        my ($re1, $im1) = @{$z1-&amp;gt;cartesian};
+        $z2 = cplx($z2) unless ref $z2;
+        my ($re2, $im2) = ref $z2 ? @{$z2-&amp;gt;cartesian} : ($z2, 0);
+        unless (defined $regular) {
+                $z1-&amp;gt;set_cartesian([$re1 + $re2, $im1 + $im2]);
+                return $z1;
+        }
+        return (ref $z1)-&amp;gt;make($re1 + $re2, $im1 + $im2);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It uses the trinary conditional operator &lt;code&gt;* = * ? * : *&lt;/code&gt;, which is also present in C. In Perl, this can return not just scalars but also lists. Thus the code to calculate the values of &lt;code&gt;$re2&lt;/code&gt; and &lt;code&gt;$im2&lt;/code&gt; is much more compact than the equivalent code in C could be. This code uses the Cartesian coordinates of &lt;code&gt;$z2&lt;/code&gt; if it&amp;rsquo;s already a complex number. Otherwise, it turns a real number into a complex number.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;plus&lt;/code&gt; function later uses &lt;code&gt;ref $z1&lt;/code&gt;, the package name of &lt;code&gt;$z1&lt;/code&gt;, to create the sum of &lt;code&gt;$z1&lt;/code&gt; and &lt;code&gt;$z2&lt;/code&gt;; this allows subclasses of Math::Complex to reuse exactly the same function.&lt;/p&gt;
+
+&lt;p&gt;Finally, the &lt;code&gt;Cartesian&lt;/code&gt; function mentioned above can either return existing values for the real and imaginary part, if these are &amp;ldquo;clean&amp;rdquo; (valid), or recalculate them from the polar form. Each complex number object stores the &amp;ldquo;cleanliness&amp;rdquo; (validity) of its Cartesian values, as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cartesian {$_[0]-&amp;gt;{c_dirty} ?
+        $_[0]-&amp;gt;update_cartesian : $_[0]-&amp;gt;{&#39;cartesian&#39;}}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a neat trick to avoid recalculating Cartesian coordinates when it&amp;rsquo;s not necessary.&lt;/p&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;Math::Complex&lt;/code&gt; package is not only useful, but efficient, robust, and flexible. It does use brief variable names, but this is traditional in mathematics; given that it uses complicated (or at least long) expressions, this means that the full expression is easy to understand (or read aloud). The functions themselves tend also to be brief and easy to understand.&lt;/p&gt;
+
+&lt;p&gt;We see here the benefits of reuse and refactoring. Over 8 years and 34 versions of this code, it has no doubt seen heavy rewriting, to the point of perhaps each line being different from the corresponding line in version 1.1 (or 0.1!). This extended refactoring has removed unnecessary and repeated code, clarified comments and usage, and led to clear and clean code. It provides an example not only of how to write a mathematical package in Perl, using regular expressions and references as described above, but also of what code can look like. That is perhaps its best lesson.&lt;/p&gt;
+
+&lt;h3 id=&#34;endnotes&#34;&gt;Endnotes&lt;/h3&gt;
+
+&lt;p&gt;&lt;span id=&#34;codemaintainer&#34;&gt;[1]&lt;/span&gt; &amp;ldquo;Always code as if the guy who ends up maintaining your code will be a violent psychopath who knows where you live.&amp;rdquo; (Martin Golding)&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;camel&#34;&gt;[2]&lt;/span&gt; Though perhaps not always to &lt;a href=&#34;http://www.perlmonks.org/index.pl?node_id=45213&#34;&gt;this&lt;/a&gt; extent.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

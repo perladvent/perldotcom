@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Cooking With Perl on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/cooking-with-perl/</link>
+    <description>Recent content in Cooking With Perl on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 21 Aug 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/cooking-with-perl/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Cooking with Perl</title>
+      <link>http://localhost:1313/pub/2003/08/21/perlcookbook.html/</link>
+      <pubDate>Thu, 21 Aug 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/08/21/perlcookbook.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: The new edition of &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/&#34;&gt;Perl Cookbook&lt;/a&gt; is about to hit store shelves, so to trumpet its release, we offer some recipes&amp;ndash;new to the second edition&amp;ndash;for your sampling pleasure. This week&amp;rsquo;s excerpts include recipes from Chapter 6 (&amp;ldquo;Pattern Matching&amp;rdquo;) and Chapter 8 (&amp;ldquo;File Contents&amp;rdquo;). And be sure to check back here in the coming weeks for more new recipes on topics such as using SQL without a database server, extracting table data, templating with HTML::Mason, and more.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;sample-recipe-matching-nested-patterns&#34;&gt;Sample Recipe: Matching Nested Patterns&lt;/h2&gt;
+
+&lt;h3 id=&#34;problem&#34;&gt;Problem&lt;/h3&gt;
+
+&lt;p&gt;You want to match a nested set of enclosing delimiters, such as the arguments to a function call.&lt;/p&gt;
+
+&lt;h3 id=&#34;solution&#34;&gt;Solution&lt;/h3&gt;
+
+&lt;p&gt;Use match-time pattern interpolation, recursively:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $np;
+$np = qr{
+           \(
+           (?:
+              (?&amp;gt; [^(  )]+ )    # Non-capture group w/o backtracking
+            |
+              (??{ $np })     # Group with matching parens
+           )*
+           \)
+        }x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or use the Text::Balanced module&amp;rsquo;s &lt;code&gt;extract_bracketed&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;h3 id=&#34;discussion&#34;&gt;Discussion&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;$(??{&lt;/code&gt;&lt;em&gt;CODE&lt;/em&gt;&lt;code&gt;})&lt;/code&gt; construct runs the code and interpolates the string that the code returns right back into the pattern. A simple, non-recursive example that matches palindromes demonstrates this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($word =~ /^(\w+)\w?(??{reverse $1})$/ ) {
+    print &amp;quot;$word is a palindrome.\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Consider a word like &amp;ldquo;reviver&amp;rdquo;, which this pattern correctly reports as a palindrome. The &lt;code&gt;$1&lt;/code&gt; variable contains &lt;code&gt;&amp;quot;rev&amp;quot;&lt;/code&gt; partway through the match. The optional word character following catches the &lt;code&gt;&amp;quot;i&amp;quot;&lt;/code&gt;. Then the code &lt;code&gt;reverse $1&lt;/code&gt; runs and produces &lt;code&gt;&amp;quot;ver&amp;quot;&lt;/code&gt;, and that result is interpolated into the pattern.&lt;/p&gt;
+
+&lt;p&gt;For matching something balanced, you need to recurse, which is a bit tricker. A compiled pattern that uses &lt;code&gt;(??{&lt;/code&gt;&lt;em&gt;CODE&lt;/em&gt;&lt;code&gt;})&lt;/code&gt; can refer to itself. The pattern given in the Solution matches a set of nested parentheses, however deep they may go. Given the value of &lt;code&gt;$np&lt;/code&gt; in that pattern, you could use it like this to match a function call:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$text = &amp;quot;myfunfun(1,(2*(3+4)),5)&amp;quot;;
+$funpat = qr/\w+$np/;   # $np as above
+$text =~ /^$funpat$/;   # Matches!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You&amp;rsquo;ll find many CPAN modules that help with matching (parsing) nested strings. The Regexp::Common module supplies canned patterns that match many of the tricker strings. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Regexp::Common;
+$text = &amp;quot;myfunfun(1,(2*(3+4)),5)&amp;quot;;
+if ($text =~ /(\w+\s*$RE{balanced}{-parens=&amp;gt;&#39;(  )&#39;})/o) {
+  print &amp;quot;Got function call: $1\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Other patterns provided by that module match numbers in various notations and quote-delimited strings:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$RE{num}{int}
+$RE{num}{real}
+$RE{num}{real}{&#39;-base=2&#39;}{&#39;-sep=,&#39;}{&#39;-group=3&#39;}
+$RE{quoted}
+$RE{delimited}{-delim=&amp;gt;&#39;/&#39;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The standard (as of v5.8) Text::Balanced module provides a general solution to this problem.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Text::Balanced qw/extract_bracketed/;
+$text = &amp;quot;myfunfun(1,(2*(3+4)),5)&amp;quot;;
+if (($before, $found, $after)  = extract_bracketed($text, &amp;quot;(&amp;quot;)) {
+    print &amp;quot;answer is $found\n&amp;quot;;
+} else {
+    print &amp;quot;FAILED\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;see-also&#34;&gt;See Also&lt;/h3&gt;
+
+&lt;p&gt;The section on &amp;ldquo;Match-Time Pattern Interpolation&amp;rdquo; in Chapter 5, &amp;ldquo;Pattern Matching,&amp;rdquo; of &lt;a href=&#34;http://www.oreilly.com/catalog/pperl3/&#34;&gt;Programming Perl, 3rd Edition&lt;/a&gt;; the documentation for the Regexp::Common CPAN module and the standard Text::Balanced module.&lt;/p&gt;
+
+&lt;h2 id=&#34;sample-recipe-pretending-a-string-is-a-file&#34;&gt;Sample Recipe: Pretending a String Is a File&lt;/h2&gt;
+
+&lt;h2 id=&#34;problem-1&#34;&gt;Problem&lt;/h2&gt;
+
+&lt;p&gt;You have data in string, but would like to treat it as a file. For example, you have a subroutine that expects a filehandle as an argument, but you would like that subroutine to work directly on the data in your string instead. Additionally, you don&amp;rsquo;t want to write the data to a temporary file.&lt;/p&gt;
+
+&lt;h3 id=&#34;solution-1&#34;&gt;Solution&lt;/h3&gt;
+
+&lt;p&gt;Use the scalar I/O in Perl v5.8:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open($fh, &amp;quot;+&amp;lt;&amp;quot;, \$string);   # read and write contents of $string
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;discussion-1&#34;&gt;Discussion&lt;/h3&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s I/O layers include support for input and output from a scalar. When you read a record with &lt;code&gt;&amp;lt;$fh&amp;gt;&lt;/code&gt;, you are reading the next line from &lt;code&gt;$string&lt;/code&gt;. When you write a record with &lt;code&gt;print&lt;/code&gt;, you change &lt;code&gt;$string&lt;/code&gt;. You can pass &lt;code&gt;$fh&lt;/code&gt; to a function that expects a filehandle, and that subroutine need never know that it&amp;rsquo;s really working with data in a string.&lt;/p&gt;
+
+&lt;p&gt;Perl respects the various access modes in &lt;code&gt;open&lt;/code&gt; for strings, so you can specify that the strings be opened as read-only, with truncation, in append mode, and so on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open($fh, &amp;quot;&amp;lt;&amp;quot;,  \$string);   # read only
+open($fh, &amp;quot;&amp;gt;&amp;quot;,  \$string);   # write only, discard original contents
+open($fh, &amp;quot;+&amp;gt;&amp;quot;, \$string);   # read and write, discard original contents
+open($fh, &amp;quot;+&amp;lt;&amp;quot;, \$string);   # read and write, preserve original contents
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These handles behave in all respects like regular filehandles, so all I/O functions work, such as &lt;code&gt;seek&lt;/code&gt;, &lt;code&gt;truncate&lt;/code&gt;, &lt;code&gt;sysread&lt;/code&gt;, and friends.&lt;/p&gt;
+
+&lt;h3 id=&#34;see-also-1&#34;&gt;See Also&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;open&lt;/code&gt; function in &lt;em&gt;perlfunc&lt;/em&gt;(1) and in Chapter 29 (&amp;ldquo;Functions&amp;rdquo;) of &lt;a href=&#34;http://www.oreilly.com/catalog/pperl3/&#34;&gt;Programming Perl, 3rd Edition&lt;/a&gt;; &amp;ldquo;Using Random-Access I/O;&amp;rdquo; and &amp;ldquo;Setting the Default I/O Layers&amp;rdquo;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;O&amp;rsquo;Reilly &amp;amp; Associates will soon release (August 2003) &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/&#34;&gt;Perl Cookbook, 2nd Edition.&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/chapter/index.html&#34;&gt;Sample Chapter 1, Strings&lt;/a&gt; is available free online.&lt;/li&gt;
+&lt;li&gt;You can also look at the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/toc.html&#34;&gt;Table of Contents&lt;/a&gt;, the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/inx.html&#34;&gt;Index&lt;/a&gt;, and the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/desc.html&#34;&gt;full description&lt;/a&gt; of the book.&lt;/li&gt;
+&lt;li&gt;For more information, or to order the book, &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/&#34;&gt;click here&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

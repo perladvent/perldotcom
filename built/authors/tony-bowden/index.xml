@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tony Bowden on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/tony-bowden/</link>
+    <description>Recent content in Tony Bowden on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 27 Nov 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/tony-bowden/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Class::DBI</title>
+      <link>http://localhost:1313/pub/2002/11/27/classdbi.html/</link>
+      <pubDate>Wed, 27 Nov 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/11/27/classdbi.html/</guid>
+      <description>
+
+&lt;p&gt;Several articles on Perl.com, including the recent &lt;a href=&#34;http://localhost:1313/pub/2002/10/22/phrasebook.html&#34;&gt;Phrasebook Design Pattern&lt;/a&gt;, have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon&amp;rsquo;s &lt;a href=&#34;http://localhost:1313/pub/2001/02/dbix.html&#34;&gt;DBIx::Recordset&lt;/a&gt; article attempted to show how code dealing with databases can be made simpler, and more maintainable. In this article, I will try to show how &lt;code&gt;Class::DBI&lt;/code&gt; can make this easier still.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Class::DBI&lt;/code&gt; prizes laziness and simplicity. Its goal is to make simple database interactions trivial, while leaving the hard ones possible. For many simple applications, it replaces the need for writing SQL entirely. On the other hand, it doesn&amp;rsquo;t force you to build complex data structures to specify a complex query; if you really need the power or expressiveness of raw SQL, then it gets out of your way and lets you drop back to that.&lt;/p&gt;
+
+&lt;p&gt;The easiest way to see &lt;code&gt;Class::DBI&lt;/code&gt; in action is to build a simple application with it. In this article, I&amp;rsquo;ll build a tool for performing analysis on my telephone bill.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Data::BT::PhoneBill&#34;&gt;Data::BT::PhoneBill&lt;/a&gt; (available from CPAN), provides a simple interface to a phone bill downloaded from the BT Web site. So, armed with this module, and a few recent phonebills, let&amp;rsquo;s store these details in a database, and see how to extract useful information from them.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Class::DBI&lt;/code&gt; works on the basis that each table in your database has a corresponding class. Although each class could set up its own connection information, it&amp;rsquo;s a better idea to encapsulate that connection in one class, and have all the others inherit from that. So, we set up our database, and create the base class for our application:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package My::PhoneBill::DBI;
+
+  use base &#39;Class::DBI&#39;;
+
+  __PACKAGE__-&amp;gt;set_db(&#39;Main&#39;, &#39;dbi:mysql:phonebill&#39;, &#39;u/n&#39;, &#39;p/w&#39;);
+
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We simply inherit from &lt;code&gt;Class::DBI&lt;/code&gt; and use the &amp;lsquo;&lt;code&gt;set_db&lt;/code&gt;&amp;rsquo; method to set up the connection information for our database. That&amp;rsquo;s all we need in this class for now, so next we set up our table for storing the phone call information:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  CREATE TABLE call (
+    callid      MEDIUMINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    number      VARCHAR(20) NOT NULL,
+    destination VARCHAR(255) NOT NULL,
+    calldate    DATE NOT NULL,
+    calltime    TIME NOT NULL,
+    type        VARCHAR(50) NOT NULL,
+    duration    SMALLINT UNSIGNED NOT NULL,
+    cost        FLOAT(8,1)
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For this, we set up a corresponding class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package My::PhoneBill::Call;
+
+  use base &#39;My::PhoneBill::DBI&#39;;
+
+  __PACKAGE__-&amp;gt;table(&#39;call&#39;);
+  __PACKAGE__-&amp;gt;columns(All   =&amp;gt;
+    qw/callid number destination calldate calltime type duration cost/);
+
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We inherit our connection information from our base class, and then specify what table we&amp;rsquo;re dealing with, and what its columns are. Now we have enough to populate the table.&lt;/p&gt;
+
+&lt;p&gt;So, we create a simple, &amp;ldquo;&lt;em&gt;populate_phone_bill&lt;/em&gt;&amp;rdquo; script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+
+  use Data::BT::PhoneBill;
+  use My::PhoneBill::Call;
+
+  my $file = shift or die &amp;quot;Need a phone bill file&amp;quot;;
+  my $bill = Data::BT::PhoneBill-&amp;gt;new($file) or die &amp;quot;Can&#39;t parse bill&amp;quot;;
+
+  while (my $call = $bill-&amp;gt;next_call) {
+    My::PhoneBill::Call-&amp;gt;create({
+      number      =&amp;gt; $call-&amp;gt;number,
+      calldate    =&amp;gt; $call-&amp;gt;date,
+      calltime    =&amp;gt; $call-&amp;gt;time,
+      destination =&amp;gt; $call-&amp;gt;destination,
+      duration    =&amp;gt; $call-&amp;gt;duration,
+      type        =&amp;gt; $call-&amp;gt;type,
+      cost        =&amp;gt; $call-&amp;gt;cost,
+    });
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;create()&lt;/code&gt; call runs the SQL to &lt;code&gt;INSERT&lt;/code&gt; the row for each call. As we&amp;rsquo;re using &lt;code&gt;Class::DBI&lt;/code&gt;, and have defined our primary key column to be &lt;code&gt;AUTO_INCREMENT&lt;/code&gt;, we don&amp;rsquo;t need to specify a value for that column. On databases that support sequences, we could also inform &lt;code&gt;Class::DBI&lt;/code&gt; what sequence should be used to provide the primary key.&lt;/p&gt;
+
+&lt;p&gt;Now that we have a table populated with calls, we can begin to run queries against it. Let&amp;rsquo;s write a simple script that reports on all the calls to a specified number:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+
+  use My::PhoneBill::Call;
+
+  my $number = shift or die &amp;quot;Usage: $0 &amp;lt;number&amp;gt;&amp;quot;;
+
+  my @calls = My::PhoneBill::Call-&amp;gt;search(number =&amp;gt; $number);
+  my $total_cost = 0;
+
+  foreach my $call (@calls) {
+    $total_cost += $call-&amp;gt;cost;
+    printf &amp;quot;%s %s - %d secs, %.1f pence\n&amp;quot;,
+      $call-&amp;gt;calldate, $call-&amp;gt;calltime, $call-&amp;gt;duration, $call-&amp;gt;cost;
+  }
+  printf &amp;quot;Total: %d calls, %d pence\n&amp;quot;, scalar @calls, $total_cost;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we can see that &lt;code&gt;Class::DBI&lt;/code&gt; provides a &amp;lsquo;&lt;code&gt;search&lt;/code&gt;&amp;rsquo; method for us to use. We supply a hash of column/value pairs, and we get back all the records that matched. Each result is an instance of the &lt;code&gt;Call&lt;/code&gt; class, and each has an accessor method corresponding to each column. (It&amp;rsquo;s also a mutator method, so we can update that record, but we&amp;rsquo;re only reporting at this stage).&lt;/p&gt;
+
+&lt;p&gt;So, if we want to see how often we&amp;rsquo;re calling the Speaking Clock, then we run&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;gt; perl calls_to 123
+  2002-09-17 11:06:00 - 5 secs, 8.5 pence
+  2002-10-19 21:20:00 - 8 secs, 8.5 pence
+  Total: 2 calls, 17 pence
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Similarly, if we want to see all the calls on a given date, then we could have a &amp;lsquo;&lt;code&gt;calls_on&lt;/code&gt;&amp;rsquo; script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+
+  use My::PhoneBill::Call;
+
+  my $date = shift or die &amp;quot;Usage: $0 &amp;lt;date&amp;gt;&amp;quot;;
+
+  my @calls = My::PhoneBill::Call-&amp;gt;search(calldate =&amp;gt; $date);
+  my $total_cost = 0;
+
+  foreach my $call (@calls) {
+    $total_cost += $call-&amp;gt;cost;
+    printf &amp;quot;%s) %s - %d secs, %.1f pence\n&amp;quot;,
+      $call-&amp;gt;calltime, $call-&amp;gt;number, $call-&amp;gt;duration, $call-&amp;gt;cost;
+  }
+  printf &amp;quot;Total: %d calls, %d pence\n&amp;quot;, scalar @calls, $total_cost;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running it gives:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;gt; perl calls_on 2002-10-19
+  ...
+  18:36:00) 028 9024 4222 - 41 secs, 4.2 pence
+  21:20:00) 123 - 8 secs, 8.5 pence
+  ...
+  Total: 7 calls, 92 pence
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As promised, we&amp;rsquo;ve written a database application without writing any SQL. OK, so we haven&amp;rsquo;t really done anything very complicated yet, but even for this simplistic use &lt;code&gt;Class::DBI&lt;/code&gt; makes our life much easier.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-building-a-phone-book-building-a-phone-book-span&#34;&gt;&lt;span id=&#34;building_a_phone_book&#34;&gt;Building a Phone Book&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;I used to have a good memory for phone numbers. But Nokia, Ericsson, et al, have conspired against me. By giving my cell phone a built-in address book, they ensured that the part of my brain responsible for remembering 10 or 11 digit numbers would gradually atrophy. Now, when I look at the output of &amp;lsquo;&lt;code&gt;calls_on&lt;/code&gt;&amp;rsquo;, I have no idea who &amp;ldquo;028 9024 4222&amp;rdquo; represents. So, let&amp;rsquo;s build an address book that can store this information, and then change our reports to use it.&lt;/p&gt;
+
+&lt;p&gt;The first thing we should do is arrange our information a little better. We&amp;rsquo;ll take the &lt;code&gt;number&lt;/code&gt; and &lt;code&gt;destination&lt;/code&gt; columns, and move them to a &amp;ldquo;recipient&amp;rdquo; table, to which we&amp;rsquo;ll add a &lt;code&gt;name&lt;/code&gt; column. &amp;ldquo;Destination&amp;rdquo; doesn&amp;rsquo;t make as much sense when associated with the number, rather than the call, so we&amp;rsquo;ll rename it to &amp;ldquo;location&amp;rdquo;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  CREATE TABLE recipient (
+    recipid  MEDIUMINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    number   VARCHAR(20) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    name     VARCHAR(255),
+    KEY (number)
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then we create the relevant class for this table:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package My::PhoneBill::Recipient;
+
+  use base &#39;My::PhoneBill::DBI&#39;;
+
+  __PACKAGE__-&amp;gt;table(&#39;recipient&#39;);
+  __PACKAGE__-&amp;gt;columns(All =&amp;gt; qw/recipid number location name/);
+
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We also need to modify the Call table:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  CREATE TABLE call (
+    callid    MEDIUMINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+ *  recipient MEDIUMINT UNSIGNED NOT NULL,
+    calldate  DATE NOT NULL,
+    calltime  TIME NOT NULL,
+    type      VARCHAR(50) NOT NULL,
+    duration  SMALLINT UNSIGNED NOT NULL,
+    cost      FLOAT(8,1),
+ *  KEY (recipient)
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and its associated class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package My::PhoneBill::Call;
+
+  use base &#39;My::PhoneBill::DBI&#39;;
+
+  __PACKAGE__-&amp;gt;table(&#39;call&#39;);
+  __PACKAGE__-&amp;gt;columns(All   =&amp;gt;
+ *  qw/callid recipient calldate calltime type duration cost/);
+
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we can modify our script that populates the database:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+
+  use Data::BT::PhoneBill;
+  use My::PhoneBill::Call;
+ *use My::PhoneBill::Recipient;
+
+  my $file = shift or die &amp;quot;Need a phone bill file&amp;quot;;
+  my $bill = Data::BT::PhoneBill-&amp;gt;new($file) or die &amp;quot;Can&#39;t parse bill&amp;quot;;
+
+ *while (my $call = $bill-&amp;gt;next_call) {
+ *  my $recipient = My::PhoneBill::Recipient-&amp;gt;find_or_create({
+ *    number      =&amp;gt; $call-&amp;gt;number,
+ *    location    =&amp;gt; $call-&amp;gt;destination,
+ *  });
+ *  My::PhoneBill::Call-&amp;gt;create({
+ *    recipient   =&amp;gt; $recipient-&amp;gt;id,
+      calldate    =&amp;gt; $call-&amp;gt;date,
+      calltime    =&amp;gt; $call-&amp;gt;time,
+      duration    =&amp;gt; $call-&amp;gt;duration,
+      type        =&amp;gt; $call-&amp;gt;type,
+      cost        =&amp;gt; $call-&amp;gt;cost,
+    });
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This time we need to create the &lt;code&gt;Recipient&lt;/code&gt; first, so we can link to it from the &lt;code&gt;Call&lt;/code&gt;. But we don&amp;rsquo;t want to create a new &lt;code&gt;Recipient&lt;/code&gt; for each call - if we&amp;rsquo;ve ever rang this person before, there&amp;rsquo;ll already be an entry in the recipient table: so we use &lt;code&gt;find_or_create&lt;/code&gt; to give us back the existing entry if it&amp;rsquo;s there, or else create a new one.&lt;/p&gt;
+
+&lt;p&gt;With the table repopulated we can return to our reporting scripts.&lt;/p&gt;
+
+&lt;p&gt;Our &lt;code&gt;calls_on&lt;/code&gt; script now fails as we can can&amp;rsquo;t ask a call for its &amp;lsquo;number&amp;rsquo;. So, we change it to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+
+  use My::PhoneBill::Call;
+
+  my $date = shift or die &amp;quot;Usage: $0 &amp;lt;date&amp;gt;&amp;quot;;
+
+  my @calls = My::PhoneBill::Call-&amp;gt;search(calldate =&amp;gt; $date);
+  my $total_cost = 0;
+
+  foreach my $call (@calls) {
+    $total_cost += $call-&amp;gt;cost;
+    printf &amp;quot;%s) %s - %d secs, %.1f pence\n&amp;quot;,
+ *    $call-&amp;gt;calltime, $call-&amp;gt;recipient, $call-&amp;gt;duration, $call-&amp;gt;cost;
+  }
+  printf &amp;quot;Total: %d calls, %d pence\n&amp;quot;, scalar @calls, $total_cost;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, running it doesn&amp;rsquo;t really give us what we want:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;gt; perl calls_on 2002-10-19
+  ...
+  18:36:00) 67 - 41 secs, 4.2 pence
+  21:20:00) 47 - 8 secs, 8.5 pence
+  ...
+  Total: 7 calls, 92 pence
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instead of getting the phone number, we now get the ID from the recipient table, which is just an auto-incrementing value.&lt;/p&gt;
+
+&lt;p&gt;To turn this into a sensible value, we add the following line to the &lt;code&gt;Call&lt;/code&gt; class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  __PACKAGE__-&amp;gt;has_a(recipient =&amp;gt; &#39;My::PhoneBill::Recipient&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This tells it that the recipient method doesn&amp;rsquo;t just return a simple value, but that that value should be automatically turned into an instance of the Recipient class.&lt;/p&gt;
+
+&lt;p&gt;Of course, calls_on still won&amp;rsquo;t be correct:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;gt; perl calls_on 2002-10-19
+  ...
+  18:36:00) My::PhoneBill::Recipient=HASH(0x835b6b8) - 41 secs, 4.2 pence
+  21:20:00) My::PhoneBill::Recipient=HASH(0x835a210) - 8 secs, 8.5 pence
+  ...
+  Total: 7 calls, 92 pence
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But now all it takes is a small tweak to the script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    printf &amp;quot;%s) %s - %d secs, %.1f pence\n&amp;quot;,
+      $call-&amp;gt;calltime, $call-&amp;gt;recipient-&amp;gt;number, $call-&amp;gt;duration, $call-&amp;gt;cost;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now everything is working perfectly again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;gt; perl calls_on 2002-10-19
+  ...
+  18:36:00) 028 9024 4222 - 41 secs, 4.2 pence
+  21:20:00) 123 - 8 secs, 8.5 pence
+  ...
+  Total: 7 calls, 92 pence
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;calls_to&lt;/code&gt; script is slightly trickier, as the initial search is now on the recipient rather than the call.&lt;/p&gt;
+
+&lt;p&gt;So, we change the initial search to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my ($recipient) = My::PhoneBill::Recipient-&amp;gt;search(number =&amp;gt; $number)
+    or die &amp;quot;No calls to $number\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we need to get all the calls to that recipient. For this, we need to inform &lt;code&gt;Recipient&lt;/code&gt; of the relationship with calls. Unlike the &lt;code&gt;has_a&lt;/code&gt; we just set up in the &lt;code&gt;Call&lt;/code&gt; class, the recipient table doesn&amp;rsquo;t store any value concerned with the call table that could be inflated on demand. Instead we need to add a &lt;code&gt;has_many&lt;/code&gt; declaration to Recipient:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  __PACKAGE__-&amp;gt;has_many(calls =&amp;gt; &#39;My::PhoneBill::Call&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates a new method &lt;code&gt;calls&lt;/code&gt; for each Recipient object, returning a list of &lt;code&gt;Call&lt;/code&gt; objects whose &lt;code&gt;recipient&lt;/code&gt; method is our primary key.&lt;/p&gt;
+
+&lt;p&gt;So, having found our recipient in the &lt;code&gt;calls_to&lt;/code&gt; script, we can simply ask:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my @calls = $recipient-&amp;gt;calls;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now the script works just as before:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+
+  use My::PhoneBill::Recipient;
+
+  my $number = shift or die &amp;quot;Usage: $0 &amp;lt;number&amp;gt;&amp;quot;;
+
+  my ($recipient) = My::PhoneBill::Recipient-&amp;gt;search(number =&amp;gt; $number)
+    or die &amp;quot;No calls to $number\n&amp;quot;;
+  my @calls = $recipient-&amp;gt;calls;
+
+  my $total_cost = 0;
+
+  foreach my $call (@calls) {
+    $total_cost += $call-&amp;gt;cost;
+    printf &amp;quot;%s %s - %d secs, %.1f pence\n&amp;quot;,
+      $call-&amp;gt;calldate, $call-&amp;gt;calltime, $call-&amp;gt;duration, $call-&amp;gt;cost;
+  }
+  printf &amp;quot;Total: %d calls, %d pence\n&amp;quot;, scalar @calls, $total_cost;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now we can get the old results again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;gt; perl calls_to 123
+  2002-09-17 11:06:00 - 5 secs, 8.5 pence
+  2002-10-19 21:20:00 - 8 secs, 8.5 pence
+  Total: 2 calls, 17 pence
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next we need a script to give a name to a number in our address book:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+
+  use My::PhoneBill::Recipient;
+
+  my($number, $name) = @ARGV;
+  die &amp;quot;Usage $0 &amp;lt;number&amp;gt; &amp;lt;name&amp;gt;\n&amp;quot; unless $number and $name;
+
+  my $recip = My::PhoneBill::Recipient-&amp;gt;find_or_create({number =&amp;gt; $number});
+  my $old_name = $recip-&amp;gt;name;
+  $recip-&amp;gt;name($name);
+  $recip-&amp;gt;commit;
+
+  if ($old_name) {
+    print &amp;quot;OK. $number changed from $old_name to $name\n&amp;quot;;
+  } else {
+    print &amp;quot;OK. $number is $name\n&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This lets us associate a number to a name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;gt; perl add_phone_number 123 &amp;quot;Speaking Clock&amp;quot;
+  OK. 123 is Speaking Clock
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now with a tiny change to our calls_on script we can output the name where known:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    printf &amp;quot;%s) %s - %d secs, %.1f pence\n&amp;quot;,
+      $call-&amp;gt;calltime, $call-&amp;gt;recipient-&amp;gt;name || $call-&amp;gt;recipient-&amp;gt;number,
+      $call-&amp;gt;duration, $call-&amp;gt;cost;
+
+  &amp;gt; perl calls_on 2002-10-19
+  ...
+  18:36:00) 028 9024 4222 - 41 secs, 4.2 pence
+  21:20:00) Speaking Clock - 8 secs, 8.5 pence
+  ...
+  Total: 7 calls, 92 pence
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To allow the &lt;code&gt;calls_to&lt;/code&gt; script to work if we give it either a name or a number, we can use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $recipient = My::PhoneBill::Recipient-&amp;gt;search(name =&amp;gt; $number)
+               || My::PhoneBill::Recipient-&amp;gt;search(number =&amp;gt; $number)
+               || die &amp;quot;No calls to $number\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, as we&amp;rsquo;ve called search in scalar context, rather than the normal list context, we get back an interator rather than an individual &lt;code&gt;Recipient&lt;/code&gt; object. As one name may map to multiple numbers, we need to iterate over each of these in turn:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @calls;
+    while (my $recip = $recipient-&amp;gt;next) {
+      push @calls, $recip-&amp;gt;calls;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Printing individual totals for each number is left as an exercise for the reader.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;gt; perl calls_to &amp;quot;Speaking Clock&amp;quot;
+  2002-09-17 11:06:00 - 5 secs, 8.5 pence
+  2002-10-19 21:20:00 - 8 secs, 8.5 pence
+  Total: 2 calls, 17 pence
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;span-id-working-with-other-modules-working-with-other-modules-span&#34;&gt;&lt;span id=&#34;working_with_other_modules&#34;&gt;Working With Other Modules&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Sometimes the information we store in the database can be used to work with non-&lt;code&gt;Class::DBI&lt;/code&gt; modules. For example, if we wanted to format the dates of our calls differently, we might like to turn them into &lt;code&gt;Date::Simple&lt;/code&gt; objects. Again, &lt;code&gt;Class::DBI&lt;/code&gt; makes this easy.&lt;/p&gt;
+
+&lt;p&gt;In the &lt;code&gt;Call&lt;/code&gt; class, we again use &lt;code&gt;has_a&lt;/code&gt; to declare this relationship:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  __PACKAGE__-&amp;gt;has_a(recipient =&amp;gt; &#39;My::PhoneBill::Recipient&#39;);
+ *__PACKAGE__-&amp;gt;has_a(calldate  =&amp;gt; &#39;Date::Simple&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, when we fetch the &lt;code&gt;calldate&lt;/code&gt; it is automatically inflated to a &lt;code&gt;Date::Simple&lt;/code&gt; object. So, we can change the output of &lt;code&gt;calls_to&lt;/code&gt; to print the date in a nicer format:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  printf &amp;quot;%s %s - %d secs, %.1f pence\n&amp;quot;,
+    $call-&amp;gt;calldate-&amp;gt;format(&amp;quot;%d %b&amp;quot;), $call-&amp;gt;calltime,
+    $call-&amp;gt;duration, $call-&amp;gt;cost;
+
+  &amp;gt; perl calls_to &amp;quot;Speaking Clock&amp;quot;
+  17 Sep 11:06:00 - 5 secs, 8.5 pence
+  19 Oct 21:20:00 - 8 secs, 8.5 pence
+  Total: 2 calls, 17 pence
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Class::DBI&lt;/code&gt; assumes that any non-&lt;code&gt;Class::DBI&lt;/code&gt; class is inflated through a &lt;code&gt;new&lt;/code&gt; method, and can be deflated through stringification. As both of these are true for &lt;code&gt;Date::Simple&lt;/code&gt;, we didn&amp;rsquo;t need to do anything more. If this is not the case - for example, if you wanted to use &lt;code&gt;Time::Piece&lt;/code&gt; instead of &lt;code&gt;Date::Simple&lt;/code&gt; - you need to tell &lt;code&gt;Class::DBI&lt;/code&gt; how to do the inflating and deflating as the value goes in and comes out of the database.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  __PACKAGE__-&amp;gt;has_a(calldate =&amp;gt; &#39;Time::Piece&#39;,
+    inflate =&amp;gt; sub { Time::Piece-&amp;gt;strptime(shift, &amp;quot;%Y-%m-%d&amp;quot;) },
+    deflate =&amp;gt; &#39;ymd&#39;
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Deflating a &lt;code&gt;Time::Piece&lt;/code&gt; object back to an ISO date string suitable for MySQL is quite simple: you can just call its &lt;code&gt;ymd()&lt;/code&gt; method. Thus we can specify this as a string. Inflating is more difficult, as it requires a two argument call to &lt;code&gt;strptime()&lt;/code&gt;. Thus we need to specify this as a subroutine reference. When inflating, this is called with the value from the database as its one and only argument. Thus, we can pass that to &lt;code&gt;Time::Piece&lt;/code&gt;&amp;rsquo;s &lt;code&gt;strptime&lt;/code&gt; method, specifying the format to instantiate from.&lt;/p&gt;
+
+&lt;p&gt;Using &lt;code&gt;Time::Piece&lt;/code&gt; instead of &lt;code&gt;Date::Time&lt;/code&gt; requires one further change to to our output script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  printf &amp;quot;%s %s - %d secs, %.1f pence\n&amp;quot;,
+ *  $call-&amp;gt;calldate-&amp;gt;strftime(&amp;quot;%d %b&amp;quot;), $call-&amp;gt;calltime,
+    $call-&amp;gt;duration, $call-&amp;gt;cost;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;span-id-most-called-numbers-most-called-numbers-span&#34;&gt;&lt;span id=&#34;most_called_numbers&#34;&gt;MOST CALLED NUMBERS&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;BT provide a service that allows you to save money on 10 numbers of your choice. So it would be useful if we were able to find out which numbers we spend the most money calling. We&amp;rsquo;ll assume that any number we&amp;rsquo;ve only ever called once isn&amp;rsquo;t worth adding to our list, as it was probably a one-off call. Thus we want the 10 numbers with the highest spend that have had more than one call.&lt;/p&gt;
+
+&lt;p&gt;As we said earlier, &lt;code&gt;Class::DBI&lt;/code&gt; doesn&amp;rsquo;t attempt to provide a syntax to express any arbitrary SQL, so there&amp;rsquo;s no way of asking directly for this information. Instead, we&amp;rsquo;ll try a simple approach.&lt;/p&gt;
+
+&lt;p&gt;Firstly we&amp;rsquo;ll add a method to the &lt;code&gt;Recipient&lt;/code&gt; class to tell us the total we&amp;rsquo;ve spent on calls to that number:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use List::Util &#39;sum&#39;;
+
+  sub total_spend {
+    my $self = shift;
+    return sum map $_-&amp;gt;cost, $self-&amp;gt;calls;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we can create a &lt;code&gt;top_ten&lt;/code&gt; script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+
+  use My::PhoneBill::Recipient;
+
+  my @recipients = My::PhoneBill::Recipient-&amp;gt;retrieve_all;
+  my @regulars = grep $_-&amp;gt;calls &amp;gt; 1, @recipients;
+  my @sorted = sort { $b-&amp;gt;total_spend &amp;lt;=&amp;gt; $a-&amp;gt;total_spend } @regulars;
+
+  foreach my $recip (@sorted[0 .. 9]) {
+    printf &amp;quot;%s - %d calls = %d pence\n&amp;quot;,
+      $recip-&amp;gt;name || $recip-&amp;gt;number,
+      scalar $recip-&amp;gt;calls,
+      $recip-&amp;gt;total_spend;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is very slow, however, once you have more than a few hundred calls stored in your database. This is mainly because we&amp;rsquo;re sorting based on a method call. Replacing the sort above with a Schwartzian Transform speeds everything up significantly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my @sorted = map $_-&amp;gt;[0],
+    sort { $b-&amp;gt;[1] &amp;lt;=&amp;gt; $a-&amp;gt;[1] }
+    map [ $_, $_-&amp;gt;total_spend ], @regulars;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, until the database gets significantly bigger, this is probably fast enough - especially as you probably won&amp;rsquo;t be running the script very often.&lt;/p&gt;
+
+&lt;p&gt;However, if this isn&amp;rsquo;t enough, then we can always drop back to SQL. Of course, when we need to optimize for speed, we usually lose something else - in this case, portability. In this example, we&amp;rsquo;re using MySQL, so I would add the relevant MySQL-specific query to &lt;em&gt;Recipient.pm&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  __PACKAGE__-&amp;gt;set_sql(top_ten =&amp;gt; qq{
+    SELECT recipient.recipid,
+           SUM(call.cost) AS spend,
+           COUNT(call.callid) AS calls
+      FROM recipient, call
+     WHERE recipient.recipid = call.recipient
+     GROUP BY recipient.recipid
+    HAVING calls &amp;gt; 1
+     ORDER BY spend DESC
+     LIMIT 10
+  });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we can set up a method that returns the relevant objects for these:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub top_ten {
+    my $class = shift;
+    my $sth = $class-&amp;gt;sql_top_ten;
+       $sth-&amp;gt;execute;
+    return $class-&amp;gt;sth_to_objects($sth);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Any SQL set up using &lt;code&gt;set_sql&lt;/code&gt; can be retrieved as a readily prepared DBI statement handle by prepending its name with &lt;code&gt;sql_&lt;/code&gt; - thus we fetch back this &lt;code&gt;top_ten&lt;/code&gt; using &lt;code&gt;my $sth = $class-&amp;gt;sql_top_ten&lt;/code&gt;;&lt;/p&gt;
+
+&lt;p&gt;Although we could happily execute this and then call any of the traditional DBI commands (&lt;code&gt;fetchrow_array&lt;/code&gt; etc.), we can also take a shortcut. As one of the columns being returned from our query is the primary key of the Recipient, we can simply feed the results into the underlying method in &lt;code&gt;Class::DBI&lt;/code&gt; that allows searches to return a list of objects, &lt;code&gt;sth_to_objects&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;So, our script becomes simply:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  foreach my $recip (My::PhoneBill::Recipient-&amp;gt;top_ten) {
+    printf &amp;quot;%s - %d calls = %d pence\n&amp;quot;,
+      $recip-&amp;gt;name || $recip-&amp;gt;number,
+      scalar $recip-&amp;gt;calls,
+      $recip-&amp;gt;total_spend;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As we have seen, &lt;code&gt;Class::DBI&lt;/code&gt; makes it possible to perform many of the common database tasks completely trivially - without writing a single line of SQL. But, when you really need it, it&amp;rsquo;s fairly easy to write the SQL that you need and execute it.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

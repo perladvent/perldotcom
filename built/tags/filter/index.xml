@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Filter on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/filter/</link>
+    <description>Recent content in Filter on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 17 Jul 2001 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/filter/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Mail Filtering with Mail::Audit</title>
+      <link>http://localhost:1313/pub/2001/07/17/mailfiltering.html/</link>
+      <pubDate>Tue, 17 Jul 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/07/17/mailfiltering.html/</guid>
+      <description>
+
+&lt;p&gt;Let&amp;rsquo;s face it. &lt;em&gt;procmail&lt;/em&gt; is horrid. But for most of us, it&amp;rsquo;s the only sensible way to handle mail filtering. I used to tolerate &lt;em&gt;procmail&lt;/em&gt;, with its grotesque syntax and its less-than-helpful error messages, because it was the only way I knew to separate out my mail. One day, however, I decided that I&amp;rsquo;d been told &amp;ldquo;delivery failed, couldn&amp;rsquo;t get lock&amp;rdquo; or similar garbage for the very last time, and decided to sit down and write a &lt;em&gt;procmail&lt;/em&gt; replacement.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s when it dawned on me that what I really disliked about &lt;em&gt;procmail&lt;/em&gt; was the recipe format. I didn&amp;rsquo;t want to handle my mail with a collection of colons, zeroes, and single-letter commands that made &lt;code&gt;sendmail.cf&lt;/code&gt; look like a Shakespearean sonnet; I wanted to program my mail routing in a nice, high-level language. Something like Perl, for instance.&lt;/p&gt;
+
+&lt;p&gt;The result is the astonishingly simple Mail::Audit module. In this article, we&amp;rsquo;ll examine what we can do with Mail::Audit and how we can use it to create mail filters. We&amp;rsquo;ll also look at the News::Gateway module for turning mailing lists into newsgroups and back again.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-is-it&#34;&gt;What Is It?&lt;/h3&gt;
+
+&lt;p&gt;Mail::Audit itself isn&amp;rsquo;t a mail filter - it&amp;rsquo;s a toolkit that makes it very easy for you to build mail filters. You write a program that describes what should happen to your mail, and this replaces your &lt;em&gt;procmail&lt;/em&gt; command in your &lt;code&gt;.forward&lt;/code&gt; or &lt;code&gt;.qmail&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;p&gt;Mail::Audit provides the functionality for extracting mail headers, bouncing, accepting, rejecting, forwarding, and filtering incoming mail.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-very-simple-mail-filter&#34;&gt;A Very Simple Mail Filter&lt;/h3&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the simplest filter program we can make with Mail::Audit.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Mail::Audit;
+    my $incoming = Mail::Audit-&amp;gt;new;
+    $incoming-&amp;gt;reject;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you save this as &lt;code&gt;~/bin/chuckmail&lt;/code&gt;, then you can put the following in a &lt;code&gt;.forward&lt;/code&gt; file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    |~/bin/chuckmail
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or in a &lt;code&gt;.qmail&lt;/code&gt; file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    preline ~/bin/chuckmail
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Every mail message you receive will now pass through this program. The mail comes into the program via standard input, and the &lt;code&gt;new()&lt;/code&gt; method takes it from there and turns it into a Mail::Audit object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $incoming = Mail::Audit-&amp;gt;new;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, we bounce it as undeliverable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $incoming-&amp;gt;reject;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We could even get fancy, and supply a reason with the bounce:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$incoming-&amp;gt;reject(&amp;lt;&amp;lt;EOF);
+    The local user was silly enough to leave chuckmail as his
+    mail filter.  Too bad you can&#39;t mail him to let him know.
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This reason will be relayed back to the sender as part of the bounce message.&lt;/p&gt;
+
+&lt;h3 id=&#34;separating-mail-into-folders&#34;&gt;Separating Mail Into Folders&lt;/h3&gt;
+
+&lt;p&gt;The one thing most people use &lt;em&gt;procmail&lt;/em&gt; for is to separate mail out into several mail folders. Here&amp;rsquo;s an example of how we&amp;rsquo;d do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Mail::Audit;
+    my $item = Mail::Audit-&amp;gt;new;
+
+    if ($item-&amp;gt;from =~ /perl5-porters/) {
+        $item-&amp;gt;accept(&amp;quot;/home/simon/mail/p5p&amp;quot;)
+    }
+
+    $item-&amp;gt;accept;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now any mail with &lt;code&gt;perl5-porters&lt;/code&gt; in the &lt;code&gt;From:&lt;/code&gt; line will be added to the file &lt;code&gt;mail/p5p&lt;/code&gt; under my home directory. Any other mail will be accepted into my inbox as normal.&lt;/p&gt;
+
+&lt;p&gt;Two things to note here:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Once the mail has been filed to &lt;code&gt;mail/p5p&lt;/code&gt; via &lt;code&gt;accept()&lt;/code&gt;, it leaves the program. Game over, end of story. The same goes for the other methods such as &lt;code&gt;reject()&lt;/code&gt;, &lt;code&gt;pipe()&lt;/code&gt;, and &lt;code&gt;bounce()&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;The last line in the program should probably be an &lt;code&gt;accept()&lt;/code&gt; call; mail that reaches the end of the program without being deposited in a mailbox or rejected will be silently ignored. (This may change to an implicit &lt;code&gt;accept()&lt;/code&gt; in a later version, to be more &lt;em&gt;procmail&lt;/em&gt;-like.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve got a few mailing lists or people you want to filter, you could do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Mail::Audit;
+  my $item    = Mail::Audit-&amp;gt;new;
+  my $maildir = &amp;quot;/home/simon/mail/&amp;quot;;
+
+  my %lists = (
+      perl5-porters    =&amp;gt; &amp;quot;p5p&amp;quot;,
+      helixcode        =&amp;gt; &amp;quot;gnome&amp;quot;,
+      uclinux          =&amp;gt; &amp;quot;uclinux&amp;quot;,
+      &#39;infobot\.org&#39;   =&amp;gt; &amp;quot;infobot&amp;quot;,
+      &#39;@dion\.ne\.jp&#39;  =&amp;gt; &amp;quot;yamachan&amp;quot;
+  );
+
+  for my $pattern (keys %lists) {
+      $item-&amp;gt;accept($maildir.$lists{$pattern})
+          if $item-&amp;gt;from =~ /$pattern/ 
+             or $item-&amp;gt;to =~ /$pattern/;
+  }
+
+  $item-&amp;gt;accept;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This time, we perform a regular expression match to see if either the &lt;code&gt;From:&lt;/code&gt; line or the &lt;code&gt;To:&lt;/code&gt; line match any of the patterns in our hash keys, and if they do, direct the mail to the corresponding folder. Since we&amp;rsquo;re using ordinary Perl regular expressions, we can do this sort of thing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &#39;\bxxx.*\.com$&#39;  =&amp;gt; &amp;quot;spam&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(And you&amp;rsquo;d be surprised at quite how much junk mail that one traps.)&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s another simple but remarkably effective spamtrap recipe:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $item-&amp;gt;accept(&amp;quot;questionable&amp;quot;)
+      if $item-&amp;gt;from !~ /simon/i and $item-&amp;gt;cc !~ /simon/i;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We check the &lt;code&gt;From:&lt;/code&gt; and &lt;code&gt;CC:&lt;/code&gt; headers for my name, and if it&amp;rsquo;s not in either - the mail probably isn&amp;rsquo;t to me. This one only makes sense after we&amp;rsquo;ve filtered out mailing list messages, which could validly be sent from a subscriber to a generic list address.&lt;/p&gt;
+
+&lt;h3 id=&#34;mail-and-news&#34;&gt;Mail and News&lt;/h3&gt;
+
+&lt;p&gt;I much prefer reading mailing lists as newsgroups; while a good mail client like &lt;em&gt;mutt&lt;/em&gt; can display mail as threaded discussions, I personally prefer navigating in a newsreader. So, how do we gate mailing lists to newsgroups and back? Russ Allbery&amp;rsquo;s News::Gateway module helps do just that - it provides a program called &lt;em&gt;listgate&lt;/em&gt; which takes an incoming mailing list message, reformats it as a valid news article, and then posts it to the news server. We can plug this into our mail filter quite easily; assuming we&amp;rsquo;ve got the group &lt;code&gt;lists.p5p&lt;/code&gt; set up on the local news server and we&amp;rsquo;ve configured listgate appropriately, we can just say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $item-&amp;gt;pipe(&amp;quot;listgate p5p&amp;quot;) if $item-&amp;gt;from =~ /perl5-porters/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Again, if we&amp;rsquo;ve got multiple groups, we can use a hash to correlate patterns to groups as we did with mailing lists above.&lt;/p&gt;
+
+&lt;p&gt;So much for getting incoming mail to news - what about getting posted articles back into the mailing list? The key to this is in the newsgroup moderation system - when you post to a moderated newsgroup, the article is mailed to a moderator for approval. If we set the moderator of &lt;code&gt;lists.p5p&lt;/code&gt; to the list address, we can get our outgoing posts sent to the list. In &lt;code&gt;/usr/news/etc/moderators&lt;/code&gt;, you&amp;rsquo;d say&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    lists.p5p:  perl5-porters@perl.org
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Very easy. The only problem is that it doesn&amp;rsquo;t work. Mail messages and news articles have a slightly different format, and some mailing list managers will reject mail messages that look like news articles. So we need to send our message through a clean-up phase first. Instead of sending it to &lt;code&gt;perl5-porters@perl.org&lt;/code&gt;, we&amp;rsquo;ll instead send it to &lt;code&gt;news-outgoing@localhost&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    lists.*:    news-outgoing@localhost
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Mail arriving at that account needs to go through another Perl program to clean up and dispatch the outgoing article, and that looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use News::Gateway;
+    my $gw=News::Gateway-&amp;gt;new(0);
+    $gw-&amp;gt;modules( &#39;newstomail&#39;, &#39;headers&#39;);
+    $gw-&amp;gt;config_line(&amp;quot;newstomail /home/simon/bin/news2mail.h&amp;quot;);
+    $gw-&amp;gt;config_line(&amp;quot;header newsgroups drop&amp;quot;);
+    $gw-&amp;gt;config_line(&amp;quot;header organisation drop&amp;quot;);
+    $gw-&amp;gt;config_line(&amp;quot;header nntp-posting-host drop&amp;quot;);
+    $gw-&amp;gt;read(*STDIN) or die $!;
+    $gw-&amp;gt;apply();
+    $gw-&amp;gt;mail();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This reads an article from standard input, drops the &lt;code&gt;Newsgroups&lt;/code&gt;, &lt;code&gt;Organisation&lt;/code&gt;, and &lt;code&gt;NNTP-Posting-Host&lt;/code&gt; headers, reformats it as a mail message using the configuration file &lt;code&gt;/home/simon/bin/news2mail.h&lt;/code&gt; to find the address, and then sends it. That config file is just a list of newsgroups and the addresses they belong to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    lists.p5p perl5-porters@perl.org
+    lists.tlug tlug@tlug.gr.jp
+    lists.advocacy advocacy@perl.org
+    lists.linux-kernel linux-kernel@vger.rutgers.edu
+    lists.perl-friends perl-friends@perlsupport.com
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So here&amp;rsquo;s the recipe for filtering news to mail and back again:&lt;/p&gt;
+
+&lt;p&gt;• Incoming messages&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;will be trapped by a rule in your mail filter, and be piped to &lt;code&gt;listgate&lt;/code&gt; via a line like&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $item-&amp;gt;pipe(&amp;quot;listgate p5p&amp;quot;)
+        if $item-&amp;gt;from =~ /perl5-porters/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;listgate&lt;/code&gt; will then post them to your news server, to the group &lt;code&gt;lists.p5p&lt;/code&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;• Outgoing articles&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;will be sent to the moderator address, &lt;code&gt;news-outgoing@localhost&lt;/code&gt; for cleanup. The cleanup program will drop unnecessary headers, reformat as a mail message, and then look at the configuration file to determine where to send them on. They&amp;rsquo;ll be sent to the mailing list, and sometime later will be returned to you by mail, to appear in the newsgroup as above.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&#34;a-complete-filter&#34;&gt;A Complete Filter&lt;/h3&gt;
+
+&lt;p&gt;Here, to show off exactly what I do with Mail::Audit, is a suitably anonymized and annotated version of the filter I currently use to process my incoming mail.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use Mail::Audit;
+    $folder = &amp;quot;/home/simon/mail/&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Anything that actually reaches me is going to be logged so that I can &lt;code&gt;tail -f&lt;/code&gt; a summary of incoming mail to one of my terminals.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    open (LOG, &amp;quot;&amp;gt;/home/simon/.audit_log&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Read in the new mail message, and extract the important headers from it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $item = Mail::Audit-&amp;gt;new;
+    my $from = $item-&amp;gt;from();
+    study $from;
+    my $to = $item-&amp;gt;to();
+    my $cc = $item-&amp;gt;cc();
+    my $subject = $item-&amp;gt;subject();
+    chomp($from, $to, $subject);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If I&amp;rsquo;m likely to be at the office, I appreciate a copy of all mail I receive, in case there&amp;rsquo;s something I need to deal with immediately. So I need &lt;em&gt;time-controlled&lt;/em&gt; filtering. Try doing this with &lt;em&gt;procmail&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my ($hour, $wday) = (localtime)[2,6];
+    if ($wday !=0 and $wday !=6         # Not Saturday/Sunday
+        and $hour &amp;gt; 9 and $hour &amp;lt; 18) { # Between 9am and 6pm
+        print LOG &amp;quot;$subject: $from: Bouncing to work\n&amp;quot;;
+        $item-&amp;gt;resend(&#39;simon@theoffice.com&#39;);
+        # resend is the only action
+        # which doesn&#39;t end the program.
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;One of my users didn&amp;rsquo;t have their own email address for a while, so they had their friends send mail to me instead. Now they have their own address, so the mail is bounced across to them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $item-&amp;gt;bounce(&#39;ei@somewhere.com&#39;) if $subject =~ /^For Ei:/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I maintain two FAQs: the perl5-porters FAQ and the Tokyo high speed connectivity FAQ. The mail comes to different email addresses, but it all ends up at my box. They need to go in separate folders.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $item-&amp;gt;accept(&amp;quot;$folder/p5p-faq&amp;quot;)   if $to=~ /p5p-faq/;
+    $item-&amp;gt;accept(&amp;quot;$folder/tokyo-faq&amp;quot;) if $to=~ /faq/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I get some mail in Greek which needs to be processed with &lt;code&gt;metamail&lt;/code&gt; to sort out the character sets. The pipe method squirts the mail to a separate program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $item-&amp;gt;pipe(&amp;quot;metamail -B -x &amp;gt; $folder/greek&amp;quot;)
+                if $from =~/hri\.org$/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some people I definitely want to hear from, so they get accepted at this stage to save time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (qw(goodguy dormouse locust)) {
+        if ($from =~ /$_/) {
+            print LOG &amp;quot;$from:$subject:Exception, 
+                accepting into inbox\n&amp;quot;;
+            $item-&amp;gt;accept;
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some people I very definitely do not want to hear from:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (qw(badguy nasty enemy)) {
+        if ($from =~ /$_/) {
+            print LOG &amp;quot;$from:$subject:Dumped\n&amp;quot;;
+            $item-&amp;gt;reject(&amp;quot;Go away! Stop emailing me!&amp;quot;);
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some people or mailing lists I currently just don&amp;rsquo;t have time for, so they get silently ignored:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (qw(freshmeat.net microsoft news\@myhost cron)) {
+        if ($from =~ /$_/) {
+            print LOG &amp;quot;$from:$subject:Ignored\n&amp;quot;;
+            $item-&amp;gt;ignore;
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some mailing lists I want to stay as lists:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my %lists = (
+        &amp;quot;pound.perl.org&amp;quot;  =&amp;gt; &amp;quot;purl&amp;quot;,
+        &amp;quot;helixcode&amp;quot;       =&amp;gt; &amp;quot;gnome&amp;quot;,
+        &amp;quot;uclinux&amp;quot;         =&amp;gt; &amp;quot;uclinux&amp;quot;,
+        &amp;quot;infobot&amp;quot;         =&amp;gt; &amp;quot;infobot&amp;quot;,
+        &amp;quot;european-&amp;quot;       =&amp;gt; &amp;quot;yapc&amp;quot;,
+        &amp;quot;tpm\@otherside&amp;quot;  =&amp;gt; &amp;quot;tpm&amp;quot;,
+        &amp;quot;hellenic&amp;quot;        =&amp;gt; &amp;quot;greeknews&amp;quot;,
+    );
+    for my $what (keys %lists) {
+        next unless $from =~ /$what/i or 
+            $to =~ /$what/i or $cc =~/$what/i;
+        my $where = $lists{$what};
+        print LOG &amp;quot;$from:$subject:List, 
+            accepting to folder $where\n&amp;quot;;
+        $item-&amp;gt;accept($folder.$where);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And some I want to pipe to &lt;code&gt;listgate&lt;/code&gt; as newsgroups:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my %gated = (
+        &amp;quot;tlug&amp;quot;    =&amp;gt; &amp;quot;tlug&amp;quot;,
+        &amp;quot;advocacy&amp;quot;    =&amp;gt; &amp;quot;advocacy&amp;quot;,
+        &amp;quot;security-sig&amp;quot;    =&amp;gt; &amp;quot;security&amp;quot;,
+        &amp;quot;iss.net&amp;quot; =&amp;gt; &amp;quot;security&amp;quot;,
+        &amp;quot;securityfocus&amp;quot;   =&amp;gt; &amp;quot;security&amp;quot;,
+        &amp;quot;perl5-porters&amp;quot;   =&amp;gt; &amp;quot;p5p&amp;quot;,
+        &amp;quot;linux-kernel&amp;quot;    =&amp;gt; &amp;quot;linux-kernel&amp;quot;,
+        &amp;quot;perlsupport&amp;quot; =&amp;gt; &amp;quot;perl-friends&amp;quot;,
+    );
+
+    for my $what (keys %gated) {
+        next unless $from =~ /$what/i or 
+            $to =~ /$what/i or $cc =~/$what/i;
+        my $where=$gated{$what};
+        print LOG &amp;quot;$from:$subject:Gated to lists.$where\n&amp;quot;;
+        $item-&amp;gt;pipe(&amp;quot;/usr/local/bin/listgate $where&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some spammers just don&amp;rsquo;t give up, so we actually reject their messages. We do this based on subject, which is a bit risky but seems to work:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (&amp;quot;Invest&amp;quot;, &amp;quot;nude asian&amp;quot;))  {
+        $item-&amp;gt;reject(&amp;quot;No! Go away!&amp;quot;)
+                if $subject=~/\b$_\b/;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Before we let the article in to the inbox, there&amp;rsquo;s a long list of patterns at the end of the program which match known spam senders. We check the incoming mail against this list, and save it for analysis and reporting:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    while (&amp;lt;DATA&amp;gt;) {
+        chomp;
+        next unless $from =~ /$_/i or $to =~ /$_/i;
+        print LOG &amp;quot;$from:$subject:Spam?\n&amp;quot;;
+        $item-&amp;gt;accept($folder.&amp;quot;spam&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now our final check for mail which doesn&amp;rsquo;t appear to be for us:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if ($item-&amp;gt;from !~ /simon/i and $item-&amp;gt;cc !~ /simon/i) {
+        print LOG &amp;quot;$from:$subject:Badly addressed mail\n&amp;quot;;
+        $item-&amp;gt;accept(&amp;quot;questionable&amp;quot;)
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, we let the mail in:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    print LOG &amp;quot;INCOMING MAIL:$from:$subject:
+            Accepting to inbox\n&amp;quot;;
+    $item-&amp;gt;accept();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;caveats&#34;&gt;Caveats&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m perfectly happy to trust Mail::Audit with all my incoming email. For a while it was running alongside &lt;em&gt;procmail&lt;/em&gt;, but now it rules the roost. However, there are some things which you do need to take care about if you want to run it yourself.&lt;/p&gt;
+
+&lt;p&gt;Mail::Audit has been tested on &lt;code&gt;qmail&lt;/code&gt; and &lt;code&gt;postfix&lt;/code&gt; - it should work fine on other MTAs (Message Transfer Agents), so long as they believe that &lt;code&gt;exit 100&lt;/code&gt;; means reject. If they don&amp;rsquo;t, you can override the &lt;code&gt;reject&lt;/code&gt; method like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $item = Mail::Audit-&amp;gt;new(
+            reject =&amp;gt; sub { exit 67; }
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It also assumes that the default mailbox is &lt;code&gt;/var/spool/mail/name&lt;/code&gt; where &lt;code&gt;name&lt;/code&gt; is user ID of the current user. If this isn&amp;rsquo;t the case, (I believe &lt;code&gt;mh&lt;/code&gt; doesn&amp;rsquo;t work like this) say &lt;code&gt;accept(&amp;quot;Mailbox&amp;quot;)&lt;/code&gt; or override &lt;code&gt;accept&lt;/code&gt; with a subroutine of your own.&lt;/p&gt;
+
+&lt;p&gt;Finally, Mail::Audit isn&amp;rsquo;t sophisticated. It&amp;rsquo;s little other than a wrapper around Mail::Internet. While it&amp;rsquo;s probably perfectly fine for most filters you want to write, don&amp;rsquo;t expect it to do everything for you.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Mail::Audit and News::Gateway are both available from CPAN; together they allow you to very easily construct mail filters and newsgroup gateways in Perl. It&amp;rsquo;s a great way to filter your mail with Perl, and an excellent replacement for moldy old &lt;em&gt;procmail&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Copyright The Perl Journal. Reprinted with permission from CPM Media LLC. All rights reserved.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

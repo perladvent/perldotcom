@@ -1,0 +1,765 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tcp on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/tcp/</link>
+    <description>Recent content in Tcp on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 28 Feb 2018 10:40:29 +0000</lastBuildDate>
+    <atom:link href="/tags/tcp/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How does traceroute work?</title>
+      <link>http://localhost:1313/article/how-does-traceroute-work-/</link>
+      <pubDate>Wed, 28 Feb 2018 10:40:29 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/how-does-traceroute-work-/</guid>
+      <description>
+
+&lt;p&gt;Lately I&amp;rsquo;ve been reading &lt;a href=&#34;https://www.amazon.com/Interconnections-Bridges-Switches-Internetworking-Protocols/dp/0201634481/&#34;&gt;Interconnections&lt;/a&gt; by Radia Perlman (great lastname!). It&amp;rsquo;s an old, but still relevant book which describes how low-level networking technologies work, such as ethernet. The book contains many insights and anecdotes. On page 236 I came across this gem:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The traceroute utility is a clever hack designed to force each router along the path, in turn, to return an error report. It works by setting the TTL first to 1 (causing the first router to send an error report back to the source) and then setting it to 2 (causing the next router to send an error report) and so forth until the packet reaches the destination.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I had never considered how &lt;code&gt;traceroute&lt;/code&gt; worked before, and by reading that paragraph, I instantly understood. The &lt;a href=&#34;https://en.wikipedia.org/wiki/Time_to_live&#34;&gt;Time To Live (TTL)&lt;/a&gt; field in an IP header was intended to hold the number of seconds for which the IP packet is valid, after which it can be dropped. In practice, it is used as a decrementing hop count, whereby every router that forwards the packet reduces the TTL value by one. IPv6 packets have the &amp;ldquo;hop limit&amp;rdquo; header field which is better named and serves the same purpose.&lt;/p&gt;
+
+&lt;p&gt;When a router decrements a packet&amp;rsquo;s hop count value to zero, it sends an ICMP &lt;a href=&#34;https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Time_exceeded&#34;&gt;time exceeded error message&lt;/a&gt; back to the source IP address in the packet, otherwise it forwards the packet onward.&lt;/p&gt;
+
+&lt;p&gt;Modern versions of the &lt;code&gt;traceroute&lt;/code&gt; program don&amp;rsquo;t just send one packet at a time though. To speed things up it sends several packets with varying hop counts at once, so the program doesn&amp;rsquo;t have to wait for each router to respond before issuing the next packet.&lt;/p&gt;
+
+&lt;h3 id=&#34;do-protocols-matter&#34;&gt;Do protocols matter?&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;traceroute&lt;/code&gt; program installed on my computer sends UDP datagrams by default, but can also be configured to send TCP or ICMP messages instead. All of these rely on the same principle of setting the hop count to a small number, and awaiting an ICMP time exceeded error message.&lt;/p&gt;
+
+&lt;p&gt;However some routers may block certain ports by firewall, hence using TCP on port 80, an ICMP echo request (ping) or UDP on port 53 (DNS) might be more likely to succeed than a UDP datagram on a random unused port.&lt;/p&gt;
+
+&lt;h3 id=&#34;traceroute-with-perl&#34;&gt;Traceroute with Perl&lt;/h3&gt;
+
+&lt;p&gt;The module &lt;a href=&#34;https://metacpan.org/pod/Net::Traceroute::PurePerl&#34;&gt;Net::Traceroute::PurePerl&lt;/a&gt; implements the traceroute functionality in Perl. I installed the module from CPAN and ran it on the Perl.com domain using this one liner:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo $(which perl) -MNet::Traceroute::PurePerl -wE \
+  &#39;my $n=Net::Traceroute::PurePerl-&amp;gt;new(host=&amp;gt;&amp;quot;perl.com&amp;quot;);$n-&amp;gt;traceroute();$n-&amp;gt;pretty_print&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because the script opens a raw socket, it needed to be run with root privileges. I use a locally-managed perl, so the subcommand &lt;code&gt;$(which perl)&lt;/code&gt; ensured my local perl was run instead of the system one. This is the output I got:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;traceroute to perl.com (207.171.7.45), 30 hops max, 40 byte packets
+ 1 192.168.1.1        1.98 ms    2.02 ms    1.96 ms
+ 2 * * *
+ 3 68.173.200.108    14.25 ms   15.03 ms   15.43 ms
+ 4 68.173.198.32     21.36 ms   16.54 ms   16.77 ms
+ 5 107.14.19.24      21.44 ms
+ 5 66.109.6.78       21.68 ms   10.39 ms
+ 6 66.109.6.27       12.58 ms   15.19 ms   14.55 ms
+ 7 66.109.5.119      16.93 ms   13.88 ms   20.49 ms
+ 8 154.54.10.209     14.68 ms   18.87 ms   13.28 ms
+ 9 154.54.44.217     12.37 ms
+ 9 154.54.80.177     19.20 ms   18.18 ms
+10 154.54.40.106     32.09 ms
+10 154.54.40.110     14.15 ms
+10 154.54.40.106     14.30 ms
+11 154.54.24.222     30.80 ms
+11 154.54.7.158      30.87 ms
+11 154.54.24.222     33.32 ms
+12 154.54.28.70      42.33 ms   44.74 ms
+12 154.54.28.130     41.91 ms
+13 154.54.29.222     62.53 ms
+13 154.54.30.162     60.21 ms   60.57 ms
+14 154.54.42.65      72.04 ms   71.75 ms
+14 154.54.42.77      70.90 ms
+15 154.54.45.162     81.26 ms   81.30 ms   90.29 ms
+16 154.54.42.102     80.39 ms
+16 154.54.25.150     82.34 ms   83.04 ms
+17 38.88.197.82      83.23 ms   91.67 ms   82.39 ms
+18 207.171.30.62     83.17 ms   72.52 ms   77.83 ms
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first entry is my wifi router. I&amp;rsquo;m guessing the second is my modem, which did not respond (hence the asterisks). You can see the succession of IP addresses for each router (technically, interface) that responded to the packets. The 18th entry is the last hop because Perl.com (207.171.7.45) sits on the same network (207.171.0.0/18).&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::Traceroute::PurePerl&#34;&gt;Net::Traceroute::PurePerl&lt;/a&gt; currently lacks IPv6 support, and hasn&amp;rsquo;t been updated in a while. The documentation lists IPv6 as a todo item, so if you&amp;rsquo;re interested in traceroute programming, this might be a good opportunity to send a patch. If the author doesn&amp;rsquo;t respond, you can always fork the distribution!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Port scanning with Perl, Part II</title>
+      <link>http://localhost:1313/article/188/2015/8/15/Port-scanning-with-Perl--Part-II/</link>
+      <pubDate>Sat, 15 Aug 2015 15:05:31 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/188/2015/8/15/Port-scanning-with-Perl--Part-II/</guid>
+      <description>
+
+&lt;p&gt;In &lt;a href=&#34;http://perltricks.com/article/183/2015/7/20/Port-scanning-with-Perl&#34;&gt;part I&lt;/a&gt; of this article, I showed how to develop a basic forking &lt;a href=&#34;https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d&#34;&gt;port scanner&lt;/a&gt; with Perl. In this article, I&amp;rsquo;ll add some enhancements to make this a truly useful tool.&lt;/p&gt;
+
+&lt;h3 id=&#34;scan-a-range-of-ports&#34;&gt;Scan a range of ports&lt;/h3&gt;
+
+&lt;p&gt;The first feature I want to add is the ability to scan user-defined port ranges, instead of the default list of named ports. Because I&amp;rsquo;m using &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; to parse command line arguments, I can add &lt;code&gt;range&lt;/code&gt; to the parameter options:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;GetOptions (
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ip=s&amp;#39;&lt;/span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target_ip,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;range=s&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port_range,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;h|help|?&amp;#39;&lt;/span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { pod2usage(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;) },
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The port processing &lt;a href=&#34;https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L53-L57&#34;&gt;code&lt;/a&gt; becomes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# use named ports if no range was provided&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @ports &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shuffle &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; ($port_range)
+  {
+    map { $port_directory{$_}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{port} }
+      grep { $port_directory{$_}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name} &lt;span style=&#34;color:#f92672&#34;&gt;!~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^unknown$/&lt;/span&gt;
+             &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $port_directory{$_}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{proto} &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; $protocol } keys %port_directory;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($min, $max) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $port_range &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/([0-9]+)-([0-9]+)/&lt;/span&gt;
+      &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;port-range must be formatted like this: 100-1000\n&amp;#34;&lt;/span&gt;;
+    $min&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;$max;
+  }
+};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I check for the presence of the &lt;code&gt;$port_range&lt;/code&gt; variable, and if it&amp;rsquo;s present I try to parse the minimum and maximum ports using a regex capture. I like this code pattern:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($min, $max) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $port_range &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/([0-9]+)-([0-9]+)/&lt;/span&gt;
+      &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;port-range must be formatted like this: 100-1000\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Because either the port range will be successfully parsed into &lt;code&gt;$min&lt;/code&gt; and &lt;code&gt;$max&lt;/code&gt; or an exception with be thrown. By passing a string ending in a newline to &lt;code&gt;die&lt;/code&gt;, it won&amp;rsquo;t print out a line reference, which makes for cleaner &amp;ldquo;usage&amp;rdquo; style messages.&lt;/p&gt;
+
+&lt;h3 id=&#34;tune-processes-and-frequency&#34;&gt;Tune processes and frequency&lt;/h3&gt;
+
+&lt;p&gt;The simple &lt;a href=&#34;https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d&#34;&gt;port scanner&lt;/a&gt; initiates 50 processes, divides the ports to be scanned evenly between all processes, with each process sending one request per second. There are a few issues with this. Firstly if the user wants to scan all 65,535 ports the program will run for at least 20 minutes, which is quite slow. Secondly, some hosts have dynamic firewalls which will start dropping packets if they detect a port scan, so the user may want to be stealthy and slow down the scan speed &lt;em&gt;further&lt;/em&gt;. Ideally then, we should let the user define how many processes to run and how much to delay between each sent packet.&lt;/p&gt;
+
+&lt;p&gt;To capture those arguments, I can add &lt;code&gt;procs&lt;/code&gt; and &lt;code&gt;delay&lt;/code&gt; to &lt;code&gt;GetOptions&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;GetOptions (
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;delay=f&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $delay &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ip=s&amp;#39;&lt;/span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target_ip,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;range=s&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port_range,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;procs=i&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $procs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;h|help|?&amp;#39;&lt;/span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { pod2usage(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;) },
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code does a few neat things: by using the &lt;code&gt;=i&lt;/code&gt; definition, &lt;code&gt;GetOptions&lt;/code&gt; will do integer type checking for the number of processors. Likewise &lt;code&gt;=f&lt;/code&gt; will enforce a floating-point number type. The other thing this code does is declare and set a default value for the variables within the &lt;code&gt;GetOptions&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;p&gt;To support &lt;code&gt;sleep&lt;/code&gt; for floating point seconds, I need to import the &lt;a href=&#34;https://metacpan.org/pod/Time::HiRes&#34;&gt;Time::HiRes&lt;/a&gt; module (part of the Perl core):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Time::HiRes &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;sleep&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now the forking &lt;a href=&#34;https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L68-L91&#34;&gt;code&lt;/a&gt; can become:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;$procs)
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @ports_to_scan &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; splice @ports, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, $batch_size;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $parent &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; fork;
+  die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;unable to fork!\n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; defined ($parent);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($parent)
+  {
+    push(@child_pids, $parent);
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt;;
+  }
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# child waits until the parent signals to continue&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $continue &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+  local $SIG{CONT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { $continue &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;};
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;until&lt;/span&gt; ($continue) {}
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target_port (@ports_to_scan)
+  {
+    sleep($delay);
+    send_packet($protocol, $target_port, $flags);
+  }
+  exit &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# exit child&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And the scanner will now fork &lt;code&gt;$procs&lt;/code&gt; number of processes, and sleep &lt;code&gt;$delay&lt;/code&gt; seconds between each sent packet. This should give users the ability to fine-tune the frequency of packets sent and the run time of the scan.&lt;/p&gt;
+
+&lt;h3 id=&#34;reporting&#34;&gt;Reporting&lt;/h3&gt;
+
+&lt;p&gt;The simple scanner prints out every scanned port and the port status. This can be too much information - in most cases the user is interested in vulnerable open ports and doesn&amp;rsquo;t care about filtered or closed ones. On the other hand, the output is missing key information that would be required for a security audit: datetime of execution, program version, parameters used, overall runtime etc. So I need to add this information to the output.&lt;/p&gt;
+
+&lt;p&gt;To calculate the program runtime duration, and print the start datetime I can use the &lt;a href=&#34;https://metacpan.org/pod/Time::Piece&#34;&gt;Time::Piece&lt;/a&gt; module. The module is part of core Perl so there is no need to install it, plus you can do &lt;a href=&#34;http://perltricks.com/article/59/2014/1/10/Solve-almost-any-datetime-need-with-Time--Piece&#34;&gt;almost anything&lt;/a&gt; with it.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Time::Piece;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $start_time &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; localtime;
+
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $end_time &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; localtime;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $duration &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $end_time &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; $start_time;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;When you import Time::Piece it overrides the localtime and gmtime built in functions to construct Time::Piece objects. Subtracting the start and end times returns a Time::Seconds object which is our runtime duration. Both object types nicely format when printed, so that&amp;rsquo;s all we need to do here. Simple!&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll add a &lt;code&gt;verbose&lt;/code&gt; option to &lt;code&gt;GetOptions&lt;/code&gt;. If this is present, we&amp;rsquo;ll print out all port results, else just the open ones:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;GetOptions (
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;delay=f&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $delay &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ip=s&amp;#39;&lt;/span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target_ip,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;range=s&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port_range,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;procs=i&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $procs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;verbose&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $verbose,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;h|help|?&amp;#39;&lt;/span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { pod2usage(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;) },
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note how for boolean parameters no type declaration is given to &lt;code&gt;GetOptions&lt;/code&gt; (e.g. no &lt;code&gt;=i&lt;/code&gt;). This means that on the command line the user just has to type either &lt;code&gt;--verbose&lt;/code&gt; or &lt;code&gt;-v&lt;/code&gt; and &lt;code&gt;$verbose&lt;/code&gt; will be given a true value.&lt;/p&gt;
+
+&lt;p&gt;Instead of printing out port results in the &lt;code&gt;read_packet()&lt;/code&gt; &lt;a href=&#34;https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L145&#34;&gt;subroutine&lt;/a&gt;, I&amp;rsquo;m going to return the port number and status back to the calling code and defer the printing until later. This simple change has a two benefits: it&amp;rsquo;s more flexible: I can add more packet parsing routines to &lt;code&gt;read_packet()&lt;/code&gt; without having to add multiple print statements and I can sort the port scan results before printing them. The program can scan ports in a random order but the output should be orderly!&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (sort { $a &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;=&amp;gt;&lt;/span&gt; $b } keys %port_scan_results)
+{
+  printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; %5u %-15s %-40s\n&amp;#34;&lt;/span&gt;, $_, $port_scan_results{$_}, ($port_directory{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$_/$protocol&amp;#34;&lt;/span&gt;}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $port_scan_results{$_} &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/open/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; $verbose;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This approach has one downside - the results will not be printed to the terminal until all responses have been received or the packet capture times out. What would be &lt;em&gt;really&lt;/em&gt; nice would be to print the sorted results as they are received. For example if we were scanning ports 1 to 100 and had received responses for ports 1 through 10, print those results and wait until we receive a response for port 11. This improvement is left as an exercise for the reader (pull requests welcome!).&lt;/p&gt;
+
+&lt;h3 id=&#34;support-different-types-of-scan&#34;&gt;Support different types of scan&lt;/h3&gt;
+
+&lt;p&gt;The simple scanner does a TCP &amp;ldquo;SYN&amp;rdquo; scan. This is a good default, but there are many different &lt;a href=&#34;http://nmap.org/book/man-port-scanning-techniques.html&#34;&gt;types&lt;/a&gt; of port scans we can undertake, which can yield better results against different systems. For example in my testing I&amp;rsquo;ve found the TCP SYN scan relatively useless against Chromebooks and mobile devices.&lt;/p&gt;
+
+&lt;p&gt;As with the other updates, I&amp;rsquo;m going to add new parameters to the &lt;code&gt;GetOptions&lt;/code&gt; function. I want to capture the protocol to use (e.g. TCP, UDP, ICMP) and any flags that should be added to the sent packet. These two variables should give us enough flexibility to support a variety of scans.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;GetOptions (
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;delay=f&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $delay &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ip=s&amp;#39;&lt;/span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target_ip,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;range=s&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port_range,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;procs=i&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $procs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;type=s&amp;#39;&lt;/span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $protocol &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tcp&amp;#39;&lt;/span&gt;),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;flag=s&amp;#39;&lt;/span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @flags,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;verbose&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $verbose,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;h|help|?&amp;#39;&lt;/span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { pod2usage(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;) },
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You might be wondering how it&amp;rsquo;s possible to read the &lt;code&gt;flag&lt;/code&gt; string parameter into the &lt;code&gt;@flags&lt;/code&gt; array. In this scenario, I want to be able to accept one or more flag arguments, so the user can pass them to the port scanner like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;port_scanner &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;flag fin &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;flag psh &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;flag urg&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Or more tersely:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;port_scanner &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f fin &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f psh &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f urg&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;These values will be captured into &lt;code&gt;@flags&lt;/code&gt;. By the way, those three flags are part of a TCP port scanning technique called the &amp;ldquo;Xmas&amp;rdquo; scan. To process the flags I&amp;rsquo;ll use this code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;flags are for tcp only!\n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $protocol &lt;span style=&#34;color:#f92672&#34;&gt;ne&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tcp&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; @flags;
+$flags[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;syn&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; @flags &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; $protocol &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;udp&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $flags &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; { map { $_ &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; } @flags };
+$flags &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {} &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; exists $flags&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{null};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Flags can only be passed for TCP scans, so the first thing thing I&amp;rsquo;m checking here is if we received any flags and the requested protocol is &lt;em&gt;not&lt;/em&gt; TCP, which will raise an exception. The code then reads &lt;code&gt;@flags&lt;/code&gt; into a hashref, defaulting to SYN if the protocol is TCP and no flags were passed. We also support a special type of scan the &amp;ldquo;null&amp;rdquo; scan where no flags are passed at all.&lt;/p&gt;
+
+&lt;p&gt;Now the &lt;a href=&#34;https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L125-L139&#34;&gt;send_packet&lt;/a&gt; subroutine can be updated to handle different protocols and scans:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;send_packet&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($protocol, $target_port, $flags) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  Net::RawIP&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;({ ip &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+                      saddr &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $local_ip,
+                      daddr &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $target_ip,
+                    },
+                    $protocol &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+                      source &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $local_port,
+                      dest   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $target_port,
+                      %$flags,
+                    },
+                  })&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;send;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The updated subroutine transparently passes the arguments received to &lt;a href=&#34;https://metacpan.org/pod/Net::RawIP&#34;&gt;Net::RawIP&lt;/a&gt;, which handles the details. The remaining ip and port variables are globals and already defined by this point in the code.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L145-L171&#34;&gt;read_packet&lt;/a&gt; subroutine also needs to be updated to parse different packet types:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;read_packet&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $raw_data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ip_data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NetPacket::Ethernet::strip($raw_data);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ip_packet &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NetPacket::IP&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;decode($ip_data);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($ip_packet&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{proto} &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;)
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tcp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NetPacket::TCP&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;decode(NetPacket::IP::strip($ip_data));
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{src_port};
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{flags} &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; SYN)
+    {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ($port, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;open&amp;#39;&lt;/span&gt;);
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{flags} &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; RST)
+    {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ($port, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;closed&amp;#39;&lt;/span&gt;);
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ($port, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;unknown&amp;#39;&lt;/span&gt;);
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($ip_packet&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{proto} &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;17&lt;/span&gt;)
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $udp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NetPacket::UDP&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;decode(NetPacket::IP::strip($ip_data));
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $udp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{src_port};
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ($port, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;open&amp;#39;&lt;/span&gt;);
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+  {
+    warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Received unknown packet protocol: $ip_packet-&amp;gt;{proto}\n&amp;#34;&lt;/span&gt;;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If we receive a TCP packet, the code examines the packet flags to determine the status of the port. A port is considered open if we receive an ACK/SYN response, which can be tested for by checking the presence of the &lt;code&gt;SYN&lt;/code&gt; flag. An &lt;code&gt;RST&lt;/code&gt; flag indicates the port is closed. Note that to test for presence of the flag we use bitwise &lt;code&gt;&amp;amp;&lt;/code&gt; against the flag constants exported by &lt;a href=&#34;https://metacpan.org/pod/NetPacket::TCP&#34;&gt;NetPacket::TCP&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;UDP is a simpler affair as it doesn&amp;rsquo;t support flags. If we receive a UDP datagram, we treat the port as open.&lt;/p&gt;
+
+&lt;h4 id=&#34;icmp&#34;&gt;ICMP&lt;/h4&gt;
+
+&lt;p&gt;Even though we&amp;rsquo;re not sending ICMP messages, we may receive them from the target host. Sometimes hosts return an ICMP message of type &amp;ldquo;destination port unreachable&amp;rdquo; instead of replying with a TCP/UDP packet. The ICMP message will include the IP header of the sender&amp;rsquo;s original message, but IP headers do not include destination ports, so how could we determine the destination port from the ICMP response? One way could be to include the destination port in the data portion of the IP packet. Once we receive the ICMP response, we parse out the IP header and extract the destination port from the data component of the message.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s not all we can do with ICMP responses. An ICMP response can also indicate that a dynamic firewall has started dropping our packets as we&amp;rsquo;ve exceed a rate-limit. It would be nice if an ICMP message was received, the port scanner automatically increased the delay between sending messages. To communicate this update to the sub-processes, we could install a signal handler. In order to &amp;ldquo;see&amp;rdquo; ICMP message responses, the pcap filter would need to be updated to remove the port clause. This introduces a new problem: we may receive messages from the target host that are unrelated to our scan. For now I&amp;rsquo;ve avoided handling ICMP.&lt;/p&gt;
+
+&lt;h3 id=&#34;running-the-new-port-scanner&#34;&gt;Running the new port scanner&lt;/h3&gt;
+
+&lt;p&gt;So that&amp;rsquo;s it! The full code can be found &lt;a href=&#34;https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/port_scanner&#34;&gt;here&lt;/a&gt;. Now let&amp;rsquo;s see some examples of how to run the code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# tcp syn scan of common ports, 100 processes sending packets every 0.25 sec:&lt;/span&gt;
+$ sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;i &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.5&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;p &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d &lt;span style=&#34;color:#ae81ff&#34;&gt;0.25&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# same as before but print all closed and filtered ports too&lt;/span&gt;
+$ sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;i &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.5&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;p &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d &lt;span style=&#34;color:#ae81ff&#34;&gt;0.25&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;v
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# udp scan&lt;/span&gt;
+$ sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;i &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.5&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;t udp
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# tcp fin scan&lt;/span&gt;
+$ sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;i &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.5&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f fin
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# tcp null scan&lt;/span&gt;
+$ sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;i &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.5&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f null
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# tcp xmas scan&lt;/span&gt;
+$ sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;i &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.5&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; f fin &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f psh &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f urg&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ve built something that&amp;rsquo;s beginning to resemble a professional tool: a customizable, high performance TCP/UDP port scanner with useful reporting. By developing our own solution and not relying on tools like nmap, we can achieve a deeper understanding of how networking works and the skills required to scan a host.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Port scanning with Perl</title>
+      <link>http://localhost:1313/article/183/2015/7/20/Port-scanning-with-Perl/</link>
+      <pubDate>Mon, 20 Jul 2015 13:14:57 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/183/2015/7/20/Port-scanning-with-Perl/</guid>
+      <description>
+
+&lt;p&gt;My recent infosec articles have focused on livehost discovery on a network. Inspired by Douglas Berdeaux&amp;rsquo;s &lt;a href=&#34;https://www.packtpub.com/networking-and-servers/penetration-testing-perl-raw&#34;&gt;Penetration Testing with Perl&lt;/a&gt;, I&amp;rsquo;ve assembled a potent &lt;a href=&#34;https://github.com/dnmfarrell/Penetration-Testing-With-Perl&#34;&gt;collection&lt;/a&gt; of livehost scanners including ARP, echo, SMB and Netbios. Each of these have different strengths and weaknesses. Regardless, once you&amp;rsquo;ve discovered a livehost and you want to probe for vulnerabilities, a port scan is the logical next step.&lt;/p&gt;
+
+&lt;h3 id=&#34;port-scanning-explained&#34;&gt;Port Scanning Explained&lt;/h3&gt;
+
+&lt;p&gt;An IP address identifies the network location of a computer, but once the computer receives a UDP datagram or TCP packet it then needs to decide where to route it internally within itself. Every TCP/UDP parcel contains a &amp;ldquo;destination port&amp;rdquo; field, which is where the computer will attempt to deliver the packet/datagram. Every computer has 65,535 available TCP and UDP ports for services to use. Many are already assigned for common services, like 22 for SSH, 25 for SMTP and 80 for HTTP.&lt;/p&gt;
+
+&lt;p&gt;Port scanning is the act of probing the ports of another computer to understand which ports are &amp;ldquo;open&amp;rdquo; (have services listening on them), &amp;ldquo;filtered&amp;rdquo; (prevented access by a firewall) and &amp;ldquo;closed&amp;rdquo; (have no services listening on them). Once the attacker has an idea of which ports are open, they can begin probing those services for weaknesses. For example, if I ran a port scan against a remote server and found port 25 SMTP to be open, I could try a number of attacks against it. I could telnet to the livehost&amp;rsquo;s IP address on port 25, and attempt to discover a username on the system using the &amp;lsquo;VRFY&amp;rsquo; command. Once I had a username, I could proceed with a brute force password cracking attempt - possibly on port 22 or against a web application if it was running on the host. I may not even need a username and password if I succeed in a buffer overflow attack against the email service listening on port 25.&lt;/p&gt;
+
+&lt;h3 id=&#34;port-scanning-with-perl&#34;&gt;Port scanning with Perl&lt;/h3&gt;
+
+&lt;p&gt;A basic port scanner needs to be able to take an IP address of a livehost, enumerate a list of ports, send a packet to each port on the livehost and listen and decode the responses. Perl has a number of modules that make this easier. I&amp;rsquo;m going to step through each requirement one by one.&lt;/p&gt;
+
+&lt;h4 id=&#34;parsing-command-line-arguments&#34;&gt;Parsing command line arguments&lt;/h4&gt;
+
+&lt;p&gt;We can use &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Pod::Usage&#34;&gt;Pod::Usage&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Getopt::Long;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Pod::Usage;
+
+GetOptions (
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;help|?&amp;#39;&lt;/span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { pod2usage(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;) },
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ip=s&amp;#39;&lt;/span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target_ip,
+);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# validate required args are given&lt;/span&gt;
+die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Missing --ip parameter, try --help\n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $target_ip;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;__END__
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 NAME
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;port_scanner - a concurrent randomized tcp/udp port scanner written in Perl
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 SYNOPSIS
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;port_scanner [options]
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; Options:
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  --ip,     -i   ip address to scan e.g. 10.30.1.52
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  --help,   -h   display this help text&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;GetOptions&lt;/code&gt; function parses command line arguments and assigns them to variables. Getop::Long can handle shortened option names so &lt;code&gt;--ip 10.0.1.5&lt;/code&gt; and &lt;code&gt;-i 10.0.1.5&lt;/code&gt; will both assign the IP address to the variable &lt;code&gt;$target_ip&lt;/code&gt;. If the program receives &lt;code&gt;--help&lt;/code&gt;, &lt;code&gt;-h&lt;/code&gt; or &lt;code&gt;-?&lt;/code&gt; it will print out the documentation using &lt;code&gt;pod2usage&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;discovering-the-local-ip-and-port&#34;&gt;Discovering the local IP and port&lt;/h4&gt;
+
+&lt;p&gt;To send an IP packet, we need both the destination and the local IP address. We&amp;rsquo;ll also need a local port.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Address::IP::Local;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IO::Socket::INET;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $local_ip   &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::Address::IP::Local&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;public;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# find a random free port by opening a socket using the protocol&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $local_port &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $socket &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; IO::Socket::INET&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(Proto &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tcp&amp;#39;&lt;/span&gt;, LocalAddr &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $local_ip);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $socket_port &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $socket&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sockport();
+  $socket&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;close;
+  $socket_port;
+};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To get the local ip address, I call the &lt;code&gt;public&lt;/code&gt; method provided by the &lt;a href=&#34;https://metacpan.org/pod/Net::Address::IP::Local&#34;&gt;Net::Address::IP::Local&lt;/a&gt; module. Easy! Finding a local port that is available is more involved. In theory any unnamed port should be available, but there might be another service already using it. Instead I create a new socket object using &lt;a href=&#34;https://metacpan.org/pod/IO::Socket::INET&#34;&gt;IO::Socket::INET&lt;/a&gt; without specifying a local port. Under the hood, this attempts to open a socket on port zero, and the operating system will then automatically assign an available port to the socket (zero is reserved). This has the added benefit of randomizing the local port used by the scanner every time it runs. I then save the port number the socket was opened on, and close the socket.&lt;/p&gt;
+
+&lt;h4 id=&#34;getting-a-list-of-ports-to-scan&#34;&gt;Getting a list of ports to scan&lt;/h4&gt;
+
+&lt;p&gt;For our simple scanner, I&amp;rsquo;ll focus on scanning named ports, that is port numbers pre-assigned to services by the &lt;a href=&#34;http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml&#34;&gt;IANA&lt;/a&gt;. Fortunately for us, the developers behind the popular NMAP tool have already assembled a text &lt;a href=&#34;https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/data/nmap-services.txt&#34;&gt;file&lt;/a&gt; of named ports, and I&amp;rsquo;ll use this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; List::Util &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;shuffle&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %port_directory;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port_file, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;data/nmap-services.txt&amp;#39;&lt;/span&gt;
+  &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error reading data/nmap-services.txt $!\n&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$port_file&amp;gt;&lt;/span&gt;)
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^#/&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# skip comments&lt;/span&gt;
+  chomp;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($name, $number_protocol, $probability, $comments) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\t/&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($port, $proto) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\//&lt;/span&gt;, $number_protocol;
+
+  $port_directory{$number_protocol} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+    port        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $port,
+    proto       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $proto,
+    name        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $name,
+    probability &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $probability,
+    comments    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $comments,
+  };free
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @ports &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shuffle &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+    map { $port_directory{$_}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{port} }
+      grep { $port_directory{$_}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name} &lt;span style=&#34;color:#f92672&#34;&gt;!~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^unknown$/&lt;/span&gt;
+             &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $port_directory{$_}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{proto} &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tcp&amp;#39;&lt;/span&gt; } keys %port_directory;
+};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code starts by importing the &lt;code&gt;shuffle&lt;/code&gt; function from &lt;a href=&#34;https://metacpan.org/pod/List::Util&#34;&gt;List::Util&lt;/a&gt;, which I use later to randomize the order of the list of ports. I then open a filehandle to the nmap-services text file, loop through it building the &lt;code&gt;%port_directory&lt;/code&gt; hash. Finally I loop through the the port directory with &lt;code&gt;grep&lt;/code&gt;, extracting all the tcp ports not labeled &amp;ldquo;unknown&amp;rdquo;, use &lt;code&gt;map&lt;/code&gt; to extract the port number from the hash, shuffling the port numbers to randomize their entry into &lt;code&gt;@ports&lt;/code&gt; (shuffle may be unnecessary in newer versions of Perl as hash key order is randomized anyway).&lt;/p&gt;
+
+&lt;h4 id=&#34;sending-packets-and-listening-for-responses&#34;&gt;Sending packets and listening for responses&lt;/h4&gt;
+
+&lt;p&gt;We need to send packets and listen for responses simultaneously, because if we send the packets first and &lt;em&gt;then&lt;/em&gt; listen for packets, we might have missed some responses in the interim. To do this I use &lt;code&gt;fork&lt;/code&gt; to create child processes for sending packets, and use the parent process to listen for responses.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Pcap;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; POSIX &lt;span style=&#34;color:#e6db74&#34;&gt;qw/WNOHANG ceil/&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# apportion the ports to scan between processes&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $procs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $batch_size &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ceil(@ports &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; $procs);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %total_ports &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; map { $_ &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;filtered&amp;#39;&lt;/span&gt; } @ports; &lt;span style=&#34;color:#75715e&#34;&gt;# for reporting&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @child_pids;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;$procs)
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @ports_to_scan &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; splice @ports, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, $batch_size;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $parent &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; fork;
+  die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;unable to fork!\n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; defined ($parent);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($parent)
+  {
+    push(@child_pids, $parent);
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt;;
+  }
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# child waits until the parent signals to continue&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $continue &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+  local $SIG{CONT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { $continue &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;};
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;until&lt;/span&gt; ($continue) {}
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target_port (@ports_to_scan)
+  {
+    sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+    send_packet($target_port);
+  }
+  exit &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# exit child&lt;/span&gt;
+}
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# setup parent packet capture&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $device_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pcap_lookupdev(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $err);
+pcap_lookupnet($device_name, &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $net, &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $mask, &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$err);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pcap &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pcap_open_live($device_name, &lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$err);
+pcap_compile(
+  $pcap,
+  &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $filter,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;(src net $target_ip) &amp;amp;&amp;amp; (dst port $local_port)&amp;#34;&lt;/span&gt;,
+  &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+  $mask
+);
+pcap_setfilter($pcap,$filter);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# signal the child pids to start sending&lt;/span&gt;
+kill CONT &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $_ &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; @child_pids;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;until&lt;/span&gt; (waitpid(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, WNOHANG) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;# until all children exit&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $packet_capture &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pcap_next_ex($pcap,&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %header,&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $packet);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;($packet_capture &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+  {
+    read_packet($packet);
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($packet_capture &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+  {
+    warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;libpcap errored while reading a packet\n&amp;#34;&lt;/span&gt;;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is a lot of code to process, but l&amp;rsquo;m going to cover the broad strokes. The code forks 50 child processes and assigns a batch of ports to each child. I install a signal handler for the &lt;code&gt;CONT&lt;/code&gt; signal in each child, and pause the child processes until that signal is received. This is to stop the children from going ahead and firing off packets that the parent is not ready to capture. Once all the children have been created, the parent process sets up a packet capture object using &lt;a href=&#34;https://metacpan.org/pod/Lib::Pcap&#34;&gt;Lib::Pcap&lt;/a&gt;. The capture object is given a filter for the &lt;code&gt;$target_ip&lt;/code&gt; and the &lt;code&gt;$local_port&lt;/code&gt; which we discovered earlier.&lt;/p&gt;
+
+&lt;p&gt;The parent then signals the children processes using &lt;code&gt;kill&lt;/code&gt; and the children begin sending packets using &lt;code&gt;send_packet&lt;/code&gt; (defined below). Finally the parent process starts a loop listening for packets using &lt;code&gt;waitpid&lt;/code&gt; to determine when all of the children have finished sending their packets and exited. During the loop, the parent calls &lt;code&gt;read_packet&lt;/code&gt; (defined below) every time it receives a new packet.&lt;/p&gt;
+
+&lt;p&gt;You might be wondering what the constant &lt;code&gt;WNOHANG&lt;/code&gt; is for. When &lt;code&gt;waitpid&lt;/code&gt; is called with -1, it attempts to reap any terminated child processes. In the excellent &lt;a href=&#34;http://www.amazon.com/Network-Programming-Perl-Lincoln-Stein/dp/0201615711&#34;&gt;Network Programming with Perl&lt;/a&gt;, Lincoln Stein explains there are three scenarios which can cause &lt;code&gt;waitpid&lt;/code&gt; to hang or lose track of child processes; if a child process is terminated or restarted by a signal, if two child processes terminate at virtually the same time or if the parent process inadvertently creates new children via system calls. &lt;code&gt;WNOHANG&lt;/code&gt; protects against these scenarios to ensure all child processes will be properly reaped by the parent process.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s look at the &lt;code&gt;send_packet&lt;/code&gt; subroutine:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::RawIP;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;send_packet&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($target_port) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  Net::RawIP&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;({ ip &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+                      saddr &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $local_ip,
+                      daddr &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $target_ip,
+                    },
+                    tcp &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+                      source &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $local_port,
+                      dest   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $target_port,
+                      syn &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+                    },
+                  })&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;send;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code uses the much under-appreciated &lt;a href=&#34;https://metacpan.org/pod/Net::RawIP&#34;&gt;Net::RawIP&lt;/a&gt; module to craft TCP packets and send them to our target destination. We set the SYN flag to 1 to trigger the beginning of a three-way TCP connection which we will never complete. This is a stealthy way to discover ports - by not completing the handshake our requests will not be logged unless the target has been configured to capture this data.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;read_packet&lt;/code&gt; subroutine is a bit more involved:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; NetPacket::Ethernet;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; NetPacket::IP;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; NetPacket::TCP;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;read_packet&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($raw_data) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ip_data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NetPacket::Ethernet::strip($raw_data);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ip_packet &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NetPacket::IP&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;decode($ip_data);
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# is it TCP&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($ip_packet&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{proto} &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;)
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tcp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; NetPacket::TCP&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;decode(NetPacket::IP::strip($ip_data));
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{src_port};
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; exists $port_directory{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$port/tcp&amp;#34;&lt;/span&gt;}
+      ? $port_directory{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$port/tcp&amp;#34;&lt;/span&gt;}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name}
+      : &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{flags} &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; SYN)
+    {
+      printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; %5d %-20s %-20s\n&amp;#34;&lt;/span&gt;, $port, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;open&amp;#39;&lt;/span&gt;, $port_name;
+      $total_ports{$port} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;open&amp;#39;&lt;/span&gt;;
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{flags} &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; RST)
+    {
+      printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; %5d %-20s %-20s\n&amp;#34;&lt;/span&gt;, $port, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;closed&amp;#39;&lt;/span&gt;, $port_name;
+      $total_ports{$port} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;closed&amp;#39;&lt;/span&gt;;
+    }
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I use the &lt;a href=&#34;https://metacpan.org/pod/NetPacket&#34;&gt;NetPacket&lt;/a&gt; distribution to parse the incoming packets. The first check &lt;code&gt;if ($ip_packet-&amp;gt;{proto} == 6)&lt;/code&gt; is to check that we&amp;rsquo;re processing a TCP packet (each protocol has a number - see &lt;a href=&#34;https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers&#34;&gt;list&lt;/a&gt;). The code then parses the TCP packet and looks up the port name in our &lt;code&gt;%port_directory&lt;/code&gt; created earlier. &lt;code&gt;SYN&lt;/code&gt; and &lt;code&gt;RST&lt;/code&gt; are constants exported by &lt;a href=&#34;https://metacpan.org/pod/NetPacket::TCP&#34;&gt;NetPacket::TCP&lt;/a&gt;, which are ANDed against the flags value of the TCP header to identify the type of TCP packet. If we&amp;rsquo;ve received a SYN packet, it looks like the port is open, a RST packet indicates the port is closed.&lt;/p&gt;
+
+&lt;h4 id=&#34;summarizing-the-results&#34;&gt;Summarizing the results&lt;/h4&gt;
+
+&lt;p&gt;Once the port scan has finished, all closed and open ports should have been printed out. But there are also the filtered ports to think about - by definition we&amp;rsquo;ll never receive a response for those. I&amp;rsquo;ve used the &lt;code&gt;%total_ports&lt;/code&gt; hash to track the status of ports. Every port starts as &amp;ldquo;filtered&amp;rdquo;, and is set to &amp;ldquo;open&amp;rdquo; or &amp;ldquo;closed&amp;rdquo; as responses are received. We can then use this data to summarize the results:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n %d ports scanned, %d filtered, %d closed, %d open\n&amp;#34;&lt;/span&gt;,
+  scalar(keys %total_ports),
+  scalar(grep { $total_ports{$_} &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;filtered&amp;#39;&lt;/span&gt; } keys %total_ports),
+  scalar(grep { $total_ports{$_} &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;closed&amp;#39;&lt;/span&gt;   } keys %total_ports),
+  scalar(grep { $total_ports{$_} &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;open&amp;#39;&lt;/span&gt;     } keys %total_ports);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;END&lt;/span&gt; { pcap_close($pcap) &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $pcap }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;END&lt;/code&gt; block executes in the final stage of a Perl program, and closes the packet capture object. This won&amp;rsquo;t execute if the program receives a INT or TERM signal during execution, so I can add signal handlers to ensure Perl shuts down in an orderly way, should a signal be received:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; { $SIG{INT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $SIG{TERM} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { exit &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; } }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I can add this code near the beginning of the program, but the &lt;code&gt;BEGIN&lt;/code&gt; block ensures it will execute early in the program&amp;rsquo;s startup phase, before the main code is executed.&lt;/p&gt;
+
+&lt;h3 id=&#34;putting-it-together&#34;&gt;Putting it together&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve saved the code into a &lt;a href=&#34;https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d&#34;&gt;program&lt;/a&gt;. Now I can run it on the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) port_scanner &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;ip &lt;span style=&#34;color:#ae81ff&#34;&gt;10.0.1.5&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I need to use &lt;code&gt;sudo&lt;/code&gt; because the libpcap requires root privileges to run. The program emits a lot of output, here&amp;rsquo;s a snippet:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;...
+   264 closed               bgmp                
+    48 closed               auditd              
+  9100 open                 jetdirect 
+  2456 closed               altav-remmgt        
+  3914 closed               listcrt-port-2      
+    42 closed               nameserver          
+  1051 closed               optima-vnet         
+  1328 closed               ewall               
+  4200 closed               vrml-multi-use      
+    65 closed               tacacs-ds           
+  8400 closed               cvd                 
+  8042 closed               fs-agent            
+  1516 closed               vpad                
+   702 closed               iris-beep           
+  1034 closed               zincite-a           
+   598 closed               sco-websrvrmg3      
+
+ 2258 ports scanned, 25 filtered, 2229 closed, 4 open
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note how the order is randomized, and we&amp;rsquo;ve found 4 open ports. If I run the program with &lt;code&gt;--help&lt;/code&gt; it prints out some useful instructions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Usage:
+    port_scanner [options]
+
+     Options:
+      --ip,     -i   ip address to scan e.g. 10.30.1.52
+      --help,   -h   display this help text
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap-up&lt;/h3&gt;
+
+&lt;p&gt;Our basic port scanner could be improved. For one thing we only scan named ports - it would be nice to accept a range of ports to scan. The supported protocols and TCP flags could also be expanded to yield better results against different machines. The user should also be able to control the number of child processes and the packet frequency to tune the scan to the sensitivities of the target. In part two I&amp;rsquo;ll show how to incorporate these changes and more into a fully-featured port scanner.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Host discovery with broadcast and echo</title>
+      <link>http://localhost:1313/article/180/2015/7/6/Host-discovery-with-broadcast-and-echo/</link>
+      <pubDate>Mon, 06 Jul 2015 12:27:10 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/180/2015/7/6/Host-discovery-with-broadcast-and-echo/</guid>
+      <description>
+
+&lt;p&gt;Network host discovery is the attempt to elicit the addresses of the hosts connected to a network. Last week I &lt;a href=&#34;http://perltricks.com/article/179/2015/7/1/Basic-network-hacking-with-Perl&#34;&gt;wrote&lt;/a&gt; about a unicast approach with Perl that enumerated through every address in the network subnet, messaging each address in turn to see if any hosts respond. This week I&amp;rsquo;ve been working on an alternative approach using broadcast and echo.&lt;/p&gt;
+
+&lt;h3 id=&#34;icmp-and-echo&#34;&gt;ICMP and echo&lt;/h3&gt;
+
+&lt;p&gt;Internet Control Message Protocol (ICMP) is a networking protocol used by networking devices to coordinate with each other. ICMP messages contain a type and a code which have predefined &lt;a href=&#34;https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Control_messages&#34;&gt;meanings&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;An ICMP message of type 8 means echo request and hosts are expected to respond with an ICMP message of type 0 (echo reply). To discover hosts on a network, I can send an echo request to the network and capture the IP address of any echo replies received. Instead of cycling through every possible IP address in the subnet, I can send the echo request to the broadcast IP: &lt;code&gt;255.255.255.255&lt;/code&gt; and the message will automatically be sent to every host on the network.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re running a modern Linux, you can test this out at the command line using &lt;code&gt;ping&lt;/code&gt; (other versions may work without the &amp;ldquo;-b&amp;rdquo; switch):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ ping &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;b &lt;span style=&#34;color:#ae81ff&#34;&gt;255.255.255.255&lt;/span&gt;
+WARNING: pinging broadcast address
+PING &lt;span style=&#34;color:#ae81ff&#34;&gt;255.255.255.255&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;255.255.255.255&lt;/span&gt;) &lt;span style=&#34;color:#ae81ff&#34;&gt;56&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;84&lt;/span&gt;) bytes of data&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; bytes from &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.4&lt;/span&gt;: icmp_seq&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ttl&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; time&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;92.9&lt;/span&gt; ms
+&lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; bytes from &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.4&lt;/span&gt;: icmp_seq&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; ttl&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; time&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2.04&lt;/span&gt; ms
+&lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; bytes from &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.4&lt;/span&gt;: icmp_seq&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; ttl&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; time&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;136&lt;/span&gt; ms
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here you see one other host on my network is responding at the address &lt;code&gt;192.168.1.4&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;implementing-echo-in-perl&#34;&gt;Implementing echo in Perl&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s possible to implement ping using nothing but core Perl modules. That is, if Perl is installed, this &lt;a href=&#34;https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/livehost_echo&#34;&gt;script&lt;/a&gt; should work:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Socket;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Ping;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# the checksum must be correct else hosts will ignore the request&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $msg_checksum &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::Ping&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;checksum(pack(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C2 n3&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;));
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $msg &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pack(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C2 n3&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, $msg_checksum, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+
+socket(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $socket, AF_INET, SOCK_RAW, getprotobyname(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;icmp&amp;#39;&lt;/span&gt;));
+setsockopt($socket, SOL_SOCKET, SO_BROADCAST, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+send($socket, $msg, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, sockaddr_in(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, inet_aton(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;255.255.255.255&amp;#39;&lt;/span&gt;)));
+bind($socket,sockaddr_in(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,inet_aton(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)));
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $addr &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; recv($socket, &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $data, &lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($tmp, $tos, $len, $id, $offset, $tt, $proto, $checksum,
+    $src_ip, $dest_ip, $options) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CCnnnCCnNNa*&amp;#39;&lt;/span&gt;, $data);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($dest_ip &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4294967295&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;# destination != 255.255.255.255&lt;/span&gt;
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($port, $peer) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sockaddr_in($addr);
+    printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%s bytes from %s\n&amp;#34;&lt;/span&gt;, length($data), inet_ntoa($peer);
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This script starts by importing the &lt;code&gt;Socket&lt;/code&gt; and &lt;code&gt;Net::Ping&lt;/code&gt; modules - both part of the Perl core distribution. It uses the &lt;code&gt;checksum&lt;/code&gt; function from &lt;code&gt;Net::Ping&lt;/code&gt; to calculate the message checksum. The checksum is important because if it is incorrect, hosts will not reply. The script packs the code, the type, checksum and offset into &lt;code&gt;$msg&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The script then creates a broadcast socket, and sends the message to the broadcast address (&lt;code&gt;255.255.255.255&lt;/code&gt;). The socket is then bound to the network address, and the script enters a while loop attempting to read data from the socket using &lt;code&gt;recv&lt;/code&gt;. Any received data is unpacked and the packet address saved in &lt;code&gt;$addr&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The source and destination IP fields in the unpacked message are stored as 32 bit integers, so the script ignores packets whose destination matches the integer of the broadcast address, as this message was sent by the script. After that the script decodes the packet address and prints the results.&lt;/p&gt;
+
+&lt;p&gt;Running this script on my network, I can see the same host as was returned by &lt;code&gt;ping&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ sudo &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;livehost_echo                                 
+&lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt; bytes from &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.4&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;fingerprinting-hosts&#34;&gt;Fingerprinting hosts&lt;/h3&gt;
+
+&lt;p&gt;The primary issue with this technique is it can only discover hosts that respond to broadcast requests, and many do not. For example Chromebooks, smart phones and Linux machines usually don&amp;rsquo;t reply (OSX machines and many versions of Windows do though). This can be an advantage though: because the response rate to broadcast is different to unicast, the echo script can be used in conjunction with unicast to fingerprint hosts. If a machine responds to a unicast message but not a broadcast, we learn something about the identity of that host. For example if I use the &lt;a href=&#34;https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/livehost_scanner&#34;&gt;livehost_scanner&lt;/a&gt; script on my home network:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) livehost_scanner                                                                                                                  
+Gateway IP: &lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.1&lt;/span&gt;
+Starting scan
+&lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.1&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;d:7f:81:31:c2
+&lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.2&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;c:c5:d4:47:0a:13 (this machine)
+&lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.7&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;38&lt;/span&gt;:e7:d8:00:9a:d5
+&lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.4&lt;/span&gt; e0:ac:cb:5e:d5:da
+&lt;span style=&#34;color:#ae81ff&#34;&gt;192.168.1.10&lt;/span&gt; cc:3d:82:60:4b:95&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I can see that there 2 other livehosts (excluding the router) which show up, but didn&amp;rsquo;t respond to an echo request. The echo script could be adapted to send other types of ICMP messages such as timestamp and subnet mask which can be used to further &lt;a href=&#34;http://www.sans.org/security-resources/idfaq/icmp_misuse.php&#34;&gt;identify&lt;/a&gt; a host.&lt;/p&gt;
+
+&lt;h3 id=&#34;further-thoughts&#34;&gt;Further thoughts&lt;/h3&gt;
+
+&lt;p&gt;The echo script uses the broadcast technique which only works on IPv4 networks. IPv6 networks support multicast instead, but that would require changes to the script. Interestingly the number of potential addresses in a single IPv6 subnet, (I think) renders the unicast technique redundant.&lt;/p&gt;
+
+&lt;p&gt;Another other problem with the echo script is that because it opens a raw socket, it requires root privileges to run. The &lt;code&gt;ping&lt;/code&gt; utility on the other hand is installed with setuserid permissions and runs as root regardless of the user&amp;rsquo;s own privileges.&lt;/p&gt;
+
+&lt;h3 id=&#34;useful-resources&#34;&gt;Useful resources&lt;/h3&gt;
+
+&lt;p&gt;In preparing this script I learned a lot about sockets and network programming. Lincoln Stein&amp;rsquo;s &lt;a href=&#34;http://www.amazon.com/Network-Programming-Perl-Lincoln-Stein/dp/0201615711/ref=la_B000APT5P6_1_1&#34;&gt;Network Programming with Perl&lt;/a&gt; was an invaluable resource for understanding sockets and the arcane invocations to use with them. If you&amp;rsquo;re considering working with sockets, the &lt;a href=&#34;https://metacpan.org/pod/IO::Socket&#34;&gt;IO::Socket&lt;/a&gt; module has a cleaner interface than the &lt;a href=&#34;https://metacpan.org/pod/Socket&#34;&gt;Socket&lt;/a&gt; module (and is also part of core). The source code for the excellent &lt;a href=&#34;https://metacpan.org/pod/NetPacket&#34;&gt;NetPacket&lt;/a&gt; distribution was useful in understanding how to parse packets.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - December 2014</title>
+      <link>http://localhost:1313/article/142/2015/1/5/What-s-new-on-CPAN---December-2014/</link>
+      <pubDate>Mon, 05 Jan 2015 13:50:44 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/142/2015/1/5/What-s-new-on-CPAN---December-2014/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Welcome to &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo;, a curated look at last month&amp;rsquo;s new CPAN uploads for your reading and programming pleasure.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;apis-apps&#34;&gt;APIs &amp;amp; Apps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Easily setup a TCP proxy server for analyzing web traffic with &lt;a href=&#34;https://metacpan.org/pod/App::tcpproxy&#34;&gt;App::tcpproxy&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/App::Prove::Watch&#34;&gt;App::Prove::Watch&lt;/a&gt; runs your unit tests every time your code changes&lt;/li&gt;
+&lt;li&gt;Monitor Bitcoin prices from several sources using &lt;a href=&#34;https://metacpan.org/pod/Finance::Bitcoin::Feed&#34;&gt;Finance::Bitcoin::Feed&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::Tesco&#34;&gt;Net::Tesco&lt;/a&gt; provides a Perly API for Tesco, one of the World&amp;rsquo;s largest retailers&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WebService::Vultr&#34;&gt;WebService::Vultr&lt;/a&gt; is an API for the cloud server company&lt;/li&gt;
+&lt;li&gt;If you use Instapaper, the bookmarking service, check out&lt;a href=&#34;https://metacpan.org/pod/WebService::Instapaper&#34;&gt;WebService::Instapaper&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;config-devops&#34;&gt;Config &amp;amp; DevOps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Debug::Statements&#34;&gt;Debug::Statements&lt;/a&gt; provides a convenient way of managing debug statements in code&lt;/li&gt;
+&lt;li&gt;Log every time a Perl process starts using &lt;a href=&#34;https://metacpan.org/pod/Devel::PerlLog&#34;&gt;Devel::PerlLog&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;There are already several Dist::Zilla plugins for auto-generating a distribution readme from pod, but &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::Pod2Readme&#34;&gt;Dist::Zilla::Plugin::Pod2Readme&lt;/a&gt; aims to be as simple as possible. Very useful for GitHub hosted distributions&lt;/li&gt;
+&lt;li&gt;Add a timeout to command line prompts, including default options with &lt;a href=&#34;https://metacpan.org/pod/IO::Prompt::Timeout&#34;&gt;IO::Prompt::Timeout&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Version::Compare&#34;&gt;Version::Compare&lt;/a&gt; can compare version numbers and determine which is greater&lt;/li&gt;
+&lt;li&gt;Allow certain exceptions to not be caught using &lt;a href=&#34;https://metacpan.org/pod/Try::Tiny::Except&#34;&gt;Try::Tiny::Except&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Regexp::SAR&#34;&gt;Regexp::SAR&lt;/a&gt; implements event handling on regexp matching conditions&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;data&#34;&gt;Data&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Color::RGB::Util&#34;&gt;Color::RGB::Util&lt;/a&gt; provides a bunch of useful functions for manipulating RGB colors&lt;/li&gt;
+&lt;li&gt;Implement a circular list with &lt;a href=&#34;https://metacpan.org/pod/Data::CircularList&#34;&gt;Data::CircularList&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Data::Embed&#34;&gt;Data::Embed&lt;/a&gt; provides read / write accessors for data embedded in files&lt;/li&gt;
+&lt;li&gt;Looking for a faster Excel reader? Check out &lt;a href=&#34;https://metacpan.org/pod/Data::XLSX::Parser&#34;&gt;Data::XLSX::Parser&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/ETL::Yertl&#34;&gt;ETL::Yertl&lt;/a&gt; is a command line data ETL tool. At an early stage of development, but looks interesting&lt;/li&gt;
+&lt;li&gt;Only access part of a file using &lt;a href=&#34;https://metacpan.org/pod/IO::Slice&#34;&gt;IO::Slice&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/SQL::Interpol&#34;&gt;SQL::Interpol&lt;/a&gt; can interpolate Perl variables into SQL queries&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/PQL::Cache&#34;&gt;PQL::Cache&lt;/a&gt; is an in-memory Perl database with many useful features&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;math-science-language&#34;&gt;Math, Science &amp;amp; Language&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Geo::Coder::All&#34;&gt;Geo::Coder::All&lt;/a&gt; is an all-in-one wrapper for geocoding data that works with Google, Bing, TomTom etc.&lt;/li&gt;
+&lt;li&gt;Compare image hashes with &lt;a href=&#34;https://metacpan.org/pod/Image::Hash&#34;&gt;Image::Hash&lt;/a&gt;. Very cool!&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Map::Metro&#34;&gt;Map::Metro&lt;/a&gt; is another implementation of public transport graphing with some useful features&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Safely&lt;/em&gt; truncate unicode text using &lt;a href=&#34;https://metacpan.org/pod/Unicode::Truncate&#34;&gt;Unicode::Truncate&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web&#34;&gt;Web&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Add an auto-timeout to your Dancer routes with &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::TimeoutManager&#34;&gt;Dancer::Plugin::TimeoutManager&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Lavoco::Website&#34;&gt;Lavoco::Website&lt;/a&gt; is an experimental micro web framework for hosting template toolkit templates&lt;/li&gt;
+&lt;li&gt;Check if a URL is active with &lt;a href=&#34;https://metacpan.org/pod/URL::Exists&#34;&gt;URL::Exists&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

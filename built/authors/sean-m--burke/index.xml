@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sean M  Burke on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/sean-m--burke/</link>
+    <description>Recent content in Sean M  Burke on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 20 Aug 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/sean-m--burke/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Web Basics with LWP</title>
+      <link>http://localhost:1313/pub/2002/08/20/perlandlwp.html/</link>
+      <pubDate>Tue, 20 Aug 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/08/20/perlandlwp.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Sean M. Burke is the author of &lt;a href=&#34;http://www.oreilly.com/catalog/perllwp/&#34;&gt;Perl &amp;amp; LWP&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
+
+&lt;p&gt;LWP (short for &amp;ldquo;Library for WWW in Perl&amp;rdquo;) is a popular group of Perl modules for accessing data on the Web. Like most Perl module-distributions, each of LWP&amp;rsquo;s component modules comes with documentation that is a complete reference to its interface. However, there are so many modules in LWP that it&amp;rsquo;s hard to know where to look for information on doing even the simplest things.&lt;/p&gt;
+
+&lt;p&gt;Introducing you to using LWP would require a whole book&amp;ndash;a book that just happens to exist, called &lt;a href=&#34;http://www.oreilly.com/catalog/perllwp/&#34;&gt;&lt;em&gt;Perl &amp;amp; LWP&lt;/em&gt;&lt;/a&gt;. This article offers a sampling of recipes that let you perform common tasks with LWP.&lt;/p&gt;
+
+&lt;h3 id=&#34;getting-documents-with-lwp-simple&#34;&gt;Getting Documents with LWP::Simple&lt;/h3&gt;
+
+&lt;p&gt;If you just want to access what&amp;rsquo;s at a particular URL, the simplest way to do it is to use &lt;code&gt;LWP::Simple&lt;/code&gt;&amp;rsquo;s functions.&lt;/p&gt;
+
+&lt;p&gt;In a Perl program, you can call its &lt;code&gt;get($url)&lt;/code&gt; function. It will try getting that URL&amp;rsquo;s content. If it works, then it&amp;rsquo;ll return the content; but if there&amp;rsquo;s some error, it&amp;rsquo;ll return &lt;code&gt;undef&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $url = &#39;http://freshair.npr.org/dayFA.cfm?todayDate=current&#39;;
+    # Just an example: the URL for the most recent /Fresh Air/ show
+
+  use LWP::Simple;
+  my $content = get $url;
+  die &amp;quot;Couldn&#39;t get $url&amp;quot; unless defined $content;
+
+  # Then go do things with $content, like this:
+
+  if($content =~ m/jazz/i) {
+    print &amp;quot;They&#39;re talking about jazz today on Fresh Air!\n&amp;quot;;
+  } else {
+    print &amp;quot;Fresh Air is apparently jazzless today.\n&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The handiest variant on &lt;code&gt;get&lt;/code&gt; is &lt;code&gt;getprint&lt;/code&gt;, which is useful in Perl one-liners. If it can get the page whose URL you provide, it sends it to &lt;code&gt;STDOUT&lt;/code&gt;; otherwise it complains to &lt;code&gt;STDERR&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl -MLWP::Simple -e &amp;quot;getprint &#39;http://cpan.org/RECENT&#39;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the URL of a plain-text file. It lists new files in CPAN in the past two weeks. You can easily make it part of a tidy little shell command, like this one that mails you the list of new &lt;code&gt;Acme::&lt;/code&gt; modules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl -MLWP::Simple -e &amp;quot;getprint &#39;http://cpan.org/RECENT&#39;&amp;quot;  \
+     | grep &amp;quot;/by-module/Acme&amp;quot; | mail -s &amp;quot;New Acme modules! Joy!&amp;quot; $USER
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are other useful functions in &lt;code&gt;LWP::Simple&lt;/code&gt;, including one function for running a &lt;code&gt;HEAD&lt;/code&gt; request on a URL (useful for checking links, or getting the last-revised time of a URL), and two functions for saving and mirroring a URL to a local file. See the &lt;a href=&#34;https://metacpan.org/pod/LWP::Simple&#34;&gt;LWP::Simple documentation&lt;/a&gt; for the full details, or Chapter 2, &amp;ldquo;Web Basics&amp;rdquo; of &lt;em&gt;Perl &amp;amp; LWP&lt;/em&gt; for more examples.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-basics-of-the-lwp-class-model&#34;&gt;The Basics of the LWP Class Model&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;LWP::Simple&lt;/code&gt;&amp;rsquo;s functions are handy for simple cases, but its functions don&amp;rsquo;t support cookies or authorization; they don&amp;rsquo;t support setting header lines in the HTTP request; and generally, they don&amp;rsquo;t support reading header lines in the HTTP response (most notably the full HTTP error message, in case of an error). To get at all those features, you&amp;rsquo;ll have to use the full LWP class model.&lt;/p&gt;
+
+&lt;p&gt;While LWP consists of dozens of classes, the two that you have to understand are &lt;code&gt;LWP::UserAgent&lt;/code&gt; and &lt;code&gt;HTTP::Response&lt;/code&gt;. &lt;code&gt;LWP::UserAgent&lt;/code&gt; is a class for &amp;ldquo;virtual browsers,&amp;rdquo; which you use for performing requests, and &lt;code&gt;HTTP::Response&lt;/code&gt; is a class for the responses (or error messages) that you get back from those requests.&lt;/p&gt;
+
+&lt;p&gt;The basic idiom is &lt;code&gt;$response = $browser-&amp;gt;get($url)&lt;/code&gt;, or fully illustrated:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Early in your program:
+
+  use LWP 5.64; # Loads all important LWP classes, and makes
+                #  sure your version is reasonably recent.
+
+  my $browser = LWP::UserAgent-&amp;gt;new;
+
+  ...
+
+  # Then later, whenever you need to make a get request:
+  my $url = &#39;http://freshair.npr.org/dayFA.cfm?todayDate=current&#39;;
+
+  my $response = $browser-&amp;gt;get( $url );
+  die &amp;quot;Can&#39;t get $url -- &amp;quot;, $response-&amp;gt;status_line
+   unless $response-&amp;gt;is_success;
+
+  die &amp;quot;Hey, I was expecting HTML, not &amp;quot;, $response-&amp;gt;content_type
+   unless $response-&amp;gt;content_type eq &#39;text/html&#39;;
+     # or whatever content-type you&#39;re equipped to deal with
+
+  # Otherwise, process the content somehow:
+
+  if($response-&amp;gt;content =~ m/jazz/i) {
+    print &amp;quot;They&#39;re talking about jazz today on Fresh Air!\n&amp;quot;;
+  } else {
+    print &amp;quot;Fresh Air is apparently jazzless today.\n&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are two objects involved: &lt;code&gt;$browser&lt;/code&gt;, which holds an object of the class &lt;code&gt;LWP::UserAgent&lt;/code&gt;, and then the &lt;code&gt;$response&lt;/code&gt; object, which is of the class &lt;code&gt;HTTP::Response&lt;/code&gt;. You really need only one browser object per program; but every time you make a request, you get back a new &lt;code&gt;HTTP::Response&lt;/code&gt; object, which will have some interesting attributes:
+-   A status code indicating success or failure (which you can test with &lt;code&gt;$response-&amp;gt;is_success&lt;/code&gt;).&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;An HTTP status line, which I hope is informative if there is a failure (which you can see with &lt;code&gt;$response-&amp;gt;status_line&lt;/code&gt;, and which returns something like &amp;ldquo;404 Not Found&amp;rdquo;).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;A MIME content-type like &amp;ldquo;text/html&amp;rdquo;, &amp;ldquo;image/gif&amp;rdquo;, &amp;ldquo;application/xml&amp;rdquo;, and so on, which you can see with &lt;code&gt;$response-&amp;gt;content_type&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The actual content of the response, in &lt;code&gt;$response-&amp;gt;content&lt;/code&gt;. If the response is HTML, that&amp;rsquo;s where the HTML source will be; if it&amp;rsquo;s a GIF, then &lt;code&gt;$response-&amp;gt;content&lt;/code&gt; will be the binary GIF data.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;And dozens of other convenient and more specific methods that are documented in the docs for &lt;code&gt;HTTP::Response&lt;/code&gt;, and its superclasses, &lt;code&gt;HTTP::Message&lt;/code&gt; and &lt;code&gt;HTTP::Headers&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;adding-other-http-request-headers&#34;&gt;Adding Other HTTP Request Headers&lt;/h3&gt;
+
+&lt;p&gt;The most commonly used syntax for requests is &lt;code&gt;$response = $browser-&amp;gt;get($url)&lt;/code&gt;, but in truth, you can add extra HTTP header lines to the request by adding a list of key-value pairs after the URL, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $response = $browser-&amp;gt;get( $url, $key1, $value1, $key2, $value2, ... );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For example, here&amp;rsquo;s how to send more Netscape-like headers, in case you&amp;rsquo;re dealing with a site that would otherwise reject your request:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my @ns_headers = (
+   &#39;User-Agent&#39; =&amp;gt; &#39;Mozilla/4.76 [en] (Win98; U)&#39;,
+   &#39;Accept&#39; =&amp;gt; &#39;image/gif, image/x-xbitmap, image/jpeg, 
+        image/pjpeg, image/png, */*&#39;,
+   &#39;Accept-Charset&#39; =&amp;gt; &#39;iso-8859-1,*,utf-8&#39;,
+   &#39;Accept-Language&#39; =&amp;gt; &#39;en-US&#39;,
+  );
+
+  ...
+
+  $response = $browser-&amp;gt;get($url, @ns_headers);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you weren&amp;rsquo;t reusing that array, you could just go ahead and do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $response = $browser-&amp;gt;get($url,
+   &#39;User-Agent&#39; =&amp;gt; &#39;Mozilla/4.76 [en] (Win98; U)&#39;,
+   &#39;Accept&#39; =&amp;gt; &#39;image/gif, image/x-xbitmap, image/jpeg, 
+        image/pjpeg, image/png, */*&#39;,
+   &#39;Accept-Charset&#39; =&amp;gt; &#39;iso-8859-1,*,utf-8&#39;,
+   &#39;Accept-Language&#39; =&amp;gt; &#39;en-US&#39;,
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you were only going to change the &amp;lsquo;User-Agent&amp;rsquo; line, you could just change the &lt;code&gt;$browser&lt;/code&gt; object&amp;rsquo;s default line from &amp;ldquo;libwww-perl/5.65&amp;rdquo; (or the like) to whatever you like, using &lt;code&gt;LWP::UserAgent&lt;/code&gt;&amp;rsquo;s &lt;code&gt;agent&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   $browser-&amp;gt;agent(&#39;Mozilla/4.76 [en] (Win98; U)&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;enabling-cookies&#34;&gt;Enabling Cookies&lt;/h3&gt;
+
+&lt;p&gt;A default &lt;code&gt;LWP::UserAgent&lt;/code&gt; object acts like a browser with its cookies support turned off. There are various ways of turning it on, by setting its &lt;code&gt;cookie_jar&lt;/code&gt; attribute. A &amp;ldquo;cookie jar&amp;rdquo; is an object representing a little database of all the HTTP cookies that a browser can know about. It can correspond to a file on disk (the way Netscape uses its &lt;em&gt;cookies.txt&lt;/em&gt; file), or it can be just an in-memory object that starts out empty, and whose collection of cookies will disappear once the program is finished running.&lt;/p&gt;
+
+&lt;p&gt;To give a browser an in-memory empty cookie jar, you set its &lt;code&gt;cookie_jar&lt;/code&gt; attribute like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $browser-&amp;gt;cookie_jar({});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To give it a copy that will be read from a file on disk, and will be saved to it when the program is finished running, set the &lt;code&gt;cookie_jar&lt;/code&gt; attribute like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use HTTP::Cookies;
+  $browser-&amp;gt;cookie_jar( HTTP::Cookies-&amp;gt;new(
+    &#39;file&#39; =&amp;gt; &#39;/some/where/cookies.lwp&#39;,
+        # where to read/write cookies
+    &#39;autosave&#39; =&amp;gt; 1,
+        # save it to disk when done
+  ));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That file will be an LWP-specific format. If you want to access the cookies in your Netscape cookies file, you can use the &lt;code&gt;HTTP::Cookies::Netscape&lt;/code&gt; class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use HTTP::Cookies;
+    # yes, loads HTTP::Cookies::Netscape too
+
+  $browser-&amp;gt;cookie_jar( HTTP::Cookies::Netscape-&amp;gt;new(
+    &#39;file&#39; =&amp;gt; &#39;c:/Program Files/Netscape/Users/DIR-NAME-HERE/cookies.txt&#39;,
+        # where to read cookies
+  ));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You could add an &lt;code&gt;&#39;autosave&#39; =&amp;gt; 1&lt;/code&gt; line as we did earlier, but at time of writing, it&amp;rsquo;s uncertain whether Netscape might discard some of the cookies you could be writing back to disk.&lt;/p&gt;
+
+&lt;h3 id=&#34;posting-form-data&#34;&gt;Posting Form Data&lt;/h3&gt;
+
+&lt;p&gt;Many HTML forms send data to their server using an HTTP POST request, which you can send with this syntax:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $response = $browser-&amp;gt;post( $url,
+   [
+     formkey1 =&amp;gt; value1, 
+     formkey2 =&amp;gt; value2, 
+     ...
+   ],
+ );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or if you need to send HTTP headers:
+     $response = $browser-&amp;gt;post( $url,
+       [
+         formkey1 =&amp;gt; value1,
+         formkey2 =&amp;gt; value2,
+         &amp;hellip;
+       ],
+       headerkey1 =&amp;gt; value1,
+       headerkey2 =&amp;gt; value2,
+     );&lt;/p&gt;
+
+&lt;p&gt;For example, the following program makes a search request to AltaVista (by sending some form data via an HTTP POST request), and extracts from the HTML the report of the number of matches:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use strict;
+  use warnings;
+  use LWP 5.64;
+  my $browser = LWP::UserAgent-&amp;gt;new;
+
+  my $word = &#39;tarragon&#39;;
+
+  my $url = &#39;http://www.altavista.com/sites/search/web&#39;;
+  my $response = $browser-&amp;gt;post( $url,
+    [ &#39;q&#39; =&amp;gt; $word,  # the Altavista query string
+      &#39;pg&#39; =&amp;gt; &#39;q&#39;, &#39;avkw&#39; =&amp;gt; &#39;tgz&#39;, &#39;kl&#39; =&amp;gt; &#39;XX&#39;,
+    ]
+  );
+  die &amp;quot;$url error: &amp;quot;, $response-&amp;gt;status_line
+   unless $response-&amp;gt;is_success;
+  die &amp;quot;Weird content type at $url -- &amp;quot;, $response-&amp;gt;content_type
+   unless $response-&amp;gt;content_type eq &#39;text/html&#39;;
+
+  if( $response-&amp;gt;content =~ m{AltaVista found ([0-9,]+) results} ) {
+    # The substring will be like &amp;quot;AltaVista found 2,345 results&amp;quot;
+    print &amp;quot;$word: $1\n&amp;quot;;
+  } else {
+    print &amp;quot;Couldn&#39;t find the match-string in the response\n&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;sending-get-form-data&#34;&gt;Sending GET Form Data&lt;/h3&gt;
+
+&lt;p&gt;Some HTML forms convey their form data not by sending the data in an HTTP POST request, but by making a normal &lt;code&gt;GET&lt;/code&gt; request with the data stuck on the end of the URL. For example, if you went to &lt;a href=&#34;http://imdb.com/&#34;&gt;&lt;em&gt;imdb.com&lt;/em&gt;&lt;/a&gt; and ran a search on &lt;em&gt;Blade Runner&lt;/em&gt;, the URL you&amp;rsquo;d see in your browser window would be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  http://us.imdb.com/Tsearch?title=Blade%20Runner&amp;amp;restrict=Movies+and+TV
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To run the same search with LWP, you&amp;rsquo;d use this idiom, which involves the URI class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use URI;
+  my $url = URI-&amp;gt;new( &#39;http://us.imdb.com/Tsearch&#39; );
+    # makes an object representing the URL
+
+  $url-&amp;gt;query_form(  # And here the form data pairs:
+    &#39;title&#39;    =&amp;gt; &#39;Blade Runner&#39;,
+    &#39;restrict&#39; =&amp;gt; &#39;Movies and TV&#39;,
+  );
+
+  my $response = $browser-&amp;gt;get($url);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;See Chapter 5, &amp;ldquo;Forms&amp;rdquo; of &lt;em&gt;Perl &amp;amp; LWP&lt;/em&gt; for a longer discussion of HTML forms and of form data, as well as Chapter 6 through Chapter 9 for a longer discussion of extracting data from HTML.&lt;/p&gt;
+
+&lt;h3 id=&#34;absolutizing-urls&#34;&gt;Absolutizing URLs&lt;/h3&gt;
+
+&lt;p&gt;The URI class that we just mentioned above provides all sorts of methods for accessing and modifying parts of URLs (such as asking sort of URL it is with &lt;code&gt;$url-&amp;gt;scheme&lt;/code&gt;, and asking what host it refers to with &lt;code&gt;$url-&amp;gt;host&lt;/code&gt;, and so on, as described in &lt;a href=&#34;https://metacpan.org/pod/URI&#34;&gt;the docs for the URI class&lt;/a&gt;. However, the methods of most immediate interest are the &lt;code&gt;query_form&lt;/code&gt; method seen above, and now the &lt;code&gt;new_abs&lt;/code&gt; method for taking a probably relative URL string (like &amp;ldquo;../foo.html&amp;rdquo;) and getting back an absolute URL (like &amp;ldquo;/stuff/foo.html&amp;rdquo;), as shown here:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use URI;
+  $abs = URI-&amp;gt;new_abs($maybe_relative, $base);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For example, consider this program that matches URLs in the HTML list of new modules in CPAN:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use strict;
+  use warnings;
+  use LWP 5.64;
+  my $browser = LWP::UserAgent-&amp;gt;new;
+
+  my $url = &#39;http://www.cpan.org/RECENT.html&#39;;
+  my $response = $browser-&amp;gt;get($url);
+  die &amp;quot;Can&#39;t get $url -- &amp;quot;, $response-&amp;gt;status_line
+   unless $response-&amp;gt;is_success;
+
+  my $html = $response-&amp;gt;content;
+  while( $html =~ m/&amp;lt;A HREF=\&amp;quot;(.*?)\&amp;quot;/g ) {    
+      print &amp;quot;$1\n&amp;quot;;  
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When run, it emits output that starts out something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MIRRORING.FROM
+  RECENT
+  RECENT.html
+  authors/00whois.html
+  authors/01mailrc.txt.gz
+  authors/id/A/AA/AASSAD/CHECKSUMS
+  ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, if you actually want to have those be absolute URLs, you can use the URI module&amp;rsquo;s &lt;code&gt;new_abs&lt;/code&gt; method, by changing the &lt;code&gt;while&lt;/code&gt; loop to this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  while( $html =~ m/&amp;lt;A HREF=\&amp;quot;(.*?)\&amp;quot;/g ) {    
+      print URI-&amp;gt;new_abs( $1, $response-&amp;gt;base ) ,&amp;quot;\n&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(The &lt;code&gt;$response-&amp;gt;base&lt;/code&gt; method from &lt;code&gt;HTTP::Message&lt;/code&gt; is for returning the URL that should be used for resolving relative URLs&amp;ndash;it&amp;rsquo;s usually just the same as the URL that you requested.)&lt;/p&gt;
+
+&lt;p&gt;That program then emits nicely absolute URLs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  http://www.cpan.org/MIRRORING.FROM
+  http://www.cpan.org/RECENT
+  http://www.cpan.org/RECENT.html
+  http://www.cpan.org/authors/00whois.html
+  http://www.cpan.org/authors/01mailrc.txt.gz
+  http://www.cpan.org/authors/id/A/AA/AASSAD/CHECKSUMS
+  ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;See Chapter 4, &amp;ldquo;URLs&amp;rdquo;, of &lt;em&gt;Perl &amp;amp; LWP&lt;/em&gt; for a longer discussion of URI objects.&lt;/p&gt;
+
+&lt;p&gt;Of course, using a regexp to match hrefs is a bit simplistic, and for more robust programs, you&amp;rsquo;ll probably want to use an HTML-parsing module like &lt;code&gt;HTML::LinkExtor&lt;/code&gt;, or &lt;code&gt;HTML::TokeParser&lt;/code&gt;, or even maybe &lt;code&gt;HTML::TreeBuilder&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;other-browser-attributes&#34;&gt;Other Browser Attributes&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;LWP::UserAgent&lt;/code&gt; objects have many attributes for controlling how they work. Here are a few notable ones:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$browser-&amp;gt;timeout(15)&lt;/code&gt;: This sets this browser object to give up on requests that don&amp;rsquo;t answer within 15 seconds.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$browser-&amp;gt;protocols_allowed( [ &#39;http&#39;, &#39;gopher&#39;] )&lt;/code&gt;: This sets this browser object to not speak any protocols other than HTTP and gopher. If it tries accessing any other kind of URL (like an &amp;ldquo;ftp:&amp;rdquo; or &amp;ldquo;mailto:&amp;rdquo; or &amp;ldquo;news:&amp;rdquo; URL), then it won&amp;rsquo;t actually try connecting, but instead will immediately return an error code 500, with a message like &amp;ldquo;Access to ftp URIs has been disabled&amp;rdquo;.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;use LWP::ConnCache;  $browser-&amp;gt;conn_cache(LWP::ConnCache-&amp;gt;new())&lt;/code&gt;: This tells the browser object to try using the HTTP/1.1 &amp;ldquo;Keep-Alive&amp;rdquo; feature, which speeds up requests by reusing the same socket connection for multiple requests to the same server.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$browser-&amp;gt;agent( &#39;SomeName/1.23 (more info here maybe)&#39; )&lt;/code&gt;: This changes how the browser object will identify itself in the default &amp;ldquo;User-Agent&amp;rdquo; line is its HTTP requests. By default, it&amp;rsquo;ll send &amp;ldquo;libwww-perl/&lt;em&gt;versionnumber&lt;/em&gt;&amp;rdquo;, like &amp;ldquo;libwww-perl/5.65&amp;rdquo;. You can change that to something more descriptive like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $browser-&amp;gt;agent( &#39;SomeName/3.14 (contact@robotplexus.int)&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or if need be, you can go in disguise, like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $browser-&amp;gt;agent( 
+     &#39;Mozilla/4.0 (compatible; MSIE 5.12; Mac_PowerPC)&#39; );
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;push @{ $ua-&amp;gt;requests_redirectable }, &#39;POST&#39;&lt;/code&gt;: This tells this browser to obey redirection responses to POST requests (like most modern interactive browsers), even though the HTTP RFC says that should not normally be done.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For more options and information, see &lt;a href=&#34;https://metacpan.org/pod/LWP::UserAgent&#34;&gt;the full documentation for LWP::UserAgent&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-polite-robots&#34;&gt;Writing Polite Robots&lt;/h3&gt;
+
+&lt;p&gt;If you want to make sure that your LWP-based program respects &lt;em&gt;robots.txt&lt;/em&gt; files and doesn&amp;rsquo;t make too many requests too fast, you can use the &lt;code&gt;LWP::RobotUA&lt;/code&gt; class instead of the &lt;code&gt;LWP::UserAgent&lt;/code&gt; class.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;LWP::RobotUA&lt;/code&gt; class is just like &lt;code&gt;LWP::UserAgent&lt;/code&gt;, and you can use it like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use LWP::RobotUA;
+  my $browser = LWP::RobotUA-&amp;gt;new(
+    &#39;YourSuperBot/1.34&#39;, &#39;you@yoursite.com&#39;);
+    # Your bot&#39;s name and your email address
+
+  my $response = $browser-&amp;gt;get($url);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But &lt;code&gt;HTTP::RobotUA&lt;/code&gt; adds these features:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;If the &lt;em&gt;robots.txt&lt;/em&gt; on &lt;code&gt;$url&lt;/code&gt;&amp;rsquo;s server forbids you from accessing &lt;code&gt;$url&lt;/code&gt;, then the &lt;code&gt;$browser&lt;/code&gt; object (assuming it&amp;rsquo;s of the class &lt;code&gt;LWP::RobotUA&lt;/code&gt;) won&amp;rsquo;t actually request it, but instead will give you back (in &lt;code&gt;$response&lt;/code&gt;) a 403 error with a message &amp;ldquo;Forbidden by robots.txt&amp;rdquo;. That is, if you have this line:&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;If this &lt;code&gt;$browser&lt;/code&gt; object sees that the last time it talked to &lt;code&gt;$url&lt;/code&gt;&amp;rsquo;s server was too recently, then it will pause (via &lt;code&gt;sleep&lt;/code&gt;) to avoid making too many requests too often. How long it will pause for, is by default one minute&amp;ndash;but you can control it with the &lt;code&gt;$browser-&amp;gt;delay( minutes )&lt;/code&gt; attribute.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For more options and information, see &lt;a href=&#34;https://metacpan.org/pod/LWP::RobotUA&#34;&gt;the full documentation for LWP::RobotUA&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-proxies&#34;&gt;Using Proxies&lt;/h3&gt;
+
+&lt;p&gt;In some cases, you will want to (or will have to) use proxies for accessing certain sites or for using certain protocols. This is most commonly the case when your LWP program is running (or could be running) on a machine that is behind a firewall.&lt;/p&gt;
+
+&lt;p&gt;To make a browser object use proxies that are defined in the usual environment variables (&lt;code&gt;HTTP_PROXY&lt;/code&gt;), just call the &lt;code&gt;env_proxy&lt;/code&gt; on a user-agent object before you go making any requests on it. Specifically:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use LWP::UserAgent;
+  my $browser = LWP::UserAgent-&amp;gt;new;
+
+  # And before you go making any requests:
+  $browser-&amp;gt;env_proxy;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For more information on proxy parameters, see &lt;a href=&#34;https://metacpan.org/pod/LWP::UserAgent&#34;&gt;the LWP::UserAgent documentation&lt;/a&gt;, specifically the &lt;code&gt;proxy&lt;/code&gt;, &lt;code&gt;env_proxy&lt;/code&gt;, and &lt;code&gt;no_proxy&lt;/code&gt; methods.&lt;/p&gt;
+
+&lt;h3 id=&#34;http-authentication&#34;&gt;HTTP Authentication&lt;/h3&gt;
+
+&lt;p&gt;Many Web sites restrict access to documents by using &amp;ldquo;HTTP Authentication&amp;rdquo;. This isn&amp;rsquo;t just any form of &amp;ldquo;enter your password&amp;rdquo; restriction, but is a specific mechanism where the HTTP server sends the browser an HTTP code that says &amp;ldquo;That document is part of a protected &amp;lsquo;realm&amp;rsquo;, and you can access it only if you re-request it and add some special authorization headers to your request&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;For example, the Unicode.org administrators stop email-harvesting bots from harvesting the contents of their mailing list archives by protecting them with HTTP Authentication, and then publicly stating the username and password (at &lt;em&gt;&lt;a href=&#34;http://www.unicode.org/mail-arch/&#34;&gt;http://www.unicode.org/mail-arch/&lt;/a&gt;&lt;/em&gt;)&amp;ndash;namely username &amp;ldquo;unicode-ml&amp;rdquo; and password &amp;ldquo;unicode&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;For example, consider this URL, which is part of the protected area of the Web site:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  http://www.unicode.org/mail-arch/unicode-ml/y2002-m08/0067.html
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you access that with a browser, you&amp;rsquo;ll get a prompt like &amp;ldquo;Enter username and password for &amp;lsquo;Unicode-MailList-Archives&amp;rsquo; at server &amp;lsquo;www.unicode.org&amp;rsquo;&amp;rdquo;, or in a graphical browser, something like this:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_08_20_perlandlwp/burke_auth_snapshot.gif&#34; alt=&#34;Screenshot of site with Basic Auth required&#34; width=&#34;475&#34; height=&#34;240&#34; /&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;In LWP, if you just request that URL, like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use LWP 5.64;
+  my $browser = LWP::UserAgent-&amp;gt;new;
+
+  my $url =
+   &#39;http://www.unicode.org/mail-arch/unicode-ml/y2002-m08/0067.html&#39;;
+  my $response = $browser-&amp;gt;get($url);
+
+  die &amp;quot;Error: &amp;quot;, $response-&amp;gt;header(&#39;WWW-Authenticate&#39;) || 
+    &#39;Error accessing&#39;,
+    #  (&#39;WWW-Authenticate&#39; is the realm-name)
+    &amp;quot;\n &amp;quot;, $response-&amp;gt;status_line, &amp;quot;\n at $url\n Aborting&amp;quot;
+   unless $response-&amp;gt;is_success;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then you&amp;rsquo;ll get this error:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Error: Basic realm=&amp;quot;Unicode-MailList-Archives&amp;quot;
+   401 Authorization Required
+   at http://www.unicode.org/mail-arch/unicode-ml/y2002-m08/0067.html
+   Aborting at auth1.pl line 9.  [or wherever]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;because the &lt;code&gt;$browser&lt;/code&gt; doesn&amp;rsquo;t know any the username and password for that realm (&amp;ldquo;Unicode-MailList-Archives&amp;rdquo;) at that host (&amp;ldquo;www.unicode.org&amp;rdquo;). The simplest way to let the browser know about this is to use the &lt;code&gt;credentials&lt;/code&gt; method to let it know about a username and password that it can try using for that realm at that host. The syntax is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $browser-&amp;gt;credentials(
+    &#39;servername:portnumber&#39;,
+    &#39;realm-name&#39;,
+    &#39;username&#39; =&amp;gt; &#39;password&#39;
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In most cases, the port number is 80, the default TCP/IP port for HTTP; and you usually call the &lt;code&gt;credentials&lt;/code&gt; method before you make any requests. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $browser-&amp;gt;credentials(
+    &#39;reports.mybazouki.com:80&#39;,
+    &#39;web_server_usage_reports&#39;,
+    &#39;plinky&#39; =&amp;gt; &#39;banjo123&#39;
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So if we add the following to the program above, right after the &lt;code&gt;$browser = LWP::UserAgent-&amp;gt;new;&lt;/code&gt; line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $browser-&amp;gt;credentials(  # add this to our $browser &#39;s &amp;quot;key ring&amp;quot;
+    &#39;www.unicode.org:80&#39;,
+    &#39;Unicode-MailList-Archives&#39;,
+    &#39;unicode-ml&#39; =&amp;gt; &#39;unicode&#39;
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and then when we run it, the request succeeds, instead of causing the &lt;code&gt;die&lt;/code&gt; to be called.&lt;/p&gt;
+
+&lt;h3 id=&#34;accessing-https-urls&#34;&gt;Accessing HTTPS URLs&lt;/h3&gt;
+
+&lt;p&gt;When you access an HTTPS URL, it&amp;rsquo;ll work for you just like an HTTP URL would&amp;ndash;if your LWP installation has HTTPS support (via an appropriate Secure Sockets Layer library). For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use LWP 5.64;
+  my $url = &#39;https://www.paypal.com/&#39;;   # Yes, HTTPS!
+  my $browser = LWP::UserAgent-&amp;gt;new;
+  my $response = $browser-&amp;gt;get($url);
+  die &amp;quot;Error at $url\n &amp;quot;, $response-&amp;gt;status_line, &amp;quot;\n Aborting&amp;quot;
+   unless $response-&amp;gt;is_success;
+  print &amp;quot;Whee, it worked!  I got that &amp;quot;,
+   $response-&amp;gt;content_type, &amp;quot; document!\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If your LWP installation doesn&amp;rsquo;t have HTTPS support set up, then the response will be unsuccessful, and you&amp;rsquo;ll get this error message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Error at https://www.paypal.com/
+   501 Protocol scheme &#39;https&#39; is not supported
+   Aborting at paypal.pl line 7.   [or whatever program and line]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If your LWP installation &lt;em&gt;does&lt;/em&gt; have HTTPS support installed, then the response should be successful, and you should be able to consult &lt;code&gt;$response&lt;/code&gt; just like with any normal HTTP response.&lt;/p&gt;
+
+&lt;p&gt;For information about installing HTTPS support for your LWP installation, see the helpful &lt;em&gt;README.SSL&lt;/em&gt; file that comes in the libwww-perl distribution.&lt;/p&gt;
+
+&lt;h3 id=&#34;getting-large-documents&#34;&gt;Getting Large Documents&lt;/h3&gt;
+
+&lt;p&gt;When you&amp;rsquo;re requesting a large (or at least potentially large) document, a problem with the normal way of using the request methods (like &lt;code&gt;$response = $browser-&amp;gt;get($url)&lt;/code&gt;) is that the response object in memory will have to hold the whole document&amp;ndash;&lt;em&gt;in memory&lt;/em&gt;. If the response is a 30-megabyte file, this is likely to be quite an imposition on this process&amp;rsquo;s memory usage.&lt;/p&gt;
+
+&lt;p&gt;A notable alternative is to have LWP save the content to a file on disk, instead of saving it up in memory. This is the syntax to use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $response = $ua-&amp;gt;get($url,
+                         &#39;:content_file&#39; =&amp;gt; $filespec,
+                      );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For example,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $response = $ua-&amp;gt;get(&#39;https://metacpan.org/&#39;,
+                         &#39;:content_file&#39; =&amp;gt; &#39;/tmp/sco.html&#39;
+                      );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you use this &lt;code&gt;:content_file&lt;/code&gt; option, the &lt;code&gt;$response&lt;/code&gt; will have all the normal header lines, but &lt;code&gt;$response-&amp;gt;content&lt;/code&gt; will be empty.&lt;/p&gt;
+
+&lt;p&gt;Note that this &amp;ldquo;:content_file&amp;rdquo; option isn&amp;rsquo;t supported under older versions of LWP, so you should consider adding &lt;code&gt;use LWP 5.66;&lt;/code&gt; to check the LWP version, if you think your program might run on systems with older versions.&lt;/p&gt;
+
+&lt;p&gt;If you need to be compatible with older LWP versions, then use this syntax, which does the same thing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use HTTP::Request::Common;
+  $response = $ua-&amp;gt;request( GET($url), $filespec );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;resources&#34;&gt;Resources&lt;/h3&gt;
+
+&lt;p&gt;Remember, this article is just the most rudimentary introduction to LWP&amp;ndash;to learn more about LWP and LWP-related tasks, you really must read from the following:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;LWP::Simple&lt;/code&gt;: Simple functions for getting, heading, and mirroring URLs.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;LWP&lt;/code&gt;: Overview of the libwww-perl modules.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;LWP::UserAgent&lt;/code&gt;: The class for objects that represent &amp;ldquo;virtual browsers.&amp;rdquo;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;HTTP::Response&lt;/code&gt;: The class for objects that represent the response to a LWP response, as in &lt;code&gt;$response = $browser-&amp;gt;get(...)&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;HTTP::Message&lt;/code&gt; and &lt;code&gt;HTTP::Headers&lt;/code&gt;: Classes that provide more methods to &lt;code&gt;HTTP::Response&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;URI&lt;/code&gt;: Class for objects that represent absolute or relative URLs.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;URI::Escape&lt;/code&gt;: Functions for URL-escaping and URL-unescaping strings (like turning &amp;ldquo;this &amp;amp; that&amp;rdquo; to and from &amp;ldquo;this%20%26%20that&amp;rdquo;).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;HTML::Entities&lt;/code&gt;: Functions for HTML-escaping and HTML-unescaping strings (like turning &amp;ldquo;C. &amp;amp; E. Brontë&amp;rdquo; to and from &amp;ldquo;C. &amp;amp; E. Bront&amp;euml;&amp;rdquo;).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;HTML::TokeParser&lt;/code&gt; and &lt;code&gt;HTML::TreeBuilder&lt;/code&gt;: Classes for parsing HTML.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;HTML::LinkExtor&lt;/code&gt;: Class for finding links in HTML documents.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;And last but not least, my book &lt;a href=&#34;http://www.oreilly.com/catalog/perllwp/&#34;&gt;Perl &amp;amp; LWP&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Copyright ©2002, Sean M. Burke. You can redistribute this document and/or modify it, but only under the same terms as Perl itself.&lt;/p&gt;
+
+&lt;hr /&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

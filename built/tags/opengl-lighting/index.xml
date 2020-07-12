@@ -1,0 +1,1416 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Opengl Lighting on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/opengl-lighting/</link>
+    <description>Recent content in Opengl Lighting on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 04 Aug 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/opengl-lighting/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Building a 3D Engine in Perl, Part 4</title>
+      <link>http://localhost:1313/pub/2005/08/04/3d_engine.html/</link>
+      <pubDate>Thu, 04 Aug 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/08/04/3d_engine.html/</guid>
+      <description>
+
+&lt;p&gt;This article is the fourth in a series aimed at &lt;a href=&#34;http://localhost:1313/authors/geoff-broadwell&#34;&gt;building a full 3D engine in Perl&lt;/a&gt;. The &lt;a href=&#34;http://localhost:1313/pub/2004/12/01/3d_engine.html&#34;&gt;first article&lt;/a&gt; started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The &lt;a href=&#34;http://localhost:1313/pub/2004/12/29/3d_engine.html&#34;&gt;second article&lt;/a&gt; followed with a discussion of time, view animation, SDL events, keyboard handling, and a nice chunk of refactoring. The &lt;a href=&#34;http://localhost:1313/pub/2005/02/17/3d_engine.html&#34;&gt;third article&lt;/a&gt; continued with screenshots, movement of the viewpoint, simple OpenGL lighting, and subdivided box faces.&lt;/p&gt;
+
+&lt;p&gt;At the end of the last article, the engine was quite slow. This article shows how to locate the performance problem and what to do about it. Then it demonstrates how to apply the same new OpenGL technique a different way to create an on-screen frame rate counter. As usual, you can follow along with the code by downloading the &lt;a href=&#34;http://localhost:1313/media/_pub_2005_08_04_3d_engine/perl_opengl_examples_4.tar.gz&#34;&gt;sample code&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;sdl-perl-developments&#34;&gt;SDL_perl Developments&lt;/h3&gt;
+
+&lt;p&gt;First, there is some good news&amp;ndash;Win32 users are no longer left out in the cold. Thanks to Wayne Keenan, SDL_perl 1.x now fully supports OpenGL on Win32, and prebuilt binaries are available. There are more details at the new &lt;a href=&#34;http://www.broadwell.org/graphics/sdl-perl/&#34;&gt;SDL_perl 1.x page&lt;/a&gt; on my site; browse the Subversion repository at &lt;a href=&#34;http://svn.openfoundry.org/sdlperl1/&#34;&gt;svn.openfoundry.org/sdlperl1&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;d like to help in the efforts to improve SDL_perl 1.x, please come visit the &lt;a href=&#34;http://www.broadwell.org/graphics/sdl-perl/&#34;&gt;SDL_perl 1.x page&lt;/a&gt;, check out the &lt;a href=&#34;http://svn.openfoundry.org/sdlperl1/&#34;&gt;code&lt;/a&gt; and send me comments or patches, or ping me in &lt;code&gt;#sdlperl&lt;/code&gt; on &lt;code&gt;irc.freenode.net&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;benchmarking-the-engine&#34;&gt;Benchmarking the Engine&lt;/h3&gt;
+
+&lt;p&gt;As I mentioned in the introduction, when last I left off, the engine pretty much crawled. It&amp;rsquo;s time to figure out why and figure out what to do about it. The right tool for the first job is a &lt;em&gt;profiler&lt;/em&gt;, which watches a running program and keeps track of the performance of each part of it. Perl&amp;rsquo;s native profiler is &lt;code&gt;dprofpp&lt;/code&gt;, which tracks time spent and call count for every subroutine in the program. Examining these numbers will reveal if the engine spends most of its time in one routine, which will then be the focus for optimization.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s best if these numbers are relatively repeatable from run to run, making it easy to compare profiles before and after a change. For a rendering engine, the easiest solution is a benchmark mode. In benchmark mode, the engine runs for a set period of time or number of frames, displaying a predefined scene or sequence. I chose to enable benchmark mode with a new setting in &lt;code&gt;init_conf&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;benchmark =&amp;gt; 1,
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The engine already displays a constant scene as long as the user doesn&amp;rsquo;t press any keys; the remaining requirement is to quit after a set period.&lt;/p&gt;
+
+&lt;p&gt;In previous articles I&amp;rsquo;ve simply hardcoded an out-of-time check into the rendering loop, but this time I opted for a more general approach, using &lt;em&gt;triggered events&lt;/em&gt;. Engine events so far have always come from SDL in response to external input, such as key presses and window close events. In contrast, the engine itself produces triggered events in response to changes in the state of the simulated world, such as a player attempting to open a door or attack an enemy.&lt;/p&gt;
+
+&lt;p&gt;To gather these events, I added two new lines to the beginning of &lt;code&gt;do_events&lt;/code&gt;; the opening lines are now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub do_events
+{
+    my $self = shift;
+
+    my $queue     = $self-&amp;gt;process_events;
+    my $triggered = $self-&amp;gt;triggered_events;
+    push @$queue, @$triggered;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After processing the SDL events with &lt;code&gt;process_events&lt;/code&gt; and stuffing the resulting commands into the &lt;code&gt;$queue&lt;/code&gt;, &lt;code&gt;do_events&lt;/code&gt; calls &lt;code&gt;triggered_events&lt;/code&gt; to gather commands from any pending internally generated events and adds them to the &lt;code&gt;$queue&lt;/code&gt;. &lt;code&gt;triggered_events&lt;/code&gt; can be pretty simple for now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub triggered_events
+{
+    my $self = shift;
+
+    my @queue;
+    push @queue, &#39;quit&#39; if $self-&amp;gt;{conf}{benchmark} and
+                           $self-&amp;gt;{world}{time} &amp;gt;= 5;
+    return \@queue;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is pretty much a direct translation of the old hardcoded timeout code to the command queue concept. Normally &lt;code&gt;triggered_events&lt;/code&gt; simply returns an empty arrayref, indicating no events were triggered, and therefore no commands generated. Benchmark mode adds a quit command to the queue as soon as the world time reaches 5 seconds. Normal command processing in &lt;code&gt;do_events&lt;/code&gt; will take care of the rest.&lt;/p&gt;
+
+&lt;h3 id=&#34;dprofpp-is-your-obtuse-friend&#34;&gt;&lt;code&gt;dprofpp&lt;/code&gt; is Your (Obtuse) Friend&lt;/h3&gt;
+
+&lt;p&gt;With benchmark mode enabled, the engine runs under &lt;code&gt;dprofpp&lt;/code&gt;. The first step is to collect the profile data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;dprofpp -Q -p step065
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;-p step065&lt;/code&gt; tells &lt;code&gt;dprofpp&lt;/code&gt; to *p*rofile the program named &lt;code&gt;step065&lt;/code&gt;, and &lt;code&gt;-Q&lt;/code&gt; tells it to *q*uit after collecting the data. &lt;code&gt;dprofpp&lt;/code&gt; ran &lt;code&gt;step065&lt;/code&gt;, collected the profile data, and stored it in a specially formatted text file named &lt;em&gt;tmon.out&lt;/em&gt; in the current directory.&lt;/p&gt;
+
+&lt;p&gt;To turn the profile data into human-readable output, I used &lt;code&gt;dprofpp&lt;/code&gt; without any arguments. It crunched the collected data for a while and finally produced this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ dprofpp
+Exporter::Heavy::heavy_export_to_level has 4 unstacked calls in outer
+Exporter::export_to_level has -4 unstacked calls in outer
+Exporter::export has -12 unstacked calls in outer
+Exporter::Heavy::heavy_export has 12 unstacked calls in outer
+Total Elapsed Time = 4.838377 Seconds
+  User+System Time = 1.498377 Seconds
+Exclusive Times
+%Time ExclSec CumulS #Calls sec/call Csec/c  Name
+ 88.1   1.320  1.320      1   1.3200 1.3200  SDL::SetVideoMode
+ 38.1   0.571  0.774    294   0.0019 0.0026  main::draw_quad_face
+ 16.0   0.240  0.341      8   0.0300 0.0426  SDL::OpenGL::BEGIN
+ 13.0   0.195  0.195  64722   0.0000 0.0000  SDL::OpenGL::Vertex
+ 11.3   0.170  0.170      1   0.1700 0.1700  DynaLoader::dl_load_file
+ 9.34   0.140  0.020     12   0.0116 0.0017  Exporter::export
+ 6.67   0.100  0.100   1001   0.0001 0.0001  SDL::in
+ 4.00   0.060  0.060      1   0.0600 0.0600  SDL::Init
+ 3.34   0.050  0.847      8   0.0062 0.1059  main::BEGIN
+ 2.00   0.030  0.040      5   0.0060 0.0080  SDL::Event::BEGIN
+ 1.80   0.027  0.801     49   0.0005 0.0163  main::draw_cube
+ 1.47   0.022  0.022   2947   0.0000 0.0000  SDL::OpenGL::End
+ 1.33   0.020  0.020      1   0.0200 0.0200  warnings::BEGIN
+ 1.33   0.020  0.020     16   0.0012 0.0012  Exporter::as_heavy
+ 1.33   0.020  0.209      5   0.0040 0.0418  SDL::BEGIN
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are several problems with this output. The numbers are clearly silly (88 percent of its time spent in &lt;code&gt;SDL::SetVideoMode&lt;/code&gt;?), the statistics for the various &lt;code&gt;BEGIN&lt;/code&gt; blocks are inconsequential to the task and in the way, and the error messages at the top are rather disconcerting. To fix these issues, &lt;code&gt;dprofpp&lt;/code&gt; has the &lt;code&gt;-g&lt;/code&gt; option, which tells &lt;code&gt;dprofpp&lt;/code&gt; to only display statistics for a particular routine and its descendants:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ dprofpp -g main::main_loop
+Total Elapsed Time = 4.952042 Seconds
+  User+System Time = 0.812051 Seconds
+Exclusive Times
+%Time ExclSec CumulS #Calls sec/call Csec/c  Name
+ 70.3   0.571  0.774    294   0.0019 0.0026  main::draw_quad_face
+ 24.0   0.195  0.195  64722   0.0000 0.0000  SDL::OpenGL::Vertex
+ 3.32   0.027  0.801     49   0.0005 0.0163  main::draw_cube
+ 2.71   0.022  0.022   2947   0.0000 0.0000  SDL::OpenGL::End
+ 1.23   0.010  0.010     49   0.0002 0.0002  SDL::OpenGL::Rotate
+ 1.11   0.009  0.009      7   0.0013 0.0013  main::prep_frame
+ 1.11   0.009  0.009     70   0.0001 0.0001  SDL::OpenGL::Color
+ 0.25   0.002  0.002   2947   0.0000 0.0000  SDL::OpenGL::Begin
+ 0.00       - -0.000      1        -      -  main::action_quit
+ 0.00       - -0.000      2        -      -  SDL::EventType
+ 0.00       - -0.000      2        -      -  SDL::Event::type
+ 0.00       - -0.000      7        -      -  SDL::GetTicks
+ 0.00       - -0.000      7        -      -  SDL::OpenGL::Clear
+ 0.00       - -0.000      7        -      -  SDL::OpenGL::GL_NORMALIZE
+ 0.00       - -0.000      7        -      -  SDL::OpenGL::GL_SPOT_EXPONENT
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You may have noticed that I specified &lt;code&gt;main::main_loop&lt;/code&gt; instead of just &lt;code&gt;main_loop&lt;/code&gt;. &lt;code&gt;dprofpp&lt;/code&gt; always uses fully qualified names and will give empty results if you use &lt;code&gt;main_loop&lt;/code&gt; without the &lt;code&gt;main::&lt;/code&gt; package qualifier.&lt;/p&gt;
+
+&lt;p&gt;In this exclusive times view, the percentages in the first column and the row order depend only on the runtime of each routine, without respect to its children. Using just this view, I might have tried to optimize &lt;code&gt;draw_quad_face&lt;/code&gt; somehow, as it appears to be the most expensive routine by a large margin. That&amp;rsquo;s not the best approach, however, as an inclusive view (&lt;code&gt;-I&lt;/code&gt;) shows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ dprofpp -I -g main::main_loop
+Total Elapsed Time = 4.952042 Seconds
+  User+System Time = 0.812051 Seconds
+Inclusive Times
+%Time ExclSec CumulS #Calls sec/call Csec/c  Name
+ 100.       -  0.814      7        - 0.1163  main::do_frame
+ 99.9       -  0.812      1        - 0.8121  main::main_loop
+ 99.7       -  0.810      7        - 0.1158  main::draw_view
+ 99.2       -  0.806      7        - 0.1151  main::draw_frame
+ 98.6   0.027  0.801     49   0.0005 0.0163  main::draw_cube
+ 95.3   0.571  0.774    294   0.0019 0.0026  main::draw_quad_face
+ 24.0   0.195  0.195  64722   0.0000 0.0000  SDL::OpenGL::Vertex
+ 2.71   0.022  0.022   2947   0.0000 0.0000  SDL::OpenGL::End
+ 1.23   0.010  0.010     49   0.0002 0.0002  SDL::OpenGL::Rotate
+ 1.11   0.009  0.009     70   0.0001 0.0001  SDL::OpenGL::Color
+ 1.11   0.009  0.009      7   0.0013 0.0013  main::prep_frame
+ 0.25   0.002  0.002   2947   0.0000 0.0000  SDL::OpenGL::Begin
+ 0.00       - -0.000      1        -      -  main::action_quit
+ 0.00       - -0.000      2        -      -  SDL::EventType
+ 0.00       - -0.000      2        -      -  SDL::Event::type
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this view, &lt;code&gt;draw_quad_face&lt;/code&gt; looks even worse, because the first column now includes the time taken by all of the OpenGL calls inside of it, including tens of thousands of &lt;code&gt;glVertex&lt;/code&gt; calls. It seems that I should do something to speed it up, but at this point it&amp;rsquo;s not entirely clear how to simplify it or reduce the number of OpenGL calls it makes (other than reducing the subdivision level of each face, which would reduce rendering quality).&lt;/p&gt;
+
+&lt;p&gt;Actually, there&amp;rsquo;s a better option. The real problem is that &lt;code&gt;draw_cube&lt;/code&gt; dominates the execution time, and &lt;code&gt;draw_quad_face&lt;/code&gt; dominates that. How about not calling &lt;code&gt;draw_cube&lt;/code&gt; (and therefore &lt;code&gt;draw_quad_face&lt;/code&gt;) &lt;em&gt;at all&lt;/em&gt; during normal rendering? It seems extremely wasteful to have to tell OpenGL how to render a cube face dozens of times each frame. If only there were a way to tell OpenGL to remember the cube definition once, and just refer to that definition each time the engine needs to draw it.&lt;/p&gt;
+
+&lt;h3 id=&#34;display-lists&#34;&gt;Display Lists&lt;/h3&gt;
+
+&lt;p&gt;I expect no one will find it surprising that OpenGL provides exactly this function, with the &lt;em&gt;display lists&lt;/em&gt; facility. A display list is a list of OpenGL commands to execute to perform some function. The OpenGL driver stores it (sometimes in a mildly optimized format) and further code refers to it by number. Later, the program can request that OpenGL run the commands in some particular list as many times as desired. Lists can even call other lists; a bicycle model might call a wheel display list twice, and the wheel display list might itself call a spoke display list dozens of times.&lt;/p&gt;
+
+&lt;p&gt;I added &lt;code&gt;init_models&lt;/code&gt; to create display lists for each shape I want to model:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub init_models
+{
+    my $self = shift;
+
+    my %models = (
+        cube =&amp;gt; \&amp;amp;draw_cube,
+    );
+    my $count  = keys %models;
+    my $base   = glGenLists($count);
+    my %display_lists;
+
+    foreach my $model (keys %models) {
+        glNewList($base, GL_COMPILE);
+        $models{$model}-&amp;gt;();
+        glEndList;
+
+        $display_lists{$model} = $base++;
+    }
+
+    $self-&amp;gt;{models}{dls} = \%display_lists;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;%models&lt;/code&gt; associates each model with the code needed to draw it. Because the engine already knows how to draw a cube, I simply reused &lt;code&gt;draw_cube&lt;/code&gt; here. The next two lines begin the work of building the display lists. The code first determines how many display lists it needs and then calls &lt;code&gt;glGenLists&lt;/code&gt; to allocate them. OpenGL numbers the allocated lists in sequence, returning the first number in the sequence (the &lt;em&gt;list base&lt;/em&gt;). For example, if the code had requested four lists, OpenGL might have numbered them 1051, 1052, 1053, and 1054, and would then return 1051 as the list base.&lt;/p&gt;
+
+&lt;p&gt;For each defined model, &lt;code&gt;init_models&lt;/code&gt; calls &lt;code&gt;glNewList&lt;/code&gt; to tell OpenGL that it is ready to compile a new display list at the number &lt;code&gt;$base&lt;/code&gt;. OpenGL then prepares to convert any subsequent OpenGL calls to entries in the list, rather than rendering them immediately. If I had chosen &lt;code&gt;GL_COMPILE_AND_EXECUTE&lt;/code&gt; instead of &lt;code&gt;GL_COMPILE&lt;/code&gt;, OpenGL would perform the rendering and save the calls in the display list at the same time. &lt;code&gt;GL_COMPILE_AND_EXECUTE&lt;/code&gt; is useful for on-the-fly caching when code needs active rendering anyway. Because &lt;code&gt;init_models&lt;/code&gt; is simply precaching the rendering commands and nothing should render while this occurs, &lt;code&gt;GL_COMPILE&lt;/code&gt; is the better choice.&lt;/p&gt;
+
+&lt;p&gt;The code then calls the drawing routine, which conveniently submits all of the OpenGL calls needed for the new list. The call to &lt;code&gt;glEndList&lt;/code&gt; then tells OpenGL to stop recording entries in the display list and return to normal operation. The model loop then records the display list number used by the current model in the &lt;code&gt;%display_lists&lt;/code&gt; hash, and increments &lt;code&gt;$base&lt;/code&gt; for the next iteration. After processing all of the models, &lt;code&gt;init_models&lt;/code&gt; saves &lt;code&gt;%display_lists&lt;/code&gt; into a new structure in the engine object.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;init&lt;/code&gt; calls &lt;code&gt;init_models&lt;/code&gt; just before &lt;code&gt;init_objects&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$self-&amp;gt;init_models;
+$self-&amp;gt;init_objects;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With this initialization in place, the next step was to change &lt;code&gt;draw_view&lt;/code&gt; to draw from either a model or a draw routine. To do this, I replaced the &lt;code&gt;$o-&amp;gt;{draw}-&amp;gt;()&lt;/code&gt; call with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if ($o-&amp;gt;{model}) {
+        my $dl = $self-&amp;gt;{models}{dls}{$o-&amp;gt;{model}};
+        glCallList($dl);
+    }
+    else {
+        $o-&amp;gt;{draw}-&amp;gt;();
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the object has an associated model, &lt;code&gt;draw_view&lt;/code&gt; looks up the display list in the hash created by &lt;code&gt;init_models&lt;/code&gt;, and then calls the list using &lt;code&gt;glCallList&lt;/code&gt;. Otherwise, &lt;code&gt;draw_view&lt;/code&gt; falls back to calling the object&amp;rsquo;s draw routine as before. A quick run confirmed that the fallback works and adding &lt;code&gt;init_models&lt;/code&gt; didn&amp;rsquo;t break anything, so it was safe to change &lt;code&gt;init_objects&lt;/code&gt; to use models instead of draw routines for the cubes. This involved replacement of just three lines&amp;ndash;I changed each copy of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        draw        =&amp;amp; \&amp;amp;draw_cube,
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        model       =&amp;amp; &#39;cube&#39;,
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Suddenly, the engine was &lt;em&gt;much&lt;/em&gt; faster and more responsive. A &lt;code&gt;dprofpp&lt;/code&gt; run confirmed this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ dprofpp -Q -p step068
+
+Done.
+$ dprofpp -I -g main::main_loop
+Total Elapsed Time = 4.053240 Seconds
+  User+System Time = 0.973250 Seconds
+Inclusive Times
+%Time ExclSec CumulS #Calls sec/call Csec/c  Name
+ 99.9       -  0.973      1        - 0.9733  main::main_loop
+ 86.5   0.024  0.842    413   0.0001 0.0020  main::do_frame
+ 58.1   0.203  0.566    413   0.0005 0.0014  main::draw_view
+ 56.9   0.016  0.554    413   0.0000 0.0013  main::draw_frame
+ 20.1   0.196  0.196    413   0.0005 0.0005  SDL::GLSwapBuffers
+ 19.3       -  0.188    413        - 0.0005  SDL::App::sync
+ 18.4       -  0.180    413        - 0.0004  main::end_frame
+ 16.7   0.163  0.163   2891   0.0001 0.0001  SDL::OpenGL::CallList
+ 9.14   0.028  0.089    413   0.0001 0.0002  main::do_events
+ 8.53   0.035  0.083    413   0.0001 0.0002  main::prep_frame
+ 6.68   0.008  0.065    413   0.0000 0.0002  main::process_events
+ 5.03   0.049  0.049   3304   0.0000 0.0000  SDL::OpenGL::GL_LIGHTING
+ 4.93   0.002  0.048    413   0.0000 0.0001  SDL::Event::pump
+ 4.73   0.046  0.046    413   0.0001 0.0001  SDL::PumpEvents
+ 4.11   0.012  0.040    413   0.0000 0.0001  main::update_time
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that I had to run &lt;code&gt;dprofpp -Q -p&lt;/code&gt; again with the new code before doing the analysis, or &lt;code&gt;dprofpp&lt;/code&gt; would have just reused the old &lt;code&gt;tmon.out&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The first thing to note in this report is that previously the engine only managed seven frames (calls to &lt;code&gt;do_frame&lt;/code&gt;) before timing out, but now managed 413 in the same time! Secondly, as intended, &lt;code&gt;main_loop&lt;/code&gt; never calls &lt;code&gt;draw_cube&lt;/code&gt;, having replaced all such calls with calls to &lt;code&gt;glCallList&lt;/code&gt;. Because of this it is no longer necessary to do many thousands of low-level OpenGL calls to draw the scene each frame, with the attendant Perl and XS overhead. Instead, the OpenGL driver handles all of those calls internally, with minimal overhead.&lt;/p&gt;
+
+&lt;p&gt;This has the added advantage that it is now feasible to run the engine on one computer and display the window on another, as the OpenGL driver on the displaying computer saves the display lists. Once &lt;code&gt;init_models&lt;/code&gt; compiles the display lists, they are loaded into the display driver, and future frames require minimal network traffic to handle &lt;code&gt;glCallList&lt;/code&gt;. (Adventurous users running X can do this by logging in locally to the display computer, &lt;code&gt;ssh&lt;/code&gt;ing to the computer that has the engine and SDL_perl on it, and running the program there. If your &lt;code&gt;ssh&lt;/code&gt; has X11 forwarding turned on, your reward should be a local window. And there was much rejoicing.)&lt;/p&gt;
+
+&lt;h3 id=&#34;an-fps-counter&#34;&gt;An FPS Counter&lt;/h3&gt;
+
+&lt;p&gt;The measurements that &lt;code&gt;dprofpp&lt;/code&gt; performs have enough overhead to significantly reduce the engine&amp;rsquo;s apparent performance. (Even old hardware can do better than 80-100 FPS with this simple scene.) The overhead is necessary to get a detailed analysis, but when it comes time to show off, most users want to have a nice frame rate display showing the performance of the engine running as fast as it can.&lt;/p&gt;
+
+&lt;p&gt;Making a frame rate display requires the ability to render text in front of the scene. The necessary pieces of that are:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;A font containing glyphs for the characters to display (at least 0 through 9).&lt;/li&gt;
+&lt;li&gt;A font reader to load the font from a file into memory as bitmaps.&lt;/li&gt;
+&lt;li&gt;A converter from raw bitmaps to a format that OpenGL can readily display.&lt;/li&gt;
+&lt;li&gt;A way to render the proper bitmaps for a given string.&lt;/li&gt;
+&lt;li&gt;A way to calculate the current frame rate.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h4 id=&#34;the-numbers-font&#34;&gt;The Numbers Font&lt;/h4&gt;
+
+&lt;p&gt;There are hundreds of freely available fonts, but most of them are available only in fairly complex font formats such as TrueType and Type 1. Some versions of SDL_perl support these complex font formats, but this support has historically been frustratingly buggy or incomplete.&lt;/p&gt;
+
+&lt;p&gt;Given the relatively simple requirement (render a single integer), I chose instead to create a very simple bitmapped font format just for this article. The font file is &lt;em&gt;numbers-7x11.txt&lt;/em&gt; in the examples tarball. It begins as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;7x11
+
+30
+..000..
+.0...0.
+.0...0.
+0.....0
+0.....0
+0.....0
+0.....0
+0.....0
+.0...0.
+.0...0.
+..000..
+
+31
+...0...
+..00...
+00.0...
+...0...
+...0...
+...0...
+...0...
+...0...
+...0...
+...0...
+0000000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first line indicates the size of each character cell in the font; in this case, seven columns and 11 rows. The remaining chunks each consist of the character&amp;rsquo;s codepoint in hex followed by a bitmap represented as text&amp;ndash;&lt;code&gt;.&lt;/code&gt; represents a transparent pixel, and &lt;code&gt;0&lt;/code&gt; represents a rendered pixel. Empty lines separate chunks.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-font-reader&#34;&gt;The Font Reader&lt;/h4&gt;
+
+&lt;p&gt;To read the glyph definitions into bitmaps, I first added &lt;code&gt;read_font_file&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub read_font_file
+{
+    my $self = shift;
+    my $file = shift;
+
+    open my $defs, &#39;&amp;lt;&#39;, $file
+        or die &amp;quot;Could not open &#39;$file&#39;: $!&amp;quot;;
+    local $/ = &#39;&#39;;
+
+    my $header  = &amp;lt;$defs&amp;gt;;
+    chomp($header);
+    my ($w, $h) = split /x/ =&amp;amp; $header;
+
+    my %bitmaps;
+    while (my $def = &amp;lt;$defs&amp;gt;) {
+        my ($hex, @rows) = grep /\S/ =&amp;amp; split /\n/ =&amp;amp; $def;
+
+        @rows = map {tr/.0/01/; pack &#39;B*&#39; =&amp;amp; $_} @rows;
+
+        my $bitmap           = join &#39;&#39; =&amp;amp; reverse @rows;
+        my $codepoint        = hex $hex;
+
+        $bitmaps{$codepoint} = $bitmap;
+    }
+
+    return (\%bitmaps, $w, $h);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;read_font_file&lt;/code&gt; begins by opening the font file for reading. It next requests paragraph slurping mode by setting &lt;code&gt;$/&lt;/code&gt; to &lt;code&gt;&#39;&#39;&lt;/code&gt;. In this mode, Perl automatically breaks up the font file at empty lines, with the header first followed by each complete glyph definition as a single chunk. Next, the routine reads the header, chomps it, and splits the cell size definition into width and height.&lt;/p&gt;
+
+&lt;p&gt;With the preliminaries out of the way, &lt;code&gt;read_font_file&lt;/code&gt; creates a hash to store the finished bitmaps and enters a &lt;code&gt;while&lt;/code&gt; loop over the remaining chunks of the font file. Each glyph definition is split into a hex number and an array of bitmap rows; using &lt;code&gt;grep /\S/ =&amp;amp;&lt;/code&gt; ignores any trailing blank lines.&lt;/p&gt;
+
+&lt;p&gt;The next line converts textual rows to real bitstrings. First, each transparent pixel (&lt;code&gt;.&lt;/code&gt;) becomes &lt;code&gt;0&lt;/code&gt;, and each rendered pixel (&lt;code&gt;0&lt;/code&gt;) turns into a &lt;code&gt;1&lt;/code&gt;. Feeding the resulting binary text string to &lt;code&gt;pack &#39;B*&#39;&lt;/code&gt; converts the binary into an actual bitstring, with the bits packed in starting from the high bit of each byte (as OpenGL prefers). The resulting bitstrings are stored back in &lt;code&gt;@rows&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Because OpenGL prefers bitmaps to start at the bottom and go up, the code reverses &lt;code&gt;@rows&lt;/code&gt; before &lt;code&gt;join&lt;/code&gt;ing to create the finished bitmap. The &lt;code&gt;hex&lt;/code&gt; operator converts the hex number to decimal to be the key for the newly created bitmap in the &lt;code&gt;%bitmaps&lt;/code&gt; hash.&lt;/p&gt;
+
+&lt;p&gt;After parsing the whole font file, the function returns the bitmaps to the caller, along with the cell size metrics.&lt;/p&gt;
+
+&lt;h4 id=&#34;speaking-opengl-s-language&#34;&gt;Speaking OpenGL&amp;rsquo;s Language&lt;/h4&gt;
+
+&lt;p&gt;The bitmaps produced by &lt;code&gt;read_font_file&lt;/code&gt; are simply packed bitstrings, in this case 11 bytes long (one byte per seven-pixel row). Before using them to render strings, the engine must first load these bitmaps into OpenGL. This happens in the main &lt;code&gt;init_fonts&lt;/code&gt; routine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub init_fonts
+{
+    my $self  = shift;
+
+    my %fonts = (
+        numbers =&amp;amp; &#39;numbers-7x11.txt&#39;,
+    );
+
+    glPixelStore(GL_UNPACK_ALIGNMENT, 1);
+
+    foreach my $font (keys %fonts) {
+        my ($bitmaps, $w, $h) = 
+            $self-&amp;gt;read_font_file($fonts{$font});
+
+        my @cps    = sort {$a &amp;lt;=&amp;amp; $b} keys %$bitmaps;
+        my $max_cp = $cps[-1];
+        my $base   = glGenLists($max_cp + 1);
+
+        foreach my $codepoint (@cps) {
+            glNewList($base + $codepoint, GL_COMPILE);
+            glBitmap($w, $h, 0, 0, $w + 2, 0,
+                     $bitmaps-&amp;gt;{$codepoint});
+            glEndList;
+        }
+
+        $self-&amp;gt;{fonts}{$font}{base} = $base;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;init_fonts&lt;/code&gt; opens with a hash associating each known font with a font file; at the moment, only the &lt;code&gt;numbers&lt;/code&gt; font is defined. The real work begins with the &lt;code&gt;glPixelStore&lt;/code&gt; call, which tells OpenGL that the rows for all bitmaps are tightly packed (along one-byte boundaries) rather than being padded, so that each row begins at even two-, four-, or eight-byte memory locations.&lt;/p&gt;
+
+&lt;p&gt;The main font loop starts by calling &lt;code&gt;read_font_file&lt;/code&gt; to load the bitmaps for the current font into memory. The next line sorts the codepoints into &lt;code&gt;@cps&lt;/code&gt;, and the following line finds the maximum codepoint by simply taking the last one in &lt;code&gt;@cps&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;glGenLists&lt;/code&gt; call allocates display lists for codepoints 0 through &lt;code&gt;$max_cp&lt;/code&gt;, which will have numbers from &lt;code&gt;$base&lt;/code&gt; through &lt;code&gt;$base + $max_cp&lt;/code&gt;. For each codepoint defined by the font, the inner loop uses &lt;code&gt;glNewList&lt;/code&gt; to start compiling the appropriate list, &lt;code&gt;glBitmap&lt;/code&gt; to load the bitmap into OpenGL, and finally, &lt;code&gt;glEndList&lt;/code&gt; to finish compiling the list.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;glBitmap&lt;/code&gt; call has six parameters aside from the bitmap data itself (&lt;code&gt;$bitmaps-&amp;gt;{$codepoint}&lt;/code&gt;). The first two are the width and height of the bitmap in pixels, which &lt;code&gt;read_font_file&lt;/code&gt; conveniently provides. The next two define the &lt;em&gt;origin&lt;/em&gt; for the bitmap, counted from the lower-left corner. Bitmap fonts use a non-zero origin for several purposes, generally when the glyph extends farther left or below the &amp;ldquo;normal&amp;rdquo; lower-left corner. This may be because the glyph has a &lt;em&gt;descender&lt;/em&gt; (a part of the glyph that descends below the general line of text, as with the lowercase letters &amp;ldquo;p&amp;rdquo; and &amp;ldquo;y&amp;rdquo;), or perhaps because the font leans to the left. The simple code in &lt;code&gt;init_fonts&lt;/code&gt; assumes none of these special cases apply and sets the origin to (0,0).&lt;/p&gt;
+
+&lt;p&gt;The last two parameters are the X and Y &lt;em&gt;increments&lt;/em&gt;, the distances that OpenGL should move along the X and Y axes before drawing the next character. Left-to-right languages use fonts with positive X and zero Y increments; right-to-left languages use negative X and zero Y. Top-to-bottom languages use zero X and negative Y. The increments must include both the width/height of the character itself and any additional distance needed to provide proper spacing. In this case, the rendering will be left to right. I wanted two extra pixels for spacing, so I set the X increment to width plus two, and the Y increment to zero.&lt;/p&gt;
+
+&lt;p&gt;The last line of the outer loop simply saves the list base for the font to make it available later during rendering.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;init&lt;/code&gt; calls &lt;code&gt;init_fonts&lt;/code&gt; as usual, just after the call to &lt;code&gt;init_time&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$self-&amp;gt;init_fonts;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;text-rendering&#34;&gt;Text Rendering&lt;/h4&gt;
+
+&lt;p&gt;The hard part is now done: parsing the font file and loading the bitmaps into OpenGL. The new &lt;code&gt;draw_fps&lt;/code&gt; routine calculates and renders the frame rate:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub draw_fps
+{
+    my $self   = shift;
+
+    my $base   = $self-&amp;gt;{fonts}{numbers}{base};
+    my $d_time = $self-&amp;gt;{world}{d_time} || 0.001;
+    my $fps    = int(1 / $d_time);
+
+    glColor(1, 1, 1);
+    glRasterPos(10, 10, 0);
+    glListBase($base);
+    glCallListsScalar($fps);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The routine starts by retrieving the list base for the &lt;code&gt;numbers&lt;/code&gt; font, retrieving the world time delta for this frame, and calculating the current frames per second as one frame in &lt;code&gt;$d_time&lt;/code&gt; seconds. It takes a little care to make sure &lt;code&gt;$d_time&lt;/code&gt; is non-zero, even if the engine is running so fast that it renders a frame in less than a millisecond (the precision of SDL time handling); otherwise, the &lt;code&gt;$fps&lt;/code&gt; calculation would die with a divide-by-zero error.&lt;/p&gt;
+
+&lt;p&gt;The OpenGL section begins by setting the current drawing color to white with a call to &lt;code&gt;glColor&lt;/code&gt;. The next line sets the &lt;em&gt;raster position&lt;/em&gt;, the window coordinates at which to place the origin of the next bitmap. After rendering each bitmap, the raster position is automatically updated using the bitmap&amp;rsquo;s X and Y increments so that the bitmaps will not overlap each other. In this case, &lt;code&gt;(10, 10, 0)&lt;/code&gt; sets the raster position ten pixels up and right from the lower-left corner of the window, with &lt;code&gt;Z=0&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The next two lines together actually call the appropriate display list in our bitmap font for each character in the &lt;code&gt;$fps&lt;/code&gt; string. &lt;code&gt;glCallListsScalar&lt;/code&gt; breaks the string into individual characters and calls the display list with the same number as the codepoint of the character. For example, for the &amp;ldquo;5&amp;rdquo; character (at codepoint 53 decimal), &lt;code&gt;glCallListsScalar&lt;/code&gt; calls display list 53. Unfortunately, there&amp;rsquo;s no guarantee that display list 53 actually will display a &amp;ldquo;5,&amp;rdquo; because the font&amp;rsquo;s list base may not be 0. If the font had a list base of 1500, for example, the code would need to call display list 1500+53=1553 to display the &amp;ldquo;5.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Rather than make the programmer do this calculation manually every time, OpenGL provides the &lt;code&gt;glListBase&lt;/code&gt; function, which sets the list base to use with &lt;code&gt;glCallLists&lt;/code&gt;. After the &lt;code&gt;glListBase&lt;/code&gt; call above, OpenGL will automatically offset every display list number specified with &lt;code&gt;glCallLists&lt;/code&gt; by &lt;code&gt;$base&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;You may have noticed that in the code I use &lt;code&gt;glCallListsScalar&lt;/code&gt;, but the previous paragraph referred to &lt;code&gt;glCallLists&lt;/code&gt; instead. &lt;code&gt;glCallListsScalar&lt;/code&gt; is actually an SDL_perl extension (not part of core OpenGL) that provides an alternate calling convention for &lt;code&gt;glCallLists&lt;/code&gt; in Perl. Internally, SDL_perl implements both Perl routines using the same underlying C function in OpenGL (&lt;code&gt;glCallLists&lt;/code&gt;). SDL_perl provides two different calling conventions because Perl treats a string and an array of numbers as two different things, while C treats them as essentially the same.&lt;/p&gt;
+
+&lt;p&gt;If you want to render a string, and all of the characters in the string have codepoints &amp;lt;= 255 decimal (single-byte character sets, and the ASCII subset of most variable-width character sets), you can use &lt;code&gt;glCallListsScalar&lt;/code&gt;, and it will do the right thing for you:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;glCallListsScalar($string);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you simply want to render several display lists with a single call, and you&amp;rsquo;re not trying to render a string, use the standard version of &lt;code&gt;glCallLists&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;glCallLists(@lists);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you need to render a string, but it contains characters above codepoint 255, you have to use a more complex workaround:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;glCallLists(map ord($_) =&amp;amp; split // =&amp;amp; $string);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because the FPS counter merely renders ASCII digits, the first option works fine.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;draw_frame&lt;/code&gt; now ends with a call to &lt;code&gt;draw_fps&lt;/code&gt;, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub draw_frame
+{
+    my $self = shift;
+
+    $self-&amp;gt;set_projection_3d;
+    $self-&amp;gt;set_eye_lights;
+    $self-&amp;gt;set_view_3d;
+    $self-&amp;gt;set_world_lights;
+    $self-&amp;gt;draw_view;
+    $self-&amp;gt;draw_fps;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For now, I decided to turn off benchmark mode by changing the config setting in &lt;code&gt;init_config&lt;/code&gt; to &lt;code&gt;0&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    benchmark =&amp;amp; 0,
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With the font handling in place, and &lt;code&gt;draw_fps&lt;/code&gt; called each frame to display the frame rate in white in the lower-left corner, everything should be grand, as Figure 1 shows.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_08_04_3d_engine/step070.gif&#34; alt=&#34;drawing frame rate, take one&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;
+&lt;em&gt;Figure 1. Drawing the frame rate&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Oops. There&amp;rsquo;s no frame rate display. Actually, it&amp;rsquo;s there, just &lt;em&gt;very&lt;/em&gt; faint. If you look very carefully (or turn your video card&amp;rsquo;s gamma up very high), you can just make out the frame rate display near the top of the window, above the big white box on the right. There are (at least) two problems&amp;ndash;the text is too dark and it&amp;rsquo;s in the wrong place.&lt;/p&gt;
+
+&lt;p&gt;The first problem is reminiscent of the dark scene in the &lt;a href=&#34;http://localhost:1313/pub/2005/02/17/3d_engine.html&#34;&gt;last article&lt;/a&gt;, after enabling lighting but no lights. Come to think of it, there&amp;rsquo;s not much reason to have lighting enabled just to display stats, but the last object rendered by &lt;code&gt;draw_view&lt;/code&gt; left it on. To make sure lighting is off, I added a &lt;code&gt;set_lighting_2d&lt;/code&gt; routine, which &lt;code&gt;draw_frame&lt;/code&gt; now calls just before calling &lt;code&gt;draw_fps&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub set_lighting_2d
+{
+    glDisable(GL_LIGHTING);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_08_04_3d_engine/step071.gif&#34; alt=&#34;the unlit frame rate&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;
+&lt;em&gt;Figure 2. The unlit frame rate&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Figure 2 is much better! With lighting turned off, the frame rate now renders in bright white as intended. The next problem is the incorrect position. Moving and rotating the viewpoint shows that while the digits always face the screen, their apparent position moves around (Figure 3).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_08_04_3d_engine/step071a.gif&#34; alt=&#34;moving frame rate&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;
+&lt;em&gt;Figure 3. A moving frame rate&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;It turns out that the current modelview and projection matrices transform the raster position set by &lt;code&gt;glRasterPos&lt;/code&gt;, just like the coordinates from a &lt;code&gt;glVertex&lt;/code&gt; call. That means OpenGL reuses whatever state the modelview and projection matrices are in.&lt;/p&gt;
+
+&lt;p&gt;To get unaltered window coordinates, I need to use an orthographic projection (no foreshortening or other non-linear effects) matching the window dimensions. I also need to set an identity modelview matrix (so that the modelview matrix won&amp;rsquo;t transform the coordinates at all). All of this happens in &lt;code&gt;set_projection_2d&lt;/code&gt;, called just before &lt;code&gt;set_lighting_2d&lt;/code&gt; in &lt;code&gt;draw_frame&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub set_projection_2d
+{
+    my $self = shift;
+
+    my $w    = $self-&amp;gt;{conf}{width};
+    my $h    = $self-&amp;gt;{conf}{height};
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity;
+    gluOrtho2D(0, $w, 0, $h);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This routine first gathers the window width and height from the configuration hash. It then switches to the projection matrix (&lt;code&gt;GL_PROJECTION&lt;/code&gt;) and restores the identity state before calling &lt;code&gt;gluOrtho2D&lt;/code&gt; to create an orthographic projection matching the window dimensions. Finally, it switches back to the modelview matrix (&lt;code&gt;GL_MODELVIEW&lt;/code&gt;) and restores its identity state as well. The frame rate now renders at the intended spot near the lower-left corner (Figure 4).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_08_04_3d_engine/step072.gif&#34; alt=&#34;frame rate in the right spot&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;
+&lt;em&gt;Figure 4. The frame rate in the correct position&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;There is another more subtle rendering problem, however, which you can see by moving the viewpoint forward a bit (Figure 5).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_08_04_3d_engine/step072a.gif&#34; alt=&#34;frame rate depth problems&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;
+&lt;em&gt;Figure 5. Frame rate depth problems&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Notice how the &amp;ldquo;5&amp;rdquo; is partially cut off. The problem is that OpenGL compares the depth of the pixels in the thin yellow box to the depth of the pixels in the frame rate display, and finds that some of the pixels in the 5 are farther away than the pixels in the box. In effect, part of the 5 draws &lt;em&gt;inside&lt;/em&gt; the box. In fact, moving the viewpoint slightly to the left from this point will make the frame rate disappear altogether, hidden by the near face of the yellow box.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s not very good behavior from a statistics display that should appear to hover in front of the scene. The solution is to turn off OpenGL&amp;rsquo;s depth testing, using a new line at the end of &lt;code&gt;set_projection_2d&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;glDisable(GL_DEPTH_TEST);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With this change, you can move the view anywhere without fear that the frame rate will be cut off or disappear entirely (Figure 6).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_08_04_3d_engine/step073.gif&#34; alt=&#34;position-independent frame rate&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;
+&lt;em&gt;Figure 6. Position-independent frame rate&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;too-fast&#34;&gt;Too Fast&lt;/h3&gt;
+
+&lt;p&gt;There&amp;rsquo;s yet another problem; this time, one that will require a change to the frame rate calculations. The frame rate shown in the above screenshots is either 333 or 500, but nothing else. On this system, the frames take between two and three milliseconds to render, but because SDL can only provide one-millisecond resolution, the time delta for a single frame will appear to be &lt;em&gt;exactly&lt;/em&gt; either .002 second or .003 second. 1/.002=500, and 1/.003=333, so the display is a blur, flashing back and forth between the two possible values.&lt;/p&gt;
+
+&lt;p&gt;To get a more representative (and easier-to-read) value, the code must average frame rate over a number of frames. Doing this will allow the total measured time to be long enough to drown out the resolution deficiency of SDL&amp;rsquo;s clock.&lt;/p&gt;
+
+&lt;p&gt;The first thing I needed was a routine to initialize the frame rate data to carry over multiple frames:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub init_fps
+{
+    my $self = shift;
+
+    $self-&amp;gt;{stats}{fps}{cur_fps}    = 0;
+    $self-&amp;gt;{stats}{fps}{last_frame} = 0;
+    $self-&amp;gt;{stats}{fps}{last_time}  = $self-&amp;gt;{world}{time};
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The new &lt;code&gt;stats&lt;/code&gt; structure in the engine object will hold any statistics that the engine gathers about itself. To calculate FPS, the engine needs to remember the last frame for which it took a timestamp, as well as the timestamp for that frame. Because the engine calculates the frame rate only every few frames, it also saves the last calculated FPS value so that it can render it as needed. The &lt;code&gt;init_fps&lt;/code&gt; call, as usual, goes at the end of &lt;code&gt;init&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$self-&amp;gt;init_fps;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The new &lt;code&gt;update_fps&lt;/code&gt; routine now calculates the frame rate:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub update_fps
+{
+    my $self      = shift;
+
+    my $frame     = $self-&amp;gt;{state}{frame};
+    my $time      = $self-&amp;gt;{world}{time};
+
+    my $d_frames  = $frame - $self-&amp;gt;{stats}{fps}{last_frame};
+    my $d_time    = $time  - $self-&amp;gt;{stats}{fps}{last_time};
+    $d_time     ||= 0.001;
+
+    if ($d_time &amp;gt;= .2) {
+        $self-&amp;gt;{stats}{fps}{last_frame} = $frame;
+        $self-&amp;gt;{stats}{fps}{last_time}  = $time;
+        $self-&amp;gt;{stats}{fps}{cur_fps}    = int($d_frames / $d_time);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;update_fps&lt;/code&gt; starts by gathering the current frame number and timestamp, and calculating the deltas from the saved values. Again, &lt;code&gt;$d_time&lt;/code&gt; must default to 0.001 second to avoid possible divide-by-zero errors later on.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;if&lt;/code&gt; statement checks to see if enough time has gone by to result in a reasonably accurate frame rate calculation. If so, it sets the last frame number and timestamp to the current values and the current frame rate to &lt;code&gt;$d_frames / $d_time&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;update_fps&lt;/code&gt; call must occur early in the &lt;code&gt;main_loop&lt;/code&gt;, but after the engine has determined the new frame number and timestamp. &lt;code&gt;main_loop&lt;/code&gt; now looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub main_loop
+{
+    my $self = shift;
+
+    while (not $self-&amp;gt;{state}{done}) {
+        $self-&amp;gt;{state}{frame}++;
+        $self-&amp;gt;update_time;
+        $self-&amp;gt;update_fps;
+        $self-&amp;gt;do_events;
+        $self-&amp;gt;update_view;
+        $self-&amp;gt;do_frame;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The final change needed to enable the new more accurate display is in &lt;code&gt;draw_fps&lt;/code&gt;; the &lt;code&gt;$d_time&lt;/code&gt; lookup goes away and the &lt;code&gt;$fps&lt;/code&gt; calculation turns into a simple retrieval of the current value from the &lt;code&gt;stats&lt;/code&gt; structure:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $fps  = $self-&amp;gt;{stats}{fps}{cur_fps};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The more accurate calculation now makes it easy to see the difference between the frame rate for a simple view (Figure 7):&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_08_04_3d_engine/step074.gif&#34; alt=&#34;frame rate for a simple view&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;
+&lt;em&gt;Figure 7. Frame rate for a simple view&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;and the frame rate for a more complex view (Figure 8).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_08_04_3d_engine/step074a.gif&#34; alt=&#34;frame rate for a complex view&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;
+&lt;em&gt;Figure 8. Frame rate for a complex view&lt;/em&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;is-the-new-display-a-bottleneck&#34;&gt;Is the New Display a Bottleneck?&lt;/h4&gt;
+
+&lt;p&gt;The last thing to do is to check that the shiny new frame rate display is not itself a major bottleneck. The easiest way to do that is to turn benchmark mode back on in &lt;code&gt;init_conf&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    benchmark =&amp;amp; 1,
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After doing that, I ran the engine under &lt;code&gt;dprofpp&lt;/code&gt; again, and then analyzed the results, just as I had earlier:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ dprofpp -Q -p step075
+
+Done.
+$ dprofpp -I -g main::main_loop
+Total Elapsed Time = 3.943764 Seconds
+  User+System Time = 1.063773 Seconds
+Inclusive Times
+%Time ExclSec CumulS #Calls sec/call Csec/c  Name
+ 100.       -  1.064      1        - 1.0638  main::main_loop
+ 94.6   0.006  1.007    384   0.0000 0.0026  main::do_frame
+ 85.2   0.019  0.907    384   0.0000 0.0024  main::draw_frame
+ 50.7   0.205  0.540    384   0.0005 0.0014  main::draw_view
+ 16.8   0.073  0.179    384   0.0002 0.0005  main::draw_fps
+ 15.4   0.095  0.164    384   0.0002 0.0004  main::set_projection_2d
+ 11.6   0.045  0.124    384   0.0001 0.0003  main::draw_axes
+ 10.9   0.116  0.116   2688   0.0000 0.0000  SDL::OpenGL::CallList
+ 8.74   0.013  0.093    384   0.0000 0.0002  main::end_frame
+ 7.52   0.003  0.080    384   0.0000 0.0002  SDL::App::sync
+ 7.24   0.077  0.077    384   0.0002 0.0002  SDL::GLSwapBuffers
+ 4.89   0.052  0.052   3072   0.0000 0.0000  SDL::OpenGL::PopMatrix
+ 4.70   0.023  0.050    384   0.0001 0.0001  main::update_view
+ 3.67   0.039  0.039   3456   0.0000 0.0000  SDL::OpenGL::GL_LIGHTING
+ 3.48   0.037  0.037    384   0.0001 0.0001  SDL::OpenGL::Begin
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As it currently stands, &lt;code&gt;draw_view&lt;/code&gt; takes half of the run time of &lt;code&gt;main_loop&lt;/code&gt;, and the combination of &lt;code&gt;set_projection_2d&lt;/code&gt; and &lt;code&gt;draw_fps&lt;/code&gt; takes about a third of the &lt;code&gt;main_loop&lt;/code&gt; time together. Is that good or bad news?&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;draw_view&lt;/code&gt; is so quick now because I&amp;rsquo;ve just optimized it. Now that it&amp;rsquo;s running so fast again, I can afford to add more features and perhaps make a more complex scene, either of which will make &lt;code&gt;draw_view&lt;/code&gt; take a larger percentage of the time again. Also, &lt;code&gt;set_projection_2d&lt;/code&gt; is necessary for any in-window statistics, debugging, or HUD (heads up display) anyway, so the time spent there will not go to waste.&lt;/p&gt;
+
+&lt;p&gt;That leaves &lt;code&gt;draw_fps&lt;/code&gt;, taking about one sixth of &lt;code&gt;main_loop&lt;/code&gt;&amp;rsquo;s run time. That&amp;rsquo;s perhaps a bit larger than I&amp;rsquo;d like, but not large enough to warrant additional effort yet. I&amp;rsquo;ll save my energy for the next set of features.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;During this article, I covered several concepts relating to engine performance: adding a benchmark mode; profiling with &lt;code&gt;dprofpp&lt;/code&gt;; using display lists to optimize slow, repetitive rendering tasks; and using display lists, bitmapped fonts, and averaging to produce a smooth frame rate display. I also added a stub for a triggered events subsystem, which I&amp;rsquo;ll come back to in a future article.&lt;/p&gt;
+
+&lt;p&gt;With these performance improvements, the engine is ready for the next new feature, textured surfaces, which will be the main topic for the next article.&lt;/p&gt;
+
+&lt;p&gt;Until then, enjoy yourself and have fun hacking!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Building a 3D Engine in Perl, Part 3</title>
+      <link>http://localhost:1313/pub/2005/02/17/3d_engine.html/</link>
+      <pubDate>Thu, 17 Feb 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/02/17/3d_engine.html/</guid>
+      <description>
+
+&lt;p&gt;This article is the third in a series aimed at &lt;a href=&#34;http://localhost:1313/authors/geoff-broadwell&#34;&gt;building a full 3D engine in Perl&lt;/a&gt;. The &lt;a href=&#34;http://localhost:1313/pub/2004/12/01/3d_engine.html&#34;&gt;first article&lt;/a&gt; started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The &lt;a href=&#34;http://localhost:1313/pub/2004/12/29/3d_engine.html&#34;&gt;second article&lt;/a&gt; followed with a discussion of time, view animation, SDL events, keyboard handling, and a nice chunk of refactoring.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: see also the next article in the series, &lt;a href=&#34;http://localhost:1313/pub/2005/08/04/3d_engine.html&#34;&gt;profiling your application&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Later in this article, I&amp;rsquo;ll discuss movement of the view position, continue the refactoring work by cleaning up &lt;code&gt;draw_view&lt;/code&gt;, and begin to improve the look of our scene using OpenGL lighting and materials. Before I cover that, your feedback to the previous articles has included a couple of common requests: screenshots and help with porting issues. If you&amp;rsquo;re having problems running SDL_Perl and the &lt;a href=&#34;http://localhost:1313/media/_pub_2005_02_17_3d_engine/perl_opengl_3_examples.tar.gz&#34;&gt;sample code&lt;/a&gt; from these articles on your system, or might be able to help the Mac OS X and Win32 readers, take a look at the next section. Otherwise, skip down to the &lt;a href=&#34;#Screenshots&#34;&gt;Screenshots&lt;/a&gt; section, where the main article begins.&lt;/p&gt;
+
+&lt;h3 id=&#34;known-porting-issues&#34;&gt;Known Porting Issues&lt;/h3&gt;
+
+&lt;h4 id=&#34;general&#34;&gt;General&lt;/h4&gt;
+
+&lt;p&gt;Some versions of SDL_Perl require that the program load SDL::Constants to recognize &lt;code&gt;SDL_QUIT&lt;/code&gt; and other constants. As this change should be transparent to other users, I have merged that into the latest version of the sample code, retroactive to the first use of an SDL constant.&lt;/p&gt;
+
+&lt;h4 id=&#34;freebsd&#34;&gt;FreeBSD&lt;/h4&gt;
+
+&lt;p&gt;See the suggestions at the beginning of the &lt;a href=&#34;http://localhost:1313/pub/2004/12/29/3d_engine.html&#34;&gt;second article&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;mac-os-x&#34;&gt;Mac OS X&lt;/h4&gt;
+
+&lt;p&gt;I spent some time research the porting issues on Mac OS X but am as yet unable to figure out a simple procedure for building SDL_Perl from scratch. Recent emails on the &lt;em&gt;sdl-devel&lt;/em&gt; mailing list seem to indicate that Mac OS X builds for recent SDL_Perl sources are problematic right now, but older releases seem to be even worse. There have been some packaging attempts in the past, but none that I have found so far install a fully configured set of SDL_Perl libraries into the system &lt;code&gt;perl&lt;/code&gt;. I&amp;rsquo;m no Mac porting expert, so I appreciate any help on this; please post a comment in this month&amp;rsquo;s article discussion if you have a suggestion or solution.&lt;/p&gt;
+
+&lt;h4 id=&#34;slackware&#34;&gt;Slackware&lt;/h4&gt;
+
+&lt;p&gt;According to comments by Federico (&lt;code&gt;ironfede&lt;/code&gt;) in last month&amp;rsquo;s &lt;a href=&#34;http://localhost:1313/pub/2004/12/29/3d_engine.html?page=last#thread&#34;&gt;article discussion&lt;/a&gt;, Slackware ships with a version of SDL_Perl that requires SDL::Constants. This is not an issue for the current version of the sample code, which I fixed as mentioned above in the &lt;a href=&#34;#General&#34;&gt;General&lt;/a&gt; issues paragraph.&lt;/p&gt;
+
+&lt;h4 id=&#34;win32&#34;&gt;Win32&lt;/h4&gt;
+
+&lt;p&gt;Win32 porting went as did Mac OS X porting. I was quite excited when chromatic pointed me to some old Win32 PPM packages, but sadly they don&amp;rsquo;t include a working version of SDL::OpenGL. Building manually was &amp;ldquo;interesting&amp;rdquo; at best, as I have no access to a Microsoft compiler and precious little experience using &lt;code&gt;gcc&lt;/code&gt; under Win32. As with the Mac folks, I appreciate any help from the readers. Please post a comment in this month&amp;rsquo;s article discussion if you have a suggestion or solution for your fellows.&lt;/p&gt;
+
+&lt;h3 id=&#34;screenshots&#34;&gt;Screenshots&lt;/h3&gt;
+
+&lt;p&gt;Thankfully, screenshots are much easier to handle than porting issues. I&amp;rsquo;d like the user to be able to take a screenshot whenever desired. The obvious way to accomplish that is to bind the screenshot action to a key; I chose function key &lt;code&gt;F4&lt;/code&gt; at random. First I added it to the &lt;code&gt;bind&lt;/code&gt; hash:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        bind   =&amp;gt; {
+            escape =&amp;gt; &#39;quit&#39;,
+            f4     =&amp;gt; &#39;screenshot&#39;,
+            left   =&amp;gt; &#39;+yaw_left&#39;,
+            right  =&amp;gt; &#39;+yaw_right&#39;,
+            tab    =&amp;gt; &#39;+look_behind&#39;,
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The new key must have an action routine, so I altered that lookup hash as well:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $self-&amp;gt;{lookup}{command_action} = {
+          quit         =&amp;gt; \&amp;amp;action_quit,
+          screenshot   =&amp;gt; \&amp;amp;action_screenshot,
+        &#39;+yaw_left&#39;    =&amp;gt; \&amp;amp;action_move,
+        &#39;+yaw_right&#39;   =&amp;gt; \&amp;amp;action_move,
+        &#39;+look_behind&#39; =&amp;gt; \&amp;amp;action_move,
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I need to wait until drawing completes for the entire scene before I can take a snapshot, but event processing happens before drawing begins. To work around this, I set a state variable marking that the user has requested a screenshot, rather than perform the screenshot immediately:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub action_screenshot
+{
+    my $self = shift;
+
+    $self-&amp;gt;{state}{need_screenshot} = 1;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code checks this state variable in a new line at the end of &lt;code&gt;end_frame&lt;/code&gt;, after the drawing has completed and it has synced the screen with the image written into OpenGL&amp;rsquo;s color buffer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub end_frame
+{
+    my $self = shift;
+
+    $self-&amp;gt;{resource}{sdl_app}-&amp;gt;sync;
+    $self-&amp;gt;screenshot if $self-&amp;gt;{state}{need_screenshot};
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;screenshot&lt;/code&gt; routine is surprisingly short but dense:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub screenshot
+{
+    my $self = shift;
+
+    my $file = &#39;screenshot.bmp&#39;;
+    my $w    = $self-&amp;gt;{conf}{width};
+    my $h    = $self-&amp;gt;{conf}{height};
+
+    glReadBuffer(GL_FRONT);
+    my $data = glReadPixels(0, 0, $w, $h, GL_BGR,
+                            GL_UNSIGNED_BYTE);
+    SDL::OpenGL::SaveBMP($file, $w, $h, 24, $data);
+
+    $self-&amp;gt;{state}{need_screenshot} = 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The routine starts by specifying a filename for the screenshot and gathering the width and height of the screen. The real work begins with the call to &lt;code&gt;glReadBuffer&lt;/code&gt;. Depending on the OpenGL driver, the hardware, and a number of advanced settings, OpenGL may have provided &lt;em&gt;several&lt;/em&gt; color buffers in which to draw and read images. In fact, the default behavior on most systems is to draw onto one buffer, known as the &lt;em&gt;back buffer&lt;/em&gt;, and display a separate buffer, known as the &lt;em&gt;front buffer&lt;/em&gt;. After completing the drawing for each frame, the &lt;code&gt;SDL::App::sync&lt;/code&gt; call moves the image from the back buffer to the front buffer so the user can see it. Behind the scenes, OpenGL generally handles this in one of two different ways, depending on the underlying implementation. Software OpenGL implementations, such as Mesa, copy the data from the back buffer to the front buffer. Hardware-accelerated systems can swap internal pointers so that the back buffer becomes the front buffer and vice versa. As you can imagine, this is much faster.&lt;/p&gt;
+
+&lt;p&gt;This extra work brings a great benefit. Without double buffering, as soon as one frame completes, the next frame immediately clears the screen to black and starts drawing again from scratch. Depending on the relative speed difference between the user&amp;rsquo;s monitor and the application, this would probably appear to the user as a flickering, dark, perpetually half-drawn scene. With double buffering, this problem is almost gone. The front buffer shows a solid stable image while all of the drawing is done on the back buffer. Once the drawing completes, it takes at most a few milliseconds to sync up and start displaying the new frame. To the human eye, the animation appears solid, bright, and (hopefully) smooth.&lt;/p&gt;
+
+&lt;p&gt;In this case, I want to make sure that I take a screenshot of exactly the same image the user sees, so I tell OpenGL that I want to read the image in the front buffer (&lt;code&gt;GL_FRONT&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;At this point, it&amp;rsquo;s safe to read the image data into a Perl buffer in the proper format. The first four arguments to &lt;code&gt;glReadPixels&lt;/code&gt; specify the lower-left corner and size of the sub-image to read. The next two arguments together tell OpenGL what format I would like for the data. I specify that I want to read the entire window and that I want the data in the correct format for a BMP file&amp;ndash;one unsigned byte for each of the red, green, and blue color channels for each pixel, but in reverse order.&lt;/p&gt;
+
+&lt;p&gt;Once I have the data from OpenGL I use the SDL_Perl utility routine &lt;code&gt;SaveBMP&lt;/code&gt; to save the image into a file. The arguments are the filename, image width, image height, color depth (24 bits per pixel), and data buffer. Finally, the routine resets the &lt;code&gt;need_screenshot&lt;/code&gt; state flag and returns.&lt;/p&gt;
+
+&lt;p&gt;At this point you should be able to take a screenshot each time you press the &lt;code&gt;F4&lt;/code&gt; key. Of course, I&amp;rsquo;d like to show several screenshots during this article as the code progresses. The current code overwrites the previous screenshot file every time I request a new one. Because I number each runnable version of the code, I used a quick workaround resulting in a different screenshot filename for each code step. I first load one of the core Perl modules to strip directories from a path:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use File::Basename;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then I use the filename of the script itself as part of my screenshot filename:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $file = basename($0) . &#39;.bmp&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This may be all you need for your application, or you may want to add some code to number each file uniquely. This code is enough to fix my problem, so I&amp;rsquo;ve left the more powerful version as an exercise for the reader.&lt;/p&gt;
+
+&lt;p&gt;Here then is the first screenshot:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step042.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The observant reader will notice that this image is not a BMP file; it&amp;rsquo;s a PNG image, which is both much smaller than a BMP and more friendly to web standards. There are many tools available that can perform this conversion. Any good image editor can do it. In this case that&amp;rsquo;s overkill&amp;ndash;I instead used the &lt;code&gt;convert&lt;/code&gt; program from the &lt;a href=&#34;http://www.imagemagick.org/&#34;&gt;ImageMagick&lt;/a&gt; suite of utilities:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;convert step042.bmp step042.png
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;moving-the-viewpoint&#34;&gt;Moving the Viewpoint&lt;/h3&gt;
+
+&lt;p&gt;That view is more than a tad overplayed. The user can&amp;rsquo;t even move the viewpoint to see the back or sides of the scene. It&amp;rsquo;s time to change that. I started by defining some new key bindings:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        bind   =&amp;gt; {
+            escape =&amp;gt; &#39;quit&#39;,
+            f4     =&amp;gt; &#39;screenshot&#39;,
+            a      =&amp;gt; &#39;+move_left&#39;,
+            d      =&amp;gt; &#39;+move_right&#39;,
+            w      =&amp;gt; &#39;+move_forward&#39;,
+            s      =&amp;gt; &#39;+move_back&#39;,
+            left   =&amp;gt; &#39;+yaw_left&#39;,
+            right  =&amp;gt; &#39;+yaw_right&#39;,
+            tab    =&amp;gt; &#39;+look_behind&#39;,
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I then updated the &lt;code&gt;command_action&lt;/code&gt; &lt;code&gt;lookup&lt;/code&gt; hash to handle these as movement keys:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $self-&amp;gt;{lookup}{command_action} = {
+          quit          =&amp;gt; \&amp;amp;action_quit,
+          screenshot    =&amp;gt; \&amp;amp;action_screenshot,
+        &#39;+move_left&#39;    =&amp;gt; \&amp;amp;action_move,
+        &#39;+move_right&#39;   =&amp;gt; \&amp;amp;action_move,
+        &#39;+move_forward&#39; =&amp;gt; \&amp;amp;action_move,
+        &#39;+move_back&#39;    =&amp;gt; \&amp;amp;action_move,
+        &#39;+yaw_left&#39;     =&amp;gt; \&amp;amp;action_move,
+        &#39;+yaw_right&#39;    =&amp;gt; \&amp;amp;action_move,
+        &#39;+look_behind&#39;  =&amp;gt; \&amp;amp;action_move,
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;init_view&lt;/code&gt; needs to initialize two more velocity components and matching deltas:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $self-&amp;gt;{world}{view} = {
+        position    =&amp;gt; [6, 2, 10],
+        orientation =&amp;gt; [0, 0, 1, 0],
+        d_yaw       =&amp;gt; 0,
+        v_yaw       =&amp;gt; 0,
+        v_forward   =&amp;gt; 0,
+        v_right     =&amp;gt; 0,
+        dv_yaw      =&amp;gt; 0,
+        dv_forward  =&amp;gt; 0,
+        dv_right    =&amp;gt; 0,
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;action_move&lt;/code&gt; needs a new movement speed to match the existing yaw speed and some additions to &lt;code&gt;%move_update&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $speed_move       = 5;
+    my %move_update      = (
+        &#39;+yaw_left&#39;     =&amp;gt; [dv_yaw     =&amp;gt;  $speed_yaw ],
+        &#39;+yaw_right&#39;    =&amp;gt; [dv_yaw     =&amp;gt; -$speed_yaw ],
+        &#39;+move_right&#39;   =&amp;gt; [dv_right   =&amp;gt;  $speed_move],
+        &#39;+move_left&#39;    =&amp;gt; [dv_right   =&amp;gt; -$speed_move],
+        &#39;+move_forward&#39; =&amp;gt; [dv_forward =&amp;gt;  $speed_move],
+        &#39;+move_back&#39;    =&amp;gt; [dv_forward =&amp;gt; -$speed_move],
+        &#39;+look_behind&#39;  =&amp;gt; [d_yaw      =&amp;gt;  180        ],
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So far, the changes are mostly hash updates instead of procedural code; that&amp;rsquo;s a good sign that the existing code design has some more life left. When conceptually simple changes require significant code modification, especially special cases or repetitive blocks of code, it&amp;rsquo;s time to look for a refactoring opportunity. Thankfully, these changes are in initialization and configuration rather than special cases.&lt;/p&gt;
+
+&lt;p&gt;One routine that requires a good bit of new code is &lt;code&gt;update_view&lt;/code&gt;. I added these lines to the end:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $view-&amp;gt;{v_right}        += $view-&amp;gt;{dv_right};
+    $view-&amp;gt;{dv_right}        = 0;
+    $view-&amp;gt;{v_forward}      += $view-&amp;gt;{dv_forward};
+    $view-&amp;gt;{dv_forward}      = 0;
+
+    my $vx                   =  $view-&amp;gt;{v_right};
+    my $vz                   = -$view-&amp;gt;{v_forward};
+    $view-&amp;gt;{position}[0]    += $vx * $d_time;
+    $view-&amp;gt;{position}[2]    += $vz * $d_time;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That routine is beginning to look a bit repetitious and has several copies of very similar lines of code, so it goes on the list of places to refactor in the future. There are not yet enough cases to make the best solution obvious, so I&amp;rsquo;ll hold off for a bit.&lt;/p&gt;
+
+&lt;p&gt;The new code starts by applying the new velocity deltas in the same way that it updates &lt;code&gt;v_yaw&lt;/code&gt; earlier in the routine. It converts the right and forward velocities to velocities along the world axes by noting that the view starts out with &amp;ldquo;forward&amp;rdquo; parallel to the negative Z axis and &amp;ldquo;right&amp;rdquo; parallel to the positive X axis. It then multiplies the X and Z velocities by the time delta to arrive at a position change, which it adds into the current view position.&lt;/p&gt;
+
+&lt;p&gt;This version of the code works fine as long as the user doesn&amp;rsquo;t rotate the view. When the view rotates, &amp;ldquo;forward&amp;rdquo; and &amp;ldquo;right&amp;rdquo; don&amp;rsquo;t match the new view directions. They still point down the -Z and +X axes respectively, which can prove very disorienting for high rotations. The solution is a bit of trigonometry. The idea is treat the initial X and Z velocities as components of the total velocity vector, and rotate that vector through the same angle that the user rotated the view:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $vx                   =  $view-&amp;gt;{v_right};
+    my $vz                   = -$view-&amp;gt;{v_forward};
+    my $angle                = $view-&amp;gt;{orientation}[0];
+    ($vx, $vz)               = rotate_xz($angle, $vx, $vz);
+    $view-&amp;gt;{position}[0]    += $vx * $d_time;
+    $view-&amp;gt;{position}[2]    += $vz * $d_time;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The two middle lines are the new ones. They call &lt;code&gt;rotate_xz&lt;/code&gt; to do the vector rotation work and then set &lt;code&gt;$vx&lt;/code&gt; and &lt;code&gt;$vz&lt;/code&gt; to the returned components of the rotated velocity vector. &lt;code&gt;rotate_xz&lt;/code&gt; is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub rotate_xz
+{
+    my ($angle, $x, $z) = @_;
+
+    my $radians = $angle * PI / 180;
+    my $cos     = cos($radians);
+    my $sin     = sin($radians);
+    my $rot_x   =  $cos * $x + $sin * $z;
+    my $rot_z   = -$sin * $x + $cos * $z;
+
+    return ($rot_x, $rot_z);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After converting the angle from degrees to radians, the code calculates and saves the sine and cosine of the angle. It then calculates the rotated velocity components given the original unrotated components. Finally, it returns the rotated components to the caller.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll skip the derivation here (you&amp;rsquo;re welcome), but if you&amp;rsquo;re curious about how and why this calculation performs a rotation, there are numerous books that explain the wonders of vector mathematics in amazing detail. O&amp;rsquo;Reilly&amp;rsquo;s &lt;a href=&#34;http://www.oreilly.com/catalog/physicsgame/&#34;&gt;Physics for Game Developers&lt;/a&gt;, by David M. Bourg, includes a high-level discussion of rotation. Charles River Media&amp;rsquo;s &lt;a href=&#34;http://www.charlesriver.com/titles/lengyelmath2.html&#34;&gt;Mathematics for 3D Game Programming &amp;amp; Computer Graphics&lt;/a&gt;, by Eric Lengyel, includes a deeper discussion though I, for one, have college math flashbacks every time I read it. Speaking of which, any college textbook on linear algebra should include as much detail as you desire.&lt;/p&gt;
+
+&lt;p&gt;This code requires a definition for &lt;code&gt;PI&lt;/code&gt;, provided by the following line near the top of the program, right after requesting warnings from Perl:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use constant PI =&amp;gt; 4 * atan2(1, 1);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;constant&lt;/code&gt; module evaluates possibly complex calculations during the compile phase and then converts them into constants at runtime. The above calculation takes advantage of a standard trig identity to derive a value for &lt;code&gt;PI&lt;/code&gt; accurate to as many digits as the system can deliver.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;update_view&lt;/code&gt; now does the right thing, no matter what angle the view is facing. It doesn&amp;rsquo;t take long to find a more interesting view:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step044.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;let-there-be-lighting&#34;&gt;Let There Be Lighting!&lt;/h3&gt;
+
+&lt;p&gt;Okay, so maybe that&amp;rsquo;s not &lt;em&gt;much&lt;/em&gt; more interesting, admittedly. This scene needs a little mood lighting instead of the flat colors I&amp;rsquo;ve used so far (especially because they make it hard to see the shape of each object clearly). As a first step, I turned on OpenGL&amp;rsquo;s lighting system with a new line at the end of &lt;code&gt;prep_frame&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    glEnable(GL_LIGHTING);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step045.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Far from lighting the scene, the view is now almost black. If you look very carefully and your monitor and room lighting are forgiving, you should be able to just make out the objects, which are very dark gray on the black background. In order to see anything, I must enable both &lt;code&gt;GL_LIGHTING&lt;/code&gt; and one or more lights to provide light to the scene. Without a light, the objects are dark gray instead of true black because OpenGL, by default, applies a very small amount of light to the entire scene, known as &lt;em&gt;ambient&lt;/em&gt; light. To show the objects more brightly, I turned on the first OpenGL light with another new line at the end of &lt;code&gt;prep_frame&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    glEnable(GL_LIGHT0);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step046.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now the objects are brighter, but they&amp;rsquo;re still just gray. When calculating colors with lighting enabled, OpenGL uses a completely different set of parameters from the colors used when lighting is disabled. Together these new parameters make up a &lt;em&gt;material&lt;/em&gt;. Complex interactions between the parameters that make up a material can result in very interesting color effects, but in this case, I&amp;rsquo;m not trying to create a complex effect. I want my objects to have their old colors back without worrying about the full complexity that materials provide. Thankfully, OpenGL provides a way to state that the current material should default to the current color. To do this, I add yet another line to the end of &lt;code&gt;prep_frame&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    glEnable(GL_COLOR_MATERIAL);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step047.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;At this point, the objects once again have color, but each of the faces is still the same shade rather than appearing to be lit by a single light source somewhere. The problem is that OpenGL does not know whether each face points toward or away from the light and, if so, by how much. The angle between the face and the light determines how much light falls on the surface and, therefore, how bright it should appear. It is possible to calculate the angle of each face in my scene from the location of its vertices, but this is not always the right thing to do (especially when dealing with curved surfaces), so OpenGL does not calculate this internally. Instead, the program needs to do the direction calculations and tell OpenGL the result, known as the &lt;em&gt;normal vector&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Luckily, in &lt;code&gt;draw_cube&lt;/code&gt; the faces align with the coordinate axes so that each face points down one of them (positive or negative X, Y, or Z). I don&amp;rsquo;t have to do any calculation here, just tell OpenGL which normal vector to associate with each face:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub draw_cube
+{
+    # A simple cube
+    my @indices = qw( 4 5 6 7   1 2 6 5   0 1 5 4
+                      0 3 2 1   0 4 7 3   2 3 7 6 );
+    my @vertices = ([-1, -1, -1], [ 1, -1, -1],
+                    [ 1,  1, -1], [-1,  1, -1],
+                    [-1, -1,  1], [ 1, -1,  1],
+                    [ 1,  1,  1], [-1,  1,  1]);
+    my @normals = ([0, 0,  1], [ 1, 0, 0], [0, -1, 0],
+                   [0, 0, -1], [-1, 0, 0], [0,  1, 0]);
+
+    glBegin(GL_QUADS);
+
+    foreach my $face (0 .. 5) {
+        my $normal = $normals[$face];
+        glNormal(@$normal);
+
+        foreach my $vertex (0 .. 3) {
+            my $index  = $indices[4 * $face + $vertex];
+            my $coords = $vertices[$index];
+            glVertex(@$coords);
+        }
+    }
+    glEnd;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The new lines are the definition of the &lt;code&gt;@normals&lt;/code&gt; array and the two lines at the top of the &lt;code&gt;$face&lt;/code&gt; loop that select the correct normal for each face and pass it to OpenGL using &lt;code&gt;glNormal&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The boxes are now shaded reasonably and it&amp;rsquo;s clear that the light is coming from somewhere behind the viewer; the front faces are brighter than the sides. Unfortunately, the axes are now dark again:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step048.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;I did not specify any normal for the axis lines because the concept doesn&amp;rsquo;t make a whole lot of sense for lines or points. However, with lighting enabled, OpenGL needs a set of normals for every lit object, so it goes back to the current state and uses the most recently defined normal. For the very first frame this is the default normal, which happens to point towards the default first light, but for succeeding frames it will be the last normal set in &lt;code&gt;draw_cube&lt;/code&gt;. The latter definitely does not point toward the light, and the axes end up dark.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;d rather the axis lines didn&amp;rsquo;t take part in lighting calculations at all and kept their original bright colors, regardless of any lighting (or lack thereof) in the scene. To do this, I removed the line that enables &lt;code&gt;GL_LIGHTING&lt;/code&gt; in &lt;code&gt;prep_frame&lt;/code&gt; and inserted two new lines near the top of &lt;code&gt;draw_view&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub draw_view
+{
+    glDisable(GL_LIGHTING);
+
+    draw_axes();
+
+    glEnable(GL_LIGHTING);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now lighting is off before drawing the axis lines and back on afterward. The axis lines have bright colors again, but rotating the view exposes a new problem. When the view rotates, the direction of the light changes as well:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step049.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Because of the way that OpenGL calculates light position and direction, any lights defined before the view is set are fixed to the viewer like the light on a miner&amp;rsquo;s helmet. To fix a light relative to the simulated world, define the light instead after setting the view. I removed the line enabling &lt;code&gt;GL_LIGHT0&lt;/code&gt; in &lt;code&gt;prep_frame&lt;/code&gt; and moved it to the new routine &lt;code&gt;set_world_lights&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub set_world_lights
+{
+    glEnable(GL_LIGHT0);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I then updated &lt;code&gt;draw_frame&lt;/code&gt; to call the new routine after setting the view:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub draw_frame
+{
+    my $self = shift;
+
+    $self-&amp;gt;set_projection_3d;
+    $self-&amp;gt;set_view_3d;
+    $self-&amp;gt;set_world_lights;
+    $self-&amp;gt;draw_view;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unfortunately, this doesn&amp;rsquo;t work. OpenGL only updates its internal state with the light&amp;rsquo;s position and direction when they change explicitly, not when the light is enabled or disabled. I&amp;rsquo;ve never set the light&amp;rsquo;s parameters explicitly, so the original default still stands. This issue is easy to fix with another line in &lt;code&gt;set_world_lights&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub set_world_lights
+{
+    glLight(GL_LIGHT0, GL_POSITION, 0.0, 0.0, 1.0, 0.0);
+
+    glEnable(GL_LIGHT0);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In one of the few OpenGL interface decisions that actively annoys me, the new line sets the &lt;em&gt;direction&lt;/em&gt; of the light, not its position. OpenGL defines all lights as one of two types: &lt;em&gt;directional&lt;/em&gt; or &lt;em&gt;positional&lt;/em&gt;. OpenGL assumes directional lights are very far away so that anywhere in the scene the direction from the light to each object is effectively the same. Positional lights are nearer and OpenGL must calculate the direction from the light to every vertex of every object in the scene independently. As you can imagine, this is much slower, but produces more interesting lighting effects.&lt;/p&gt;
+
+&lt;p&gt;The key to choosing between these two types is the last parameter of the &lt;code&gt;glLight&lt;/code&gt; call above. If this parameter is &lt;code&gt;0&lt;/code&gt;, the light is directional and the other three coordinates specify the direction from which the light comes. In this case, I&amp;rsquo;ve specified that the light should come &lt;em&gt;from&lt;/em&gt; the +Z direction. If the last parameter is &lt;code&gt;1&lt;/code&gt;, then OpenGL makes the light positional and uses the other three coordinates to set the light&amp;rsquo;s position within the scene. For now, I&amp;rsquo;ll skip the gory details of what happens when a value other than &lt;code&gt;0&lt;/code&gt; or &lt;code&gt;1&lt;/code&gt; is used, but in short, the light will be positional and extra calculations determine the actual position used. Most of the time it&amp;rsquo;s best to ignore that case.&lt;/p&gt;
+
+&lt;p&gt;You may wonder why I explicitly specified &lt;code&gt;0.0&lt;/code&gt; and &lt;code&gt;1.0&lt;/code&gt; instead of &lt;code&gt;0&lt;/code&gt; and &lt;code&gt;1&lt;/code&gt;. This is a workaround for a bug in &lt;code&gt;glLight&lt;/code&gt; in some versions of SDL_Perl when it is presented with integer arguments instead of floating-point arguments.&lt;/p&gt;
+
+&lt;p&gt;With this line added, the light now stays fixed in the world, even when the user moves and rotates the view:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step051.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;a-lantern&#34;&gt;A Lantern&lt;/h3&gt;
+
+&lt;p&gt;Of course, sometimes a light connected to the viewer is exactly the intention. For example, perhaps the desired effect is for the player to hold a lantern or flashlight to light dark places. Both of these are localized light sources that light nearby objects quite a bit, but distant objects only a little. The primary difference between them is that a flashlight and certain types of lanterns cast light primarily in one direction, often in a cone. Most lanterns, torches, and similar light sources cast light in all directions (barring shadows from handles, fuel tins, and the like).&lt;/p&gt;
+
+&lt;p&gt;Non-directed light is a little simpler to implement, so I&amp;rsquo;ll start with lantern light. I wanted the light rooted at the viewer&amp;rsquo;s position, so I defined the light before setting the view:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub draw_frame
+{
+    my $self = shift;
+
+    $self-&amp;gt;set_projection_3d;
+    $self-&amp;gt;set_eye_lights;
+    $self-&amp;gt;set_view_3d;
+    $self-&amp;gt;set_world_lights;
+    $self-&amp;gt;draw_view;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I refer to viewer-fixed lights as &lt;em&gt;eye lights&lt;/em&gt; because OpenGL refers to the coordinate system it uses for lights as &lt;em&gt;eye coordinates&lt;/em&gt;, and a light defined this way as maintaining a particular position &amp;ldquo;relative to the eye.&amp;rdquo; Here&amp;rsquo;s &lt;code&gt;set_eye_lights&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub set_eye_lights
+{
+    glLight(GL_LIGHT1, GL_POSITION, 0.0, 0.0, 1.0, 0.0);
+
+    glEnable(GL_LIGHT1);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here I set the second light exactly the same way I set the first. Note that it doesn&amp;rsquo;t matter that I actually define the second light in my program before the first. Each OpenGL light is independently numbered and always keeps the same number, rather than acting like a stack or queue numbered by order of use.&lt;/p&gt;
+
+&lt;p&gt;Sadly, the new code doesn&amp;rsquo;t seem to have any effect at all. In reality, there really is a new light shining on the scene&amp;ndash;unlike &lt;code&gt;GL_LIGHT0&lt;/code&gt;, which defaults to shining bright white, all of the other lights default to black and provide no new light to the scene. The solution is to set another parameter of the light:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub set_eye_lights
+{
+    glLight(GL_LIGHT1, GL_POSITION, 0.0, 0.0, 1.0, 0.0);
+    glLight(GL_LIGHT1, GL_DIFFUSE,  1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_LIGHT1);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The front faces of each object should appear considerably brighter. Moving around the scene shows that the eye light brightens a surface only dimly lit by the world light:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step053.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;If you watch carefully, however, you&amp;rsquo;ll notice that the lighting varies by the view rotation&amp;ndash;not position. I defined the light as directional with the light coming from behind the viewer, rather than positional, with the light coming from the viewer directly. I hinted at the fix earlier&amp;ndash;changing the &lt;code&gt;GL_POSITION&lt;/code&gt; parameter as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    glLight(GL_LIGHT1, GL_POSITION, 0.0, 0.0, 0.0, 1.0);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The light now comes from &lt;code&gt;(0, 0, 0)&lt;/code&gt; in eye coordinates, right at the viewpoint. Moving around and rotating shows that this version has the intended effect.&lt;/p&gt;
+
+&lt;p&gt;The simulated lantern still shines as brightly on far-away objects as it does on near ones. A real lantern&amp;rsquo;s light falls off rapidly with distance from the lantern. OpenGL can do this with another setting:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub set_eye_lights
+{
+    glLight(GL_LIGHT1, GL_POSITION, 0.0, 0.0, 0.0, 1.0);
+    glLight(GL_LIGHT1, GL_DIFFUSE,  1.0, 1.0, 1.0, 1.0);
+    glLight(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.5);
+
+    glEnable(GL_LIGHT1);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This case tells OpenGL to include a dimming term in its equations proportional to the distance between the light and the object. Physics-minded readers will point out that physically accurate dimming is proportional to the square of the distance, and OpenGL does allow this using &lt;code&gt;GL_QUADRATIC_ATTENUATION&lt;/code&gt;. However, a host of factors (including the lighting equations that OpenGL uses and the non-linear effects of the graphics hardware, monitor, and human eye) make this more accurate dimming look rather odd. Linear dimming turns out to look better in many cases, so that&amp;rsquo;s what I used here. It is also possible to combine different dimming types, so that the dimming appears linear for nearby objects and quadratic for distant ones, which you may find a better tradeoff. The &lt;code&gt;0.5&lt;/code&gt; setting tells OpenGL how strong the linear dimming effect should be for my scene.&lt;/p&gt;
+
+&lt;p&gt;Moving around the scene, you should be able to see the relatively subtle dimming effect in action. Don&amp;rsquo;t be afraid to leave it subtle instead of turning the dimming effect way up. Some moods call for striking lighting effects, while others call for lighting effects that the viewer notices only subconsciously. In some visualization applications, lighting subtlety is a great virtue, allowing the human visual system&amp;rsquo;s amazing processing power to come to grips with a complex scene without being overwhelmed.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-flashlight&#34;&gt;A Flashlight&lt;/h3&gt;
+
+&lt;p&gt;I really happen to like the way a flashlight casts its cone of light, so I converted the omnidirectional light of the lantern to a directed cone. OpenGL refers to this type of light as a &lt;em&gt;spotlight&lt;/em&gt; and includes several light parameters to define them. The first change is a new setting in &lt;code&gt;set_eye_lights&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    glLight(GL_LIGHT1, GL_SPOT_CUTOFF, 15.0);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This sets the angle between the center of the light beam and the edges of the cone. OpenGL accepts either 180 degrees (omnidirectional) or any value between 0 and 90 degrees (from a laser beam to a hemisphere of light). In this case, I chose a centerline-to-edge angle of 15 degrees, making a nice 30-degree-wide cone of light.&lt;/p&gt;
+
+&lt;p&gt;This change indeed limits the cone of light, but also reveals an ugly artifact. Move to a point just in front of the left front corner of the white cube and rotate the view to pan the light across the yellow box. You&amp;rsquo;ll see the light jump nastily from corner to corner, even disappearing entirely in between. Even when a corner is lit, the shape of the light is not very conelike:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step056.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;OpenGL&amp;rsquo;s standard lighting model only performs the lighting calculations at each vertex, interpolating the results in between. For models that have many small faces and a resulting high density of vertices, this works relatively well. It breaks down nastily in scenes containing objects with large faces and few vertices, especially when a positional light is close to an object. Spotlights make the problem even more apparent, as they can easily shine &lt;em&gt;between&lt;/em&gt; two vertices without lighting either of them; the polygon then appears uniformly dark.&lt;/p&gt;
+
+&lt;h3 id=&#34;ode-to-rush&#34;&gt;Ode to Rush&lt;/h3&gt;
+
+&lt;p&gt;Advanced OpenGL functionality paired with recent hardware can solve this problem with per-pixel lighting calculations. Older hardware can fake it with light maps and similar tricks. Rather than using advanced functionality, I&amp;rsquo;ll use a simpler method for improving the lighting, known as &lt;em&gt;subdivisions&lt;/em&gt;. (Those of you scratching your heads over the Rush reference can now breathe a collective sigh of relief.) Subdivisions have their own problems, as I&amp;rsquo;ll show later, but those issues explain a lot about the design of graphics APIs, so they&amp;rsquo;re worth a look.&lt;/p&gt;
+
+&lt;p&gt;As the name implies, the basic idea is to subdivide each face into many smaller faces, each with its own set of vertices. For curved objects such as spheres and cylinders, this is essential so that nearby objects appear to curve smoothly. For objects with large flat faces, such as boxes and pyramids, this merely has the side effect of forcing the per-vertex lighting calculations to be done many times across each face.&lt;/p&gt;
+
+&lt;p&gt;Before I can use subdivided faces, I need to prepare by refactoring &lt;code&gt;draw_cube&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub draw_cube
+{
+    # A simple cube
+    my @indices = qw( 4 5 6 7   1 2 6 5   0 1 5 4
+                      0 3 2 1   0 4 7 3   2 3 7 6 );
+    my @vertices = ([-1, -1, -1], [ 1, -1, -1],
+                    [ 1,  1, -1], [-1,  1, -1],
+                    [-1, -1,  1], [ 1, -1,  1],
+                    [ 1,  1,  1], [-1,  1,  1]);
+    my @normals = ([0, 0,  1], [ 1, 0, 0], [0, -1, 0],
+                   [0, 0, -1], [-1, 0, 0], [0,  1, 0]);
+
+    foreach my $face (0 .. 5) {
+        my $normal = $normals[$face];
+        my @corners;
+
+        foreach my $vertex (0 .. 3) {
+            my $index  = $indices[4 * $face + $vertex];
+            my $coords = $vertices[$index];
+            push @corners, $coords;
+        }
+        draw_quad_face(normal    =&amp;gt; $normal,
+                       corners   =&amp;gt; \@corners);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instead of performing the OpenGL calls directly in &lt;code&gt;draw_cube&lt;/code&gt;, it now calls &lt;code&gt;draw_quad_face&lt;/code&gt;. For each large face it creates a new &lt;code&gt;@corners&lt;/code&gt; array filled with the vertex coordinates of the corners of that face. It then passes that array and the face normal to &lt;code&gt;draw_quad_face&lt;/code&gt;, defined as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub draw_quad_face
+{
+    my %args    = @_;
+    my $normal  = $args{normal};
+    my $corners = $args{corners};
+
+    glBegin(GL_QUADS);
+    glNormal(@$normal);
+
+    foreach my $coords (@$corners) {
+        glVertex(@$coords);
+    }
+    glEnd;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This function performs exactly the OpenGL operations that &lt;code&gt;draw_cube&lt;/code&gt; used to do. I&amp;rsquo;ve also used a different argument-passing style for this routine than I have previously. In this case, I pass named arguments because I know that I will add at least one more argument very soon and that there&amp;rsquo;s a pretty good chance I&amp;rsquo;ll want to add more later. When the arguments to a routine are likely to change over time, and especially when callers might want to specify only a few arguments and allow the rest to take on reasonable defaults, named arguments are usually a better choice. The arguments can either be a hashref or a list stuffed into a hash. This time, I chose the latter method.&lt;/p&gt;
+
+&lt;p&gt;After refactoring comes testing, and a quick run showed that everything worked as expected. Safe in that knowledge, I rewrote &lt;code&gt;draw_quad_face&lt;/code&gt; to subdivide each face:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub draw_quad_face
+{
+    my %args    = @_;
+    my $normal  = $args{normal};
+    my $corners = $args{corners};
+    my $div     = $args{divisions} || 10;
+    my ($a, $b, $c, $d) = @$corners;
+
+    # NOTE: ASSUMES FACE IS A PARALLELOGRAM
+
+    my $s_ab = calc_vector_step($a, $b, $div);
+    my $s_ad = calc_vector_step($a, $d, $div);
+
+    glNormal(@$normal);
+    for my $strip (0 .. $div - 1) {
+        my @v = ($a-&amp;gt;[0] + $strip * $s_ab-&amp;gt;[0],
+                 $a-&amp;gt;[1] + $strip * $s_ab-&amp;gt;[1],
+                 $a-&amp;gt;[2] + $strip * $s_ab-&amp;gt;[2]);
+
+        glBegin(GL_QUAD_STRIP);
+        for my $quad (0 .. $div) {
+            glVertex(@v);
+            glVertex($v[0] + $s_ab-&amp;gt;[0],
+                     $v[1] + $s_ab-&amp;gt;[1],
+                     $v[2] + $s_ab-&amp;gt;[2]);
+
+            $v[0] += $s_ad-&amp;gt;[0];
+            $v[1] += $s_ad-&amp;gt;[1];
+            $v[2] += $s_ad-&amp;gt;[2];
+        }
+        glEnd;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The new routine starts by adding the new optional argument &lt;code&gt;divisions&lt;/code&gt;, which defaults to 10. This specifies how many subdivisions the face should have both &amp;ldquo;down&amp;rdquo; and &amp;ldquo;across&amp;rdquo;; the actual number of sub-faces is the square of this number. For the default 10 divisions, that comes to 100 sub-faces for each large face, so each cube has 600 sub-faces.&lt;/p&gt;
+
+&lt;p&gt;The next line labels the corners in counterclockwise order. This puts corner A diagonally across from corner C, with B on one side and D on the other.&lt;/p&gt;
+
+&lt;p&gt;As the comment on the next line indicates, I&amp;rsquo;ve simplified the math considerably by assuming that the face is at least a parallelogram. With this simplification, I can calculate the steps for one division along sides AB and AD and use these steps to position every sub-face across the entire large face.&lt;/p&gt;
+
+&lt;p&gt;I can&amp;rsquo;t just calculate the step as a simple distance to move, because I have no idea which direction each edge is pointing and wouldn&amp;rsquo;t know which way to move for each step. Instead, I calculate the vector difference between the vertices at each end of the edge and divide that by the number of divisions. The code does the same calculation twice, so I&amp;rsquo;ve extracted it into a separate routine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub calc_vector_step
+{
+    my ($v1, $v2, $div) = @_;
+
+    return [($v2-&amp;gt;[0] - $v1-&amp;gt;[0]) / $div,
+            ($v2-&amp;gt;[1] - $v1-&amp;gt;[1]) / $div,
+            ($v2-&amp;gt;[2] - $v1-&amp;gt;[2]) / $div];
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Returning to &lt;code&gt;draw_quad_face&lt;/code&gt;, it stores the vector steps in &lt;code&gt;$s_ab&lt;/code&gt; (the step along the AB side) and &lt;code&gt;$s_ad&lt;/code&gt; (the step along the AD side). Next it sets the current normal, which for a flat face remains the same across its entirety.&lt;/p&gt;
+
+&lt;p&gt;Finally, I can begin to define the sub-faces themselves. I&amp;rsquo;ve taken advantage of the OpenGL quad strip primitive to draw the sub-faces as a series of parallel strips extending from the AB edge to the CD edge. For each strip, I first need to calculate the location of its starting vertex. I know this is on the AB edge, so the code starts at A and adds an AB step for each completed strip. For the first strip, this puts the starting vertex at A. For the last strip, the starting vertex will be one step (one strip width) away from B. It initializes the current vertex &lt;code&gt;@v&lt;/code&gt; with the starting vertex and will keep it updated as it moves along each strip.&lt;/p&gt;
+
+&lt;p&gt;It then begins a strip of quads with &lt;code&gt;glBegin(GL_QUAD_STRIP)&lt;/code&gt;. To define the strip, I&amp;rsquo;ve specified the locations of each pair of vertices across from each other along its length. For each pair, it uses the current vertex and a calculated vertex one step further along the AB direction. The code then moves the current vertex one step along the length of the strip (the AD direction). Once the strip is complete, it ends it with &lt;code&gt;glEnd&lt;/code&gt; and loops again for the next strip.&lt;/p&gt;
+
+&lt;p&gt;All of this complexity makes quite a visual difference:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step058.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s clear that the light has a definite shape to it, but the lighting is so jagged that it&amp;rsquo;s distracting. One way to fix this is to increase the number of divisions, making smaller sub-faces. This requires a simple addition to the &lt;code&gt;draw_quad_face&lt;/code&gt; call in &lt;code&gt;draw_cube&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        draw_quad_face(normal    =&amp;gt; $normal,
+                       corners   =&amp;gt; \@corners,
+                       divisions =&amp;gt; 30);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The result is quite a bit less jagged:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step059.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, the jaggies are smaller but still obviously there&amp;ndash;and the closer the viewer is to an object the bigger they appear. There are also nine times as many sub-faces to draw (&lt;sup&gt;30&lt;/sup&gt;&amp;frasl;&lt;sub&gt;10&lt;/sub&gt; squared) and the program now runs considerably slower. If you&amp;rsquo;re lucky enough to have a recent system with fast video hardware and don&amp;rsquo;t notice the slowdown, use 100 or so for the number of divisions. You&amp;rsquo;ll probably see it.&lt;/p&gt;
+
+&lt;h3 id=&#34;softening-the-edges&#34;&gt;Softening the Edges&lt;/h3&gt;
+
+&lt;p&gt;Clearly, increasing the number of subdivisions only goes so far to improve the rendering, while simultaneously costing dearly in performance. I&amp;rsquo;ll try a different tack and go back to what I know about a flashlight. Most flashlights cast a beam that is brighter in the center than at the edge. (Some have a dark circle in the very center, but I&amp;rsquo;m ignoring that for now.) I can take advantage of this to create a more accurate image and also soften the large jaggies considerably. First, I backed out my change to the &lt;code&gt;draw_quad_face&lt;/code&gt; call:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        draw_quad_face(normal    =&amp;gt; $normal,
+                       corners   =&amp;gt; \@corners);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then I changed one spotlight parameter for the flashlight in &lt;code&gt;set_eye_lights&lt;/code&gt; and added another:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    glLight(GL_LIGHT1, GL_SPOT_CUTOFF,   30.0);
+    glLight(GL_LIGHT1, GL_SPOT_EXPONENT, 80.0);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With the change to &lt;code&gt;GL_SPOT_CUTOFF&lt;/code&gt;, I&amp;rsquo;ve widened the beam to twice its original angle. At the same time, I&amp;rsquo;ve told OpenGL to make it quite a bit dimmer at the edges using &lt;code&gt;GL_SPOT_EXPONENT&lt;/code&gt;, hopefully hiding any jaggies. The new parameter has a somewhat confusing name that refers to the details of the equation that determines the strength of the off-center dimming effect. In a theme seen throughout the mathematics of computer graphics, the dimming is a function of the cosine of the angle between the center line and the vertex being lit. In fact, the dimming factor is the cosine raised to the exponent specified by &lt;code&gt;GL_SPOT_EXPONENT&lt;/code&gt;. Why use the cosine of the angle? It turns out to be cheap to calculate&amp;ndash;cheaper than calculating the angle itself&amp;ndash;and also gives a nice smooth effect.&lt;/p&gt;
+
+&lt;p&gt;With luck, the new beam will appear about the same width to the eye as the old one:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step060.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Good enough. The image looks better without the massive performance strain of high subdivision levels.&lt;/p&gt;
+
+&lt;h3 id=&#34;refactoring-drawing&#34;&gt;Refactoring Drawing&lt;/h3&gt;
+
+&lt;p&gt;There&amp;rsquo;s still something not right, but it will take a few more objects in the scene to show it. &lt;code&gt;draw_view&lt;/code&gt; is already a repetitive hardcoded mess and it&amp;rsquo;s been on the &amp;ldquo;to be refactored&amp;rdquo; list for a while, so now seems a good time to clean it up before I add to the mess.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;draw_view&lt;/code&gt; performs a series of transformations and state settings for each object drawn. I want to move to a more data-driven design, with each object in the simulated world represented by a data structure specifying the needed transformations and settings. Eventually, these structures may become full-fledged blessed objects, but I&amp;rsquo;ll start simple for now.&lt;/p&gt;
+
+&lt;p&gt;I initialized the data structures in &lt;code&gt;init_objects&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub init_objects
+{
+    my $self = shift;
+
+    my @objects = (
+        {
+            draw        =&amp;gt; \&amp;amp;draw_axes,
+        },
+        {
+            lit         =&amp;gt; 1,
+            color       =&amp;gt; [ 1, 1,  1],
+            position    =&amp;gt; [12, 0, -4],
+            scale       =&amp;gt; [ 2, 2,  2],
+            draw        =&amp;gt; \&amp;amp;draw_cube,
+        },
+        {
+            lit         =&amp;gt; 1,
+            color       =&amp;gt; [ 1, 1, 0],
+            position    =&amp;gt; [ 4, 0, 0],
+            orientation =&amp;gt; [40, 0, 0, 1],
+            scale       =&amp;gt; [.2, 1, 2],
+            draw        =&amp;gt; \&amp;amp;draw_cube,
+        },
+    );
+
+    $self-&amp;gt;{world}{objects} = \@objects;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each hash includes the arguments to the various transformations to apply to it, along with a reference to the routine that actually draws the object and a flag indicating whether the object should be subject to OpenGL lighting. The object array then becomes a new part of the world hash for easy access later.&lt;/p&gt;
+
+&lt;p&gt;I called this routine at the end of &lt;code&gt;init&lt;/code&gt; as usual:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $self-&amp;gt;init_objects;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I also replaced &lt;code&gt;draw_view&lt;/code&gt; with a version that interprets the data into a series of OpenGL calls:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub draw_view
+{
+    my $self    = shift;
+
+    my $objects = $self-&amp;gt;{world}{objects};
+
+    foreach my $o (@$objects) {
+        $o-&amp;gt;{lit} ? glEnable (GL_LIGHTING)
+                  : glDisable(GL_LIGHTING);
+
+        glColor(@{$o-&amp;gt;{color}})        if $o-&amp;gt;{color};
+
+        glPushMatrix;
+
+        glTranslate(@{$o-&amp;gt;{position}}) if $o-&amp;gt;{position};
+        glRotate(@{$o-&amp;gt;{orientation}}) if $o-&amp;gt;{orientation};
+        glScale(@{$o-&amp;gt;{scale}})        if $o-&amp;gt;{scale};
+
+        $o-&amp;gt;{draw}-&amp;gt;();
+
+        glPopMatrix;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The new routine iterates over the world object array, performing each requested operation. It either skips or defaults any unspecified values. First up is the choice to enable or disable &lt;code&gt;GL_LIGHTING&lt;/code&gt;, followed by setting the current color if requested. The code next checks for and applies the usual transformations and finally, calls the object draw routine.&lt;/p&gt;
+
+&lt;p&gt;For simplicity and robustness, I&amp;rsquo;ve unconditionally wrapped the transformations and draw routine in a matrix push/pop pair rather than trying to detect whether they need the push and pop. OpenGL implementations tend to be highly optimized with native code, and any detection I did would be Perl. Chances are good that such an &amp;ldquo;optimization&amp;rdquo; would instead slow things down. This way, my code stays cleaner and even a misbehaving draw routine that performed transformations internally without cleaning up afterwards will not affect the next object drawn.&lt;/p&gt;
+
+&lt;p&gt;A quick test showed that this refactored version still worked. Now I could add a few more objects to demonstrate the remaining lighting issue. I specified several more boxes programmatically by inserting a new loop before the end of &lt;code&gt;init_objects&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    foreach my $num (1 .. 5) {
+        my $scale =   $num * $num / 15;
+        my $pos   = - $num * 2;
+        push @objects, {
+            lit         =&amp;gt; 1,
+            color       =&amp;gt; [ 1, 1,  1],
+            position    =&amp;gt; [$pos, 2.5, 0],
+            orientation =&amp;gt; [30, 1, 0, 0],
+            scale       =&amp;gt; [1, 1, $scale],
+            draw        =&amp;gt; \&amp;amp;draw_cube,
+        };
+    }
+
+    $self-&amp;gt;{world}{objects} = \@objects;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For each box, just two parameters vary: position and Z scale. I chose the position to set each box next to the last, progressing along the -X axis. The scale is set so that the height and width of each box remains the same, but the depths vary from very shallow for the first box to fairly deep for the last.&lt;/p&gt;
+
+&lt;p&gt;The loop specifies five boxes in total and begins by calculating the X position and Z scaling (depth) for the current box. The next few lines simply create a new hash for the new box and push it onto the object array.&lt;/p&gt;
+
+&lt;p&gt;Finally, there was one last change&amp;ndash;the bright world light overwhelms the problematic effect from the flashlight. This is an easy fix; I commented out the line that enables it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub set_world_lights
+{
+    glLight(GL_LIGHT0, GL_POSITION, 0.0, 0.0, 1.0, 0.0);
+
+#     glEnable(GL_LIGHT0);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By panning to the left across the scene until the viewpoint is in front of the new boxes, the problem becomes obvious:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step062.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The brightness of the lighting varies immensely depending on the depth of the box! This rather unintuitive outcome is an unfortunate side effect of how OpenGL must handle normals. A normal specifies the direction of the surface associated with a vertex. If a rigid object rotates, its surfaces rotate, so all of its normals must rotate as well. OpenGL handles this by transforming normal coordinates as it would vertex coordinates. This runs into trouble with any transformations other than translation and rotation. OpenGL calculations assume that normals are normalized (have unit length). Scaling the normal breaks this assumption and results in the effect seen above.&lt;/p&gt;
+
+&lt;p&gt;To fix this, I told OpenGL that normals may not have unit length and that OpenGL must normalize them before other calculations are performed. This is not the default behavior because of the performance cost of normalizing each vector. An application that can ensure normals are always unit length after transformation can keep the default and run a little faster. I want to allow arbitrary scaling of objects, so I enabled automatic normalization with another line at the end of &lt;code&gt;prep_frame&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    glEnable(GL_NORMALIZE);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That fixed the problem:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_02_17_3d_engine/step063.png&#34; width=&#34;400&#34; height=&#34;400&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;With that bug killed, I reenabled the world light by uncommenting the &lt;code&gt;glEnable&lt;/code&gt; line in &lt;code&gt;set_world_lights&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub set_world_lights
+{
+    glLight(GL_LIGHT0, GL_POSITION, 0.0, 0.0, 1.0, 0.0);
+
+    glEnable(GL_LIGHT0);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;During this article I&amp;rsquo;ve moved pretty quickly, covering screenshots, movement of the viewpoint, the beginnings of lighting in OpenGL, and subdivided faces for the boxes. Along the way, I took the chance to refactor &lt;code&gt;draw_view&lt;/code&gt; into a more data-driven design and made the scene a little more interesting.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, these new changes have slowed things down quite a bit. OpenGL has several features that can improve performance considerably. Next time, I&amp;rsquo;ll talk about one of the most powerful of these: display lists. I&amp;rsquo;ll also introduce basic font handling and run with the performance theme by adding an FPS display to the engine.&lt;/p&gt;
+
+&lt;p&gt;Until next time, have fun and keep hacking!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

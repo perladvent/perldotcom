@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Variables on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/variables/</link>
+    <description>Recent content in Variables on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 18 Jun 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/variables/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Perl&#39;s Special Variables</title>
+      <link>http://localhost:1313/pub/2004/06/18/variables.html/</link>
+      <pubDate>Fri, 18 Jun 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/06/18/variables.html/</guid>
+      <description>
+
+&lt;p&gt;One of the best ways to make your Perl code look more like &amp;hellip; well, like Perl code &amp;ndash; and not like C or BASIC or whatever you used before you were introduced to Perl &amp;ndash; is to get to know the internal variables that Perl uses to control various aspects of your program&amp;rsquo;s execution.&lt;/p&gt;
+
+&lt;p&gt;In this article we&amp;rsquo;ll take a look at a number of variables that give you finer control over your file input and output.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-counting-lines-counting-lines-span&#34;&gt;&lt;span id=&#34;Counting_Lines&#34;&gt;Counting Lines&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I decided to write this article because I am constantly amazed by the number of people who don&amp;rsquo;t know about the existence of &lt;code&gt;$.&lt;/code&gt;. I still see people producing code that looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $line_no = 0;
+
+  while (&amp;lt;FILE&amp;gt;) {
+    ++$line_no;
+    unless (/some regex/) {
+      warn &amp;quot;Error in line $line_no\n&amp;quot;;
+      next;
+    }
+
+    # process the record in some way
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For some reason, many people seem to completely miss the existence of &lt;code&gt;$.&lt;/code&gt;, which is Perl&amp;rsquo;s internal variable that keeps track of your current record number. The code above can be rewritten as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  while (&amp;lt;FILE&amp;gt;) {
+    unless (/some regex/) {
+      warn &amp;quot;Error in line $.\n&amp;quot;;
+      next;
+    }
+
+    # process the record in some way
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I know that it doesn&amp;rsquo;t actually save you very much typing, but why create a new variable if you don&amp;rsquo;t have to?&lt;/p&gt;
+
+&lt;p&gt;One other nice way to use &lt;code&gt;$.&lt;/code&gt; is in conjunction with Perl&amp;rsquo;s &amp;ldquo;flip-flop&amp;rdquo; operator (&lt;code&gt;..&lt;/code&gt;). When used in list context, &lt;code&gt;..&lt;/code&gt; is the list construction operator. It builds a list of elements by calculating all of the items between given start and end values like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my @numbers = (1 .. 1000);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But when you use this operator in a scalar context (like, for example, as the condition of an &lt;code&gt;if&lt;/code&gt; statement), its behavior changes completely. The first operand (the left-hand expression) is evaluated to see if it is true or false. If it is false then the operator returns false and nothing happens. If it is true, however, the operator returns true and &lt;em&gt;continues&lt;/em&gt; to return true on subsequent calls until the second operand (the right-hand expression) returns true.&lt;/p&gt;
+
+&lt;p&gt;An example will hopefully make this clearer. Suppose you have a file and you only want to process certain sections of it. The sections that you want to print are clearly marked with the string &amp;ldquo;!! START !!&amp;rdquo; at the start and &amp;ldquo;!! END !!&amp;rdquo; at the end. Using the flip-flop operator you can write code like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  while (&amp;lt;FILE&amp;gt;) {
+    if (/!! START !!/ .. /!! END !!/) {
+      # process line
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each time around the loop, the current line is checked by the flip-flop operator. If the line doesn&amp;rsquo;t match &lt;code&gt;/!! START !!/&lt;/code&gt; then the operator returns false and the loop continues. When we reach the first line that matches &lt;code&gt;/!! START !!/&lt;/code&gt; then the flip-flop operator returns true and the code in the &lt;code&gt;if&lt;/code&gt; block is executed. On subsequent iterations of the &lt;code&gt;while&lt;/code&gt; loop, the flip-flop operator checks for matches again &lt;code&gt;/!! END !!/&lt;/code&gt;, but it continues to return true until it finds a match. This means that all of the lines between the &amp;ldquo;!! START !!&amp;rdquo; and &amp;ldquo;!! END !!&amp;rdquo; markers are processed. When a line matches &lt;code&gt;/!! END !!/&lt;/code&gt; then the flip-flop operator returns false and starts checking against the first regex again.&lt;/p&gt;
+
+&lt;p&gt;So what does all this have to do with &lt;code&gt;$.&lt;/code&gt;? Well, there&amp;rsquo;s another piece of magic coded into the flip-flop operator. If either of its operands are constant values then they are converted to integers and matched against &lt;code&gt;$.&lt;/code&gt;. So to print out just the first 10 lines of a file you can write code like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  while (&amp;lt;FILE&amp;gt;) {
+    print if 1 .. 10;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;One final point on &lt;code&gt;$.&lt;/code&gt;, there is only one &lt;code&gt;$.&lt;/code&gt; variable. If you are reading from multiple filehandles then &lt;code&gt;$.&lt;/code&gt; contains the current record number from the most recently read filehandle. If you want anything more complex then you can use something like IO::File objects for your filehandle. These objects all have an &lt;code&gt;input_line_number&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-field-record-separators-the-field-record-separators-span&#34;&gt;&lt;span id=&#34;The_Field_Record_Separators&#34;&gt;The Field Record Separators&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Next, we&amp;rsquo;ll look at &lt;code&gt;$/&lt;/code&gt; and &lt;code&gt;$\&lt;/code&gt; which are the input and output record separators respectively. They control what defines a &amp;ldquo;record&amp;rdquo; when you are reading or writing data.&lt;/p&gt;
+
+&lt;p&gt;Let me explain that in a bit more detail. Remember when you were first learning Perl and you were introduced to the file input operator. Almost certainly you were told that &lt;code&gt;&amp;lt;FILE&amp;gt;&lt;/code&gt; read data from the file up to and including the next newline character. Well that&amp;rsquo;s not true. Well, it is, but it&amp;rsquo;s only a specialized case. Actually it reads data up to and including the next occurrence of whatever is currently in &lt;code&gt;$/&lt;/code&gt; - the file input separator. Let&amp;rsquo;s look at an example.&lt;/p&gt;
+
+&lt;p&gt;Imagine you have a text file which contains amusing quotes. Or lyrics from songs. Or whatever it is that you like to put in your randomly generated signature. The file might look something like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    This is the definition of my life
+  %%
+    We are far too young and clever
+  %%
+    Stab a sorry heart
+    With your favorite finger
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we have three quotes separated by a line containing just the string &lt;code&gt;%%&lt;/code&gt;. How would you go about reading in that file a quote at a time?&lt;/p&gt;
+
+&lt;p&gt;One solution would be to read the file a line at a time, checking to see if the new line is just the string &lt;code&gt;%%&lt;/code&gt;. You&amp;rsquo;d need to keep a variable that contains current quote that you are building up and process a completed quote when you find the termination string. Oh, and you&amp;rsquo;d need to remember to process the last quote in the file as that doesn&amp;rsquo;t have a termination string (although, it might!)&lt;/p&gt;
+
+&lt;p&gt;A simpler solution would be to change Perl&amp;rsquo;s idea of what constitutes a record. We do that by changing the value of &lt;code&gt;$/&lt;/code&gt;. The default value is a newline character - which is why &lt;code&gt;&amp;lt;...&amp;gt;&lt;/code&gt; usually reads in a line at a time. But we can set it to any value we like. We can do something like this&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $/ = &amp;quot;%%\n&amp;quot;;
+
+  while (&amp;lt;QUOTE&amp;gt;) {
+    chomp;
+    print;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now each time we call the file input operator, Perl reads data from the filehandle until it finds &lt;code&gt;%%\n&lt;/code&gt; (or the end of file marker). A newline is no longer seen as a special character. Notice, however, that the file input operator always returns the next record with the file input separator still attached. When &lt;code&gt;$/&lt;/code&gt; has its default value of a newline character, you know that you can remove the newline character by calling &lt;code&gt;chomp&lt;/code&gt;. Well it works exactly the same way when &lt;code&gt;$/&lt;/code&gt; has other values. It turns out that &lt;code&gt;chomp&lt;/code&gt; doesn&amp;rsquo;t just remove a newline character (that&amp;rsquo;s another &amp;ldquo;simplification&amp;rdquo; that you find in beginners books) it actually removes whatever is the current value of &lt;code&gt;$/&lt;/code&gt;. So in our sample code above, the call to &lt;code&gt;chomp&lt;/code&gt; is removing the whole string &lt;code&gt;%%\n&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-changing-perl-s-special-variables-changing-perl-s-special-variables-span&#34;&gt;&lt;span id=&#34;Changing_Perl&#39;s_Special_Variables&#34;&gt;Changing Perl&amp;rsquo;s Special Variables&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Before we go on I just need to alert you to one possible repercussion of changing these variables whenever you want. The problem is that most of these variables are forced into the &lt;code&gt;main&lt;/code&gt; package. This means that when you change one of these variables, you are altering the value everywhere in your program. This includes any modules that you use in your program. The reverse is also true. If you&amp;rsquo;re writing a module that other people will use in their programs and you change the value of &lt;code&gt;$/&lt;/code&gt; inside it, then you have changed the value for all of the remaining program execution. I hope you can seen why changing variables like &lt;code&gt;$/&lt;/code&gt; in one part of your program can potentially lead to hard to find bugs in another part.&lt;/p&gt;
+
+&lt;p&gt;So we need to do what we can to avoid this. Your first approach might be to reset the value of &lt;code&gt;$/&lt;/code&gt; after you have finished with it. So you&amp;rsquo;d write code like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $/ = &amp;quot;%%\n&amp;quot;;
+
+  while (&amp;lt;QUOTE&amp;gt;) {
+    chomp;
+    print;
+  }
+
+  $/ = &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The problem with this is you can&amp;rsquo;t be sure that &lt;code&gt;$/&lt;/code&gt; contained &lt;code&gt;\n&lt;/code&gt; before you started fiddling with it. Someone else might have changed it before your code was reached. So the next attempt might look like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $old_input_rec_sep = $/;
+  $/ = &amp;quot;%%\n&amp;quot;;
+
+  while (&amp;lt;QUOTE&amp;gt;) {
+    chomp;
+    print;
+  }
+
+  $/ = $old_input_rec_sep;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code works and doesn&amp;rsquo;t have the bug that we&amp;rsquo;re trying to avoid but there&amp;rsquo;s another way that looks cleaner. Remember the &lt;code&gt;local&lt;/code&gt; function that you used to declare local variables until someone told you that you should use &lt;code&gt;my&lt;/code&gt; instead? Well this is one of the few places where you can use &lt;code&gt;local&lt;/code&gt; to great effect.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s generally acknowledged that &lt;code&gt;local&lt;/code&gt; is badly named. The name doesn&amp;rsquo;t describe what the function does. In Perl 6 the function is likely to be renamed to &lt;code&gt;temp&lt;/code&gt; as that&amp;rsquo;s a far better description of what it does - it creates a temporary variable with the same name as an existing variable and restores the original variable when the program leaves the innermost enclosing block. This means that we can write our code like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  {
+    local $/ = &amp;quot;%%\n&amp;quot;;
+
+    while (&amp;lt;QUOTE&amp;gt;) {
+      chomp;
+      print;
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;ve enclosed all of the code in another pair of braces to create a &lt;em&gt;naked block&lt;/em&gt;. Code blocks are usually associated with loops, conditionals or subroutines, but in Perl they don&amp;rsquo;t need to be. You can introduce a new block whenever you want. Here, we&amp;rsquo;ve introduced a block purely to delimit the area where we want &lt;code&gt;$/&lt;/code&gt; to have a new value. We then use &lt;code&gt;local&lt;/code&gt; to store the old &lt;code&gt;$/&lt;/code&gt; variable somewhere where it can&amp;rsquo;t be disturbed and set our new version of the variable to &lt;code&gt;%%\n&lt;/code&gt;. We can then do whatever we want in the code block and when we exit from the block, Perl automatically restores the original copy of &lt;code&gt;$/&lt;/code&gt; and we never needed to know what it was set to.&lt;/p&gt;
+
+&lt;p&gt;For all this reason, it&amp;rsquo;s good practice to never change one of Perl&amp;rsquo;s internal variables unless it is localized in a block.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-other-values-for-other-values-for-span&#34;&gt;&lt;span id=&#34;Other_Values_For_$/&#34;&gt;Other Values For $/&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;There are a few special values that you can give &lt;code&gt;$/&lt;/code&gt; which turn on interesting behaviours. The first of these is setting it to &lt;code&gt;undef&lt;/code&gt;. This turns on &amp;ldquo;slurp mode&amp;rdquo; and the next time you read from a filehandle you will get all of the remaining data right up to the end of file marker. This means that you can read a whole file in using code like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $file = do { local $/; &amp;lt;FILE&amp;gt; };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A &lt;code&gt;do&lt;/code&gt; block returns the value of the last expression evaluated within it, which in this case is the file input operator. And as &lt;code&gt;$/&lt;/code&gt; has been set to &lt;code&gt;undef&lt;/code&gt; it returns the whole file. Notice that we don&amp;rsquo;t even need to explicitly set &lt;code&gt;$/&lt;/code&gt; to &lt;code&gt;undef&lt;/code&gt; as all Perl variables are initialized to &lt;code&gt;undef&lt;/code&gt; when they are created.&lt;/p&gt;
+
+&lt;p&gt;There is a big difference between setting &lt;code&gt;$/&lt;/code&gt; to &lt;code&gt;undef&lt;/code&gt; and setting it to an empty string. Setting it to an empty string turns on &amp;ldquo;paragraph&amp;rdquo; mode. In this mode each record is a paragraph of text terminated by one or more empty lines. You might think that this effect can be mimicked by setting &lt;code&gt;$/&lt;/code&gt; to &lt;code&gt;\n\n&lt;/code&gt;, but the subtle difference is that paragraph mode acts as thought &lt;code&gt;$/&lt;/code&gt; had been set to &lt;code&gt;\n\n+&lt;/code&gt; (although you can&amp;rsquo;t actually set &lt;code&gt;$/&lt;/code&gt; equal to a regular expression.)&lt;/p&gt;
+
+&lt;p&gt;The final special value is to set &lt;code&gt;$/&lt;/code&gt; to either a reference to a scalar variable that holds an integer, or to a reference to an integer constant. In these cases the next read from a filehandle will read up to that number of bytes (I say &amp;ldquo;up to&amp;rdquo; because at the end of the file there might not be enough data left to give you). So you read a file 2Kb at a time and you can do this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  {
+    local $/ = \2048;
+
+    while (&amp;lt;FILE&amp;gt;) {
+      # $_ contains the next 2048 bytes from FILE
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-and-and-span&#34;&gt;&lt;span id=&#34;$/_and_$.&#34;&gt;$/ and $.&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Note that changing &lt;code&gt;$/&lt;/code&gt; alters Perl&amp;rsquo;s definition of a record and therefore it alters the behavior of &lt;code&gt;$.&lt;/code&gt;. &lt;code&gt;$.&lt;/code&gt; doesn&amp;rsquo;t actually contain the current line number, it contains the current &lt;em&gt;record&lt;/em&gt; number. So in our quotes example above, &lt;code&gt;$.&lt;/code&gt; will be incremented for each quote that you read from the filehandle.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-what-about-what-about-span&#34;&gt;&lt;span id=&#34;What_About_$\?&#34;&gt;What About $\?&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Many paragraphs back I mentioned both &lt;code&gt;$/&lt;/code&gt; and &lt;code&gt;$\&lt;/code&gt; as being the input and output record separators. But since then I&amp;rsquo;ve just gone on about &lt;code&gt;$/&lt;/code&gt;. What happened to &lt;code&gt;$\&lt;/code&gt;?&lt;/p&gt;
+
+&lt;p&gt;Well, to be honest, &lt;code&gt;$\&lt;/code&gt; isn&amp;rsquo;t anywhere near as useful as &lt;code&gt;$/&lt;/code&gt;. It contains a string that is printed at the end of every call to &lt;code&gt;print&lt;/code&gt;. Its default value is the empty string, so nothing gets added to data that you display with &lt;code&gt;print&lt;/code&gt;. But if, for example, you longed for the days of Pascal you could write a &lt;code&gt;println&lt;/code&gt; function like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub println {
+    local $\ = &amp;quot;\n&amp;quot;;
+    print @_;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then every time you called &lt;code&gt;println&lt;/code&gt;, all of the arguments would be printed followed by a newline.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-other-print-variables-other-print-variables-span&#34;&gt;&lt;span id=&#34;Other_Print_Variables&#34;&gt;Other Print Variables&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The next two variables that I want to discuss are very easily confused although they do completely different things. To illustrate them, consider the following code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my @arr = (1, 2, 3);
+
+  print @arr;
+  print &amp;quot;@arr&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, without looking it up do you know what the difference is between the output from the two calls to &lt;code&gt;print&lt;/code&gt;?&lt;/p&gt;
+
+&lt;p&gt;The answer is that the first one prints the three elements of the array with nothing separating them (like this - &lt;code&gt;123&lt;/code&gt;) whereas the second one prints the elements separated by spaces (like this - &lt;code&gt;1 2 3&lt;/code&gt;). Why is there a difference?&lt;/p&gt;
+
+&lt;p&gt;The key to understanding it is to look at exactly what is being passed to &lt;code&gt;print&lt;/code&gt; in each case. In the first case &lt;code&gt;print&lt;/code&gt; is passed an array. Perl unrolls that array into a list and &lt;code&gt;print&lt;/code&gt; actually sees the three elements of the array as separate arguments. In the second case, the array is interpolated into a double quoted string before &lt;code&gt;print&lt;/code&gt; sees it. That interpolation has nothing at all to do with the call to &lt;code&gt;print&lt;/code&gt;. Exactly the same process would take place if, for example, we did something like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $string = &amp;quot;@arr&amp;quot;;
+  print $string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So in the second case, the &lt;code&gt;print&lt;/code&gt; function only sees one argument. The fact that it is the results of interpolating an array in double quotes has no effect on how &lt;code&gt;print&lt;/code&gt; treats the string.&lt;/p&gt;
+
+&lt;p&gt;We therefore have two cases. When &lt;code&gt;print&lt;/code&gt; receives a number of arguments it prints them out with no spaces between them. And when an array is interpolated in double quotes it is expanded with spaces between the individual elements. These two cases are completely unrelated, but from our first example above it&amp;rsquo;s easy to see how people can get them confused.&lt;/p&gt;
+
+&lt;p&gt;Of course, Perl allows us to change these behaviors if we want to. The string that is printed between the arguments passed to &lt;code&gt;print&lt;/code&gt; is stored in a variable called &lt;code&gt;$,&lt;/code&gt; (because you use a comma to separate arguments). As we&amp;rsquo;ve seen, the default value for that is an empty string but it can, of course, be changed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my @arr = (1, 2, 3);
+  {
+    local $, = &#39;,&#39;;
+
+    print @arr;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code prints the string &lt;code&gt;1,2,3&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The string that separates the elements of an array when expanded in a double quoted string is stored in &lt;code&gt;$&amp;quot;&lt;/code&gt;. Once again, it&amp;rsquo;s simple to change it to a different value.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my @arr = (1, 2, 3);
+  {
+    local $&amp;quot; = &#39;+&#39;;
+
+    print &amp;quot;@arr&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code prints &lt;code&gt;1+2+3&amp;quot;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, &lt;code&gt;$&amp;quot;&lt;/code&gt; doesn&amp;rsquo;t necessarily have to used in conjunction with a print statement. You can use it anywhere that you have an array in a doubled quoted string. And it doesn&amp;rsquo;t just work for arrays. Array and hash slices work just as well.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my %hash = (one =&amp;gt; 1, two =&amp;gt; 2, three =&amp;gt; 3);
+
+  {
+    local $&amp;quot; = &#39; &amp;lt; &#39;;
+
+    print &amp;quot;@hash{qw(one two three)}&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This displays &lt;code&gt;1 &amp;lt; 2 &amp;lt; 3&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;Conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In this article we&amp;rsquo;ve just scratched the surface of what you can do by changing the values in Perl&amp;rsquo;s internal variables. If this makes you want to look at this subject in more detail, then you should read the &lt;code&gt;perlvar&lt;/code&gt; manual page.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

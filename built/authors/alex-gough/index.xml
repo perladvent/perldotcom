@@ -1,0 +1,853 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Alex Gough on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/alex-gough/</link>
+    <description>Recent content in Alex Gough on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 04 May 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/alex-gough/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Charting Data at the Bottom of the World</title>
+      <link>http://localhost:1313/pub/2006/05/04/charting-data.html/</link>
+      <pubDate>Thu, 04 May 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/05/04/charting-data.html/</guid>
+      <description>
+
+&lt;p&gt;I have an odd job: I&amp;rsquo;m the only programmer for about 500 miles. I look after experiments on &lt;a href=&#34;http://www.bas.ac.uk/Living_and_Working/Stations/Halley/index.php&#34;&gt;a remote Antarctic research station&lt;/a&gt; and look after the data they produce. As well as the scientific stuff knocking about, we have between 20 and 70 people, most of them keen on the weather. Either because we can&amp;rsquo;t work if its windy, or can enjoy a spot of kite skiing if it&amp;rsquo;s just windy enough, everyone here wants to know what&amp;rsquo;s going on outside.&lt;/p&gt;
+
+&lt;p&gt;Luckily we have a few climate science experiments running, including a weather station. For a few years now, data from the weather station has been available on people&amp;rsquo;s computers through a Perl Tk application and some slightly baroque shuttling of records between three different data servers and the network the office computers run on. All is well and good, and we leave it well alone, as it&amp;rsquo;s worked well. Recently, a new experiment installed on the station provides an up-to-the-minute profile of wind speeds over the first 30 meters of the air. It&amp;rsquo;s there to support research into interactions between snow and air in Antarctica, but it&amp;rsquo;s also crucial information if you want to head out and whiz about behind a kite.&lt;/p&gt;
+
+&lt;p&gt;The data from this mast goes to a remote machine that allows users to VNC in to check its health, and logs this data to a binary format of its own making. People around the station have taken to logging in to this machine before heading out, which is probably not the best way keep the data rolling in without interruption. Rather than forbidding access to this useful source of local data, we decided to upgrade our weather display system to include the major parameters recorded by the mast.&lt;/p&gt;
+
+&lt;p&gt;Alas, while fairly nice to use, Tk is a bit fiddly and not exactly my cup of tea. Adding new displays to an existing application can be time-consuming, as you must re-learn the relations among each different widget, pane, and button. Added to this programming burden, even if we could find every copy of the application scattered around our network, we&amp;rsquo;d have to do so every time we added some other source of data. We settled instead on a complete rewrite as a CGI script and some automatically generated graphs. A fancier man than me might call that a three-tier application, but then, he&amp;rsquo;d probably be selling you something at the same time.&lt;/p&gt;
+
+&lt;h3 id=&#34;mountains-of-data&#34;&gt;Mountains of Data&lt;/h3&gt;
+
+&lt;p&gt;Before you can see what the weather is doing (beyond looking out of the window), you need to get at the raw numbers somehow. Ours are provided by state-of-the-art scientific instruments in state-of-the-art data formats; that is to say, partly as lines of ASCII data in columns, and partly as fixed-length records in a binary file. No matter, though. Perl and some friends from CPAN make fast work of building meaning from tumbled piles of data.&lt;/p&gt;
+
+&lt;p&gt;Before doing anything, I set up a couple of objects to hold some data values. Each set of observations has a class corresponding to the experiment that generated it. The classes also contain &lt;code&gt;read_file&lt;/code&gt; factory methods that read a file and produce a list of observations. To make things as quick (to write) as possible, I used &lt;a href=&#34;https://metacpan.org/pod/Class::Accessor&#34;&gt;&lt;code&gt;Class::Accessor&lt;/code&gt;&lt;/a&gt; to autogenerate &lt;code&gt;get&lt;/code&gt; and &lt;code&gt;set&lt;/code&gt; methods for my objects:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; # Current weather data
+ package Z::Weather;
+ use base qw(Class::Accessor);
+ Z::Weather-&amp;gt;mk_accessors( qw(time temp pressure wind dir) );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This automatically creates a &lt;code&gt;new()&lt;/code&gt; method for &lt;code&gt;Z::Weather&lt;/code&gt;. Call it as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $weather = Z::Weather-&amp;gt;new({time =&amp;gt; $time,
+                                temp =&amp;gt; $temp,
+                                pressure =&amp;gt; $pres,
+                                wind =&amp;gt; $wind,
+                                dir
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It also generates &lt;code&gt;get&lt;/code&gt; and &lt;code&gt;set&lt;/code&gt; accessors for each field:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; # set
+ $weather-&amp;gt;temp(30);
+
+ # get
+ my $temp = $weather-&amp;gt;temp();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(The &amp;ldquo;codename&amp;rdquo; used when shipping items to our station is &lt;code&gt;Z&lt;/code&gt;, so I&amp;rsquo;ve used that as my little local namespace, too.)&lt;/p&gt;
+
+&lt;p&gt;From our mast, we have a number of observations taken at different heights, so I wanted a slightly more complicated representation, using a class to represent the mast and another to represent each level on the mast.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; package Z::Mast;
+ use base qw(Class::Accessor);
+
+ Z::Mast-&amp;gt;mk_accessors(qw(time values));
+
+ package Z::Mast::Level;
+ use base qw(Class::Accessor);
+ Z::Mast::Level-&amp;gt;mk_accessors(qw(wind dir level));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember that &lt;code&gt;Z::Mast::values&lt;/code&gt; will set and get a reference to an array of &lt;code&gt;::Level&lt;/code&gt; objects. If I wanted to enforce that, I could override the methods provided by &lt;code&gt;Class::Accessor&lt;/code&gt;, but that would create work that I can get away without doing for this simple case.&lt;/p&gt;
+
+&lt;p&gt;Now that I know what the data will look like in Perl, I can wrench it from the covetous hands of our data loggers and turn it into something I can use.&lt;/p&gt;
+
+&lt;p&gt;First, I decided to deal with the plain ASCII file. This contains single lines, with the time of observation first, then white-space-separated values for temperature, pressure, wind speed, direction, and a few others that I don&amp;rsquo;t care about. &lt;code&gt;Z::Weather&lt;/code&gt; needs to use a couple of modules and add a couple of methods:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use IO::All;
+
+ sub from_file {
+     my $class = shift;
+     my $io    = io(shift);
+     my @recs  = ();
+
+     while (my $line = $io-&amp;gt;readline()) {
+         chomp($line);
+         push @recs, $class-&amp;gt;_line($line);
+     }
+     return @recs;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I expect to call this as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my @weather_records = Z::Weather-&amp;gt;fromfile(&amp;quot;weather.data&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using the &lt;a href=&#34;https://metacpan.org/pod/IO::All&#34;&gt;&lt;code&gt;IO::All&lt;/code&gt;&lt;/a&gt; module to access the files both makes it very easy to read the file and also allows &lt;em&gt;calling&lt;/em&gt; code to instead supply an &lt;code&gt;IO::All&lt;/code&gt; object of its own, or to call this method with a filehandle already opened to the data source. This will make it easy to obtain data from some other source; for instance, if the experiment changes to provide a socket from which to read the current values.&lt;/p&gt;
+
+&lt;p&gt;Parsing the data is the responsibility of another method, &lt;code&gt;_line()&lt;/code&gt;, which expects lines like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 2006 02 06 01 25  -10.4  983.2  23.5 260.1
+
+ use DateTime;
+ sub _line {
+     my ($class, $line) = @_;
+     my @vals = split /\s+/, $line;
+
+     # extract time fields and turn into DateTime object
+     my($y, $m, $d, $h, $min)
+        = $line =~ /^(\d{4}) (\d\d) (\d\d) (\d\d) (\d\d)/;
+
+     my $t = DateTime-&amp;gt;new(year=&amp;gt;$y,month=&amp;gt;$m,day=&amp;gt;$d,hour=&amp;gt;$h,minute=&amp;gt;$min);
+
+     # return a new Z::Weather record, using the magic new() method
+     return $class-&amp;gt;new({time =&amp;gt; $t,
+                         temp     =&amp;gt; $vals[5],
+                         pressure =&amp;gt; $vals[6],
+                         wind     =&amp;gt; $vals[7],
+                         dir      =&amp;gt; $vals[8],  });
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;split&lt;/code&gt; and Perl&amp;rsquo;s magic make sense of the data points, and the &lt;a href=&#34;https://metacpan.org/pod/DateTime&#34;&gt;&lt;code&gt;DateTime&lt;/code&gt;&lt;/a&gt; module take cares of the details of when the record was produced. I find it much easier to turn any time-related value into a &lt;code&gt;DateTime&lt;/code&gt; object at the soonest possible moment, so that the rest of my code can expect &lt;code&gt;DateTime&lt;/code&gt; objects. It becomes easier to reuse in other projects. If you find yourself writing code to handle leap years every other day, then make using &lt;code&gt;DateTime&lt;/code&gt; your number one new habit.&lt;/p&gt;
+
+&lt;p&gt;I deal with the mast data in a similar way, except that the other format is fixed-length binary records. The time of the recording is stored in the first four bytes as the number of seconds into an arbitrary epoch. I correct this into Unix time when creating its &lt;code&gt;DateTime&lt;/code&gt; object. Values are stored as two-byte, network-endian unsigned shorts stored as hundredths of the recorded values. &lt;code&gt;unpack()&lt;/code&gt; comes to my aid here.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub from_file {
+   my $class = shift;
+   my $io    = io(shift);
+   my ($rec, @recs);
+
+   while ($io-&amp;gt;read($rec, 62) == 62) {
+     push @recs, $class-&amp;gt;_record($rec);
+   }
+   return @recs;
+ }
+
+ # map height of reading to offsets in binary record
+ our %heights = qw(1 24  2 28 4 32  8 36  15 40  30 44);
+ use constant MAST_EPOCH =&amp;gt; 2082844800;
+
+ sub _record {
+   my ($class, $rec) = @_;
+
+   # extract the time as a 4 byte network order integer, and correct epoch
+   my $crazy_time = unpack(&amp;quot;N&amp;quot;, $rec);
+   my $time       = DateTime-&amp;gt;from_epoch(epoch=&amp;gt;$crazy_time-MAST_EPOCH);
+
+   # then a series of (speed, dir) 2 byte pairs further into the record
+   my @vals;
+   foreach my $offset (sort values %heights) {
+     my ($speed, $dir) = unpack(&amp;quot;nn&amp;quot;, substr($rec, $offset));
+     push @vals,
+       Z::Mast::Level-&amp;gt;new({wind=&amp;gt;$speed*100,
+                            dir =&amp;gt; $dir*100,
+                            level=&amp;gt;$heights{$offset}});
+   }
+   return $class-&amp;gt;new({time =&amp;gt; $time,
+                       values =&amp;gt; \@vals});
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Again, I can call this using any one of the types supported by &lt;code&gt;IO::All&lt;/code&gt;. Again, I wield &lt;code&gt;DateTime&lt;/code&gt; to my advantage to turn a time stored in an unusual epoch quickly into an object which anything or anyone else can understand. There are a few magic numbers here, but that&amp;rsquo;s what you end up with when you deal with other people&amp;rsquo;s crazy file formats. The key thing is to record magic numbers in one place, to allow other people to change them if they need to, both in your code and from their own code (hence the &lt;code&gt;our&lt;/code&gt; variable), and finally, to let values pass from undocumented darkness into visible, named objects as soon as possible.&lt;/p&gt;
+
+&lt;h3 id=&#34;displaying-data&#34;&gt;Displaying Data&lt;/h3&gt;
+
+&lt;p&gt;I now have hold of the weather data and have forced it into a form that I can follow. Now I get to show it to someone else. I did this in two different ways: as raw data through a web page and as a pre-generated chart embedded in the page.&lt;/p&gt;
+
+&lt;p&gt;In each case, the code has to read in files to obtain the necessary data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my @weather_records = Z::Weather-&amp;gt;from_file(&#39;weather.data.dat&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then it needs to produce the web page:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Template;
+ my $template = Template-&amp;gt;new();
+
+ print &amp;quot;Content-type: text/html\n\n&amp;quot;;
+
+ $template-&amp;gt;process(\*DATA, {
+                       now =&amp;gt; $weather_records[-1],
+                       records =&amp;gt; \@weather_records,
+                             })
+    || die &amp;quot;Could not process template: &amp;quot;.$template-&amp;gt;error().&amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This isn&amp;rsquo;t really all that interesting. In fact, it looks almost like this does nothing at all. I&amp;rsquo;ve pulled in the &lt;code&gt;Template&lt;/code&gt; module, told it to build and output a template defined after the &lt;code&gt;__END__&lt;/code&gt; of the script, and given it two template variables to play with. The template looks something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; __END__
+ &amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;Weather&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;
+ &amp;lt;body&amp;gt;
+ &amp;lt;h2&amp;gt;Latest weather data at [% now.time %]&amp;lt;a name=&amp;quot;/h2&amp;quot;&amp;gt;
+
+ &amp;lt;P&amp;gt;T: [% now.temp %] &amp;amp;deg;C
+    P: [% now.pressure %] kPa
+    W: [% now.wind %] kts
+    D: [% now.dir %] &amp;amp;deg;&amp;lt;/p&amp;gt;
+
+ &amp;lt;P&amp;gt;&amp;lt;img src=&amp;quot;/weather_chart.png&amp;quot;&amp;gt;&amp;lt;br&amp;gt;
+    &amp;lt;img src=&amp;quot;/mast_chart.png&amp;quot;&amp;lt;/p&amp;gt;
+
+ &amp;lt;table&amp;gt;
+ &amp;lt;tr&amp;gt;&amp;lt;th&amp;gt; Time &amp;lt;/th&amp;gt;&amp;lt;th&amp;gt; Temp &amp;lt;/th&amp;gt;&amp;lt;th&amp;gt; Wind &amp;lt;/th&amp;gt;&amp;lt;/tr&amp;gt;
+ [% FOREACH rec IN records %]
+ &amp;lt;tr&amp;gt;
+  &amp;lt;td&amp;gt;[% rec.time %]&amp;lt;/td&amp;gt;
+  &amp;lt;td&amp;gt;[% rec.temp %]&amp;lt;/td&amp;gt;
+  &amp;lt;td&amp;gt;[% rec.wind %]&amp;lt;/td&amp;gt;
+ &amp;lt;/tr&amp;gt;
+ [% END %]
+ &amp;lt;/table&amp;gt;
+ &amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The template uses the syntax of the &lt;a href=&#34;http://www.template-toolkit.org/&#34;&gt;&lt;code&gt;Template-Toolkit&lt;/code&gt;&lt;/a&gt;, a general-purpose templating framework. It&amp;rsquo;s useful because it allows the separation of display and formatting of data from the code that generates it. There&amp;rsquo;s no Perl code in the template, and no HTML will appear in any of my Perl code. While the output generated now is ugly and basic, it will be easy to make it flashy later, once I have the program working, without having to change anything in the program itself to do so. As I&amp;rsquo;ve prepared our data carefully as objects with sensible methods, I can just hand a bunch of these over to the template and let it suck out whatever it wants to show.&lt;/p&gt;
+
+&lt;h3 id=&#34;pretty-pictures&#34;&gt;Pretty Pictures&lt;/h3&gt;
+
+&lt;p&gt;Producing the charts is, again, a simple business (by now, the theme of this article should be emerging). Gone are the days when you&amp;rsquo;d have to scratch your head figuring out how to draw lines and plot points; gone even are the days when you have to bang your head hard against the confused API of some long-forgotten module. Taking the mast values as an example, I first need to read in the data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my @mast_values = Z::Mast-&amp;gt;from_file(&#39;mast.data.dat&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because old weather is old news, I throw away any values older than three hours, using &lt;code&gt;DateTime&lt;/code&gt; and &lt;a href=&#34;https://metacpan.org/pod/DateTime::Duration&#34;&gt;&lt;code&gt;DateTime::Duration&lt;/code&gt;&lt;/a&gt; methods in a &lt;code&gt;grep&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use DateTime;
+ use DateTime::Duration;
+
+ my $now = DateTime-&amp;gt;now();
+ my $age = DateTime::Duration-&amp;gt;new(hours =&amp;gt; 3);
+
+ @mast_values = grep { $_-&amp;gt;time + $age &amp;gt; $now } @mast_values;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is so, so much easier than fiddling around with epochs and &lt;code&gt;3*3600&lt;/code&gt; all over the place. If you find yourself writing 3600 anywhere in your code, you should be using &lt;code&gt;DateTime::Duration&lt;/code&gt; instead. Next, I feed the data points into the &lt;a href=&#34;https://metacpan.org/pod/Chart::Lines&#34;&gt;&lt;code&gt;Chart::Lines&lt;/code&gt;&lt;/a&gt; module, a part of the &lt;a href=&#34;https://metacpan.org/pod/Chart&#34;&gt;&lt;code&gt;Chart&lt;/code&gt;&lt;/a&gt; distribution. I use this in three phases. First, I create a new &lt;code&gt;Chart&lt;/code&gt; and specify how large the resulting graphic should be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Chart::Lines;
+ my $chart = Chart::Lines-&amp;gt;new($x_size, $y_size);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then I set up a few options to tweak how the chart will display:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $chart-&amp;gt;set(
+    legend          =&amp;gt; &#39;none&#39;,
+    xy_plot         =&amp;gt; &#39;true&#39;,
+    grey_background =&amp;gt; 0,
+    y_label         =&amp;gt; &#39;Wind kts&#39;,
+    x_label         =&amp;gt; &#39;Hours ago&#39;,
+    colors          =&amp;gt; {
+      y_label    =&amp;gt; [0xff, 0xee, 0xee],
+      text       =&amp;gt; [0xff,0xee,0xff],
+      dataset0   =&amp;gt; [0xff,0,0],
+      dataset1   =&amp;gt; [0,0xff,0xff],
+      dataset2   =&amp;gt; [0,0,0xff],
+      background =&amp;gt; [0x55, 0x00, 0x55],
+                },
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These are mostly self-explanatory; the &lt;code&gt;Chart&lt;/code&gt; documentation covers them in detail. I set &lt;code&gt;xy_plot&lt;/code&gt; to &lt;code&gt;true&lt;/code&gt; so that the module will use the first dataset as the &lt;code&gt;x&lt;/code&gt; values and all of the other datasets as the &lt;code&gt;y&lt;/code&gt; values for a line. I set a bunch of rather bright colors, to keep my avid customers cheerful, and set the text used to label the chart.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my @labels = map {($now-&amp;gt;epoch - $_-&amp;gt;time-&amp;gt;epoch) / 60} @mast_values;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, I used a series of &lt;code&gt;map&lt;/code&gt; expressions to extract &lt;code&gt;x&lt;/code&gt; and &lt;code&gt;y&lt;/code&gt; values from the data. One turns the &lt;code&gt;DateTime&lt;/code&gt; times into a number of minutes ago. These values are the &lt;code&gt;x&lt;/code&gt; values. &lt;code&gt;y&lt;/code&gt; values are the appropriate parameters extracted from the nested &lt;code&gt;Z::Mast&lt;/code&gt; and &lt;code&gt;Z::Mast::Label&lt;/code&gt; objects. The rest of the code provides the data to the plotting method of the chart, directing it to write out a .png file (Figure 1).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $chart-&amp;gt;png(&amp;quot;mast.png&amp;quot;,
+               [ \@labels,
+                [map {$_-&amp;gt;values()-&amp;gt;[0]-&amp;gt;wind} @mast_values],
+                [map {$_-&amp;gt;values()-&amp;gt;[1]-&amp;gt;wind} @mast_values],
+                [map {$_-&amp;gt;values()-&amp;gt;[2]-&amp;gt;wind} @mast_values],
+                  ]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2006_05_04_charting-data/mast.png&#34; alt=&#34;the resulting chart&#34; width=&#34;500&#34; height=&#34;260&#34; /&gt;
+&lt;em&gt;Figure 1. The resulting chart&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;All I need now is a working HTTP server and a &lt;code&gt;crontab&lt;/code&gt; entry or two to run the graphic generation programs. It is possible to use the &lt;code&gt;Chart&lt;/code&gt; modules to generate CGI output directly using the &lt;code&gt;Chart::cgi&lt;/code&gt; method, but I found that this was too slow once lots of different clients accessed the weather data at the same time. It was a simple task to instead switch to a &lt;code&gt;crontab&lt;/code&gt;-based approach for the graphs, with a CGI script still providing real-time access to the current values.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusions&#34;&gt;Conclusions&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;Chart&lt;/code&gt; family of modules provides more than just an &lt;code&gt;x&lt;/code&gt;-&lt;code&gt;y&lt;/code&gt; plot. Pie, bar, Pareto, and mountain charts, amongst others, are available through the same API as I discussed in this article. They are just as easy to whip into being to satisfy even the most demanding of data consumers.&lt;/p&gt;
+
+&lt;p&gt;The Template Toolkit is used mainly for more complicated websites and content management systems, but it will simplify the production of simple sites and pages, allowing you to concentrate on the detail of the problem by separating data and its presentation. Even though a problem is simple and allows a fast solution, you can reach your goal faster still by pulling in big tools to do little jobs.&lt;/p&gt;
+
+&lt;p&gt;As for the &lt;code&gt;DateTime&lt;/code&gt; module, I simply wouldn&amp;rsquo;t go anywhere without it. These days, I find myself automatically typing &lt;code&gt;use DateTime;&lt;/code&gt; along with &lt;code&gt;warnings&lt;/code&gt; and &lt;code&gt;strict&lt;/code&gt; at the head of every Perl program I write.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Class::Accessors&lt;/code&gt; makes the creation of data representation objects faster than typing in a C struct, provides some level of documentation about what the data you&amp;rsquo;re dealing with, and allows for reuse. You could just stick everything into layers of nested hashes and arrays, but this is a certain path to eventual confusion. &lt;code&gt;Class::Accessors&lt;/code&gt; will keep you sane and save your fingers at the same time.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;IO::All&lt;/code&gt; should be a part of your day-to-day toolkit; the new idioms it provides will soon see you using it everywhere, even in one-liners.&lt;/p&gt;
+
+&lt;p&gt;One of the many joys of programming lies in the satisfaction we receive when we make someone&amp;rsquo;s life that little bit better. Perl makes it easy, fast, and fun for us to tread that path. Perl&amp;rsquo;s greatest strength, the rock upon which its greatness is founded, is the speed with which we can take a problem, or a cool idea, and structure our half-formed thoughts into a soundly built solution.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2006_05_04_charting-data/purple_code.pl&#34;&gt;Download the example code&lt;/a&gt; for this article.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How Perl Powers Christmas</title>
+      <link>http://localhost:1313/pub/2002/12/18/hohoho.html/</link>
+      <pubDate>Wed, 18 Dec 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/12/18/hohoho.html/</guid>
+      <description>&lt;p&gt;You know, it&amp;rsquo;s not easy having the happiness of billions of children around the world resting with your organization, and it&amp;rsquo;s even harder on the IT department. The incorporated elves and pixiefolk of the North Pole, under the direction of their jolly old leader, have to deal with massive quantities of data, huge manfacturing flows and what is possibly the strictest delivery timetable in the world. Despite these challenges Santa and his reindeer have been able to meet their tight deadline and achieve one of the highest customer satisfaction ratings in industry.&lt;/p&gt;
+
+&lt;p&gt;For many centuries, the elves needed to work for only a couple of months of the year to manufacture every gift for every child, but recent advances in technology and the increasing global population have, in the past two decades, left them working day and night all year round, with only a few days of holiday before work had to begin again in early Janurary. During the early &amp;lsquo;90s, some workflow improvements were made and some time savings were gained by using a mainframe to coordinate the route Santa would take on the night before Christmas, ensuring he could still visit every client during the 24 hours available. By 1995, these savings had made only a small difference to the performance of the operation, with representatives of the Amalgamated Present Production and Sleigh Mechanics&amp;rsquo; Union threatening to leak to the media predictions that Christmas might need to be cancelled in 1998 and held bi-annually from then on if every child was to receive presents on the same day. The elves even considered going on strike in 1996, but they reconsidered after seeing the reaction of a young boy to his older brother&amp;rsquo;s proof that Santa Claus could not physically exist. (Santa is, of course, entirely real &amp;ndash; he just doesn&amp;rsquo;t pay too much attention to natural laws.)&lt;/p&gt;
+
+&lt;p&gt;Thankfully, history took a different route and the North Pole escaped its first industrial action since records began. A searching review of the whole production process included sending parts of the short statured delivery facilitation team on outplacements in industry. One of the elves in this division was lucky enough to be sent along to an emerging dot-com, where he discovered &amp;ndash; and instantly fell in love with &amp;ndash; Perl. He returned to the Pole brimming with enthusiasm and soon convinced Santa (well, his wife, who then made Mr. Claus convinced) that it would be possible to prepare for Christmas in a matter of months, or maybe even weeks, if this emerging tool fulfilled its early promise.&lt;/p&gt;
+
+&lt;p&gt;That was seven years ago, and now Perl powers Christmas. Its diverse realm of application, not to mention its slightly idiosyncratic nature, fit the mindset of an elf perfectly and &amp;ndash; more importantly &amp;ndash; help them to get everything done in November and December, leaving them the rest of the year to enjoy themselves.&lt;/p&gt;
+
+&lt;p&gt;The first application of Perl was in the Health and Safety department. For many years, the Association for the Prevention of Cruelty to Avionic Reindeer was worried about the risks presented during landings on roofs and increasingly from the potential for midair collisions with aircraft. An effort was undertaken to carefully map international air corridors, catalog hazardous or unstable landing patches and (as Santa&amp;rsquo;s diet was underperforming) details of chimney widths for every dwelling on the planet. Needless to say maintaining this was a nightmare &amp;ndash; until, that is, a custom set of tools was written in Perl to allow Santa&amp;rsquo;s scouts to take reports from the field using a primitive Web interface. The major benefit of Perl here was the speed with which new types of reindeer strip could be added to the database as the time needed to program the necessary logic to handle them was reduced.&lt;/p&gt;
+
+&lt;p&gt;Perl continued to make inroads on the databases of Santa&amp;rsquo;s grottos. Next to fall to its rogueish charms was the global child distribution and route planning systems. These had been implemented on two mainframes under two different packages but global population growth scaled faster than the earlier architecture, requiring a shift to an entirely new distributed design. The database itself uses a commercial package but the data migration was handled using Perl. Its flexible dynamic typing, object system and, above all, the set of DBI drivers allowed Perl to talk to every database in its own language without the programmers needing to learn each and every one of them. This project was completed ahead of schedule leaving the team of crack data migration experts with little to do, so they were tasked to set their tools onto the internally infamous naughtyness database.&lt;/p&gt;
+
+&lt;p&gt;The naughtyness database was, for many years, simply a set of paper files kept in a filing cabinet in a dungeon by a troll. Every year, the troll would carefully collate every good deed and every black act of every boy and girl the world over. Before distributing presents on Christmas day, Father Christmas would ask the troll if there were any children that deserved coal instead. Of course, due to his meticulous record keeping the troll could honestly, if gruffly, reply &amp;ldquo;no, not a single child has been that bad.&amp;rdquo; The mounting volumes of data near the end of the last century left the troll unable to keep up with developments. Soon he began to confuse one child with another, sometimes he couldn&amp;rsquo;t enter every good thought of every child and eventually the system failed. A child was assigned not one but two sacks of coal. Thankfully an internal investigation revealed the problems faced by the troll and corrected the error, but it was decided that the troll must be retired in favor of a system based on the latest developments in artificial intelligence technologies. The review also concluded that the system should also modified so that especially good children would get better presents delivered, and coal was retired in favor of a good talking to from the troll who now relishes his new line in community work.&lt;/p&gt;
+
+&lt;p&gt;Getting back to the technical details, the system needed to run quickly (emulating a troll is not an easy undertaking, they may appear dimwitted but are, in fact, deeply pondering the games of postal Go they love so much). At the same time, it had to allow for operators to script the system and tune its operation using a high level language. It was decided that the crucial parts of the program would be implemented in C, with wrappers being written using the Inline::C module allowing Perl to form the high level director of the system. This proved to be a great sucess, with roughly 5 percent of children now qualifying for bonus presents. Elves are also queing up to work in the new department, in part because of the rewarding work, but also because the system allows them so much room to tinker with the criteria for awards as each processing run is performed so quickly.&lt;/p&gt;
+
+&lt;p&gt;The recent explosion of the Internet has been both good and bad for the elves in the mail room. Santa receives many millions of letters each year from all around the world, and now also gets about 10 times as many e-mails. For a time, these were processed in the same way as the letters, but soon a new solution was required. In the end, rather than develop an in house tool, the elves adopted RT &amp;ndash; a trouble ticketing and bug tracking system written in Perl &amp;ndash; to handle the assignment of requests to manufacturing areas. This allowed a much closer match between the wishes of the children and the presents they unwrapped come Dec. 25. The elves also encountered a growing problem from e-mail spam. For a while, they naively assumed that Santa should be sending viagra and his bank details to relatives of the President of Nigeria, but eventually they twigged that odd things were afoot. A bit of research, and some help from the Perl community, led them quickly to Mail::Audit and spamassassin as an optimal filter.&lt;/p&gt;
+
+&lt;p&gt;In line with many companies these days, the North Pole has started to outsource its production of presents to commercial concerns. Perl has again been able to help with this effort by acting as a mediator between the requirements database produced from letters to Santa and the production systems of the outsourced manufacturers. A combination of freely available XML, SOAP and CORBA tools allow rapid creation of interfaces to the systems of new partners and allow aggregation of many external representations of an invoice to a single standard form suitable for input to the internal accounting systems.&lt;/p&gt;
+
+&lt;p&gt;These accounting systems are written entirely in Perl, mostly because commercial packages are not available to deal in the currency (sherry, biscuits and carrots) of Santa&amp;rsquo;s environs. This highly available mission critical application ensures that elves are well supplied with the rewards for their work and keeps the workforce motivated the whole year round. Using a core engine written using Perl&amp;rsquo;s framework for multi user dungeons (and any other multitasking or massively networked environments), POE, the system has scaled to process over one billion transactions in a single day. (The elves and reindeer are paid yearly, on boxing day, out of the titbits left out in houses and collected by Santa as he passes through.)&lt;/p&gt;
+
+&lt;p&gt;Fifi Longstockings, the chief software engineer and head of blancmange parties, says of Perl: &amp;ldquo;without Perl, I don&amp;rsquo;t know what would happen to our operation. It&amp;rsquo;s now critical to every area of our business and contributes directly to the magic of Christmas. It&amp;rsquo;s amazing just how much hard work and effort it has helped us avoid in the past few years. Here in the grotto we dare to be lazy and Perl is the ideal tool for the inspired slacker who&amp;rsquo;d rather sing and dance than spend longer than they need to at work.&amp;rdquo; He also looks forward to the benefits that Perl 6 could bring, and is happy that Perl will continue to be supported by the community for the foreseeable future: &amp;ldquo;Of course, Perl has come a long way since we started using it. There were some tasks it just couln&amp;rsquo;t cope with before it gained an object oriented framework and there are some things now we&amp;rsquo;d love to get done using it but cannot. Some of these should be possible with Perl 6 though, so we&amp;rsquo;re investing a couple of our elves&amp;rsquo; time and some fairy dust in parrot development at the moment. It&amp;rsquo;s certainly an exciting time for us, and for Perl!&amp;rdquo;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>The Lighter Side of CPAN</title>
+      <link>http://localhost:1313/pub/2001/10/31/lighter.html/</link>
+      <pubDate>Wed, 31 Oct 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/10/31/lighter.html/</guid>
+      <description>
+
+&lt;p&gt;Programming can be a stressful game. We sit at our machines, day in, day out, endlessly staring at a monitor fathoming where that last devious bug has buried itself. It&amp;rsquo;s not surprising then that sometimes it gets to be too much, and someone, somewhere, snaps. The strangest things become hilarious and valuable hours will be wasted developing a strained play on words into a fully tested and highly featured module.&lt;/p&gt;
+
+&lt;p&gt;Portions of this creative outpouring of humor often find their way onto the CPAN. There is even the special &lt;code&gt;Acme::*&lt;/code&gt; name space set aside for these bizarre freaks so they do not interfere with the normal smooth running of that ever so special service. It may seem a little pointless for someone to release these into the wild, but you may be surprised what you could learn from them. A good joke is usually marked out by being both funny and simple, and the same applies to jokes told in Perl. All unnecessary detail is stripped away, leaving a short piece of code that makes a perfect example of how to use, abuse or create a language feature.&lt;/p&gt;
+
+&lt;p&gt;There now follows a brief tour of some (but not all) of the more amusing extensions to Perl, along with some hints on how you might improve your programs by taking inspiration from the tricks they use to implement their punch lines. (Ba-boom tching!)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-getting-it-wrong-the-wright-way-getting-it-wrong-the-wright-way-span&#34;&gt;&lt;span id=&#34;getting it wrong the wright way&#34;&gt;Getting It Wrong the Wright Way&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Perl is a lazy language. It appeals to the discerning man of leisure who wants nothing more than a chance to get things done quickly. There are some who would have Perl be more lazy but, until rescued by Dave Cross and his band of visionaries, they were forced to work hard making sure that every single keystroke they made was correct. Dismayed by errors like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Undefined subroutine &amp;amp;main::find_nexT called at frob.pl line 39.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;many turned away from Perl. Now they return in droves, using &lt;code&gt;Symbol::Approx::Sub&lt;/code&gt;, their lives are made an order of magnitude easier, leaving them more time to sip cocktails as they lounge in deck chairs. This module can even save you money; observe the simple calculation of your fiscal dues after the careful application of a couple of typos:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; #!/usr/bin/perl
+ use Symbol::Approx::Sub;
+
+ sub milage  { 40_000   };
+ sub taxipay {     10   };
+ sub tax2pay {$_[0]*0.4 };
+ sub myage   {     25   };
+
+
+ # Sell car
+ print &amp;quot;For Sale: Very Good Car, only @{[ miage()]} on the clock\n&amp;quot;;
+
+
+ # Cheque for tax man
+ my $income = 40_000;
+ print &amp;quot;Must pay taxes, cheque for: @{[ taxpay($income) ]}\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A calculation which could not be faulted by any government, but which will leave you with a brand new car and, half the time, a whopping rebate:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; For Sale: Very Good Car, only 25 miles on the clock
+ Must pay taxes, cheque for: 10
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How does this all work? There are two major bits of magic going on: installing a handler that intercepts calls to undefined subroutines and a tool for divining the names of those routines that it can call instead.&lt;/p&gt;
+
+&lt;p&gt;The handler is implemented by creating an &lt;code&gt;AUTOLOAD&lt;/code&gt; function for the module that &lt;code&gt;use&lt;/code&gt;s &lt;code&gt;Symbol::Approx::Sub&lt;/code&gt;. When Perl is asked to run a subroutine that it cannot locate, it will invoke &lt;code&gt;AUTOLOAD&lt;/code&gt; in the package where it was first told to look for the subroutine. This is handed the same arguments as the original function call and is told which subroutine Perl was looking for in the global &lt;code&gt;$AUTOLOAD&lt;/code&gt; variable. &lt;code&gt;AUTOLOAD&lt;/code&gt; is mainly used to write lazy accessors for object data, this example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub AUTOLOAD {
+    my ($self, $value) = @_;
+    my ($field) = $AUTOLOAD =~ /.*::(.*)$/;
+    return if $field eq &#39;DESTROY&#39;;
+    return @_==1 ? $self-&amp;gt;{$field} : $self-&amp;gt;{$field} = $value;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;provides simple get/set methods. So that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $object-&amp;gt;name(&#39;Harry&#39;);
+ print $object-&amp;gt;name, &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;prints &lt;code&gt;Harry&lt;/code&gt; even though you haven&amp;rsquo;t had to explicitly write a &lt;code&gt;name&lt;/code&gt; method for your object.&lt;/p&gt;
+
+&lt;p&gt;Perl stores all information about non-lexical variables, filehandles and subroutine names in a massive hash. You can inspect this yourself but doing so requires code that is so close to spaghetti you could plate it up and serve it to an Italian. The easy way out, wisely taken by the &lt;code&gt;Symbol::Approx::Sub&lt;/code&gt; module, is to use the &lt;code&gt;Devel::Symdump&lt;/code&gt; module that provides a friendly and clean interface to Perl&amp;rsquo;s symbol table. &lt;code&gt;Devel::Symdump&lt;/code&gt; provides various useful tools: If you are scratching your head trying to resolve an inheritance tree, then the &lt;code&gt;isa_tree&lt;/code&gt; method will help; if you want to find exactly what a module exports into your namespace, then you&amp;rsquo;ll find the &lt;code&gt;diff&lt;/code&gt; method a constant friend.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-presently-living-in-the-past-presently-living-in-the-past-span&#34;&gt;&lt;span id=&#34;presently living in the past&#34;&gt;Presently Living in the Past&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Ever since the ancients erected the huge lumps of stone that paved the way for the digital watches that we hold so dear, mankind has needed to know when he is. Perl is no different and now has many &amp;ndash; although some might say too many &amp;ndash; date- and time-related modules, around 80 of them in fact. Simple statistics tell us that at least a few of those should be so useless we couldn&amp;rsquo;t possibly resist trying to find something to do with them.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Date::Discordian&lt;/code&gt;, although lacking in chicken references. Gobble.&lt;/p&gt;
+
+&lt;p&gt;This could, in a limited set of circumstances, be helpful though. Imagine the scene: a trusted client is on the phone demanding a completion date for the project doomed to persist. You reach for the keyboard and, in a moment of divine inspiration, type:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; perl -MDate::Discordian -le&#39;print discordian(time+rand(3e7))&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You then soberly relate the result to your tormentor, ``Prickle Prickle, Discord 16 YOLD 3168&amp;rdquo; and, suddenly, everything is alright. Well, they&amp;rsquo;ve put the phone down and left you in peace. If you prefer to provide a useful service, then you might be better off investigating the &lt;code&gt;Time::Human&lt;/code&gt; module by Simon Cozens. This creates person-friendly descriptions of a time, transforming the excessively precise 00:23:12.00 into a positively laid-back ``coming up to 25 past midnight.&amp;rdquo; The module is internationalized and could be used in conjunction with a text-to-speech system, such as festival, to build an aural interface to something like a ticket-booking system.&lt;/p&gt;
+
+&lt;p&gt;Moving swiftly on, we come to Date::Tolkien::Shire, a king amongst date modules. Most newspapers carry an ``on this day in history&amp;rdquo; column &amp;ndash; where you find, for instance, that you were born on the same day as the man who invented chili-paste &amp;ndash; but no broadsheet will tell you what happened to Frodo and his valiant companions as they fought to free Middle Earth from the scourge of the Dark Lord. The undeceptively simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Date::Tolkien::Shire;
+ print Date::Tolkien::Shire-&amp;gt;new(time)-&amp;gt;on_date, &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;outputs (well, output a few days ago):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Highday Winterfilth 30 7465
+ The four Hobbits arrive at the Brandywine Bridge in the dark, 1419.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What better task could there be for crontab but to run this in the wee hours and update &lt;code&gt;/etc/motd&lt;/code&gt; for our later enjoyment. Implementing this is, as ever, left as an exercise for the interested reader.&lt;/p&gt;
+
+&lt;p&gt;There is a more useful side to &lt;code&gt;Date::Tolkien::Shire&lt;/code&gt; or, at the very least, it does light the way for other modules. As well as the &lt;code&gt;on_date()&lt;/code&gt; method it provides an overloaded interface to the dates it returns. This allows you to compare dates and times as if they were normal numbers, so that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $date1 = Date::Tolkien::Shire-&amp;gt;new(time);
+ $date2 = Date::tolkien::Shire-&amp;gt;new(time - 1e6);
+
+
+ print &#39;time is &#39;.( $date1 &amp;gt; $date2  ? &#39;later&#39;:&#39;earlier&#39; ).
+     &amp;quot;than time -1e6\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;prints &lt;code&gt;time is later than time -1e6&lt;/code&gt;, the more prosaic &lt;code&gt;Date::Simple&lt;/code&gt; module provides a similar interface for real dates and ensures they stringify with ISO formatting.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-from-one-date-to-another-from-one-date-to-another-span&#34;&gt;&lt;span id=&#34;from one date to another&#34;&gt;From One Date to Another&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;It is often said that computers and relationships don&amp;rsquo;t mix well but this isn&amp;rsquo;t entirely true. If you feel alone in the world and need to find that special person, then Perl is there to help you. Your first task is to meet someone. Perhaps by putting an advertisement on a dating service. Of course, you want to find the very best match and, being fond of concise notation, decide you will search for your companion with the help of the geek code. But how is your prospective mate to know what all those funny sigils mean? With the help of the &lt;code&gt;Convert::GeekCode&lt;/code&gt; module of course:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Convert::GeekCode;
+
+
+ print join(&amp;quot;\n&amp;quot;,geek_decode(&amp;lt;&amp;lt;&#39;ENDCODE&#39;),&amp;quot;\n&amp;quot;);
+ -----BEGIN GEEK CODE BLOCK-----
+ GS d+ s:- a--a? C++&amp;gt; UB++ P++++ !L E+ W+++ N++ K? w--() !M PS++ PE+
+ Y PGP+ t+(-) 5++ !X R+ !tv b+++  DI++ D+++ G e* h y?
+ ------END GEEK CODE BLOCK------
+ ENDCODE
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Will tell you, amongst other things, that ``&lt;em&gt;I don&amp;rsquo;t write Perl, I speak it. Perl has superseded all other programming languages. I firmly believe that all programs can be reduced to a Perl one-liner.&lt;/em&gt;&amp;ldquo;&lt;/p&gt;
+
+&lt;p&gt;So, you&amp;rsquo;ve got a reply and someone wants to meet you. This is a worrying prospect though as you feel you&amp;rsquo;ll need to brush up on your conversation skills a little before meeting your date. Again, Perl comes to your aid with Chatbot::Eliza, which is especially useful if you want to meet a simple-minded psychologist. Fire her up with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; perl -MChatbot::Eliza -e&#39;Chatbot::Eliza-&amp;gt;new-&amp;gt;command_interface&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and enjoy hours of elegant conversation:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; you:    I like pie
+ Eliza:  That&#39;s quite interesting.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If your wit and repartee fail to impress, then you may want to convince your partner that you have a deep and lasting interest in some obscure branch of mystical poetry. Doing this requires some mastery of ZenPAN combined with a careful study of Lee Goddard&amp;rsquo;s &lt;code&gt;Poetry::Aum&lt;/code&gt;. More than any other module, this teaches you that true understanding comes from within: by inspecting the source of all your powers. The source code, that is.&lt;/p&gt;
+
+&lt;p&gt;If none of this works or you find you&amp;rsquo;ve arranged a date with a total bore, don&amp;rsquo;t despair. There are ways to move the encounter toward an interesting conclusion. Simply let Michael Schwern&amp;rsquo;s &lt;code&gt;Bone::Easy&lt;/code&gt; take the pain out of dumping your burden.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; perl -MBone::Easy -le&#39;print pickup()&#39;
+
+
+ When are you going to drain that?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How could all this be useful though? &lt;code&gt;Convert::GeekCode&lt;/code&gt; hints at Perl&amp;rsquo;s greatest strength: data transformation. The remaining 20 or so &lt;code&gt;Convert::*&lt;/code&gt; modules can sometimes be a Godsend. If you are having trouble with EBCDIC-encoded text or need to make your product catalog acceptable to people who need whichever of metric and Imperial units you haven&amp;rsquo;t provided, then you&amp;rsquo;ll find something to furnish the answer.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Chatbot::Eliza&lt;/code&gt; on the other hand is a shining example of code whose behavior you can change easily. Because it was written using Perl&amp;rsquo;s OO features and a bit of thought was applied while deconstructing the problem it addresses, it is full of hooks from which you can dangle your own bits of code, perhaps to use a different interface or a text to speech system. Can &lt;code&gt;Bone::Easy&lt;/code&gt; teach you anything? Who knows &amp;hellip;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-day-at-the-races-a-day-at-the-races-span&#34;&gt;&lt;span id=&#34;a day at the races&#34;&gt;A Day at the Races&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Having foolishly followed my dating advice above you will have a great deal of time to yourself but do not fear, you can still keep yourself amused. If you have a sporting bent, then Jos Boumans&amp;rsquo;s &lt;code&gt;ACME::Poe::Knee&lt;/code&gt; uses the wonderful &lt;code&gt;POE&lt;/code&gt; framework to race ponies across your screen; you could even make bets with yourself sure in the knowledge that you&amp;rsquo;ll end the day even. One day &lt;code&gt;POE&lt;/code&gt; may fulfill its original purpose and morph into a multi-user dungeon (MUD), although at the moment, alas, it is far too busy being useful.&lt;/p&gt;
+
+&lt;p&gt;If you get tired of watching &lt;code&gt;ACME::Poe::Knee&lt;/code&gt;, then you can instead follow Sean M Burke&amp;rsquo;s &lt;code&gt;Games::Worms&lt;/code&gt;, in combination with the cross-platform Tk Perl bindings, as it draws pretty patterns on your screen. Tk is only one of many graphical toolkits for Perl that can be used to quickly prototype an interface design or glue together a range of command line applications with a common frontend.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-when-bugs-attack-when-bugs-attack-span&#34;&gt;&lt;span id=&#34;when bugs attack&#34;&gt;When Bugs Attack&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Every now and then, despite all your best efforts to program extremely and extract the maximum of laziness from Perl, you will come across a deeply buried, complicated and fatal bug in your code. Your spirits sink when you discover one, the next two days of your precious time will be filled with cryptic error messages flashing all over your terminal:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Something is very wrong at Desiato.pl line 22.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It needn&amp;rsquo;t be like this though - there is a better way. You&amp;rsquo;ll still have to fight this bug for days but you can keep your blood pressure at bay with a little application of Damian Conway&amp;rsquo;s &lt;code&gt;Coy&lt;/code&gt;. Simply add:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; PERL5OPT=-MCoy
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to your environment (ideally somewhere global like &lt;code&gt;/etc/.cshrc&lt;/code&gt;) so that any time Perl explodes all over your hard disk you&amp;rsquo;ll be greeted by a soothing Haiku to take the edge off your pain:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        -----
+        A woodpecker nesting 
+        in a lemon tree. Ten 
+        trout swim in a stream.
+        -----
+
+                Tor Kin Tun&#39;s commentary...
+
+
+                Something is very wrong
+
+                        (Analects of Desiato.pl: line 22.)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Setting &lt;code&gt;PERL5OPT&lt;/code&gt; can help you in normal circumstances. Should you be developing an existing library you will often want to switch from the new to the old version, saying &lt;code&gt;export PERL5OPT=-Ipath/to/new&lt;/code&gt; is less hassle than fiddling with &lt;code&gt;use lib &#39;path/to/new&#39;&lt;/code&gt; within your code.&lt;/p&gt;
+
+&lt;p&gt;These, along with a much larger host of useful modules, are available from the CPAN.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Quantum::Entanglement</title>
+      <link>http://localhost:1313/pub/2001/08/08/quantum.html/</link>
+      <pubDate>Wed, 08 Aug 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/08/08/quantum.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-there-is-more-than-one-world-in-which-to-do-it-there-is-more-than-one-world-in-which-to-do-it-span&#34;&gt;&lt;span id=&#34;there is more than one world (in which) to do it&#34;&gt;There Is More Than One World (In Which) To Do It&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;With the possible exception of many physicists, quantum mechanics is one of the stranger things to have emerged from science over the last hundred years. It has led the way to new understanding of a diverse range of fundamental physical phenomena and, should recent developments prove fruitful, could also lead to an entirely new mode of computation where previously intractable problems find themselves open to easy solution.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;Quantum::Entanglement&lt;/code&gt; module attempts to port some of the functionality of the universe into Perl. Variables can be prepared in a superposition of states, where they take many values at once, and when observed during the course of a program, will collapse to have a single value. If variables interact then their fates are linked so that when one is observed and forced to collapse the others will also collapse at the moment of observation.&lt;/p&gt;
+
+&lt;p&gt;It is quite hard to provide a complete version of quantum mechanics in Perl, so we need to make some simplifications. Instead of solving thousands of equations each time we want to do something, we will forget entirely about eigen-functions, Hermitian operators and other mathematical hurdles. This still leaves us with plenty of ways to make Perl behave in a thoroughly unpredictable fashion.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-entangle-function-the-entangle-function-span&#34;&gt;&lt;span id=&#34;the entangle() function&#34;&gt;The &lt;code&gt;entangle()&lt;/code&gt; function&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;Quantum::Entanglement&lt;/code&gt; module adds an &lt;code&gt;entangle()&lt;/code&gt; function to Perl, this takes a list of amplitudes and values and returns a scalar in a superposition of values; saying&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $die = entangle( 1=&amp;gt;1, 1=&amp;gt;2, 1=&amp;gt;3, 1=&amp;gt;4, 1=&amp;gt;5, 1=&amp;gt;6);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;creates a superposition of the values &lt;code&gt;1..6&lt;/code&gt;. From now on, &lt;code&gt;$die&lt;/code&gt; acts as if it has every one of those values at the same time as long as we do not try to find out exactly which one.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-observation-and-collapse-in-perl-observation-and-collapse-in-perl-span&#34;&gt;&lt;span id=&#34;observation and collapse in perl&#34;&gt;Observation and Collapse in Perl&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We now need to decide what happens when we observe our variable, and what we mean by &lt;em&gt;observe&lt;/em&gt;? Taking a broad definition as being ``anything that reveals the values which a variable has&amp;rdquo; seems about right. Perl provides us with many ways of doing this, there are the obvious acts of printing out a variable or testing it for truth, but even operators such as &lt;code&gt;eq&lt;/code&gt; or &lt;code&gt;&amp;lt;=&lt;/code&gt; tell us something.&lt;/p&gt;
+
+&lt;p&gt;How do we decide which way a variable collapses? Well, each possible value has an associated probability amplitude, so all we need to do is build up a list of distinct outcomes, add up the amplitudes for each one, square the result, then use this to bias the value (or values) to which the variable collapses.&lt;/p&gt;
+
+&lt;p&gt;As every coefficient of the superposition in &lt;code&gt;$die&lt;/code&gt; is equal to 1,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; print &amp;quot;You rolled a $die.\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will output &lt;code&gt;You rolled a 1.&lt;/code&gt; or &lt;code&gt;You rolled a 2.&lt;/code&gt; and so on, each for one sixth of the time.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-entanglement-and-simple-complex-logic-entanglement-and-simple-complex-logic-span&#34;&gt;&lt;span id=&#34;entanglement and simple complex logic&#34;&gt;Entanglement and Simple Complex Logic&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Whenever superposed variables interact, or are involved in calculations, the results of these as well as the variables themselves become entangled. This means that they will all collapse at the same time, so as to remain consistent with their history. This emulates the entanglement, or ``spooky action at a distance&amp;rdquo;, which so worried Einstein.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-complex-amplitudes-and-entanglement-in-perl-complex-amplitudes-and-entanglement-in-perl-span&#34;&gt;&lt;span id=&#34;complex amplitudes and entanglement in perl&#34;&gt;Complex Amplitudes and Entanglement in Perl&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If we can have plain numbers as the coefficients of our superpositions it seems sensible that we could also use complex numbers. Although instead of just squaring the number when working out our probability, we need to square the &lt;em&gt;size&lt;/em&gt; of the number. (eg. &lt;code&gt;|1+2i|**2 == 5 == |1-2i|**2&lt;/code&gt;.)&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;Quantum::Entanglement&lt;/code&gt; module allows subroutines to create new states (amplitude-value pairs) based on the current set of states by using the function &lt;code&gt;q_logic&lt;/code&gt;. This takes as an argument a subroutine which is presented each state in turn and must return a new set of states constructed from these.&lt;/p&gt;
+
+&lt;p&gt;Starting our program with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; #!/usr/bin/perl -w
+
+ use Quantum::Entanglement qw(:DEFAULT :complex);
+
+ $Quantum::Entanglement::destroy = 0;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;so that we have access to the constants defined by &lt;code&gt;Math::Complex&lt;/code&gt; and turn off the memory management performed by the module (as this causes some information to be lost, which will be important later). We then define a subroutine to return the value it receives and its logical negation, their coefficients are those of the original state multiplied by &lt;code&gt;i/sqrt(2)&lt;/code&gt; and &lt;code&gt;1/sqrt(2)&lt;/code&gt; respectively:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub root_not {
+
+   my ($prob, $val) = @_;
+
+   return( $prob * i / sqrt(2) , $val,
+
+               $prob / sqrt(2) , !$val );
+
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We then create a superposition which we &lt;em&gt;know&lt;/em&gt; is equal to 0 and feed it through our &lt;code&gt;root_not()&lt;/code&gt; once:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $var = entangle(1 =&amp;gt; 0);
+
+ $var = q_logic(\&amp;amp;root_not, $var);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;the variable is now in a superposition of two possible values, 0 and 1, with coefficients of &lt;code&gt;i/sqrt(2)&lt;/code&gt; and &lt;code&gt;1/sqrt(2)&lt;/code&gt; respectively. We now make our variable interact, storing the result in &lt;code&gt;$peek&lt;/code&gt;. As &lt;code&gt;$var&lt;/code&gt; is in a superposition, every possible value it has participates in the calculation and contributes to the result.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $peek  = 12*$var;   # $peek and $var become entangled
+
+ $var = q_logic(\&amp;amp;root_not, $var);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We then feed &lt;code&gt;$var&lt;/code&gt; through &lt;code&gt;root_not()&lt;/code&gt; one more time and test it for truth. What will happen and what will be the value of &lt;code&gt;$peek&lt;/code&gt;?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; if ($var) { print &amp;quot;\$var is true!\n&amp;quot;; }
+
+ else      { print &amp;quot;\$var is false\n&amp;quot;; }
+
+
+
+
+ print &amp;quot;\$peek is equal to: $peek.\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The output is always &lt;code&gt;$var is true!&lt;/code&gt; as &lt;code&gt;$var&lt;/code&gt; is in a final superposition of &lt;code&gt;(1/2=&lt;/code&gt;0, i/2=&amp;gt;1, -&lt;sup&gt;1&lt;/sup&gt;&amp;frasl;&lt;sub&gt;2&lt;/sub&gt;=&amp;gt;0, i/2=&amp;gt;1)&amp;gt;. You can convince yourself of this by running through the math. What about &lt;code&gt;$peek&lt;/code&gt;? Well, because it interacted with &lt;code&gt;$var&lt;/code&gt; before $&amp;lt;var&amp;gt; collapsed and both possible values that &lt;code&gt;$var&lt;/code&gt; had at that time contributed to its eventual truthfulness, both values of &lt;code&gt;$peek&lt;/code&gt; are still present, we get 0 or 12 each for half the time.&lt;/p&gt;
+
+&lt;p&gt;If we reverse the order in which we examine the variables:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; print &amp;quot;\$peek is equal to: $peek.\n&amp;quot;;
+
+
+
+
+ if ($var) { print &amp;quot;\$var is true!\n&amp;quot;; }
+
+ else      { print &amp;quot;\$var is false\n&amp;quot;; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;we still see &lt;code&gt;peek&lt;/code&gt; being &lt;code&gt;0&lt;/code&gt; and &lt;code&gt;12&lt;/code&gt; but as we collapsed &lt;code&gt;$peek&lt;/code&gt; we must also collapse &lt;code&gt;$var&lt;/code&gt; at the same time. This causes &lt;code&gt;$var&lt;/code&gt; to be in a superposition of &lt;code&gt;(1/2=&lt;/code&gt;0,i/2=&amp;gt;1)&amp;gt; or a superposition of &lt;code&gt;(-1/2=&lt;/code&gt;0,i/2=&amp;gt;1)&amp;gt;, both of which will collapse to 0 half of the time and 1 the other half of the time so that (on average) we see both phrases printed.&lt;/p&gt;
+
+&lt;p&gt;If we try to find the value that &lt;code&gt;$var&lt;/code&gt; had while it was `between&amp;rsquo; the subroutines we force it to have a single value so that after two passes though &lt;code&gt;root_not()&lt;/code&gt; we get random noise, even if we test this after the event. If, on the other hand, we leave it alone it emerges from repeated application of &lt;code&gt;root_not()&lt;/code&gt; as the logical negation of its original value, thus the name of our subroutine.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-beneath-the-veil-beneath-the-veil-span&#34;&gt;&lt;span id=&#34;beneath the veil&#34;&gt;Beneath the Veil&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Although the module is intended to be used as a black box which does the Right Thing (or some close approximation to it), the internals of the code are interesting and reveal many features of Perl which may be useful elsewhere.&lt;/p&gt;
+
+&lt;p&gt;Writing entangled behaviour into Perl presents an interesting challenge; a means of representing a superposition is required, as is some way of allowing different variables to know about each other without creating a twisty maze of references which would stand in the way of garbage collection and lead to a certain programming headache. We also need a means to cause collapse, as well as a robust mechanism for dealing with both real and complex numbers. Thankfully Perl provides a rich set of ingredients which can more than satisfy these requirements without making the job so hard that it becomes impossible.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-objective-reality-objective-reality-span&#34;&gt;&lt;span id=&#34;objective reality&#34;&gt;Objective Reality&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We want to represent something which has many values (and store these somewhere) while making it look like there&amp;rsquo;s only one value present. Objects in Perl are nothing more than scalars that know slightly more than usual. When a new entanglement is created, we create a new object, and return that to the calling program. Deep within the module we have a routine which is similar to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub entangle {
+
+   my $self = [ ~ data goes in here ~ ];
+
+   return bless $self, &#39;Quantum::Entanglement&#39;;
+
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;exactly how we store the data is covered below. We then turn this into a &amp;lsquo;core&amp;rsquo; function by importing it into the namespace which asked for it.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-when-worlds-collide-when-worlds-collide-span&#34;&gt;&lt;span id=&#34;when worlds collide&#34;&gt;When Worlds Collide&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ve created a superposition of values and sent it back to our user. What needs to happen when they write something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $talk = entangle( 1=&amp;gt;&#39;Ships&#39;,    1=&amp;gt;&#39;Sealing Wax&#39;,
+                   1=&amp;gt;&#39;Cabbages&#39;, 1=&amp;gt;&#39;Kings&#39;        );
+ $more = $talk . &#39; yada yada yada&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We want to redefine the meaning of concatenation when an entangled object is involved. Perl lets us do this using the &lt;code&gt;overload&lt;/code&gt; module. Within the &lt;code&gt;Quantum::Entanglement&lt;/code&gt; module we say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use overload
+        &#39;+&#39;  =&amp;gt; sub { binop(@_, sub{$_[0] + $_[1]} ) },
+     # more ...
+        &#39;.&#39;  =&amp;gt; sub { binop(@_, sub{$_[0] . $_[1]} ) },
+     # yet more ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whenever someone applies the &amp;lsquo;.&amp;rsquo; operator to our object, a subroutine (in this case an anonymous one) is called to handle the operation, the result of this subroutine is then used as the result of the operation. Because the module provides new behaviours for all of Perl&amp;rsquo;s operations, we write a generic routine to handle &lt;strong&gt;Bi&lt;/strong&gt;nary &lt;strong&gt;N&lt;/strong&gt;on-observational &lt;strong&gt;Op&lt;/strong&gt;erations and pass this the values to operate on along with another anonymous routine (which it will see as a code-ref) so that it knows which operation to perform. This allows us to re-use the code which works out if both operands are objects and if they are reversed and pieces together the data structures we use. &lt;code&gt;binop&lt;/code&gt; is described below.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-data-structures-with-hair-data-structures-with-hair-span&#34;&gt;&lt;span id=&#34;data structures with hair&#34;&gt;Data Structures with Hair&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;This module lives and dies on the strength of its data structures. We need to ensure that every variable (or, more correctly, object) knows about all the other superpositions it has been involved with throughout the course of the program without having any direct pointers between them.&lt;/p&gt;
+
+&lt;p&gt;When we create a new variable, we give it the following structure:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub entangle {
+   my $universe = [ [ @_[0,1] ], # amp1, val1
+                    [ @_[2,3] ], ...  ];
+   my $offsets  = [];
+   $var = [ \$universe, 1, \$offsets];
+   $offsets-&amp;gt;[0] = \ $var-&amp;gt;[1];
+   return bless $var, &#39;Quantum::Entanglement&#39;;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;there&amp;rsquo;s a lot going on here, so pay attention. &lt;code&gt;$universe&lt;/code&gt; is a list of lists (lol), essentially a two dimensional table with the first two columns holding the amplitudes and values of our superposition. &lt;code&gt;$var&lt;/code&gt; contains a reference which points at a scalar which then points at the universe, rather like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; ($var-&amp;gt;[0]) ---&amp;gt; (anonymous scalar) ---&amp;gt; $universe
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The second value in &lt;code&gt;$var&lt;/code&gt; is a number which indicates the column in the universe that we need to look at to find the values of our superposition. The last field of &lt;code&gt;$var&lt;/code&gt; again points to a pointer to an array. This array though contains a scalar which points directly at the scalar which holds the number representing the offset of the values in the universe, something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $var[ (-&amp;gt;X-&amp;gt;universe), (number), (-&amp;gt;Y-&amp;gt;offsets[  ])  ]
+                            \------&amp;lt;----&amp;lt;-------/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, when we want this object to interact with another object, all we need to do is make &lt;code&gt;$var-&amp;gt;[0]&lt;/code&gt; and &lt;code&gt;$var-&amp;gt;[1]&lt;/code&gt; for each object end up refering to the same universe. Easy, you might say, given that we have both objects around. But what if one had already interacted with another variable, which we cannot directly access anymore? This is where our extra level of indirection is required. Because each variable contains something which points at something else which then points at their set of values, we merely need to make sure that the &amp;lsquo;something else&amp;rsquo; ends up pointing at the same thing for everything. So, we delve into each object&amp;rsquo;s universe, choosing one which will contain the data for both objects (and thus for all those which have interacted in the past) and move all the data from the other object&amp;rsquo;s universe into it. We then make our middle reference the same for each object.&lt;/p&gt;
+
+&lt;p&gt;Initially,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; universe1 = [[a1,av1],      [a2,av2]      ,... ]
+
+ universe2 = [[b1,bv1,c1,cv1],[b2,bv2,c1,cv1],... ] 
+
+ $var1[ (-&amp;gt;X-&amp;gt;universe1), 1,... ] # we have this object
+
+ $var2[ (-&amp;gt;Y-&amp;gt;universe2), 1,... ] #  and this object
+
+ $var3[ (-&amp;gt;Y-&amp;gt;universe2), 3,... ] # but not this one
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then by pointing Y at universe1 the whole structure of our objects becomes&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; universe1 = [[a1,av1,b1,bv1,c1,cv1],[a2,v2,b1,bv1,c1,cv1] ,... ]
+
+ $var1[ (-&amp;gt;X-&amp;gt;universe1), 1,... ] # we have this object
+
+ $var2[ (-&amp;gt;Y-&amp;gt;universe1), 3,... ] #  and this object
+
+ $var3[ (-&amp;gt;Y-&amp;gt;universe1), 5,... ] # but not this one
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To allow every possible value of one variable to interact with every possible value of our other variables, we need to follow a crossing rule so that the rows of our merged universe look like this:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;pre&gt;&lt;code&gt;
+ universe1   universe2            result
+
+ a1 av1      b1 bv1 c1 cv1      a1 av9  ]
+
+                            \------&amp;lt;----&amp;lt;-------/&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Now, when we want this object to interact with another object, all we need to do is make &lt;code&gt;$var-&amp;gt;[0]&lt;/code&gt; and &lt;code&gt;$var-&amp;gt;[1]&lt;/code&gt; for each object end up refering to the same universe. Easy, you might say, given that we have both objects around. But what if one had already interacted with another variable, which we cannot directly access anymore? This is where our extra level of indirection is required. Because each variable contains something which points at something else which then points at their set of values, we merely need to make sure that the &amp;lsquo;something else&amp;rsquo; ends up pointing at the same thing for everything. So, we delve into each object&amp;rsquo;s universe, choosing one which will contain the data for both objects (and thus for all those which have interacted in the past) and move all the data from the other object&amp;rsquo;s universe into it. We then make our middle reference the same for each object.&lt;/p&gt;
+
+&lt;p&gt;Initially,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; universe1 = [[a1,av1],      [a2,av2]      ,... ]
+
+ universe2 = [[b1,bv1,c1,cv1],[b2,bv2,c1,cv1],... ] 
+
+ $var1[ (-&amp;gt;X-&amp;gt;universe1), 1,... ] # we have this object
+
+ $var2[ (-&amp;gt;Y-&amp;gt;universe2), 1,... ] #  and this object
+
+ $var3[ (-&amp;gt;Y-&amp;gt;universe2), 3,... ] # but not this one
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then by pointing Y at universe1 the whole structure of our objects becomes&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; universe1 = [[a1,av1,b1,bv1,c1,cv1],[a2,v2,b1,bv1,c1,cv1] ,... ]
+
+ $var1[ (-&amp;gt;X-&amp;gt;universe1), 1,... ] # we have this object
+
+ $var2[ (-&amp;gt;Y-&amp;gt;universe1), 3,... ] #  and this object
+
+ $var3[ (-&amp;gt;Y-&amp;gt;universe1), 5,... ] # but not this one
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To allow every possible value of one variable to interact with every possible value of our other variables, we need to follow a crossing rule so that the rows of our merged universe look like this:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;pre&gt;&lt;code&gt;
+ universe1   universe2            result
+
+ a1 av1      b1 bv1 c1 cv1      a1 av1  b1 bv1  c1 cv1
+
+ a2 av2    * b1 bv1 c2 cv2  ==&amp;gt; a1 av1  b1 bv1  c2 cv2
+
+                                a2 av2  b1 bv1  c1 cv1
+
+                                a2 av2  b1 bv1  c2 cv2&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;so that every row in the first universe is paired with every row of the second. We then need to update the offsets for each variable which has had data moved from one universe to another. As the offsets array contains pointers back to these values, it is easy to increase each one by the correct amount. So, given two entanglements in @_, and a bit of cheating with &lt;code&gt;map&lt;/code&gt;, we can say&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $offsets1 = ${$_[0]-&amp;gt;[2]}; # middle-man reference
+
+  my $offsets2 = ${$_[1]-&amp;gt;[2]};
+
+  my $extra = scalar(@{ ${$_[0]-&amp;gt;[0]} });
+
+  push @$offsets1, map {$$_+=$extra; $_} @$offsets2;
+
+  ${$_[1]-&amp;gt;[2]} = $offsets1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and you can&amp;rsquo;t get clearer than that.&lt;/p&gt;
+
+&lt;p&gt;So &lt;code&gt;binop&lt;/code&gt; is written like so (assuming that we can only be given two entangled variables in the correct order, for the full story, read the source):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub binop {
+
+    my ($obj1,$obj2,$r,$code) = @_;
+
+    _join($obj1,$obj2);   # ensure universes shared
+
+    my ($os1, $os2) = ($obj1-&amp;gt;[1],$obj2-&amp;gt;[1]);
+
+    my $new = $obj1-&amp;gt;_add(); # new var also shares universe
+
+    foreach my $state (@{${$obj1-&amp;gt;[0]}}) {
+
+       push( @$state, $state-&amp;gt;[$os1-1]*$state-&amp;gt;[$os2-1],
+
+                      &amp;amp;$code( $state-&amp;gt;[$os1], $state-&amp;gt;[$os2] );
+
+    }
+
+    return $new;
+
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or, in English: make sure each variable is in the same universe then create a new variable in the same universe. For every row of the universe: add two extra values, the first is the product of the two input amplitudes, the second is the result of our operation on our two input values. Here you see the tremendous value of code reuse, no sane man would write such a routine more than once. Or, more correctly, no man would remain sane if they tried.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-london-bridge-is-falling-down-london-bridge-is-falling-down-span&#34;&gt;&lt;span id=&#34;london bridge is falling down&#34;&gt;London Bridge is Falling Down&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;How do we collapse our superpositions so that every entangled variable is affected even though we can only access one of them at once? When we perform an observational operation (&lt;code&gt;if ($var){...}&lt;/code&gt;, say) we simply need to split our universe (table of values) into two groups, those which lead to our operator returning a true value and those that do not. We add up the probability amplitudes for each value in each group, square these to get two numbers and use these to decide which group to keep. To cause our collapse we merely need to delete all the rows of the universe which form the other group which will remove any value of any variable in that row.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&#34;span-id-getting-the-module-getting-the-module-span&#34;&gt;&lt;span id=&#34;getting the module&#34;&gt;Getting the Module&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The module distribution, like all good things, is available from the CPAN and includes a few short demonstrations of what the module can do, along with plenty of explanation (including Shor&amp;rsquo;s algorithm and the square root of NOT gate outlined above). The source of this, and any other module on the CPAN, is available for inspection. If you have a burning desire to find out how the mystical wheel was first invented, Perl, and its community, will gladly show you.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

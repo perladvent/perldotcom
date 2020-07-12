@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Building a UTF-8 encoder in Perl </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Learn UTF-8 by encoding it yourself"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/building-a-utf-8-encoder-in-perl/" />
+<meta property="og:title" content="Building a UTF-8 encoder in Perl" />
+<meta property="og:description" content="Learn UTF-8 by encoding it yourself">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2016-08-08T08:08:08Z" />
+<meta property="og:image" content="http://localhost:1313/images/building-a-utf8-encoder-in-perl/thumb_bart-simpson-utf8.png" />
+<meta property="og:article:tag" content="unicode" />
+<meta property="og:article:tag" content="utf8" />
+<meta property="og:article:tag" content="encode" />
+<meta property="og:article:tag" content="decode" />
+<meta property="og:article:tag" content="binary" />
+<meta property="og:article:tag" content="bitmask" />
+<meta property="og:article:tag" content="codepoint" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Building a UTF-8 encoder in Perl</h1>
+              <p class="blog-post-meta">Aug 2, 2016 by
+              
+              
+                
+                
+                <a href="#author-bio-david-farrell">David Farrell</a>
+              
+              </p>
+              <img alt="" src="/images/building-a-utf8-encoder-in-perl/bart-simpson-utf8.png"/>
+                
+
+<p>This week I wrote a UTF-8 encoder/decoder. Perl already comes with UTF-8 encoding features built-in, so this wasn&rsquo;t necessary, but sometimes it&rsquo;s nice to understand how things work. The UTF-8 scheme is defined in <a href="https://tools.ietf.org/html/rfc3629">RFC 3629</a>.</p>
+
+<h3 id="what-does-a-utf-8-encoder-do">What does a UTF-8 encoder do?</h3>
+
+<p>UTF-8 is a scheme for encoding <a href="https://en.wikipedia.org/wiki/Unicode">Unicode</a> sequences of codepoints as bytes/octets. A codepoint is just a number, that identifies the Unicode entry (such as 0x24 which is a dollar sign).</p>
+
+<p>Unicode defines codepoints in the range 0x0000..0x10FFFF, so the encoder must take a codepoint and convert it to bytes according to the UTF-8 scheme, which looks like this:</p>
+
+<pre><code>Char. number range  |     UTF-8 bytes/octets sequence
+   (hexadecimal)    |              (binary)
+--------------------+------------------------------------
+0000 0000-0000 007F | 0xxxxxxx
+0000 0080-0000 07FF | 110xxxxx 10xxxxxx
+0000 0800-0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
+0001 0000-0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+</code></pre>
+
+<p>This has some interesting properties. First of all, codepoints in the range 0x00..0x7F (0-127) will have the same bytes as with ASCII encoding, which is convenient. Second it&rsquo;s a <em>variable width</em> encoding, which means that a single codepoint can be 1-4 bytes long.</p>
+
+<p>Decoding is simply the process in reverse: converting a sequence of bytes back into a codepoint.</p>
+
+<h3 id="encoding-utf-8">Encoding UTF-8</h3>
+
+<p>To encode UTF-8, I need to convert a codepoint (which is just a number), into a sequence of bytes. As there are four different byte sequences defined in the UTF-8 table, there are four scenarios to handle:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">codepoint_to_bytes</span> {
+  <span style="color:#66d9ef">my</span> $codepoint <span style="color:#f92672">=</span> shift;
+
+  <span style="color:#66d9ef">if</span> ($codepoint <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0x80</span>) {
+    <span style="color:#66d9ef">return</span> pack <span style="color:#e6db74">&#39;C&#39;</span>, $codepoint;
+  }
+  <span style="color:#66d9ef">elsif</span> ($codepoint <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0x800</span>) {
+    <span style="color:#66d9ef">return</span> pack <span style="color:#e6db74">&#39;CC&#39;</span>,
+           $codepoint <span style="color:#f92672">&gt;&gt;</span>  <span style="color:#ae81ff">6</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">0b11000000</span>,
+           $codepoint       <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">0b10000000</span>;
+  }
+  <span style="color:#66d9ef">elsif</span> ($codepoint <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0x10000</span>) {
+    <span style="color:#66d9ef">return</span> pack <span style="color:#e6db74">&#39;CCC&#39;</span>,
+           $codepoint <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">12</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">0b11100000</span>,
+           $codepoint <span style="color:#f92672">&gt;&gt;</span>  <span style="color:#ae81ff">6</span> <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">0b10000000</span>,
+           $codepoint       <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">0b10000000</span>;
+  }
+  <span style="color:#66d9ef">else</span> {
+    <span style="color:#66d9ef">return</span> pack <span style="color:#e6db74">&#39;CCCC&#39;</span>,
+           $codepoint <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">18</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">0b11110000</span>,
+           $codepoint <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">12</span> <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">0b10000000</span>,
+           $codepoint <span style="color:#f92672">&gt;&gt;</span>  <span style="color:#ae81ff">6</span> <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">0b10000000</span>,
+           $codepoint       <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">0b10000000</span>;
+  }
+}</code></pre></div>
+<p>The first is the easiest: if the codepoint is between 0x00 and 0x7F, no transformation is required, so I just <a href="https://perldoc.perl.org/functions/pack.html">pack</a> the codepoint as-is. The byte value of a character is the same as the codepoint (e.g. <code>'U' == 56 == 0x38 == 00111000</code>).</p>
+
+<p>For the second scenario I have to populate the bitmask <code>110xxxxx 10xxxxxx</code> with the codepoint, which means I need to return two bytes. This is how I do it:</p>
+
+<ol>
+<li>For the first byte, bitshift the codepoint 6 places to the right (as the second byte will get those 6 bits).</li>
+<li>Use bitwise OR to set the two most significant bits to one (<code>xxxxxxxx | 11000000 == 11xxxxxx</code>). I&rsquo;m using Perl&rsquo;s inline binary notation (<code>0b...</code>) which makes it easy to compare the binary numbers with the bitmask.</li>
+<li>For the second byte use bitwise AND to set the two most significant bits to zero (<code>xxxxxxxx &amp; 00111111 == 00xxxxxx</code>).</li>
+<li>Use bitwise OR to set the most significant bit to 1 (<code>xxxxxxxx | 10000000 == 1xxxxxxx</code>).</li>
+<li>Use <a href="https://perldoc.perl.org/functions/pack.html">pack</a> to combine the bytes into a scalar and return it.</li>
+</ol>
+
+<p>The process for three byte and four byte encoding follows the same approach, with the rules updated according to the UTF-8 scheme.</p>
+
+<p>If I wanted to get UTF-8 encoded bytes for the <a href="http://www.fileformat.info/info/unicode/char/1f4fa/fontsupport.htm">Television</a> codepoint (U+1F4FA) I could use the code like so:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> $bytes <span style="color:#f92672">=</span> codepoint_to_bytes(<span style="color:#ae81ff">0x1F4FA</span>);</code></pre></div>
+<h3 id="decoding-utf-8">Decoding UTF-8</h3>
+
+<p>To decode UTF-8 bytes, we need to reverse the encoding process to get back to the original Unicode codepoint number. The decoder must check how many bytes it received, extract the appropriate bits and add them together.</p>
+
+<p>Perl tries &ldquo;to make the easy things easy, and the hard things possible&rdquo; as the saying goes, but sometimes it makes easy things harder than they are in simpler languages like C. Binary data is one such area: Perl needs to be told to turn off its character features before you can safely work with the data.</p>
+
+<p>There are two ways to do that. The old, discouraged way is to use the <a href="https://metacpan.org/pod/bytes">bytes pragma</a>. The newer way is to use the <a href="https://metacpan.org/pod/Encode#SYNOPSIS">Encode</a> module to encode the scalar as bytes and remove its UTF-8 flag. After that, Perl&rsquo;s functions will treat the scalar as a sequence of bytes instead of characters:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Encode <span style="color:#e6db74">&#39;encode&#39;</span>;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">bytes_to_codepoint</span> {
+  <span style="color:#75715e"># treat the scalar as bytes/octets</span>
+  <span style="color:#66d9ef">my</span> $input    <span style="color:#f92672">=</span> encode(<span style="color:#e6db74">&#39;UTF-8&#39;</span>, shift);
+
+  <span style="color:#75715e"># length returns number of bytes</span>
+  <span style="color:#66d9ef">my</span> $len      <span style="color:#f92672">=</span> length $input;
+  <span style="color:#66d9ef">my</span> $template <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;C&#39;</span> x $len;
+  <span style="color:#66d9ef">my</span> @bytes    <span style="color:#f92672">=</span> unpack $template, $input;
+
+  <span style="color:#f92672">...</span>
+}</code></pre></div>
+<p>In the subroutine <code>bytes_to_codepoint</code> I use <code>encode()</code> to populate <code>$input</code> with the bytes passed to it. Next I use the <code>length</code> function to return the number of bytes in <code>$input</code> - this is different from its usual behavior which returns the number of characters; this is the effect of using <code>encode()</code> to convert the scalar to bytes. Finally I use <a href="https://perldoc.perl.org/functions/unpack.html">unpack</a> to extract the bytes from <code>$input</code>.</p>
+
+<p>Now I know the number of bytes passed to <code>bytes_to_codepoint</code>, it&rsquo;s just a matter of reversing the binary operations from the encoding process:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">if</span> ($len <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>) {
+  <span style="color:#66d9ef">return</span> $bytes[<span style="color:#ae81ff">0</span>];
+}
+<span style="color:#66d9ef">elsif</span> ($len <span style="color:#f92672">==</span> <span style="color:#ae81ff">2</span>) {
+  <span style="color:#66d9ef">return</span> (($bytes[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00011111</span>) <span style="color:#f92672">&lt;&lt;</span>  <span style="color:#ae81ff">6</span>) <span style="color:#f92672">+</span>
+          ($bytes[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>);
+}
+<span style="color:#66d9ef">elsif</span> ($len <span style="color:#f92672">==</span> <span style="color:#ae81ff">3</span>) {
+  <span style="color:#66d9ef">return</span> (($bytes[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00001111</span>) <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">12</span>) <span style="color:#f92672">+</span>
+         (($bytes[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>) <span style="color:#f92672">&lt;&lt;</span>  <span style="color:#ae81ff">6</span>) <span style="color:#f92672">+</span>
+         ( $bytes[<span style="color:#ae81ff">2</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>);
+}
+<span style="color:#66d9ef">else</span> {
+  <span style="color:#66d9ef">return</span> (($bytes[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00000111</span>) <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">18</span>) <span style="color:#f92672">+</span>
+         (($bytes[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>) <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">12</span>) <span style="color:#f92672">+</span>
+         (($bytes[<span style="color:#ae81ff">2</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>) <span style="color:#f92672">&lt;&lt;</span>  <span style="color:#ae81ff">6</span>) <span style="color:#f92672">+</span>
+          ($bytes[<span style="color:#ae81ff">3</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>);
+}</code></pre></div>
+<p>If there is just one byte, I return it as-is because the codepoint number is the same as the byte value. As with encoding, it gets interesting with two bytes:</p>
+
+<ol>
+<li>Remove the bitmask from the first byte with bitwise AND. Remember bitwise AND returns any bits as zero which are zero in the right operand (<code>xxxxxxxx &amp; 00011111 == 000xxxxx</code>).</li>
+<li>Bit shift the resulting number 6 places to the left to get the original value. So <code>00000010</code> would become <code>10000000</code>.</li>
+<li>Remove the bitmask from the second byte with bitwise AND (<code>xxxxxxxx &amp; 00111111 == 00xxxxxx</code>).</li>
+<li>Add the numbers together.</li>
+</ol>
+
+<p>The same logic applies to three byte and four byte sequences, I just update the bitwise operations to match the UTF-8 scheme. The final code looks like this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Encode <span style="color:#e6db74">&#39;encode&#39;</span>;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">bytes_to_codepoint</span> {
+  <span style="color:#75715e"># treat the scalar as bytes/octets</span>
+  <span style="color:#66d9ef">my</span> $input    <span style="color:#f92672">=</span> encode(<span style="color:#e6db74">&#39;UTF-8&#39;</span>, shift);
+
+  <span style="color:#75715e"># length returns number of bytes</span>
+  <span style="color:#66d9ef">my</span> $len      <span style="color:#f92672">=</span> length $input;
+  <span style="color:#66d9ef">my</span> $template <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;C&#39;</span> x $len;
+  <span style="color:#66d9ef">my</span> @bytes    <span style="color:#f92672">=</span> unpack $template, $input;
+
+  <span style="color:#75715e"># reverse encoding</span>
+  <span style="color:#66d9ef">if</span> ($len <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>) {
+    <span style="color:#66d9ef">return</span> $bytes[<span style="color:#ae81ff">0</span>];
+  }
+  <span style="color:#66d9ef">elsif</span> ($len <span style="color:#f92672">==</span> <span style="color:#ae81ff">2</span>) {
+    <span style="color:#66d9ef">return</span> (($bytes[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00011111</span>) <span style="color:#f92672">&lt;&lt;</span>  <span style="color:#ae81ff">6</span>) <span style="color:#f92672">+</span>
+            ($bytes[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>);
+  }
+  <span style="color:#66d9ef">elsif</span> ($len <span style="color:#f92672">==</span> <span style="color:#ae81ff">3</span>) {
+    <span style="color:#66d9ef">return</span> (($bytes[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00001111</span>) <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">12</span>) <span style="color:#f92672">+</span>
+           (($bytes[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>) <span style="color:#f92672">&lt;&lt;</span>  <span style="color:#ae81ff">6</span>) <span style="color:#f92672">+</span>
+           ( $bytes[<span style="color:#ae81ff">2</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>);
+  }
+  <span style="color:#66d9ef">else</span> {
+    <span style="color:#66d9ef">return</span> (($bytes[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00000111</span>) <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">18</span>) <span style="color:#f92672">+</span>
+           (($bytes[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>) <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">12</span>) <span style="color:#f92672">+</span>
+           (($bytes[<span style="color:#ae81ff">2</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>) <span style="color:#f92672">&lt;&lt;</span>  <span style="color:#ae81ff">6</span>) <span style="color:#f92672">+</span>
+            ($bytes[<span style="color:#ae81ff">3</span>] <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0b00111111</span>);
+  }
+}</code></pre></div>
+<p>Let&rsquo;s say I wanted to get the codepoint for the <a href="http://www.fileformat.info/info/unicode/char/1f5fc/index.htm">Tokyo Tower</a> I can call the code like this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> utf8;
+<span style="color:#66d9ef">my</span> $codepoint <span style="color:#f92672">=</span> bytes_to_codepoint(<span style="color:#e6db74">&#39;🗼&#39;</span>);</code></pre></div>
+<h3 id="notes">Notes</h3>
+
+<ol>
+<li>This is a naive implementation - it doesn&rsquo;t handle UTF-16 reserved characters (U+D800..U+DFFF), noncharacters and only encodes/decodes one codepoint at a time.</li>
+<li>Take a look at <a href="https://metacpan.org/pod/Unicode::UTF8">Unicode::UTF8</a> if you need a fast UTF-8 encoder and don&rsquo;t want to use Perl&rsquo;s builtin tools.</li>
+<li>UTF-8 is by far the most popular Unicode encoding. It was created by Ken Thompson and Rob Pike in <a href="http://doc.cat-v.org/bell_labs/utf-8_history">just a few days</a>.</li>
+<li>Building your own UTF-8 encoder? Check out Markus Kuhn&rsquo;s <a href="https://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt">decoder test file</a> which contains several difficult or edge case tests for UTF-8 decoding. Markus also wrote a comprehensive <a href="https://www.cl.cam.ac.uk/~mgk25/unicode.html">UTF-8 and Unicode FAQ for Unix/Linux</a>.</li>
+</ol>
+
+<p><br />
+<em>This article was originally posted on <a href="http://perltricks.com">PerlTricks.com</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/data">data</a></div>
+                
+                  <div class="tag"><a href="/tags/unicode">unicode</a></div>
+                
+                  <div class="tag"><a href="/tags/utf8">utf8</a></div>
+                
+                  <div class="tag"><a href="/tags/encode">encode</a></div>
+                
+                  <div class="tag"><a href="/tags/decode">decode</a></div>
+                
+                  <div class="tag"><a href="/tags/binary">binary</a></div>
+                
+                  <div class="tag"><a href="/tags/bitmask">bitmask</a></div>
+                
+                  <div class="tag"><a href="/tags/codepoint">codepoint</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-david-farrell">
+  <div class="col-sm-2">
+    
+    <a href="/authors/david-farrell/"><div class="circle-avatar" style="background-image:url(/images/author/david-farrell.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/david-farrell/"><h3>David Farrell</h3></a>
+    <p>David is the editor of Perl.com. An organizer of the <a href="http://www.meetup.com/The-New-York-Perl-Meetup-Group/">New York Perl Meetup</a>, he works for ZipRecruiter as a software developer, and sometimes <a href="https://twitter.com/perltricks">tweets</a> about Perl and Open Source.</p>
+    <h5><a href="/authors/david-farrell/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/building-a-utf-8-encoder-in-perl.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

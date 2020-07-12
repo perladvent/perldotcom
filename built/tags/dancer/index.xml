@@ -1,0 +1,1566 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Dancer on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/dancer/</link>
+    <description>Recent content in Dancer on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 10 Jan 2020 13:37:00 +0000</lastBuildDate>
+    <atom:link href="/tags/dancer/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Porting a Dancer plugin to Dancer2</title>
+      <link>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</link>
+      <pubDate>Fri, 10 Jan 2020 13:37:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</guid>
+      <description>
+
+&lt;p&gt;In my &lt;a href=&#34;https://metacpan.org/pod/Dancer2&#34;&gt;Dancer2&lt;/a&gt; web application, I want to know which requests come from smartphones.  There’s a plugin for that — but only in the older &lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer (v1)&lt;/a&gt; framework.  I’m no expert, but even I was easily able to port the Dancer plugin, &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::MobileDevice&#34;&gt;Dancer::Plugin::MobileDevice&lt;/a&gt;, to Dancer2!  In this article, we’ll explore Dancer2 and the way it handles plugins.  We’ll get our hands dirty working with the framework, and examine the main changes I made to port the plugin from Dancer to Dancer2.  By the end of this article, you’ll be ready to rock &lt;em&gt;and&lt;/em&gt; you’ll have a handy reference to use when porting plugins yourself.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-dancer2-web-framework&#34;&gt;The Dancer2 web framework&lt;/h2&gt;
+
+&lt;p&gt;Dancer2 applications run on a Web server and process requests from a browser.  The application’s Perl code uses keywords in Dancer2’s domain-specific language (DSL) to access information about a request.&lt;/p&gt;
+
+&lt;p&gt;Try it out: Install &lt;a href=&#34;https://metacpan.org/pod/Task::Dancer2&#34;&gt;Task::Dancer2&lt;/a&gt;.  Then, save this as &lt;code&gt;app.psgi&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hello, &amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; (query_parameters&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;world&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;!&amp;#39;&lt;/span&gt;;
+};
+to_app;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and run &lt;code&gt;plackup&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Enter the URL &lt;code&gt;http://localhost:5000&lt;/code&gt; in a browser and you will see “Hello, world!”, or visit &lt;code&gt;http://localhost:5000/?name=genius&lt;/code&gt; to see “Hello, genius!”.  The “genius” comes from &lt;code&gt;query_parameters&lt;/code&gt;, a DSL keyword that returns the values after the &lt;code&gt;?&lt;/code&gt; in the URL.  You can use those values when building a response to a request.&lt;/p&gt;
+
+&lt;h2 id=&#34;dancer-and-dancer2-plugins&#34;&gt;Dancer and Dancer2 plugins&lt;/h2&gt;
+
+&lt;p&gt;Dancer and Dancer2 plugins define new DSL keywords for the plugin’s users.  They also install “hooks,” subroutines that run while Dancer processes a request.  The hooks collect information for the DSL keywords to access.&lt;/p&gt;
+
+&lt;p&gt;For example, a hook in Dancer::Plugin::MobileDevice detects whether a request is coming from a mobile device.  The plugin defines the &lt;code&gt;is_mobile_device&lt;/code&gt; DSL keyword so your code can react appropriately. To port the plugin, I changed code for the keyword, the hooks, and the test suite.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-keywords&#34;&gt;Porting keywords&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins use the Dancer DSL and a &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin&#34;&gt;plugin-specific DSL&lt;/a&gt; to define DSL keywords. In Dancer (v1), the &lt;code&gt;is_mobile_device&lt;/code&gt; keyword is created with the &lt;code&gt;register&lt;/code&gt; plugin-DSL function (code examples simplified to focus on the porting):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;register &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+};
+register_plugin;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 plugins are &lt;a href=&#34;https://metacpan.org/pod/Moo&#34;&gt;Moo&lt;/a&gt; objects, and new DSL keywords are member functions on those objects.  Therefore, I changed &lt;code&gt;is_mobile_device()&lt;/code&gt; to a member function:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;is_mobile_device&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;       &lt;span style=&#34;color:#75715e&#34;&gt;# get the plugin’s object instance&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ($self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; ;
+}
+plugin_keywords &lt;span style=&#34;color:#e6db74&#34;&gt;qw(is_mobile_device)&lt;/span&gt;;   &lt;span style=&#34;color:#75715e&#34;&gt;# replaces register_plugin()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the body of the function, the Dancer plugin directly accessed the DSL keyword &lt;code&gt;request&lt;/code&gt;.  The Dancer2 plugin instead accesses the request via &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;request&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-hooks&#34;&gt;Porting hooks&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins add hooks using the DSL &lt;code&gt;hook&lt;/code&gt; keyword.  For example, this &lt;code&gt;before_template&lt;/code&gt; hook makes &lt;code&gt;is_mobile_device&lt;/code&gt; available in templates:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;hook before_template &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; is_mobile_device();
+};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 handles hooks very differently.  The plugin’s Moo constructor, &lt;code&gt;BUILD&lt;/code&gt;, is called when a plugin instance is created.  In &lt;code&gt;BUILD&lt;/code&gt;, the plugin registers the hook.  I added &lt;code&gt;BUILD&lt;/code&gt; and called
+&lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; to add the hook:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;BUILD&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;hook( before_template_render &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+        $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{is_mobile_device} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $plugin&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;is_mobile_device;
+    });
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If your hook functions are too long to move into &lt;code&gt;BUILD&lt;/code&gt;, you can leave them where they are and say &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook( hook_name =&amp;gt; \&amp;amp;sub_name );&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-the-tests&#34;&gt;Porting the tests&lt;/h2&gt;
+
+&lt;p&gt;Dancer::Plugin::MobileDevice has a full test suite.  These tests are extremely useful to developers, as they allow you to to see if a Dancer2 port behaves the same as the Dancer original. That said, you have to port the tests themselves before you can use them to test your ported plugin! We’ll look at the Dancer way, then I’ll show you the Dancer2 changes.&lt;/p&gt;
+
+&lt;p&gt;The Dancer tests define a simple Web application using the plugin.  They exercise that application using helpers in &lt;a href=&#34;https://metacpan.org/pod/Dancer::Test&#34;&gt;Dancer::Test&lt;/a&gt;.  For example (simplified from &lt;code&gt;t/01-is-mobile-device.t&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;{   &lt;span style=&#34;color:#75715e&#34;&gt;# The simple application&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Plugin::MobileDevice;
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Test;
+
+$ENV{HTTP_USER_AGENT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dancer_response GET &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;# dancer_response() is from Dancer::Test&lt;/span&gt;
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{content}, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2, on the other hand, uses the &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt; ecosystem for testing instead of its own helpers.  To work in that ecosystem, I changed the
+above test as described in the
+&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Manual#TESTING&#34;&gt;Dancer2 manual’s “testing” section&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Plack::Test;                        &lt;span style=&#34;color:#75715e&#34;&gt;# Additional testing modules&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; HTTP::Request::Common;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; TestApp;     &lt;span style=&#34;color:#75715e&#34;&gt;# Still a simple application, but now with a name&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2::Plugin::MobileDevice;
+
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dut &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Plack::Test&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;create(TestApp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_app);     &lt;span style=&#34;color:#75715e&#34;&gt;# a fake Web server&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $dut&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request(GET &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;User-Agent&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;);
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;content, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 tests use more boilerplate than Dancer tests, but Dancer2 tests are more modular and flexible than Dancer tests.  With Plack, you don’t have to use the global state (&lt;code&gt;%ENV&lt;/code&gt;) any more, and you can test more than one application or use case per &lt;code&gt;.t&lt;/code&gt; file.  Seeing the tests pass is good indication that your porting job is done.&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;I am a newbie at Dancer2, and have never used Dancer.  But I was able to port Dancer::Plugin::MobileDevice to Dancer2 in less than a day — including time to read the documentation and figure out how!  When you need a Dancer function in Dancer2, grab the quick reference below and you’ll be off and running!&lt;/p&gt;
+
+&lt;h2 id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/h2&gt;
+
+&lt;p&gt;My thanks to Kelly Deltoro-White for her insights, and to the authors of Dancer::Plugin::MobileDevice and Dancer2 for a strong foundation to build on.&lt;/p&gt;
+
+&lt;h2 id=&#34;more-information-on-dancer2-plugins&#34;&gt;More information on Dancer2 plugins&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;“&lt;a href=&#34;http://advent.perldancer.org/2016/22&#34;&gt;The new Dancer2 plugin system&lt;/a&gt;” by Sawyer X, for an overview&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Plugin&#34;&gt;Dancer2::Plugin&lt;/a&gt;, for details&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;quick-reference-porting-plugins-from-dancer-to-dancer2&#34;&gt;Quick reference: porting plugins from Dancer to Dancer2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Port keywords:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Make keywords freestanding &lt;code&gt;sub&lt;/code&gt;s, not arguments of &lt;code&gt;register&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Access data through &lt;code&gt;$self&lt;/code&gt; rather than DSL keywords&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;register_plugin&lt;/code&gt; to &lt;code&gt;plugin_keywords&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port hooks:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Add a &lt;code&gt;BUILD&lt;/code&gt; function&lt;/li&gt;
+&lt;li&gt;Move the hook functions into &lt;code&gt;BUILD&lt;/code&gt;, or refer to them from &lt;code&gt;BUILD&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Wrap each hook function in a &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; call&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port tests:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Import &lt;a href=&#34;https://metacpan.org/pod/Plack::Test&#34;&gt;Plack::Test&lt;/a&gt; and
+&lt;a href=&#34;https://metacpan.org/pod/HTTP::Request::Common&#34;&gt;HTTP::Request::Common&lt;/a&gt;
+instead of Dancer::Test&lt;/li&gt;
+&lt;li&gt;Give the application under test a &lt;code&gt;package&lt;/code&gt; statement&lt;/li&gt;
+&lt;li&gt;Create a Plack::Test instance representing the application&lt;/li&gt;
+&lt;li&gt;Create requests using HTTP::Request::Common methods&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;$response-&amp;gt;{content}&lt;/code&gt; to &lt;code&gt;$response-&amp;gt;content&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl and CGI</title>
+      <link>http://localhost:1313/article/perl-and-cgi/</link>
+      <pubDate>Mon, 12 Nov 2018 10:36:08 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/perl-and-cgi/</guid>
+      <description>
+
+&lt;p&gt;CGI stands for &lt;a href=&#34;https://tools.ietf.org/html/rfc3875#section-6.2.1&#34;&gt;Common Gateway Interface&lt;/a&gt;, it&amp;rsquo;s a protocol for executing scripts via web requests, and in the late 1990&amp;rsquo;s was the main way to write dynamic programs for the Web. It&amp;rsquo;s also the name of the Perl &lt;a href=&#34;https://metacpan.org/pod/CGI&#34;&gt;module&lt;/a&gt; we used (and for me, still use) to code for the web.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Warning&lt;/strong&gt; you probably don&amp;rsquo;t want to use CGI for modern web development, see &lt;a href=&#34;#why-not-to-use-cgi&#34;&gt;Why Not to Use CGI&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;cgi-and-http&#34;&gt;CGI and HTTP&lt;/h2&gt;
+
+&lt;p&gt;You&amp;rsquo;ve probably heard of HTTP (HyperText Transfer Protocol), which is the communications protocol used by most Internet services. Broadly speaking, CGI programs receive HTTP requests, and return HTTP responses. An HTTP response header must include the status and the content-type. CGI (the interface) makes this easy.&lt;/p&gt;
+
+&lt;p&gt;We could hardcode a Perl script to return an HTTP response header and HTML in the body:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;END&amp;#39;&lt;/span&gt;;
+Status: &lt;span style=&#34;color:#ae81ff&#34;&gt;200&lt;/span&gt;
+Content&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;type: text&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;html
+
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;!&lt;/span&gt;doctype html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;html&amp;gt;&lt;/span&gt; HTML Goes Here &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;END&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;But CGI.pm can handle the header for us:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; CGI;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $cgi &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; CGI&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;();
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;END&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;!&lt;/span&gt;doctype html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;html&amp;gt;&lt;/span&gt; HTML Goes Here &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;END&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Of course, you don&amp;rsquo;t have to just send HTML text.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; CGI;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $cgi &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; CGI&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;();
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header( &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;type &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;text/plain&amp;#39;&lt;/span&gt; );
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;END&amp;#39;&lt;/span&gt;;
+This is now text
+&lt;span style=&#34;color:#66d9ef&#34;&gt;END&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;But that is not the limit, by far. The content-type is a &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types&#34;&gt;Multipurpose Internet Mail Extension (MIME) type&lt;/a&gt;, and it determines how the browser handles the message once it returns. The above example treats the &amp;ldquo;This is now text&amp;rdquo; message as text, and displays it as such. If the content-type was &amp;ldquo;text/html&amp;rdquo;, it would be parsed for HTML like a web page. If it was &amp;ldquo;application/json&amp;rdquo;, it might be displayed like text, or formatted into a browsable form, depending on your browser or extensions. If it was &amp;ldquo;application/vnd.ms-excel&amp;rdquo; or even &amp;ldquo;text/csv&amp;rdquo;, the browser would likely open in in Excel or another spreadsheet program, or possibly directly into a gene sequencer, like happens to those I generate at work.&lt;/p&gt;
+
+&lt;p&gt;And, if the program was this &amp;ndash;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; CGI;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $cgi &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; CGI&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;();
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header( &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;type &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;image/jpg&amp;#39;&lt;/span&gt; );
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $img, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/home/user/images/author/dave-jacoby.jpg&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$img&amp;gt;&lt;/span&gt;) { &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&amp;ndash; you would get this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/author/dave-jacoby.jpg&#34; alt=&#34;/images/author/dave-jacoby.jpg&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;processing-input&#34;&gt;Processing input&lt;/h2&gt;
+
+&lt;p&gt;The first way to pass data is with the query string, (the portion of a URI beginning with &lt;code&gt;?&lt;/code&gt;), which you see in URLs like &lt;code&gt;https://example.com/?foo=bar&lt;/code&gt;. This uses the &amp;ldquo;GET&amp;rdquo; request method, and becomes available to the program as &lt;code&gt;$ENV-&amp;gt;{QUERY_STRING}&lt;/code&gt;, which in this case is &lt;code&gt;foo=bar&lt;/code&gt; (CGI programs receive their arguments as environment variables). But CGI provides the &lt;code&gt;param&lt;/code&gt; method which parses the query string into key value pairs, so you can work with them like a hash:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; CGI;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $cgi &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; CGI&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %param &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; map { $_ &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; scalar $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param($_) } $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param() ;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header( &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;type &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;text/plain&amp;#39;&lt;/span&gt; );
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qq{PARAM:\N}&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $k ( sort keys %param ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;: &amp;#34;&lt;/span&gt;, $k, $param{$k};
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;
+}
+&lt;span style=&#34;color:#75715e&#34;&gt;# PARAM:&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# foo: bar&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So, now, let&amp;rsquo;s make a web page like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!DOCTYPE html&amp;gt;&lt;/span&gt;
+&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;html&lt;/span&gt;&amp;gt;
+&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;head&lt;/span&gt;&amp;gt;
+&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;head&lt;/span&gt;&amp;gt;
+&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;body&lt;/span&gt;&amp;gt;
+    &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;form&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;method&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;POST&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;action&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/url/of/simple.cgi&amp;#34;&lt;/span&gt;&amp;gt;
+        &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;input&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;type&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;text&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;foo&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;bar&amp;#34;&lt;/span&gt;&amp;gt;
+        &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;input&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;type&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;submit&amp;#34;&lt;/span&gt;&amp;gt;
+    &amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;form&lt;/span&gt;&amp;gt;
+&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;body&lt;/span&gt;&amp;gt;
+&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;html&lt;/span&gt;&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And click submit. The browser will send an HTTP &amp;ldquo;POST&amp;rdquo; request, with the form input as key value pairs in the request body. CGI handles this and places the data in &lt;code&gt;$cgi-&amp;gt;param&lt;/code&gt;, just like with &amp;ldquo;GET&amp;rdquo;. Only, with &amp;ldquo;POST&amp;rdquo; the size of input can be much larger (URL&amp;rsquo;s are generally limited to 2048 bytes by browsers).&lt;/p&gt;
+
+&lt;h2 id=&#34;generating-html&#34;&gt;Generating HTML&lt;/h2&gt;
+
+&lt;p&gt;Let&amp;rsquo;s make that form above, using the HTML-generation techniques that come with CGI.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $output;
+$output &lt;span style=&#34;color:#f92672&#34;&gt;.=&lt;/span&gt; $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;start_form(
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;method &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post&amp;#34;&lt;/span&gt;,
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;action &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/path/to/simple.cgi&amp;#34;&lt;/span&gt;
+);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;textfield( &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;name &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;foo&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;value &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bar&amp;#39;&lt;/span&gt; );
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;submit;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;end_form;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The problem with this, is the code to generate HTML with CGI can get very long and unreadable. The maintainers of CGI agree, which is why this is at the top of &lt;a href=&#34;https://metacpan.org/pod/CGI#HTML-Generation-functions-should-no-longer-be-used&#34;&gt;the documentation for CGI.pm&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;All HTML generation functions within CGI.pm are no longer being maintained. [&amp;hellip;] The rationale for this is that the HTML generation functions of CGI.pm are an obfuscation at best and a maintenance nightmare at worst. You should be using a template engine for better separation of concerns. See &lt;a href=&#34;https://metacpan.org/pod/CGI::Alternatives&#34;&gt;CGI::Alternatives&lt;/a&gt; for an example of using CGI.pm with the &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;Template::Toolkit&lt;/a&gt; module.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Using Template Toolkit, that form might look like:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; CGI;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Template;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $cgi      &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; CGI&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $template &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Template&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;();
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $input    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;DATA&amp;gt;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $data     &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; { action &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/url/of/program&amp;#39;&lt;/span&gt;} ;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cgi&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header;
+$template&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;process(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$input,$data)
+    &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Template process failed&amp;#34;&lt;/span&gt;, $template&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;error();
+
+__DATA__
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;form method&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;POST&amp;#34;&lt;/span&gt; action&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;[% action %]&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;input type&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;text&amp;#34;&lt;/span&gt; name&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;foo&amp;#34;&lt;/span&gt; value&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;bar&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;input type&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;submit&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/form&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I use Template Toolkit for all my server-side web work. It&amp;rsquo;s also the default in many of Perl&amp;rsquo;s web frameworks.&lt;/p&gt;
+
+&lt;h2 id=&#34;configuring-cgi-on-apache&#34;&gt;Configuring CGI on Apache&lt;/h2&gt;
+
+&lt;p&gt;To use CGI, your web server should have &lt;a href=&#34;http://httpd.apache.org/docs/current/mod/mod_cgi.html&#34;&gt;mod_cgi&lt;/a&gt; installed. Once installed, you will have to to configure your server to execute CGI programs.&lt;/p&gt;
+
+&lt;p&gt;The first way is to have &lt;code&gt;cgi-bin&lt;/code&gt; directories where every file gets executed instead of transferred.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Directory &amp;quot;/home/*/www/cgi-bin&amp;quot;&amp;gt;
+    Options ExecCGI
+    SetHandler cgi-script
+&amp;lt;/Directory&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The other is to allow CGI to be enabled per directory, with a configuration that looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Directory &amp;quot;/home/*/www&amp;quot;&amp;gt;
+    Options +ExecCGI
+    AddHandler cgi-script .cgi
+&amp;lt;/Directory&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then add a &lt;code&gt;.htaccess&lt;/code&gt; file in each directory that looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;AddHandler cgi-script .cgi
+Options +ExecCGI
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So that &lt;code&gt;foo.pl&lt;/code&gt; will transfer but &lt;code&gt;foo.cgi&lt;/code&gt; will run, even if both are executable.&lt;/p&gt;
+
+&lt;h2 id=&#34;why-not-to-use-cgi&#34;&gt;Why not to use CGI&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.nntp.perl.org/group/perl.perl5.porters/2013/05/msg202130.html&#34;&gt;In May 2013, Ricardo Signes, then Perl5 Pumpking, sent this to the Perl5 Porters list&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;I think it&amp;rsquo;s time to seriously consider removing CGI.pm from the core distribution. It is no longer what I&amp;rsquo;d point &lt;em&gt;anyone&lt;/em&gt; at for writing &lt;em&gt;any&lt;/em&gt; sort of web code. It is in the core, as far as I know, because once it was the state of the art, and a major reason for many people to use the language. I don&amp;rsquo;t think either is true now.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;It was marked deprecated with 5.20 and removed from Core with 5.22. This is not catastrophic; it is still available in CPAN, so you would have to install it, or have your administrator install it, depending on your circumstances.&lt;/p&gt;
+
+&lt;p&gt;So, why did CGI drop from &amp;ldquo;state of the art&amp;rdquo; to discouraged by its own maintainers?&lt;/p&gt;
+
+&lt;p&gt;There are two big issues with CGI: speed and complexity. Every HTTP request triggers the forking of a new process on the web server, which is costly for server resources. A more efficient and faster way is to use a multi-process daemon which does its forking on startup and maintains a pool of processes to handle requests.&lt;/p&gt;
+
+&lt;p&gt;CGI isn&amp;rsquo;t good at managing the complexity of larger web applications: it has no MVC architecture to help developers separate concerns. This tends to lead to hard-to-maintain programs.&lt;/p&gt;
+
+&lt;p&gt;The rise of web frameworks such as Ruby on Rails, and the application servers they run on, have done much to solve both problems. There are many web frameworks written in Perl; among the most popular are &lt;a href=&#34;https://metacpan.org/pod/Catalyst::Manual&#34;&gt;Catalyst&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Dancer2&#34;&gt;Dancer&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Mojolicious&#34;&gt;Mojolicious&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;CGI also contains a security &lt;a href=&#34;https://metacpan.org/pod/distribution/CGI/lib/CGI.pod#Fetching-the-value-or-values-of-a-single-named-parameter&#34;&gt;vulnerability&lt;/a&gt; which must be coded around to avoid parameter injection.&lt;/p&gt;
+
+&lt;h2 id=&#34;references&#34;&gt;References&lt;/h2&gt;
+
+&lt;p&gt;The &amp;ldquo;good&amp;rdquo; parts of CGI.pm, the header creation and parameter parsing, are well-explained in the module&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/CGI&#34;&gt;documentation&lt;/a&gt;. As for the deprecated HTML generation functions, they are documented &lt;a href=&#34;https://metacpan.org/pod/CGI::HTML::Functions&#34;&gt;separately&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Lincoln Stein, the creator of CGI.pm also wrote the &lt;a href=&#34;https://www.amazon.com/Official-Guide-Programming-CGI-pm-Lincoln/dp/0471247448&#34;&gt;Official Guide&lt;/a&gt;. The book is 20 years old, and out of date but remains a clear and concise resource about CGI.pm.&lt;/p&gt;
+
+&lt;p&gt;Lee Johnson, the current maintainer of CGI.pm wrote a long form blog &lt;a href=&#34;https://leejo.github.io/2016/02/22/all_software_is_legacy/&#34;&gt;post&lt;/a&gt; about the history of CGI, its current state and future.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - June 2015</title>
+      <link>http://localhost:1313/article/181/2015/7/9/What-s-new-on-CPAN---June-2015/</link>
+      <pubDate>Thu, 09 Jul 2015 13:17:10 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/181/2015/7/9/What-s-new-on-CPAN---June-2015/</guid>
+      <description>
+
+&lt;p&gt;Welcome to &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo;, a curated look at last month&amp;rsquo;s new CPAN uploads for your reading and programming pleasure. Enjoy!&lt;/p&gt;
+
+&lt;h3 id=&#34;module-of-the-month&#34;&gt;Module of the month&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Class::Storage&#34;&gt;Class::Storage&lt;/a&gt; is a module for serializing blessed references (objects). Once serialized, an object can be transmitted via JSON, XML, YAML or saved in a data store. Serializing objects can also make IPC easier: coroutines, threads and other processes can pass text but blessed references are often an issue.&lt;/p&gt;
+
+&lt;p&gt;Module author Peter Valdemar Mørch has pulled together excellent documentation. A welcome addition to CPAN, check out the &lt;a href=&#34;https://metacpan.org/pod/Class::Storage#ACKNOWLEDGEMENTS&#34;&gt;acknowledgements section&lt;/a&gt; for some interesting background on the module. For an alternative approach, you might be interested in &lt;a href=&#34;https://metacpan.org/pod/Object::Serializer&#34;&gt;Object::Serializer&lt;/a&gt;. For non-readable serializers, checkout &lt;a href=&#34;https://metacpan.org/pod/Storable&#34;&gt;Storable&lt;/a&gt; and the newer and faster &lt;a href=&#34;https://metacpan.org/pod/Sereal&#34;&gt;Sereal&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Important&lt;/strong&gt; - when working with object serializers like Class::Storage, only deserialize trusted data, as malicious code can be injected into the data, and when the data is deserialized, the code will be executed automatically. See for example this bug &lt;a href=&#34;https://rt.cpan.org/Public/Bug/Display.html?id=105772&#34;&gt;report&lt;/a&gt; (&lt;em&gt;Thanks to Reini Urban for the reminder&lt;/em&gt;).&lt;/p&gt;
+
+&lt;h3 id=&#34;apis-apps&#34;&gt;APIs &amp;amp; Apps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/API::Zendesk&#34;&gt;API::Zendesk&lt;/a&gt; provides a Perl interface for the customer support app&lt;/li&gt;
+&lt;li&gt;Painlessly install libsvm, the support vector machine library using &lt;a href=&#34;https://metacpan.org/pod/Alien::LIBSVM&#34;&gt;Alien::LIBSVM&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Use Slack? Of course you do. Check out &lt;a href=&#34;https://metacpan.org/pod/AnyEvent::SlackRTM&#34;&gt;AnyEvent::SlackRTM&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Develop your first Slack bot with &lt;a href=&#34;https://metacpan.org/pod/Bot::Backbone::Service::SlackChat&#34;&gt;Bot::Backbone::Service::SlackChat&lt;/a&gt;!&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Interchange::Search::Solr&#34;&gt;Interchange::Search::Solr&lt;/a&gt; let&amp;rsquo;s you use Solr search with Perl&lt;/li&gt;
+&lt;li&gt;Be popular, send your co-workers Bonusly with &lt;a href=&#34;https://metacpan.org/pod/WebService::Bonusly&#34;&gt;WebService::Bonusly&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WebDriver::Tiny&#34;&gt;WebDriver::Tiny&lt;/a&gt; is an all-new implementation of a Selenium webdriver API for Perl&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;config-devops&#34;&gt;Config &amp;amp; DevOps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Config::App&#34;&gt;Config::App&lt;/a&gt; implements &amp;ldquo;cascading configurations&amp;rdquo; - looks like a convenient way to have context-specific configurations without resorting to Perl code&lt;/li&gt;
+&lt;li&gt;Quickly rind files on your Mac using &lt;a href=&#34;https://metacpan.org/pod/Mac::FindFile&#34;&gt;Mac::FindFile&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Perl::Critic::Freenode&#34;&gt;Perl::Critic::Freenode&lt;/a&gt; is a compilation of policies recommended by the folks on the #perl channel on freenode IRC&lt;/li&gt;
+&lt;li&gt;Include ditaa diagrams in pod with &lt;a href=&#34;https://metacpan.org/pod/Pod::Weaver::Plugin::Ditaa&#34;&gt;Pod::Weaver::Plugin::Ditaa&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;data&#34;&gt;Data&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Extract data from your Zoom 5341J cable modem with &lt;a href=&#34;https://metacpan.org/pod/Device::CableModem::Zoom5341J&#34;&gt;Device::CableModem::Zoom5341J&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Log::Dispatch::HipChat&#34;&gt;Log::Dispatch::HipChat&lt;/a&gt; will send your log messages to HipChat&lt;/li&gt;
+&lt;li&gt;Moving averages are easy to implement, and easy to get wrong. The next time you need one, consider &lt;a href=&#34;https://metacpan.org/pod/Math::SMA&#34;&gt;Math::SMA&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;If you&amp;rsquo;re working with 35mm film and DX codes, you might like &lt;a href=&#34;https://metacpan.org/pod/Photography::DX&#34;&gt;Photography::DX&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;development-and-version-control&#34;&gt;Development and Version Control&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;When stuck in Git merge conflict hell, sometimes it&amp;rsquo;s easier to say &amp;ldquo;I&amp;rsquo;m right&amp;rdquo;. &lt;a href=&#34;https://metacpan.org/pod/App::Git::Workflow::Command::Take&#34;&gt;App::Git::Workflow::Command::Take&lt;/a&gt; let&amp;rsquo;s you tell Git to merge your changes. You win!&lt;/li&gt;
+&lt;li&gt;If you have a load of Git repos that you&amp;rsquo;d like to execute a command against, you might like &lt;a href=&#34;https://metacpan.org/pod/App::Multigit&#34;&gt;App::Multigit&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Assert::Conditional&#34;&gt;Assert::Conditional&lt;/a&gt; from Tom Christiansen let&amp;rsquo;s you conditionally compile assertions into your Perl programs, ala C&amp;rsquo;s assert.h. Wow&lt;/li&gt;
+&lt;li&gt;Daemonize &lt;em&gt;anything&lt;/em&gt; with &lt;a href=&#34;https://metacpan.org/pod/JIP::Daemon&#34;&gt;JIP::Daemon&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;text-language&#34;&gt;Text &amp;amp; Language&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Acme::Unicodify&#34;&gt;Acme::Unicodify&lt;/a&gt; can convert ASCII text into Unicode-esque characters&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Crypt::RS14_PP&#34;&gt;Crypt::RS14_PP&lt;/a&gt; is a pure Perl implementation of the RS14 encryption algorithm&lt;/li&gt;
+&lt;li&gt;Convert HTML into FreeStyleWiki markup using &lt;a href=&#34;https://metacpan.org/pod/HTML::WikiConverter::FreeStyleWiki&#34;&gt;HTML::WikiConverter::FreeStyleWiki&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Awesome! detect the language with &lt;a href=&#34;https://metacpan.org/pod/Lingua::Identify::CLD2&#34;&gt;Lingua::Identify::CLD2&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Text::Hogan&#34;&gt;Text::Hogan&lt;/a&gt; is a Perl clone of hogan.js, the JavaScript template engine. Supports pre-compilation!&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;science-and-mathematics&#34;&gt;Science and Mathematics&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Algorithm::BloomFilter&#34;&gt;Algorithm::BloomFilter&lt;/a&gt; is a simple, superfast bloom filter implementation written in XS&lt;/li&gt;
+&lt;li&gt;Not a new module, but it is new to CPAN, &lt;a href=&#34;https://metacpan.org/pod/App::Chart&#34;&gt;App::Chart&lt;/a&gt; the visual charting library is useful&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/BioX::Workflow&#34;&gt;BioX::Workflow&lt;/a&gt; is an &amp;ldquo;opinionated template based workflow writer&amp;rdquo;, hailing from the Bioinformatics World, but not just for BioX&lt;/li&gt;
+&lt;li&gt;The Longest Common Subsequence algorithm is used for diffing text, among other uses. &lt;a href=&#34;https://metacpan.org/pod/LCS::XS&#34;&gt;LCS::XS&lt;/a&gt; is a supercharged version, written in XS&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web&#34;&gt;Web&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Extract all of the supported URLs from your Catalyst app using &lt;a href=&#34;https://metacpan.org/pod/Catalyst::Plugin::ActionPaths&#34;&gt;Catalyst::Plugin::ActionPaths&lt;/a&gt; (disclosure, I&amp;rsquo;m the module author)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::Piwik&#34;&gt;Dancer::Plugin::Piwik&lt;/a&gt; helps you integrate Pwik analytics with a Dancer app&lt;/li&gt;
+&lt;li&gt;Use MongoDB with Minion, the job queue application using &lt;a href=&#34;https://metacpan.org/pod/Minion::Backend::MongoDB&#34;&gt;Minion::Backend::MongoDB&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Mojo::Reactor::UV&#34;&gt;Mojo::Reactor::UV&lt;/a&gt; let&amp;rsquo;s you use the C library, libuv as the backend event loop for your Mojo application&lt;/li&gt;
+&lt;li&gt;Rapidly expand shortened URLs with &lt;a href=&#34;https://metacpan.org/pod/WWW::Expand::More&#34;&gt;WWW::Expand::More&lt;/a&gt;. Cool!&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Updated to include other example serializer modules and deserialization warning - 2015-07-09&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>A Perl Review of the ODROID-C1</title>
+      <link>http://localhost:1313/article/152/2015/2/11/A-Perl-Review-of-the-ODROID-C1/</link>
+      <pubDate>Wed, 11 Feb 2015 13:53:33 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/152/2015/2/11/A-Perl-Review-of-the-ODROID-C1/</guid>
+      <description>&lt;p&gt;The success of the Raspberry Pi has opened up a whole new market of System on a Chip devices, where a single chip integrates most of the basic functions of a computer. Many of these systems run some kind of Linux distribution. Naturally, Perl comes along for the ride.&lt;/p&gt;
+
+&lt;p&gt;The last year saw the emergence of several competitors to the Raspberry Pi, though few have managed to hit the same formula - just enough RAM, just enough CPU, Ethernet, USB, and cheap. Some have been faster or have more RAM, but miss that $35 price point of the Model B+. One that has done it is the &lt;a href=&#34;http://www.hardkernel.com/main/products/prdt_info.php&#34;&gt;ODROID-C1&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;With a Cortex-A5 processor running at 1.5GHz, and 1GB of RAM, it&amp;rsquo;s ahead of the Raspberry Pi version 1, and may still keep ahead of the recently released Pi version 2. In addition to booting off a MicroSD card, it can instead take an eMMC module, which promises to be much faster.&lt;/p&gt;
+
+&lt;p&gt;SD card quality can vary, even when buying Class 6 or Class 10 cards, which can affect your program&amp;rsquo;s performance if it does a lot of I/O. I bought an 8GB SD card from the ODROID store preloaded with Xubuntu. From a subjective standpoint, I found it quite peppy compared to the random SD cards I usually use with my Raspberry Pi&amp;rsquo;s. If you need something extra, the eMMC are about twice the cost for the same size, but may be a worthwhile option.&lt;/p&gt;
+
+&lt;p&gt;Since installing CPAN modules (especially ones that don&amp;rsquo;t have official OS packages) involves a lot of downloading, unpacking, reading, and copying, the process can be harsh on cheap SD cards. Even worse (in my experience) is the PCDuino v3&amp;rsquo;s built-in flash, which is glacially slow. Too bad, because it otherwise could have been an interesting alternative to the Raspberry Pi.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve spent entire evenings waiting for layers of CPAN dependencies to install on a Raspberry Pi&amp;rsquo;s SD card. Using &lt;a href=&#34;https://vonbienenstock.de/hiveberry/&#34;&gt;Hiveberry&amp;rsquo;s images&lt;/a&gt; can certainly help here. Of course, most people will be starting from the official OS images, and may hesitate to use a third-party; understandably so.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a quick-and-dirty benchmark of installing &lt;a href=&#34;https://metacpan.org/pod/Device::WebIO&#34;&gt;Device::WebIO&lt;/a&gt; from a fresh deployment on an SD card bought directly from the ODROID store:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ time sudo cpanm Device::WebIO
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+real    &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;m0&lt;span style=&#34;color:#ae81ff&#34;&gt;.980&lt;/span&gt;s
+user    &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;m46&lt;span style=&#34;color:#ae81ff&#34;&gt;.290&lt;/span&gt;s
+sys     &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;m18&lt;span style=&#34;color:#ae81ff&#34;&gt;.780&lt;/span&gt;s&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then &lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt; immediately after that (which has quite the dependency list):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ time sudo cpanm Dancer
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+real    &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt;m40&lt;span style=&#34;color:#ae81ff&#34;&gt;.347&lt;/span&gt;s
+user    &lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;m53&lt;span style=&#34;color:#ae81ff&#34;&gt;.190&lt;/span&gt;s
+sys     &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;m32&lt;span style=&#34;color:#ae81ff&#34;&gt;.360&lt;/span&gt;s&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Compared to what I&amp;rsquo;ve seen on random SD cards, this is nice and quick!&lt;/p&gt;
+
+&lt;p&gt;Power comes from a 5V/2A adapter with a 2.5mm plug, which deviates from the micro USB plugs that have become common with SoC devices. I consider this a good thing; people would often use old cellphone chargers with inadequate amp ratings and tons of noise in the signal. It might boot the board up fine, but things would go wrong at random, and they&amp;rsquo;d get frustrated and give up. In retrospect, micro USB on these boards might have been a bad idea. Encouraging a specific, vetted power source with a less ubiquitous kind of plug is something I hope other boards will copy, provided that it doesn&amp;rsquo;t lead to gouging on proprietary plugs.&lt;/p&gt;
+
+&lt;p&gt;You will also want to be sure to have an adapter for the HDMI Micro Type-D port. This is even smaller than the HDMI Mini found on some similar boards, such as the BeagleBone Black.&lt;/p&gt;
+
+&lt;p&gt;Booting the board up, using a random monitor laying around the hackerspace, it showed only a blank screen, flickering with the occasional noisy image. The reason is that the boot.ini file on the first partition of the SD card has a hardcoded resolution for the HDMI output. This partition is a simple FAT32 format, so you can mount it on just about any computer and edit the file to choose the right resolution.&lt;/p&gt;
+
+&lt;p&gt;The preinstalled perl is:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;v
+
+This is perl &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;, version &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt;, subversion &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; (v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.18.2&lt;/span&gt;) built &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; arm&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;linux&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;gnueabihf&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;thread&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;multi&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt;int
+(with &lt;span style=&#34;color:#ae81ff&#34;&gt;41&lt;/span&gt; registered patches, see perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;V &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; more detail)
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is more up to date than the 5.14 that comes on Raspbian images. Note the enabling of threads and 64-bit integers on this build, which is also the case on Raspbian. No doubt this is because perls built for a default system installation need to be compatible with every Perl script in existence (or as much as possible, anyway). Most Linux-based Perl applications don&amp;rsquo;t use threads, and can usually get away with native 32-bit integers. Threads, in particular, give a noticeable slowdown to every execution, even in apps that don&amp;rsquo;t use them. If you need to get a little extra speed out of your app, go for a custom Perl compile without these features.&lt;/p&gt;
+
+&lt;p&gt;So far, I&amp;rsquo;m liking this little board. Once past the screen resolution issues, setup is a breeze. It&amp;rsquo;s nice and fast, with a reasonably up to date Perl. On the downside, the community is smaller, and so you&amp;rsquo;ll often be on your own to figure things out. Recommended for any trailblazers in the Perl community.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - December 2014</title>
+      <link>http://localhost:1313/article/142/2015/1/5/What-s-new-on-CPAN---December-2014/</link>
+      <pubDate>Mon, 05 Jan 2015 13:50:44 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/142/2015/1/5/What-s-new-on-CPAN---December-2014/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Welcome to &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo;, a curated look at last month&amp;rsquo;s new CPAN uploads for your reading and programming pleasure.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;apis-apps&#34;&gt;APIs &amp;amp; Apps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Easily setup a TCP proxy server for analyzing web traffic with &lt;a href=&#34;https://metacpan.org/pod/App::tcpproxy&#34;&gt;App::tcpproxy&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/App::Prove::Watch&#34;&gt;App::Prove::Watch&lt;/a&gt; runs your unit tests every time your code changes&lt;/li&gt;
+&lt;li&gt;Monitor Bitcoin prices from several sources using &lt;a href=&#34;https://metacpan.org/pod/Finance::Bitcoin::Feed&#34;&gt;Finance::Bitcoin::Feed&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::Tesco&#34;&gt;Net::Tesco&lt;/a&gt; provides a Perly API for Tesco, one of the World&amp;rsquo;s largest retailers&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WebService::Vultr&#34;&gt;WebService::Vultr&lt;/a&gt; is an API for the cloud server company&lt;/li&gt;
+&lt;li&gt;If you use Instapaper, the bookmarking service, check out&lt;a href=&#34;https://metacpan.org/pod/WebService::Instapaper&#34;&gt;WebService::Instapaper&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;config-devops&#34;&gt;Config &amp;amp; DevOps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Debug::Statements&#34;&gt;Debug::Statements&lt;/a&gt; provides a convenient way of managing debug statements in code&lt;/li&gt;
+&lt;li&gt;Log every time a Perl process starts using &lt;a href=&#34;https://metacpan.org/pod/Devel::PerlLog&#34;&gt;Devel::PerlLog&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;There are already several Dist::Zilla plugins for auto-generating a distribution readme from pod, but &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::Pod2Readme&#34;&gt;Dist::Zilla::Plugin::Pod2Readme&lt;/a&gt; aims to be as simple as possible. Very useful for GitHub hosted distributions&lt;/li&gt;
+&lt;li&gt;Add a timeout to command line prompts, including default options with &lt;a href=&#34;https://metacpan.org/pod/IO::Prompt::Timeout&#34;&gt;IO::Prompt::Timeout&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Version::Compare&#34;&gt;Version::Compare&lt;/a&gt; can compare version numbers and determine which is greater&lt;/li&gt;
+&lt;li&gt;Allow certain exceptions to not be caught using &lt;a href=&#34;https://metacpan.org/pod/Try::Tiny::Except&#34;&gt;Try::Tiny::Except&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Regexp::SAR&#34;&gt;Regexp::SAR&lt;/a&gt; implements event handling on regexp matching conditions&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;data&#34;&gt;Data&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Color::RGB::Util&#34;&gt;Color::RGB::Util&lt;/a&gt; provides a bunch of useful functions for manipulating RGB colors&lt;/li&gt;
+&lt;li&gt;Implement a circular list with &lt;a href=&#34;https://metacpan.org/pod/Data::CircularList&#34;&gt;Data::CircularList&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Data::Embed&#34;&gt;Data::Embed&lt;/a&gt; provides read / write accessors for data embedded in files&lt;/li&gt;
+&lt;li&gt;Looking for a faster Excel reader? Check out &lt;a href=&#34;https://metacpan.org/pod/Data::XLSX::Parser&#34;&gt;Data::XLSX::Parser&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/ETL::Yertl&#34;&gt;ETL::Yertl&lt;/a&gt; is a command line data ETL tool. At an early stage of development, but looks interesting&lt;/li&gt;
+&lt;li&gt;Only access part of a file using &lt;a href=&#34;https://metacpan.org/pod/IO::Slice&#34;&gt;IO::Slice&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/SQL::Interpol&#34;&gt;SQL::Interpol&lt;/a&gt; can interpolate Perl variables into SQL queries&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/PQL::Cache&#34;&gt;PQL::Cache&lt;/a&gt; is an in-memory Perl database with many useful features&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;math-science-language&#34;&gt;Math, Science &amp;amp; Language&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Geo::Coder::All&#34;&gt;Geo::Coder::All&lt;/a&gt; is an all-in-one wrapper for geocoding data that works with Google, Bing, TomTom etc.&lt;/li&gt;
+&lt;li&gt;Compare image hashes with &lt;a href=&#34;https://metacpan.org/pod/Image::Hash&#34;&gt;Image::Hash&lt;/a&gt;. Very cool!&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Map::Metro&#34;&gt;Map::Metro&lt;/a&gt; is another implementation of public transport graphing with some useful features&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Safely&lt;/em&gt; truncate unicode text using &lt;a href=&#34;https://metacpan.org/pod/Unicode::Truncate&#34;&gt;Unicode::Truncate&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web&#34;&gt;Web&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Add an auto-timeout to your Dancer routes with &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::TimeoutManager&#34;&gt;Dancer::Plugin::TimeoutManager&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Lavoco::Website&#34;&gt;Lavoco::Website&lt;/a&gt; is an experimental micro web framework for hosting template toolkit templates&lt;/li&gt;
+&lt;li&gt;Check if a URL is active with &lt;a href=&#34;https://metacpan.org/pod/URL::Exists&#34;&gt;URL::Exists&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - October 2014</title>
+      <link>http://localhost:1313/article/132/2014/11/7/What-s-new-on-CPAN---October-2014/</link>
+      <pubDate>Fri, 07 Nov 2014 13:22:17 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/132/2014/11/7/What-s-new-on-CPAN---October-2014/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Welcome to &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo;, a curated look at last month&amp;rsquo;s new CPAN uploads for your reading and programming pleasure.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;apis&#34;&gt;APIs&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WebService::HackerNews&#34;&gt;WebService::HackerNews&lt;/a&gt; provides an interface to HackerNews, woohoo!&lt;/li&gt;
+&lt;li&gt;Like music album cover art? &lt;a href=&#34;https://metacpan.org/pod/WWW::Search::Coveralia&#34;&gt;WWW::Search::Coveralia&lt;/a&gt; provides a search API for Coveralia.com&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;apps&#34;&gt;Apps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Games::Dukedom&#34;&gt;Games::Dukedom&lt;/a&gt; implements the land management game in the terminal&lt;/li&gt;
+&lt;li&gt;Convert anything to anything in the cloud using &lt;a href=&#34;https://metacpan.org/pod/App::cloudconvert&#34;&gt;App::cloudconvert&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/App::DistSync&#34;&gt;App::DistSync&lt;/a&gt; is a file synchronization app&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;async-concurrency&#34;&gt;Async &amp;amp; Concurrency&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Test::Async::HTTP&#34;&gt;Test::Async::HTTP&lt;/a&gt; is a mock class for testing the asynchronous user agent&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Lock::Socket&#34;&gt;Lock::Socket&lt;/a&gt; is a clever module that provides process locking via sockets&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;data&#34;&gt;Data&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Slurp with confidence using &lt;a href=&#34;https://metacpan.org/pod/File::Slurper&#34;&gt;File::Slurper&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;It has a long title but it&amp;rsquo;s worth it: &lt;a href=&#34;https://metacpan.org/pod/DBIx::Class::InflateColumn::Serializer::Sereal&#34;&gt;DBIx::Class::InflateColumn::Serializer::Sereal&lt;/a&gt; inflates / deflates into DBIx columns using the super-fast Sereal!&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Couchbase::README&#34;&gt;Couchbase&lt;/a&gt; is a new Perl client for the NoSQL database, implemented in XS&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Geo::Address::Formatter&#34;&gt;Geo::Address::Formatter&lt;/a&gt; formats addresses from all over the World.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;config-devops&#34;&gt;Config &amp;amp; DevOps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/FFI::TinyCC&#34;&gt;FFI::TinyCC&lt;/a&gt; provides an interface to the super-fast (compile time) TinyCC compiler&lt;/li&gt;
+&lt;li&gt;Another useful FFI library, &lt;a href=&#34;https://metacpan.org/pod/FFI::CheckLib&#34;&gt;FFI::CheckLib&lt;/a&gt; will check that a C library is available for FFI to use&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;math-science-language&#34;&gt;Math, Science &amp;amp; Language&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Generate random, normally distributed numbers with &lt;a href=&#34;https://metacpan.org/pod/Math::Random::Normal::Leva&#34;&gt;Math::Random::Normal::Leva&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Related, &lt;a href=&#34;https://metacpan.org/pod/Rand::Urandom&#34;&gt;Rand::Urandom&lt;/a&gt;will generate better pseudo random numbers&lt;/li&gt;
+&lt;li&gt;Do efficient fuzzy matching with &lt;a href=&#34;https://metacpan.org/pod/Tree::BK&#34;&gt;Tree::BK&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Rstats&#34;&gt;Rstats&lt;/a&gt; exports R functions, an interesting alternative to Statistics::R. Next step, Inline::R!&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;object-oriented&#34;&gt;Object Oriented&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/MooseX::Role::Hashable&#34;&gt;MooseX::Role::Hashable&lt;/a&gt; enables Moose object to be convertible into hashes!&lt;/li&gt;
+&lt;li&gt;Get some useful extra type constraint methods from &lt;a href=&#34;https://metacpan.org/pod/MooseX::Types::MoreUtils&#34;&gt;MooseX::Types::MoreUtils&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;testing-exceptions&#34;&gt;Testing &amp;amp; Exceptions&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Devel::DidYouMean&#34;&gt;Devel::DidYouMean&lt;/a&gt; intercepts failed subroutine calls and suggests useful alternatives (disclaimer - I am the module author.)&lt;/li&gt;
+&lt;li&gt;Conveniently test that numbers are within tolerance using &lt;a href=&#34;https://metacpan.org/pod/Test::Deep::NumberTolerant&#34;&gt;Test::Deep::NumberTolerant&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web&#34;&gt;Web&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Per the documention: &lt;a href=&#34;https://metacpan.org/pod/Mojo::Pg&#34;&gt;Mojo::Pg&lt;/a&gt; &amp;ldquo;makes PostgreSQL a lot of fun to use with the Mojolicious&amp;rdquo;. Check it out!&lt;/li&gt;
+&lt;li&gt;Want to generate a sitemap for a web app? Check out &lt;a href=&#34;https://metacpan.org/pod/WWW::Sitemap::Simple&#34;&gt;WWW::Sitemap::Simple&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Plugin::Auth::OAuth&#34;&gt;Dancer2::Plugin::Auth::OAuth&lt;/a&gt; makes is easy to incorporate open auth into a Dancer2 web app.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Help us&lt;/strong&gt; make &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo; better! Add your suggestions to the r/perl &lt;a href=&#34;http://www.reddit.com/r/perl/comments/2lkrq7/whats_new_on_cpan_october/&#34;&gt;post&lt;/a&gt; for this article.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Updates&lt;/strong&gt;: &lt;em&gt;additional web modules added to article 2014-11-08.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - June 2014</title>
+      <link>http://localhost:1313/article/100/2014/7/3/What-s-new-on-CPAN---June-2014/</link>
+      <pubDate>Thu, 03 Jul 2014 14:00:46 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/100/2014/7/3/What-s-new-on-CPAN---June-2014/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Welcome to &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo;, a curated look at last month&amp;rsquo;s new CPAN uploads for your reading and programming pleasure.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;apis&#34;&gt;APIs&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Get a REST API for your database with &lt;a href=&#34;https://metacpan.org/pod/Cookieville&#34;&gt;Cookieville&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Device::SaleaeLogic&#34;&gt;Device::SaleaeLogic&lt;/a&gt; provides a Perl interface to Saleae Logic devices&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Etcd&#34;&gt;Etcd&lt;/a&gt; is a Perl API for etcd, a key value store&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Geo::Coder::OpenCage&#34;&gt;Geo::Coder::OpenCage&lt;/a&gt; is a Perl API for OpenCage a geocoding service&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Math::OEIS&#34;&gt;Math::OEIS&lt;/a&gt; provides an interface to Online Encyclopaedia of Integer Sequences. Who knew there was such a thing!&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::PMP&#34;&gt;Net::PMP&lt;/a&gt; is an interface for the Public Media Platform&lt;/li&gt;
+&lt;li&gt;Manage GNU Screen windows easily with &lt;a href=&#34;https://metacpan.org/pod/Term::GnuScreen::WindowArrayLike&#34;&gt;Term::GnuScreen::WindowArrayLike&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WWW::Spotify&#34;&gt;WWW::Spotify&lt;/a&gt; provide an interface to the Spotify API&lt;/li&gt;
+&lt;li&gt;Interact with a RabbitMQ broker using &lt;a href=&#34;https://metacpan.org/pod/WWW::RabbitMQ::Broker&#34;&gt;WWW::RabbitMQ::Broker&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WWW::GoKGS&#34;&gt;WWW::GoKGS&lt;/a&gt; is a scraper for the KGS Go server&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WebService::Amazon::Route53::Caching&#34;&gt;WebService::Amazon::Route53::Caching&lt;/a&gt; implements a caching layer for the Amazon Route 53 DNS service&lt;/li&gt;
+&lt;li&gt;Send error reports to raygun.io from your Plack middleware with &lt;a href=&#34;https://metacpan.org/pod/Plack::Middleware::Raygun&#34;&gt;Plack::Middleware::Raygun&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;apps&#34;&gt;Apps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Run CPANTS Kwalitee tests on your distribution with &lt;a href=&#34;https://metacpan.org/pod/App::CPANTS::Lint&#34;&gt;App::CPANTS::Lint&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/App::Goto::Amazon&#34;&gt;App::Goto::Amazon&lt;/a&gt; provides a shortcut command for connecting to Amazon EC2 instances&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/App::HPGL2Cadsoft&#34;&gt;App::HPGL2Cadsoft&lt;/a&gt; converts HPGL files to Cadsoft Eagle script (a circuit board design tool)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;data&#34;&gt;Data&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/AnyEvent::Pg::Pool::Multiserver&#34;&gt;AnyEvent::Pg::Pool::Multiserver&lt;/a&gt; let&amp;rsquo;s you make asynchronous DB calls to multiple Postgres servers, using AnyEvent::Pg&lt;/li&gt;
+&lt;li&gt;Convert CSS into a Regexp::Grammar parse tree with &lt;a href=&#34;https://metacpan.org/pod/CSS::Selector::Grammar&#34;&gt;CSS::Selector::Grammar&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Run massive numbers of insert and update statements on a MySQL database using &lt;a href=&#34;https://metacpan.org/pod/DBIx::TxnPool&#34;&gt;DBIx::TxnPool&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Deeme&#34;&gt;Deeme&lt;/a&gt; is a &amp;ldquo;Database-agnostic driven Event Emitter&amp;rdquo; with support for multiple backends&lt;/li&gt;
+&lt;li&gt;Auto-release your distributions to Stratopan with &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::UploadToStratopan&#34;&gt;Dist::Zilla::Plugin::UploadToStratopan&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Lookup USA state names and capitals with &lt;a href=&#34;https://metacpan.org/pod/Geo::States&#34;&gt;Geo::States&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/MySQL::Explain::Parser&#34;&gt;MySQL::Explain::Parser&lt;/a&gt; converts MySQL&amp;rsquo;s explain output into Perl&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;development-system-administration&#34;&gt;Development &amp;amp; System Administration&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/DBG&#34;&gt;DBG&lt;/a&gt; provides a collection of useful debugging functions for Perl code&lt;/li&gt;
+&lt;li&gt;Another useful debugging too: get a stack trace for all system calls with &lt;a href=&#34;https://metacpan.org/pod/Devel::Trace::Syscall&#34;&gt;Devel::Trace::Syscall&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Quickly generate Perl data structures using &lt;a href=&#34;https://metacpan.org/pod/Data::Random::Structure&#34;&gt;Data::Random::Structure&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/MooseX::AuthorizedMethodRoles&#34;&gt;MooseX::AuthorizedMethodRoles&lt;/a&gt; provides role checking through whitelist methods&lt;/li&gt;
+&lt;li&gt;Get Pango constants without the heft of Glib and Gtk2 libraries with &lt;a href=&#34;https://metacpan.org/pod/PangoConst&#34;&gt;PangoConst&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Sort::Key::Domain&#34;&gt;Sort::Key::Domain&lt;/a&gt; sorts domain names&lt;/li&gt;
+&lt;li&gt;Get Jenkins compatible TAP test output with &lt;a href=&#34;https://metacpan.org/pod/TAP::Formatter::Jenkins&#34;&gt;TAP::Formatter::Jenkins&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Test::RequiresInternet&#34;&gt;Test::RequiresInternet&lt;/a&gt; will check for Internet connectivity before running tests - very useful.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;fun&#34;&gt;Fun&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Looking for the gramatically correct version of &amp;ldquo;Buffalo buffalo &amp;hellip;&amp;rdquo;? Look no further because &lt;a href=&#34;https://metacpan.org/pod/Acme::Buffalo::Buffalo&#34;&gt;Acme::Buffalo::Buffalo&lt;/a&gt; has got you covered&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Acme::MilkyHolmes&#34;&gt;Acme::MilkyHolmes&lt;/a&gt; provides character information on the famous Japanese animated cartoon&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Games::Go::Referee&#34;&gt;Games::Go::Referee&lt;/a&gt; analyses sgf files for Go rule violations&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web&#34;&gt;Web&lt;/h3&gt;
+
+&lt;p&gt;Conveniently run A/B testing on CGI applications with &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::AB&#34;&gt;CGI::Application::Plugin::AB&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::Throttle&#34;&gt;CGI::Application::Plugin::Throttle&lt;/a&gt; implements a throttling function for users (identifies by IP address)&lt;/p&gt;
+
+&lt;p&gt;Avoid connecting to blacklisted URLs with &lt;a href=&#34;https://metacpan.org/pod/HTTP::Tiny::Paranoid&#34;&gt;HTTP::Tiny::Paranoid&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;New Dancer modules:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::CORS&#34;&gt;Dancer::Plugin::CORS&lt;/a&gt; configures cross-origin sharing rules&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::Negotiate&#34;&gt;Dancer::Plugin::Negotiate&lt;/a&gt; wraps HTTP::Negotiate&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::Swig&#34;&gt;Dancer::Plugin::Swig&lt;/a&gt; implements a Swig wrapper&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;New Mojolicious modules:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Mojolicious::Plugin::Logf&#34;&gt;Mojolicious::Plugin::Logf&lt;/a&gt; flattens and logs complex data structures using sprintf&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Mojolicious::Plugin::MoreUtilHelpers&#34;&gt;Mojolicious::Plugin::MoreUtilHelpers&lt;/a&gt; implements some utility methods&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Mojolicious::Plugin::NetsPayment&#34;&gt;Mojolicious::Plugin::NetsPayment&lt;/a&gt; is an experimental module for making payments using Nets&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Mojolicious::Plugin::PayPal&#34;&gt;Mojolicious::Plugin::PayPal&lt;/a&gt; is an experimental module for making payments using PayPal&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/MojoX::GlobalEvents&#34;&gt;MojoX::GlobalEvents&lt;/a&gt; is an event handler&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Just how much heavier is Catalyst than Dancer2?</title>
+      <link>http://localhost:1313/article/85/2014/5/5/Just-how-much-heavier-is-Catalyst-than-Dancer2-/</link>
+      <pubDate>Mon, 05 May 2014 12:29:09 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/85/2014/5/5/Just-how-much-heavier-is-Catalyst-than-Dancer2-/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Within the Perl community it is received wisdom that Catalyst is a heavyweight web framework with many dependencies and that Dancer2 is a micro web framework that&amp;rsquo;s more agile than a Cirque du Soleil acrobat. But is it true?&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;tech-specs&#34;&gt;Tech Specs&lt;/h3&gt;
+
+&lt;p&gt;The comparison was between &lt;a href=&#34;https://metacpan.org/release/JJNAPIORK/Catalyst-Runtime-5.90062/lib/Catalyst/Runtime.pm&#34;&gt;Catalyst 5.90062&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/release/XSAWYERX/Dancer2-0.140000&#34;&gt;Dancer2 0.14&lt;/a&gt;. For local tests the machine used was a 2011 MacBook Air running Fedora 19 and Perl 5.16.3.&lt;/p&gt;
+
+&lt;h3 id=&#34;number-of-dependencies&#34;&gt;Number of Dependencies&lt;/h3&gt;
+
+&lt;p&gt;The greatest perceived difference between Catalyst and Dancer2 is the number of dependencies each has, with Catalyst being thought to have &amp;ldquo;too many&amp;rdquo;. For example at the recent German Perl workshop, Dancer2 development lead Sawyer X &lt;a href=&#34;http://www.youtube.com/watch?v=91xDp_Eus5c&amp;amp;t=12m09s&#34;&gt;joked&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;We&amp;rsquo;re not pulling off half of CPAN like maybe a different web framework [Catalyst]&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;To compare the two frameworks, we need to compare all of their dependencies; not just those first-order dependencies used by the framework, but also those used by the modules used by the framework and so on. Fortunately this is an easy comparison to make using &lt;a href=&#34;https://stratopan.com/&#34;&gt;Stratopan&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I created two stacks, one for &lt;a href=&#34;https://stratopan.com/sillymoose/WebStuff/Catalyst/graphs&#34;&gt;Catalyst&lt;/a&gt; and one for &lt;a href=&#34;https://stratopan.com/sillymoose/WebStuff/Dancer2/graphs&#34;&gt;Dancer2&lt;/a&gt;. Their respective dependency graphs are shown below:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/85/catalyst%20dependencies.png&#34; alt=&#34;Catalyst framework&#34; /&gt;
+&lt;img src=&#34;http://localhost:1313/images/85/dancer2%20dependencies.png&#34; alt=&#34;Dancer2 framework&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Tabulating the Stratopan data for the two stacks we get:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;33%&#34; /&gt;
+&lt;col width=&#34;33%&#34; /&gt;
+&lt;col width=&#34;33%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;Framework&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;Direct Dependencies&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;Recursive Dependencies&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;Catalyst&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;44&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;114&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;Dancer2&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;29&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;96&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;+15&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;+18&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Stratopan reveals that while Catalyst required 15 more modules than Dancer2 (+52%), when considering recursive dependencies, the Catalyst stack is only 19% larger than the Dancer2 stack. Interestingly, over 61% of the 96 distributions Dancer2 uses are used by Catalyst.&lt;/p&gt;
+
+&lt;h3 id=&#34;testing&#34;&gt;Testing&lt;/h3&gt;
+
+&lt;p&gt;When installing a CPAN module, the module tests usually take the longest time of the installation process and can contribute to the perceived &amp;ldquo;size&amp;rdquo; of the module. As the maturer framework, perhaps Catalyst simply has more tests than Dancer2, and therefore it&amp;rsquo;s installation process takes longer?&lt;/p&gt;
+
+&lt;p&gt;To check for this, I tested both frameworks installation tests:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl Makefile&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;PL
+$ make
+$ make test&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Catalyst&amp;rsquo;s test results:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Files&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;166&lt;/span&gt;, Tests&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3374&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;179&lt;/span&gt; wallclock secs ( &lt;span style=&#34;color:#ae81ff&#34;&gt;0.85&lt;/span&gt; usr  &lt;span style=&#34;color:#ae81ff&#34;&gt;0.16&lt;/span&gt; sys &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;172.95&lt;/span&gt; cusr  &lt;span style=&#34;color:#ae81ff&#34;&gt;4.56&lt;/span&gt; csys &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;178.52&lt;/span&gt; CPU)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2&amp;rsquo;s results:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Files&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;78&lt;/span&gt;, Tests&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1112&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt; wallclock secs ( &lt;span style=&#34;color:#ae81ff&#34;&gt;0.38&lt;/span&gt; usr  &lt;span style=&#34;color:#ae81ff&#34;&gt;0.07&lt;/span&gt; sys &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;19.68&lt;/span&gt; cusr  &lt;span style=&#34;color:#ae81ff&#34;&gt;1.46&lt;/span&gt; csys &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;21.59&lt;/span&gt; CPU)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;These results show that Catalyst ran 3,374 tests over 3 minutes compared to Dancer2&amp;rsquo;s 1,112 tests over 21 seconds. So while Catalyst did run more tests, it was also slower in executing them; Dancer2 executed 53 tests per second and Catalyst managed 19 tests per second.&lt;/p&gt;
+
+&lt;p&gt;What would explain this discrepancy? Perhaps Dancer2 has more trivial tests that run quicker than Catalyst&amp;rsquo;s tests. As a control I checked the code coverage of each framework&amp;rsquo;s test suite using &lt;a href=&#34;https://metacpan.org/pod/Devel::Cover&#34;&gt;Devel::Cover&lt;/a&gt;. Dancer2&amp;rsquo;s total test coverage was 84.7% whilst Catalyst&amp;rsquo;s was 85.5% - a negligible difference.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;So is Catalyst&amp;rsquo;s &amp;ldquo;heavyweight&amp;rdquo; reputation deserved? Whilst it does not have a significantly greater number of dependencies than Dancer2, during installation Dancer2&amp;rsquo;s test suite runs far faster than Catalyst&amp;rsquo;s and with a similar code coverage. This doesn&amp;rsquo;t mean Dancer2&amp;rsquo;s test suite is better than Catalyst&amp;rsquo;s (Catalyst&amp;rsquo;s test suite could have higher cyclomatic complexity). But it does show that Dancer2&amp;rsquo;s simpler micro-framework approach offers benefits beyond fast startups and application development time. As a Catalyst user, I&amp;rsquo;ve found Catalyst to be plenty fast for my needs (like PerlTricks.com), however its startup time is noticeably slow and during installation tests the Catalyst test application is started and stopped multiple times. I expect that contributes more to discrepancy in installation times between Dancer2 and Catalyst than anything else.&lt;/p&gt;
+
+&lt;p&gt;Enjoyed this article? Help us out and &lt;a href=&#34;https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F85%2F2014%2F5%2F5%2FJust-how-much-heavier-is-Catalyst-than-Dancer2-&amp;amp;text=Just+how+much+heavier+is+Catalyst+than+Dancer2%3F&amp;amp;tw_p=tweetbutton&amp;amp;url=http%3A%2F%2Fperltricks.com%2Farticle%2F85%2F2014%2F5%2F5%2FJust-how-much-heavier-is-Catalyst-than-Dancer2-&amp;amp;via=perltricks&#34;&gt;tweet&lt;/a&gt; about it!&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl web application security - HTTP headers</title>
+      <link>http://localhost:1313/article/81/2014/3/31/Perl-web-application-security---HTTP-headers/</link>
+      <pubDate>Mon, 31 Mar 2014 12:27:39 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/81/2014/3/31/Perl-web-application-security---HTTP-headers/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;HTTP headers are included in every HTTP response from a web server. Setting the appropriate HTTP headers can reduce the risk of man-in-the-middle and cross-site-scripting attacks on a web application. You can also reduce information leaks about the web application configuration - vital data that gives a would-be attacker clues about potential vulnerabilities. Read on to find out how to set the appropriate headers in your Perl web application.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;application&#34;&gt;Application&lt;/h3&gt;
+
+&lt;p&gt;All three of major Perl web frameworks provide some kind of identifying header. Dancer and Mojolicious use &amp;ldquo;X-Powered-By&amp;rdquo; and Catalyst uses &amp;ldquo;X-Catalyst&amp;rdquo;. The problem with this header is it informs the requester the language of the application (Perl) and the web framework being used. In some cases it also reveals the version number. With this information a would-be attacker can focus on exploits that are specific to Perl or the web framework. Here&amp;rsquo;s how you can disable it:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;By default Catalyst does not turn on its application header. The header is controlled by the &amp;ldquo;enable_catalyst_header&amp;rdquo; config option, normally located in the root application class (e.g. lib/MyApp.pm) or the application config file.&lt;/li&gt;
+&lt;li&gt;Mojolicious does not set this header since &lt;a href=&#34;https://github.com/kraih/mojo/blob/b5da0c7afcdd793c85e8e2a67eb29f7f36bdb601/Changes#L538&#34;&gt;version 4.00&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Dancer (and Dancer2) use the &lt;a href=&#34;https://metacpan.org/pod/Dancer2::Config#no_server_tokens-(boolean)&#34;&gt;server tokens&lt;/a&gt; directive.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;server&#34;&gt;Server&lt;/h3&gt;
+
+&lt;p&gt;Web servers often broadcast information about themselves by default. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Server: nginx&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.4.6&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is risky for the same reason that revealing information about the underlying Perl web application is. To disable the server header in nginx, just add this line to your nginx.conf or virtual host file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;server_tokens off;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For Apache 1.3x add these lines to your virtual host file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;ServerTokens Prod
+ServerSignature Off&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For Apache 2.x, these lines will load the mod_headers module, and remove the server header:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;LoadModule headers_module &lt;span style=&#34;color:#e6db74&#34;&gt;/usr/&lt;/span&gt;lib&lt;span style=&#34;color:#e6db74&#34;&gt;/apache/mo&lt;/span&gt;dules&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;mod_headers&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;so
+Header unset Server&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All of the major Perl web frameworks ship with web servers that set the server header:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Catalyst&lt;/span&gt;
+Server: HTTP::Server::PSGI
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# mojolicious&lt;/span&gt;
+Server: Mojolicious (Perl)
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Dancer&lt;/span&gt;
+Server: Perl Dancer &lt;span style=&#34;color:#ae81ff&#34;&gt;1.3121&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;These headers can be overwritten within the application code. For instance, if we wanted to change the server to appear to be nginx:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Catalyst&lt;/span&gt;
+$c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Server&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;nginx&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Mojolicious&lt;/span&gt;
+$self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;headers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Server&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;nginx&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Dancer / Dancer2&lt;/span&gt;
+header &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Server&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;nginx&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;x-frame-options&#34;&gt;X-Frame-Options&lt;/h3&gt;
+
+&lt;p&gt;This header can prevent your application responses from being loaded within frame or iframe HTML elements (see the &lt;a href=&#34;http://tools.ietf.org/html/rfc7034&#34;&gt;spec&lt;/a&gt;). This is to prevent clickjacking requests where your application response is displayed on another website, within an invisible iframe, which then hijacks the user&amp;rsquo;s request when they click a link on your website. Here&amp;rsquo;s how to disable it in the respective web frameworks:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Catalyst&lt;/span&gt;
+$c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Frame-Options&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DENY&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Mojolicious&lt;/span&gt;
+$self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;headers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Frame-Options&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DENY&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Dancer / Dancer2&lt;/span&gt;
+header &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Frame-Options&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DENY&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;strict-transport-security&#34;&gt;Strict-Transport-Security&lt;/h3&gt;
+
+&lt;p&gt;This header instructs the requester to load all content from the domain via HTTPS and not load any content unless there is a valid ssl certificate. This header can help prevent man-in-middle attacks as it ensures that all HTTP requests and responses are encrypted. The Strict-Transport-Security header has a max-age parameter that defines how long in seconds to enforce the policy for. Here&amp;rsquo;s how to add it to your Perl web application:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Catalyst&lt;/span&gt;
+$c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Strict-Transport-Security&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;max-age=3600&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Mojolicious&lt;/span&gt;
+$self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;headers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Strict-Transport-Security&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;max-age=3600&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Dancer / Dancer2&lt;/span&gt;
+header &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Strict-Transport-Security&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;max-age=3600&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;content-security-policy&#34;&gt;Content-Security-Policy&lt;/h3&gt;
+
+&lt;p&gt;The CSP header sets a whitelist of domains from which content can be safely loaded. This prevents most types of XSS attack, assuming the malicious content is not hosted by a whitelisted domain. For example this line specifies that all content should only be loaded from the responding domain:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;X&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Content&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Security&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Policy: default&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;src &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;self&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;There is &lt;a href=&#34;http://www.html5rocks.com/en/tutorials/security/content-security-policy%0A&#34;&gt;a lot to CSP&lt;/a&gt; (&lt;a href=&#34;http://www.w3.org/TR/CSP/&#34;&gt;spec&lt;/a&gt;) and browser support is &lt;a href=&#34;http://caniuse.com/#feat=contentsecuritypolicy&#34;&gt;fairly good&lt;/a&gt;. One downside to the whitelist approach is it&amp;rsquo;s not compatible with ad services like Google&amp;rsquo;s adsense as you won&amp;rsquo;t know the domains in advance in order to whitelist them. To set the header in your facourite Perl web application, use on of these lines:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Catalyst&lt;/span&gt;
+$c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Content-Security-Policy&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;default-src &amp;#39;self&amp;#39;&amp;#34;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Mojolicious&lt;/span&gt;
+$self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;headers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Content-Security-Policy&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;default-src &amp;#39;self&amp;#39;&amp;#34;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Dancer / Dancer2&lt;/span&gt;
+header &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Content-Security-Policy&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;default-src &amp;#39;self&amp;#39;&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;x-content-type-options&#34;&gt;X-Content-Type-Options&lt;/h3&gt;
+
+&lt;p&gt;This is an IE only header that is used to disable mime sniffing. The vulnerability is that IE will auto-execute any script code contained in a file when IE attempts to detect the file type. This is disabled by default in IE anyway, but to enforce it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Catalyst&lt;/span&gt;
+$c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Content-Type-Options&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;nosniff&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Mojolicious&lt;/span&gt;
+$self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;headers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Content-Type-Options&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;nosniff&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Dancer / Dancer2&lt;/span&gt;
+header &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Content-Type-Options&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;nosniff&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;x-download-options&#34;&gt;X-Download-Options&lt;/h3&gt;
+
+&lt;p&gt;This is another IE-only header that prevents IE from opening an HTML file directly on download from a website. The security issue here is, if a browser opens the file directly, it can run as if it were part of the site. To add this header, use one of these lines:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Catalyst&lt;/span&gt;
+$c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Download-Options&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;noopen&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Mojolicious&lt;/span&gt;
+$self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;headers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Download-Options&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;noopen&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Dancer / Dancer2&lt;/span&gt;
+header &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-Download-Options&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;noopen&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;x-xss-protection&#34;&gt;X-XSS-Protection&lt;/h3&gt;
+
+&lt;p&gt;This is the final IE-only header. It was introduced in IE8 as part of the cross-site-scripting (XSS) filter functionality (more &lt;a href=&#34;http://blogs.msdn.com/b/ieinternals/archive/2011/01/31/controlling-the-internet-explorer-xss-filter-with-the-x-xss-protection-http-header.aspx&#34;&gt;here&lt;/a&gt;). The header can force IE to turn on its XSS filter. Additionally it has an optional setting called &amp;ldquo;mode&amp;rdquo; that can force IE to block the entire page if an XSS attempt is detected. Here&amp;rsquo;s how to add it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Catalyst&lt;/span&gt;
+$c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-XSS-Protection&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;1; &amp;#39;mode=block&amp;#39;&amp;#34;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Mojolicious&lt;/span&gt;
+$self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;headers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-XSS-Protection&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;1; &amp;#39;mode=block&amp;#39;&amp;#34;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Dancer / Dancer2&lt;/span&gt;
+header &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;X-XSS-Protection&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;1; &amp;#39;mode=block&amp;#39;&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;adding-headers-in-the-web-server&#34;&gt;Adding headers in the web server&lt;/h3&gt;
+
+&lt;p&gt;You may prefer to add these headers in the web server configuration, rather than at the application level. For nginx, use the &amp;ldquo;add_header&amp;rdquo; directive - see &lt;a href=&#34;https://gist.github.com/plentz/6737338&#34;&gt;here&lt;/a&gt; for a good example. For Apache use the &amp;ldquo;Header set&amp;rdquo; directive in mod_headers (&lt;a href=&#34;http://moko.ru/doc/apache/mod/mod_headers.html&#34;&gt;1.3&lt;/a&gt;, &lt;a href=&#34;http://httpd.apache.org/docs/2.0/de/mod/mod_headers.html&#34;&gt;2.x&lt;/a&gt;).&lt;/p&gt;
+
+&lt;h3 id=&#34;testing-the-headers&#34;&gt;Testing the headers&lt;/h3&gt;
+
+&lt;p&gt;tThere are a number of ways to check which headers your application is returning. Firstly you can use curl (replace perltricks.com with the URL to check):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;curl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;I perltricks&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will return the HTTP headers only:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;HTTP&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.1&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;200&lt;/span&gt; OK
+Server: nginx
+Date: Mon, &lt;span style=&#34;color:#ae81ff&#34;&gt;31&lt;/span&gt; Mar &lt;span style=&#34;color:#ae81ff&#34;&gt;2014&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;01&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;54&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;59&lt;/span&gt; GMT
+Content&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Type: text&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;html; charset&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;utf&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;
+Connection: keep&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;alive
+Cache&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Control: max&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;age&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3600&lt;/span&gt;
+X&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Frame&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Options: DENY&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You can use &lt;a href=&#34;https://securityheaders.com/&#34;&gt;SecurityHeaders.com&amp;rsquo;s&lt;/a&gt; excellent checking tool. Or you can inspect the headers yourself by using your browser&amp;rsquo;s developer mode.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;These HTTP headers are easy to add and can make a reduce your application&amp;rsquo;s vulnerability to XSS and man-in-the-middle attacks, particularly for applications that allow users to upload content.&lt;/p&gt;
+
+&lt;p&gt;Enjoyed this article? Help us out and &lt;a href=&#34;https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F81%2F2014%2F3%2F31%2FPerl-web-application-security-HTTP-headers&amp;amp;text=Perl+web+application+security+-+HTTP+headers&amp;amp;tw_p=tweetbutton&amp;amp;url=http%3A%2F%2Fperltricks.com%2Farticle%2F81%2F2014%2F3%2F31%2FPerl-web-application-security-HTTP-headers&amp;amp;via=perltricks&#34;&gt;retweet&lt;/a&gt; it!&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Cover photo © &lt;a href=&#34;http://www.flickr.com/photos/rightee/259084010/in/photostream/&#34;&gt;Andy Wright&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Updates: Mojolicious application header corrected. Web frameworks server header added. (31/3/2014)&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Simple web framework FastCGI caching with nginx - part 2</title>
+      <link>http://localhost:1313/article/77/2014/3/17/Simple-web-framework-FastCGI-caching-with-nginx---part-2/</link>
+      <pubDate>Mon, 17 Mar 2014 01:54:09 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/77/2014/3/17/Simple-web-framework-FastCGI-caching-with-nginx---part-2/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;In &lt;a href=&#34;http://perltricks.com/article/76/2014/3/11/Simple-web-framework-FastCGI-caching-with-nginx-part-1&#34;&gt;part 1&lt;/a&gt; of this series, we covered how to cache FastCGI responses with nginx and how to purge the cache on demand. We saw how easy it is to setup caching with the main Perl web frameworks (Catalyst, Dancer and Mojolicious). In this article we&amp;rsquo;ll use Nginx::FastCGI::Cache to manage our cached responses and gain some useful benefits along the way.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;requirements&#34;&gt;Requirements&lt;/h3&gt;
+
+&lt;p&gt;You&amp;rsquo;ll need Perl v5.12.3 or greater to install &lt;a href=&#34;https://metacpan.org/pod/Nginx::FastCGI::Cache&#34;&gt;Nginx::FastCGI::Cache&lt;/a&gt;. The CPAN Testers &lt;a href=&#34;http://matrix.cpantesters.org/?dist=Nginx-FastCGI-Cache+0.008&#34;&gt;results&lt;/a&gt; show that it runs on most platforms including Windows. To install the module using CPAN, just open the terminal and type:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan Nginx::FastCGI::Cache&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;nginx-fastcgi-caching-explained&#34;&gt;nginx fastcgi caching explained&lt;/h3&gt;
+
+&lt;p&gt;In an nginx virtual host file, the &amp;ldquo;fastcgi_cache_path&amp;rdquo; directive sets the root directory from where nginx will build the cache. nginx uses the variables of the &amp;ldquo;fastcgi_cache_key&amp;rdquo; directive to create an md5 hexadecimal hash key as the filename. The &amp;ldquo;levels&amp;rdquo; value determines the number of subdirectories and the subdirectories name length. For example, with this configuration:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;fastcgi_cache_path  &lt;span style=&#34;color:#e6db74&#34;&gt;/var/c&lt;/span&gt;ache&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;nginx levels&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;
+                    keys_zone&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;app_cache:50m
+                    inactive&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;m;
+fastcgi_cache_key &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$scheme$request_method$host$request_uri&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;A GET request for &amp;ldquo;&lt;a href=&#34;http://perltricks.com/&amp;quot;&#34;&gt;http://perltricks.com/&amp;quot;&lt;/a&gt; would have a key of &amp;ldquo;httpGETperltricks.com/&amp;rdquo;, and be stored at: &amp;ldquo;/var/cache/nginx/4/85/200d51ef65b0a76de421f8f1ec047854&amp;rdquo;. Note that the name of the first subdirectory is the last letter of the md5 hash (&amp;ldquo;4&amp;rdquo;) and the second subdirectory name the previous two letters (&amp;ldquo;85&amp;rdquo;) - this is because of the levels value of &amp;ldquo;1:2&amp;rdquo; set in the nginx virtual host file. Deleting the file &amp;ldquo;/var/cache/nginx/4/85/200d51ef65b0a76de421f8f1ec047854 will purge it from nginx&amp;rsquo;s cache.&lt;/p&gt;
+
+&lt;h3 id=&#34;introducing-nginx-fastcgi-cache&#34;&gt;Introducing Nginx::FastCGI::Cache&lt;/h3&gt;
+
+&lt;p&gt;I wrote &lt;a href=&#34;https://metacpan.org/pod/Nginx::FastCGI::Cache&#34;&gt;Nginx::FastCGI::Cache&lt;/a&gt; to make it easy to purge individually cached fastcgi responses from the nginx cache. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Nginx::FastCGI::Cache;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $nginx_cache &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Nginx::FastCGI::Cache&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;({ location &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/var/cache/nginx&amp;#39;&lt;/span&gt; });
+$nginx_cache&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;purge_file(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://perltricks.com/&amp;#34;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will convert the URL into the md5 hashed cache key, and delete it from the nginx cache directory. By default &amp;ldquo;purge_file&amp;rdquo; assumes the HTTP request type is GET. If you want to purge a file for a different request type, simply include it as a parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$nginx_cache&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;purge_file(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://perltricks.com/&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;HEAD&amp;#34;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you want to blow away the whole cache, use the &amp;ldquo;purge_cache&amp;rdquo; method:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$nginx_cache&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;purge_cache;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;These two methods should be all that&amp;rsquo;s required to conveniently manage the nginx cache from your favourite Perl web application.&lt;/p&gt;
+
+&lt;h3 id=&#34;portability&#34;&gt;Portability&lt;/h3&gt;
+
+&lt;p&gt;In part 1 our purge cache code used a system call to the GNU find program to delete all the files in the cache. Whilst this is fine as a quick hack, using an external program limits the portability of the code (it wouldn&amp;rsquo;t run on Windows for example). Nginx::FastCGI::Cache uses Perl&amp;rsquo;s opendir and unlink functions to read the cache directory and delete files, which should work on all platforms that Perl runs on.&lt;/p&gt;
+
+&lt;h3 id=&#34;safety-first&#34;&gt;Safety First&lt;/h3&gt;
+
+&lt;p&gt;Whenever you have a program that is going to recursively delete all files in a directory, you want to be sure that it&amp;rsquo;s looking at the correct directory. That&amp;rsquo;s why the &amp;ldquo;location&amp;rdquo; is a mandatory parameter for the &lt;a href=&#34;https://metacpan.org/pod/Nginx::FastCGI::Cache&#34;&gt;Nginx::FastCGI::Cache&lt;/a&gt; constructor—no default location is assumed. Additionally, should the Perl process not have sufficient permissions to read the cache directory or delete a cached file, &lt;a href=&#34;https://metacpan.org/pod/Nginx::FastCGI::Cache&#34;&gt;Nginx::FastCGI::Cache&lt;/a&gt; will &lt;a href=&#34;https://perldoc.perl.org/Carp.html&#34;&gt;croak&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;other-nginx-considerations&#34;&gt;Other nginx considerations&lt;/h3&gt;
+
+&lt;p&gt;By default, nginx will not cache a fastcgi response that includes a &amp;ldquo;Set-Cookie&amp;rdquo; header. Depending on how you are using cookies, you may want to have nginx cache the response and ignore the &amp;ldquo;Set-Cookie&amp;rdquo; header. This can be done by adding this line to your virtual host file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;fastcgi_ignore_headers &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Set-Cookie&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Bear in mind that the &amp;ldquo;set-Cookie&amp;rdquo; header will be removed from the response altogether, so this is useful when serving uniform responses that do not distinguish between users with session cookies and those without.&lt;/p&gt;
+
+&lt;p&gt;By default nginx will only cache GET and HEAD requests. This is a good default, but you may want to restrict the cache to just GET responses, or enable other kinds of HTTP requests such as POST. If so, add the fastcgi_cache_methods directive to your nginx virtual host file. For example to only cache GET requests:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;fastcgi_cache_methods GET;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The nginx &lt;a href=&#34;http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html&#34;&gt;documentation&lt;/a&gt; provides comprehensive detail on the fastcgi module.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Whether you are using Catalyst, Dancer or Mojolicious, setting the appropriate caching headers is easy (see &lt;a href=&#34;http://perltricks.com/article/76/2014/3/11/Simple-web-framework-FastCGI-caching-with-nginx-part-1&#34;&gt;part 1&lt;/a&gt;). Consider using &lt;a href=&#34;https://metacpan.org/pod/Nginx::FastCGI::Cache&#34;&gt;Nginx::FastCGI::Cache&lt;/a&gt; with nginx to conveniently purge the cache on demand.&lt;/p&gt;
+
+&lt;p&gt;Enjoyed this article? Help us out and &lt;a href=&#34;https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F77%2F2014%2F3%2F16%2FSimple-web-framework-FastCGI-caching-with-nginx-part-2&amp;amp;text=Simple+web+framework+FastCGI+caching+with+nginx+-+part+2&amp;amp;tw_p=tweetbutton&amp;amp;url=http%3A%2F%2Fperltricks.com%2Farticle%2F77%2F2014%2F3%2F16%2FSimple-web-framework-FastCGI-caching-with-nginx-part-2&amp;amp;via=perltricks&#34;&gt;retweet&lt;/a&gt; it!&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Simple web framework FastCGI caching with nginx - part 1</title>
+      <link>http://localhost:1313/article/76/2014/3/11/Simple-web-framework-FastCGI-caching-with-nginx---part-1/</link>
+      <pubDate>Tue, 11 Mar 2014 03:18:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/76/2014/3/11/Simple-web-framework-FastCGI-caching-with-nginx---part-1/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Fastcgi server caching is a wonderful technique for improving response times and reducing load on a web application. In part 1 of this series we look at how to cache responses with Catalyst, Dancer and Mojolocious and how to clear the cache on-demand when using the nginx web server. Before you know it, your web application will be faster than a racing llama!&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;fastcgi-server-caching-explained&#34;&gt;FastCGI server caching explained&lt;/h3&gt;
+
+&lt;p&gt;FastCGI server caching is when the FastCGI application sets a caching header in its response to an upstream server. The &lt;a href=&#34;http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9.3&#34;&gt;max-age header&lt;/a&gt; defines in seconds from the time of the request how long to cache the response message for. If it&amp;rsquo;s correctly configured, the upstream server will cache the response, and for the duration of the max-age value, return the cached response to all requests to the same URL. As a bonus the max-age header can be passed back to the requester, and it will be cached in their browser as well.&lt;/p&gt;
+
+&lt;p&gt;FastCGI server caching brings the following benefits:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Cut response times by as much as 95%.&lt;/li&gt;
+&lt;li&gt;Reduce load on the the FastCGI application (imagine 1 request per hour per URL).&lt;/li&gt;
+&lt;li&gt;Reduce load on the the web server with browser caching.&lt;/li&gt;
+&lt;li&gt;Avoid corrupt memory risks of simultaneous read/write when caching responses in the FastCGI application.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;how-to-cache-your-catalyst-mojolicious-dancer-response&#34;&gt;How to cache your Catalyst / Mojolicious / Dancer response&lt;/h3&gt;
+
+&lt;p&gt;All of the major Perl frameworks support server caching and the good news is it&amp;rsquo;s easy to implement. For example, if $seconds is number of seconds to cache the response for, in Catalyst add this line to a controller method.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Cache-Control&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;max-age=$seconds&amp;#34;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In Mojolicious, add this code to your controller action:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;res&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;headers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;cache_control(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;max-age=$seconds&amp;#39;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And for Dancer, update a route with:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;header &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;max-age&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$seconds&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;how-to-setup-nginx-fastcgi-caching&#34;&gt;How to setup nginx FastCGI caching&lt;/h3&gt;
+
+&lt;p&gt;To enable nginx caching, add the fastcgi cache directives to to your virtual host config file. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;fastcgi_cache_path  &lt;span style=&#34;color:#e6db74&#34;&gt;/var/&lt;/span&gt;nginx&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;cache levels&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;
+                    keys_zone&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;fcgi_cache:50m
+                    inactive&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;m;
+fastcgi_cache_key &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$scheme$request_method$host$request_uri&amp;#34;&lt;/span&gt;;
+fastcgi_buffers &lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;k;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code specifies the cache directory, zone name, cache key and buffers (see the &lt;a href=&#34;http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html&#34;&gt;manual&lt;/a&gt; for details). The code should be outside your server declaration. Within your server declaration, add:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;fastcgi_cache fcgi_cache;
+fastcgi_cache_valid &lt;span style=&#34;color:#ae81ff&#34;&gt;200&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;s;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code defines the cache zone to use (&amp;ldquo;fcgi_cache&amp;rdquo;), sets the cache size to 200mb and by default caches a response for 1 second. The max-age header will override the default cache time, but you may want to choose a value other than 1 second, depending on your application&amp;rsquo;s needs. Here is a complete example virtual host file with fastcgi caching:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;fastcgi_cache_path  &lt;span style=&#34;color:#e6db74&#34;&gt;/var/&lt;/span&gt;nginx&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;cache levels&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;
+                    keys_zone&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;PerlTricks:50m
+                    inactive&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;m;
+fastcgi_cache_key &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$scheme$request_method$host$request_uri&amp;#34;&lt;/span&gt;;
+fastcgi_buffers &lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;k;
+
+server {
+    listen &lt;span style=&#34;color:#ae81ff&#34;&gt;80&lt;/span&gt; default;
+    server_name perltricks&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com;
+    try_files $uri @fcgi;
+    location @fcgi {
+        fastcgi_cache PerlTricks;
+        fastcgi_cache_valid &lt;span style=&#34;color:#ae81ff&#34;&gt;200&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;m;
+        fastcgi_pass unix:&lt;span style=&#34;color:#e6db74&#34;&gt;/tmp/&lt;/span&gt;perltricks&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;socket;
+        include &lt;span style=&#34;color:#e6db74&#34;&gt;/etc/&lt;/span&gt;nginx&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;fastcgi&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;conf;
+        fastcgi_param SCRIPT_NAME &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;;
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For an in-depth look at the configuring the nginx fastcgi cache, check out this &lt;a href=&#34;https://www.digitalocean.com/community/articles/how-to-setup-fastcgi-caching-with-nginx-on-your-vps&#34;&gt;useful article&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;clearing-the-cache&#34;&gt;Clearing the cache&lt;/h3&gt;
+
+&lt;p&gt;Whilst caching responses can deliver huge benefits, it would be nice to be able to clear the cache on-demand, in case the application state changes. Fortunately with nginx this is super-easy with Perl - all you have to do is delete all files in the fastcgi_cache_path declared in the virtual host config file. For example, on Unix-based systems this works:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;clear_cache&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/var/nginx/cache&amp;#39;&lt;/span&gt;) {
+        system(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;find /var/nginx/cache -type f -exec rm -f {} \;&amp;#39;&lt;/span&gt;);
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;All of the major Perl web frameworks support FastCGI server caching. It&amp;rsquo;s easy to set up and with nginx, easy to manage. However there is more that can be done: in part 2 of this series we&amp;rsquo;ll make our cache management more precise by adding the ability to clear specific URL responses from the cache, rather than obliterating the whole cache in one go. We&amp;rsquo;ll also look at how to make the &amp;ldquo;clear_cache&amp;rdquo; subroutine safer and Windows compatible.&lt;/p&gt;
+
+&lt;p&gt;Enjoyed this article? Help us out and &lt;a href=&#34;https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F76%2F2014%2F3%2F11%2FSimple-web-framework-FastCGI-caching-with-nginx-part-1&amp;amp;text=Simple+web+framework+FastCGI+caching+with+nginx+-+part+1&amp;amp;tw_p=tweetbutton&amp;amp;url=http%3A%2F%2Fperltricks.com%2Farticle%2F76%2F2014%2F3%2F11%2FSimple-web-framework-FastCGI-caching-with-nginx-part-1&amp;amp;via=perltricks&#34;&gt;retweet&lt;/a&gt; it!&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Cover picture © David Hoshor licensed via &lt;a href=&#34;https://creativecommons.org/licenses/by/2.0/&#34;&gt;Creative Commons&lt;/a&gt;. The picture has been digitally enhanced.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Writing on Walls with Facebook::Graph</title>
+      <link>http://localhost:1313/pub/2011/04/writing-on-walls-with-facebookgraph.html/</link>
+      <pubDate>Mon, 04 Apr 2011 18:03:13 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/04/writing-on-walls-with-facebookgraph.html/</guid>
+      <description>&lt;p&gt;In my first article about &lt;a href=&#34;https://metacpan.org/pod/Facebook::Graph&#34;&gt;Facebook::Graph&lt;/a&gt;, I showed you how to &lt;a href=&#34;http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html&#34;&gt;use Facebook as an authentication mechanism for your site&lt;/a&gt;. This time let me show you how to build on that authentication to post something to a user&amp;rsquo;s Facebook wall.&lt;/p&gt;
+
+&lt;p&gt;First things first. The application needs additional permissions from the user. The previous app requested only basic rights to view the most basic of information about the user. Any app that wants to post to auser&amp;rsquo;s wall needs to ask the user for permission to post to their wall. Replace the existing login method with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb
+        -&amp;gt;authorize
+        -&amp;gt;extend_permissions( qw(publish_stream) )
+        -&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only difference between this version and the original is the &lt;code&gt;extend_permissions&lt;/code&gt; line which asks for &lt;code&gt;publish_stream&lt;/code&gt; access. Facebook maintains &lt;a href=&#34;http://developers.facebook.com/docs/authentication/permissions/&#34;&gt;a table of Facebook application permissions&lt;/a&gt; and their implications.&lt;/p&gt;
+
+&lt;p&gt;When a user grants this additional permission, the application can post almost anything to the user&amp;rsquo;s wall. For example, if you have a shop of some kind, you could post something to a user&amp;rsquo;s wall after a purchase:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+$fb-&amp;gt;add_post
+  -&amp;gt;set_message(&#39;I just bought Widget X from The Cool Shop for only $4.99.&#39;)
+  -&amp;gt;publish;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or more descriptive:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$fb-&amp;gt;add_post
+  -&amp;gt;set_message(&#39;I just bought Widget X from The Cool Shop for only $4.99.&#39;)
+  -&amp;gt;set_picture_uri(&#39;http://images.coolshop.com/widgetx.jpg&#39;),
+  -&amp;gt;link_uri(&#39;http://www.coolshop.com/products/widget-x&#39;),
+  -&amp;gt;link_caption(&#39;Widget X&#39;)
+  -&amp;gt;publish;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you publish links, do yourself a favor by making sure the page you are linking uses &lt;a href=&#34;http://ogp.me/&#34;&gt;Open Graph Protocol&lt;/a&gt; meta tags. Facebook can refer to these tags, and will therefore link that metadata into your post, which means if anybody posts your link &lt;em&gt;&lt;a href=&#34;http://www.coolshop.com/products/widget-x&#34;&gt;http://www.coolshop.com/products/widget-x&lt;/a&gt;&lt;/em&gt; into a Facebook post, it will automatically pull in images, description, and other things.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Make sure whatever you post abides by &lt;a href=&#34;http://developers.facebook.com/policy/&#34;&gt;Facebook&amp;rsquo;s Platform Polices&lt;/a&gt;. If you don&amp;rsquo;t, Facebook can and will ban your application.&lt;/p&gt;
+
+&lt;p&gt;This works well for posting something to Facebook when a logged-in user performs an action in your application, but but what if you want to post something &lt;em&gt;not&lt;/em&gt; as the result of a direct user action? Maybe your site isn&amp;rsquo;t a shop. Maybe it&amp;rsquo;s a reminders site that posts stuff like &amp;ldquo;Happy Birthday Maggie!&amp;rdquo; or a random quote of the day. To post on behalf of the user even when they aren&amp;rsquo;t logged in to your site, you must request offline access. This requires another update to the login page:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb
+        -&amp;gt;authorize
+        -&amp;gt;extend_permissions( qw(offline_access publish_stream) )
+        -&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see the &lt;code&gt;offline_access&lt;/code&gt; permission in addition to &lt;code&gt;publish_stream&lt;/code&gt; this time. Another necessary change is to store the resulting access token in something more robust than a Dancer session this time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/postback/&#39; =&amp;gt; sub {
+    my $params = request-&amp;gt;params;
+    my $fb     = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;request_access_token($params-&amp;gt;{code});
+    session access_token =&amp;gt; $fb-&amp;gt;access_token;
+
+    my $user = $fb-&amp;gt;fetch(&#39;me&#39;);
+
+    database-&amp;gt;quick_insert( &#39;facebook&#39;, {
+        uid          =&amp;gt; $user-&amp;gt;{uid},=20
+        name         =&amp;gt; $user-&amp;gt;{name},=20
+        access_token =&amp;gt; $fb-&amp;gt;access_token,
+       }
+    );
+    redirect &#39;/&#39;;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In addition to storing the &lt;code&gt;access_token&lt;/code&gt; in a Dancer session, the code also stores it in a database table for future reference (using &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::Database&#34;&gt;Dancer::Plugin::Database&lt;/a&gt;, which is a wrapper around &lt;a href=&#34;https://metacpan.org/pod/DBI&#34;&gt;DBI&lt;/a&gt;). This sort of thing can be good for other reasons too. For example, Facebook recommends caching data that you fetch from it for faster response times. If you want to display the user&amp;rsquo;s name on every page, it&amp;rsquo;s much faster to pull it out of the local database based upon the access token you have in your Dancer session than it is to request it from Facebook again.&lt;/p&gt;
+
+&lt;p&gt;As you can see, &lt;code&gt;Facebook::Graph&lt;/code&gt; makes it quite easy to post to Facebook on behalf of your users. Stay tuned for Part III, where I&amp;rsquo;ll show you how to publish calendar events and RSVP to them.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Facebook Authentication with Perl and Facebook::Graph</title>
+      <link>http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html/</link>
+      <pubDate>Tue, 15 Mar 2011 10:17:51 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html/</guid>
+      <description>&lt;p&gt;Basic integration of software and web sites with Facebook, Twitter, and other social networking systems has become a litmus test for business these days. Depending on the software or site you might need to fetch some data, make a post, create events, upload photos, or use one or more of the social networking sites as a single sign-on system. This series will show you how to do exactly those things on Facebook using &lt;a href=&#34;https://metacpan.org/pod/Facebook::Graph&#34;&gt;Facebook::Graph&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This first article starts small by using Facebook as an authentication mechanism. There are certainly simpler things to do, but this is one of the more popular things people want to be able to do. Before you can do anything, you need to have a Facebook account. Then &lt;a href=&#34;http://apps.facebook.com/developer&#34;&gt;register your new application&lt;/a&gt; (Figure 1).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_03_facebook-authentication-with-perl-and-facebookgraph/register_app.png&#34; alt=&#34;registering a Facebook application&#34; width=&#34;696&#34; height=&#34;209&#34; /&gt;
+&lt;em&gt;Figure 1. Registering a Facebook application.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Then fill out the &amp;ldquo;Web Site&amp;rdquo; section of your new app (Figure 2).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_03_facebook-authentication-with-perl-and-facebookgraph/register_website.png&#34; alt=&#34;registering your application&amp;#39;s web site&#34; width=&#34;740&#34; height=&#34;224&#34; /&gt;
+&lt;em&gt;Figure 2. Registering your application&amp;rsquo;s web site.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Registering an application with Facebook gives you a unique identifier for your application as well as a secret key. This allows your app to communicate with Facebook and use its API. Without it, you can&amp;rsquo;t do much (besides screen scraping and hoping).&lt;/p&gt;
+
+&lt;p&gt;Now you&amp;rsquo;re ready to start creating your app. I&amp;rsquo;ve used the &lt;a href=&#34;http://perldancer.org/&#34;&gt;Dancer web app framework&lt;/a&gt;, but feel free to use your favorite. Start with a basic Dancer module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package MyFacebook;
+
+use strict;
+use Dancer &#39;:syntax&#39;;
+use Facebook::Graph;
+
+get &#39;/&#39; =&amp;gt; sub {
+  template &#39;home.tt&#39;
+};
+
+true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s sufficient to give the app a home page. The next step is to force people to log in if they haven&amp;rsquo;t already:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;before sub {
+    if (request-&amp;gt;path_info !~ m{^/facebook}) {
+        if (session-&amp;gt;{access_token} eq &#39;&#39;) {
+            request-&amp;gt;path_info(&#39;/facebook/login&#39;)
+        }
+    }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This little bit of Dancer magic says that if the path is not &lt;code&gt;/facebook&lt;/code&gt; and the user has no access_token attached to their session, then redirect them to our login page. Speaking of our login page, create that now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb-&amp;gt;authorize-&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates a page that will redirect the user to Facebook, and ask them if it&amp;rsquo;s ok for the app to use their basic Facebook information. That code passes &lt;code&gt;Facebook::Graph&lt;/code&gt; some configuration information, so remember to add a section to Dancer&amp;rsquo;s &lt;em&gt;config.yml&lt;/em&gt; to keep track of that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;facebook:
+    postback: &amp;quot;http://www.madmongers.org/facebook/postback/&amp;quot;
+    app_id: &amp;quot;XXXXXXXXXXXXXXXX&amp;quot;
+    secret: &amp;quot;XXXXXXXXXXXXXXXXXXXXXXXXXXX&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember, you get the app_id and the secret from Facebook&amp;rsquo;s developer application after you create the app. The postback tells Facebook where to post back to after the user has granted the app authorization. Note that Facebook requires a slash (/) on the end of the URL for the postback. With Facebook ready to post to a URL, it&amp;rsquo;s time to create it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/postback/&#39; =&amp;gt; sub {
+    my $authorization_code = params-&amp;gt;{code};
+    my $fb                 = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;request_access_token($authorization_code);
+    session access_token =&amp;gt; $fb-&amp;gt;access_token;
+    redirect &#39;/&#39;;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;NOTE: I know it&amp;rsquo;s called a postback, but for whatever reason Facebook does the &lt;code&gt;POST&lt;/code&gt; as a &lt;code&gt;GET&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Facebook&amp;rsquo;s postback passes an authorization code—a sort of temporary password. Use that code to ask Facebook for an access token (like a session id). An access token allows you to request information from Facebook &lt;em&gt;on behalf of the user&lt;/em&gt;, so all of those steps are, essentially, your app logging in to Facebook. However, unless you store that access token to use again in the future, the next request to Facebook will log you out. Therefore, the example shoves the access token into a Dancer session to store it for future use before redirecting the user back to the front page of the site.&lt;/p&gt;
+
+&lt;p&gt;NOTE: The access token we have will only last for two hours. After that, you have to request it again.&lt;/p&gt;
+
+&lt;p&gt;Now you can update the front page to include a little bit of information from Facebook. Replace the existing front page with this one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;access_token(session-&amp;gt;{access_token});
+
+    my $response = $fb-&amp;gt;query-&amp;gt;find(&#39;me&#39;)-&amp;gt;request;
+    my $user     = $response-&amp;gt;as_hashref;
+    template &#39;home.tt&#39;, { name =&amp;gt; $user-&amp;gt;{name} }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code fetches the access token back out of the session and uses it to find out some information about the current user. It passes the name of that user into the home template as a template parameter so that the home page can display the user&amp;rsquo;s name. (How do you know what to request and what responses you get? See the &lt;a href=&#34;http://developers.facebook.com/docs/reference/api/&#34;&gt;Facebook Graph API documentation&lt;/a&gt;.)&lt;/p&gt;
+
+&lt;p&gt;While there is a bit of a trick to using Facebook as an authentication system, it&amp;rsquo;s not terribly difficult. Stay tuned for Part II where I&amp;rsquo;ll show you how to post something to a user&amp;rsquo;s wall.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>A Website in a Minute Using Dancer, the Effortless Web Framework</title>
+      <link>http://localhost:1313/pub/2010/04/a-website-in-a-minute-using-dancer-the-effortless-web-framework.html/</link>
+      <pubDate>Tue, 06 Apr 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/04/a-website-in-a-minute-using-dancer-the-effortless-web-framework.html/</guid>
+      <description>
+
+&lt;p&gt;While Perl has a few heavy hitters in the web framework world (&lt;a href=&#34;https://metacpan.org/pod/Catalyst&#34;&gt;Catalyst&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Jifty&#34;&gt;Jifty&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/CGI::Application&#34;&gt;CGI::App&lt;/a&gt;), sometimes they can seem like overkill. When writing a light web service or a high-end but not-as-complex website, you might want something smaller and simpler. This is where &lt;a href=&#34;http://www.perldancer.org/&#34;&gt;Dancer&lt;/a&gt; comes in.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt; is a web framework whose purpose is to let you get a website up and running within a minute, if not sooner. It started as a port of Ruby&amp;rsquo;s &lt;a href=&#34;http://www.sinatrarb.com/&#34;&gt;Sinatra&lt;/a&gt; but has since took its own path.&lt;/p&gt;
+
+&lt;p&gt;Dancer supports &lt;a href=&#34;http://plackperl.org/&#34;&gt;Plack&lt;/a&gt;/&lt;a href=&#34;http://plackperl.org/&#34;&gt;PSGI&lt;/a&gt; from an early version and has a built-in scaffolding script to help you get up and running within seconds. It creates deployment scripts for you, includes a guide for deployment situations to help you configure your webserver (whether &lt;a href=&#34;http://www.danga.com/perlbal&#34;&gt;Perlbal&lt;/a&gt;, &lt;a href=&#34;http://httpd.apache.org/&#34;&gt;Apache&lt;/a&gt;, &lt;a href=&#34;http://www.lighttpd.net/&#34;&gt;Lighttpd&lt;/a&gt; or anything else you might care to use) and has a default clean design to help you prototype your website faster.&lt;/p&gt;
+
+&lt;h2 id=&#34;dancing&#34;&gt;&lt;strong&gt;Dancing&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The best way to learn, understand, and fall in love with Dancer is to get on the dance floor:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ cpan Dancer # or cpanp, or cpanm
+    $ dancer -a MyApp
+    + ./MyApp
+    + MyApp/views
+    + MyApp/views/index.tt
+    + MyApp/views/layouts
+    + MyApp/views/layouts/main.tt
+    + MyApp/environments
+    + MyApp/environments/development.yml
+    + MyApp/environments/production.yml
+    + MyApp/config.yml
+    + MyApp/app.psgi
+    + MyApp/MyApp.pm
+    + MyApp/MyApp.pl
+    + MyApp/public
+    + MyApp/public/css
+    + MyApp/public/css/style.css
+    + MyApp/public/css/error.css
+    + MyApp/public/images
+    + MyApp/public/404.html
+    + MyApp/public/dispatch.fcgi
+    + MyApp/public/dispatch.cgi
+    + MyApp/public/500.html
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;dancer&lt;/code&gt; application creates a &lt;em&gt;views&lt;/em&gt; folder, which contains layout and templates. It contains sane defaults you can use to start. It also creates a &lt;em&gt;config.yaml&lt;/em&gt; file and an &lt;em&gt;environments&lt;/em&gt; folder for environment-specific configurations. &lt;em&gt;MyApp.pm&lt;/em&gt; and &lt;em&gt;MyApp.pl&lt;/em&gt; are the main application files. &lt;em&gt;MyApp.pl&lt;/em&gt; includes a built-in webserver for the development (or even deployment!) of your application. The &lt;em&gt;public&lt;/em&gt; folder contains default CSS and images.&lt;/p&gt;
+
+&lt;p&gt;This directory tree includes a few other interesting files; these are dispatchers for various backends. The PSGI dispatcher is &lt;em&gt;app.psgi&lt;/em&gt;. The CGI and FCGI dispatchers are &lt;em&gt;public/dispatch.cgi&lt;/em&gt; and &lt;em&gt;public/dispatch.fcgi&lt;/em&gt;, respectively.&lt;/p&gt;
+
+&lt;p&gt;Look in &lt;em&gt;MyApp/MyApp.pm&lt;/em&gt;. Dancing really is this simple!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package MyApp;
+    use Dancer;
+
+    get &#39;/&#39; =&amp;gt; sub {
+        template &#39;index&#39;;
+    };
+
+    true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What does this all mean?&lt;/p&gt;
+
+&lt;h2 id=&#34;routes&#34;&gt;&lt;strong&gt;Routes&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer uses the notion of &lt;em&gt;routes&lt;/em&gt; to specify the paths your users might take in your website. All you need in order to write a Dancer application is to define routes. Routes are not only simple, but concise and versatile. They support variables (named matching, wildcard matching), regular expressions and even conditional matching.&lt;/p&gt;
+
+&lt;p&gt;Here are a few examples:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/&#39; =&amp;gt; sub {
+        return &#39;hello world!&#39;;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This route defines the root path of the application. If someone reaches &lt;a href=&#34;http://example.com/&#34;&gt;http://example.com/&lt;/a&gt;, it will match this route.&lt;/p&gt;
+
+&lt;p&gt;The word &lt;code&gt;get&lt;/code&gt; signifies the HTTP method (GET) for which the path exists. If you use a web form, you need a route for a POST method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    post &#39;/user/add/&#39; =&amp;gt; sub {
+        # create a user using the data from the form
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are a few more methods (&lt;strong&gt;del&lt;/strong&gt; for &lt;em&gt;DELETE&lt;/em&gt;, &lt;strong&gt;put&lt;/strong&gt; for &lt;em&gt;PUT&lt;/em&gt;). You can also use &lt;code&gt;any&lt;/code&gt; to provide a single route for all HTTP methods or for several specific methods:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    any [&#39;get&#39;, &#39;post&#39;] =&amp;gt; sub {
+        # both post and get will reach here!
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Variables are clean and simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/user/view/:username/&#39; =&amp;gt; sub {
+        my $username = params-&amp;gt;{username};
+        template &#39;users&#39; =&amp;gt; { username =&amp;gt; $username };
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This route matches &lt;a href=&#34;http://example.com/user/view/variable/&#34;&gt;http://example.com/user/view/variable/&lt;/a&gt;, while &lt;em&gt;variable&lt;/em&gt; can be of any type.&lt;/p&gt;
+
+&lt;p&gt;Of course, you can write a more complex wildcard matching:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/download/*.*&#39; =&amp;gt; sub {
+        # we extract the wild card matching using splat
+        my ( $file, $ext ) = splat;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you feel rambunctious, you can define a regular expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get r( &#39;/hello/([\w]+)&#39; ) =&amp;gt; sub {
+        my ($name) = splat;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that in these examples, the &lt;code&gt;splat&lt;/code&gt; keyword returns the values that the wildcards (the &lt;code&gt;*&lt;/code&gt; used in routes) or regular expressions (declared with &lt;code&gt;r()&lt;/code&gt;) match. As a convenience, note also that you do &lt;em&gt;not&lt;/em&gt; have to escape the forward slash regex delimiters used in &lt;code&gt;r()&lt;/code&gt;; Dancer escapes them for you.&lt;/p&gt;
+
+&lt;h2 id=&#34;multiple-routes&#34;&gt;&lt;strong&gt;Multiple Routes&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;When writing many routes, you might find it easier to separate them to different files according to their prefixes. Dancer provides &lt;code&gt;prefix&lt;/code&gt; and &lt;code&gt;load&lt;/code&gt; to help you with that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # in main Dancer application:
+    load &#39;UserRoutes.pm&#39;;
+
+    # in UserRoutes.pm:
+    use Dancer &#39;:syntax&#39;; # importing just the syntax to create routes
+    prefix &#39;/user&#39;;
+
+    get &#39;/view/&#39;   =&amp;gt; sub { ... };
+    get &#39;/edit/&#39;   =&amp;gt; sub { ... };
+    get &#39;/delete/&#39; =&amp;gt; sub { ... };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These will match &lt;a href=&#34;http://example.com/user/view/&#34;&gt;http://example.com/user/view/&lt;/a&gt;, &lt;a href=&#34;http://example.com/user/edit/&#34;&gt;http://example.com/user/edit/&lt;/a&gt; and &lt;a href=&#34;http://example.com/user/delete/&#34;&gt;http://example.com/user/delete/&lt;/a&gt;, respectively.&lt;/p&gt;
+
+&lt;h2 id=&#34;built-for-scalability&#34;&gt;&lt;strong&gt;Built for scalability&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer has a built-in route caching mechanism, making sure that even when you have a lot of routes, it will be able to serve them at almost the same speed as though you had only a few routes. This means that even if you have 600 routes, you do not have to worry about your application being slow!&lt;/p&gt;
+
+&lt;h2 id=&#34;variables&#34;&gt;&lt;strong&gt;Variables&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer supports internal variables. Declare them with &lt;code&gt;var&lt;/code&gt;, and you can later fetch them inside your routes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    var waiter =&amp;gt; &#39;sawyer&#39;;
+
+    get &#39;/welcome/&#39; =&amp;gt; sub {
+        my $name = vars-&amp;gt;{waiter};
+        return &amp;quot;Hi, I&#39;m $name and I&#39;ll be your waiter this evening.&amp;quot;;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;filters&#34;&gt;&lt;strong&gt;Filters&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Sometimes you want to be able to specify code to run before any route. &lt;a href=&#34;https://metacpan.org/pod/KiokuDB&#34;&gt;KiokuDB&lt;/a&gt;, for example, requires you to make a scope whenever you want to work with the database. This is easy to automate with the &lt;code&gt;before&lt;/code&gt; filter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    before sub {
+        var scope =&amp;gt; $dir-&amp;gt;new_scope;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another common technique is to verify a session:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    before sub {
+        if ( !session(&#39;user&#39;) &amp;amp;&amp;amp; request-&amp;gt;path_info !~ m{^/login} ) {
+            # Pass the original path requested along to the handler:
+            var requested_path =&amp;gt; request-&amp;gt;path_info;
+            request-&amp;gt;path_info(&#39;/login&#39;);
+        }
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;templates&#34;&gt;&lt;strong&gt;Templates&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer will return to the user agent whatever you return from a route, just like PSGI does. &amp;ldquo;Hello, world!&amp;rdquo; in Dancer is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/&#39; =&amp;gt; sub { &#39;Hello, world!&#39; };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Plain text isn&amp;rsquo;t always what you want, so Dancer has powerful support for templates. There are various template engines available (&lt;a href=&#34;https://metacpan.org/pod/Template&#34;&gt;Template::Toolkit&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Template::Tiny&#34;&gt;Template::Tiny&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Tenjin&#34;&gt;Tenjin&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Text::Haml&#34;&gt;Text::Haml&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Mason&#34;&gt;Mason&lt;/a&gt;, to name a few). Dancer also provides a default simple template engine called &lt;a href=&#34;https://metacpan.org/pod/Dancer::Template::Simple&#34;&gt;Dancer::Template::Simple&lt;/a&gt;. This gives you a simple self-contained template engine at no additional cost!&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;template&lt;/code&gt; keyword allows you to specify which template to process and which variables to pass to the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/user/view/:name&#39; =&amp;gt; sub {
+        my $name = params-&amp;gt;{name};
+
+        # Dancer adds .tt automatically, but this is configurable
+        template &#39;show_user&#39; =&amp;gt; {
+            name =&amp;gt; $name,
+            user =&amp;gt; get_user($name),
+        };
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Dancer automatically supplies you an encompassing layout for your templates, much like &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;Template&lt;/a&gt;&amp;rsquo;s &lt;code&gt;WRAPPER&lt;/code&gt; option. This built-in template means you can use the layout with other template engines, such as &lt;a href=&#34;https://metacpan.org/pod/Template::Tiny&#34;&gt;Template::Tiny&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Dancer accomplishes this by rendering two templates: the one you provided and a (configurable) layout template. The layout template gets the output of rendering your template as a &lt;code&gt;content&lt;/code&gt; variable, then embeds that content in the general page layout.&lt;/p&gt;
+
+&lt;p&gt;The default templates that come with Dancer demonstrate this point very well. Here&amp;rsquo;s &lt;em&gt;main.tt&lt;/em&gt;, the default layout:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;!-- some default css --&amp;gt;&amp;lt;/head&amp;gt;
+    &amp;lt;body&amp;gt;
+    &amp;lt;% content %&amp;gt;
+    &amp;lt;/body&amp;gt;
+    &amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;serializers-make-resting-easier&#34;&gt;&lt;strong&gt;Serializers make RESTing easier&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Serializers are a new feature in Dancer (available since version 1.170). They allow automatic serialization for your output in various forms (&lt;a href=&#34;https://metacpan.org/pod/Data::Dumper&#34;&gt;Data::Dumper&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/YAML&#34;&gt;YAML&lt;/a&gt;, or &lt;a href=&#34;https://metacpan.org/pod/JSON&#34;&gt;JSON&lt;/a&gt;) to shorten the amount of code you have to write in your application.&lt;/p&gt;
+
+&lt;p&gt;When programming a RESTful service, the JSON serializer cuts down much of your code by automatically serializing your output. This makes your server-side AJAX code much more efficient and less boilerplate code for you to write.&lt;/p&gt;
+
+&lt;h2 id=&#34;file-uploads-are-fun&#34;&gt;&lt;strong&gt;File uploads are fun&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;File uploads exist since version 1.170. Within a route, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # several files
+    my @files = request-&amp;gt;upload();
+
+    # single file
+    my $file  = request-&amp;gt;upload();
+
+    # then you can do several things with that file
+    $file-&amp;gt;copy_to(&#39;/my/upload/folder&#39;);
+    my $fh       = $file-&amp;gt;file_handle;
+    my $content  = $file-&amp;gt;content;
+    my $filename = $file-&amp;gt;filename;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;easy-configuration&#34;&gt;&lt;strong&gt;Easy configuration&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;You can configure everything (logging, session handling, template layout, file locations) in Dancer using the main configuration file (&lt;em&gt;appdir/config.yml&lt;/em&gt;). There are configuration files for your specific environment (&lt;em&gt;production&lt;/em&gt; and &lt;em&gt;development&lt;/em&gt;) and you can provide environment-specific configurations in the corresponding file (&lt;em&gt;appdir/environments/development.yml&lt;/em&gt;, for example).&lt;/p&gt;
+
+&lt;h2 id=&#34;summary&#34;&gt;&lt;strong&gt;Summary&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;While Dancer is still evolving, it is already a production-ready simple-yet-powerful web framework lets you get from zero to web in record time. Put on your dancing shoes, define your steps, and bust a move!&lt;/p&gt;
+
+&lt;p&gt;Dancer is available on the CPAN (&lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt;), and &lt;a href=&#34;http://github.com/sukria/Dancer&#34;&gt;Dancer development takes place on Github&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

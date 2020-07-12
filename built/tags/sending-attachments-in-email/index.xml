@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sending Attachments in Email on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/sending-attachments-in-email/</link>
+    <description>Recent content in Sending Attachments in Email on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 03 Sep 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/sending-attachments-in-email/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Cooking with Perl, Part 2</title>
+      <link>http://localhost:1313/pub/2003/09/03/perlcookbook.html/</link>
+      <pubDate>Wed, 03 Sep 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/09/03/perlcookbook.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: The new edition of &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/index.html?CMP=IL7015&#34;&gt;Perl Cookbook&lt;/a&gt; has released, so this week we continue to highlight recipes&amp;ndash;new to the second edition&amp;ndash;for your sampling pleasure. This week&amp;rsquo;s excerpts include recipes from Chapter 14 (&amp;ldquo;Database Access&amp;rdquo;) and Chapter 18 (&amp;ldquo;Internet Services&amp;rdquo;). And be sure to check back here next week for more new recipes on extracting table data, making simple changes to elements or text, and templating with HTML::Mason.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;sample-recipe-using-sql-without-a-database-server&#34;&gt;Sample Recipe: Using SQL Without a Database Server&lt;/h3&gt;
+
+&lt;h4 id=&#34;problem&#34;&gt;Problem&lt;/h4&gt;
+
+&lt;p&gt;You want to make complex SQL queries but don&amp;rsquo;t want to maintain a relational database server.&lt;/p&gt;
+
+&lt;h4 id=&#34;solution&#34;&gt;Solution&lt;/h4&gt;
+
+&lt;p&gt;Use the DBD::SQLite module from CPAN:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use DBI;
+ 
+$dbh = DBI-&amp;gt;connect(&amp;quot;dbi:SQLite:dbname=/Users/gnat/salaries.sqlt&amp;quot;, &amp;quot;&amp;quot;, &amp;quot;&amp;quot;,
+                    { RaiseError =&amp;gt; 1, AutoCommit =&amp;gt; 1 });
+ 
+$dbh-&amp;gt;do(&amp;quot;UPDATE salaries SET salary = 2 * salary WHERE name = &#39;Nat&#39;&amp;quot;);
+ 
+$sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT id,deductions FROM salaries WHERE name = &#39;Nat&#39;&amp;quot;);
+# ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;discussion&#34;&gt;Discussion&lt;/h4&gt;
+
+&lt;p&gt;An SQLite database lives in a single file, specified with the &lt;code&gt;dbname&lt;/code&gt; parameter in the DBI constructor. Unlike most relational databases, there&amp;rsquo;s no database server here&amp;ndash;DBD::SQLite interacts directly with the file. Multiple processes can read from the same database file at the same time (with SELECTs), but only one process can make changes (and other processes are prevented from reading while those changes are being made).&lt;/p&gt;
+
+&lt;p&gt;SQLite supports transactions. That is, you can make a number of changes to different tables, but the updates won&amp;rsquo;t be written to the file until you commit them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use DBI;
+$dbh = DBI-&amp;gt;connect(&amp;quot;dbi:SQLite:dbname=/Users/gnat/salaries.sqlt&amp;quot;, &amp;quot;&amp;quot;, &amp;quot;&amp;quot;,
+                    { RaiseError =&amp;gt; 1, AutoCommit =&amp;gt; 0 });
+eval {
+  $dbh-&amp;gt;do(&amp;quot;INSERT INTO people VALUES (29, &#39;Nat&#39;, 1973)&amp;quot;);
+  $dbh-&amp;gt;do(&amp;quot;INSERT INTO people VALUES (30, &#39;William&#39;, 1999)&amp;quot;);
+  $dbh-&amp;gt;do(&amp;quot;INSERT INTO father_of VALUES (29, 30)&amp;quot;);
+  $dbh-&amp;gt;commit(  );
+};
+if ($@) {
+      eval { $dbh-&amp;gt;rollback(  ) };
+      die &amp;quot;Couldn&#39;t roll back transaction&amp;quot; if $@;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;SQLite is a typeless database system. Regardless of the types specified when you created a table, you can put any type (strings, numbers, dates, blobs) into any field. Indeed, you can even create a table without specifying any types:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CREATE TABLE people (id, name, birth_year);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only time that data typing comes into play is when comparisons occur, either through WHERE clauses or when the database has to sort values. The database ignores the type of the column and looks only at the type of the specific value being compared. Like Perl, SQLite recognizes only strings and numbers. Two numbers are compared as floating-point values, two strings are compared as strings, and a number is always less than a string when values of two different types are compared.&lt;/p&gt;
+
+&lt;p&gt;There is only one case when SQLite looks at the type you declare for a column. To get an automatically incrementing column, such as unique identifiers, specify a field of type &amp;ldquo;INTEGER PRIMARY KEY&amp;rdquo;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CREATE TABLE people (id INTEGER PRIMARY KEY, name, birth_year);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;#79318&#34;&gt;Example 14-6&lt;/a&gt; shows how this is done.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;79318&#34;&gt;Example 14-6:&lt;/span&gt;&lt;/strong&gt; &lt;strong&gt;ipk&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -w
+  # ipk - demonstrate integer primary keys
+  use DBI;
+  use strict;
+  my $dbh = DBI-&amp;gt;connect(&amp;quot;dbi:SQLite:ipk.dat&amp;quot;, &amp;quot;&amp;quot;, &amp;quot;&amp;quot;,
+  {RaiseError =&amp;gt; 1, AutoCommit =&amp;gt; 1});
+  # quietly drop the table if it already existed
+  eval {
+    local $dbh-&amp;gt;{PrintError} = 0;
+    $dbh-&amp;gt;do(&amp;quot;DROP TABLE names&amp;quot;);
+  };
+  # (re)create it
+  $dbh-&amp;gt;do(&amp;quot;CREATE TABLE names (id INTEGER PRIMARY KEY, name)&amp;quot;);
+  # insert values
+  foreach my $person (qw(Nat Tom Guido Larry Damian Jon)) {
+    $dbh-&amp;gt;do(&amp;quot;INSERT INTO names VALUES (NULL, &#39;$person&#39;)&amp;quot;);
+  }
+  # remove a middle value
+  $dbh-&amp;gt;do(&amp;quot;DELETE FROM names WHERE name=&#39;Guido&#39;&amp;quot;);
+  # add a new value
+  $dbh-&amp;gt;do(&amp;quot;INSERT INTO names VALUES (NULL, &#39;Dan&#39;)&amp;quot;);
+  # display contents of the table
+  my $all = $dbh-&amp;gt;selectall_arrayref(&amp;quot;SELECT id,name FROM names&amp;quot;);
+  foreach my $row (@$all) {
+    my ($id, $word) = @$row;
+    print &amp;quot;$word has id $id\n&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;SQLite can hold 8-bit text data, but can&amp;rsquo;t hold an ASCII NUL character (&lt;code&gt;\0&lt;/code&gt;). The only workaround is to do your own encoding (for example, URL encoding or Base64) before you store and after you retrieve the data. This is true even of columns declared as BLOBs.&lt;/p&gt;
+
+&lt;h4 id=&#34;see-also&#34;&gt;See Also&lt;/h4&gt;
+
+&lt;p&gt;&amp;ldquo;Executing an SQL Command Using DBI;&amp;rdquo; the documentation for the CPAN module DBD::SQLite; the SQLite home page at &lt;a href=&#34;http://www.hwaci.com/sw/sqlite/&#34;&gt;http://www.hwaci.com/sw/sqlite/&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;sample-recipe-sending-attachments-in-mail&#34;&gt;Sample Recipe: Sending Attachments in Mail&lt;/h3&gt;
+
+&lt;h4 id=&#34;problem-1&#34;&gt;Problem&lt;/h4&gt;
+
+&lt;p&gt;You want to send mail that includes attachments; for example, you want to mail a PDF document.&lt;/p&gt;
+
+&lt;h4 id=&#34;solution-1&#34;&gt;Solution&lt;/h4&gt;
+
+&lt;p&gt;Use the MIME::Lite module from CPAN. First, create a MIME::Lite object representing the multipart message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use MIME::Lite;
+ 
+$msg = MIME::Lite-&amp;gt;new(From    =&amp;gt; &#39;sender@example.com&#39;,
+                       To      =&amp;gt; &#39;recipient@example.com&#39;,
+                       Subject =&amp;gt; &#39;My photo for the brochure&#39;,
+                       Type    =&amp;gt; &#39;multipart/mixed&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, add content through the &lt;code&gt;attach&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$msg-&amp;gt;attach(Type        =&amp;gt; &#39;image/jpeg&#39;,
+             Path        =&amp;gt; &#39;/Users/gnat/Photoshopped/nat.jpg&#39;,
+             Filename    =&amp;gt; &#39;gnat-face.jpg&#39;);
+ 
+$msg-&amp;gt;attach(Type        =&amp;gt; &#39;TEXT&#39;,
+             Data        =&amp;gt; &#39;I hope you can use this!&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, send the message, optionally specifying how to send it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$msg-&amp;gt;send(  );            # default is to use sendmail(1)
+# alternatively
+$msg-&amp;gt;send(&#39;smtp&#39;, &#39;mailserver.example.com&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;discussion-1&#34;&gt;Discussion&lt;/h4&gt;
+
+&lt;p&gt;The MIME::Lite module creates and sends mail with MIME-encoded attachments. MIME stands for Multimedia Internet Mail Extensions, and is the standard way of attaching files and documents. It can&amp;rsquo;t, however, extract attachments from mail messages&amp;ndash;for that you need to read Recipe &amp;ldquo;Extracting Attachments from Mail.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;When creating and adding to a MIME::Lite object, pass parameters as a list of named parameter pairs. The pair conveys both mail headers (e.g., &lt;code&gt;From&lt;/code&gt;, &lt;code&gt;To&lt;/code&gt;, &lt;code&gt;Subject&lt;/code&gt;) and those specific to MIME::Lite. In general, mail headers should be given with a trailing colon:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$msg = MIME::Lite-&amp;gt;new(&#39;X-Song-Playing:&#39; =&amp;gt; &#39;Natchez Trace&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, MIME::Lite accepts the headers in &lt;a href=&#34;#20112&#34;&gt;Table 18-2&lt;/a&gt; without a trailing colon. &lt;code&gt;*&lt;/code&gt; indicates a wildcard, so &lt;code&gt;Content-*&lt;/code&gt; includes &lt;code&gt;Content-Type&lt;/code&gt; and &lt;code&gt;Content-ID&lt;/code&gt; but not &lt;code&gt;Dis-Content&lt;/code&gt;.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Approved&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Encrypted&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Received&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Sender&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Bcc&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;From&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;References&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Subject&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Cc&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Keywords&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Reply-To&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;To&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Comments&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Message-ID&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Resent-*&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;X-*&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Content-*&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;MIME-Version&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Return-Path&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Date&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Organization&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The full list of MIME::Lite options is given in &lt;a href=&#34;#21965&#34;&gt;Table 18-3&lt;/a&gt;.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Data&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;FH&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;ReadNow&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Datestamp&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Filename&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Top&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Disposition&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Id&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Type&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Encoding&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Length&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Filename&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Path&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The MIME::Lite options and their values govern what is attached (the data) and how:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Path&lt;/code&gt;
+The file containing the data to attach.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Filename&lt;/code&gt;
+The default filename for the reader of the message to save the file as. By default this is the filename from the &lt;code&gt;Path&lt;/code&gt; option (if &lt;code&gt;Path&lt;/code&gt; was specified).&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Data&lt;/code&gt;
+The data to attach.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Type&lt;/code&gt;
+The &lt;code&gt;Content-Type&lt;/code&gt; of the data to attach.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Disposition&lt;/code&gt;
+Either &lt;code&gt;inline&lt;/code&gt; or &lt;code&gt;attachment&lt;/code&gt;. The former indicates that the reader should display the data as part of the message, not as an attachment. The latter indicates that the reader should display an option to decode and save the data. This is, at best, a hint.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;FH&lt;/code&gt;
+An open filehandle from which to read the attachment data.&lt;/p&gt;
+
+&lt;p&gt;There are several useful content types: &lt;code&gt;TEXT&lt;/code&gt; means &lt;code&gt;text/plain&lt;/code&gt;, which is the default; &lt;code&gt;BINARY&lt;/code&gt; similarly is short for &lt;code&gt;application/octet-stream&lt;/code&gt;; &lt;code&gt;multipart/mixed&lt;/code&gt; is used for a message that has attachments; &lt;code&gt;application/msword&lt;/code&gt; for Microsoft Word files; &lt;code&gt;application/vnd.ms-excel&lt;/code&gt; for Microsoft Excel files; &lt;code&gt;application/pdf&lt;/code&gt; for PDF files; &lt;code&gt;image/gif&lt;/code&gt;, &lt;code&gt;image/jpeg&lt;/code&gt;, and &lt;code&gt;image/png&lt;/code&gt; for GIF, JPEG, and PNG files, respectively; &lt;code&gt;audio/mpeg&lt;/code&gt; for MP3 files; &lt;code&gt;video/mpeg&lt;/code&gt; for MPEG movies; &lt;code&gt;video/quicktime&lt;/code&gt; for Quicktime (&lt;em&gt;.mov&lt;/em&gt;) files.&lt;/p&gt;
+
+&lt;p&gt;The only two ways to send the message are using &lt;em&gt;sendmail&lt;/em&gt;(1) or using Net::SMTP. Indicate Net::SMTP by calling &lt;code&gt;send&lt;/code&gt; with a first argument of &lt;code&gt;&amp;quot;smtp&amp;quot;&lt;/code&gt;. Remaining arguments are parameters to the Net::SMTP constructor:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# timeout of 30 seconds
+$msg-&amp;gt;send(&amp;quot;smtp&amp;quot;, &amp;quot;mail.example.com&amp;quot;, Timeout =&amp;gt; 30);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you plan to make more than one MIME::Lite object, be aware that invoking &lt;code&gt;send&lt;/code&gt; as a class method changes the default way to send messages:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;MIME::Lite-&amp;gt;send(&amp;quot;smtp&amp;quot;, &amp;quot;mail.example.com&amp;quot;);
+$msg = MIME::Lite-&amp;gt;new(%opts);
+# ...
+$msg-&amp;gt;send(  );                   # sends using SMTP
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you&amp;rsquo;re going to process multiple messages, also look into the &lt;code&gt;ReadNow&lt;/code&gt; parameter. This specifies that the data for the attachment should be read from the file or filehandle immediately, rather than when the message is sent, written, or converted to a string.&lt;/p&gt;
+
+&lt;p&gt;Sending the message isn&amp;rsquo;t the only thing you can do with it. You can get the final message as a string:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$text = $msg-&amp;gt;as_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;print&lt;/code&gt; method writes the string form of the message to a filehandle:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$msg-&amp;gt;print($SOME_FILEHANDLE);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;#85143&#34;&gt;Example 18-3&lt;/a&gt; is a program that mails filenames given on the command line as attachments.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;85143&#34;&gt;Example 18-3:&lt;/span&gt;&lt;/strong&gt; &lt;strong&gt;mail-attachment&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl -w
+# mail-attachment - send files as attachments
+ 
+use MIME::Lite;
+use Getopt::Std;
+ 
+my $SMTP_SERVER = &#39;smtp.example.com&#39;;           # CHANGE ME
+my $DEFAULT_SENDER = &#39;sender@example.com&#39;;      # CHANGE ME
+my $DEFAULT_RECIPIENT = &#39;recipient@example.com&#39;;# CHANGE ME
+ 
+MIME::Lite-&amp;gt;send(&#39;smtp&#39;, $SMTP_SERVER, Timeout=&amp;gt;60);
+ 
+my (%o, $msg);
+ 
+# process options
+ 
+getopts(&#39;hf:t:s:&#39;, \%o);
+ 
+$o{f} ||= $DEFAULT_SENDER;
+$o{t} ||= $DEFAULT_RECIPIENT;
+$o{s} ||= &#39;Your binary file, sir&#39;;
+ 
+if ($o{h} or !@ARGV) {
+    die &amp;quot;usage:\n\t$0 [-h] [-f from] [-t to] [-s subject] file ...\n&amp;quot;;
+}
+ 
+# construct and send email
+ 
+$msg = new MIME::Lite(
+    From =&amp;gt; $o{f},
+    To   =&amp;gt; $o{t},
+    Subject =&amp;gt; $o{s},
+    Data =&amp;gt; &amp;quot;Hi&amp;quot;,
+    Type =&amp;gt; &amp;quot;multipart/mixed&amp;quot;,
+);
+ 
+while (@ARGV) {
+  $msg-&amp;gt;attach(&#39;Type&#39; =&amp;gt; &#39;application/octet-stream&#39;,
+               &#39;Encoding&#39; =&amp;gt; &#39;base64&#39;,
+               &#39;Path&#39; =&amp;gt; shift @ARGV);
+}
+ 
+$msg-&amp;gt;send(  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;see-also-1&#34;&gt;See Also&lt;/h4&gt;
+
+&lt;p&gt;The documentation for MIME::Lite&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;O&amp;rsquo;Reilly &amp;amp; Associates recently released (August 2003) &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/index.html?CMP=IL7015&#34;&gt;Perl Cookbook, 2nd Edition.&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/chapter/index.html?CMP=IL7015&#34;&gt;Sample Chapter 1, Strings&lt;/a&gt; is available free online.&lt;/li&gt;
+&lt;li&gt;You can also look at the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/toc.html?CMP=IL7015&#34;&gt;Table of Contents&lt;/a&gt;, the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/inx.html?CMP=IL7015&#34;&gt;Index&lt;/a&gt;, and the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/desc.html?CMP=IL7015&#34;&gt;full description&lt;/a&gt; of the book.&lt;/li&gt;
+&lt;li&gt;For more information, or to order the book, &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/index.html?CMP=IL7015&#34;&gt;click here&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

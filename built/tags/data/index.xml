@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Data on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/data/</link>
+    <description>Recent content in Data on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 17 Jun 2015 13:09:04 +0000</lastBuildDate>
+    <atom:link href="/tags/data/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Separate data and behavior with table-driven testing</title>
+      <link>http://localhost:1313/article/178/2015/6/17/Separate-data-and-behavior-with-table-driven-testing/</link>
+      <pubDate>Wed, 17 Jun 2015 13:09:04 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/178/2015/6/17/Separate-data-and-behavior-with-table-driven-testing/</guid>
+      <description>&lt;p&gt;How can I easily run the same tests on different data without duplicating a lot of code? If I follow my usual pattern, I start off with a couple of tests where I write some code then cut-and-paste that a couple of times. I add a few more tests before I realize I have a mess. If I had the foresight to know that I would make a mess (again), I would have started with a table of data and a little bit of code that went through it.&lt;/p&gt;
+
+&lt;p&gt;Consider a silly and small example of testing &lt;code&gt;sprintf&lt;/code&gt;-like behavior of &lt;a href=&#34;https://metacpan.org/pod/String::Sprintf&#34;&gt;String::Sprintf&lt;/a&gt;. I can use this module to create my own format specifiers, such as one to commify a number. I stole this mostly from its documentation, although I threw in the &lt;a href=&#34;http://www.effectiveperlprogramming.com/2015/04/use-v5-20-subroutine-signatures/&#34;&gt;v5.20 signatures feature&lt;/a&gt; and the &lt;a href=&#34;http://www.effectiveperlprogramming.com/2010/09/use-the-r-substitution-flag-to-work-on-a-copy/&#34;&gt;v5.14 non-destructive substitution operator&lt;/a&gt; because I love those features:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.20&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;qw(signatures)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;qw(experimental::signatures)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; String::Sprintf;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $f &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; String::Sprintf&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;formatter(
+  N &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;($width, $value, $values, $letter) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; commify(sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%${width}f&amp;#34;&lt;/span&gt;, $value);
+  });
+
+say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Numbers are: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; 
+  $f&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sprintf(
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%10.2N, %10.2N&amp;#39;&lt;/span&gt;, 
+    &lt;span style=&#34;color:#ae81ff&#34;&gt;12345678.901&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;87654.321&lt;/span&gt;
+  );
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;commify&lt;/span&gt; ( $n ) {
+  $n &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/(\.\d+)|(?&amp;lt;=\d)(?=(?:\d\d\d)+\b)/$1 || &amp;#39;,&amp;#39;/&lt;/span&gt;rge;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;pre&gt;&lt;code&gt;Numbers are: 12,345,678.90,   87,654.32
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The mess I might make to test this starts with a single input and output with the &lt;a href=&#34;https://metacpan.org/pod/Test::More&#34;&gt;Test::More&lt;/a&gt; function &lt;code&gt;is&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.20&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;qw(signatures)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;qw(experimental::signatures)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test::More;
+    
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;commify&lt;/span&gt; ( $n ) {
+  $n &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/(\.\d+)|(?&amp;lt;=\d)(?=(?:\d\d\d)+\b)/$1 || &amp;#39;,&amp;#39;/&lt;/span&gt;rge;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $class &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;String::Sprintf&amp;#39;&lt;/span&gt;;  
+use_ok( $class );
+    
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $f &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; String::Sprintf&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;formatter(
+  N &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;($width, $value, $values, $letter) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; commify(sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%${width}f&amp;#34;&lt;/span&gt;, $value);
+  });
+    
+isa_ok(  $f, $class );
+can_ok( $f, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;sprintf&amp;#39;&lt;/span&gt; );
+
+is(  $f&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sprintf( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%.2N&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1234.56&amp;#39;&lt;/span&gt; ), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1,234.56&amp;#39;&lt;/span&gt; );
+
+done_testing();&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I decide to test another value, and I think the easiest thing to do is to duplicate that line with &lt;code&gt;is&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is(  $f&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sprintf( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%.2N&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1234.56&amp;#39;&lt;/span&gt; ), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1,234.56&amp;#39;&lt;/span&gt; );
+is(  $f&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sprintf( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%.2N&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1234&amp;#39;&lt;/span&gt; ),    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1,234.00&amp;#39;&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The particular thing to test isn&amp;rsquo;t the point of this article. It&amp;rsquo;s all the stuff around it that I want to highlight. Or, more correctly, I want to de-emphasize all this stuff around it. I had to duplicate the test although most of the structure is the same.&lt;/p&gt;
+
+&lt;p&gt;I can convert those tests to a structure to hold the data and another structure for the behavior:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+    [ ( &lt;span style=&#34;color:#ae81ff&#34;&gt;1234.56&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1,234.56&amp;#39;&lt;/span&gt; ) ],
+    [ ( &lt;span style=&#34;color:#ae81ff&#34;&gt;1234&lt;/span&gt;,    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1,234.00&amp;#39;&lt;/span&gt; ) ],
+);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $row ( @data ) {
+  is(  $f&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sprintf( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%.2N&amp;#39;&lt;/span&gt;, $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] ), $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] );
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I can add many more rows to &lt;code&gt;@data&lt;/code&gt; but the meat of the code, that &lt;code&gt;foreach&lt;/code&gt; loop, doesn&amp;rsquo;t change.&lt;/p&gt;
+
+&lt;p&gt;I can improve this though. So far I only test that one &lt;code&gt;sprintf&lt;/code&gt; template. I can add that to &lt;code&gt;@data&lt;/code&gt; too, and use that to make a label for the test:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ndot2_f &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%.2N&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+    [ $ndot2_f,( &lt;span style=&#34;color:#ae81ff&#34;&gt;1234.56&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1,234.56&amp;#39;&lt;/span&gt; ) ],
+    [ $ndot2_f, ( &lt;span style=&#34;color:#ae81ff&#34;&gt;1234&lt;/span&gt;,    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1,234.00&amp;#39;&lt;/span&gt; ) ],
+);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $row ( @data ) {
+  is( $f&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sprintf( $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;], $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] ), $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;],
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$row-&amp;gt;[1] with format $row-&amp;gt;[0] returns $row-&amp;gt;[2]&amp;#34;&lt;/span&gt;
+   );
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I can add another test with a different format. If I had kept going the way I started, this would look like a new test because the format changed. Now the format is just part of the input:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ndot2_f &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%.2N&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+    [ $ndot2_f, ( &lt;span style=&#34;color:#ae81ff&#34;&gt;1234.56&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1,234.56&amp;#39;&lt;/span&gt; ) ],
+    [ $ndot2_f, ( &lt;span style=&#34;color:#ae81ff&#34;&gt;1234&lt;/span&gt;,    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1,234.00&amp;#39;&lt;/span&gt; ) ],
+    [ &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%.0N&amp;#39;&lt;/span&gt;  , ( &lt;span style=&#34;color:#ae81ff&#34;&gt;1234.49&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1,234&amp;#39;&lt;/span&gt;    ) ],
+);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $row ( @data ) {
+  is( $f&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sprintf( $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;], $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] ), $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;],
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$row-&amp;gt;[1] with format $row-&amp;gt;[0] returns $row-&amp;gt;[2]&amp;#34;&lt;/span&gt;
+  );
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;As I go on things get more complicated. If a test fails, I want some extra information about which one failed. I&amp;rsquo;ll change up how I go through the table. In this case, I&amp;rsquo;ll use the &lt;a href=&#34;http://www.effectiveperlprogramming.com/2010/05/perl-5-12-lets-you-use-each-on-an-array/&#34;&gt;v5.12 feature&lt;/a&gt; that allows &lt;code&gt;each&lt;/code&gt; on an array so I get back the index and the value:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $index, $row ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; each @data ) {
+  is( $f&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sprintf( $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;], $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] ), $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;],
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$index: $row-&amp;gt;[1] with format $row-&amp;gt;[0] returns $row-&amp;gt;[2]&amp;#34;&lt;/span&gt;
+  );
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;My code for the test behavior changed but I didn&amp;rsquo;t have to mess with the input data at all. The particular code in this case doesn&amp;rsquo;t matter. This table-driven testing separates the inputs and the tests; that&amp;rsquo;s what you should pay attention to.&lt;/p&gt;
+
+&lt;p&gt;It can get even better. So far, I&amp;rsquo;ve put all the input data in the test file itself, but now that it&amp;rsquo;s separate from the test code, I can grab the input from somewhere else. That might be a tab-separated values file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%.2N   1234.56 1,234.56 
+%.2N    1234    1,234.00
+%.0N    1234.49 1,234
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I create &lt;code&gt;@data&lt;/code&gt; in the test file by reading and parsing the external file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $test_data_fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, $test_file_name &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @data;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$test_data_fh&amp;gt;&lt;/span&gt; ) {
+  chomp;
+  push @data, split &lt;span style=&#34;color:#e6db74&#34;&gt;/\t/&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now none of the data are in the test file. And, there&amp;rsquo;s nothing special about a simple text file. I could do a little bit more work to take the data from an Excel file (perhaps the most useful wizard skill in business) or even a database:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; DBI;
+    
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dbh &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; DBI&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;connect( &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; );
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $dbh&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;prepare( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;SELECT * FROM tests&amp;#39;&lt;/span&gt; );
+    
+$sth&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;execute();
+    
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $row &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $sth&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;fetchrow_arrayref ) {
+  state $index &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+  is( $f&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sprintf( $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;], $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] ), $row&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;],
+       $index&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;: $row-&amp;gt;[1] with format $row-&amp;gt;[0] returns $row-&amp;gt;[2]&amp;#34;&lt;/span&gt;
+  );
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That&amp;rsquo;s the idea. I separate the data and the tests to give myself some flexibility. How I access the data and how I test depend on my particular problems.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Parsing data couldn&#39;t be easier with XML::Dataset</title>
+      <link>http://localhost:1313/article/87/2014/5/9/Parsing-data-couldn-t-be-easier-with-XML--Dataset/</link>
+      <pubDate>Fri, 09 May 2014 03:14:01 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/87/2014/5/9/Parsing-data-couldn-t-be-easier-with-XML--Dataset/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;It&amp;rsquo;s hard to believe that when it comes to XML parsing CPAN hasn&amp;rsquo;t already got you covered, but &lt;a href=&#34;https://metacpan.org/pod/XML::Dataset&#34;&gt;XML::Dataset&lt;/a&gt; is a new module that fills a useful void. XML::Dataset let&amp;rsquo;s you declare a plaintext data collection schema, and then goes and extracts the data for you, super fast. Read on to see how it works.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;requirements&#34;&gt;Requirements&lt;/h3&gt;
+
+&lt;p&gt;The CPAN Testers results &lt;a href=&#34;http://matrix.cpantesters.org/?dist=XML-Dataset+0.006&#34;&gt;show&lt;/a&gt; that XML::Dataset v0.06 will run on any platform with Perl (down to 5.8.9). To install the module with CPAN, open up the terminal and type:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan XML::Dataset&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;your-data-extracted&#34;&gt;Your data, extracted&lt;/h3&gt;
+
+&lt;p&gt;To use XML::Dataset you&amp;rsquo;ll need some stringified XML source data and a data profile. A profile is just a plaintext schema which specifies the data you&amp;rsquo;d like to extract. Let&amp;rsquo;s look at an example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; XML::Dataset;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Printer;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sample_data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;q(&amp;lt;?xml version=&amp;#34;1.0&amp;#34;?&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;colleagues&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    &amp;lt;colleague&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        &amp;lt;title&amp;gt;The Boss&amp;lt;/title&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        &amp;lt;phone&amp;gt;+1 202-663-9108&amp;lt;/phone&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    &amp;lt;/colleague&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    &amp;lt;colleague&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        &amp;lt;title&amp;gt;Admin Assistant&amp;lt;/title&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        &amp;lt;phone&amp;gt;+1 347-999-5454&amp;lt;/phone&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        &amp;lt;email&amp;gt;inbox@the_company.com&amp;lt;/email&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    &amp;lt;/colleague&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    &amp;lt;colleague&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        &amp;lt;title&amp;gt;Minion&amp;lt;/title&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        &amp;lt;phone&amp;gt;+1 792-123-4109&amp;lt;/phone&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    &amp;lt;/colleague&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/colleagues&amp;gt;)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sample_data_profile
+    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;q(colleagues
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            colleague
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;                title   = dataset:colleagues
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;                email   = dataset:colleagues
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;                phone   = dataset:colleagues)&lt;/span&gt;;
+
+p parse_using_profile($sample_data, $sample_data_profile);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The code above declares a simple XML dataset ($sample_data) and a data profile to extract the required data ($sample_data_profile). XML::Dataset requires every indented newline in the data profile to map to another nested level of the data set. Once we reach the data attributes we want to extract, we simply assign a dataset to them (dataset:colleagues).&lt;/p&gt;
+
+&lt;p&gt;XML::Dataset exports the &amp;ldquo;parse_using_profile&amp;rdquo; function which extracts the data using our data profile and returns a Perl data structure. We use &lt;a href=&#34;https://metacpan.org/pod/Data::Printer&#34;&gt;Data::Printer&lt;/a&gt; to print out the results. Running this code we get this output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; {
+    colleagues   [
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] {
+            phone   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;+1 202-663-9108&amp;#34;&lt;/span&gt;,
+            title   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;The Boss&amp;#34;&lt;/span&gt;
+        },
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] {
+            email   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;inbox@the_company.com&amp;#34;&lt;/span&gt;,
+            phone   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;+1 347-999-5454&amp;#34;&lt;/span&gt;,
+            title   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Admin Assistant&amp;#34;&lt;/span&gt;
+        },
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] {
+            phone   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;+1 792-123-4109&amp;#34;&lt;/span&gt;,
+            title   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Minion&amp;#34;&lt;/span&gt;
+        },
+    ]
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note that XML::Dataset had no problem extracting the one email address that was present in the data, even though the other colleagues did not have that attribute. What if we wanted to collect emails and phone numbers, but in separate datasets? All we need to do is update $sample_data_profile with two datasets:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sample_data_profile
+    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;q(colleagues
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            colleague
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;                title   = dataset:emails dataset:phones
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;                email   = dataset:emails
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;                phone   = dataset:phones)&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Re-running the code, XML::Dataset now produces two datasets for us:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; {
+    emails   [
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] {
+            title   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;The Boss&amp;#34;&lt;/span&gt;
+        },
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] {
+            email   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;inbox@the_company.com&amp;#34;&lt;/span&gt;,
+            title   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Admin Assistant&amp;#34;&lt;/span&gt;
+        },
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] {
+            title   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Minion&amp;#34;&lt;/span&gt;
+        }
+    ],
+    phones   [
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] {
+            phone   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;+1 202-663-9108&amp;#34;&lt;/span&gt;,
+            title   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;The Boss&amp;#34;&lt;/span&gt;
+        },
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] {
+            phone   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;+1 347-999-5454&amp;#34;&lt;/span&gt;,
+            title   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Admin Assistant&amp;#34;&lt;/span&gt;
+        },
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] {
+            phone   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;+1 792-123-4109&amp;#34;&lt;/span&gt;,
+            title   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Minion&amp;#34;&lt;/span&gt;
+        }
+    ]
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;a-real-example&#34;&gt;A real example&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s write a program to parse a a more realistic data set. Many websites provide a sitemap that lists all of the content on the website, and when it was last updated. This information is used by search engines to optimize their crawling routines. The sitemap has a defined xml format, so it&amp;rsquo;s a cinch to parse it with XML::Dataset:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; XML::Dataset;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Printer;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; HTTP::Tiny;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;http://perltricks.com/sitemap.xml&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sitemap_data 
+    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; HTTP::Tiny&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get($url)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{content};
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sitemap_data_profile
+    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;q(urlset
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            url
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;                loc     = dataset:sitemap_locations_modified
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;                lastmod = dataset:sitemap_locations_modified)&lt;/span&gt;;
+
+p parse_using_profile($sitemap_data, $sitemap_data_profile);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The code above downloads the PerlTricks.com sitemap using &lt;a href=&#34;https://metacpan.org/pod/HTTP::Tiny&#34;&gt;HTTP::Tiny&lt;/a&gt; and extracts every URL and last modified timestamp from the sitemap. Running the code, we get this output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; {
+    sitemap_locations_modified   [
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]  {
+            lastmod   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2014-05-09&amp;#34;&lt;/span&gt;,
+            loc       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://perltricks.com/&amp;#34;&lt;/span&gt;
+        },
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]  {
+            lastmod   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2013-03-24&amp;#34;&lt;/span&gt;,
+            loc       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://perltricks.com/article/1/2013/3/24/3-quick-ways-to-find-out-the-version-number-of-an-installed-Perl-module-from-the-terminal&amp;#34;&lt;/span&gt;
+        },
+        [&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]  {
+            lastmod   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2013-03-27&amp;#34;&lt;/span&gt;,
+            loc       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://perltricks.com/article/3/2013/3/27/How-to-cleanly-uninstall-a-Perl-module&amp;#34;&lt;/span&gt;
+        },
+        &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+    ]
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;No problem! We could re-use that same program to download and parse any sitemap on the Internet.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;XML::Dataset is fantastic for extracting fixed data schemas from XML. The plaintext data profiles are so easy to use, a non-programmer could write them. XML::Dataset is also fast: under the hood it uses XML::LibXML (and a few optimizations) and could be adapted for well-formatted HTML. It has great &lt;a href=&#34;https://metacpan.org/pod/XML::Dataset&#34;&gt;documentation&lt;/a&gt; and offers some advanced features like partial dataset parse dispatching. Module author James Spurin deserves credit for producing a quality module and a welcome addition to CPAN&amp;rsquo;s XML namespace.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Do you have a much-loved CPAN module that you&amp;rsquo;d like us to cover? Drop us an &lt;a href=&#34;mailto:perltricks.com@gmail.com&#34;&gt;email&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Cover image &lt;a href=&#34;https://creativecommons.org/licenses/by/2.0/&#34;&gt;©&lt;/a&gt; &lt;a href=&#34;https://www.flickr.com/photos/dullhunk/3948166814/in/photolist-71TorC-5RcLVC-5RcLk1-5R8vpe-5RcMC9-5R8w7D-5R8v7e-5RcM9Q-5RcLeL-5R8upk-5RcMso-5RcL7J-72QCEU-7KoKym-72QCsE-6FtTJ-6m6pyB-5AJCpY-6FvjN-6FuLy-6FtQL-6Fv4J-5BHeXd-6FuUe-6FtXH-6Fu9t-6FuAs-5AJCs3-5AJCsd-5AJCro-tS2dS-6kzkkD-6kDvjQ-6kDAtY-6kDvzS-6kD45L-6kzqYM-6kDvsE-6kDuys-6kDvcE-6m6prT-6kDupU-6kDuWw-6kDv6j-6kzkd2-6kDALo-5AJCsA-CJhVy-5AJCrN-5MzAkw&#34;&gt;Duncun Hull&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,572 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Chris Nandor on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/chris-nandor/</link>
+    <description>Recent content in Chris Nandor on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 23 Jan 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/chris-nandor/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Introducing Mac::Glue</title>
+      <link>http://localhost:1313/pub/2004/01/23/macglue.html/</link>
+      <pubDate>Fri, 23 Jan 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/01/23/macglue.html/</guid>
+      <description>
+
+&lt;p&gt;Thanks to the popularity of Mac OS X, the new iBook, and the PowerBook G4, it&amp;rsquo;s no longer uncool to talk about owning an Apple. Longtime Mac devotees have now been joined by longtime Unix devotees and pretty much anyone who wants computers to be shiny, and speakers at conferences such as the &lt;a href=&#34;http://conferences.oreillynet.com/os2004/&#34;&gt;Open Source Convention&lt;/a&gt; are beginning to get used to looking down over a sea of Apple laptops.&lt;/p&gt;
+
+&lt;p&gt;One of the great features about Apple&amp;rsquo;s Mac OS is its support for flexible inter-process communication (IPC), which Apple calls inter-application communication (IAC). One of the components of IAC is called Apple events, and allows applications to command each other to perform various tasks. On top of the raw Apple events layer, Apple has developed the &lt;strong&gt;Open Scripting Architecture&lt;/strong&gt;, an architecture for scripting languages such as Apple&amp;rsquo;s own AppleScript.&lt;/p&gt;
+
+&lt;p&gt;But this is &lt;code&gt;perl.com&lt;/code&gt;, and we don&amp;rsquo;t need inferior scripting languages! The &lt;code&gt;Mac::Glue&lt;/code&gt; module provides OSA compatibility and allows us to talk to Mac applications with Perl code. Let&amp;rsquo;s take a look at how to script Mac tools at a high level in Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-pre-history-of-mac-glue&#34;&gt;The Pre-History of &lt;code&gt;Mac::Glue&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;In the beginning, there was &lt;code&gt;Mac::AppleEvents&lt;/code&gt;. This module wrapped the raw Apple events API, with its cryptic four-character codes to describe applications and their capabilities, and its collection of awkward constants. You had to find out the four-character identifiers yourself, you had to manage and dispose of memory yourself, but at least it got you talking Apple events. Here&amp;rsquo;s some &lt;code&gt;Mac::AppleEvents&lt;/code&gt; code to open your System Folder in the Finder::&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::AppleEvents;
+
+my $evt = AEBuildAppleEvent(&#39;aevt&#39;, &#39;odoc&#39;, typeApplSignature, 
+             &#39;MACS&#39;, kAutoGenerateReturnID, kAnyTransactionID,
+             &amp;quot;&#39;----&#39;: obj{want:type(prop), from:&#39;null&#39;(),&amp;quot; .
+                &amp;quot;form:prop, seld:type(macs)}&amp;quot;
+          );
+my $rep = AESend($evt, kAEWaitReply);
+
+AEDisposeDesc($evt);
+AEDisposeDesc($rep);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Obviously this isn&amp;rsquo;t putting the computer to its full use; in a high-level language like Perl, we shouldn&amp;rsquo;t have to concern ourselves with clearing up descriptors when they&amp;rsquo;re no longer in use, or providing low-level flags. We just want to send the message to the Finder. So along came &lt;code&gt;Mac::AppleEvents::Simple&lt;/code&gt;, which does more of the work:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::AppleEvents::Simple;
+do_event(qw(aevt odoc MACS),
+     &amp;quot;&#39;----&#39;: obj{want:type(prop), from:&#39;null&#39;(),&amp;quot; .
+     &amp;quot;form:prop, seld:type(macs)}&amp;quot;
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a bit better; at least we&amp;rsquo;re just talking the IAC language now, instead of having to emulate the raw API. But those troublesome identifiers &amp;ndash; &amp;ldquo;aevt&amp;rdquo; for the Finder, &amp;ldquo;odoc&amp;rdquo; to open a document, and &amp;ldquo;MACS&amp;rdquo; for the System folder.&lt;/p&gt;
+
+&lt;p&gt;Maybe we&amp;rsquo;d be better off in AppleScript after all &amp;ndash; the AppleScript code for the same operation looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;tell application &amp;quot;Finder&amp;quot; to open folder &amp;quot;System Folder&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And before &lt;code&gt;Mac::Glue&lt;/code&gt; was ported to Mac OS X, this is exactly what we had to do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::AppleScript qw(RunAppleScript);
+RunAppleScript(&#39;tell application &amp;quot;Finder&amp;quot; to open folder &amp;quot;System Folder&amp;quot;&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is considerably easier to understand, but it&amp;rsquo;s just not Perl. &lt;code&gt;Mac::Glue&lt;/code&gt; uses the same magic that allows AppleScript to use names instead of identifiers, but wraps it in Perl syntax:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::Glue;
+my $finder = Mac::Glue-&amp;gt;new(&#39;Finder&#39;);
+$finder-&amp;gt;open( $finder-&amp;gt;prop(&#39;System Folder&#39;) );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;setting-up-and-creating-glues&#34;&gt;Setting Up and Creating Glues&lt;/h3&gt;
+
+&lt;p&gt;On Mac OS 9, MacPerl comes with &lt;code&gt;Mac::Glue&lt;/code&gt;. However, OS X users will need to install it themselves. &lt;code&gt;Mac::Glue&lt;/code&gt; requires several other CPAN modules to be installed, including the &lt;code&gt;Mac-Carbon&lt;/code&gt; distribution.&lt;/p&gt;
+
+&lt;p&gt;Because this in turn requires the Carbon headers to be available, you need to install the correct Apple developer kits; if you don&amp;rsquo;t have the Developer Tools installed already, you can download them from &lt;a href=&#34;https://connect.apple.com/&#34;&gt;the ADC site&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once you have the correct headers installed, the best way to get &lt;code&gt;Mac::Glue&lt;/code&gt; up and running is through the CPAN or CPANPLUS modules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;% perl -MCPAN -e &#39;install &amp;quot;Mac::Glue&amp;quot;&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This should download and install all the prerequisites and then the &lt;code&gt;Mac::Glue&lt;/code&gt; module itself.&lt;/p&gt;
+
+&lt;p&gt;When it installs itself, &lt;code&gt;Mac::Glue&lt;/code&gt; also creates &amp;ldquo;glue&amp;rdquo; files for the core applications &amp;ndash; Finder, the System Events library, and so on. A glue file is used to describe the resources available to an application and what can be done to the properties that it has.&lt;/p&gt;
+
+&lt;p&gt;If you try to use &lt;code&gt;Mac::Glue&lt;/code&gt; to control an application for which it doesn&amp;rsquo;t currently have a glue file, it will say something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;No application glue for &#39;JEDict&#39; found in 
+&#39;/Library/Perl/5.8.1/Mac/Glue/glues&#39; at -e line 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To create glues for additional applications that are not installed by default, you can drop them onto the Mac OS 9 droplet &amp;ldquo;macglue.&amp;rdquo; On Mac OS X, run the &lt;code&gt;gluemac&lt;/code&gt; command.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-s-a-property&#34;&gt;What&amp;rsquo;s a Property?&lt;/h3&gt;
+
+&lt;p&gt;Once you have all your glues set up, you can start scripting Mac applications in Perl. It helps if you already have some knowledge of how AppleScript works before doing this, because sometimes &lt;code&gt;Mac::Glue&lt;/code&gt; doesn&amp;rsquo;t behave the way you expect it to.&lt;/p&gt;
+
+&lt;p&gt;For instance, we want to dump all the active to-do items from iCal. To-dos are associated with calendars, so first we need a list of all the calendars:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::Glue;
+my $ical = new Mac::Glue(&amp;quot;iCal&amp;quot;);
+
+my @cals = $ical-&amp;gt;prop(&amp;quot;calendars&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The problem we face immediately is that &lt;code&gt;$ical-&amp;gt;prop(&amp;quot;calendars&amp;quot;)&lt;/code&gt; doesn&amp;rsquo;t give us the calendars. Instead, it gives us a way to talk about the calendars&amp;rsquo; property. It&amp;rsquo;s an object. To get the value of that property, we call its &lt;code&gt;get&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @cals = $ical-&amp;gt;prop(&amp;quot;calendars&amp;quot;)-&amp;gt;get;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This returns a list of objects that allow us to talk about individual calendars. We can get their titles like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for my $cal (@cals) {
+    my $name = $cal-&amp;gt;prop(&amp;quot;title&amp;quot;)-&amp;gt;get;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now we want to get the to-dos in each calendar that haven&amp;rsquo;t yet been completed or have no completion date:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @todos = grep { !$_-&amp;gt;prop(&amp;quot;completion_date&amp;quot;)-&amp;gt;get }
+                       $cal-&amp;gt;prop(&amp;quot;todos&amp;quot;)-&amp;gt;get;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we then store the summary for each of the to-do items in a hash keyed by the calendar name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $todos{$name} = [ map { $_-&amp;gt;prop(&amp;quot;summary&amp;quot;)-&amp;gt;get } @todos ]
+    if @todos;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we can print out the summary of all the outstanding to-do items in each calendar:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for my $cal(keys %todo) {
+    print &amp;quot;$cal:\n&amp;quot;;
+    print &amp;quot;\t$_\n&amp;quot; for @{$todo{$cal}};
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Putting it all together, the code looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::Glue;
+my $ical = new Mac::Glue(&amp;quot;iCal&amp;quot;);
+
+my @cals = $ical-&amp;gt;prop(&amp;quot;calendars&amp;quot;)-&amp;gt;get;
+for my $cal (@cals) {
+    my $name = $cal-&amp;gt;prop(&amp;quot;title&amp;quot;)-&amp;gt;get;
+    my @todos = map  { $_-&amp;gt;prop(&amp;quot;summary&amp;quot;)-&amp;gt;get }
+                grep { !$_-&amp;gt;prop(&amp;quot;completion_date&amp;quot;)-&amp;gt;get }
+                       $cal-&amp;gt;prop(&amp;quot;todos&amp;quot;)-&amp;gt;get;
+    $todo{$name} = \@todos if @todos;
+}
+
+for my $cal(keys %todo) {
+    print &amp;quot;$cal:\n&amp;quot;;
+    print &amp;quot;\t$_\n&amp;quot; for @{$todo{$cal}};
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The question is, where did we get the property names like &lt;code&gt;summary&lt;/code&gt; and &lt;code&gt;completion_date&lt;/code&gt; from? How did we know that the calendars had &lt;code&gt;titles&lt;/code&gt; but the to-do items had &lt;code&gt;summaries&lt;/code&gt;, and so on?&lt;/p&gt;
+
+&lt;p&gt;There are two answers to this: the first is to use the documentation created when the glue is installed. Typing &lt;code&gt;gluedoc iCal&lt;/code&gt; on Mac OS X or using Shuck on Mac OS 9, you will find the verbs, properties, and objects that the application supports. For instance, under the calendar class, you should see:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;This class represents a calendar&lt;/p&gt;
+
+&lt;p&gt;Properties:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    description (wr12/utxt): This is the calendar
+description. (read-only)
+    inheritance (c@#^/item): All of the properties of the
+superclass. (read-only)
+    key (wr03/utxt): An unique calendar key (read-only)
+    tint (wr04/utxt): The calendar color (read-only)
+    title (wr02/utxt): This is the calendar title.
+    writable (wr05/bool): If this calendar is writable
+(read-only)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Elements:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    event, todo
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This tells us that we can ask a calendar for its &lt;code&gt;title&lt;/code&gt; property, and also for the &lt;code&gt;events&lt;/code&gt; or &lt;code&gt;todos&lt;/code&gt; contained within it.&lt;/p&gt;
+
+&lt;p&gt;Similarly, when we get the events back, we can look up the &amp;ldquo;event&amp;rdquo; class in the documentation and see what properties are available on it.&lt;/p&gt;
+
+&lt;p&gt;The second, and perhaps easier, way to find out what you can do with an application is to open the AppleScript Script Editor application, select Open Dictionary from the File menu, and choose the application you want to script. Now you can browse a list of the classes and commands associated with the application:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_01_23_macglue/glue.jpg&#34; width=&#34;450&#34; height=&#34;343&#34; /&gt;
+When you need to know how to translate those back into Perl, you can then consult the glue documentation. It takes a few attempts to get used to the way &lt;code&gt;Mac::Glue&lt;/code&gt; works, but once you&amp;rsquo;ve done that, you&amp;rsquo;ll find that you can translate between the AppleScript documentation and a &lt;code&gt;Mac::Glue&lt;/code&gt; equivalent in your head.&lt;/p&gt;
+
+&lt;h3 id=&#34;some-examples&#34;&gt;Some Examples&lt;/h3&gt;
+
+&lt;p&gt;In a couple of weeks, we&amp;rsquo;ll be presenting a &amp;ldquo;Mac::Glue Hacks&amp;rdquo; article in the spirit of the O&amp;rsquo;Reilly &lt;a href=&#34;http://hacks.oreilly.com&#34;&gt;hacks books&lt;/a&gt; series, with several simple &lt;code&gt;Mac::Glue&lt;/code&gt;-based application scripting tricks to whet your appetite and explore what &lt;code&gt;Mac::Glue&lt;/code&gt; can do. But to get you started, here&amp;rsquo;s a couple we found particularly useful.&lt;/p&gt;
+
+&lt;p&gt;First, iTunes allows you to give a rating to your favorite songs, on the scale of zero to five stars. Actually, internally, this is stored in the iTunes database as a number between 0 and 100. Simon keeps iTunes playing randomly over his extensive music collection, and every time an interesting track comes up, he runs this script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $itunes = Mac::Glue-&amp;gt;new(&amp;quot;iTunes&amp;quot;);
+exit unless $itunes-&amp;gt;prop(&amp;quot;player state&amp;quot;)-&amp;gt;get eq &amp;quot;playing&amp;quot;;
+
+my $rating = $itunes-&amp;gt;prop(&amp;quot;current track&amp;quot;)-&amp;gt;prop(&amp;quot;rating&amp;quot;);
+$rating-&amp;gt;set(to =&amp;gt; ($rating-&amp;gt;get + 20))
+  if $rating-&amp;gt;get &amp;lt; 81;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As well as getting properties from &lt;code&gt;Mac::Glue&lt;/code&gt;, we can also set them back with the &lt;code&gt;set&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;One more complex example is the &lt;a href=&#34;http://dev.macperl.org/files/scripts/happening&#34;&gt;happening&lt;/a&gt; script Chris uses to publish details of what&amp;rsquo;s going on at his computer. As well as simply reporting the current foremost application, it dispatches based on that application to report more information. For instance, if Safari has the focus, it reports what web page is being looked at; if it&amp;rsquo;s the Terminal, what program is currently being run. It also contacts iTunes to see what song is playing, and if there&amp;rsquo;s nothing playing on a local iTunes, asks likely other computers on the network if they&amp;rsquo;re playing anything.&lt;/p&gt;
+
+&lt;p&gt;Once &lt;code&gt;happening&lt;/code&gt; has discovered what&amp;rsquo;s going on, it checks to see if the iChat status is set to &amp;ldquo;Available,&amp;rdquo; and if so, resets itself it to report this status. Let&amp;rsquo;s break down &lt;code&gt;happening&lt;/code&gt; and see how it accomplishes each of these tasks.&lt;/p&gt;
+
+&lt;p&gt;First, to work out the name of the currently focused application:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $system = get_app(&#39;System Events&#39;) or return;
+$app    ||= $system-&amp;gt;prop(name =&amp;gt; item =&amp;gt; 1,
+    application_process =&amp;gt; whose(frontmost =&amp;gt; equals =&amp;gt; 1)
+);
+
+$app-&amp;gt;get;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;get_app&lt;/code&gt; is just a utility function that memorizes the process of calling &lt;code&gt;Mac::Glue-&amp;gt;new($app_name)&lt;/code&gt;; since loading up the glue file is quite expensive, keeping around application glue objects is a big speed-saving approach.&lt;/p&gt;
+
+&lt;p&gt;The next incantation shows you how natural &lt;code&gt;Mac::Glue&lt;/code&gt; programming can look, but also how much you need to know about how the Apple environment works. We&amp;rsquo;re asking the System Events library to tell us about the application process that matches a certain condition. &lt;code&gt;Mac::Glue&lt;/code&gt; exports the &lt;code&gt;whose&lt;/code&gt; function to create conditions.&lt;/p&gt;
+
+&lt;p&gt;The important thing about this is the fact that we use &lt;code&gt;$app ||= ...&lt;/code&gt;. The construction that we saved in &lt;code&gt;$app&lt;/code&gt; does not give us &amp;ldquo;the name of the front-most application at this moment,&amp;rdquo; but it represents the whole concept of &amp;ldquo;the name of the front-most application.&amp;rdquo; At any time in the future, we can call &lt;code&gt;get&lt;/code&gt; on it, and it will find out and return the name of the front-most application at that time, even if it has changed since the last time you called &lt;code&gt;get&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now that we know what the front-most application is, we can look it up in a hash that contains subroutines returning information specific to that application. For instance, here&amp;rsquo;s the entry for Safari:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Safari =&amp;gt; sub { my ($glue) = @_;
+                my $obj = $glue-&amp;gt;prop(url =&amp;gt; document =&amp;gt; 1 =&amp;gt; window =&amp;gt; 1);
+                my $url = $obj-&amp;gt;get;
+                return URI-&amp;gt;new($url)-&amp;gt;host if $url;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This returns the host part of the URL in the first document in the first window. For &lt;code&gt;ircle&lt;/code&gt;, an IRC client, this code will get the channel and server name for the current connection:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ircle       =&amp;gt; sub { sprintf(&amp;quot;%s:%s&amp;quot;,
+               $_[0]-&amp;gt;prop(&#39;currentchannel&#39;)-&amp;gt;get,
+               $_[0]-&amp;gt;prop(servername =&amp;gt; connection =&amp;gt;
+                   $_[0]-&amp;gt;prop(&#39;currentconnection&#39;)-&amp;gt;get
+               )-&amp;gt;get
+              )
+            },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A decent default action is to return the window title:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;default     =&amp;gt; sub { my($glue) = @_;
+                     my $obj = $objs{$glue-&amp;gt;{APPNAME}} ||=
+                               $glue-&amp;gt;prop(name =&amp;gt; window =&amp;gt; 1);
+                     $obj-&amp;gt;get;
+                   },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As before, we cache the concept of &amp;ldquo;the name of the current window&amp;rdquo; and only create it when we don&amp;rsquo;t have one already.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s look at the &amp;ldquo;Now playing in iTunes&amp;rdquo; part:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$state  ||= $itunes-&amp;gt;prop(&#39;player state&#39;);
+return unless $state-&amp;gt;get eq &amp;quot;playing&amp;quot;;
+
+$track  ||= $itunes-&amp;gt;prop(&#39;current track&#39;);
+%props    = map { $_ =&amp;gt; $track-&amp;gt;prop($_) } qw(name artist)
+            unless keys %props;
+
+my %info;
+for my $prop (keys %props) {
+    $info{$prop} = $props{$prop}-&amp;gt;get;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This first checks to see if iTunes is playing, and returns unless it is. Next, we look for the current track, and get handles to the name and artist properties of that track, as in our previous iTunes example.&lt;/p&gt;
+
+&lt;p&gt;Finally, when we&amp;rsquo;ve set up all the handles we need, we call &lt;code&gt;get&lt;/code&gt; to turn them into real data. This populates &lt;code&gt;%info&lt;/code&gt; with the name and artist of the currently playing track.&lt;/p&gt;
+
+&lt;p&gt;Now that we have the current application name, the extra information, and the current track, we can publish them as the iChat status, with this subroutine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::Apps::Launch qw(IsRunning);
+
+sub ichat {
+    my($output) = @_;
+
+    my $ichat = get_app(&#39;iChat&#39;) or return;
+    return unless IsRunning($ichat-&amp;gt;{ID});
+
+    $status  ||= $ichat-&amp;gt;prop(&#39;status&#39;);
+    return unless $status-&amp;gt;get eq &#39;available&#39;;
+
+    $message ||= $ichat-&amp;gt;prop(&#39;status message&#39;);
+    $message-&amp;gt;set(to =&amp;gt; $output);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, we have the &lt;code&gt;IsRunning&lt;/code&gt; subroutine from &lt;code&gt;Mac::AppleEvents::Simple&lt;/code&gt;, which takes the old-style four-character ID of the application we want to ask about. The &lt;code&gt;ID&lt;/code&gt; slot of the glue object will tell us this ID, and so we can immediately give up setting the iChat status if iChat isn&amp;rsquo;t even running. Then we use &lt;code&gt;set&lt;/code&gt; as before to change the status to whatever we want.&lt;/p&gt;
+
+&lt;p&gt;Finally, we mentioned that &lt;code&gt;happening&lt;/code&gt; can also ask other hosts what&amp;rsquo;s playing on their iTunes as well. This is because, if &amp;ldquo;Remote Apple Events&amp;rdquo; is turned on in the Sharing preferences, Macs support passing these Apple events between machines. Of course, this often requires authentication, so when it first contacts a host to send an Event, &lt;code&gt;happening&lt;/code&gt; will pop-up a login box to ask for credentials &amp;ndash; this is all handled internally by the operating system. Here&amp;rsquo;s the code that &lt;code&gt;happening&lt;/code&gt; actually uses:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $found = 0;
+if (IsRunning($itunes-&amp;gt;{ID})) {
+    $itunes-&amp;gt;ADDRESS;
+    $found = 1 if $state-&amp;gt;get eq &#39;playing&#39;;
+}
+
+unless ($found) {
+    for my $host (@hosts) {
+        next unless $hosts{$host} + 60 &amp;lt; time();
+        $itunes-&amp;gt;ADDRESS(eppc =&amp;gt; iTunes =&amp;gt; $host);
+        $found = 1, last if $state-&amp;gt;get eq &#39;playing&#39;;
+        $hosts{$host} = time();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first paragraph checks to see if iTunes is running locally. If so, we&amp;rsquo;re done. If not, we&amp;rsquo;re going to have to ask the hosts specified in the &lt;code&gt;@hosts&lt;/code&gt; array about it. The first and last lines inside the &lt;code&gt;for&lt;/code&gt; loop simple ensure that hosts are only tried every minute at most. The second line in there is the interesting one, though:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$itunes-&amp;gt;ADDRESS(eppc =&amp;gt; iTunes =&amp;gt; $host);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This changes the &lt;code&gt;iTunes&lt;/code&gt; glue handle from being a local one to being one that contacts the &amp;ldquo;iTunes&amp;rdquo; application on host &lt;code&gt;$host&lt;/code&gt; over EPPC, the remote Apple events transport.&lt;/p&gt;
+
+&lt;p&gt;Because &lt;code&gt;$state&lt;/code&gt; is the player status of &lt;code&gt;$itunes&lt;/code&gt;, it will now return the correct status even though &lt;code&gt;$itunes&lt;/code&gt; now refers to an application on a different computer! Similarly, all the handles we have to the artist and name of the current track will correctly refer to &lt;code&gt;$itunes&lt;/code&gt;, no matter which iTunes instance that means.&lt;/p&gt;
+
+&lt;p&gt;We hope you&amp;rsquo;ll join us next time for more &lt;code&gt;Mac::Glue&lt;/code&gt; tips and tricks, as we look at real-life applications of scripting Mac applications in Perl.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>RSS and You</title>
+      <link>http://localhost:1313/pub/2000/01/rss.html/</link>
+      <pubDate>Tue, 25 Jan 2000 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2000/01/rss.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-rss-is-born-rss-is-born-span&#34;&gt;&lt;span id=&#34;RSS_is_Born&#34;&gt;RSS is Born&lt;/span&gt;&lt;/h3&gt;
+
+&lt;table&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;strong&gt;Contents:&lt;/strong&gt;&lt;br /&gt;
+• &lt;a href=&#34;#RSS_is_Born&#34;&gt;RSS is Born&lt;/a&gt;&lt;br /&gt;
+• &lt;a href=&#34;#XML_RSS&#34;&gt;XML::RSS&lt;/a&gt;&lt;br /&gt;
+• &lt;a href=&#34;#My_Portal&#34;&gt;my_portal&lt;/a&gt;&lt;br /&gt;
+• &lt;a href=&#34;#Future_of_My_Portal&#34;&gt;Future of my_portal&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Netscape had one of the first &amp;ldquo;portals&amp;rdquo; on the Web, a place where users could go to get most of their information needs fulfilled: search engines, news, email, and more. But Netscape soon wanted a portal that was more customizable by the user and contained content from any site that wanted to contribute. Hence &lt;a href=&#34;http://my.netscape.com/&#34;&gt;My Netscape Network&lt;/a&gt; (MNN) was born.
+At MNN, the user can choose what content to put on their own page—the latest headlines on &lt;a href=&#34;https://slashdot.org/&#34;&gt;Slashdot&lt;/a&gt;, recently uploaded files at &lt;a href=&#34;http://freshmeat.sourceforge.net/&#34;&gt;freshmeat&lt;/a&gt;, or the most recent posts to a bulletin board at &lt;a href=&#34;http://www.network54.com/&#34;&gt;Network54&lt;/a&gt;. Each &lt;em&gt;channel&lt;/em&gt;, as Netscape calls them, can also include information to display an image for that channel and a text input box for searching the channel&amp;rsquo;s site.&lt;/p&gt;
+
+&lt;p&gt;The channels are described with formatted text files that are updated either at regular intervals, or whenever the site&amp;rsquo;s content changes. The Netscape servers periodically download the updated channel files from the various sites providing them, and that information is then made immediately available to the users.&lt;/p&gt;
+
+&lt;p&gt;In addition to the list of items and associated hyperlinks, the channel files can also contain information to display a text box for a form, and an image link, as well as metadata about the site.&lt;/p&gt;
+
+&lt;p&gt;In order to do all this, a universal way for developers to describe their sites was needed. Netscape developed the RDF Site Summary (RSS) format, which uses XML and the &lt;a href=&#34;https://www.w3.org/2001/sw/wiki/RDF&#34;&gt;Resource Description Framework&lt;/a&gt; (RDF), a hierarchical data model used primarily for describing web-based metadata. &lt;a href=&#34;http://my.netscape.com/publish/help/quickstart.html&#34;&gt;RSS 0.90&lt;/a&gt; was the first version, released in March 1999. RSS is very simple to work with, and because it is XML, it is both human-readable and easily parsed by many different languages and programs.&lt;/p&gt;
+
+&lt;p&gt;The fundamental container for the RSS data is the &lt;em&gt;channel&lt;/em&gt;. Properties within the channel include &lt;em&gt;title&lt;/em&gt;, &lt;em&gt;link&lt;/em&gt;, and &lt;em&gt;description&lt;/em&gt;, most of which are optional. Optional containers inside the channel are &lt;em&gt;image&lt;/em&gt; and &lt;em&gt;textinput&lt;/em&gt;, each with their own properties. At least one (and up to 15) &lt;em&gt;item&lt;/em&gt; is included in the channel. &lt;a href=&#34;http://www.news.perl.org/perl-news-short.rdf&#34;&gt;The Perl News RSS file&lt;/a&gt; is a typical example:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.news.perl.org/&#34;&gt;&lt;img src=&#34;http://www.news.perl.org/perl-news-small.gif&#34; alt=&#34;Perl News&#34; width=&#34;119&#34; height=&#34;30&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;...
+
+&amp;lt;channel&amp;gt;
+&amp;lt;title&amp;gt;Perl News&amp;lt;/title&amp;gt;
+&amp;lt;link&amp;gt;http://www.news.perl.org/&amp;lt;/link&amp;gt;
+&amp;lt;description&amp;gt;News for the Perl Community&amp;lt;/description&amp;gt;
+&amp;lt;language&amp;gt;en&amp;lt;/language&amp;gt;
+&amp;lt;copyright&amp;gt;Copyright 1999, Chris Nandor&amp;lt;/copyright&amp;gt;
+&amp;lt;pubDate&amp;gt;Sun, 02 Jan 2000 10:58:39 EST&amp;lt;/pubDate&amp;gt;
+&amp;lt;lastBuildDate&amp;gt;Sun, 02 Jan 2000 10:58:39 EST&amp;lt;/lastBuildDate&amp;gt;
+&amp;lt;managingEditor&amp;gt;news@perl.org&amp;lt;/managingEditor&amp;gt;
+&amp;lt;webMaster&amp;gt;news@perl.org&amp;lt;/webMaster&amp;gt;
+
+...
+
+&amp;lt;item&amp;gt;
+&amp;lt;title&amp;gt;Perl Conference Papers Deadline Extended Two Days&amp;lt;/title&amp;gt;
+&amp;lt;link&amp;gt;http://www.news.perl.org/perl-news.cgi?item=947976240|9809&amp;lt;/link&amp;gt;
+&amp;lt;/item&amp;gt;
+
+&amp;lt;item&amp;gt;
+&amp;lt;title&amp;gt;Robert Writes in Defense of Coding Standards&amp;lt;/title&amp;gt;
+&amp;lt;link&amp;gt;http://www.news.perl.org/perl-news.cgi?item=947976265|9810&amp;lt;/link&amp;gt;
+&amp;lt;/item&amp;gt;
+
+...
+
+&amp;lt;textinput&amp;gt;
+&amp;lt;title&amp;gt;Search Perl News&amp;lt;/title&amp;gt;
+&amp;lt;description&amp;gt;Search the Perl News database&amp;lt;/description&amp;gt;
+&amp;lt;name&amp;gt;text&amp;lt;/name&amp;gt;
+&amp;lt;link&amp;gt;http://www.news.perl.org/perl-news.cgi&amp;lt;/link&amp;gt;
+&amp;lt;/textinput&amp;gt;
+
+&amp;lt;/channel&amp;gt;
+&amp;lt;/rss&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.news.perl.org/my_portal/bullet.gif&#34; alt=&#34; * &#34; width=&#34;10&#34; height=&#34;10&#34; /&gt;&lt;a href=&#34;http://www.news.perl.org/perl-news.cgi?item=947976240%7C9809&#34;&gt;Perl Conference Papers Deadline Extended Two Days&lt;/a&gt;
+&lt;img src=&#34;http://www.news.perl.org/my_portal/bullet.gif&#34; alt=&#34; * &#34; width=&#34;10&#34; height=&#34;10&#34; /&gt;&lt;a href=&#34;http://www.news.perl.org/perl-news.cgi?item=947976265%7C9810&#34;&gt;Robert Writes in Defense of Coding Standards&lt;/a&gt;
+&lt;img src=&#34;http://www.news.perl.org/my_portal/bullet.gif&#34; alt=&#34; * &#34; width=&#34;10&#34; height=&#34;10&#34; /&gt;&lt;a href=&#34;http://www.news.perl.org/perl-news.cgi?item=947976272%7C9812&#34;&gt;Netizen Releases Training Materials&lt;/a&gt;
+&lt;img src=&#34;http://www.news.perl.org/my_portal/bullet.gif&#34; alt=&#34; * &#34; width=&#34;10&#34; height=&#34;10&#34; /&gt;&lt;a href=&#34;http://www.news.perl.org/perl-news.cgi?item=947976279%7C9813&#34;&gt;New Modules 10-14 January 2000&lt;/a&gt;
+&lt;img src=&#34;http://www.news.perl.org/my_portal/bullet.gif&#34; alt=&#34; * &#34; width=&#34;10&#34; height=&#34;10&#34; /&gt;&lt;a href=&#34;http://www.news.perl.org/perl-news.cgi?item=947555023%7C5039&#34;&gt;PerlMonth Issue 8 Now Available&lt;/a&gt;
+&lt;img src=&#34;http://www.news.perl.org/my_portal/bullet.gif&#34; alt=&#34; * &#34; width=&#34;10&#34; height=&#34;10&#34; /&gt;&lt;a href=&#34;http://www.news.perl.org/perl-news.cgi?item=947555033%7C5040&#34;&gt;New Modules 5-9 January 2000&lt;/a&gt;
+&lt;img src=&#34;http://www.news.perl.org/my_portal/bullet.gif&#34; alt=&#34; * &#34; width=&#34;10&#34; height=&#34;10&#34; /&gt;&lt;a href=&#34;http://www.news.perl.org/perl-news.cgi?item=947093003%7C13831&#34;&gt;Linux Magazine Publishes Wall&amp;rsquo;s Uncultured Perl&lt;/a&gt;
+&lt;img src=&#34;http://www.news.perl.org/my_portal/bullet.gif&#34; alt=&#34; * &#34; width=&#34;10&#34; height=&#34;10&#34; /&gt;&lt;a href=&#34;http://www.news.perl.org/perl-news.cgi?item=947093012%7C13833&#34;&gt;New Modules 4 January 2000&lt;/a&gt;
+Search Perl News&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;January 15, 2000, 17:45 EST&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;RSS files like this are now used by thousands of sites on the Web. And Netscape is not the only one providing all of this content. UserLand, which had been using its own channel description format (called &lt;em&gt;scriptingNews&lt;/em&gt;) since late 1997, was one of the early adopters of RSS for &lt;a href=&#34;http://my.userland.com/&#34;&gt;My UserLand&lt;/a&gt;. The important features of its scriptingNews format were integrated into &lt;a href=&#34;http://my.netscape.com/publish/help/mnn20/quickstart.html&#34;&gt;RSS 0.91&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The distribution of content via channels resembles the distribution of content via cable TV in that not all channels are carried by all providers. A site that carries RSS channels related to freedom of speech might not carry the Perl News channel. Netscape carries any type of channel. UserLand carries news channels only. Slashdot (which has its own RSS channel) also allows users to customize their personal Slashdot page with other channels, which they call &lt;em&gt;Slashboxes&lt;/em&gt;. But Slashdot has a much narrower focus than My UserLand and MNN, carrying only channels that relate to free software and hackers. &lt;a href=&#34;http://www.xmltree.com/&#34;&gt;xmlTree&lt;/a&gt; attempts to categorize as much of the XML content available on the Web as possible, much of which is RSS content.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&#34;span-id-xml-rss-xml-rss-span&#34;&gt;&lt;span id=&#34;XML_RSS&#34;&gt;XML::RSS&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Jonathan Eisenzopf, who has worked on a lot of XML projects for Perl and who runs &lt;a href=&#34;http://perlxml.com/&#34;&gt;the &lt;code&gt;perlxml.com&lt;/code&gt; web site&lt;/a&gt;, wrote &lt;a href=&#34;https://metacpan.org/pod/XML::RSS&#34;&gt;the &lt;code&gt;XML::RSS&lt;/code&gt; module&lt;/a&gt;. It is based on &lt;code&gt;XML::Parser&lt;/code&gt;, as most XML modules are, and uses an object-oriented syntax. It makes creation and parsing of RSS files easy.&lt;/p&gt;
+
+&lt;p&gt;To create an RSS channel, you first create an &lt;code&gt;XML::RSS&lt;/code&gt; object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use XML::RSS;
+    my $rss = new XML::RSS;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then call any of the four primary methods: &lt;code&gt;channel(),&lt;/code&gt; &lt;code&gt;image(),&lt;/code&gt; &lt;code&gt;textinput(),&lt;/code&gt; or &lt;code&gt;add_item().&lt;/code&gt; The &lt;code&gt;channel()&lt;/code&gt; method sets up information about the channel (not all the options are included here):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $rss-&amp;gt;channel(
+        title           =&amp;gt; &#39;Perl News&#39;,
+        &#39;link&#39;          =&amp;gt; &#39;http://www.news.perl.org/&#39;,
+        description     =&amp;gt; &#39;News for the Perl Community&#39;,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then you can call the optional &lt;code&gt;textinput()&lt;/code&gt; and &lt;code&gt;image()&lt;/code&gt; methods. The image data will tell the site that uses the channel where to get the image and what to link it to. The textinput data describes the action, the submit button value, and the name of the text input box so that a form can be presented to the user.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $rss-&amp;gt;image(
+        title   =&amp;gt; &#39;Perl News&#39;,
+        url     =&amp;gt; &#39;http://www.news.perl.org/perl-news-small.gif&#39;,
+    );
+
+    $rdf-&amp;gt;textinput(
+        title       =&amp;gt; &#39;Search Perl News&#39;,
+        description =&amp;gt; &#39;Search the Perl News database&#39;,
+        name        =&amp;gt; &#39;text&#39;,
+        &#39;link&#39;      =&amp;gt; &#39;http://www.news.perl.org/perl-news.cgi&#39;,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then, for each item to add to the channel, call the &lt;code&gt;add_item()&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for my $i (keys %items) {
+        $rss-&amp;gt;add_item(
+            title   =&amp;gt; $items{$i},
+            &#39;link&#39;  =&amp;gt; &amp;quot;http://www.news.perl.org/perl-news.cgi?item=$i&amp;quot;,
+        );
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The final step is to save it. You can either get the data with the &lt;code&gt;as_string()&lt;/code&gt; method and then save it, or just save it directly with the &lt;code&gt;save()&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $data = $rss-&amp;gt;as_string;             # or ...
+    $rss-&amp;gt;save(&amp;quot;$dir/$channel.rss&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For an example of using &lt;code&gt;XML::RSS&lt;/code&gt; to create RSS, see &lt;a href=&#34;http://www.news.perl.org/perl-news.plx&#34;&gt;the source for the program that generates Perl News&lt;/a&gt;. The program that generates the HTML for the Perl News main page generates the RSS file at the same time.&lt;/p&gt;
+
+&lt;p&gt;It seems that, as with HTML, many (if not most) RSS files are created by hand, or at least using a template from a program. That is fine to do, but using &lt;code&gt;XML::RSS&lt;/code&gt; has the advantage of creating valid, well-formed data (which is exceedingly important with XML); and, of course, as the RSS format evolves,the module can evolve with it. It&amp;rsquo;s simply easier, in many cases.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&#34;span-id-my-portal-my-portal-span&#34;&gt;&lt;span id=&#34;My_Portal&#34;&gt;my_portal&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;While it was pretty cool that RSS channels were being created for most of the sites I frequented, I was getting frustrated that the content providers out there did not provide all of the channels I wanted, or they weren&amp;rsquo;t in the layout I wanted, or they just did something I didn&amp;rsquo;t like. I wanted to control the content myself. That&amp;rsquo;s the whole point, right? So I finally got around to doing something about it, and wrote a program for a new site I call &lt;a href=&#34;http://www.news.perl.org/my_portal/&#34;&gt;&lt;code&gt;my_portal&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The purpose of the project was to let me view the content I wanted from the sites I wanted in the format I wanted. And, of course, I wanted others to be able to do the same thing, because I was pretty sure that I was not the only one with this dilemma (and the feedback I&amp;rsquo;ve received confirms this). So I made a basic, lightweight program using Eisenzopf&amp;rsquo;s &lt;code&gt;XML::RSS&lt;/code&gt;. The program only does a few things: it fetches RSS channels, and it displays them on the Web.&lt;/p&gt;
+
+&lt;p&gt;To display the RSS channels, I need to parse them. &lt;code&gt;XML::RSS&lt;/code&gt; and &lt;code&gt;XML::Parser&lt;/code&gt; come to the rescue again, with the &lt;code&gt;parse()&lt;/code&gt; and &lt;code&gt;parse_file() methods:&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $rss-&amp;gt;parse($data);                     # or ...
+    $rss-&amp;gt;parsefile(&amp;quot;$dir/$channel.rss&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$rss&lt;/code&gt; is a hashref, and I extract the elements as with any complex data structure:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    print qq{&amp;lt;A HREF=&amp;quot;$rss-&amp;gt;{channel}{&#39;link&#39;}&amp;quot;&amp;gt;$rss-&amp;gt;{channel}{title}&amp;lt;/A&amp;gt;};
+
+    for my $i (@{$rss-&amp;gt;{items}}) {
+        print qq{&amp;lt;A HREF=&amp;quot;$i-&amp;gt;{&#39;link&#39;}&amp;quot;&amp;gt;$i-&amp;gt;{title}&amp;lt;/A&amp;gt;};
+    }
+
+    print qq{&amp;lt;FORM METHOD=&amp;quot;GET&amp;quot; ACTION=&amp;quot;$rss-&amp;gt;{textinput}{&#39;link&#39;}&amp;quot;&amp;gt;
+             &amp;lt;INPUT TYPE=&amp;quot;TEXT&amp;quot; NAME=&amp;quot;$rss-&amp;gt;{textinput}{name}&amp;quot;&amp;gt;
+             &amp;lt;/FORM&amp;gt;};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the data structure gets confusing, I&amp;rsquo;ll often print it out with &lt;code&gt;Data::Dumper&lt;/code&gt; to get a good look at it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Data::Dumper;
+    print Dumper $rss;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The program&amp;rsquo;s interface is fairly simple. From the command line, I can add a channel by typing its name and the URL of the RSS file. The channel is added to a DBM file, and then its RSS file is downloaded (and so is the image from the RSS file, if available). I can update each channel individually, or all at once. I set a cron job to download new data every time the big hand is on the twelve or the six, so the content is updated all day long. Using the LWP::Simple module&amp;rsquo;s &lt;code&gt;mirror()&lt;/code&gt; function, a new RSS file and image are only downloaded if the remote server says they have been modified.&lt;/p&gt;
+
+&lt;p&gt;The fact that &lt;code&gt;my_portal&lt;/code&gt; was designed primarily for my own use has not dissuaded people from requesting features for it, or me from trying to provide some of them. First, there was user configurability. A configure screen presents a form where a user can choose which channels to view, and in what order. Just for kicks, the user can also select the colors of the page. All of these things have my personal choices as the default, but the user can change them at will. The data for these preferences is stored in another DBM, and remembered through cookies. Because some users wanted to use more than one computer or browser, I went ahead and added usernames and passwords so that they could log in and use the same configuration from anywhere.&lt;/p&gt;
+
+&lt;p&gt;I also worked to make sure that &lt;code&gt;my_portal&lt;/code&gt; constructs valid HTML. I am really annoyed by sites that don&amp;rsquo;t work in certain browsers, or look bad in some, so I made sure to use valid HTML 4.0 for the entire site. It looks just fine in all browsers from Lynx to Mozilla. However, because the program pulls in content from other sources, it is possible that a page will be produced containing invalid HTML. Someone may try to embed incorrect HTML tags or entities in their RSS, or neglect to encode entities that need to be encoded.&lt;/p&gt;
+
+&lt;p&gt;Normally, &lt;code&gt;XML::Parser&lt;/code&gt; will croak on many of these common problems, so they will never get to your HTML page anyway. If an item&amp;rsquo;s title is &lt;em&gt;Amazon.com Sues Barnes &amp;amp; Noble&lt;/em&gt;, the ampersand will cause an exception, because it needs to be turned into an encoded entity (such as &lt;code&gt;&amp;amp;amp;&lt;/code&gt;). Another problem I&amp;rsquo;ve run into is RSS files in Mac OS text format (using CRs instead of LFs or CRLFs), which for some odd reason were making the parser choke. So I wrote some filters that process the RSS files after &lt;code&gt;LWP::Simple::mirror()&lt;/code&gt; downloads them, before they are passed to &lt;code&gt;XML::RSS&lt;/code&gt;. A simple regex converts CRs and CRLFs to LFs, and then any ampersand that is not followed by &lt;code&gt;[a-zA-Z0-9]+;&lt;/code&gt; or &lt;code&gt;#\d+;&lt;/code&gt; is converted into &lt;code&gt;&amp;amp;amp;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    {
+        my @time = (stat $file)[8,9];
+        local $^I = &#39;.bak&#39;;
+        local @ARGV = $file;
+        while (&amp;lt;&amp;gt;) {
+            s/\015\012?/\012/g;
+            s/&amp;amp;(?!(?:[a-zA-Z0-9]+|#\d+);))/&amp;amp;amp;/g;
+            print;
+        }
+        # continued below
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I need to do one more thing before I am done with the filtered file. An optional property in the channel data notes the time when the channel was published (lastBuildDate), and &lt;code&gt;my_portal&lt;/code&gt; prints it on the web page, so users have some idea of how recently updated the channel is. If that optional data is not in the RSS file, the program uses the modification time of the RSS file on disk, which &lt;code&gt;LWP::Simple::mirror()&lt;/code&gt; sets to whatever the remote server says the modification time of the remote file is. So before touching the original file, we use &lt;code&gt;stat()&lt;/code&gt; to get the access and modification time. After saving the new file, we use &lt;code&gt;utime()&lt;/code&gt; to set those values to the newly saved file, so the modification time of the file is preserved.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    {
+        ...
+        # continued from above
+        utime @time, $file;
+        unlink &amp;quot;$file.bak&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You probably won&amp;rsquo;t be able to construct filters to fix all potential problems with the RSS files—if they are totally broken, and your computer doesn&amp;rsquo;t happen to have artificial intelligence, then there is nothing you can do—so make sure you catch exceptions when parsing XML:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for my $channel (@channels) {
+        eval { $rss-&amp;gt;parse(&amp;quot;$dir/$channel.rss&amp;quot;) }
+        warn &amp;quot;XML for channel $channel not well formed:\n$@&amp;quot;
+            and last if $@;
+
+        # do something with $rss data ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&#34;span-id-future-of-my-portal-future-of-my-portal-span&#34;&gt;&lt;span id=&#34;Future_of_My_Portal&#34;&gt;Future of &lt;code&gt;my_portal&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There are some features that &lt;code&gt;my_portal&lt;/code&gt;, because of its limited design scope, won&amp;rsquo;t accommodate in its current form. One suggestion was that users be able to add arbitrary RSS channels to their personal page through an external link (&amp;ldquo;click here to add Foo News to Your Portal!&amp;rdquo;). This is a fine idea, but it doesn&amp;rsquo;t fit the scheme and scope of the project; the interface and backend would need to be rethunk to do something like this. It may happen in the future, though.&lt;/p&gt;
+
+&lt;p&gt;Also, &lt;code&gt;my_portal&lt;/code&gt; currently does not support locking for the user&amp;rsquo;s or channel DBMs. For the channel DBM, this is not a serious problem, since only one person would likely be changing that DBM anyway.&lt;/p&gt;
+
+&lt;p&gt;For the user&amp;rsquo;s DBM, this could be a problem. Moving the data to MySQL first would solve the problem. Otherwise, locking may be added eventually. My bet is on moving to MySQL first.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;my_portal&lt;/code&gt; program is also a little bit slow; each time it displays the channel, it executes, reads in the user database to find the user, and then reads in all of the appropriate channels. If &lt;code&gt;my_portal&lt;/code&gt; were to be extended for widespread use, the best thing to do would probably be to make it into a mod_perl process that uses MySQL. That would solve or significantly alleviate the speed problems and the data problems, since it would always be loaded in, have persistence to the database connection, handle simultaneous accesses, and so on.&lt;/p&gt;
+
+&lt;p&gt;Since it suits my personal purposes fine as it is, and since I don&amp;rsquo;t get paid to work on it, I may or may not get to these and other changes in the near future. But the program is, after all, open source and available at &lt;a href=&#34;http://www.news.perl.org/my_portal/my_portal.plx&#34;&gt;&lt;code&gt;http://www.news.perl.org/my_portal/my_portal.plx&lt;/code&gt;&lt;/a&gt;. Patches welcome!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

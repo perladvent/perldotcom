@@ -1,0 +1,1370 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Apocalypse Exegesis Control Flow on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/apocalypse-exegesis-control-flow/</link>
+    <description>Recent content in Apocalypse Exegesis Control Flow on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 02 Apr 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/apocalypse-exegesis-control-flow/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Exegesis 4</title>
+      <link>http://localhost:1313/pub/2002/04/01/exegesis4.html/</link>
+      <pubDate>Tue, 02 Apr 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/04/01/exegesis4.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S04.html&#34;&gt;Synopsis 4&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_And_I%27d_se%2Dell_my%2Dy_so%2Doul_for_flow_of_con&#34;&gt;&lt;em&gt;And I&amp;rsquo;d se-ell my-y so-oul for flow of con-tro-ol &amp;hellip; over Perl&lt;/em&gt;&lt;/span&gt;&lt;/strong&gt;
+&lt;strong&gt;&lt;span id=&#34;item_%2D%2D_The_Motels%2C_%22Total_Control%22_%28Perl_6&#34;&gt;&amp;ndash; The Motels, &amp;ldquo;Total Control&amp;rdquo; (Perl 6 remix)&lt;/span&gt;&lt;/strong&gt;
+In &lt;a href=&#34;http://localhost:1313/pub/2002/01/15/apo4.html&#34;&gt;Apocalypse 4&lt;/a&gt;, Larry explains the fundamental changes to flow and block control in Perl 6. The changes bring fully integrated exceptions; a powerful new switch statement; a coherent mechanism for polymorphic matching; a greatly enhanced &lt;code&gt;for&lt;/code&gt; loop; and unification of blocks, subroutines and closures.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s dive right in.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-now-witness-the-power-of-this-fully-operational-control-structure-now-witness-the-power-of-this-fully-operational-control-structure-span&#34;&gt;&lt;span id=&#34;now, witness the power of this fully operational control structure&#34;&gt;&amp;ldquo;Now, Witness the Power of This Fully &lt;em&gt;Operational&lt;/em&gt; Control Structure&amp;rdquo;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ll consider a simple interactive &lt;a href=&#34;http://www.calculator.org/rpn.html&#34;&gt;RPN calculator&lt;/a&gt;. The real thing would have many more operators and values, but that&amp;rsquo;s not important right now.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    class Err::BadData is Exception {...}
+
+    module Calc;
+
+    my class NoData is Exception {
+        method warn(*@args) { die @args }
+    }
+
+    my %var;
+
+    my sub get_data ($data) {
+        given $data {
+            when /^\d+$/    { return %var{&amp;quot;&amp;quot;} = $_ }
+            when &#39;previous&#39; { return %var{&amp;quot;&amp;quot;} // fail NoData }
+            when %var       { return %var{&amp;quot;&amp;quot;} = %var{$_} }
+            default         { die Err::BadData : msg=&amp;gt;&amp;quot;Don&#39;t understand $_&amp;quot; }
+        }  
+    }
+
+    sub calc (str $expr, int $i) {
+        our %operator is private //= (
+            &#39;*&#39;  =&amp;gt; { $^a * $^b },
+            &#39;/&#39;  =&amp;gt; { $^a / $^b },
+            &#39;~&#39;  =&amp;gt; { ($^a + $^b) / 2 },
+        );
+
+        my @stack;
+        my $toknum = 1;
+        for split /\s+/, $expr -&amp;gt; $token {
+            try {
+                when %operator {
+                    my @args = splice @stack, -2;
+                    push @stack, %operator{$token}(*@args)
+                }
+                when &#39;.&#39;, &#39;;&#39;, &#39;=&#39; {
+                    last
+                }
+
+                use fatal;
+                push @stack, get_data($token);
+
+                CATCH {
+                    when Err::Reportable     { warn $!; continue }
+                    when Err::BadData        { $!.fail(at=&amp;gt;$toknum) }
+                    when NoData              { push @stack, 0 }
+                    when /division by zero/  { push @stack, Inf }
+                }
+            }
+
+            NEXT { $toknum++ }
+        }
+        fail Err::BadData: msg=&amp;gt;&amp;quot;Too many operands&amp;quot; if @stack &amp;gt; 1;
+        return %var{&#39;$&#39; _ $i} = pop(@stack) but true;
+    }
+
+    module main;
+
+    for 1..Inf -&amp;gt; $i {
+        print &amp;quot;$i&amp;gt; &amp;quot;;
+        my $expr = &amp;lt;&amp;gt; err last;  
+        print &amp;quot;$i&amp;gt; $( Calc::calc(i=&amp;gt;$i, expr=&amp;gt;$expr) )\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-an-exceptionally-promising-beginning-an-exceptionally-promising-beginning-span&#34;&gt;&lt;span id=&#34;an exceptionally promising beginning&#34;&gt;An Exceptionally Promising Beginning&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The calculator is going to handle internal and external errors using Perl 6&amp;rsquo;s OO exception mechanism. This means that we&amp;rsquo;re going to need some classes for those OO exceptions to belong to.&lt;/p&gt;
+
+&lt;p&gt;To create those classes, the &lt;code&gt;class&lt;/code&gt; keyword is used. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    class Err::BadData is Exception {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After this declaration, &lt;code&gt;Err::BadData&lt;/code&gt; is a class name (or rather, by analogy to &amp;ldquo;filehandle,&amp;rdquo; it&amp;rsquo;s a &amp;ldquo;classname&amp;rdquo;). Either way, it can then be used as a type specifier wherever Perl 6 expects one. Unlike Perl 5, that classname is not a bareword string: It&amp;rsquo;s a genuine first-class symbol in the program. In object-oriented terms, we could think of a classname as a meta-object &amp;ndash; an object that describes the attributes and behavior of other objects.&lt;/p&gt;
+
+&lt;p&gt;Modules and packages are also first class in Perl 6, so we can also refer to their names directly, or take references to them, or look them up in the appropriate symbol table.&lt;/p&gt;
+
+&lt;p&gt;Classes can take properties, just like variables and values. Generally, those properties will specify variations in the behavior of the class. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    class B::Like::Me is interface;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;specifies that the B::Like::Me class defines a (Java-like) interface that any subclass must implement.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;is Exception&lt;/code&gt; is not, however, a standard property. Indeed, &lt;code&gt;Exception&lt;/code&gt; is the name of another (standard, built-in) class. When a classname like this is used as if it were a property, the property it confers is inheritance. Specifically, &lt;code&gt;Err::BadData&lt;/code&gt; is defined as inheriting from the &lt;code&gt;Exception&lt;/code&gt; base class. In Perl 5, that would have been:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Perl 5 code
+    package Err::BadData;
+    use base &#39;Exception&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So now class &lt;code&gt;Err::BadData&lt;/code&gt; will have all the exceptionally useful properties of the &lt;code&gt;Exception&lt;/code&gt; class.&lt;/p&gt;
+
+&lt;p&gt;Having classnames as &amp;ldquo;first class&amp;rdquo; symbols of the program means that it&amp;rsquo;s also important to be able to pre-declare them (to avoid compile-time &amp;ldquo;no such class or module&amp;rdquo; errors). So we need a new syntax for declaring the existence of classes/modules/packages, without actually defining their behavior.&lt;/p&gt;
+
+&lt;p&gt;To do that we write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    class MyClass {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That right. That&amp;rsquo;s real, executable, Perl 6 code.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;re defining the class, but using the new Perl 6 &amp;ldquo;yada-yada-yada&amp;rdquo; operator in a block immediately after the classname. By using the &amp;ldquo;I&amp;rsquo;m-eventually-going-to-put-something-here-but-not-just-yet&amp;rdquo; marker, we indicate that this definition is only a stub or placeholder. In this way, we introduce the classname into the current scope without needing to provide the complete description of the class.&lt;/p&gt;
+
+&lt;p&gt;By the way, this is also the way we can declare other types of symbols in Perl 6 without actually defining them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    module Alpha {...}
+    package Beta {...}
+    method Gamma::delta(Gamma $self: $d1, $d2) {...}
+    sub epsilon() {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In our example, the &lt;code&gt;Err::BadData&lt;/code&gt; classname is introduced in precisely that way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    class Err::BadData is Exception {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which means that we can refer to the class by name, even though it has not yet been completely defined.&lt;/p&gt;
+
+&lt;p&gt;In fact, in this example, &lt;code&gt;Err::BadData&lt;/code&gt; is &lt;em&gt;never&lt;/em&gt; completely defined. So we&amp;rsquo;d get a fatal compile-time error: &amp;ldquo;Missing definition for class Err::BadData.&amp;rdquo; Then we&amp;rsquo;d realize we either forgot to eventually define the class, or that we had really meant to write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    class Err::BadData is Exception {}   # Define new exception class with
+                                         # no methods or attributes
+                                         # except those it inherits
+                                         # See below.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S04.html&#34;&gt;Synopsis 4&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-lexical-exceptions-lexical-exceptions-span&#34;&gt;&lt;span id=&#34;lexical exceptions&#34;&gt;Lexical Exceptions&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Most of the implementation of the calculator is contained in the &lt;code&gt;Calc&lt;/code&gt; module. In Perl 6, modules are specified using the &lt;code&gt;module&lt;/code&gt; keyword:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    module Calc;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which is similar in effect to a Perl 5:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Perl 5 code
+    package Calc;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Modules are not quite the same as packages in Perl 6. Most significantly, they have a different export mechanism: They export via a new, built-in, declarative mechanism (which will be described in a future Apocalypse) and the symbols they export are exported lexically by default.&lt;/p&gt;
+
+&lt;p&gt;The first thing to appear in the module is a class declaration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my class NoData is Exception {
+        method warn(*@args) { die @args }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is another class derived from &lt;code&gt;Exception&lt;/code&gt;, but one that has two significant differences from the declaration of &lt;code&gt;class Err::BadData&lt;/code&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The leading &lt;code&gt;my&lt;/code&gt; makes it lexical in scope, and&lt;/li&gt;
+&lt;li&gt;the trailing braces give it an associated block in which its attributes and methods can be specified.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at each of those.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;NoData&lt;/code&gt; exceptions are only going to be used within the &lt;code&gt;Calc&lt;/code&gt; module itself. So it&amp;rsquo;s good software engineering to make them visible only within the module itself.&lt;/p&gt;
+
+&lt;p&gt;Why? Because if we ever attempt to refer to the exception class outside &lt;code&gt;Calc&lt;/code&gt; (e.g. if we tried to catch such an exception in &lt;code&gt;main&lt;/code&gt;), then we&amp;rsquo;ll get a compile-time &amp;ldquo;No such class: NoData&amp;rdquo; error. Any such errors would indicate a flaw in our class design or implementation.&lt;/p&gt;
+
+&lt;p&gt;In Perl 6, classes are first-class constructs. That is, like variables and subroutines, they are &amp;ldquo;tangible&amp;rdquo; components of a program, denizens of a symbol table, able to be referred to both symbolically and by explicit reference:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $class = \Some::Previously::Defined::Class;
+
+    # and later
+
+    $obj = $class.new();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that the back slash is actually optional in that first line, just as it would be for an array or hash in the same position.&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;First class&amp;rdquo; also means that classnames live in a symbol table. So it follows that they can be defined to live in the current &lt;em&gt;lexical&lt;/em&gt; symbol table (i.e. &lt;code&gt;%MY::&lt;/code&gt;), by placing a &lt;code&gt;my&lt;/code&gt; before them.&lt;/p&gt;
+
+&lt;p&gt;A lexical class or module is only accessible in the lexical scope in which it&amp;rsquo;s declared. Of course, like Perl 5 packages, Perl 6 classes and modules don&amp;rsquo;t usually &lt;em&gt;have&lt;/em&gt; an explicit lexical scope associated with their declaration. They are implicitly associated with the surrounding lexical scope (which is normally a file scope).&lt;/p&gt;
+
+&lt;p&gt;But we can give them their own lexical scope to preside over by adding a block at the end of their declaration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    class Whatever {
+        # definition here
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This turns out to be important. Without the ability to specify a lexical scope over which the class has effect, we would be stuck with no way to embed a &amp;ldquo;nested&amp;rdquo; lexical class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    class Outer;
+    # class Outer&#39;s namespace
+
+    my class Inner;
+
+    # From this line to the end of the file 
+    # is now in class Inner&#39;s namespace
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In Perl 6, we avoid this problem by writing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    class Outer;
+    # class Outer&#39;s namespace
+
+    my class Inner {
+        # class Inner&#39;s namespace
+    }
+
+    # class Outer&#39;s namespace again
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In our example, we use this new feature to redefine &lt;code&gt;NoData&lt;/code&gt;&amp;rsquo;s &lt;code&gt;warn&lt;/code&gt; method (upgrading it to a call to &lt;code&gt;die&lt;/code&gt;). Of course, we could also have done that with just:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my class NoData is Exception;       # Open NoData&#39;s namespace
+    method warn(*@args) { die @args }   # Defined in NoData&#39;s namespace
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;but then we would have needed to &amp;ldquo;reopen&amp;rdquo; the &lt;code&gt;Calc&lt;/code&gt; module&amp;rsquo;s namespace afterward:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    module Calc;                        # Open Calc&#39;s namespace
+
+    my class NoData is Exception;       # Open NoData&#39;s (nested) namespace
+    method warn(*@args) { die @args }   # Defined in NoData&#39;s namespace
+
+    module Calc;                        # Back to Calc&#39;s namespace
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Being able to &amp;ldquo;nest&amp;rdquo; the &lt;code&gt;NoData&lt;/code&gt; namespace:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    module Calc;                            # Open Calc&#39;s namespace
+
+    my class NoData is Exception {          # Open NoData&#39;s (nested) namespace
+        method warn(*@args) { die @args }   # Defined in NoData&#39;s namespace
+    }
+
+    # The rest of module Calc defined here.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is much cleaner.&lt;/p&gt;
+
+&lt;p&gt;By the way, because classes can now have an associated block, they can even be anonymous:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $anon_class = class { 
+        # definition here
+    };
+
+    # and later
+
+    $obj = $anon_class.new();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which is a handy way of implementing &amp;ldquo;singleton&amp;rdquo; objects:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $allocator = class { 
+                        my $.count = &amp;quot;ID_000001&amp;quot;;
+                        method next_ID { $.count++ }
+                    }.new;
+
+    # and later...
+
+    for @objects {
+        $_.set_id( $allocator.next_ID );
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-maintaining-your-state-maintaining-your-state-span&#34;&gt;&lt;span id=&#34;maintaining your state&#34;&gt;Maintaining Your State&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;To store the values of any variables used by the calculator, we&amp;rsquo;ll use a single hash, with each key being a variable name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my %var;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Nothing more to see here. Let&amp;rsquo;s move along.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-it-s-a-given-it-s-a-given-span&#34;&gt;&lt;span id=&#34;it&#39;s a given&#34;&gt;It&amp;rsquo;s a Given&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;get_data&lt;/code&gt; subroutine may be given a number (i.e. a literal value), a numerical variable name (i.e. &lt;code&gt;&#39;$1&#39;&lt;/code&gt;, &lt;code&gt;&#39;$2&#39;&lt;/code&gt;, etc.) , or the keyword &lt;code&gt;&#39;previous&#39;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;It then looks up the information in the &lt;code&gt;%var&lt;/code&gt; hash, using a switch statement to determine the appropriate look-up:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my sub get_data ($data) {
+        given $data {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;given $data&lt;/code&gt; evaluates its first argument (in this case, &lt;code&gt;$data&lt;/code&gt;) in a scalar context, and makes the result the &amp;ldquo;topic&amp;rdquo; of each subsequent &lt;code&gt;when&lt;/code&gt; inside the block associated with the &lt;code&gt;given&lt;/code&gt;. (Though, just between us, that block is merely an anonymous closure acting as the &lt;code&gt;given&lt;/code&gt;&amp;rsquo;s second argument &amp;ndash; in Perl 6 &lt;em&gt;all&lt;/em&gt; blocks are merely closures that are slumming it.)&lt;/p&gt;
+
+&lt;p&gt;Note that the &lt;code&gt;given $data&lt;/code&gt; statement also makes &lt;code&gt;$_&lt;/code&gt; an alias for &lt;code&gt;$data&lt;/code&gt;. So, for example, if the &lt;code&gt;when&lt;/code&gt; specifies a pattern:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    when /^\d+$/  { return %var{&amp;quot;&amp;quot;} = $_ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then that pattern is matched against the contents of &lt;code&gt;$data&lt;/code&gt; (i.e. against the current topic). Likewise, caching and returning &lt;code&gt;$_&lt;/code&gt; when the pattern matches is the same as caching and returning &lt;code&gt;$data&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;After a &lt;code&gt;when&lt;/code&gt;&amp;rsquo;s block has been selected and executed, control automatically passes to the end of the surrounding &lt;code&gt;given&lt;/code&gt; (or, more generally, to the end of whatever block provided the &lt;code&gt;when&lt;/code&gt;&amp;rsquo;s topic). That means that &lt;code&gt;when&lt;/code&gt; blocks don&amp;rsquo;t &amp;ldquo;fall through&amp;rdquo; in the way that &lt;code&gt;case&lt;/code&gt; statements do in C.&lt;/p&gt;
+
+&lt;p&gt;You can also explicitly send control to the end of a &lt;code&gt;when&lt;/code&gt;&amp;rsquo;s surrounding &lt;code&gt;given&lt;/code&gt;, using a &lt;code&gt;break&lt;/code&gt; statement. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    given $number {
+        when /[02468]$/ {
+            if ($_ == 2) {
+                warn &amp;quot;$_ is even and prime\n&amp;quot;;
+                break;
+            }           
+            warn &amp;quot;$_ is even and composite\n&amp;quot;;
+        }
+        when &amp;amp;is_prime {
+            warn &amp;quot;$_ is odd and prime\n&amp;quot;;
+        }
+        warn &amp;quot;$_ is odd and composite\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Alternatively, you can explicitly tell Perl not to automatically &lt;code&gt;break&lt;/code&gt; at the end of the &lt;code&gt;when&lt;/code&gt; block. That is, tell it to &amp;ldquo;fall through&amp;rdquo; to the statement immediately after the &lt;code&gt;when&lt;/code&gt;. That&amp;rsquo;s done with a &lt;code&gt;continue&lt;/code&gt; statement (which is the new name for The Statement &lt;a href=&#34;http://dev.perl.org/perl6/apocalypse/4&#34;&gt;Formerly&lt;/a&gt; Known As &lt;code&gt;skip&lt;/code&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    given $number {
+        when &amp;amp;is_prime   { warn &amp;quot;$_ is prime\n&amp;quot;; continue; }
+        when /[13579]$/  { warn &amp;quot;$_ is odd&amp;quot;; }
+        when /[02468]$/  { warn &amp;quot;$_ is even&amp;quot;; }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In Perl 6, a &lt;code&gt;continue&lt;/code&gt; means: &amp;ldquo;continue executing from the next statement after the current &lt;code&gt;when&lt;/code&gt;, rather than jumping out of the surrounding &lt;code&gt;given&lt;/code&gt;.&amp;rdquo; It has nothing to do with the old Perl 5 &lt;code&gt;continue&lt;/code&gt; block, which in Perl 6 becomes &lt;a href=&#34;#onwards%20and%20backwards&#34;&gt;&lt;code&gt;NEXT&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &amp;ldquo;topic&amp;rdquo; that &lt;code&gt;given&lt;/code&gt; creates can also be aliased to a name of our own choosing (though it&amp;rsquo;s &lt;em&gt;always&lt;/em&gt; aliased to &lt;code&gt;$_&lt;/code&gt; no matter what else we may do). To give the topic a more meaningful name, we just need to use the &amp;ldquo;topical arrow:&amp;rdquo;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    given check_online().{active}{names}[0] -&amp;gt; $name {
+        when /^\w+$/  { print &amp;quot;$name&#39;s on first\n&amp;quot; }
+        when /\?\?\?/    { print &amp;quot;Who&#39;s on first\n&amp;quot; }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Having been replaced by the dot, the old Perl 5 arrow operator is given a new role in Perl 6. When placed after the topic specifier of a control structure (i.e. the scalar argument of a &lt;code&gt;given&lt;/code&gt;, or the list of a &lt;code&gt;for&lt;/code&gt;), it allows us to give an extra name (apart from &lt;code&gt;$_&lt;/code&gt;) to the topic associated with that control structure.&lt;/p&gt;
+
+&lt;p&gt;In the above version, the &lt;code&gt;given&lt;/code&gt; statement declares a lexical variable &lt;code&gt;$name&lt;/code&gt; and makes it yet another way of referring to the current topic. That is, it aliases both &lt;code&gt;$name&lt;/code&gt; and &lt;code&gt;$_&lt;/code&gt; to the value specified by &lt;code&gt;check_online().{active}{names}[0]&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is a fundamental change from Perl 5, where &lt;code&gt;$_&lt;/code&gt; was only aliased to the current topic in a &lt;code&gt;for&lt;/code&gt; loop. In Perl 6, the current topic &amp;ndash; whatever its name and however you make it the topic &amp;ndash; is &lt;em&gt;always&lt;/em&gt; aliased to &lt;code&gt;$_&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;That implies that everywhere that Perl 5 used &lt;code&gt;$_&lt;/code&gt; as a default (i.e. &lt;code&gt;print&lt;/code&gt;, &lt;code&gt;chomp&lt;/code&gt;, &lt;code&gt;split&lt;/code&gt;, &lt;code&gt;length&lt;/code&gt;, &lt;code&gt;eval&lt;/code&gt;, etc.), Perl 6 uses the current topic:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @list -&amp;gt; $next {        # iterate @list, aliasing each element to 
+                                # $next (and to $_)
+        print if length &amp;gt; 10;   # same as: print $next if length $next &amp;gt; 10
+        %count{$next}++;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is subtly different from the &amp;ldquo;equivalent&amp;rdquo; Perl 5 code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Perl 5 code
+    for my $next (@list) {      # iterate @list, aliasing each element to 
+                                # $next (but not to $_)
+        print if length &amp;gt; 10;   # same as: print $_ if length $_ &amp;gt; 10
+                                # using the $_ value from *outside* the loop
+        %count{$next}++;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you had wanted this Perl 5 behavior in Perl 6, then you&amp;rsquo;d have to say explicitly what you meant:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $outer_underscore := $_;
+    for @list -&amp;gt; $next {
+        print $outer_underscore
+            if length $outer_underscore &amp;gt; 10;
+        %count{$next}++;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which is probably a good thing in code that subtle.&lt;/p&gt;
+
+&lt;p&gt;Oh, and yes: the &lt;code&gt;p52p6&lt;/code&gt; translator program &lt;em&gt;will&lt;/em&gt; take that new behavior into account and correctly convert something pathological like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Perl 5 code
+    while (&amp;lt;&amp;gt;) {
+        for my $elem (@list) {
+            print if $elem % 2;
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Perl 6 code
+    for &amp;lt;&amp;gt; {
+        my $some_magic_temporary_variable := $_;
+        for @list -&amp;gt; $elem {
+            print $some_magic_temporary_variable if $elem % 2;
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that this works because, in Perl 6, a call to &lt;code&gt;&amp;lt;&amp;gt;&lt;/code&gt; is lazily evaluated in list contexts, including the list of a &lt;code&gt;for&lt;/code&gt; loop.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S04.html&#34;&gt;Synopsis 4&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-other-whens-other-whens-span&#34;&gt;&lt;span id=&#34;other whens&#34;&gt;Other whens&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The remaining cases of the data look-up are handled by subsequent &lt;code&gt;when&lt;/code&gt; statements. The first:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    when &#39;previous&#39; { return %var{&amp;quot;&amp;quot;} // fail NoData }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;handles the special keyword &lt;code&gt;&amp;quot;previous&amp;quot;&lt;/code&gt;. The previous value is always stored in the element of &lt;code&gt;%var&lt;/code&gt; whose key is the empty string.&lt;/p&gt;
+
+&lt;p&gt;If, however, that previous value is undefined, then the defaulting operator &amp;ndash; &lt;code&gt;//&lt;/code&gt; &amp;ndash; causes the right-hand side of the expression to be evaluated instead. That right-hand side is a call to the &lt;code&gt;fail&lt;/code&gt; method of class &lt;code&gt;NoData&lt;/code&gt; (and could equally have been written &lt;code&gt;NoData.fail()&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;The standard &lt;code&gt;fail&lt;/code&gt; method inherited from the &lt;code&gt;Exception&lt;/code&gt; class constructs an instance of the appropriate class (i.e. an exception object) and then either throws that exception (if the &lt;code&gt;use fatal&lt;/code&gt; pragma is in effect) or else returns an &lt;code&gt;undef&lt;/code&gt; value from the scope in which the &lt;code&gt;fail&lt;/code&gt; was invoked. That is, the &lt;code&gt;fail&lt;/code&gt; acts like a &lt;code&gt;die SomeExceptionClass&lt;/code&gt; or a &lt;code&gt;return undef&lt;/code&gt;, depending on the state of the &lt;code&gt;use fatal&lt;/code&gt; pragma.&lt;/p&gt;
+
+&lt;p&gt;This is possible because, in Perl 6, &lt;em&gt;all&lt;/em&gt; flow-of-control &amp;ndash; including the normal subroutine &lt;code&gt;return&lt;/code&gt; &amp;ndash; is exception-based. So, when it is supposed to act like a &lt;code&gt;return&lt;/code&gt;, the &lt;code&gt;Exception::fail&lt;/code&gt; method simply throws the special &lt;code&gt;Ctl::Return&lt;/code&gt; exception, which &lt;code&gt;get_data&lt;/code&gt;&amp;rsquo;s caller will (automagically) catch and treat as a normal return.&lt;/p&gt;
+
+&lt;p&gt;So then why not just write the usual:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    return undef;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;instead?&lt;/p&gt;
+
+&lt;p&gt;The advantage of using &lt;code&gt;fail&lt;/code&gt; is that it allows the &lt;em&gt;callers&lt;/em&gt; of &lt;code&gt;get_data&lt;/code&gt; to decide how that subroutine should signal failure. As explained above, normally &lt;code&gt;fail&lt;/code&gt; fails by returning &lt;code&gt;undef&lt;/code&gt;. But if a &lt;code&gt;use fatal&lt;/code&gt; pragma is in effect, any invocation of &lt;code&gt;fail&lt;/code&gt; instead throws the corresponding exception.&lt;/p&gt;
+
+&lt;p&gt;What&amp;rsquo;s the advantage in that? Well, some people feel that certain types of failures ought to be taken deadly seriously (i.e. they should kill you unless you explicitly catch and handle them). Others feel that the same errors really aren&amp;rsquo;t all that serious and you should be allowed to, like, chill man and just groove with the heavy consequences, dude.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;fail&lt;/code&gt; method allows you, the coder, to stay well out of that kind of fruitless religious debate.&lt;/p&gt;
+
+&lt;p&gt;When you use &lt;code&gt;fail&lt;/code&gt; to signal failure, not only is the code nicely documented at that point, but the mode of failure becomes caller-selectable. Fanatics can &lt;code&gt;use fatal&lt;/code&gt; and make each failure punishable by death; hippies can say &lt;code&gt;no fatal&lt;/code&gt; and make each failure just return &lt;code&gt;undef&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;You no longer have to get caught up in endless debate as to whether the exception-catching:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    try { $data = get_data($str) }
+        // warn &amp;quot;Couldn&#39;t get data&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is inherently better or worse than the &lt;code&gt;undef&lt;/code&gt;-sensing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    do { $data = get_data($str) }
+        // warn &amp;quot;Couldn&#39;t get data&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instead, you can just write &lt;code&gt;get_data&lt;/code&gt; such that There&amp;rsquo;s More Than One Way To Fail It.&lt;/p&gt;
+
+&lt;p&gt;By the way, &lt;code&gt;fail&lt;/code&gt; can fail in other ways, too: in different contexts or under different pragmas. The most obvious example would be inside a regex, where it would initiate back-tracking. More on that in Apocalypse 5.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-still-other-whens-still-other-whens-span&#34;&gt;&lt;span id=&#34;still other whens&#34;&gt;Still Other Whens&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Meanwhile, if &lt;code&gt;$data&lt;/code&gt; isn&amp;rsquo;t a number or the &lt;code&gt;&amp;quot;previous&amp;quot;&lt;/code&gt; keyword, then maybe it&amp;rsquo;s the name of one of the calculator&amp;rsquo;s variables. The third &lt;code&gt;when&lt;/code&gt; statement of the switch tests for that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    when %var   { return %var{&amp;quot;&amp;quot;} = %var{$_} }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If a &lt;code&gt;when&lt;/code&gt; is given a hash, then it uses the current topic as a key in the hash and looks up the corresponding entry. If that value is true, then it executes its block. In this case, that block caches the value that was looked up (i.e. &lt;code&gt;%var{$_}&lt;/code&gt;) in the &amp;ldquo;previous&amp;rdquo; slot and returns it.&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;Aha!&amp;rdquo; you say, &amp;ldquo;that&amp;rsquo;s a bug! What if the value of &lt;code&gt;%var{$_}&lt;/code&gt; is false?!&amp;rdquo; Well, if it were possible for that to ever happen, then it certainly &lt;em&gt;would&lt;/em&gt; be a bug, and we&amp;rsquo;d have to write something ugly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    when defined %var{$_}   { return %var{&amp;quot;&amp;quot;} = %var{$_} }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But, of course, it&amp;rsquo;s much easier just to redefine Truth, so that any literal zero value stored in &lt;code&gt;%var&lt;/code&gt; is no longer false. See &lt;a href=&#34;#cache%20and%20return&#34;&gt;below&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, if the &lt;code&gt;$data&lt;/code&gt; isn&amp;rsquo;t a literal, then a &lt;code&gt;&amp;quot;previous&amp;quot;&lt;/code&gt;, or a variable name, it must be an invalid token, so the default alternative in the switch statement throws an &lt;code&gt;Err::BadData&lt;/code&gt; exception:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    default     { die Err::BadData : msg=&amp;gt;&amp;quot;Don&#39;t understand $_&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that, here again, we are actually executing a method call to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Err::BadData.die(msg=&amp;gt;&amp;quot;Don&#39;t understand $_&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;as indicated by the use of the colon after the classname.&lt;/p&gt;
+
+&lt;p&gt;Of course, by using &lt;code&gt;die&lt;/code&gt; instead of &lt;code&gt;fail&lt;/code&gt; here, we&amp;rsquo;re giving clients of the &lt;code&gt;get_data&lt;/code&gt; subroutine no choice but to deal with &lt;code&gt;Err::BadData&lt;/code&gt; exceptions.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-an-aside-the-smart-match-operator-an-aside-the-smart-match-operator-span&#34;&gt;&lt;span id=&#34;an aside: the smart match operator&#34;&gt;An Aside: the &amp;ldquo;Smart Match&amp;rdquo; Operator&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The rules governing how the argument of a &lt;code&gt;when&lt;/code&gt; is matched against the current topic are designed to be as DWIMish as possible. Which means that they are actually quite complex. They&amp;rsquo;re listed in Apocalypse 4, so we won&amp;rsquo;t review them here.&lt;/p&gt;
+
+&lt;p&gt;Collectively, the rules are designed to provide a generic &amp;ldquo;best attempt at matching&amp;rdquo; behavior. That is, given two values (the current topic and the &lt;code&gt;when&lt;/code&gt;&amp;rsquo;s first argument), they try to determine whether those values can be combined to produce a &amp;ldquo;smart match&amp;rdquo; &amp;ndash; for some reasonable definitions of &amp;ldquo;smart&amp;rdquo; and &amp;ldquo;match.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;That means that one possible use of a Perl 6 switch statement is simply to test &lt;em&gt;whether&lt;/em&gt; two values match without worrying about &lt;em&gt;how&lt;/em&gt; those two values match:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub hey_just_see_if_dey_match_willya ($val1, $val2) {
+        given $val1 {
+            when $val2 { return 1 }
+            default    { return 0 }
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That behavior is sufficiently useful that Larry wanted to make it much easier to use. Specifically, he wanted to provide a generic &amp;ldquo;smart match&amp;rdquo; operator.&lt;/p&gt;
+
+&lt;p&gt;So he did. It&amp;rsquo;s called &lt;code&gt;=~&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Yes, the humble Perl 5 &amp;ldquo;match a string against a regex&amp;rdquo; operator is promoted in Perl 6 to a &amp;ldquo;smart-match an &lt;em&gt;anything&lt;/em&gt; against an &lt;em&gt;anything&lt;/em&gt;&amp;rdquo; operator. So now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if ($val1 =~ $val2) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;works out the most appropriate way to compare its two scalar operands. The result might be a numeric comparison (&lt;code&gt;$val1 == $val2&lt;/code&gt;) or a string comparison (&lt;code&gt;$val1 eq $val2&lt;/code&gt;) or a subroutine call (&lt;code&gt;$val1.($val2)&lt;/code&gt;) or a pattern match (&lt;code&gt;$val1 =~ /$val2/&lt;/code&gt;) or whatever else makes the most sense for the actual run-time types of the two operands.&lt;/p&gt;
+
+&lt;p&gt;This new turbo-charged &amp;ldquo;smart match&amp;rdquo; operator will also work on arrays, hashes and lists:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if @array =~ $elem {...}        # true if @array contains $elem
+
+    if $key =~ %hash {...}          # true if %hash{$key}
+
+    if $value =~ (1..10) {...}      # true if $value is in the list
+
+    if $value =~ (&#39;a&#39;,/\s/,7) {...} # true if $value is eq to &#39;a&#39;
+                                    #   or if $value contains whitespace
+                                    #   or if $value is == to 7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That final example illustrates some of the extra intelligence that Perl 6&amp;rsquo;s &lt;code&gt;=~&lt;/code&gt; has: When one of its arguments is a list (&lt;em&gt;not&lt;/em&gt; an array), the &amp;ldquo;smart match&amp;rdquo; operator recursively &amp;ldquo;smart matches&amp;rdquo; each element and ORs the results together, short-circuiting if possible.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-being-calculating-being-calculating-span&#34;&gt;&lt;span id=&#34;being calculating&#34;&gt;Being Calculating&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The next component of the program is the subroutine that computes the actual results of each expression that the user enters. It takes a string to be evaluated and an integer indicating the current iteration number of the main input loop (for debugging purposes):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub calc (str $expr, int $count) {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-give-us-a-little-privacy-please-give-us-a-little-privacy-please-span&#34;&gt;&lt;span id=&#34;give us a little privacy, please&#34;&gt;Give us a little privacy, please&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Perl 5 has a really ugly idiom for creating &amp;ldquo;durable&amp;rdquo; lexical variables: variables that are lexically scoped but stick around from call to call.&lt;/p&gt;
+
+&lt;p&gt;If you write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub whatever {
+        my $count if 0;
+        $count++;
+        print &amp;quot;whatever called $count times\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then the compile-time aspect of a &lt;code&gt;my $count&lt;/code&gt; declaration causes &lt;code&gt;$count&lt;/code&gt; to be declared as a lexical in the subroutine block. However, at run-time &amp;ndash; when the variable would normally be (re-)allocated &amp;ndash; the &lt;code&gt;if 0&lt;/code&gt; prevents that process. So the original lexical variable is not replaced on each invocation, and is instead shared by them all.&lt;/p&gt;
+
+&lt;p&gt;This awful &lt;code&gt;if 0&lt;/code&gt; idiom works under most versions of Perl 5, but it&amp;rsquo;s really just a freakish accident of Perl&amp;rsquo;s evolution, not a carefully designed and lovingly crafted feature. So &lt;a href=&#34;http://perl.plover.com/docs/perlsub.html#warning&#34;&gt;just say &amp;ldquo;No!&amp;rdquo;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Perl 6 allows us to do the same thing, but without feeling the need to wash afterward.&lt;/p&gt;
+
+&lt;p&gt;To understand how Perl 6 cleans up this idiom, notice that the durable variable is really much more; like a package variable that just happens to be accessible only in a particular lexical scope. That kind of restricted-access package variable is going to be quite common in Perl 6 &amp;ndash; as an attribute of a class.&lt;/p&gt;
+
+&lt;p&gt;So the way we create such a variable is to declare it as a package variable, but with the &lt;code&gt;is private&lt;/code&gt; property:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    module Wherever;
+
+    sub whatever {
+        our $count is private;
+        $count++;
+        print &amp;quot;whatever called $count times\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Adding &lt;code&gt;is private&lt;/code&gt; causes Perl to recognize the existence of the variable &lt;code&gt;$count&lt;/code&gt; within the &lt;code&gt;Wherever&lt;/code&gt; module, but then to restrict its accessibility to the lexical scope in which it is first declared. In the above example, any attempt to refer to &lt;code&gt;$Wherever::count&lt;/code&gt; outside the &lt;code&gt;&amp;amp;Wherever::whatever&lt;/code&gt; subroutine produces a compile-time error. It&amp;rsquo;s still a package variable, but now you can&amp;rsquo;t use it anywhere but in the nominated lexical scope.&lt;/p&gt;
+
+&lt;p&gt;Apart from the benefit of replacing an ugly hack with a clean explicit marker on the variable, the real advantage is that Perl 6 private variables can be also be initialized:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub whatever {
+        our $count is private //= 1;
+        print &amp;quot;whatever called $count times\n&amp;quot;;
+        $count++;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That initialization is performed the first time the variable declaration is encountered during execution (because that&amp;rsquo;s the only time its value is &lt;code&gt;undef&lt;/code&gt;, so that&amp;rsquo;s the only time the &lt;code&gt;//=&lt;/code&gt; operator has any effect).&lt;/p&gt;
+
+&lt;p&gt;In our example program we use that facility to do a one-time-only initialization of a private package hash. That hash will then be used as a (lexically restricted) look-up table to provide the implementations for a set of operator symbols:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        our %operator is private //= (
+            &#39;*&#39;  =&amp;gt; { $^a * $^b },
+            &#39;/&#39;  =&amp;gt; { $^a / $^b },
+            &#39;~&#39;  =&amp;gt; { ($^a + $^b) / 2 },
+        );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each key of the hash is an operator symbol and the corresponding value is an anonymous subroutine that implements the appropriate operation. Note the use of the &amp;ldquo;place-holder&amp;rdquo; variables (&lt;code&gt;$^a&lt;/code&gt; and &lt;code&gt;$^b&lt;/code&gt;) to implicitly specify the parameters of the closures.&lt;/p&gt;
+
+&lt;p&gt;Since all the data for the &lt;code&gt;%operator&lt;/code&gt; hash is constant, we could have achieved a similar effect with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my %operator is constant = (
+            &#39;*&#39;  =&amp;gt; { $^a * $^b },
+            &#39;/&#39;  =&amp;gt; { $^a / $^b },
+            &#39;~&#39;  =&amp;gt; { ($^a + $^b) / 2 },
+        );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notionally this is quite different from the &lt;code&gt;is private&lt;/code&gt; version, in that &amp;ndash; theoretically &amp;ndash; the lexical constant would be reconstructed and reinitialized on each invocation of the &lt;code&gt;calc&lt;/code&gt; subroutine. Although, in practice, we would expect the compiler to notice the constant initializer and optimize the initialization out to compile-time.&lt;/p&gt;
+
+&lt;p&gt;If the initializer had been a run-time expression, then the &lt;code&gt;is private&lt;/code&gt; and &lt;code&gt;is constant&lt;/code&gt; versions would behave very differently:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    our %operator is private //= todays_ops();   # Initialize once, the first
+                                                 # time statement is reached.
+                                                 # Thereafter may be changed
+                                                 # at will within subroutine.
+
+    my %operator is constant = todays_ops();     # Re-initialize every time
+                                                 # statement is reached.
+                                                 # Thereafter constant
+                                                 # within subroutine
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-let-s-split-let-s-split-span&#34;&gt;&lt;span id=&#34;let&#39;s split!&#34;&gt;Let&amp;rsquo;s Split!&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We then have to split the input expression into (whitespace-delimited) tokens, in order to parse and execute it. Since the calculator language we&amp;rsquo;re implementing is RPN, we need a stack to store data and interim calculations:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @stack;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We also need a counter to track the current token number (for error messages):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $toknum = 1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we just use the standard &lt;code&gt;split&lt;/code&gt; built-in to break up the expression string, and iterate through each of the resulting tokens using a &lt;code&gt;for&lt;/code&gt; loop:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for split /\s+/, $expr -&amp;gt; $token {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are several important features to note in this &lt;code&gt;for&lt;/code&gt; loop. To begin with, there are no parentheses around the list. In Perl 6, they are not required (they&amp;rsquo;re not needed for &lt;em&gt;any&lt;/em&gt; control structure), though they are certainly still permissible:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (split /\s+/, $expr) -&amp;gt; $token {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;More importantly, the declaration of the iterator variable (&lt;code&gt;$token&lt;/code&gt;) is no longer to the left of the list:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Perl 5 code
+    for my $token (split /\s+/, $expr) {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instead, it is specified via a topical arrow to the right of the list.&lt;/p&gt;
+
+&lt;p&gt;By the way, somewhat surprisingly, the Perl 6 arrow operator &lt;em&gt;isn&amp;rsquo;t&lt;/em&gt; a binary operator. (Actually, neither is the Perl 5 arrow operator, but that&amp;rsquo;s not important right now.)&lt;/p&gt;
+
+&lt;p&gt;Even more surprisingly, what the Perl 6 arrow operator is, is a synonym for the declarator &lt;code&gt;sub&lt;/code&gt;. That&amp;rsquo;s right, in Perl 6 you can declare an anonymous subroutine like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $product_plus_one = -&amp;gt; $x, $y { $x*$y + 1 };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The arrow behaves like an anonymous &lt;code&gt;sub&lt;/code&gt; declarator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $product_plus_one = sub($x, $y) { $x*$y + 1 };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;except that its parameter list doesn&amp;rsquo;t require parentheses. That implies:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;The Perl 6 &lt;code&gt;for&lt;/code&gt;, &lt;code&gt;while&lt;/code&gt;, &lt;code&gt;if&lt;/code&gt;, and &lt;code&gt;given&lt;/code&gt; statements each take two arguments: an expression that controls them and a subroutine/closure that they execute. Normally, that closure is just a block (in Perl6 &lt;em&gt;all&lt;/em&gt; blocks are really closures):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for 1..10 {         # no comma needed before opening brace
+        print
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;but you can also be explicit:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for 1..10, sub {    # needs comma if a regular anonymous sub
+        print
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or you can be pointed:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for 1..10 -&amp;gt; {      # no comma needed with arrow notation
+        print
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or referential:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for 1..10,          # needs comma if a regular sub reference
+        &amp;amp;some_sub;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The variable after the arrow is effectively a lexical variable confined to the scope of the following block (just as a subroutine parameter is a lexical variable confined to the scope of the subroutine block). Within the block, that lexical becomes an alias for the topic (just as a subroutine parameter becomes an alias for the corresponding argument).&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Topic variables created with the arrow notation are, by default, read-only aliases (because Perl 6 subroutine parameters are, by default, read-only aliases):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @list -&amp;gt; $i {
+        if ($cmd =~ &#39;incr&#39;) {
+            $i++;   # Error: $i is read-only
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that the rule doesn&amp;rsquo;t apply to the default topic (&lt;code&gt;$_&lt;/code&gt;), which is given special dispensation to be a modifiable alias (as in Perl 5).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;If you want a named topic to be modifiable through its alias, then you have to say so explicitly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @list -&amp;gt; $i is rw {
+        if ($cmd =~ &#39;incr&#39;) {
+            $i++;   # Okay: $i is read-write
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Just as a subroutine can have more than one parameter, so too we can specify more than one named iterator variable at a time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for %phonebook.kv -&amp;gt; $name, $number {
+        print &amp;quot;$name: $number\n&amp;quot;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that in Perl 6, a hash in a list context returns a list of pairs, not the Perl 5-ish &amp;ldquo;key, value, key, value, &amp;hellip;&amp;rdquo; sequence. To get the hash contents in that format, we have to call the hash&amp;rsquo;s &lt;code&gt;kv&lt;/code&gt; method explicitly.&lt;/p&gt;
+
+&lt;p&gt;What actually happens in this iteration (and, in fact, in all such instances) is that the &lt;code&gt;for&lt;/code&gt; loop looks at the number of arguments its closure takes and iterates that many elements at a time.&lt;/p&gt;
+
+&lt;p&gt;Note that &lt;code&gt;map&lt;/code&gt; and &lt;code&gt;reduce&lt;/code&gt; can do that too in Perl 6:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # process @xs_and_ys two-at-a-time...
+    @list_of_powers = map { $^x ** $^y } @xs_and_ys;
+
+    # reduce list three-at-a-time   
+    $sum_of_powers  = reduce { $^partial_sum + $^x ** $^y } 0, @xs_and_ys;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And, of course, since &lt;code&gt;map&lt;/code&gt; and &lt;code&gt;reduce&lt;/code&gt; take a subroutine reference as their first argument &amp;ndash; instead of using the higher-order placeholder notation &amp;ndash; we could use the arrow notation here too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @list_of_powers = map -&amp;gt; $x, $y { $x ** $y } @xs_and_ys;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or even an old-fashioned anonymous subroutine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @list_of_powers = map sub($x,$y){ $x ** $y }, @xs_and_ys;
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Phew. If that all makes your head hurt, then don&amp;rsquo;t worry. All you really need to remember is this: If you don&amp;rsquo;t want to use &lt;code&gt;$_&lt;/code&gt; as the name of the current topic, then you can change it by putting an arrow and a variable name before the block of most control statements.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S04.html&#34;&gt;Synopsis 4&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-trying-situation-a-trying-situation-span&#34;&gt;&lt;span id=&#34;a trying situation&#34;&gt;A Trying Situation&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Once the calculator&amp;rsquo;s input has been split into tokens, the &lt;code&gt;for&lt;/code&gt; loop processes each one in turn, by applying them (if they represent an operator), or jumping out of the loop (if they represent an end-of-expression marker: &lt;code&gt;&#39;.&#39;&lt;/code&gt;, &lt;code&gt;&#39;;&#39;&lt;/code&gt;, or &lt;code&gt;&#39;=&#39;&lt;/code&gt;), or pushing them onto the stack (since anything else must be an operand):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    try {
+        when %operator {                # apply operator
+            my @args = splice @stack, -2;
+            push @stack, %operator{$token}(*@args);
+        }
+
+        when &#39;.&#39;, &#39;;&#39;, &#39;=&#39; {           # or jump out of loop
+            last;
+        }
+
+        use fatal;
+        push @stack, get_data($token);  # or push operand
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first two possibilities are tested for using &lt;code&gt;when&lt;/code&gt; statements. Recall that a &lt;code&gt;when&lt;/code&gt; tests its first argument against the current topic. In this case, however, the token was made the topic by the surrounding &lt;code&gt;for&lt;/code&gt;. This is a significant feature of Perl 6: &lt;code&gt;when&lt;/code&gt; blocks can implement a switch statement &lt;em&gt;anywhere&lt;/em&gt; there is a valid topic, not just inside a &lt;code&gt;given&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The block associated with &lt;code&gt;when %operator&lt;/code&gt; will be selected if &lt;code&gt;%operator{$token}&lt;/code&gt; is true (i.e. if there is an operator implementation in &lt;code&gt;%operator&lt;/code&gt; corresponding to the current topic). In that case, the top two arguments are spliced from the stack and passed to the closure implementing that operation (&lt;code&gt;%operator{$token}(*@args)&lt;/code&gt;). Note that there would normally be a dot (&lt;code&gt;.&lt;/code&gt;) operator between the hash entry (i.e. a subroutine reference) and the subroutine call, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    %operator{$token}.(*@args)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;but in Perl 6 it may be omitted since it can be inferred (just as an inferrable &lt;code&gt;-&amp;gt;&lt;/code&gt; can be omitted in Perl 5).&lt;/p&gt;
+
+&lt;p&gt;Note too that we used the flattening operator &lt;code&gt;(C&amp;lt;*&amp;gt;)&lt;/code&gt;on &lt;code&gt;C&amp;lt;@args&amp;gt;&lt;/code&gt;, because the closure returned by &lt;code&gt;C&amp;lt;%operator{$token}&amp;gt;&lt;/code&gt; expects two scalar arguments, not one array.&lt;/p&gt;
+
+&lt;p&gt;The second &lt;code&gt;when&lt;/code&gt; simply exits the loop if it finds an &amp;ldquo;end-of-expression&amp;rdquo; token. In this example, the argument of the &lt;code&gt;when&lt;/code&gt; is a list of strings, so the &lt;code&gt;when&lt;/code&gt; succeeds if any of them matches the token.&lt;/p&gt;
+
+&lt;p&gt;Of course, since the entire body of the &lt;code&gt;when&lt;/code&gt; block is a single statement, we could also have written the &lt;code&gt;when&lt;/code&gt; as a statement modifier:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        last when &#39;.&#39;, &#39;;&#39;, &#39;=&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The fact that &lt;code&gt;when&lt;/code&gt; has a postfix version like this should come as no surprise, since &lt;code&gt;when&lt;/code&gt; is simply another control structure like &lt;code&gt;if&lt;/code&gt;, &lt;code&gt;for&lt;/code&gt;, &lt;code&gt;while&lt;/code&gt;, etc.&lt;/p&gt;
+
+&lt;p&gt;The postfix version of &lt;code&gt;when&lt;/code&gt; does have one interesting feature. Since it governs a statement, rather than a block, it does not provide the block-&lt;code&gt;when&lt;/code&gt;&amp;rsquo;s automatic &amp;ldquo;&lt;code&gt;break&lt;/code&gt; to the end of my topicalizing block&amp;rdquo; behavior. In this instance, it makes no difference since the &lt;code&gt;last&lt;/code&gt; would do that anyway.&lt;/p&gt;
+
+&lt;p&gt;The final alternative &amp;ndash; pushing the token onto the stack &amp;ndash; is simply a regular Perl &lt;code&gt;push&lt;/code&gt; command. The only interesting feature is that it calls the &lt;a href=&#34;#it&#39;s%20a%20given&#34;&gt;&lt;code&gt;get_data&lt;/code&gt;&lt;/a&gt; subroutine to pre-translate the token if necessary. It also specifies a &lt;code&gt;use fatal&lt;/code&gt; so that &lt;code&gt;get_data&lt;/code&gt; will fail by an throwing exception, rather than returning &lt;code&gt;undef&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The loop tries each of these possibilities in turn. And &amp;ldquo;tries&amp;rdquo; is the operative word here, because either the application of operations or the pushing of data onto the stack may fail, resulting in an exception. To prevent that exception from propagating all the way back to the main program and terminating it, the various alternatives are placed in a &lt;code&gt;try&lt;/code&gt; block.&lt;/p&gt;
+
+&lt;p&gt;A &lt;code&gt;try&lt;/code&gt; block is the Perl 6 successor to Perl 5&amp;rsquo;s &lt;code&gt;eval&lt;/code&gt; block. Unless it includes some explicit error handling code (see &lt;a href=&#34;#where&#39;s%20the%20catch&#34;&gt;Where&amp;rsquo;s the catch???&lt;/a&gt;), it acts exactly like a Perl 5 &lt;code&gt;eval {...}&lt;/code&gt;, intercepting a propagating exception and converting it to an &lt;code&gt;undef&lt;/code&gt; return value:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    try { $quotient = $numerator / $denominator } // warn &amp;quot;couldn&#39;t divide&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-where-s-the-catch-where-s-the-catch-span&#34;&gt;&lt;span id=&#34;where&#39;s the catch&#34;&gt;Where&amp;rsquo;s the Catch???&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In Perl 6, we aren&amp;rsquo;t limited to just blindly catching a propagating exception and then coping with an &lt;code&gt;undef&lt;/code&gt;. It is also possible to set up an explicit handler to catch, identify and deal with various types of exceptions. That&amp;rsquo;s done in a &lt;code&gt;CATCH&lt;/code&gt; block:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    CATCH {
+        when Err::Reportable     { warn $!; continue }
+        when Err::BadData        { $!.fail(at=&amp;gt;$toknum) }
+        when NoData              { push @stack, 0 }
+        when /division by zero/  { push @stack, Inf }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A &lt;code&gt;CATCH&lt;/code&gt; block is like a &lt;code&gt;BEGIN&lt;/code&gt; block (hence the capitalization). Its one argument is a closure that is executed if an exception ever propagates as far as the block in which the &lt;code&gt;CATCH&lt;/code&gt; was declared. If the block eventually executes, then the current topic is aliased to the error variable &lt;code&gt;$!&lt;/code&gt;. So the typical thing to do is to populate the exception handler&amp;rsquo;s closure with a series of &lt;code&gt;when&lt;/code&gt; statements that identify the exception contained in &lt;code&gt;$!&lt;/code&gt; and handle the error appropriately. More on that &lt;a href=&#34;#catch%20as%20catch%20can&#34;&gt;in a moment&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;CATCH&lt;/code&gt; block has one additional property. When its closure has executed, it transfers control to the end of the block in which it was defined. This means that exception handling in Perl 6 is non-resumptive: once an exception is handled, control passes outward, and the code that threw the exception is not automatically re-executed.&lt;/p&gt;
+
+&lt;p&gt;If we did want &amp;ldquo;try, try, try again&amp;rdquo; exception handling instead, then we&amp;rsquo;d need to explicitly code a loop around the code we&amp;rsquo;re trying:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # generate exceptions (sometimes)
+    sub getnum_or_die {
+        given &amp;lt;&amp;gt; {                      # readline and make it the topic
+            die &amp;quot;$_ is not a number&amp;quot;
+                unless defined &amp;amp;&amp;amp; /^\d+$/;
+            return $_;
+        }
+    }
+
+    # non-resumptive exception handling
+    sub readnum_or_cry {
+        return getnum_or_die;       # maybe generate an exception
+        CATCH { warn $! }           # if so, warn and fall out of sub
+    }
+
+    # pseudo-resumptive
+    sub readnum_or_retry {
+        loop {                      # loop endlessly...
+            return getnum_or_die;   #   maybe generate an exception
+            CATCH { warn $! }       #   if so, warn and fall out of loop
+        }                           #   (i.e. loop back and try again)
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that this isn&amp;rsquo;t true resumptive exception handling. Control still passes outward &amp;ndash; to the end of the &lt;code&gt;loop&lt;/code&gt; block. But then the &lt;code&gt;loop&lt;/code&gt; reiterates, sending control back into &lt;code&gt;getnum_or_die&lt;/code&gt; for another attempt.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-catch-as-catch-can-catch-as-catch-can-span&#34;&gt;&lt;span id=&#34;catch as catch can&#34;&gt;Catch as Catch Can&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Within the &lt;code&gt;CATCH&lt;/code&gt; block, the example uses the standard Perl 6 exception handling technique: a series of &lt;code&gt;when&lt;/code&gt; statements. Those &lt;code&gt;when&lt;/code&gt; statements compare their arguments against the current topic. In a &lt;code&gt;CATCH&lt;/code&gt; block, that topic is always aliased to the error variable &lt;code&gt;$!&lt;/code&gt;, which contains a reference to the propagating exception object.&lt;/p&gt;
+
+&lt;p&gt;The first three &lt;code&gt;when&lt;/code&gt; statements use a classname as their argument. When matching a classname against an object, the &lt;code&gt;=~&lt;/code&gt; operator (and therefore any &lt;code&gt;when&lt;/code&gt; statement) will call the object&amp;rsquo;s &lt;code&gt;isa&lt;/code&gt; method, passing it the classname. So the first three cases of the handler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    when Err::Reportable   { warn $!; continue }
+    when Err::BadData      { $!.fail(at=&amp;gt;$toknum) }
+    when NoData            { push @stack, 0 }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;are (almost) equivalent to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if $!.isa(Err::Reportable)  { warn $! }
+    elsif $!.isa(Err::BadData)  { $!.fail(at=&amp;gt;$toknum) }
+    elsif $!.isa(NoData)        { push @stack, 0 }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;except far more readable.&lt;/p&gt;
+
+&lt;p&gt;The first &lt;code&gt;when&lt;/code&gt; statement simply passes the exception object to &lt;code&gt;warn&lt;/code&gt;. Since &lt;code&gt;warn&lt;/code&gt; takes a string as its argument, the exception object&amp;rsquo;s stringification operator (inherited from the standard &lt;code&gt;Exception&lt;/code&gt; class) is invoked and returns an appropriate diagnostic string, which is printed. The &lt;code&gt;when&lt;/code&gt; block then executes a &lt;code&gt;continue&lt;/code&gt; statement, which circumvents the default &amp;ldquo;&lt;code&gt;break&lt;/code&gt; out of the surrounding topicalizer block&amp;rdquo; semantics of the &lt;code&gt;when&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The second &lt;code&gt;when&lt;/code&gt; statement calls the propagating exception&amp;rsquo;s &lt;code&gt;fail&lt;/code&gt; method to cause &lt;code&gt;calc&lt;/code&gt; either to return or rethrow the exception, depending on whether &lt;code&gt;use fatal&lt;/code&gt; was set. In addition, it passes some extra information to the exception, namely the number of the token that caused the problem.&lt;/p&gt;
+
+&lt;p&gt;The third &lt;code&gt;when&lt;/code&gt; statement handles the case where there is no cached data corresponding to the calculator&amp;rsquo;s &lt;code&gt;&amp;quot;previous&amp;quot;&lt;/code&gt; keyword, by simply pushing a zero onto the stack.&lt;/p&gt;
+
+&lt;p&gt;The final case that the handler tests for:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    when /division by zero/  { push @stack, Inf }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;uses a regex, rather than a classname. This causes the topic (i.e. the exception) to be stringified and pattern-matched against the regex. As mentioned above, by default, all exceptions stringify to their own diagnostic string. So this part of the handler simply tests whether that string includes the words &amp;ldquo;division by zero,&amp;rdquo; in which case it pushes the Perl 6 infinity value onto the stack.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-one-dot-only-one-dot-only-span&#34;&gt;&lt;span id=&#34;one dot only&#34;&gt;One Dot Only&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;CATCH&lt;/code&gt; block handled bad data by calling the &lt;code&gt;fail&lt;/code&gt; method of the current exception:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    when Err::BadData  { $!.fail(at=&amp;gt;$toknum) }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s a particular instance of a far more general activity: calling a method on the current topic. Perl 6 provides a shortcut for that &amp;ndash; the prefix unary dot operator. Unary dot calls the method that is its single operand, using the current topic as the implicit invocant. So the &lt;code&gt;Err::BadData&lt;/code&gt; handler could have been written:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    when Err::BadData  { .fail(at=&amp;gt;$toknum) }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;One of the main uses of unary dot is to allow &lt;code&gt;when&lt;/code&gt; statements to select behavior on the basis of method calls. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    given $some_object {
+        when .has_data(&#39;new&#39;) { print &amp;quot;New data available\n&amp;quot; }
+        when .has_data(&#39;old&#39;) { print &amp;quot;Old data still available\n&amp;quot; }
+        when .is_updating     { sleep 1 }
+        when .can(&#39;die&#39;)      { .die(&amp;quot;bad state&amp;quot;) }    # $some_object.die(...)
+        default               { die &amp;quot;internal error&amp;quot; } # global die
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unary dot is also useful within the definition of methods themselves. In a Perl 6 method, the invocant (i.e. the first argument of the method, which is a reference to the object on which the method was invoked) is always the topic, so instead of writing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    method dogtag (Soldier $self) {
+        print $self.rank, &amp;quot; &amp;quot;, $self.name, &amp;quot;\n&amp;quot;
+            unless $self.status(&#39;covert&#39;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;we can just write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    method dogtag (Soldier $self) {     # $self is automagically the topic
+        print .rank, &amp;quot; &amp;quot;, .name, &amp;quot;\n&amp;quot;
+            unless .status(&#39;covert&#39;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or even just:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    method dogtag {                     # @_[0] is automagically the topic
+        print .rank, &amp;quot; &amp;quot;, .name, &amp;quot;\n&amp;quot;
+            unless .status(&#39;covert&#39;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yet another use of unary dot is as a way of abbreviating multiple accesses to hash or array elements. That is, &lt;code&gt;given&lt;/code&gt; also implements the oft-coveted &lt;code&gt;with&lt;/code&gt; statement. If many elements of a hash or array are to be accessed in a set of statements, then we can avoid the tedious repetition of the container name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # initialize from %options...
+
+    $name  = %options{name} // %options{default_name};
+    $age   = %options{age};
+    $limit = max(%options{limit}, %options{rate} * %options{count});
+    $count = $limit / %options{max_per_count};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;by making it the topic and using unary dot:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # initialize from %options...
+
+    given %options {
+        $name  = .{name} // .{default_name};
+        $age   = .{age};
+        $limit = max(.{limit}, .{rate} * .{count});
+        $count = $limit / .{max_per_count};
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S04.html&#34;&gt;Synopsis 4&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-onwards-and-backwards-onward-and-backward-span&#34;&gt;&lt;span id=&#34;onwards and backwards&#34;&gt;Onward and Backward&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Back in our example, after each token has been dealt with in its loop iteration, the iteration is finished. All that remains to do is increment the token number.&lt;/p&gt;
+
+&lt;p&gt;In Perl 5, that would be done in a &lt;code&gt;continue&lt;/code&gt; block at the end of the loop block. In Perl 6, it&amp;rsquo;s done in a &lt;code&gt;NEXT&lt;/code&gt; statement &lt;em&gt;within&lt;/em&gt; the loop block:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    NEXT { $toknum++ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Like a &lt;code&gt;CATCH&lt;/code&gt;, a &lt;code&gt;NEXT&lt;/code&gt; is a special-purpose &lt;code&gt;BEGIN&lt;/code&gt; block that takes a closure as its single argument. The &lt;code&gt;NEXT&lt;/code&gt; pushes that closure onto the end of a queue of &amp;ldquo;next-iteration&amp;rdquo; handlers, all of which are executed each time a loop reaches the end of an iteration. That is, when the loop reaches the end of its block or when it executes an explicit &lt;code&gt;next&lt;/code&gt; or &lt;code&gt;last&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The advantage of moving from Perl 5&amp;rsquo;s external &lt;code&gt;continue&lt;/code&gt; to Perl 6&amp;rsquo;s internal &lt;code&gt;NEXT&lt;/code&gt; is that it gives the &amp;ldquo;next-iteration&amp;rdquo; handler access to any lexical variables declared within the loop block. In addition, it allows the &amp;ldquo;next-iteration&amp;rdquo; handler to be placed anywhere in the loop that&amp;rsquo;s convenient (e.g. close to the initialization it&amp;rsquo;s later supposed to clean up).&lt;/p&gt;
+
+&lt;p&gt;For example, instead of having to write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Perl 5 code
+    my $in_file, $out_file;
+    while (&amp;lt;&amp;gt;) {
+        open $in_file, $_ or die;
+        open $out_file, &amp;quot;&amp;gt; $_.out&amp;quot; or die;
+
+        # process files here (maybe next&#39;ing out early)
+    }
+    continue {
+        close $in_file  or die;
+        close $out_file or die;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;we can just write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    while (&amp;lt;&amp;gt;) {
+        my $in_file  = open $_ or die;
+        my $out_file = open &amp;quot;&amp;gt; $_.out&amp;quot; or die;
+        NEXT {
+            close $in_file  or die;
+            close $out_file or die;
+        }
+
+        # process files here (maybe next&#39;ing out early)
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s no need to declare &lt;code&gt;$in_file&lt;/code&gt; and &lt;code&gt;$out_file&lt;/code&gt; outside the loop, because they don&amp;rsquo;t have to be accessible outside the loop (i.e. in an external &lt;code&gt;continue&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;This ability to declare, access and clean up lexicals within a given scope is especially important because, in Perl 6, there is no reference counting to ensure that the filehandles close themselves automatically immediately at the end of the block. Perl 6&amp;rsquo;s full incremental garbage collector &lt;em&gt;does&lt;/em&gt; guarantee to eventually call the filehandle&amp;rsquo;s destructors, but makes no promises about when that will happen.&lt;/p&gt;
+
+&lt;p&gt;Note that there is also a &lt;code&gt;LAST&lt;/code&gt; statement, which sets up a handler that is called automatically when a block is left for the last time. For example, this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for reverse 1..10 {
+        print &amp;quot;$_...&amp;quot; and flush;
+        NEXT { sleep 1 }
+        LAST { ignition() &amp;amp;&amp;amp; print &amp;quot;lift-off!\n&amp;quot; }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;prints:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    10...9...8...7...6...5...4...3...2...1...lift-off!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;sleeping one second after each iteration (including the last one), and then calling &lt;code&gt;&amp;amp;ignition&lt;/code&gt; at the end of the countdown.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;LAST&lt;/code&gt; statements are also extremely useful in nonlooping blocks, as a way of giving the block a &amp;ldquo;destructor&amp;rdquo; with which it can clean up its state regardless of how it is exited:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub handler ($value, $was_handled is rw) {
+        given $value {
+            LAST { $was_handled = 1 }
+            when &amp;amp;odd { return &amp;quot;$value is odd&amp;quot; }
+            when /0$/ { print &amp;quot;decimal compatible&amp;quot; }
+            when /2$/ { print &amp;quot;binary compatible&amp;quot;; break }
+            $value %= 7;
+            when 1,3,5 { die &amp;quot;odd residual&amp;quot; }
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the above example, no matter how the &lt;code&gt;given&lt;/code&gt; block exits &amp;ndash; i.e. via the &lt;code&gt;return&lt;/code&gt; of the first &lt;code&gt;when&lt;/code&gt; block, or via the (implicit) &lt;code&gt;break&lt;/code&gt; of the second &lt;code&gt;when&lt;/code&gt;, or via the (explicit and redundant) &lt;code&gt;break&lt;/code&gt; of the third &lt;code&gt;when&lt;/code&gt;, or via the &lt;code&gt;&amp;quot;odd residual&amp;quot;&lt;/code&gt; exception, or by falling off the end of the &lt;code&gt;given&lt;/code&gt; block &amp;ndash; the &lt;code&gt;$was_handled&lt;/code&gt; parameter is always correctly set.&lt;/p&gt;
+
+&lt;p&gt;Note that the &lt;code&gt;LAST&lt;/code&gt; is essential here. It wouldn&amp;rsquo;t suffice to write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub handler ($value, $was_handled is rw) {
+        given $value {
+            when &amp;amp;odd { return &#39;$value is odd&amp;quot; }
+            when /3$/ { print &amp;quot;ternary compatible&amp;quot; }
+            when /2$/ { print &amp;quot;binary compatible&amp;quot;; break }
+            $value %= 7;
+            when 1,3,5 { die &amp;quot;odd residual&amp;quot; }
+        }
+        $was_handled = 1;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;because then &lt;code&gt;$handled&lt;/code&gt; wouldn&amp;rsquo;t be set if an exception was thrown. Of course, if that&amp;rsquo;s actually the semantics you &lt;em&gt;wanted&lt;/em&gt;, then you don&amp;rsquo;t want &lt;code&gt;LAST&lt;/code&gt; in that case.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-why-are-you-shouting-why-are-you-shouting-span&#34;&gt;&lt;span id=&#34;why are you shouting&#34;&gt;WHY ARE YOU SHOUTING???&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;You may be wondering why &lt;code&gt;try&lt;/code&gt; is in lower case but &lt;code&gt;CATCH&lt;/code&gt; is in upper. Or why &lt;code&gt;NEXT&lt;/code&gt; and &lt;code&gt;LAST&lt;/code&gt; blocks have those &amp;ldquo;loud&amp;rdquo; keywords.&lt;/p&gt;
+
+&lt;p&gt;The reason is simple: &lt;code&gt;CATCH&lt;/code&gt;, &lt;code&gt;NEXT&lt;/code&gt; and &lt;code&gt;LAST&lt;/code&gt; blocks are just specialized &lt;code&gt;BEGIN&lt;/code&gt; blocks that install particular types of handlers into the block in which they appear.&lt;/p&gt;
+
+&lt;p&gt;They install those handlers at compile-time so, unlike a &lt;code&gt;try&lt;/code&gt; or a &lt;code&gt;next&lt;/code&gt; or a &lt;code&gt;last&lt;/code&gt;, they don&amp;rsquo;t actually &lt;em&gt;do&lt;/em&gt; anything when the run-time flow of execution reaches them. The blocks associated with them are only executed if the appropriate condition or exception is encountered within their scope. And, if that happens, then they are executed automatically, just like &lt;code&gt;AUTOLOAD&lt;/code&gt;, or &lt;code&gt;DESTROY&lt;/code&gt;, or &lt;code&gt;TIEHASH&lt;/code&gt;, or &lt;code&gt;FETCH&lt;/code&gt;, etc.&lt;/p&gt;
+
+&lt;p&gt;So Perl 6 is merely continuing the long Perl tradition of using a capitalized keyword to highlight code that is executed automatically.&lt;/p&gt;
+
+&lt;p&gt;In other words: I&amp;rsquo;M SHOUTING BECAUSE I WANT YOU TO BE AWARE THAT SOMETHING SUBTLE IS HAPPENING AT THIS POINT.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-cache-and-return-cache-and-return-span&#34;&gt;&lt;span id=&#34;cache and return&#34;&gt;Cache and Return&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Meanwhile, back in &lt;code&gt;calc&lt;/code&gt;&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Once the loop is complete and all the tokens have been processed, the result of the calculation should be the top item on the stack. If the stack of items has more than one element left, then it&amp;rsquo;s likely that the expression was wrong somehow (most probably, because there were too many original operands). So we report that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    fail Err::BadData : msg=&amp;gt;&amp;quot;Too many operands&amp;quot;
+        if @stack &amp;gt; 1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If everything is OK, then we simply pop the one remaining value off the stack and make sure it will evaluate true (even if its value is zero or &lt;code&gt;undef&lt;/code&gt;) by setting its &lt;code&gt;true&lt;/code&gt; property. This avoids the potential bug &lt;a href=&#34;#still%20other%20whens&#34;&gt;discussed earlier&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, we record it in &lt;code&gt;%var&lt;/code&gt; under the key &lt;code&gt;&#39;$n&#39;&lt;/code&gt; (i.e. as the &lt;em&gt;n&lt;/em&gt;-th result), and return it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    return %var{&#39;$&#39; _ $i} = pop(@stack) but true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;ldquo;But, but, but&amp;hellip;&amp;rdquo;, I hear you expostulate, &amp;ldquo;&amp;hellip;shouldn&amp;rsquo;t that be &lt;code&gt;pop(@stack) is true&lt;/code&gt;???&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Once upon a time, yes. But Larry has recently decided that compile-time and run-time properties should have different keywords. Compile-time properties (i.e. those ascribed to declarations) will still be specified with the &lt;code&gt;is&lt;/code&gt; keyword:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    class Child is interface;
+    my $heart is constant = &amp;quot;true&amp;quot;;
+    our $meeting is private;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;whereas run-time properties (i.e. those ascribed to values) will now be specified with the &lt;code&gt;but&lt;/code&gt; keyword:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $str = &amp;lt;$trusted_fh&amp;gt; but tainted(0);
+    $fh = open($filename) but chomped;
+    return 0 but true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The choice of &lt;code&gt;but&lt;/code&gt; is meant to convey the fact that run-time properties will generally contradict some standard property of a value, such as its normal truth, chompedness or tainting.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s also meant to keep people from writing the very natural, but very misguided:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if ($x is true) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which now generates a (compile-time) error:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Can&#39;t ascribe a compile-time property to the run-time value of $x.
+    (Did you mean &amp;quot;$x but true&amp;quot; or &amp;quot;$x =~ true&amp;quot;?)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-the-forever-loop-the-forever-loop-span&#34;&gt;&lt;span id=&#34;the forever loop&#34;&gt;The Forever Loop&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Once the &lt;code&gt;Calc&lt;/code&gt; module has all its functionality defined, all that&amp;rsquo;s required is to write the main input-process-output loop. We&amp;rsquo;ll cheat a little and write it as an infinite loop, and then (in solemn Unix tradition) we&amp;rsquo;ll require an EOF signal to exit.&lt;/p&gt;
+
+&lt;p&gt;The infinite loop needs to keep track of its iteration count. In Perl 5 that would be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Perl 5 code
+    for (my $i=0; 1; $i++) {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which would translate into Perl 6 as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    loop (my $i=0; 1; $i++) {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;since Perl 5&amp;rsquo;s C-like &lt;code&gt;for&lt;/code&gt; loop has been renamed &lt;code&gt;loop&lt;/code&gt; in Perl 6 &amp;ndash; to distinguish it from the Perl-like &lt;code&gt;for&lt;/code&gt; loop.&lt;/p&gt;
+
+&lt;p&gt;However, Perl 6 also allows us to create semi-infinite, lazily evaluated lists, so we can write the same loop much more cleanly as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for 0..Inf -&amp;gt; $i {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When &lt;code&gt;Inf&lt;/code&gt; is used as the right-hand operand to &lt;code&gt;..&lt;/code&gt;, it signifies that the resulting list must be lazily built, and endlessly iterable. This type of loop will probably be common in Perl 6 as an easy way of providing a loop counter.&lt;/p&gt;
+
+&lt;p&gt;If we need to iterate some list of values, as well as tracking a loop counter, then we can take advantage of another new feature of Perl 6: iteration streams.&lt;/p&gt;
+
+&lt;p&gt;A regular Perl 6 &lt;code&gt;for&lt;/code&gt; loop iterates a single stream of values, aliasing the current topic to each in turn:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @stream -&amp;gt; $topic_from_stream {
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But it&amp;rsquo;s also possible to specify two (or more) streams of values that the one &lt;code&gt;for&lt;/code&gt; loop will step through &lt;em&gt;in parallel&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @stream1 ; @stream2 -&amp;gt; $topic_from_stream1 ; $topic_from_stream2 {
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each stream of values is separated by a semicolon, and each topic variable is similarly separated. The &lt;code&gt;for&lt;/code&gt; loop iterates both streams in parallel, aliasing the next element of the first stream (&lt;code&gt;@stream1&lt;/code&gt;) to the first topic (&lt;code&gt;$topic_from_stream1&lt;/code&gt;) and the next element of the second stream (&lt;code&gt;@stream2&lt;/code&gt;) to the second topic (&lt;code&gt;$topic_from_stream2&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;The commonest application of this will probably be to iterate a list and simultaneously provide an iteration counter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @list; 0..@list.last -&amp;gt; $next; $index {
+        print &amp;quot;Element $index is $next\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It may be useful to set that out slightly differently, to show the parallel nature of the iteration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for  @list ; 0..@list.last
+     -&amp;gt;  $next ; $index   {
+        print &amp;quot;Element $index is $next\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s important to note that writing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @a; @b -&amp;gt; $x; $y {...}
+    # in parallel, iterate @a one-at-a-time as $x, and @b one-at-a-time as $y
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is &lt;em&gt;not&lt;/em&gt; the same as writing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @a, @b -&amp;gt; $x, $y {...}
+    # sequentially iterate @a then @b, two-at-a-time as $x and $y
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The difference is that semicolons separate streams, while commas separate elements within a single stream.&lt;/p&gt;
+
+&lt;p&gt;If we were brave enough, then we could even combine the two:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @a1, @a2; @b -&amp;gt; $x; $y1, $y2 {...}
+    # sequentially iterate @a1 then @a2, one-at-a-time as $x
+    # and, in parallel, iterate @b two-at-a-time as $y1 and $y2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is definitely a case where a different layout would help make the various iterations and topic bindings clearer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @a1, @a2 ;  @b
+     -&amp;gt; $x       ;  $y1, $y2   {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note, however, that the normal way in Perl 6 to step through an array&amp;rsquo;s values while tracking its indices will almost certainly be to use the array&amp;rsquo;s &lt;code&gt;kv&lt;/code&gt; method. That method returns a list of interleaved indices and values (much like the hash&amp;rsquo;s &lt;code&gt;kv&lt;/code&gt; method returns alternating keys and values):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for @list.kv -&amp;gt; $index, $next {
+        print &amp;quot;Element $index is $next\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S04.html&#34;&gt;Synopsis 4&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-read-or-die-read-or-die-span&#34;&gt;&lt;span id=&#34;read or die&#34;&gt;Read or Die&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Having prompted for the next expression that the calculator will evaluate:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    print &amp;quot;$i&amp;gt; &amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;we read in the expression and check for an EOF (which will cause the &lt;code&gt;&amp;lt;&amp;gt;&lt;/code&gt; operator to return &lt;code&gt;undef&lt;/code&gt;, in which case we escape the infinite loop):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $expr = &amp;lt;&amp;gt; err last;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Err&amp;hellip;&lt;code&gt;err&lt;/code&gt;???&lt;/p&gt;
+
+&lt;p&gt;In &lt;a href=&#34;http://localhost:1313/pub/2001/10/02/apocalypse3.html&#34;&gt;Apocalypse 3&lt;/a&gt;, Larry introduced the &lt;code&gt;//&lt;/code&gt; operator, which is like a &lt;code&gt;||&lt;/code&gt; that tests its left operand for definedness rather than truth.&lt;/p&gt;
+
+&lt;p&gt;What he didn&amp;rsquo;t mention (but which you probably guessed) was that there is also the low-precedence version of &lt;code&gt;//&lt;/code&gt;. Its name is &lt;code&gt;err&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          Operation         High Precedence       Low Precedence
+
+         INCLUSIVE OR             ||                     or
+         EXCLUSIVE OR             ~~                    xor
+          DEFINED OR              //                    err
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But why call it &lt;code&gt;err&lt;/code&gt;?&lt;/p&gt;
+
+&lt;p&gt;Well, the &lt;code&gt;//&lt;/code&gt; operator looks like a skewed version of &lt;code&gt;||&lt;/code&gt;, so the low-precedence version should probably be a skewed version of &lt;code&gt;or&lt;/code&gt;. We can&amp;rsquo;t skew it visually (even Larry thought that using italics would be going a bit far), so we skew it phonetically instead: &lt;code&gt;or&lt;/code&gt; -&amp;gt; &lt;code&gt;err&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;err&lt;/code&gt; also has the two handy mnemonic connotations:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;That we&amp;rsquo;re handling an &lt;strong&gt;err&lt;/strong&gt;or marker (which a returned &lt;code&gt;undef&lt;/code&gt; usually is)&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;That we&amp;rsquo;re voicing a surprised double-take after something unexpected (which a returned &lt;code&gt;undef&lt;/code&gt; often is).&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Besides all that, it just seems to work well. That is, something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $value = compute_value(@args)
+        err die &amp;quot;Was expecting a defined value&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;reads quite naturally in English (whether you think of &lt;code&gt;err&lt;/code&gt; as an abbreviation of &amp;ldquo;on error&amp;hellip;&amp;rdquo;, or as a synonym for &amp;ldquo;oops&amp;hellip;&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;Note that &lt;code&gt;err&lt;/code&gt; is a binary operator, just like &lt;code&gt;or&lt;/code&gt;, and &lt;code&gt;xor&lt;/code&gt;, so there&amp;rsquo;s no particular need to start it on a new line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $value = compute_value(@args) err die &amp;quot;Was expecting a defined value&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In our example program, the &lt;code&gt;undef&lt;/code&gt; returned by the &lt;code&gt;&amp;lt;&amp;gt;&lt;/code&gt; operator at end-of-file is our signal to jump out of the main loop. To accomplish that we simply append &lt;code&gt;err last&lt;/code&gt; to the input statement:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $expr = &amp;lt;&amp;gt; err last;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that an &lt;code&gt;or last&lt;/code&gt; wouldn&amp;rsquo;t work here, as both the empty string and the string &amp;ldquo;0&amp;rdquo; are valid (i.e. non-terminating) inputs to the calculator.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-just-do-it-just-do-it-span&#34;&gt;&lt;span id=&#34;just do it&#34;&gt;Just Do It&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Then it&amp;rsquo;s just a matter of calling &lt;code&gt;Calc::calc&lt;/code&gt;, passing it the iteration number and the expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Calc::calc(i=&amp;gt;$i, expr=&amp;gt;$expr)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that we used named arguments, so passing them in the wrong order didn&amp;rsquo;t matter.&lt;/p&gt;
+
+&lt;p&gt;We then interpolate the result back into the output string using the &lt;code&gt;$(...)&lt;/code&gt; scalar interpolator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    print &amp;quot;$i&amp;gt; $( Calc::calc(i=&amp;gt;$i, expr=&amp;gt;$expr) )\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We could even simplify that a little further, by taking advatage of the fact that subroutine calls interpolate directly into strings in Perl 6, provided we use the &lt;code&gt;&amp;amp;&lt;/code&gt; prefix:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    print &amp;quot;$i&amp;gt; &amp;amp;Calc::calc(i=&amp;gt;$i, expr=&amp;gt;$expr)\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Either way, that&amp;rsquo;s it: we&amp;rsquo;re done.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-summing-up-summing-up-span&#34;&gt;&lt;span id=&#34;summing up&#34;&gt;Summing Up&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In terms of control structures, Perl 6:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;provides far more support for exceptions and exception handling,&lt;/li&gt;
+&lt;li&gt;cleans up and extends the &lt;code&gt;for&lt;/code&gt; loop syntax in several ways,&lt;/li&gt;
+&lt;li&gt;unifies the notions of blocks and closures and makes them interchangeable,&lt;/li&gt;
+&lt;li&gt;provides hooks for attaching various kinds of automatic handlers to a block/closure,&lt;/li&gt;
+&lt;li&gt;re-factors the concept of a switch statement into two far more general ideas: marking a value/variable as the current topic, and then doing &amp;ldquo;smart matching&amp;rdquo; against that topic.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These extensions and cleanups offer us far more power and control, and &amp;ndash; amazingly &amp;ndash; in most cases require far less syntax. For example, here&amp;rsquo;s (almost) the same program, written in Perl 5:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Err::BadData; 
+    use base &#39;Exception&#39;;   # which you&#39;d have to write yourself
+
+    package NoData;         # not lexical
+    use base &#39;Exception&#39;;
+    sub warn { die @_ }
+
+    package Calc;
+
+    my %var;
+
+    sub get_data  {
+        my $data = shift;
+        if ($data =~ /^\d+$/)       { return $var{&amp;quot;&amp;quot;} = $data }
+        elsif ($data eq &#39;previous&#39;) { return defined $var{&amp;quot;&amp;quot;}
+                                                 ? $var{&amp;quot;&amp;quot;}
+                                                 : die NoData-&amp;gt;new() 
+                                    }
+        elsif ($var{$data})         { return $var{&amp;quot;&amp;quot;} = $var{$data} }
+        else                        { die Err::BadData-&amp;gt;new(
+                                             {msg=&amp;gt;&amp;quot;Don&#39;t understand $data&amp;quot;}
+                                          )
+                                     }
+    }
+
+    sub calc {
+        my %data = @_;
+        my ($i, $expr) = @data{&#39;i&#39;, &#39;expr&#39;};
+        my %operator = (
+            &#39;*&#39;  =&amp;gt; sub { $_[0] * $_[1] },
+            &#39;/&#39;  =&amp;gt; sub { $_[0] / $_[1] },
+            &#39;~&#39;  =&amp;gt; sub { ($_[0] + $_[1]) / 2 },
+        );
+
+        my @stack;
+        my $toknum = 1;
+        LOOP: for my $token (split /\s+/, $expr) {
+            defined eval {
+                TRY: if ($operator{$token}) {
+                    my @args = splice @stack, -2;
+                    push @stack, $operator{$token}-&amp;gt;(@args);
+                    last TRY;
+                }
+                last LOOP if $token eq &#39;.&#39; || $token eq &#39;;&#39; || $token eq &#39;=&#39;;
+
+                push @stack, get_data($token);
+            } || do {
+                if ($@-&amp;gt;isa(Err::Reportable))     { warn $@; }
+                if ($@-&amp;gt;isa(Err::BadData))        { $@-&amp;gt;{at} = $i; die $@ }
+                elsif ($@-&amp;gt;isa(NoData))           { push @stack, 0     }
+                elsif ($@ =~ /division by zero/)  { push @stack, ~0 }
+            }
+        }
+        continue { $toknum++ }
+        die Err::BadData-&amp;gt;new(msg=&amp;gt;&amp;quot;Too many operands&amp;quot;) if @stack &amp;gt; 1;
+        $var{&#39;$&#39;.$i} = $stack[-1] . &#39; but true&#39;;
+        return 0+pop(@stack);
+    }
+
+    package main;
+
+    for (my $i=1; 1; $i++) {
+        print &amp;quot;$i&amp;gt; &amp;quot;;
+        defined( my $expr = &amp;lt;&amp;gt; ) or last;
+        print &amp;quot;$i&amp;gt; ${\Calc::calc(i=&amp;gt;$i, expr=&amp;gt;$expr)}\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Hmmmmmmm. I know which version &lt;em&gt;I&amp;rsquo;d&lt;/em&gt; rather maintain.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

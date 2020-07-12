@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Filtering on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/filtering/</link>
+    <description>Recent content in Filtering on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 10 Jun 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/filtering/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The Evolution of Perl Email Handling</title>
+      <link>http://localhost:1313/pub/2004/06/10/email.html/</link>
+      <pubDate>Thu, 10 Jun 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/06/10/email.html/</guid>
+      <description>
+
+&lt;p&gt;I spend the vast majority of my time at a computer working with email, whether it&amp;rsquo;s working through the ones I send and receive each day, or working on my interest in analyzing, indexing, organizing, and mining email content. Naturally, Perl helps out with this.&lt;/p&gt;
+
+&lt;p&gt;There are many modules on the CPAN for slicing and dicing email, and we&amp;rsquo;re going to take a whistlestop tour of the major ones. We&amp;rsquo;ll also concentrate on an effort started by myself, Richard Clamp, Simon Wistow, and others, called the Perl Email Project, to produce simple, efficient and accurate mail handling modules.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-message-handling-message-handling-span&#34;&gt;&lt;span id=&#34;Message_handling&#34;&gt;Message Handling&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ll begin with those modules that represent an individual message, giving you access to the headers and body, and usually allowing you to modify these.&lt;/p&gt;
+
+&lt;p&gt;The granddaddy of these modules is &lt;a href=&#34;https://metacpan.org/pod/Mail::Internet&#34;&gt;&lt;code&gt;Mail::Internet&lt;/code&gt;&lt;/a&gt;, originally created by Graham Barr and now maintained by Mark Overmeer. This module offers a constructor that takes either an array of lines or a filehandle, reads a message, and returns a &lt;code&gt;Mail::Internet&lt;/code&gt; object representing the message. Throughout these examples, we&amp;rsquo;ll use the variable &lt;code&gt;$rfc2822&lt;/code&gt; to represent a mail message as a string.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $obj = Mail::Internet-&amp;gt;new( [ split /\n/, $rfc2822 ] );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Internet&lt;/code&gt; splits a message into a header object in the &lt;a href=&#34;https://metacpan.org/pod/Mail::Header&#34;&gt;&lt;code&gt;Mail::Header&lt;/code&gt;&lt;/a&gt; class, plus a body. You can get and set individual headers through this object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $subject = $obj-&amp;gt;head-&amp;gt;get(&amp;quot;Subject&amp;quot;);
+    $obj-&amp;gt;head-&amp;gt;replace(&amp;quot;Subject&amp;quot;, &amp;quot;New subject&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reading and editing the body is done through the &lt;code&gt;body&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $old_body = $obj-&amp;gt;body;
+    $obj-&amp;gt;body(&amp;quot;Wasn&#39;t worth reading anyway.&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;ve not said anything about MIME yet. &lt;code&gt;Mail::Internet&lt;/code&gt; is reasonably handy for simple tasks, but it doesn&amp;rsquo;t handle MIME at all. Thankfully, &lt;a href=&#34;https://metacpan.org/pod/MIME::Entity&#34;&gt;&lt;code&gt;MIME::Entity&lt;/code&gt;&lt;/a&gt; is a MIME-aware subclass of &lt;code&gt;Mail::Internet&lt;/code&gt;; it allows you to read individual parts of a MIME message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $num_parts = $obj-&amp;gt;parts;
+    for (0..$num_parts) {
+        my $part = $obj-&amp;gt;parts($_);
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If &lt;code&gt;Mail::Internet&lt;/code&gt; and &lt;code&gt;MIME::Entity&lt;/code&gt; don&amp;rsquo;t cut it for you, you can try Mark Overmeer&amp;rsquo;s own &lt;a href=&#34;https://metacpan.org/pod/Mail::Message&#34;&gt;&lt;code&gt;Mail::Message&lt;/code&gt;&lt;/a&gt;, part of the impressive &lt;a href=&#34;https://metacpan.org/pod/Mail::Box&#34;&gt;&lt;code&gt;Mail::Box&lt;/code&gt;&lt;/a&gt; suite. &lt;code&gt;Mail::Message&lt;/code&gt; is extremely featureful and comprehensive, but that is not always meant as a compliment.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Message&lt;/code&gt; objects are usually constructed by &lt;code&gt;Mail::Box&lt;/code&gt; as part of reading in an email folder, but can also be generated from an email using the &lt;code&gt;read&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj = Mail::Message-&amp;gt;read($rfc2822);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Like &lt;code&gt;Mail::Internet&lt;/code&gt;, messages are split into headers and bodies; unlike &lt;code&gt;Mail::Internet&lt;/code&gt;, the body of a &lt;code&gt;Mail::Message&lt;/code&gt; object is also an object. We read headers like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj-&amp;gt;head-&amp;gt;get(&amp;quot;Subject&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or, for &lt;code&gt;Subject&lt;/code&gt; and other common headers:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj-&amp;gt;subject;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I couldn&amp;rsquo;t find a way to set headers directly, and ended up doing this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj-&amp;gt;head-&amp;gt;delete($header);
+    $obj-&amp;gt;head-&amp;gt;add($header, $_) for @data;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reading the body as a string is only marginally more difficult:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj-&amp;gt;decoded-&amp;gt;string
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;While setting the body is an absolute nightmare&amp;ndash;we have to create a new &lt;code&gt;Mail::Message::Body&lt;/code&gt; object and replace our current one with it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj-&amp;gt;body(Mail::Message::Body-&amp;gt;new(data =&amp;gt; [split /\n/, $body]));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Message&lt;/code&gt; may be slow, but it&amp;rsquo;s certainly hard to use. It&amp;rsquo;s also rather complex; the operations we&amp;rsquo;ve looked at so far involved the use of 16 classes (&lt;code&gt;Mail::Address&lt;/code&gt;, &lt;code&gt;Mail::Box::Parser&lt;/code&gt;, &lt;code&gt;Mail::Box::Parser::Perl&lt;/code&gt;, &lt;code&gt;Mail::Message&lt;/code&gt;, &lt;code&gt;Mail::Message::Body&lt;/code&gt;, &lt;code&gt;Mail::Message::Body::File&lt;/code&gt;, &lt;code&gt;Mail::Message::Body::Lines&lt;/code&gt;, &lt;code&gt;Mail::Message::Body::Multipart&lt;/code&gt;, &lt;code&gt;Mail::Message::Body::Nested&lt;/code&gt;, &lt;code&gt;Mail::Message::Construct&lt;/code&gt;, &lt;code&gt;Mail::Message::Field&lt;/code&gt;, &lt;code&gt;Mail::Message::Field::Fast&lt;/code&gt;, &lt;code&gt;Mail::Message::Head&lt;/code&gt;, &lt;code&gt;Mail::Message::Head::Complete&lt;/code&gt;, &lt;code&gt;Mail::Message::Part&lt;/code&gt;, and &lt;code&gt;Mail::Reporter&lt;/code&gt;) and 4400 lines of code. It does have a lot of features, though.&lt;/p&gt;
+
+&lt;p&gt;Foolishly, I thought that email parsing shouldn&amp;rsquo;t be so complex, and so I sat down to write the simplest possible functional mail handling library. The result is &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt;, and its interface looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $obj = Email::Simple-&amp;gt;new($rfc2822);
+    my $subject = $obj-&amp;gt;header(&amp;quot;Subject&amp;quot;);
+    $obj-&amp;gt;header_set(&amp;quot;Subject&amp;quot;, &amp;quot;A new subject&amp;quot;);
+    my $old_body = $obj-&amp;gt;body;
+    $obj-&amp;gt;body_set(&amp;quot;A new body\n&amp;quot;);
+    print $obj-&amp;gt;as_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It doesn&amp;rsquo;t do a lot, but it does it simply and efficiently. If you need MIME handling, there&amp;rsquo;s a subclass called &lt;a href=&#34;https://metacpan.org/pod/Email::MIME&#34;&gt;&lt;code&gt;Email::MIME&lt;/code&gt;&lt;/a&gt;, which adds the &lt;code&gt;parts&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;Realistically, the choice of which mail handling library to use ought to be up to you, the end user, but this isn&amp;rsquo;t always true. Auxilliary modules, which mess about with email at a higher level, can ask for the mail to be presented in a particular representation. For instance, until recently, the wonderful &lt;code&gt;Mail::ListDetector&lt;/code&gt; module, which we&amp;rsquo;ll examine later, required mails passed in to it to be &lt;code&gt;Mail::Internet&lt;/code&gt; objects, since this gave it a known API to work with the objects. I don&amp;rsquo;t want to work with &lt;code&gt;Mail::Internet&lt;/code&gt; objects, but I want to use &lt;code&gt;Mail::ListDetector&lt;/code&gt;&amp;rsquo;s functionality. What can I do?&lt;/p&gt;
+
+&lt;p&gt;In order to enable the user to have the choice again, I wrote an abstraction layer across all of the above modules, called &lt;a href=&#34;https://metacpan.org/pod/Email::Abstract&#34;&gt;&lt;code&gt;Email::Abstract&lt;/code&gt;&lt;/a&gt;. Given any of the above objects, we can say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     my $subject = Email::Abstract-&amp;gt;get_header($obj, &amp;quot;Subject&amp;quot;);
+     Email::Abstract-&amp;gt;set_header($obj, &amp;quot;Subject&amp;quot;, &amp;quot;My new subject&amp;quot;);
+     my $body = Email::Abstract-&amp;gt;get_body($obj);
+     Email::Abstract-&amp;gt;set_body($message, &amp;quot;Hello\nTest message\n&amp;quot;);
+     $rfc2822 = Email::Abstract-&amp;gt;as_string($obj);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Email::Abstract&lt;/code&gt; knows how to perform these operations on the major types of mail representation objects. It also abstracts out the process of constructing a message, and allows you to change the interface of a message using the &lt;code&gt;cast&lt;/code&gt; class method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $obj = Email::Abstract-&amp;gt;cast($rfc2822, &amp;quot;Mail::Internet&amp;quot;);
+    my $mm = Email::Abstract-&amp;gt;cast($obj, &amp;quot;Mail::Message&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This allows module authors to write their mail handling libraries in an interface-agnostic way, and I&amp;rsquo;m grateful to Michael Stevens for taking up &lt;code&gt;Email::Abstract&lt;/code&gt; in &lt;code&gt;Mail::ListDetector&lt;/code&gt; so quickly. Now I can pass in &lt;code&gt;Email::Simple&lt;/code&gt; objects to &lt;code&gt;Mail::ListDetector&lt;/code&gt; and it will work fine.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Email::Abstract&lt;/code&gt; also gives us the opportunity to create some benchmarks for all of the above modules. Here was the benchmarking code I used:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Email::Abstract;
+    my $message = do { local $/; &amp;lt;DATA&amp;gt;; };
+    my @classes =
+        qw(Email::MIME Email::Simple MIME::Entity Mail::Internet Mail::Message);
+
+    eval &amp;quot;require $_&amp;quot; or die $@ for @classes;
+
+    use Benchmark;
+    my %h;
+    for my $class (@classes) {
+        $h{$class} = sub {
+            my $obj = Email::Abstract-&amp;gt;cast($message, $class);
+            Email::Abstract-&amp;gt;get_header($obj, &amp;quot;Subject&amp;quot;);
+            Email::Abstract-&amp;gt;get_body($obj);
+            Email::Abstract-&amp;gt;set_header($obj, &amp;quot;Subject&amp;quot;, &amp;quot;New Subject&amp;quot;);
+            Email::Abstract-&amp;gt;set_body($obj, &amp;quot;A completely new body&amp;quot;);
+            Email::Abstract-&amp;gt;as_string($obj);
+        }
+    }
+    timethese(1000, \%h);
+
+    __DATA__
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I put a short email in the &lt;code&gt;DATA&lt;/code&gt; section and ran the same simple operations a thousand times: construct a message, read a header, read the body, set the header, set the body, and return the message as a string.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Benchmark: timing 1000 iterations of Email::MIME, Email::Simple, 
+    MIME::Entity, Mail::Internet, Mail::Message...
+    Email::MIME: 10 wallclock secs ( 7.97 usr +  0.24 sys =  8.21 CPU) 
+        @ 121.80/s (n=1000)
+    Email::Simple:  9 wallclock secs ( 7.49 usr +  0.05 sys =  7.54 CPU) 
+        @ 132.63/s (n=1000)
+    MIME::Entity: 33 wallclock secs (23.76 usr +  0.35 sys = 24.11 CPU) 
+        @ 41.48/s (n=1000)
+    Mail::Internet: 24 wallclock secs (17.34 usr +  0.30 sys = 17.64 CPU) 
+        @ 56.69/s (n=1000)
+    Mail::Message: 20 wallclock secs (17.12 usr +  0.27 sys = 17.39 CPU) 
+        @ 57.50/s (n=1000)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Perl Email Project was a success: &lt;code&gt;Email::MIME&lt;/code&gt; and &lt;code&gt;Email::Simple&lt;/code&gt; were twice as fast as their nearest competitors. However, it should be stressed that they&amp;rsquo;re both very low level; if you&amp;rsquo;re doing anything more complex than the operations we&amp;rsquo;ve seen, you might consider one of the older &lt;code&gt;Mail::&lt;/code&gt; modules.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mailbox-handling-mailbox-handling-span&#34;&gt;&lt;span id=&#34;Mailbox_handling&#34;&gt;Mailbox Handling&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So much for individual messages; let&amp;rsquo;s move on to handling groups of messages, or folders. We&amp;rsquo;ve mentioned &lt;code&gt;Mail::Box&lt;/code&gt; already, and this is truly the king of folder handling, supporting local and remote folders, editing folders, and all sorts of other things besides. To use it, we first need a &lt;code&gt;Mail::Box::Manager&lt;/code&gt;, which is a factory object for creating &lt;code&gt;Mail::Box&lt;/code&gt;es.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Mail::Box::Manager
+    my $mgr = Mail::Box::Manager-&amp;gt;new;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, we need to open the folder using the manager:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $folder = $mgr-&amp;gt;open(folder =&amp;gt; $folder_file);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now we can get at the individual messages as &lt;code&gt;Mail::Message&lt;/code&gt; objects:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for ($folder-&amp;gt;messages) {
+        print $_-&amp;gt;subject,&amp;quot;\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With its more minimalist approach, my favorite mail box manager until recently was &lt;code&gt;Mail::Util&lt;/code&gt;&amp;rsquo;s &lt;code&gt;read_mbox&lt;/code&gt; function, which takes the name of a Unix &lt;code&gt;mbox&lt;/code&gt; file, and returns a list of array references; each reference is the array of lines of a message, suitable for feeding to &lt;code&gt;Mail::Internet-&amp;gt;new&lt;/code&gt; or similar:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (read_mbox($folder_file)) {
+        my $obj = Mail::Internet-&amp;gt;new($_);
+        print $_-&amp;gt;head-&amp;gt;get(&amp;quot;Subject&amp;quot;),&amp;quot;\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These two are both really handy, but there seemed to be room for something in between the simplicity of &lt;code&gt;Mail::Util&lt;/code&gt; and the functionality of &lt;code&gt;Mail::Box&lt;/code&gt;, and so the Email Project struck again with &lt;a href=&#34;https://metacpan.org/pod/Email::Folder&#34;&gt;&lt;code&gt;Email::Folder&lt;/code&gt;&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Email::LocalDelivery&#34;&gt;&lt;code&gt;Email::LocalDelivery&lt;/code&gt;&lt;/a&gt;. &lt;code&gt;Email::Folder&lt;/code&gt; handles mbox and maildir folders, with more types planned, and has a reasonably simple interface:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $folder = Email::Folder-&amp;gt;new($folder_file);
+    for ($folder-&amp;gt;messages) {
+        print $_-&amp;gt;header(&amp;quot;Subject&amp;quot;),&amp;quot;\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default it returns &lt;code&gt;Email::Simple&lt;/code&gt; objects for the messages, but this can be changed by subclassing. For instance, if we want raw RFC2822 strings, we can do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Email::Folder::Raw; use base &#39;Email::Folder&#39;;
+    sub bless_message { my ($self, $rfc2822) = @_; return $rfc2822; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Perhaps in the future, we will change &lt;code&gt;bless_message&lt;/code&gt; to use &lt;code&gt;Email::Abstract-&amp;gt;cast&lt;/code&gt; to make the representation of messages easier to select without necessarily having to subclass.&lt;/p&gt;
+
+&lt;p&gt;The other side of folder handling is writing to a folder, or &amp;ldquo;local delivery&amp;rdquo;. &lt;a href=&#34;https://metacpan.org/pod/Email::LocalDelivery&#34;&gt;&lt;code&gt;Email::LocalDelivery&lt;/code&gt;&lt;/a&gt; was written to assist &lt;code&gt;Email::Filter&lt;/code&gt;, of which more later. The problem is harder than it sounds, as it has to deal with locking, escaping mail bodies, and specific problems due to mailbox and maildir formats. &lt;code&gt;LocalDelivery&lt;/code&gt; hides all of these things beneath a simple interface:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Email::LocalDelivery-&amp;gt;deliver($rfc2822, @mailboxes);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Both &lt;code&gt;Email::LocalDelivery&lt;/code&gt; and &lt;code&gt;Email::Folder&lt;/code&gt; use the &lt;a href=&#34;https://metacpan.org/pod/Email::FolderType&#34;&gt;&lt;code&gt;Email::FolderType&lt;/code&gt;&lt;/a&gt; helper module to determine the type of a folder based on its filename.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-address-handling-address-handling-span&#34;&gt;&lt;span id=&#34;Address_handling&#34;&gt;Address Handling&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;To come down to a lower level of abstraction again, there are a number of modules for handling email addresses. The old favorite is &lt;a href=&#34;https://metacpan.org/pod/Mail::Address&#34;&gt;&lt;code&gt;Mail::Address&lt;/code&gt;&lt;/a&gt;. A mail address appearing in the fields of an email can be made up of several elements: the actual address, a phrase or name, and a comment. For instance:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Example user &amp;lt;example@example.com&amp;gt; (Not a real user)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Address&lt;/code&gt; parses these addresses, separating out the phrase and comments, allowing you to get at the individual components:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (Mail::Address-&amp;gt;parse($from_line)) {
+        print $_-&amp;gt;name, &amp;quot;\t&amp;quot;, $_-&amp;gt;address, &amp;quot;\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unfortunately, like many of the mail modules, it tries really hard to be helpful.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my ($addr) = Mail::Address-&amp;gt;parse(&#39;&amp;quot;eBay, Inc.&amp;quot; &amp;lt;support@ebay.com&amp;gt;&#39;);
+    print $addr-&amp;gt;name # Inc. eBay
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which, while better than the &amp;ldquo;Inc Ebay&amp;rdquo; that previous versions would produce, isn&amp;rsquo;t really acceptable. Casey West joined our merry band of renegades and produced &lt;a href=&#34;https://metacpan.org/pod/Email::Address&#34;&gt;&lt;code&gt;Email::Address&lt;/code&gt;&lt;/a&gt;. It has exactly the same interface as &lt;code&gt;Mail::Address&lt;/code&gt;, but it works, and is about twice to three times as fast.&lt;/p&gt;
+
+&lt;p&gt;One thing we often want to do when handling mail addresses is to make sure that they&amp;rsquo;re valid. If, for instance, a user is registering for content at a web site, we need to check that the address they&amp;rsquo;ve given is capable of receiving mail. &lt;a href=&#34;https://metacpan.org/pod/Email::Valid&#34;&gt;&lt;code&gt;Email::Valid&lt;/code&gt;&lt;/a&gt;, the original inhabitant of the &lt;code&gt;Email::&lt;/code&gt; namespace before our bunch of disaffected squatters moved in, does just this. In its most simple use, we can say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if (not Email::Valid-&amp;gt;address(&#39;test@example.com&#39;)) {
+        die &amp;quot;Not a valid address&amp;quot;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can turn on additional checks, such as ensuring there&amp;rsquo;s a valid MX record for the domain, correcting common AOL and Compuserve addressing mistakes, on so on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if (not Email::Valid-&amp;gt;address(-address =&amp;gt; &#39;test@example.com&#39;,
+                                  -mxcheck =&amp;gt; 1)) {
+        die &amp;quot;Not a valid address&amp;quot;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-mail-munging-mail-munging-span&#34;&gt;&lt;span id=&#34;Mail_munging&#34;&gt;Mail Munging&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Once we have our emails, what are we going to do with them? A lot of what I&amp;rsquo;ve been looking at has been textual analysis of email, and there are three modules that particularly help with this.&lt;/p&gt;
+
+&lt;p&gt;This first is &lt;code&gt;Text::Quoted&lt;/code&gt;; it takes the body text of an email message, or any other text really, and tries to figure out which parts of the message are quotations from other messages. It then separates these out into a nested data structure. For instance, if we have&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $message = &amp;lt;&amp;lt;EOF
+    &amp;gt; foo
+    &amp;gt; # Bar
+    &amp;gt; baz
+
+    quux
+    EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then running &lt;code&gt;extract($message)&lt;/code&gt; will return a data structure like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [
+      [
+        { text =&amp;gt; &#39;foo&#39;, quoter =&amp;gt; &#39;&amp;gt;&#39;, raw =&amp;gt; &#39;&amp;gt; foo&#39; },
+        [ 
+            { text =&amp;gt; &#39;Bar&#39;, quoter =&amp;gt; &#39;&amp;gt; #&#39;, raw =&amp;gt; &#39;&amp;gt; # Bar&#39; } 
+        ],
+        { text =&amp;gt; &#39;baz&#39;, quoter =&amp;gt; &#39;&amp;gt;&#39;, raw =&amp;gt; &#39;&amp;gt; baz&#39; }
+      ],
+
+      { empty =&amp;gt; 1 },
+      { text =&amp;gt; &#39;quux&#39;, quoter =&amp;gt; &#39;&#39;, raw =&amp;gt; &#39;quux&#39; }
+    ];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is extremely useful for highlighting different levels of quoting in different colors when displaying a message. A similar concept is &lt;a href=&#34;https://metacpan.org/pod/Text::Original&#34;&gt;&lt;code&gt;Text::Original&lt;/code&gt;&lt;/a&gt;, which looks for the start of original, non-quoted content in an email. It knows about many kinds of attribution lines, so with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $message = &amp;lt;&amp;lt;EOF
+    You wrote:
+    &amp;gt; Why are there so many different mail modules?
+
+    There&#39;s more than one way to do it! Different modules have different
+    focuses, and operate at different levels; some lower, some higher.
+    EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;the &lt;code&gt;first_sentence($message)&lt;/code&gt; would be &lt;code&gt;There&#39;s more than one way to do it!&lt;/code&gt;. The Mariachi mailing list archiver uses this technique to give a &amp;ldquo;prompt&amp;rdquo; for each message in a thread.&lt;/p&gt;
+
+&lt;p&gt;And speaking of threads, the &lt;a href=&#34;https://metacpan.org/pod/Mail::Thread&#34;&gt;&lt;code&gt;Mail::Thread&lt;/code&gt;&lt;/a&gt; module is a Perl implementation of Jamie Zawinski&amp;rsquo;s mail threading algorithm, as used by Mozilla as well as many other mail clients since then. It&amp;rsquo;s also used by Mariachi, and has recently been updated to use &lt;code&gt;Email::Abstract&lt;/code&gt; to handle any kind of mail object you want to throw at it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $threader = Mail::Thread-&amp;gt;new(@mails);
+    $threader-&amp;gt;thread; # Compute threads
+    for ($threader-&amp;gt;rootset) { # Original mails in a thread
+        dump_thread($_);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-mail-filtering-mail-filtering-span&#34;&gt;&lt;span id=&#34;Mail_filtering&#34;&gt;Mail Filtering&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The classic Perl mail filtering tool is &lt;a href=&#34;https://metacpan.org/pod/Mail::Audit&#34;&gt;&lt;code&gt;Mail::Audit&lt;/code&gt;&lt;/a&gt;, and I&amp;rsquo;ve written articles here about using Mail::Audit on its own (&lt;a href=&#34;http://www.perl.com/pub/2001/07/17/mailfiltering.html&#34;&gt;http://www.perl.com/pub/2001/07/17/mailfiltering.html&lt;/a&gt;) and using it in conjunction with &lt;a href=&#34;https://metacpan.org/pod/Mail::SpamAssassin&#34;&gt;&lt;code&gt;Mail::SpamAssassin&lt;/code&gt;&lt;/a&gt; (&lt;a href=&#34;http://www.perl.com/pub/2002/03/06/spam.html&#34;&gt;http://www.perl.com/pub/2002/03/06/spam.html&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ve mentioned &lt;a href=&#34;https://metacpan.org/pod/Mail::ListDetector&#34;&gt;&lt;code&gt;Mail::ListDetector&lt;/code&gt;&lt;/a&gt; a couple of times already, and I use this with &lt;code&gt;Mail::Audit&lt;/code&gt; to do most of the filtering automatically for me. The &lt;code&gt;Mail::Audit::List&lt;/code&gt; plugin uses &lt;code&gt;ListDetector&lt;/code&gt; to look for mailing list headers in a message; these are things like &lt;code&gt;List-Id&lt;/code&gt;, &lt;code&gt;X-Mailman-Version&lt;/code&gt;, and the like, which identify a mail as having come through a mailing list. This means I can filter out all mailing list posts to their own folders, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $list = Mail::ListDetector-&amp;gt;new($obj);
+    if ($list) {
+        my $name = $list-&amp;gt;listname;
+        $item-&amp;gt;accept(&amp;quot;mail/$name.-$date&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, &lt;code&gt;Mail::Audit&lt;/code&gt; itself is getting a little long in the tooth, and so new installations are encouraged to use the Email Project&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Email::Filter&#34;&gt;&lt;code&gt;Email::Filter&lt;/code&gt;&lt;/a&gt; instead; it has the same interface for the most part, although not all of the same features, and it uses the new-fangled &lt;code&gt;Email::Simple&lt;/code&gt; mail representation for speed and cleanliness.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mail-mining-mail-mining-span&#34;&gt;&lt;span id=&#34;Mail_mining&#34;&gt;Mail Mining&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Finally, the most high-level thing I do with email is develop frameworks to automatically categorize, organize, and index mail into a database, and attempt to analyze it for interesting nuggets of information.&lt;/p&gt;
+
+&lt;p&gt;My first module to do this with was &lt;a href=&#34;https://metacpan.org/pod/Mail::Miner&#34;&gt;&lt;code&gt;Mail::Miner&lt;/code&gt;&lt;/a&gt;, which consists of three major parts. The first part takes an email, removes any attachments, and stores the lot in a database. The second looks over the email and runs a set of &amp;ldquo;Recogniser&amp;rdquo; modules on it; these find addresses, phone numbers, keywords and phrases, and so on, and store them in a separate database table. The third part is a command-line tool to query the database for mail and information.&lt;/p&gt;
+
+&lt;p&gt;For instance, if I need to find Tim O&amp;rsquo;Reilly&amp;rsquo;s postal address, I ask the query tool, &lt;code&gt;mm&lt;/code&gt;, to find addresses in emails from him:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; % mm --from &amp;quot;Tim O&amp;quot; --address              
+ Address found in message 1835 from &amp;quot;Tim O&#39;Reilly&amp;quot; &amp;lt;tim@oreilly.com&amp;gt;:
+ Tim O&#39;Reilly @ O&#39;Reilly &amp;amp; Associates, Inc.
+ 1005 Gravenstein Highway North, Sebastopol, CA 95472
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To retrieve the whole email, I&amp;rsquo;d say&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; % mm --id 1835
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And if it originally contained an attachment, we&amp;rsquo;d see something like this as part of the email:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; [ text/xml attachment something.xml detached - use
+   mm --detach 208
+   to recover ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I paste that middle line &lt;code&gt;mm --detach 208&lt;/code&gt; into a shell, and hey presto, &lt;em&gt;something.xml&lt;/em&gt; is written to disk.&lt;/p&gt;
+
+&lt;p&gt;Now &lt;code&gt;Mail::Miner&lt;/code&gt; is all very well, but having the three ideas in one tight package&amp;ndash;filing mail, mining mail, and interfacing to the database&amp;ndash;makes it difficult to develop and extend any one of them. And of course, it uses the old-school &lt;code&gt;Mail::&lt;/code&gt; modules.&lt;/p&gt;
+
+&lt;p&gt;This brings us to our final module on the mail modules tour, and the most recently released: &lt;a href=&#34;https://metacpan.org/pod/Email::Store&#34;&gt;&lt;code&gt;Email::Store&lt;/code&gt;&lt;/a&gt;. This is a framework, based on &lt;a href=&#34;https://metacpan.org/pod/Class::DBI&#34;&gt;&lt;code&gt;Class::DBI&lt;/code&gt;&lt;/a&gt;, for storing email in a database and indexing it in various ways:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   use Email::Store &#39;dbi:SQLite:mail.db&#39;;
+   Email::Store-&amp;gt;setup;
+   Email::Store::Mail-&amp;gt;store($rfc2822);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then later&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   my ($name) = Email::Store::Name-&amp;gt;search( name =&amp;gt; &amp;quot;Simon Cozens&amp;quot; )
+   @mails_from_simon = $name-&amp;gt;addressings( role =&amp;gt; &amp;quot;From&amp;quot; )-&amp;gt;mails;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It can be used to build a mailing list archive tool such as Mariachi, or a data mining setup like &lt;code&gt;Mail::Miner&lt;/code&gt;. It&amp;rsquo;s still very much in development, and makes use of a new idea in module extensibility.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll be bringing more information when we&amp;rsquo;ve written the first mail archiving and searching tool using &lt;code&gt;Email::Store&lt;/code&gt;, which I&amp;rsquo;m going to be doing as a new interface to the Perl mailing lists at &lt;code&gt;perl.org&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;Conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ve looked at the major modules for mail handling on CPAN, and there are many more. I am obviously biased towards those which I wrote, and particularly the Perl Email Project modules in the &lt;code&gt;Email::*&lt;/code&gt; namespace. These modules are specifically designed to be simple, efficient, and correct, but may not always be a good substitute for the more thorough &lt;code&gt;Mail::*&lt;/code&gt; modules, particularly &lt;code&gt;Mail::Box&lt;/code&gt;. However, I hope you&amp;rsquo;re now a little more aware of the diversity of mail handling tools out there, and know where to look next time you need to manipulate email with Perl.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

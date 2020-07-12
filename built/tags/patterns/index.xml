@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Patterns on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/patterns/</link>
+    <description>Recent content in Patterns on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 21 Aug 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/patterns/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Cooking with Perl</title>
+      <link>http://localhost:1313/pub/2003/08/21/perlcookbook.html/</link>
+      <pubDate>Thu, 21 Aug 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/08/21/perlcookbook.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: The new edition of &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/&#34;&gt;Perl Cookbook&lt;/a&gt; is about to hit store shelves, so to trumpet its release, we offer some recipes&amp;ndash;new to the second edition&amp;ndash;for your sampling pleasure. This week&amp;rsquo;s excerpts include recipes from Chapter 6 (&amp;ldquo;Pattern Matching&amp;rdquo;) and Chapter 8 (&amp;ldquo;File Contents&amp;rdquo;). And be sure to check back here in the coming weeks for more new recipes on topics such as using SQL without a database server, extracting table data, templating with HTML::Mason, and more.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;sample-recipe-matching-nested-patterns&#34;&gt;Sample Recipe: Matching Nested Patterns&lt;/h2&gt;
+
+&lt;h3 id=&#34;problem&#34;&gt;Problem&lt;/h3&gt;
+
+&lt;p&gt;You want to match a nested set of enclosing delimiters, such as the arguments to a function call.&lt;/p&gt;
+
+&lt;h3 id=&#34;solution&#34;&gt;Solution&lt;/h3&gt;
+
+&lt;p&gt;Use match-time pattern interpolation, recursively:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $np;
+$np = qr{
+           \(
+           (?:
+              (?&amp;gt; [^(  )]+ )    # Non-capture group w/o backtracking
+            |
+              (??{ $np })     # Group with matching parens
+           )*
+           \)
+        }x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or use the Text::Balanced module&amp;rsquo;s &lt;code&gt;extract_bracketed&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;h3 id=&#34;discussion&#34;&gt;Discussion&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;$(??{&lt;/code&gt;&lt;em&gt;CODE&lt;/em&gt;&lt;code&gt;})&lt;/code&gt; construct runs the code and interpolates the string that the code returns right back into the pattern. A simple, non-recursive example that matches palindromes demonstrates this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($word =~ /^(\w+)\w?(??{reverse $1})$/ ) {
+    print &amp;quot;$word is a palindrome.\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Consider a word like &amp;ldquo;reviver&amp;rdquo;, which this pattern correctly reports as a palindrome. The &lt;code&gt;$1&lt;/code&gt; variable contains &lt;code&gt;&amp;quot;rev&amp;quot;&lt;/code&gt; partway through the match. The optional word character following catches the &lt;code&gt;&amp;quot;i&amp;quot;&lt;/code&gt;. Then the code &lt;code&gt;reverse $1&lt;/code&gt; runs and produces &lt;code&gt;&amp;quot;ver&amp;quot;&lt;/code&gt;, and that result is interpolated into the pattern.&lt;/p&gt;
+
+&lt;p&gt;For matching something balanced, you need to recurse, which is a bit tricker. A compiled pattern that uses &lt;code&gt;(??{&lt;/code&gt;&lt;em&gt;CODE&lt;/em&gt;&lt;code&gt;})&lt;/code&gt; can refer to itself. The pattern given in the Solution matches a set of nested parentheses, however deep they may go. Given the value of &lt;code&gt;$np&lt;/code&gt; in that pattern, you could use it like this to match a function call:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$text = &amp;quot;myfunfun(1,(2*(3+4)),5)&amp;quot;;
+$funpat = qr/\w+$np/;   # $np as above
+$text =~ /^$funpat$/;   # Matches!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You&amp;rsquo;ll find many CPAN modules that help with matching (parsing) nested strings. The Regexp::Common module supplies canned patterns that match many of the tricker strings. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Regexp::Common;
+$text = &amp;quot;myfunfun(1,(2*(3+4)),5)&amp;quot;;
+if ($text =~ /(\w+\s*$RE{balanced}{-parens=&amp;gt;&#39;(  )&#39;})/o) {
+  print &amp;quot;Got function call: $1\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Other patterns provided by that module match numbers in various notations and quote-delimited strings:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$RE{num}{int}
+$RE{num}{real}
+$RE{num}{real}{&#39;-base=2&#39;}{&#39;-sep=,&#39;}{&#39;-group=3&#39;}
+$RE{quoted}
+$RE{delimited}{-delim=&amp;gt;&#39;/&#39;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The standard (as of v5.8) Text::Balanced module provides a general solution to this problem.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Text::Balanced qw/extract_bracketed/;
+$text = &amp;quot;myfunfun(1,(2*(3+4)),5)&amp;quot;;
+if (($before, $found, $after)  = extract_bracketed($text, &amp;quot;(&amp;quot;)) {
+    print &amp;quot;answer is $found\n&amp;quot;;
+} else {
+    print &amp;quot;FAILED\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;see-also&#34;&gt;See Also&lt;/h3&gt;
+
+&lt;p&gt;The section on &amp;ldquo;Match-Time Pattern Interpolation&amp;rdquo; in Chapter 5, &amp;ldquo;Pattern Matching,&amp;rdquo; of &lt;a href=&#34;http://www.oreilly.com/catalog/pperl3/&#34;&gt;Programming Perl, 3rd Edition&lt;/a&gt;; the documentation for the Regexp::Common CPAN module and the standard Text::Balanced module.&lt;/p&gt;
+
+&lt;h2 id=&#34;sample-recipe-pretending-a-string-is-a-file&#34;&gt;Sample Recipe: Pretending a String Is a File&lt;/h2&gt;
+
+&lt;h2 id=&#34;problem-1&#34;&gt;Problem&lt;/h2&gt;
+
+&lt;p&gt;You have data in string, but would like to treat it as a file. For example, you have a subroutine that expects a filehandle as an argument, but you would like that subroutine to work directly on the data in your string instead. Additionally, you don&amp;rsquo;t want to write the data to a temporary file.&lt;/p&gt;
+
+&lt;h3 id=&#34;solution-1&#34;&gt;Solution&lt;/h3&gt;
+
+&lt;p&gt;Use the scalar I/O in Perl v5.8:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open($fh, &amp;quot;+&amp;lt;&amp;quot;, \$string);   # read and write contents of $string
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;discussion-1&#34;&gt;Discussion&lt;/h3&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s I/O layers include support for input and output from a scalar. When you read a record with &lt;code&gt;&amp;lt;$fh&amp;gt;&lt;/code&gt;, you are reading the next line from &lt;code&gt;$string&lt;/code&gt;. When you write a record with &lt;code&gt;print&lt;/code&gt;, you change &lt;code&gt;$string&lt;/code&gt;. You can pass &lt;code&gt;$fh&lt;/code&gt; to a function that expects a filehandle, and that subroutine need never know that it&amp;rsquo;s really working with data in a string.&lt;/p&gt;
+
+&lt;p&gt;Perl respects the various access modes in &lt;code&gt;open&lt;/code&gt; for strings, so you can specify that the strings be opened as read-only, with truncation, in append mode, and so on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open($fh, &amp;quot;&amp;lt;&amp;quot;,  \$string);   # read only
+open($fh, &amp;quot;&amp;gt;&amp;quot;,  \$string);   # write only, discard original contents
+open($fh, &amp;quot;+&amp;gt;&amp;quot;, \$string);   # read and write, discard original contents
+open($fh, &amp;quot;+&amp;lt;&amp;quot;, \$string);   # read and write, preserve original contents
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These handles behave in all respects like regular filehandles, so all I/O functions work, such as &lt;code&gt;seek&lt;/code&gt;, &lt;code&gt;truncate&lt;/code&gt;, &lt;code&gt;sysread&lt;/code&gt;, and friends.&lt;/p&gt;
+
+&lt;h3 id=&#34;see-also-1&#34;&gt;See Also&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;open&lt;/code&gt; function in &lt;em&gt;perlfunc&lt;/em&gt;(1) and in Chapter 29 (&amp;ldquo;Functions&amp;rdquo;) of &lt;a href=&#34;http://www.oreilly.com/catalog/pperl3/&#34;&gt;Programming Perl, 3rd Edition&lt;/a&gt;; &amp;ldquo;Using Random-Access I/O;&amp;rdquo; and &amp;ldquo;Setting the Default I/O Layers&amp;rdquo;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;O&amp;rsquo;Reilly &amp;amp; Associates will soon release (August 2003) &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/&#34;&gt;Perl Cookbook, 2nd Edition.&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/chapter/index.html&#34;&gt;Sample Chapter 1, Strings&lt;/a&gt; is available free online.&lt;/li&gt;
+&lt;li&gt;You can also look at the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/toc.html&#34;&gt;Table of Contents&lt;/a&gt;, the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/inx.html&#34;&gt;Index&lt;/a&gt;, and the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/desc.html&#34;&gt;full description&lt;/a&gt; of the book.&lt;/li&gt;
+&lt;li&gt;For more information, or to order the book, &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/&#34;&gt;click here&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Design Patterns, Part 3</title>
+      <link>http://localhost:1313/pub/2003/08/15/design3.html/</link>
+      <pubDate>Fri, 15 Aug 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/08/15/design3.html/</guid>
+      <description>
+
+&lt;p&gt;This is the third (and final) article in a series which form one Perl programmer&amp;rsquo;s response to the book &lt;em&gt;Design Patterns&lt;/em&gt; (also known as the Gang of Four book or simply as GoF, because four authors wrote it). As I showed in the &lt;a href=&#34;http://localhost:1313/pub/2003/08/07/design2.html&#34;&gt;second article&lt;/a&gt;, Perl provides the types needed to implement many patterns. The Strategy and Template Method patterns can be implemented with code references. Builder usually builds a structure based on references to some combination of hashes and lists. Interpreters can be implemented with simple tools like &lt;code&gt;split&lt;/code&gt; or with the king: &lt;code&gt;Parse::RecDescent&lt;/code&gt;, which brings the best of yacc into your Perl script (albeit with somewhat less efficiency than yacc).&lt;/p&gt;
+
+&lt;p&gt;This article continues my treatment by considering patterns which rely on objects. As such, this article&amp;rsquo;s patterns bears the most resemblance to the GoF book. Before presenting some patterns, I&amp;rsquo;ll give you my two cents about object applicability.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-when-are-objects-good-when-are-objects-good-span&#34;&gt;&lt;span id=&#34;when_are_objects_good&#34;&gt;When Are Objects Good?&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;As Larry Wall reminds us about all programming constructs, you should use objects when they make sense and not when they don&amp;rsquo;t. So when do they make sense? This is partly a matter of taste. This subsection gives you my tastes.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s easier to say when objects are bad, which they are in these cases:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;div class=&#34;secondary&#34;&gt;
+&lt;h4 id=&#34;more-on-perl-design-patterns&#34;&gt;More on Perl Design Patterns:&lt;/h4&gt;
+&lt;p&gt;• &lt;a href=&#34;http://localhost:1313/pub/2003/06/13/design1.html&#34;&gt;Perl Design Patterns, Part 1&lt;/a&gt;&lt;br /&gt;
+• &lt;a href=&#34;http://localhost:1313/pub/2003/08/07/design2.html&#34;&gt;Perl Design Patterns, Part 2&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;ol&gt;
+&lt;li&gt;There is only data, the methods are either trivial or non-existent. Data containers (also called nodes) are like this. For example, I should not need an object to return three numbers and a string to my caller.&lt;/li&gt;
+&lt;li&gt;There are only methods. The Java Math class is like this. It won&amp;rsquo;t even let you make a Math object. Clearly its methods should just be built-in functions of the language.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Seeing the poor uses of objects gives insight into their effective use. Use objects when complexity is high and data is tightly coupled to the methods which act on it. High complexity makes these chief advantages of objects more important: separate namespaces, inheritance, and polymorphism.&lt;/p&gt;
+
+&lt;p&gt;Now that I&amp;rsquo;ve spoken my peace, I&amp;rsquo;ll go on to the patterns which use objects.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-abstract-factory-abstract-factory-span&#34;&gt;&lt;span id=&#34;abstract_factory&#34;&gt;Abstract Factory&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you want to build platform independent programs, you need a way to access the underlying systems without having to recode for each one&amp;rsquo;s API. This is where a factory comes into play. The source code asks for an instance of a class, the class delivers a subclass instance suitable for use on the current platform. That class is called an abstract factory (or simply a factory). As we will see below, the platform might be a database. So the factory would return an object suitable for use with a particular database, but all the objects would have the same API.&lt;/p&gt;
+
+&lt;p&gt;To show the basic idea, here is an example which delivers one of two types. There are four code files in this example. The first two are the greeters.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Greet::Repeat;
+
+sub new {
+    my $class    = shift;
+    my $self     = {
+        greeting =&amp;gt; shift,
+        repeat   =&amp;gt; shift,
+    };
+    return bless $self, $class;
+}
+
+sub greet {
+    my $self = shift;
+    print ($self-&amp;gt;{greeting} x $self-&amp;gt;{repeat});
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This greeter&amp;rsquo;s constructor expects a greeting and a repeat count. It stores these in a hash, returning a blessed reference to it. When asked to greet, it prints the greeting repeatedly (hence the name). (I didn&amp;rsquo;t say this example was practical, but it is small.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Greet::Stamp;
+    use strict; use warnings;
+
+    sub new {
+        my $class    = shift;
+        my $greeting = shift;
+        return bless \$greeting, $class;
+    }
+
+    sub greet {
+        my $greeting = shift;
+        my $stamp    = localtime();
+        print &amp;quot;$stamp $$greeting&amp;quot;;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This greeter only expects a greeting string, so it blesses a reference to the one it receives. When asked to greet, it prints the current time followed by the greeting.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the factory:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package GreetFactory;
+    use strict; use warnings;
+
+    sub instantiate {
+        my $self           = shift;
+        my $requested_type = shift;
+        my $location       = &amp;quot;Greet/$requested_type.pm&amp;quot;;
+        my $class          = &amp;quot;Greet::$requested_type&amp;quot;;
+
+        require $location;
+
+        return $class-&amp;gt;new(@_);
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A Perl factory looks a lot like factories in other languages. This one has only one method. It returns the requested type to the caller. It uses the caller&amp;rsquo;s requested type as the name of the class to instantiate and as the name of the Perl module in which the class lives.&lt;/p&gt;
+
+&lt;p&gt;Finally, you can use this factory with a script like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use GreetFactory;
+
+    my $greeter_n = GreetFactory-&amp;gt;instantiate(&amp;quot;Repeat&amp;quot;, &amp;quot;Hello\n&amp;quot;, 3);
+    $greeter_n-&amp;gt;greet();
+
+    my $greeter_stamp = GreetFactory-&amp;gt;instantiate(&amp;quot;Stamp&amp;quot;, &amp;quot;Good-bye\n&amp;quot;);
+    $greeter_stamp-&amp;gt;greet();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make each greeter, call the &lt;code&gt;instantiate&lt;/code&gt; method of &lt;code&gt;GreetFactory&lt;/code&gt;, passing it the name of the class you want and any arguments that class&amp;rsquo;s constructor is expecting.&lt;/p&gt;
+
+&lt;p&gt;This example shows you the basic idea. It is simple on purpose. But it does show how the factory can be ignorant of the underlying classes. Any new greeter added to the system must have a name of the form &lt;code&gt;Greet::Name&lt;/code&gt; and be placed into a &lt;code&gt;Greet&lt;/code&gt; subdirectory of an &lt;code&gt;@INC&lt;/code&gt; path member as &lt;code&gt;Name.pm&lt;/code&gt;. Then callers can use it without changing the factory. Now that you have seen a simple example, here is a more useful one.&lt;/p&gt;
+
+&lt;p&gt;The Perl DBI (DataBase Interface) provides an excellent example of a factory. Each call to &lt;code&gt;DBI-&lt;/code&gt;connect&amp;gt;, expects the type of database and whatever information that database needs to establish a connection. This is a classic factory. It will load any DBD (DataBase Driver) you have installed on your system, upon request. Additional DBD&amp;rsquo;s can be added at any time. Once they are installed, any client can use them through the same DBI API. Here&amp;rsquo;s an example use of DBI:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use DBI;
+    my $dbh      =
+        DBI-&amp;gt;connect(&amp;quot;dbi:mysql:mydb:localhost&amp;quot;, &amp;quot;user&amp;quot;, &amp;quot;password&amp;quot;);
+    ...
+    my $sth      = $dbh-&amp;gt;prepare(&#39;select * from table&#39;);
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once the database handle is obtained (which is usually called &lt;code&gt;$dbh&lt;/code&gt;), it can be used almost without regard to the underlying engine. If you later move to Oracle, you would merely change the connect call. If a new database comes on the scene, some smart person in contact with Tim Bunce will implement a class for it. You can install and switch to it as soon as they finish their work. You might even be the implementer, but I doubt I will be.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-composite-composite-span&#34;&gt;&lt;span id=&#34;composite&#34;&gt;Composite&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This pattern shows how to use the fully OO composite pattern. If you are interested in a simpler non-OO implementation see the Builder Pattern in Part 2 of this article series.&lt;/p&gt;
+
+&lt;p&gt;Many applications require hierarchies of related items linked into a tree by relationship. Many people see a hierarchy of this type: a directory structure. At the top is the root directory. In the simplest case it includes two types of items: files and subdirectories. Each subdirectory is like the root directory. Note that this definition of the structure is recursive, which is typical of composites.&lt;/p&gt;
+
+&lt;p&gt;One of the most popular examples of a composite structure today is an XML file. These files have a root element which contains various types of subelements, including tags and comments. Tags have attributes and some can contain subelements. This makes the classic composite tree. There are two important steps for a composite structure. The first is building it. The second is using it. We&amp;rsquo;ll see simple examples of both here.&lt;/p&gt;
+
+&lt;p&gt;For the genuine pattern, there must be methods that act on both regular and composite elements (the elements with children are called composite elements). Invoking such a method on the root of a composite tree, or subtree, causes that root to do work on its own data AND to forward the request to its children. Those children do the same, collecting their own data and that of their children, until the bottom of the tree is reached. The return value is a collection of all this data.&lt;/p&gt;
+
+&lt;p&gt;For a practical example consider using the DOM model to process XML. (You may obtain the &lt;code&gt;XML::DOM&lt;/code&gt; module from CPAN.) To find all the paragraphs in a document we could do something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use XML::DOM;
+    my $parser = XML::DOM::Parser-&amp;gt;new();
+    my $doc    = $parser-&amp;gt;parsefile(&amp;quot;file.xml&amp;quot;);
+    foreach my $paragraph ($doc-&amp;gt;getElementsByTagName(&amp;quot;paragraph&amp;quot;)) {
+        print &amp;quot;&amp;lt;p&amp;gt;&amp;quot;;
+        foreach my $child ($paragraph-&amp;gt;getChildNodes) {
+            print $child-&amp;gt;getNodeValue if ($child-&amp;gt;getNodeType eq TEXT_NODE);
+        }
+    }
+    $doc-&amp;gt;dispose();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The call to &lt;code&gt;getElementsByTagName&lt;/code&gt; begins at the root (since I called it through &lt;code&gt;$doc&lt;/code&gt;). The root returns any of its children which are paragraphs, but it also forwards the request to all of its tag elements asking them to return their paragraphs. They do the same.&lt;/p&gt;
+
+&lt;p&gt;An unrelated note: Notice that the above example ends with a call to dispose. &lt;code&gt;XML::DOM&lt;/code&gt; composite structures have references from parents to children and from children to parents. We usually call these circular links. Perl 5 garbage collection cannot harvest such structures. We must call dispose to break the extra links so the structure&amp;rsquo;s memory can be recovered. If you build structures with circular links, you must break those links yourself, otherwise your program will leak memory.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ve seen how useful a well crafted composite structure can be, but how could we build one for ourselves? The objects in the structure must all respond to the methods meant to walk the composite. They may return undef immediately, but they must exist. Further, the version of those methods in the composite objects (the ones which can have children), must take care to pass the message along to their children.&lt;/p&gt;
+
+&lt;p&gt;To make this concrete, consider a non-binary tree (as we have been all along). Suppose we want to know how many nodes are in the tree. We can ask the root to &lt;code&gt;count_nodes&lt;/code&gt;. It should count itself and add that to the sum of &lt;code&gt;count_nodes&lt;/code&gt; calls to each child. Nodes which are not composite (i.e. have no children) return one. Composite nodes, return one plus the sums from their children. The code follows.&lt;/p&gt;
+
+&lt;p&gt;There are four pieces of code: (1) A base class for tree nodes: &lt;code&gt;Node.pm&lt;/code&gt;, (2) A class for nodes that could have children: &lt;code&gt;Composite.pm&lt;/code&gt;, (3) A class for nodes that can&amp;rsquo;t have children: &lt;code&gt;Regular.pm&lt;/code&gt;, and (4) a driver to demonstrate that the system works: &lt;code&gt;comp&lt;/code&gt;. I&amp;rsquo;ll show these one at a time, in the order listed above.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Node;
+    use strict; use warnings;
+
+    sub count_nodes {
+        my $self       = shift;
+        my $class_name = ref $self;
+        die &amp;quot;$class_name does not implement count_nodes\n&amp;quot;;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only method here is &lt;code&gt;count_nodes&lt;/code&gt;. This serves as an implementation requirement (also called an abstract method). Attempting to use a Node subclass which doesn&amp;rsquo;t provide count_nodes results in a fatal run-time error. Every subclass should have an appropriate test to make sure this error never happens to users.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Regular;
+
+    use Node;
+    @ISA = qw(Node);
+
+    use strict; use warnings;
+
+    sub new {
+        my $class = shift;
+        my $name  = shift;
+        return bless \$name, $class;
+    }
+
+    sub count_nodes {
+        return 1;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Regular nodes are blessed references to their names. They always count as a single node. (An unrelated note: it is sometimes convenient to turn on &lt;code&gt;strict&lt;/code&gt; after the preamble of a package, here that let&amp;rsquo;s me use &lt;code&gt;@ISA&lt;/code&gt; without qualifying it.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Composite;
+
+    use Node;
+    @ISA = qw(Node);
+
+    use strict; use warnings;
+
+    sub new {
+        my $class = shift;
+        my $name  = shift;
+        my $self  = { name =&amp;gt; $name, children =&amp;gt; [] };
+        return bless $self, $class;
+    }
+
+    sub add_child {
+        my $self      = shift;
+        my $new_child = shift;
+
+        push @{$self-&amp;gt;{children}}, $new_child;
+        return $new_child;
+    }
+
+    sub count_nodes {
+        my $self  = shift;
+        my $count = 1;
+
+        foreach my $child (@{$self-&amp;gt;{children}}) {
+            $count += $child-&amp;gt;count_nodes();
+        }
+        return $count;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This class is similar to &lt;code&gt;Regular&lt;/code&gt;, but it needs a way to keep track of children. Since it also keeps its name, I used a hash for the object type. New children are just pushed onto a list. Counting includes one for the parent node, plus the total for each child. Since leaves of the tree also implement &lt;code&gt;count_nodes&lt;/code&gt;, we can process all &lt;code&gt;Node&lt;/code&gt; types together. This is the polymorphism advantage of objects and the heart of the Composite Pattern.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use Composite;
+    use Regular;
+
+    my $root     = Composite-&amp;gt;new(&amp;quot;Root&amp;quot;);
+
+    my $eldest   = $root-&amp;gt;add_child(Composite-&amp;gt;new(&amp;quot;Jim&amp;quot;));
+    my $middle   = $root-&amp;gt;add_child(Composite-&amp;gt;new(&amp;quot;Jane&amp;quot;));
+                   $root-&amp;gt;add_child(Regular-&amp;gt;new(&amp;quot;Bob&amp;quot;));
+    my $youngest = $root-&amp;gt;add_child(Composite-&amp;gt;new(&amp;quot;Joe&amp;quot;));
+
+                   $eldest-&amp;gt;add_child(Regular-&amp;gt;new(&amp;quot;JII&amp;quot;));
+    my $kayla    = $eldest-&amp;gt;add_child(Composite-&amp;gt;new(&amp;quot;Kayla&amp;quot;));
+                   $kayla-&amp;gt;add_child(Regular-&amp;gt;new(&amp;quot;Max&amp;quot;));
+
+    my $count = $root-&amp;gt;count_nodes();
+
+    print &amp;quot;count: $count\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This contrived example manually builds a simple tree, then asks for a node count. The correct answer is 8.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-proxy-proxy-span&#34;&gt;&lt;span id=&#34;proxy&#34;&gt;Proxy&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In GoF the proxy pattern example shows a way to delay loading expensive components until the user actually wants them. In the course of the example they show a genuine proxy. Proxies refer all requests to some other object. Think of it like an intermediary for the mob. You make your request to your local thug, as if he could do the thing himself. He passes that on to someone else you never meet who actually does the job. (Note to John Ashcroft: I am only imaging this process, having NO personal experience with it. Honest.)&lt;/p&gt;
+
+&lt;p&gt;Suppose an application could use several large files, but usually only needs one or two. Instead of reading all these files, I will delay loading the file until the caller wants to see it. The usual warning applies: this is contrived to explain the concept.&lt;/p&gt;
+
+&lt;p&gt;Here is the class that actually stores and prints the files:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package File;
+    use strict; use warnings;
+
+    sub new {
+        my $class = shift;
+        my $file  = shift;
+        open FILE, &amp;quot;$file&amp;quot; or die &amp;quot;Couldn&#39;t read $file: $!\n&amp;quot;;
+        my @data  = &amp;lt;FILE&amp;gt;;
+        close FILE;
+        return bless \@data, $class;
+    }
+
+    sub print_file {
+        my $data = shift;
+        print @$data;
+    }
+
+    sub DESTROY { }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the &lt;code&gt;File&lt;/code&gt; constructor is called, it reads the file into an array for later use, returning a blessed reference to the data to the caller. When asked to print, it sends the data to the currently selected output handle (usually standard out).&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;DESTROY&lt;/code&gt; subroutine is called by Perl whenever a blessed reference is about to go out of scope. This allows us to perform clean-up which is guaranteed to happen. In this case, there is no necessary clean-up, but the approach I&amp;rsquo;m about to show for the proxy class ends up calling this method explicitly. That explicit call offends Perl so much that it complains to the screen. To avoid the warning, I included the stub.&lt;/p&gt;
+
+&lt;p&gt;There is nothing special about the &lt;code&gt;File&lt;/code&gt; class shown above. The proxy follows.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package FileProxy;
+    use strict; use warnings;
+
+    use File;
+
+    sub new {
+        my $class = shift;
+        my $self  = {
+            params         =&amp;gt; \@_,
+            wrapped_object =&amp;gt; undef,
+        };
+        return bless $self, $class;
+    }
+
+    sub AUTOLOAD {
+        my $self    = shift;
+        my $command = our $AUTOLOAD;
+        $command    =~ s/.*://;
+
+        unless (defined $self-&amp;gt;{wrapped_object}) {
+            $self-&amp;gt;{wrapped_object} = File-&amp;gt;new(@{$self-&amp;gt;{params}});
+        }
+        $self-&amp;gt;{wrapped_object}-&amp;gt;$command(@_);
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The constructor for the proxy takes the things necessary to build an actual &lt;code&gt;File&lt;/code&gt; object (namely the file name) and stores them as its &lt;code&gt;params&lt;/code&gt; attribute. The other attribute will eventually hold the wrapped &lt;code&gt;File&lt;/code&gt; object. The attributes are stored in hash, the hash&amp;rsquo;s reference is blessed and returned to the caller.&lt;/p&gt;
+
+&lt;p&gt;Whenever Perl has no where else to go with a method call, it calls &lt;code&gt;AUTOLOAD&lt;/code&gt; (if there is one). So, the &lt;code&gt;AUTOLOAD&lt;/code&gt; in FileProxy handles all requests except &lt;code&gt;new&lt;/code&gt; and &lt;code&gt;DESTROY&lt;/code&gt;, which appear explicitly. &lt;code&gt;AUTOLOAD&lt;/code&gt; is all caps to remind us that Perl calls it for us. While making this call, Perl sets the package global variable &lt;code&gt;$AUTOLOAD&lt;/code&gt; to the name of the method the caller invoked. The regular expression strips off the package names from &lt;code&gt;$AUTOLOAD&lt;/code&gt;, leaving only the method name.&lt;/p&gt;
+
+&lt;p&gt;If the object is not yet defined, &lt;code&gt;AUTOLOAD&lt;/code&gt; calls File-&amp;gt;new passing it the arguments stored during construction. After that, the object is defined, so &lt;code&gt;AUTOLOAD&lt;/code&gt; calls the requested method on the wrapped object. The beauty of this mechanism is that the &lt;code&gt;FileProxy&lt;/code&gt; class only knows that the constructor is called &lt;code&gt;new&lt;/code&gt;. It does not need to change as changes to &lt;code&gt;File.pm&lt;/code&gt; are made. Any errors, such as no such method, will be fatal as usual.&lt;/p&gt;
+
+&lt;p&gt;To use this proxied scheme we might employ a caller like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use FileProxy;
+
+    my $file1 = FileProxy-&amp;gt;new(&amp;quot;art1&amp;quot;);
+    my $file2 = FileProxy-&amp;gt;new(&amp;quot;art2&amp;quot;);
+
+    $file1-&amp;gt;print_file();
+    $file1-&amp;gt;print_file();
+    $file2-&amp;gt;print_file();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With a couple of changes we could use this for any class. Here&amp;rsquo;s the new generic version:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package DelayLoad;
+    use strict; use warnings;
+
+    our %proxied_classes;
+
+    sub import {
+        shift;  # discard class name
+
+        %proxied_classes = @_;
+
+        foreach my $class (keys %proxied_classes) {
+            require &amp;quot;$class.pm&amp;quot;;
+        }
+    }
+
+    sub new {
+        my $class = shift;
+        my $self  = {
+            type           =&amp;gt; shift,
+            constructor    =&amp;gt; shift,
+            params         =&amp;gt; \@_,
+            wrapped_object =&amp;gt; undef,
+        };
+        return bless $self, $class;
+    }
+
+    sub AUTOLOAD {
+        my $self    = shift;
+        my $command = our $AUTOLOAD;
+        $command    =~ s/.*://;
+
+        if ($proxied_classes{$command}) {
+            return $self-&amp;gt;new($command, $proxied_classes{$command}, @_);
+        }
+        else {
+            unless (defined $self-&amp;gt;{wrapped_object}) {
+                my $proxied_class       = $self-&amp;gt;{type};
+                my $constructor         = $self-&amp;gt;{constructor};
+                $self-&amp;gt;{wrapped_object} = $proxied_class
+                                        -&amp;gt;$constructor(@{$self-&amp;gt;{params}});
+            }
+            $self-&amp;gt;{wrapped_object}-&amp;gt;$command(@_);
+        }
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first change is cosmetic: the name now reflects the nature of the proxy. Other changes include a new method: import. Even though its name is lower case, Perl calls it whenever the caller says &lt;code&gt;use DelayLoad&lt;/code&gt; (see below). It does two things. First, it stores the name of each proxied class in the &lt;code&gt;%proxied_classes&lt;/code&gt; package global. Second, it requires each module. &lt;code&gt;require&lt;/code&gt; is like use, but it happens at run time instead of compile time. (use also imports symbols, but then your object oriented module shouldn&amp;rsquo;t be exporting anything anyway.)&lt;/p&gt;
+
+&lt;p&gt;The constructor now stores a bit more information. In addition to saving room for the wrapped object and storing the &lt;code&gt;params&lt;/code&gt;, it also records the name of the class and of that class&amp;rsquo;s constructor. These will be used in &lt;code&gt;AUTOLOAD&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The only other changes are in the &lt;code&gt;AUTOLOAD&lt;/code&gt; method. There are two changes. The easiest one is to look up the class and constructor names in the &lt;code&gt;DelayLoad&lt;/code&gt; object instead of just calling File-&amp;gt;new.&lt;/p&gt;
+
+&lt;p&gt;The other change is used during construction. My explanation of it will make more sense, if you see the new caller first.&lt;/p&gt;
+
+&lt;p&gt;The new version requires a couple of changes to the caller. One change is on the use line which becomes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use DelayLoad &amp;quot;File&amp;quot; =&amp;gt; &amp;quot;new&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This uses &lt;code&gt;DelayLoad&lt;/code&gt;, tells it we want to be able to delay loads for &lt;code&gt;File&lt;/code&gt; objects, and that &lt;code&gt;File&lt;/code&gt;&amp;rsquo;s constructor is called &lt;code&gt;new&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The other change is in how we construct the delayed object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $file1 = DelayLoad-&amp;gt;File(&amp;quot;art1&amp;quot;);
+    my $file2 = DelayLoad-&amp;gt;File(&amp;quot;art2&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This explains the unexplained piece in &lt;code&gt;AUTOLOAD&lt;/code&gt; above. When the user calls the &lt;code&gt;File&lt;/code&gt; method, &lt;code&gt;AUTOLOAD&lt;/code&gt; notices that this ``method&amp;rdquo; is really the name of a delay loaded class. When the &lt;code&gt;if&lt;/code&gt; in &lt;code&gt;AUTOLOAD&lt;/code&gt; is true (i.e. the method is really a key in &lt;code&gt;%proxied_classes&lt;/code&gt;), the caller is given a new &lt;code&gt;DelayLoad&lt;/code&gt; object primed for later use. When the &lt;code&gt;if&lt;/code&gt; fails, &lt;code&gt;DelayLoad&lt;/code&gt; works like &lt;code&gt;FileLoad&lt;/code&gt;: it constructs the object, if needed and calls the requested method.&lt;/p&gt;
+
+&lt;p&gt;The fundamental point of this example is that Perl allows us to implement proxies without knowing very much about the underlying class. In this case, &lt;code&gt;import&lt;/code&gt; receives the necessary information from the caller, &lt;code&gt;AUTOLOAD&lt;/code&gt; takes care of the rest. Making the caller work is not always a good idea. Here it makes sense. If she knows she wants to delay loading objects until they are really needed, she must at least know the API for those objects. In the API is the name of the constructor, which she mentions in the use statement so Perl can pass to &lt;code&gt;DelayLoad::import&lt;/code&gt; for her.&lt;/p&gt;
+
+&lt;p&gt;Keep in mind that &lt;code&gt;AUTOLOAD&lt;/code&gt; is not designed for this sort of work. Its real purpose in life is to load subroutines on demand for the current package. It can&amp;rsquo;t do that here, since changing the subroutines affects all instances of a class. Here we are &lt;code&gt;AUTOLOAD&lt;/code&gt;ing data, not routines. By suitably adjusting &lt;code&gt;import&lt;/code&gt; and &lt;code&gt;AUTOLOAD&lt;/code&gt;, you can make the proxy do many other things.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-summary-summary-span&#34;&gt;&lt;span id=&#34;summary&#34;&gt;Summary&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In this article, I have finally shown object oriented patterns. We saw how to implement a Factory so our callers can choose their favorite driver, how to build composite structures and routines that traverse them (without explicit &lt;code&gt;first_child&lt;/code&gt; and &lt;code&gt;next&lt;/code&gt; pointers that would be needed in languages without quality built-in lists), and how to stand as a proxy between a caller and a class with &lt;code&gt;import&lt;/code&gt; and &lt;code&gt;AUTOLOAD&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-author-s-note-author-s-note-span&#34;&gt;&lt;span id=&#34;author&#39;s_note&#34;&gt;Author&amp;rsquo;s Note&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This is the final article in this series, but look for a book, &lt;em&gt;Design Patterns in Perl&lt;/em&gt; from Apress at your favorite bookseller in the near future.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

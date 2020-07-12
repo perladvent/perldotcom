@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Improving mod_perl Sites&#39; Performance: Part 7 </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" Correct configuration of the MinSpareServers, MaxSpareServers, StartServers, MaxClients, and MaxRequestsPerChild parameters is very important. There are no defaults. If they are too low, then you will underutilize the system&#39;s capabilities. If they are too high, then chances are that..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2003/02/05/mod_perl.html/" />
+<meta property="og:title" content="Improving mod_perl Sites&#39; Performance: Part 7" />
+<meta property="og:description" content=" Correct configuration of the MinSpareServers, MaxSpareServers, StartServers, MaxClients, and MaxRequestsPerChild parameters is very important. There are no defaults. If they are too low, then you will underutilize the system&#39;s capabilities. If they are too high, then chances are that...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2003-02-02T02:02:02Z" />
+<meta property="og:image" content="http://localhost:1313/images/site/avatar.png" />
+<meta property="og:article:tag" content="mod-perl-apache-performance" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Improving mod_perl Sites&#39; Performance: Part 7</h1>
+              <p class="blog-post-meta">Feb 5, 2003 by
+              
+              
+                
+                
+                <a href="#author-bio-stas-bekman">Stas Bekman</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>Correct configuration of the <code>MinSpareServers</code>, <code>MaxSpareServers</code>, <code>StartServers</code>, <code>MaxClients</code>, and <code>MaxRequestsPerChild</code> parameters is very important. There are no defaults. If they are too low, then you will underutilize the system&rsquo;s capabilities. If they are too high, then chances are that the server will bring the machine to its knees.</p>
+
+<p>All the above parameters should be specified on the basis of the resources you have. With a plain Apache server, it&rsquo;s no big deal if you run many servers since the processes are about 1Mb and don&rsquo;t eat a lot of your RAM. Generally, the numbers are even smaller with memory sharing. The situation is different with mod_perl. I have seen mod_perl processes of 20Mb and more. Now, if you have <code>MaxClients</code> set to 50, then 50x20Mb = 1Gb. Maybe you don&rsquo;t have 1Gb of RAM - so how do you tune the parameters? Generally, by trying different combinations and benchmarking the server. Again, mod_perl processes can be made much smaller when memory is shared.</p>
+
+<p>Before you start this task, you should be armed with the proper weapon. You need the <strong>crashme</strong> utility, which will load your server with the mod_perl scripts you possess. You need it to have the ability to emulate a multiuser environment and to emulate the behavior of multiple clients calling the mod_perl scripts on your server simultaneously. While there are commercial solutions, you can get away with free ones that do the same job. You can use the ApacheBench utility that comes with the Apache distribution, the <code>crashme</code> script which uses <code>LWP::Parallel::UserAgent</code>, httperf or http_load all discussed in one of the previous articles.</p>
+
+<p>It is important to make sure that you run the load generator (the client which generates the test requests) on a system that is more powerful than the system being tested. After all, we are trying to simulate Internet users, where many users are trying to reach your service at once. Since the number of concurrent users can be quite large, your testing machine must be very powerful and capable of generating a heavy load. Of course, you should not run the clients and the server on the same machine. If you do, then your test results would be invalid. Clients will eat CPU and memory that should be dedicated to the server, and vice versa.</p>
+
+<h3 id="span-id-configuration-tuning-with-apachebench-configuration-tuning-with-apachebench-span"><span id="configuration_tuning_with_apachebench">Configuration Tuning with ApacheBench</span></h3>
+
+<p>I&rsquo;m going to use the <code>ApacheBench</code> (<code>ab</code>) utility to tune our server&rsquo;s configuration. We will simulate 10 users concurrently requesting a very light script at <code>http://www.example.com/perl/access/access.cgi</code>. Each simulated user makes 10 requests.</p>
+
+<pre><code>  % ./ab -n 100 -c 10 http://www.example.com/perl/access/access.cgi
+</code></pre>
+
+<p>The results are:</p>
+
+<pre><code>  Document Path:          /perl/access/access.cgi
+  Document Length:        16 bytes
+
+  Concurrency Level:      10
+  Time taken for tests:   1.683 seconds
+  Complete requests:      100
+  Failed requests:        0
+  Total transferred:      16100 bytes
+  HTML transferred:       1600 bytes
+  Requests per second:    59.42
+  Transfer rate:          9.57 kb/s received
+
+  Connnection Times (ms)
+                min   avg   max
+  Connect:        0    29   101
+  Processing:    77   124  1259
+  Total:         77   153  1360
+</code></pre>
+
+<p>The only numbers we really care about are:</p>
+
+<pre><code>  Complete requests:      100
+  Failed requests:        0
+  Requests per second:    59.42
+</code></pre>
+
+<p>Let&rsquo;s raise the request load to 100 x 10 (10 users, each making 100 requests):</p>
+
+<pre><code>  % ./ab -n 1000 -c 10  http://www.example.com/perl/access/access.cgi
+  Concurrency Level:      10
+  Complete requests:      1000
+  Failed requests:        0
+  Requests per second:    139.76
+</code></pre>
+
+<p>As expected, nothing changes &ndash; we have the same 10 concurrent users. Now let&rsquo;s raise the number of concurrent users to 50:</p>
+
+<pre><code>  % ./ab -n 1000 -c 50  http://www.example.com/perl/access/access.cgi
+  Complete requests:      1000
+  Failed requests:        0
+  Requests per second:    133.01
+</code></pre>
+
+<p>We see that the server is capable of serving 50 concurrent users at 133 requests per second! Let&rsquo;s find the upper limit. Using <code>-n 10000 -c 1000</code> failed to get results (Broken Pipe?). Using <code>-n 10000 -c 500</code> resulted in 94.82 requests per second. The server&rsquo;s performance went down with the high load.</p>
+
+<p>The above tests were performed with the following configuration:</p>
+
+<pre><code>  MinSpareServers 8
+  MaxSpareServers 6
+  StartServers 10
+  MaxClients 50
+  MaxRequestsPerChild 1500
+</code></pre>
+
+<p>Now let&rsquo;s kill each child after it serves a single request. We will use the following configuration:</p>
+
+<pre><code>  MinSpareServers 8
+  MaxSpareServers 6
+  StartServers 10
+  MaxClients 100
+  MaxRequestsPerChild 1
+</code></pre>
+
+<p>Simulate 50 users each generating a total of 20 requests:</p>
+
+<pre><code>  % ./ab -n 1000 -c 50  http://www.example.com/perl/access/access.cgi
+</code></pre>
+
+<p>The benchmark timed out with the above configuration. I watched the output of <strong><code>ps</code></strong> as I ran it, the parent process just wasn&rsquo;t capable of respawning the killed children at that rate. When I raised the <code>MaxRequestsPerChild</code> to 10, I got 8.34 requests per second. Very bad - 18 times slower! You can&rsquo;t benchmark the importance of the <code>MinSpareServers</code>, <code>MaxSpareServers</code> and <code>StartServers</code> with this type of test.</p>
+
+<p>Now let&rsquo;s reset <code>MaxRequestsPerChild</code> to 1500, but reduce <code>MaxClients</code> to 10 and run the same test:</p>
+
+<pre><code>  MinSpareServers 8
+  MaxSpareServers 6
+  StartServers 10
+  MaxClients 10
+  MaxRequestsPerChild 1500
+</code></pre>
+
+<p>I got 27.12 requests per second, which is better but still four to five times slower. (I got 133 with <code>MaxClients</code> set to 50.)</p>
+
+<p><strong>Summary:</strong> I have tested a few combinations of the server configuration variables (<code>MinSpareServers</code>, <code>MaxSpareServers</code>, <code>StartServers</code>, <code>MaxClients</code> and <code>MaxRequestsPerChild</code>). The results I got are as follows:</p>
+
+<p><code>MinSpareServers</code>, <code>MaxSpareServers</code> and <code>StartServers</code> are only important for user response times. Sometimes users will have to wait a bit.</p>
+
+<p>The important parameters are <code>MaxClients</code> and <code>MaxRequestsPerChild</code>. <code>MaxClients</code> should be not too big, so it will not abuse your machine&rsquo;s memory resources, and not too small, for if it is, your users will be forced to wait for the children to become free to serve them. <code>MaxRequestsPerChild</code> should be as large as possible, to get the full benefit of mod_perl, but watch your server at the beginning to make sure your scripts are not leaking memory, thereby causing your server (and your service) to die very fast.</p>
+
+<p>Also, it is important to understand that we didn&rsquo;t test the response times in the tests above, but the ability of the server to respond under a heavy load of requests. If the test script was heavier, then the numbers would be different but the conclusions similar.</p>
+
+<p>The benchmarks were run with:</p>
+
+<ul>
+<li>HW: RS6000, 1Gb RAM</li>
+<li>SW: AIX 4.1.5 . mod_perl 1.16, apache 1.3.3</li>
+<li>Machine running only mysql, httpd docs and mod_perl servers.</li>
+<li>Machine was _completely_ unloaded during the benchmarking.</li>
+</ul>
+
+<p>After each server restart when I changed the server&rsquo;s configuration, I made sure that the scripts were preloaded by fetching a script at least once for every child.</p>
+
+<p>It is important to notice that none of the requests timed out, even if it was kept in the server&rsquo;s queue for more than a minute! That is the way <strong>ab</strong> works, which is OK for testing purposes but will be unacceptable in the real world - users will not wait for more than five to 10 seconds for a request to complete, and the client (i.e. the browser) will time out in a few minutes.</p>
+
+<p>Now let&rsquo;s take a look at some real code whose execution time is more than a few milliseconds. We will do some real testing and collect the data into tables for easier viewing.</p>
+
+<p>I will use the following abbreviations:</p>
+
+<pre><code>  NR    = Total Number of Request
+  NC    = Concurrency
+  MC    = MaxClients
+  MRPC  = MaxRequestsPerChild
+  RPS   = Requests per second
+</code></pre>
+
+<p>Running a mod_perl script with lots of mysql queries (the script under test is mysqld limited) (<a href="http://www.example.com/perl/access/access.cgi?do_sub=query_form">http://www.example.com/perl/access/access.cgi?do_sub=query_form</a>), with the configuration:</p>
+
+<pre><code>  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+  MaxRequestsPerChild 5000
+</code></pre>
+
+<p>gives us:</p>
+
+<pre><code>     NR   NC    RPS     comment
+  ------------------------------------------------
+     10   10    3.33    # not a reliable figure
+    100   10    3.94
+   1000   10    4.62
+   1000   50    4.09
+</code></pre>
+
+<p><strong>Conclusions:</strong> Here I wanted to show that when the application is slow (not due to perl loading, code compilation and execution, but limited by some external operation) it almost does not matter what load we place on the server. The RPS (Requests per second) is almost the same. Given that all the requests have been served, you have the ability to queue the clients, but be aware that anything that goes into the queue means a waiting client and a client (browser) that might time out!</p>
+
+<p>Now we will benchmark the same script without using the mysql (code limited by perl only): (<a href="http://www.example.com/perl/access/access.cgi">http://www.example.com/perl/access/access.cgi</a>), it&rsquo;s the same script but it just returns the HTML form, without making SQL queries.</p>
+
+<pre><code>  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+  MaxRequestsPerChild 5000
+
+     NR   NC      RPS   comment
+  ------------------------------------------------
+     10   10    26.95   # not a reliable figure
+    100   10    30.88
+   1000   10    29.31
+   1000   50    28.01
+   1000  100    29.74
+  10000  200    24.92
+ 100000  400    24.95
+</code></pre>
+
+<p><strong>Conclusions:</strong> This time the script we executed was pure perl (not limited by I/O or mysql), so we see that the server serves the requests much faster. You can see the number of requests per second is almost the same for any load, but goes lower when the number of concurrent clients goes beyond <code>MaxClients</code>. With 25 RPS, the machine simulating a load of 400 concurrent clients will be served in 16 seconds. To be more realistic, assuming a maximum of 100 concurrent clients and 30 requests per second, the client will be served in 3.5 seconds. Pretty good for a highly loaded server.</p>
+
+<p>Now we will use the server to its full capacity, by keeping all <code>MaxClients</code> clients alive all the time and having a big <code>MaxRequestsPerChild</code>, so that no child will be killed during the benchmarking.</p>
+
+<pre><code>  MinSpareServers       50
+  MaxSpareServers       50
+  StartServers          50
+  MaxClients            50
+  MaxRequestsPerChild 5000
+
+     NR   NC      RPS   comment
+  ------------------------------------------------
+    100   10    32.05
+   1000   10    33.14
+   1000   50    33.17
+   1000  100    31.72
+  10000  200    31.60
+</code></pre>
+
+<p>Conclusion: In this scenario, there is no overhead involving the parent server loading new children, all the servers are available, and the only bottleneck is contention for the CPU.</p>
+
+<p>Now we will change <code>MaxClients</code> and watch the results: Let&rsquo;s reduce <code>MaxClients</code> to 10.</p>
+
+<pre><code>  MinSpareServers        8
+  MaxSpareServers       10
+  StartServers          10
+  MaxClients            10
+  MaxRequestsPerChild 5000
+
+     NR   NC      RPS   comment
+  ------------------------------------------------
+     10   10    23.87   # not a reliable figure
+    100   10    32.64
+   1000   10    32.82
+   1000   50    30.43
+   1000  100    25.68
+   1000  500    26.95
+   2000  500    32.53
+</code></pre>
+
+<p><strong>Conclusions:</strong> Very little difference! Ten servers were able to serve almost with the same throughput as 50. Why? My guess is because of CPU throttling. It seems that 10 servers were serving requests five times faster than when we worked with 50 servers. In that case, each child received its CPU time slice five times less frequently. So having a big value for <code>MaxClients</code>, doesn&rsquo;t mean that the performance will be better. You have just seen the numbers!</p>
+
+<p>Now we will start drastically to reduce <code>MaxRequestsPerChild</code>:</p>
+
+<pre><code>  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+
+     NR   NC    MRPC     RPS    comment
+  ------------------------------------------------
+    100   10      10    5.77
+    100   10       5    3.32
+   1000   50      20    8.92
+   1000   50      10    5.47
+   1000   50       5    2.83
+   1000  100      10    6.51
+</code></pre>
+
+<p><strong>Conclusions:</strong> When we drastically reduce <code>MaxRequestsPerChild</code>, the performance starts to become closer to plain mod_cgi.</p>
+
+<p>Here are the numbers of this run with mod_cgi, for comparison:</p>
+
+<pre><code>  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+
+     NR   NC    RPS     comment
+  ------------------------------------------------
+    100   10    1.12
+   1000   50    1.14
+   1000  100    1.13
+</code></pre>
+
+<p><strong>Conclusion</strong>: mod_cgi is much slower. :) In the first test, when NR/NC was <sup>100</sup>&frasl;<sub>10</sub>, mod_cgi was capable of 1.12 requests per second. In the same circumstances, mod_perl was capable of 32 requests per second, nearly 30 times faster! In the first test, each client waited about 100 seconds to be served. In the second and third tests, they waited 1,000 seconds!</p>
+
+<h3 id="span-id-choosing-maxclients-choosing-maxclients-span"><span id="choosing_maxclients">Choosing MaxClients</span></h3>
+
+<p>The <code>MaxClients</code> directive sets the limit on the number of simultaneous requests that can be supported. No more than this number of child server processes will be created. To configure more than 256 clients, you must edit the <code>HARD_SERVER_LIMIT</code> entry in <code>httpd.h</code> and recompile. In our case, we want this variable to be as small as possible, so we can limit the resources used by the server children. Since we can restrict each child&rsquo;s process size with <code>Apache::SizeLimit</code> or <code>Apache::GTopLimit</code>, the calculation of <code>MaxClients</code> is pretty straightforward:</p>
+
+<pre><code>               Total RAM Dedicated to the Webserver
+  MaxClients = ------------------------------------
+                     MAX child's process size
+</code></pre>
+
+<p>So if I have 400Mb left for the Web server to run with, then I can set <code>MaxClients</code> to be of 40 if I know that each child is limited to 10Mb of memory (e.g. with <code>Apache::SizeLimit</code>).</p>
+
+<p>You will be wondering what will happen to your server if there are more concurrent users than <code>MaxClients</code> at any time. This situation is signified by the following warning message in the <code>error_log</code>:</p>
+
+<pre><code>  [Sun Jan 24 12:05:32 1999] [error] server reached MaxClients setting,
+  consider raising the MaxClients setting
+</code></pre>
+
+<p>There is no problem &ndash; any connection attempts over the <code>MaxClients</code> limit will normally be queued, up to a number based on the <code>ListenBacklog</code> directive. When a child process is freed at the end of a different request, the connection will be served.</p>
+
+<p>It <strong>is an error</strong> because clients are being put in the queue rather than getting served immediately, despite the fact that they do not get an error response. The error can be allowed to persist to balance available system resources and response time, but sooner or later you will need to get more RAM so you can start more child processes. The best approach is to try not to have this condition reached at all, and if you reach it often you should start to worry about it.</p>
+
+<p>It&rsquo;s important to understand how much real memory a child occupies. Your children can share memory between them when the OS supports that. You must take action to allow the sharing to happen. We have disscussed this in one of the previous article whose main topic was shared memory. If you do this, then chances are that your <code>MaxClients</code> can be even higher. But it seems that it&rsquo;s not so simple to calculate the absolute number. If you come up with a solution, then please let us know! If the shared memory was of the same size throughout the child&rsquo;s life, then we could derive a much better formula:</p>
+
+<pre><code>               Total_RAM + Shared_RAM_per_Child * (MaxClients - 1)
+  MaxClients = ---------------------------------------------------
+                              Max_Process_Size
+</code></pre>
+
+<p>which is:</p>
+
+<pre><code>                    Total_RAM - Shared_RAM_per_Child
+  MaxClients = ---------------------------------------
+               Max_Process_Size - Shared_RAM_per_Child
+</code></pre>
+
+<p>Let&rsquo;s roll some calculations:</p>
+
+<pre><code>  Total_RAM            = 500Mb
+  Max_Process_Size     =  10Mb
+  Shared_RAM_per_Child =   4Mb
+
+              500 - 4
+ MaxClients = --------- = 82
+               10 - 4
+</code></pre>
+
+<p>With no sharing in place</p>
+
+<pre><code>                 500
+ MaxClients = --------- = 50
+                 10
+</code></pre>
+
+<p>With sharing in place you can have 64 percent more servers without buying more RAM.</p>
+
+<p>If you improve sharing and keep the sharing level, let&rsquo;s say:</p>
+
+<pre><code>  Total_RAM            = 500Mb
+  Max_Process_Size     =  10Mb
+  Shared_RAM_per_Child =   8Mb
+
+              500 - 8
+ MaxClients = --------- = 246
+               10 - 8
+</code></pre>
+
+<p>392 percent more servers! Now you can feel the importance of having as much shared memory as possible.</p>
+
+<h3 id="span-id-choosing-maxrequestsperchild-choosing-maxrequestsperchild-span"><span id="choosing_maxrequestsperchild">Choosing MaxRequestsPerChild</span></h3>
+
+<p>The <code>MaxRequestsPerChild</code> directive sets the limit on the number of requests that an individual child server process will handle. After <code>MaxRequestsPerChild</code> requests, the child process will die. If <code>MaxRequestsPerChild</code> is 0, then the process will live forever.</p>
+
+<p>Setting <code>MaxRequestsPerChild</code> to a non-zero limit solves some memory leakage problems caused by sloppy programming practices, whereas a child process consumes more memory after each request.</p>
+
+<p>If left unbounded, then after a certain number of requests the children will use up all the available memory and leave the server to die from memory starvation. Note that sometimes standard system libraries leak memory too, especially on OSes with bad memory management (e.g. Solaris 2.5 on x86 arch).</p>
+
+<p>If this is your case, then you can set <code>MaxRequestsPerChild</code> to a small number. This will allow the system to reclaim the memory that a greedy child process consumed, when it exits after <code>MaxRequestsPerChild</code> requests.</p>
+
+<p>But beware &ndash; if you set this number too low, you will lose some of the speed bonus you get from mod_perl. Consider using <code>Apache::PerlRun</code> if this is the case.</p>
+
+<p>Another approach is to use the <code>Apache::SizeLimit</code> or the <code>Apache::GTopLimit</code> modules. By using either of these modules you should be able to discontinue using the <code>MaxRequestPerChild</code>, although for some developers, using both in combination does the job. In addition the latter module allows you to kill any servers whose shared memory size drops below a specified limit.</p>
+
+<h1 id="span-id-references-references-span"><span id="references">References</span></h1>
+
+<ul>
+<li>The mod_perl site&rsquo;s URL: <a href="http://perl.apache.org/">http://perl.apache.org/</a></li>
+<li><a href="https://metacpan.org/pod/Apache::GTopLimit">Apache::GTopLimit</a></li>
+</ul>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/web">web</a></div>
+                
+                  <div class="tag"><a href="/tags/mod-perl-apache-performance">mod-perl-apache-performance</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-stas-bekman">
+  <div class="col-sm-2">
+    
+    <a href="/authors/stas-bekman/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/stas-bekman/"><h3>Stas Bekman</h3></a>
+    <p></p>
+    <h5><a href="/authors/stas-bekman/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2003_02_05_mod_perl.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

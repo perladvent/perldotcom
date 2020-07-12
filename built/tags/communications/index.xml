@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Communications on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/communications/</link>
+    <description>Recent content in Communications on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 03 Feb 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/communications/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Throwing Shapes</title>
+      <link>http://localhost:1313/pub/2005/02/03/rpc_design.html/</link>
+      <pubDate>Thu, 03 Feb 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/02/03/rpc_design.html/</guid>
+      <description>
+
+&lt;p&gt;Sometimes data processing is better when separated into different processes that may run on the same machine or even on different ones. This is the well-known client-server technique. You can do it using a known protocol (such as http) or by developing your own, specific protocol. This approach needs implementation for constructor and parser procedures for each packet type (request and response). It&amp;rsquo;s possible for different packets to have the same structure so the constructor and parser will be always the same. Perhaps the simplest solution is to have key/value pairs packed with newline characters or with other separators inside a text block. Binary form with length encoding is another solution.&lt;/p&gt;
+
+&lt;p&gt;In an attempt to simplify this client-server interaction, the &lt;em&gt;Remote Procedure Call&lt;/em&gt; (RPC) technique appeared. It tries to map functions inside the client code to their counterparts inside the server. RPC hides all the details between a client function call and the server function&amp;rsquo;s response. This includes argument serialization (to make data appropriate to transfer over the net, also known as marshaling), transport, the server function call, and returning response data back to the client (also serialized). In some implementations, RPC also tries to remove requirements for the client and the server to run on the same operating system or hardware, or to be written in the same programming language.&lt;/p&gt;
+
+&lt;p&gt;In the Perl world there are several modules that offer different kinds of RPC, including &lt;a href=&#34;https://metacpan.org/pod/RPC::Simple&#34;&gt;RPC::Simple&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/RPC::XML&#34;&gt;RPC::XML&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/DCE::RPC&#34;&gt;DCE::RPC&lt;/a&gt;, and more.&lt;/p&gt;
+
+&lt;p&gt;In this article I&amp;rsquo;ll explain how to use Perl-specific features to develop a compact RPC implementation that I will name &lt;em&gt;Perl-centric Remote Call&lt;/em&gt; (PerlRC). As the name suggests, it will run only with Perl clients and servers.&lt;/p&gt;
+
+&lt;h3 id=&#34;shape&#34;&gt;Shape&lt;/h3&gt;
+
+&lt;p&gt;PerlRC needs to simulate a function call environment that seems familiar to the client. This requires handling the four key properties of a function call:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Function name&lt;/li&gt;
+&lt;li&gt;Function arguments&lt;/li&gt;
+&lt;li&gt;Calling context&lt;/li&gt;
+&lt;li&gt;Return data&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The design of the Perl language allows generic argument handling, which means that it is possible to handle arguments without knowing them before the function call. There are also ways to discover the calling context. Finally, the caller can handle results in the same way as the called function&amp;rsquo;s arguments &amp;ndash; generically, without knowing their details until the function call returns.&lt;/p&gt;
+
+&lt;p&gt;With this in mind, the PerlRC code must follow these steps:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Creating Transport Containers&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Essentially these are the request and response packets. I&amp;rsquo;ll use hashes for both. Each one will be serialized to a scalar which the code will send to the other side with a trailing newline terminator.&lt;/p&gt;
+
+&lt;p&gt;A request container resembles:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# request hash
+  $req1 = {
+            &#39;ARGS&#39; =&amp;gt; [          # arguments list
+                        2,
+                        8
+                      ],
+            &#39;NAME&#39; =&amp;gt; &#39;power&#39;,   # remote function name
+            &#39;WANTARRAY&#39; =&amp;gt; 0     # calling context
+          };
+
+  # result hash for scalar context
+  $res1 = {
+            &#39;RET_SCALAR&#39; =&amp;gt; 256  # result scalar
+          };
+
+  # result hash for array context
+  $res2 = {
+            &#39;RET_ARRAY&#39; =&amp;gt; [     # result array
+                             12,
+                             13,
+                             14,
+                             15,
+                             16,
+                             17,
+                             18,
+                           ]
+          };
+
+  # result hash for error
+  $res3 = {
+            # error description
+            &#39;ERROR&#39; =&amp;gt; &#39;No such function: test&#39;
+          };
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Arguments&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To keep things simple, the first argument will represent the remote function name to call. This server must remove this argument from the list before passing on the rest to the remote function. The request container holds the name for the remote function and a separate reference to the argument list.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Calling Context Discovery&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Find the calling context with the built-in &lt;code&gt;wantarray&lt;/code&gt; function and put this value (0 for scalar and 1 for array context) in the request hash.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Transfer Both to the Server&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Serialize the request to scalar and escape newline chars with &lt;code&gt;\n&lt;/code&gt;. Append the newline terminator and send it to the server.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Unpack Request Data&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;The server takes the request scalar, removes the trailing newline terminator, and unpacks the request data into a local hash that contains the function name, the calling context, and the argument list.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Server-side Function Call&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Find and call the required function in appropriate context. Take the result data or the error. Create a result container with separate fields for scalar and array contexts and one field for any error.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Pack Result Data&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Serialize the result hash, escape newlines, append a terminating newline, and send the result data to the client.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Client Unpack of the Result Data&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;When the client receives the result container, remove the trailing newline char. Unescape any newline chars and unpack the data into a local result hash. Depending on the calling context, return to the caller either the scalar or array field from the result hash or die with an error description if such exists.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The implementation uses two modules:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Storable&#34;&gt;&lt;code&gt;Storable&lt;/code&gt;&lt;/a&gt; handles the serialization of arbitrary data. Serializing data converts it to a string of characters suitable for saving or sending across the network and unserializable later into the form of the original. The rest of the article will also refer to this process as packing and unpacking the data.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/IO::Socket::INET&#34;&gt;IO::Socket::INET&lt;/a&gt; handles the creation of Internet domain sockets.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Both modules are standard in the latest Perl distribution packages.&lt;/p&gt;
+
+&lt;p&gt;It is possible to use any serialization module including FreezeThaw, XML::Dumper, or even Data::Dumper + &lt;code&gt;eval()&lt;/code&gt; instead of Storable.&lt;/p&gt;
+
+&lt;h3 id=&#34;point-of-no-return&#34;&gt;Point of No Return&lt;/h3&gt;
+
+&lt;p&gt;Enough background. Here&amp;rsquo;s the PerlRC implementation of the server:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Storable qw( thaw nfreeze );
+  use IO::Socket::INET;
+
+  # function table, maps caller names to actual server subs
+  our %FUNC_MAP = (
+                  power =&amp;gt; \&amp;amp;power,
+                  range =&amp;gt; \&amp;amp;range,
+                  tree  =&amp;gt; \&amp;amp;tree,
+                  );                                
+
+  # create listen socket
+  my $sr = IO::Socket::INET-&amp;gt;new( Listen    =&amp;gt; 5,
+                                  LocalAddr =&amp;gt; &#39;localhost:9999&#39;,
+                                  ReuseAddr =&amp;gt; 1 );
+
+  while(4)
+    {
+    # awaiting connection
+    my $cl = $sr-&amp;gt;accept() or next; # accept new connection or loop on error
+
+    while( my $req = &amp;lt;$cl&amp;gt; ) # read request data, exit loop on empty request
+      {
+      chomp( $req );
+      my $thaw = thaw( r_unescape( $req ) ); # &#39;unpack&#39; request data (\n unescape)
+      my %req = %{ $thaw || {} };            # copy to local hash
+
+      my %res;                                # result data
+      my $func = $FUNC_MAP{ $req{ &#39;NAME&#39; } }; # find required function
+      if( ! $func ) # check if function exists
+        {
+        # function name is not found, return error
+        $res{ &#39;ERROR&#39; } = &amp;quot;No such function: &amp;quot; . $req{ &#39;NAME&#39; };
+        }
+      else
+        {
+        # function exists, proceed with execution
+        my @args = @{ $req{ &#39;ARGS&#39; } }; # copy to local arguments hash
+        if( $req{ &#39;WANTARRAY&#39; } )       # depending on the required context...
+          {
+          my @ret = &amp;amp;$func( @args );    # call function in array context
+          $res{ &#39;RET_ARRAY&#39; } = \@ret;  # return array
+          }
+        else
+          {
+          my $ret = &amp;amp;$func( @args );    # call function in scalar context
+          $res{ &#39;RET_SCALAR&#39; } = $ret;  # return scalar
+          }  
+        }
+
+      my $res = r_escape( nfreeze( \%res ) ); # &#39;pack&#39; result data (\n escape)
+      print $cl &amp;quot;$res\n&amp;quot;;                     # send result data to the client
+      }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The client side is also simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Storable qw( thaw nfreeze );
+  use IO::Socket::INET;
+
+  # connect to the server
+  my $cl = IO::Socket::INET-&amp;gt;new(  PeerAddr =&amp;gt; &amp;quot;localhost:9999&amp;quot; ) 
+       or die &amp;quot;connect error\n&amp;quot;;
+
+  # this is interface sub to calling server
+  sub r_call
+  {
+    my %req; # request data
+
+    $req{ &#39;NAME&#39; }      = shift;             # function name to call
+    $req{ &#39;WANTARRAY&#39; } = wantarray ? 1 : 0; # context hint
+    $req{ &#39;ARGS&#39; }      = \@_;               # arguments
+
+    my $req = r_escape( nfreeze( \%req ) );  # &#39;pack&#39; request data (\n escape)
+    print $cl &amp;quot;$req\n&amp;quot;;                      # send to the server
+    my $res = &amp;lt;$cl&amp;gt;;                         # get result line
+    chomp( $res );
+
+    my $thaw = thaw( r_unescape( $res ) );   # &#39;unpack&#39; result (\n unescape)
+    my %res = %{ $thaw || {} };              # copy result data to local hash
+
+    # server error -- break execution!
+    die &amp;quot;r_call: server error: $res{&#39;ERROR&#39;}\n&amp;quot; if $res{ &#39;ERROR&#39; };
+
+    # finally return result in the required context
+    return wantarray ? @{ $res{ &#39;RET_ARRAY&#39; } } : $res{ &#39;RET_SCALAR&#39; };
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On both sides there are two very simple functions that escape and unescape newline chars. This is necessary to prevent serialized data that contains newline chars from breaking the chosen packet terminator. (A newline works well there because it interacts well with the &lt;code&gt;readline()&lt;/code&gt; operation on the socket.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub r_escape
+  {
+    my $s = shift;
+    # replace all newlines, CR and % with CGI-style encoded sequences
+    $s =~ s/([%\r\n])/sprintf(&amp;quot;%%%02X&amp;quot;, ord($1))/ge;
+    return $s;
+  }
+
+  sub r_unescape
+  {
+    my $s = shift;
+    # convert back escapes to the original chars
+    $s =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/ge;
+    return $s;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;waiting-in-the-wings&#34;&gt;Waiting In The Wings&lt;/h3&gt;
+
+&lt;p&gt;That&amp;rsquo;s the client and server. Now they need to do something useful. Here&amp;rsquo;s some code to run on the server from a client:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  =head2 power()
+
+   arguments: a number (n) and power (p)
+     returns: the number powered (n**p)
+
+  =cut
+
+  sub power
+  {
+    my $n = shift;
+    my $p = shift;
+    return $n**$p;
+  }
+
+  =head2 range( f, t )
+
+   arguments: lower (f) and upper indexes (t)
+     returns: array with number elements between the lower and upper indexes
+              ( f .. t )
+  =cut         
+
+  sub range
+  {
+    my $f = shift;
+    my $t = shift;
+    return $f .. $t;
+  }
+
+  =head2 tree()
+
+   arguments: none
+     returns: in scalar context: hash reference to data tree
+              in array  context: hash (array) of data tree
+       usage:
+              $data = tree(); $data-&amp;gt;{ ... }
+              %data = tree(); $data{ ... }
+  =cut
+
+  sub tree
+  {
+    my $ret = {
+              this =&amp;gt; &#39;is test&#39;,
+              nothing =&amp;gt; [ qw( ever goes as planned ) ],
+              number_is =&amp;gt; 42,
+              };
+    return wantarray ? %$ret : $ret;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make these available to clients, the server must have a map of functions. It&amp;rsquo;s easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # function table, maps caller names to actual server subs
+  our %FUNC_MAP = (
+                  power =&amp;gt; \&amp;amp;power,
+                  range =&amp;gt; \&amp;amp;range,
+                  tree  =&amp;gt; \&amp;amp;tree,
+                  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s all of the setup for the server. Now you can start it.&lt;/p&gt;
+
+&lt;p&gt;The client side calls functions in this way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  r_call( &#39;test&#39;,  1, 2, 3, &#39;opa&#39; );  # this will receive &#39;not found&#39; error
+  my $r = r_call( &#39;power&#39;,  2,  8 );  # $r = 256
+  my @a = r_call( &#39;range&#39;, 12, 18 );  # @a = ( 12, 13, 14, 15, 16, 17, 18 )
+  my %t = r_call( &#39;tree&#39; );           # returns data as hash
+  my $t = r_call( &#39;tree&#39; );           # returns data as reference
+
+  print( &amp;quot;Tree is:\n&amp;quot; . Dumper( \%t ) );
+  # this will print:
+
+  Tree is:
+  $VAR1 = {
+            &#39;number_is&#39; =&amp;gt; 42,
+            &#39;nothing&#39; =&amp;gt; [
+                           &#39;ever&#39;,
+                           &#39;goes&#39;,
+                           &#39;as&#39;,
+                           &#39;planned&#39;
+                         ],
+            &#39;this&#39; =&amp;gt; &#39;is test&#39;
+          };
+
+  # and will be the same as 
+  print( &amp;quot;Tree is:\n&amp;quot; . Dumper( $t ) );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;one-wish&#34;&gt;One Wish&lt;/h3&gt;
+
+&lt;p&gt;At this point everything works, but as usual, someone will want another feature. Suppose that the server and the client sides each had one wish.&lt;/p&gt;
+
+&lt;p&gt;The server side wish may be to have a built-in facility to find callable functions so as to build the function map can be built automatically.&lt;/p&gt;
+
+&lt;p&gt;Automatic map discovery has one major flaw which is that all functions in the current package are available to the client. This may not be always desirable. There are simple solutions to the problem. For example, all functions that need external visibility within a package could have a specific name prefix. A map discovery procedure can filter the list of all functions with this prefix and map those externally under the original names (without the prefix).&lt;/p&gt;
+
+&lt;p&gt;The following code finds all defined functions in the current namespace (the one that called &lt;code&gt;r_map_discover()&lt;/code&gt;) and returns a hash with function-name keys and function-code-reference values:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub r_map_discover
+  {
+    my ( $package ) = caller(); # get the package name of the caller
+    my $prefix = shift;         # optional prefix
+    my %map;
+
+    # disable check for symbolic references
+    no strict &#39;refs&#39;;
+
+    # loop over all entries in the caller package&#39;s namespace
+    while( my ( $k, $v ) = each %{ $package . &#39;::&#39; } ) 
+      {
+      my $sym = $package . &#39;::&#39; . $k; # construct the full name of each symbol
+      next unless $k =~ s/^$prefix//; # allow only entries starting with prefix
+      my $r = *{ $sym }{ &#39;CODE&#39; };    # take reference to the CODE in the glob
+      next unless $r;  # reference is empty, no code under this name, skip
+      $map{ $k } = $r; # reference points to CODE, assign it to the map
+      }
+    return %map;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make the use automatic discovery instead of a static function map, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # function table, maps caller names to actual server subs, initially empty
+  our %FUNC_MAP;
+
+  # run the automatic discovery function
+  %FUNC_MAP = r_map_discover();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now &lt;code&gt;%FUNC_MAP&lt;/code&gt; has all of the externally-visible functions in the current package (namespace). That means it&amp;rsquo;s time to modify the names in the module to work with automatic discovery. Suppose the prefix is &lt;code&gt;x_&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub x_power
+  {
+    ...
+  }
+
+  sub x_range
+  {
+    ...
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The server will discover only those functions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%FUNC_MAP = r_map_discover( &#39;x_&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the client will continue to call functions under their usual names:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $r = r_call( &#39;power&#39;,  2,  8 );  # $r = 256
+  my @a = r_call( &#39;range&#39;, 12, 18 );  # @a = ( 12, 13, 14, 15, 16, 17, 18 )
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s it for the server&amp;rsquo;s wish. Now it&amp;rsquo;s time to grant the client&amp;rsquo;s wish.&lt;/p&gt;
+
+&lt;p&gt;Call remote functions transparently might be most important client wish, avoiding the use of &lt;code&gt;r_call()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Perl allows the creation of anonymous function references. It&amp;rsquo;s also possible to install that reference in a namespace under a real name. The result is a function created at run-time. If the function definition takes place in a specific lexical context, it will still have access to that context even when called later from outside that context. Those functions are closures and they are one way to avoid using &lt;code&gt;r_call()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub r_define_subs
+  {
+    my ( $package ) = caller(); # get the package name of the caller
+    for my $fn ( @_ )           # loop over the specified function names
+      {
+      my $sym = $package . &#39;::&#39; . $fn;    # construct the full symbol name
+      no strict;                          # turn off symbolic refs check
+      *$sym = sub { r_call( $fn, @_ ); }; # construct and tie the closure
+      use strict;                         # turn the check back on
+      }
+  }
+
+  # define/import &#39;range&#39; and &#39;tree&#39; functions in the current package
+  r_define_subs( &#39;range&#39;, &#39;tree&#39; );
+
+  # now call them as they are normal functions
+  my @a = range( 12, 18 );      # @a = ( 12 .. 18 )
+  my %t = tree();               # returns data as reference
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach hides the use of &lt;code&gt;r_call()&lt;/code&gt; to only one place which the client doesn&amp;rsquo;t see. Wish granted.&lt;/p&gt;
+
+&lt;h3 id=&#34;limits&#34;&gt;Limits&lt;/h3&gt;
+
+&lt;p&gt;The biggest limitations of PerlRC relate to serialization.&lt;/p&gt;
+
+&lt;p&gt;First of all, both the client and server must have compatible serialization modules or versions. This is crucial! To avoid problems here, either you&amp;rsquo;ll have to write your own serialization code or perform some kind of version check. If you perform this check, be sure to do it before sending a request and response, in plain text, without using serialization at all.&lt;/p&gt;
+
+&lt;p&gt;Another problem is in what data you can serialize in the argument or result containers. Holding references there to something outside the same container may pull in more data than you want, if your serialization follows references, or it may not pull in enough data if your serialization process is very simple. Also there is no way to serialize file handles, compiled code, or objects (which are not in the same container really). In some cases, serializing code and objects may be possible if the serialization modules supports such features (as do Storable and FreezeThaw), if you have the required class modules on both sides, and if you trust code on either side.&lt;/p&gt;
+
+&lt;p&gt;The documentation of the serialization modules explain further limitations and workarounds for both approaches.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;There is a bit more work to do on PerlRC before using it in production, but if you need simple RPC or you need to tweak the way RPC deals with data or communication, you may have good experiences writing your own implementation instead fitting your application around readymade modules. I hope this text is a good starting point.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Using Perl to Enable the Disabled</title>
+      <link>http://localhost:1313/pub/2003/08/28/pvoice.html/</link>
+      <pubDate>Sat, 23 Aug 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/08/28/pvoice.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;We use Perl for all kinds of things. Web development, data munging, system administration, even bioinformatics; most of us have used Perl for one of these situations. A few people use Perl for building end-user applications with graphical user interfaces (GUIs). And as far as I know, only two people in this world use Perl to make life easier for the disabled: &lt;a href=&#34;http://localhost:1313/pub/2001/08/27/bjornstad.html&#34;&gt;Jon Bjornstad&lt;/a&gt; and I. Some people think the way we use Perl is something special, but my story will show you that I just did what any other father, capable of writing software, would do for his child.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;the-past&#34;&gt;The Past&lt;/h3&gt;
+
+&lt;p&gt;In 1995 my eldest daughter, Krista, was born. She came way too early, after a pregnancy of only 27.5 weeks. That premature birth resulted in numerous complications during the first three months of her life. Luckily she survived, but getting pneumonia three times when you can&amp;rsquo;t even breath on your own causes serious asphyxiation, which in turn resulted in severe brain damage. A few months after she left the hospital it became clear that the brain damage had caused a spastic quadriplegia.&lt;/p&gt;
+
+&lt;p&gt;As Krista grew older, it became more and more clear what she could, and couldn&amp;rsquo;t do. Being a spastic means you can&amp;rsquo;t move the muscles in your body the way you want them to. Some people can&amp;rsquo;t walk, but can do everything else. In Krista&amp;rsquo;s case, she can&amp;rsquo;t walk, she can&amp;rsquo;t sit, she can&amp;rsquo;t use her hands to grab anything, even keeping her head up is difficult. Speaking is using the muscles in your mouth and throat, so you can imagine that speaking is almost out of the question for her.&lt;/p&gt;
+
+&lt;p&gt;By the end of the year 2000, Krista went to a special school in Rotterdam. But going to school without being able to speak or without being able to write down what you want to say is hard, not only for the teacher, but also for the student. We had to find a way to let Krista communicate.&lt;/p&gt;
+
+&lt;p&gt;Together with Krista&amp;rsquo;s speech pathologist and orthopedist we started looking for devices she could use to communicate with the outside world. These devices should enable her to choose between symbols, so a word or a sentence could be pronounced. A number of devices were tested, but all of them either required some action with her hands or feet that she wasn&amp;rsquo;t able to perform, or gave her too little choices of words.&lt;/p&gt;
+
+&lt;p&gt;Then we looked into available communications software, so she could use an adapted input device (in her case a headrest with built-in switches) to control an application. Indeed there was software available that could have been used, but the best match was a program that automatically scanned through symbols on her screen and when the desired symbol was highlighted, she had to move her head to select it. Timing was the issue here. If moving your head to the left or right is really hard to do anyway, it&amp;rsquo;s hardly possible to take that action at the desired moment.&lt;/p&gt;
+
+&lt;h3 id=&#34;pvoice&#34;&gt;pVoice&lt;/h3&gt;
+
+&lt;p&gt;We had to do something. There was no suitable device or software application available. I thought it through and suggested I could try to write a simple application myself. It would be based on the idea of the best match we had found (the automatic scanning software), but this software would have no automatic scanning. Instead, moving to the right with your head would mean &amp;ldquo;Go to the next item,&amp;rdquo; and moving to the left would mean &amp;ldquo;Select the highlighted item.&amp;rdquo; That would mean that she would need a lot of time to get to the desired word, but it&amp;rsquo;s better to be slow than not able to select the right words at all.&lt;/p&gt;
+
+&lt;p&gt;The symbols would have to be put in categories, so there would be some logic in the vocabulary she&amp;rsquo;d have on her PC. She started out with categories like &amp;ldquo;Family,&amp;rdquo; containing photos of some members of the family, &amp;ldquo;School,&amp;rdquo; containing several activities at school, and &amp;ldquo;Care,&amp;rdquo; which contained things like &amp;ldquo;going to the bathroom,&amp;rdquo; &amp;ldquo;taking a shower,&amp;rdquo; and other phrases like that.&lt;/p&gt;
+
+&lt;p&gt;By the end of January 2001 I started programming. In Perl. Maybe Perl isn&amp;rsquo;t the most logical choice for writing GUI applications for disabled people, but Perl is my language of choice. And it turned out to be very suitable for this job! Using Tk I quickly set up a nice looking interface. Win32::Sound (and on Linux the Play command) enabled me to &amp;ldquo;pronounce&amp;rdquo; the prerecorded words. Within two weeks time I had a first version of pVoice, as I called this application (and since everyone asks me what the &amp;lsquo;p&amp;rsquo; stands for: &amp;lsquo;p&amp;rsquo; is for Perl). Krista started trying the application and was delighted. Finally she had a way to say what was on her mind!&lt;/p&gt;
+
+&lt;p&gt;Of course in the very beginning she didn&amp;rsquo;t have much of a vocabulary. The primary idea was to let her learn how to use it. But every week or two we added more symbols or photos and extended her vocabulary.&lt;/p&gt;
+
+&lt;p&gt;By the end of April 2001 I posted the code of this first pVoice version on &lt;a href=&#34;http://www.perlmonks.org/index.pl?node_id=75757&#34;&gt;PerlMonks&lt;/a&gt; and set up a web page for people to download it if they could use it. The response was overwhelming. Everyone loved the idea and suggestions to improve the code or to add features came rolling in. Krista&amp;rsquo;s therapists were also enthusiastic and asked for new features too.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately the original pVoice was nothing more than a quick hack to get things going. It was not designed to add all the features people were asking for. So I decided I had to rewrite the whole thing.&lt;/p&gt;
+
+&lt;p&gt;This time it had to be a well-designed application. I wanted to use wxPerl for the GUI instead of the (in my eyes) ugly Motif look of Tk, I wanted to use a speech synthesizer instead of prerecorded .wav files, and most importantly, I wanted to make it easier to use. The original application was not easy to install and modifying the vocabulary was based on the idea you knew your way around in the operating system of your choice: you had to put files in the right directories yourself and modify text files by hand. For programmers this is an easy task, but for end users this turns out to be quite difficult.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2003_08_28_pvoice/ptypescreenshot1.gif&#34; alt=&#34;pType Screenshot&#34; width=&#34;308&#34; height=&#34;231&#34; /&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;It took me until the summer of 2002 before I started working on the next pVoice release. For almost a year I hadn&amp;rsquo;t worked on it at all because of some things that happened in my personal life. Since Krista was learning to read and write and had no way of expressing what she could write herself, I decided not to start with rewriting pVoice immediately, but with building pType.&lt;/p&gt;
+
+&lt;p&gt;pType would allow her to select single letters on her screen to form words in a text entry field at the bottom of her screen and &amp;ndash; if desired &amp;ndash; to pronounce that for her. pType was my tryout for what pVoice 2.0 would come to be: it used wxPerl, Microsoft Agent for speech synthesis, and was more user-friendly. In October 2002, pType was ready and I could finally start working on pVoice 2.0. While copying and pasting lots of the code I wrote for pType, I set up pVoice to be as modular as possible. I also tried to make the design extensible, so I would be able to add features in the future &amp;ndash; even features I hadn&amp;rsquo;t already thought of.&lt;/p&gt;
+
+&lt;p&gt;In March this year it finally was time to release pVoice 2.0. It was easy to install: it was compiled into a standalone executable using PerlApp and by using InnoSetup I created a nice looking installer for it. The application looked more attractive because I used wxPerl, which gives your application the look-and-feel of the operating system it runs on. It was user friendly because the user didn&amp;rsquo;t have to modify any files to use the application: all modifications and additions to the vocabulary could be done within the application using easy-to-understand dialog windows. I was quite satisfied with the result, although I already knew I had some features to add in future releases.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-present&#34;&gt;The Present&lt;/h3&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2003_08_28_pvoice/pvoice-anigif.gif&#34; alt=&#34;pVoice animation&#34; width=&#34;300&#34; height=&#34;218&#34; /&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;At this moment, rewriting the online help file is the last step before I can release pVoice 2.1. That version will have support for all Microsoft SAPI 4 compatible speech engines, better internationalization support, the possibility to have an unlimited depth of categories within categories (until pVoice 2.0 you had only one level of categories with words and sentences), the possibility to define the number of rows and columns with images yourself, and numerous small improvements. Almost all of these improvements and feature additions are suggested by people who tried pVoice 2.0 themselves. And that&amp;rsquo;s great news, because it means that people who need this kind of software are discovering Open Source alternatives for the extremely expensive commercial applications.&lt;/p&gt;
+
+&lt;p&gt;Many people have asked me how many users pVoice has. That&amp;rsquo;s a question I can&amp;rsquo;t answer. How do you measure the use of Open Source software? Since Jan. 1, 2003, approximately 400 people have downloaded pVoice. On the other hand, the mailing lists have some 50 subscribers. How many people are actually using pVoice then? I couldn&amp;rsquo;t say.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-future&#34;&gt;The Future&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m hoping to achieve an increase in the number of users in the next 12 months. The Perl Foundation (TPF) has offered me one of its grants, to be used for promotion of pVoice. With the money I&amp;rsquo;ll be travelling to OSCON next year and hope to speak there about pVoice. While I&amp;rsquo;m in Portland I&amp;rsquo;ll try to get other speaking engagements in the area to try to convince people that they don&amp;rsquo;t always need to spend so much money on commercial software for disabled people, but that there are alternatives like SueCenter and pVoice. Shortly after I heard about the TPF grant, I also heard that I&amp;rsquo;ll be receiving a large donation from someone (who wishes to remain anonymous), that I can also use for promotion of pVoice or for other purposes like costs I might have to add features to pVoice.&lt;/p&gt;
+
+&lt;p&gt;Still, a lot can be improved on pVoice itself. I want to make it more useful for people with other disabilities than my daughter&amp;rsquo;s, I would like to have more translations of the program (currently I have Dutch and English, and helpful people offered to translate it into German, Spanish, French, and Swedish already), I want to support more Text To Speech technologies than Microsoft&amp;rsquo;s Speech API (like Festival), and I would like to find the time to make the pVoice platform independent again, because currently it only runs on Windows. I hope to write other pVoice- like programs like pHouse, which will be based upon efforts of the &lt;a href=&#34;http://www.misterhouse.com&#34;&gt;MisterHouse&lt;/a&gt; project, to be able to control appliances in and around the house, but the main thing I need for that is time. And with a full-time job, time is limited.&lt;/p&gt;
+
+&lt;p&gt;Maybe, after reading all of this, you&amp;rsquo;ll think, &amp;ldquo;How can I help?&amp;rdquo;. Well, there are several things you could do. First of all, if you know anyone who works with disabled people, tell them about pVoice. Apart from SueCenter, pVoice is the only Open Source project I know of in this area. Lots of people who need this kind of software can&amp;rsquo;t get their insurance to pay for the software and would have to pay a lot of money. With pVoice they have a free alternative.&lt;/p&gt;
+
+&lt;p&gt;Of course, you could also help with the development. Since pVoice is not tied to any specific natural language, you could help by translating pVoice into your native tongue. Since the time I can spend on pVoice is limited, it would be nice to have more developers on pVoice in general. More information on pVoice is available from the &lt;a href=&#34;http://www.pvoice.org&#34;&gt;web site&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

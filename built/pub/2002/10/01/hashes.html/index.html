@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> How Hashes Really Work </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" It&#39;s easy to take hashes for granted in Perl. They are simple, fast, and they usually &amp;quot;just work,&amp;quot; so people never need to know or care about how they are implemented. Sometimes, though, it&#39;s interesting and rewarding to look..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2002/10/01/hashes.html/" />
+<meta property="og:title" content="How Hashes Really Work" />
+<meta property="og:description" content=" It&#39;s easy to take hashes for granted in Perl. They are simple, fast, and they usually &amp;quot;just work,&amp;quot; so people never need to know or care about how they are implemented. Sometimes, though, it&#39;s interesting and rewarding to look...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2002-10-10T10:10:10Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2002_10_01_hashes/111-hashes.gif" />
+<meta property="og:article:tag" content="hashes-hash" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">How Hashes Really Work</h1>
+              <p class="blog-post-meta">Oct 1, 2002 by
+              
+              
+                
+                
+                <a href="#author-bio-abhijit-menon-sen">Abhijit Menon-Sen</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>It&rsquo;s easy to take hashes for granted in Perl. They are simple, fast, and they usually &ldquo;just work,&rdquo; so people never need to know or care about how they are implemented. Sometimes, though, it&rsquo;s interesting and rewarding to look at familiar tools in a different light. This article follows the development of a simple hash class in Perl in an attempt to find out how hashes really work.</p>
+
+<p>A hash is an unordered collection of values, each of which is identified by a unique key. A value can be retrieved by its key, and one can add to or delete from the collection. A data structure with these properties is called a dictionary, and some of the many ways to implement them are outlined below.</p>
+
+<p>Many objects are naturally identified by unique keys (like login names), and it is convenient to use a dictionary to address them in this manner. Programs use their dictionaries in different ways. A compiler&rsquo;s symbol table (which records the names of functions and variables encountered during compilation) might hold a few hundred names that are looked up repeatedly (since names usually occur many times in a section of code). Another program might need to store 64-bit integers as keys, or search through several thousands of filenames.</p>
+
+<p>How can we build a generally useful dictionary?</p>
+
+<h3 id="span-id-implementing-dictionaries-implementing-dictionaries-span"><span id="implementing_dictionaries">Implementing Dictionaries</span></h3>
+
+<p>One simple way to implement a dictionary is to use a linked list of keys and values (that is, a list where each element contains a key and the corresponding value). To find a particular value, one would need to scan the list sequentially, comparing the desired key with each key in turn until a match is found, or we reach the end of the list.</p>
+
+<p>This approach becomes progressively slower as more values are added to the dictionary, because the average number of elements we need to scan to find a match keeps increasing. We would discover that a key was not in the dictionary only after scanning every element in it. We could make things faster by performing binary searches on a sorted array of keys instead of using a linked list, but performance would still degrade as the dictionary grew larger.</p>
+
+<p>If we could transform every possible key into a unique array index (for example, by turning the string &ldquo;red&rdquo; into the index 14328.), then we could store each value in a corresponding array entry. All searches, insertions and deletions could then be performed with a single array lookup, irrespective of the number of keys. But although this strategy is simple and fast, it has many disadvantages and is not always useful.</p>
+
+<p>For one thing, calculating an index must be fast, and independent of the size of the dictionary (or we would lose all that we gained by not using a linked list). Unless the keys are already unique integers, however, it isn&rsquo;t always easy to quickly convert them into array indexes (especially when the set of possible keys is not known in advance, which is common). Furthermore, the number of keys actually stored in the dictionary is usually minute in comparison to the total number of possible keys, so allocating an array that could hold everything is wasteful.</p>
+
+<p>For example, although a typical symbol table could contain a few hundred entries, there are about 50 billion alphanumeric names with six or fewer characters. Memory may be cheap enough for an occasional million-element array, but 50 billion elements (of which most remain unused) is still definitely overkill.</p>
+
+<p>(Of course, there are many different ways to implement dictionaries. For example, red-black trees provide different guarantees about expected and worst-case running times, that are most appropriate for certain kinds of applications. This article does not discuss these possibilities further, but future articles may explore them in more detail.)</p>
+
+<p>What we need is a practical compromise between speed and memory usage; a dictionary whose memory usage is proportional to the number of values it contains, but whose performance doesn&rsquo;t become progressively worse as it grows larger.</p>
+
+<p>Hashes represent just such a compromise.</p>
+
+<h3 id="span-id-hashes-hashes-span"><span id="hashes">Hashes</span></h3>
+
+<p>Hashes are arrays (entries in it are called slots or buckets), but they do not require that every possible key correspond directly to a unique entry. Instead, a function (called a hashing function) is used to calculate the index corresponding to a particular key. This index doesn&rsquo;t have to be unique, i.e., the function may return the same hash value for two or more keys. (We disregard this possibility for a while, but return to it later, since it is of great importance.)</p>
+
+<p>We can now look up a value by computing the hash of its key, and looking at the corresponding bucket in the array. As long as the running time of our hashing function is independent of the number of keys, we can always perform dictionary operations in constant time. Since hashing functions make no uniqueness guarantees, however, we need some way to to resolve collisions (i.e., the hashed value of a key pointing to an occupied bucket).</p>
+
+<p>The simple way to resolve collisions is to avoid storing keys and values directly in buckets, and to use per-bucket linked lists instead. To find a particular value, its key is hashed to find the index of a bucket, and the linked list is scanned to find the exact key. The lists are known as chains, and this technique is called chaining.</p>
+
+<p>(There are other ways to handle collisions, e.g. via open addressing, in which colliding keys are stored in the first unoccupied slot whose index can be recursively derived from that of an occupied one. One consequence is that the hash can contain only as many values as it has buckets. This technique is not discussed here, but references to relevant material are included below.)</p>
+
+<h4 id="span-id-hashing-functions-hashing-functions-span"><span id="hashing_functions">Hashing Functions</span></h4>
+
+<p>Since chaining repeatedly performs linear searches through linked lists, it is important that the chains always remain short (that is, the number of collisions remains low). A good hashing function would ensure that it distributed keys uniformly into the available buckets, thus reducing the probability of collisions.</p>
+
+<p>In principle, a hashing function returns an array index directly; in practice, it is common to use its (arbitrary) return value modulo the number of buckets as the actual index. (Using a prime number of buckets that is not too close to a power of two tends to produce a sufficiently uniform key distribution.)</p>
+
+<p>Another way to keep chains remain short is to use a technique known as dynamic hashing: adding more buckets when the existing buckets are all used (i.e., when collisions become inevitable), and using a new hashing function that distributes keys uniformly into all of the buckets (it is usually possible to use the same hashing function, but compute indexes modulo the new number of buckets). We also need to re-distribute keys, since the corresponding indices will be different with the new hashing function.</p>
+
+<p>Here&rsquo;s the hashing function used in Perl 5.005:</p>
+
+<pre><code>  # Return the hashed value of a string: $hash = perlhash(&quot;key&quot;)
+  # (Defined by the PERL_HASH macro in hv.h)
+  sub perlhash
+  {
+      $hash = 0;
+      foreach (split //, shift) {
+          $hash = $hash*33 + ord($_);
+      }
+      return $hash;
+  }
+</code></pre>
+
+<p>More recent versions use a function designed by Bob Jenkins, and his Web page (listed below) does an excellent job of explaining how it and other hashing functions work.</p>
+
+<h4 id="span-id-representing-hashes-in-perl-representing-hashes-in-perl-span"><span id="representing_hashes_in_perl">Representing Hashes in Perl</span></h4>
+
+<p>We can represent a hash as an array of buckets, where each bucket is an array of <code>[$key, $value]</code> pairs (there&rsquo;s no particular need for chains to be linked lists; arrays are more convenient). As an exercise, let us add each of the keys in <code>%example</code> below into three empty buckets.</p>
+
+<pre><code>  %example = (
+      ab =&gt; &quot;foo&quot;, cd =&gt; &quot;bar&quot;,
+      ef =&gt; &quot;baz&quot;, gh =&gt; &quot;quux&quot;
+  );
+
+  @buckets = ( [],[],[] );
+
+  while (($k, $v) = each(%example)) {
+      $hash  = perlhash($k);
+      $chain = $buckets[ $hash % @buckets ];
+
+      $entry = [ $k, $v ];
+      push @$chain, $entry;
+  }
+</code></pre>
+
+<p>We end up with the following structure (you may want to verify that the keys are correctly hashed and distributed), in which we can identify any key-value pair in the hash with one index into the array of buckets and a second index into the entries therein. Another index serves to access either the key or the value.</p>
+
+<pre><code>  @buckets = (
+      [ [ &quot;ef&quot;, &quot;baz&quot; ]                   ],    # Bucket 0: 1 entry
+      [ [ &quot;cd&quot;, &quot;bar&quot; ]                   ],    # Bucket 1: 1 entry
+      [ [ &quot;ab&quot;, &quot;foo&quot; ], [ &quot;gh&quot;, &quot;quux&quot; ] ],    # Bucket 2: 2 entries
+  );
+  $key = $buckets[2][1][0];   # $key = &quot;gh&quot;
+  $val = $buckets[2][1][1];   # $val = $hash{$key}
+  $buckets[0][0][1] = &quot;zab&quot;;  # $hash{ef} = &quot;zab&quot;
+</code></pre>
+
+<h3 id="span-id-building-toy-hashes-building-toy-hashes-span"><span id="building_toy_hashes">Building Toy Hashes</span></h3>
+
+<p>In this section, we&rsquo;ll use the representation discussed above to write a tied hash class that emulates the behavior of real Perl hashes. For the sake of brevity, the code doesn&rsquo;t check for erroneous input. My comments also gloss over details that aren&rsquo;t directly relevant to hashing, so you may want to have a copy of <em>perltie</em> handy to fill in blanks.</p>
+
+<p>(All of the code in the class is available at the URL mentioned below.)</p>
+
+<p>We begin by writing a tied hash constructor that creates an empty hash, and another function to empty an existing hash.</p>
+
+<pre><code>  package Hash;
+
+  # We'll reuse the perlhash() function presented previously.
+
+  # Create a tied hash. (Analogous to newHV in hv.c)
+  sub TIEHASH
+  {
+      $h = {
+          keys    =&gt; 0,                         # Number of keys
+          buckets =&gt; [ [],[],[],[],[],[],[] ],  # Seven empty buckets
+          current =&gt; [ undef, undef ]           # Current iterator entry
+      };                                        # (Explained below)
+      return bless $h, shift;
+  }
+
+  # Empty an existing hash. (See hv.c:hv_clear)
+  sub CLEAR
+  {
+      ($h) = @_;
+
+         $h-&gt;{keys}      = 0;
+      @{ $h-&gt;{buckets} } = ([],[],[],[],[],[],[]);
+      @{ $h-&gt;{current} } = (undef, undef);
+  }
+</code></pre>
+
+<p>For convenience, we also write a function that looks up a given key in a hash and returns the indices of its bucket and the correct entry within. Both indexes are undefined if the key is not found in the hash.</p>
+
+<pre><code>  # Look up a specified key in a hash.
+  sub lookup
+  {
+      ($h, $key) = @_;
+
+      $buckets = $h-&gt;{buckets};
+      $bucket  = perlhash($key) % @$buckets;
+
+      $entries = @{ $buckets-&gt;[$bucket] };
+      if ($entries &gt; 0) {
+          # Look for the correct entry inside the bucket.
+          $entry = 0;
+          while ($buckets-&gt;[$bucket][$entry][0] ne $key) {
+              if (++$entry == $entries) {
+                  # None of the entries in the bucket matched.
+                  $bucket = $entry = undef;
+                  last;
+              }
+          }
+      }
+      else {
+          # The relevant bucket was empty, so the key doesn't exist.
+          $bucket = $entry = undef;
+      }
+
+      return ($bucket, $entry);
+  }
+</code></pre>
+
+<p>The <code>lookup</code> function makes it easy to write <code>EXISTS</code>, <code>FETCH</code>, and <code>DELETE</code> methods for our class:</p>
+
+<pre><code>  # Check whether a key exists in a hash. (See hv.c:hv_exists)
+  sub EXISTS
+  {
+      ($h, $key) = @_;
+      ($bucket, $entry) = lookup($h, $key);
+
+      # If $bucket is undefined, the key doesn't exist.
+      return defined $bucket;
+  }
+
+  # Retrieve the value associated with a key. (See hv.c:hv_fetch)
+  sub FETCH
+  {
+      ($h, $key) = @_;
+
+      $buckets = $h-&gt;{buckets};
+      ($bucket, $entry) = lookup($h, $key);
+
+      if (defined $bucket) {
+          return $buckets-&gt;[$bucket][$entry][1];
+      }
+      else {
+          return undef;
+      }
+  }
+
+  # Delete a key-value pair from a hash. (See hv.c:hv_delete)
+  sub DELETE
+  {
+      ($h, $key) = @_;
+
+      $buckets = $h-&gt;{buckets};
+      ($bucket, $entry) = lookup($h, $key);
+
+      if (defined $bucket) {
+          # Remove the entry from the bucket, and return its value.
+          $entry = splice(@{ $buckets-&gt;[$bucket] }, $entry, 1);
+          return $entry-&gt;[1];
+      }
+      else {
+          return undef;
+      }
+  }
+</code></pre>
+
+<p><code>STORE</code> is a little more complex. It must either update the value of an existing key (which is just an assignment), or add an entirely new entry (by pushing an arrayref into a suitable bucket). In the latter case, if the number of keys exceeds the number of buckets, then we create more buckets and redistribute existing keys (under the assumption that the hash will grow further; this is how we implement dynamic hashing).</p>
+
+<pre><code>  # Store a key-value pair in a hash. (See hv.c:hv_store)
+  sub STORE
+  {
+      ($h, $key, $val) = @_;
+
+      $buckets = $h-&gt;{buckets};
+      ($bucket, $entry) = lookup($h, $key);
+
+      if (defined $bucket) {
+          $buckets-&gt;[$bucket][$entry][1] = $val;
+      }
+      else {
+          $h-&gt;{keys}++;
+          $bucket = perlhash($key) % @$buckets;
+          push @{ $buckets-&gt;[$bucket] }, [ $key, $val ];
+
+          # Expand the hash if all the buckets are full. (See hv.c:S_hsplit)
+          if ($h-&gt;{keys} &gt; @$buckets) {
+              # We just double the number of buckets, as Perl itself does
+              # (and disregard the number becoming non-prime).
+              $newbuckets = [];
+              push(@$newbuckets, []) for 1..2*@$buckets;
+
+              # Redistribute keys
+              foreach $entry (map {@$_} @$buckets) {
+                  $bucket = perlhash($entry-&gt;[0]) % @$newbuckets;
+                  push @{$newbuckets-&gt;[$bucket]}, $entry;
+              }
+              $h-&gt;{buckets} = $newbuckets;
+          }
+      }
+  }
+</code></pre>
+
+<p>For completeness, we implement an iteration mechanism for our class. The <code>current</code> element in each hash identifies a single entry (by its bucket and entry indices). <code>FIRSTKEY</code> sets it to an initial (undefined) state, and leaves all the hard work to <code>NEXTKEY</code>, which steps through each key in turn.</p>
+
+<pre><code>  # Return the first key in a hash. (See hv.c:hv_iterinit)
+  sub FIRSTKEY
+  {
+      $h = shift;
+      @{ $h-&gt;{current} } = (undef, undef);
+      return $h-&gt;NEXTKEY(@_);
+  }
+</code></pre>
+
+<p>If <code>NEXTKEY</code> is called with the hash iterator in its initial state (by <code>FIRSTKEY</code>), it returns the first key in the first occupied bucket. On subsequent calls, it returns either the next key in the current chain, or the first key in the next occupied bucket.</p>
+
+<pre><code>  # Return the next key in a hash. (See hv.c:hv_iterkeysv et al.)
+  sub NEXTKEY
+  {
+      $h = shift;
+      $buckets = $h-&gt;{buckets};
+      $current = $h-&gt;{current};
+
+      ($bucket, $entry) = @{ $current };
+
+      if (!defined $bucket || $entry+1 == @{ $buckets-&gt;[$bucket] }) {
+      FIND_NEXT_BUCKET:
+          do {
+              if (++$current-&gt;[0] == @$buckets) {
+                  @{ $current } = (undef, undef);
+                  return undef;
+              }
+          } while (@{ $buckets-&gt;[$current-&gt;[0]] } == 0);
+          $current-&gt;[1] = 0;
+      }
+      else {
+          $current-&gt;[1]++;
+      }
+
+      return $buckets-&gt;[$current-&gt;[0]][$current-&gt;[1]][0];
+  }
+</code></pre>
+
+<p>The <code>do</code> loop at <code>FIND_NEXT_BUCKET</code> finds the next occupied bucket if the iterator is in its initial undefined state, or if the current entry is at the end of a chain. When there are no more keys in the hash, it resets the iterator and returns <code>undef</code>.</p>
+
+<p>We now have all the pieces required to use our Hash class exactly as we would a real Perl hash.</p>
+
+<pre><code>  tie %h, &quot;Hash&quot;;
+
+  %h = ( foo =&gt; &quot;bar&quot;, bar =&gt; &quot;foo&quot; );
+  while (($key, $val) = each(%h)) {
+      print &quot;$key =&gt; $val\n&quot;;
+  }
+  delete $h{foo};
+
+  # ...
+</code></pre>
+
+<h3 id="span-id-the-perl-internals-perl-internals-span"><span id="the_perl_internals">Perl Internals</span></h3>
+
+<p>If you want to learn more about the hashes inside Perl, then the <code>FakeHash</code> module by Mark-Jason Dominus and a copy of <em>hash.c</em> from Perl 1.0 are good places to start. The PerlGuts Illustrated Web site by Gisle Aas is also an invaluable resource in exploring the Perl internals. (References to all three are included below.)</p>
+
+<p>Although our <code>Hash</code> class is based on Perl&rsquo;s hash implementation, it is not a faithful reproduction; and while a detailed discussion of the Perl source is beyond the scope of this article, parenthetical notes in the code above may serve as a starting point for further exploration.</p>
+
+<h3 id="span-id-history-history-span"><span id="history">History</span></h3>
+
+<p>Donald Knuth credits H. P. Luhn at IBM for the idea of hash tables and chaining in 1953. About the same time, the idea also occurred to another group at IBM, including Gene Amdahl, who suggested open addressing and linear probing to handle collisions. Although the term &ldquo;hashing&rdquo; was standard terminology in the 1960s, the term did not actually appear in print until 1967 or so.</p>
+
+<p>Perl 1 and 2 had &ldquo;two and a half data types&rdquo;, of which one half was an &ldquo;associative array.&rdquo; With some squinting, associative arrays look very much like hashes. The major differences were the lack of the <code>%</code> symbol on hash names, and that one could only assign to them one key at a time. Thus, one would say <code>$foo{'key'} = 1;</code>, but only <code>@keys = keys(foo);</code>. Familiar functions like <code>each</code>, <code>keys</code>, and <code>values</code> worked as they do now (and <code>delete</code> was added in Perl 2).</p>
+
+<p>Perl 3 had three whole data types: it had the <code>%</code> symbol on hash names, allowed an entire hash to be assigned to at once, and added <code>dbmopen</code> (now deprecated in favour of <code>tie</code>). Perl 4 used comma-separated hash keys to emulate multidimensional arrays (which are now better handled with array references).</p>
+
+<p>Perl 5 took the giant leap of referring to associative arrays as hashes. (As far as I know, it is the first language to have referred to the data structure thus, rather than &ldquo;hash table&rdquo; or something similar.) Somewhat ironically, it also moved the relevant code from <em>hash.c</em> into <em>hv.c</em>.</p>
+
+<h3 id="span-id-nomenclature-nomenclature-span"><span id="nomenclature">Nomenclature</span></h3>
+
+<p>Dictionaries, as explained earlier, are unordered collections of values indexed by unique keys. They are sometimes called associative arrays or maps. They can be implemented in several ways, one of which is by using a data structure known as a hash table (and this is what Perl refers to as a hash).</p>
+
+<p>Perl&rsquo;s use of the term &ldquo;hash&rdquo; is the source of some potential confusion, because the output of a hashing function is also sometimes called a hash (especially in cryptographic contexts), and because hash tables aren&rsquo;t usually called hashes anywhere else.</p>
+
+<p>To be on the safe side, refer to the data structure as a hash table, and use the term &ldquo;hash&rdquo; only in obvious, Perl-specific contexts.</p>
+
+<h3 id="span-id-further-resources-further-resources-span"><span id="further_resources">Further Resources</span></h3>
+
+<p><strong><span id="item_algorithms">Introduction to Algorithms (Cormen, Leiserson and Rivest)</span></strong><br />
+Chapter 12 of this excellent book discusses hash tables in detail.</p>
+
+<p><strong><span id="item_programming">The Art of Computer Programming (Donald E. Knuth)</span></strong></p>
+
+<p>Volume 3 (&ldquo;Sorting and Searching&rdquo;) devotes a section (�6.4) to an exhaustive description, analysis, and a historical perspective on various hashing techniques.</p>
+
+<p><strong><span id="item_http%3a%2f%2fperl%2eplover%2ecom%2fbadhash%2epl"></span><a href="http://perl.plover.com/badhash.pl">http://perl.plover.com/badhash.pl</a></strong></p>
+
+<p>&ldquo;When Hashes Go Wrong&rdquo; by Mark-Jason Dominus demonstrates a pathological case of collisions, by creating a large number of keys that hash to the same value, and effectively turn the hash into a very long linked list.</p>
+
+<p><strong><span id="item_http%3a%2f%2fburtleburtle%2enet%2fbob%2fhash%2fdoo"></span><a href="http://burtleburtle.net/bob/hash/doobs.html">http://burtleburtle.net/bob/hash/doobs.html</a></strong></p>
+
+<p>Current versions of Perl use a hashing function designed by Bob Jenkins. His web page explains how the function was constructed, and provides an excellent overview of how various hashing functions perform in practice.</p>
+
+<p><strong><span id="item_http%3a%2f%2fperl%2eplover%2ecom%2ffakehash%2f"></span><a href="http://perl.plover.com/FakeHash/">http://perl.plover.com/FakeHash/</a></strong></p>
+
+<p>This module, by Mark-Jason Dominus, is a more faithful re-implementation of Perl&rsquo;s hashes in Perl, and is particularly useful because it can draw pictures of the data structures involved.</p>
+
+<p><strong><span id="item_http%3a%2f%2fwww%2eetla%2eorg%2fretroperl%2fperl1%"></span><a href="http://www.etla.org/retroperl/perl1/perl-1.0.tar.gz">http://www.etla.org/retroperl/perl1/perl-1.0.tar.gz</a></strong></p>
+
+<p>It might be instructive to read <em>hash.c</em> from the much less cluttered (and much less capable) Perl 1.0 source code, before going through the newer <em>hv.c</em>.</p>
+
+<p><strong><span id="item_http%3a%2f%2fgisle%2eaas%2eno%2fperl%2fillguts%2fh"></span><a href="http://gisle.aas.no/perl/illguts/hv.png">http://gisle.aas.no/perl/illguts/hv.png</a></strong></p>
+
+<p>This image, from Gisle Aas&rsquo;s &ldquo;PerlGuts Illustrated&rdquo;, depicts the layout of the various structures that comprise hashes in the core. The entire web site is a treasure trove for people exploring the internals.</p>
+
+<p><strong><span id="item_http%3a%2f%2fams%2ewiw%2eorg%2fsrc%2fhash%2epm"></span><a href="http://ams.wiw.org/src/Hash.pm">http://ams.wiw.org/src/Hash.pm</a></strong></p>
+
+<p>The source code for the tied Hash class developed in this article.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/hashes-hash">hashes-hash</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-abhijit-menon-sen">
+  <div class="col-sm-2">
+    
+    <a href="/authors/abhijit-menon-sen/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/abhijit-menon-sen/"><h3>Abhijit Menon-Sen</h3></a>
+    <p></p>
+    <h5><a href="/authors/abhijit-menon-sen/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2002_10_01_hashes.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

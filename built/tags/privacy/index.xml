@@ -1,0 +1,677 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Privacy on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/privacy/</link>
+    <description>Recent content in Privacy on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 27 Aug 2015 13:09:11 +0000</lastBuildDate>
+    <atom:link href="/tags/privacy/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Simple, secure backups with Perl</title>
+      <link>http://localhost:1313/article/185/2015/8/27/Simple--secure-backups-with-Perl/</link>
+      <pubDate>Thu, 27 Aug 2015 13:09:11 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/185/2015/8/27/Simple--secure-backups-with-Perl/</guid>
+      <description>
+
+&lt;p&gt;Recently I was searching for a backup solution, and ended up rolling my own. The result is &lt;a href=&#34;https://github.com/dnmfarrell/Stasis&#34;&gt;Stasis&lt;/a&gt; a Perl program that uses &lt;code&gt;tar&lt;/code&gt; and &lt;code&gt;gpg&lt;/code&gt; to compress and encrypt files.&lt;/p&gt;
+
+&lt;h3 id=&#34;how-it-works&#34;&gt;How it works&lt;/h3&gt;
+
+&lt;p&gt;Stasis takes a list of file and directory paths and builds a temporary compressed gzip archive using &lt;code&gt;tar&lt;/code&gt;. It then encrypts the temporary archive with &lt;code&gt;gpg&lt;/code&gt; using &lt;a href=&#34;https://en.wikipedia.org/wiki/Advanced_Encryption_Standard&#34;&gt;AES 256-bit&lt;/a&gt;, saving it to a new location and removes the temporary archive. Stasis supports backups using a passphrase or a GPG key.&lt;/p&gt;
+
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s say I wanted to backup all files in my main home directories. I&amp;rsquo;d create a text file called &lt;code&gt;files_to_backup.txt&lt;/code&gt;, that contains:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;/home/dfarrell/Documents
+/home/dfarrell/Downloads
+/home/dfarrell/Music
+/home/dfarrell/Pictures
+/home/dfarrell/Videos
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I can save all of these directories and files to Dropbox:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis --destination ~/Dropbox --files files_to_backup.txt --passphrase mysecretkey
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or more tersely:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt --passphrase mysecretkey
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Use passfile instead of passphrase:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt --passfile /path/to/passfile
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Use the &amp;ldquo;referrer&amp;rdquo; argument to provide a GPG key instead of a passphrase:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt -r keyname@example.com
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Ignore the files matching patterns in &lt;code&gt;.stasisignore&lt;/code&gt;. This is useful if I wanted to ignore certain types of files, like OSX &lt;code&gt;.DS_Store&lt;/code&gt; index files or more broadly, all hidden files: &lt;code&gt;.*&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt -r keyname@example.com -i .stasisignore
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;limiting-the-number-of-backups&#34;&gt;Limiting the number of backups&lt;/h3&gt;
+
+&lt;p&gt;Stasis accepts the &lt;code&gt;--limit&lt;/code&gt; option to only retain the most recent x backups:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt -r mygpgkey@email.com --limit 4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It works really nicely with the &lt;code&gt;--days&lt;/code&gt; option, which tells stasis to only create a new archive if one deosn&amp;rsquo;t already exist within x days. So to keep a months&amp;rsquo; worth of weekly archives, I can do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ stasis -de ~/Dropbox -f files_to_backup.txt -r mygpgkey@email.com --limit 4 --days 7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now stasis will only retain the last 4 archives, and only create one new archive a week. My personal laptop isn&amp;rsquo;t always on, so I have a cron job that checks for this every 30 minutes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;*/30 * * * * stasis -de ~/Dropbox -f files_to_backup.txt -r mygpgkey@email.com -l 4 -da 7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;restoring-a-backup&#34;&gt;Restoring a backup&lt;/h3&gt;
+
+&lt;p&gt;First decrypt the the backup with &lt;code&gt;gpg&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ gpg -d /path/to/backup.tar.gz.gpg &amp;gt; /path/to/output.tar.gz
+gpg: AES256 encrypted data
+gpg: encrypted with 1 passphrase
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;GPG will ask for the passphrase or GPG key passphrase to unlock the data. You can then inspect the decrypted archive&amp;rsquo;s files with &lt;code&gt;tar&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tar --list -f /path/to/output.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tar -zvtf /path/to/output.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To unzip the archive:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tar -zvxf /path/to/output.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;disadvantages-of-stasis&#34;&gt;Disadvantages of Stasis&lt;/h3&gt;
+
+&lt;p&gt;Stasis suits my needs but it has several drawbacks which mean it might not be ideal for you. For one thing, it creates a standalone, encrypted archive every time it runs instead of incremental backups. Although this is simple, it also wastes space, so consider the implications if you intend to keep many backup copies. Because Stasis creates a temporary copy of the data it archives, it also requires enough disk space to create two compressed archives of the data.&lt;/p&gt;
+
+&lt;p&gt;As Stasis creates a new archive every time, it can be a resource intensive process to backup. On my ultrabook, it takes Stasis about 20 seconds to create a new 400MB new archive. If you are intending to archive large amounts of data, you may need another solution.&lt;/p&gt;
+
+&lt;p&gt;Archive names are fixed and should not be changed. Stasis creates encrypted archives with the ISO 8601 datetime in the filename like:&lt;code&gt;stasis-0000-00-00T00:00:00.tar.gz.gpg&lt;/code&gt;. To detect previous backup files, Stasis looks for files matching this pattern in the backup directory. This comes into play of you use the &lt;code&gt;--limit&lt;/code&gt; option.&lt;/p&gt;
+
+&lt;h3 id=&#34;stasis-cheatsheet&#34;&gt;Stasis cheatsheet&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;stasis [options]
+
+Options:
+
+  --destination -de destination directory to save the encrypted archive to
+  --days        -da only create an archive if one doesn&#39;t exist within this many days (optional)
+  --files       -f  filepath to a text file of filepaths to backup
+  --ignore      -i  filepath to a text file of glob patterns to ignore (optional)
+  --limit       -l  limit number of stasis backups to keep in destination directory (optional)
+  --passphrase      passphrase to use
+  --passfile        filepath to a textfile containing the password to use
+  --referrer    -r  name of the gpg key to use (instead of a passphrase or passfile)
+  --temp        -t  temp directory path, uses /tmp by default
+  --verbose     -v  verbose, print progress statements (optional)
+  --help        -h  print this documentation (optional)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Updated&lt;/strong&gt;:&lt;em&gt;Added new section covering &amp;ndash;days options, removed scripting section 2016-04-02&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Your users deserve better than Disqus</title>
+      <link>http://localhost:1313/article/104/2014/7/29/Your-users-deserve-better-than-Disqus/</link>
+      <pubDate>Tue, 29 Jul 2014 11:46:55 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/104/2014/7/29/Your-users-deserve-better-than-Disqus/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Occasionally readers of this site will contact us to lament our lack of a commenting system. The message usually goes like this: &amp;ldquo;I love the site but I wish you had a comments section&amp;rdquo;. Some readers even recommend a solution: &amp;ldquo;you should get Disqus&amp;rdquo; they say. We are considering adding a comments system to PerlTricks.com, but it probably won&amp;rsquo;t be Disqus. This article explains why.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;what-is-disqus&#34;&gt;What is Disqus?&lt;/h3&gt;
+
+&lt;p&gt;Disqus is a third-party commenting system; you add some JavaScript code to your page and when a visitor&amp;rsquo;s browser loads the page, it runs the code which fetches the Disqus interface, and any existing comments from Disqus&amp;rsquo; servers. This makes Disqus easy to install and as such, Disqus is a popular commenting system (&amp;ldquo;used by over 3 million websites&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;Disqus solves a lot of problems for the site owner: it has a good spam filter, provides notifications, authentication, a management interface and it looks good. Some users like it too: Disqus notifies users when their comment is replied to for example. For these reasons, when many site owners are facing the prospect of developing their own solution, the ease of installing Disqus makes it a natural choice. Disqus developers seem to have anticipated the typical doubts; concerned about your comments being stored by a third party? No problem, you can download them at any time. For site owners with time or cost pressures, Disqus is a compelling pitch.&lt;/p&gt;
+
+&lt;h3 id=&#34;disqus-drawbacks&#34;&gt;Disqus&amp;rsquo; drawbacks&lt;/h3&gt;
+
+&lt;p&gt;Security is a concern. Disqus&amp;rsquo; popularity makes it an inviting target for hackers as a repeatable exploit will be effective against potentially millions of websites. Exploits for Disqus are regularly discovered, just last &lt;a href=&#34;http://thehackernews.com/2014/06/Disqus-wordpress-plugin-flaw-leaves.html&#34;&gt;month&lt;/a&gt; a remote code execution exploit was found in the Wordpress Disqus plugin that left an estimated 1.4 million sites vulnerable. In December 2013, a &lt;a href=&#34;http://cornucopia-en.cornubot.se/2013/12/flash-disqus-cracked-security-flaw.html&#34;&gt;hack&lt;/a&gt; was published that allows a malicious user to obtain the email address of any Disqus user. As a site owner, you have a responsibility to treat your users well; yet a security hole in Disqus could lead to a hacker posting malicious code on your website, that attacks users as they visit the site (&lt;a href=&#34;https://en.wikipedia.org/wiki/Cross-site_scripting&#34;&gt;XSS attacks&lt;/a&gt;). Morality aside, who knows what the legal costs for the site owner could be if an attack was successful?&lt;/p&gt;
+
+&lt;p&gt;Disqus is basically a marketing company; they collect vast amounts of user data and sell advertising to third parties. Disqus tracks users across different websites - whether they are entering comments &lt;a href=&#34;http://en.wikipedia.org/wiki/Disqus#Criticism_.26_Privacy_Concerns&#34;&gt;or not&lt;/a&gt;. Once a user has entered a comment with Disqus, they can be tracked (&amp;ldquo;followed&amp;rdquo;) by any other Disqus user, and are not able to opt out. If this is starting to sound creepy to you, it&amp;rsquo;s because it is creepy. Disqus&amp;rsquo; &lt;a href=&#34;https://help.disqus.com/customer/portal/articles/466259-privacy-policy&#34;&gt;privacy policy&lt;/a&gt; for Personally Identifiable Information (PII) makes it clear that Disqus will disclose PII to third parties &amp;ldquo;for the purpose of providing the service to you&amp;rdquo; which sounds reasonable until you stop to question why Disqus would ever need to share PII with a third party. Meanwhile the non-PII that Disqus openly shares with third parties includes: browser cookie data, ip addresses, location and device identifiers. The issue here is that some third parties are so ubiquitous they are a third party to Disqus, but a first party to your users and as such non-PII quickly &lt;a href=&#34;http://cyberlaw.stanford.edu/node/6701&#34;&gt;becomes&lt;/a&gt; PII. You could argue that users of the site are free to block Disqus with tools like NoScript and Ghostery, which is true, but it also prevents the comments section from appearing for those users. What if they want to read the comments without being tracked?&lt;/p&gt;
+
+&lt;p&gt;Most of the features that Disqus provides are easily obtainable elsewhere; need to prevent XSS content? Use &lt;a href=&#34;https://metacpan.org/pod/HTML::Entities&#34;&gt;HTML::Entities&lt;/a&gt; to HTML encode all outgoing comment text. Want to prevent spam? Add a CAPTCHA for new users posting comments. Want a decent-looking comments section? Copy the Disqus style (ha-ha). The problem is that these features are not tied up in one neat package - a developer will have to assemble the disparate components into a solution. That&amp;rsquo;s called software development.&lt;/p&gt;
+
+&lt;p&gt;As a technologist, I see many parallels between Disqus and PHP; they&amp;rsquo;re both so easy to set up but deep-down you know that using them will cost you later. History &lt;a href=&#34;http://www.psychologytoday.com/blog/the-inertia-trap/201302/why-are-people-bad-evaluating-risks&#34;&gt;shows&lt;/a&gt; that humans consistently underestimate risk and in that regard, Disqus is no different. Site owners, don&amp;rsquo;t let the short-term convenience of Disqus get the better of you, your users deserve better. But what do you think? Let us know in the comments section below*.&lt;/p&gt;
+
+&lt;p&gt;*J/k let us know on &lt;a href=&#34;http://www.reddit.com/r/programming/comments/2c19of/your_users_deserve_better_than_disqus/&#34;&gt;Reddit&lt;/a&gt; or &lt;a href=&#34;https://twitter.com/PerlTricks&#34;&gt;Twitter&lt;/a&gt; instead.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Elements of Access Control</title>
+      <link>http://localhost:1313/pub/2008/02/13/elements-of-access-control.html/</link>
+      <pubDate>Wed, 13 Feb 2008 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2008/02/13/elements-of-access-control.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;why-gates&#34;&gt;Why Gates?&lt;/h3&gt;
+
+&lt;p&gt;In a perfect world we wouldn&amp;rsquo;t do things we should not. However the world is not like this; people do forbidden things sometimes. This also applies to computer systems used by more than one person. Almost everyone has tried to read someone else&amp;rsquo;s email, view accounting department salary reports, or something else, or access otherwise hidden data.&lt;/p&gt;
+
+&lt;p&gt;I know &lt;em&gt;you&lt;/em&gt; have never done this, but many people have.&lt;/p&gt;
+
+&lt;h3 id=&#34;in-construction&#34;&gt;In Construction&lt;/h3&gt;
+
+&lt;p&gt;The simplest way to allow or forbid a user account to do something is to check if the account is in a list of permitted accounts somewhere. If you assume that everything is forbidden unless explicitly allowed, the access function can be as simple as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # access_check() return 1 or undef
+  sub access_check
+  {
+    my $user_id     = shift;
+    my @allow_users = @_;
+
+    my %quick_allow = map { $_ =&amp;gt; 1 } @allow_users;
+
+    return $quick_allow{ $user_id };
+  }
+
+  my @allowed = ( 11, 12, 23, 45 );
+
+  print &amp;quot;User 23 allowed\n&amp;quot; if access_check( 23, @allowed );
+  print &amp;quot;User 13 allowed\n&amp;quot; if access_check( 13, @allowed );
+  print &amp;quot;User 99 allowed\n&amp;quot; if access_check( 99, @allowed );
+
+  # only &amp;quot;User 23 allowed&amp;quot; will be printed
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Usually access control can be almost as simple as this function. Using user IDs for access control is simple, but tends to be hard to maintain. The problem appears with systems with many users or with public systems where new users may be created at any point. Access lists may become very large for each operation, which needs access controls.&lt;/p&gt;
+
+&lt;p&gt;One solution to this problem is &lt;em&gt;access groups&lt;/em&gt;. Each user may be a member of several groups. The access check will pass if the user is a member of a group with permission for the required operation. This middle level in the access check isolates users from the access check directly. It also helps the system&amp;rsquo;s design&amp;ndash;you can associate preset access groups with all controlled operations at their point of creation. Subsequently created users only need to be attached to one or more of those groups:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # mimic real system environment:
+  # %ALL_USER_GROUPS represents &amp;quot;storage&amp;quot; that contains all
+  # groups that each user is attached to
+  my %ALL_USER_GROUPS = (
+                    23 =&amp;gt; [ qw( g1  g4 ) ],
+                    13 =&amp;gt; [ qw( g3  g5 ) ],
+                    );
+  # user 23 is in groups g1 and g4
+  # user 13 -- in g3 and g5
+
+  # return list of user&#39;s groups. read data from storage or
+  # from %ALL_USER_GROUPS in this example
+  sub get_user_groups
+  {
+    my $user_id     = shift;
+
+    return @{ $ALL_USER_GROUPS{ $user_id } || [] };
+  }
+
+  # access_check_grp() return 1 or 0
+  sub access_check_grp
+  {
+    my $user_id     = shift;
+    my @allow_users = @_;
+
+    my %quick_allow = map { $_ =&amp;gt; 1 } @allow_users;
+
+    my @user_groups = get_user_groups( $user_id );
+
+    for my $group ( @user_groups )
+    {
+      # user groups is listed, allow
+      return 1 if $quick_allow{ $group };
+    }
+
+    # user group not found, deny
+    return 0;
+  }
+
+  # this groups list is static and will not be altered
+  # when users are added or removed from the system
+  my @allowed = qw( g1  g2  g7  g9 );
+
+  print &amp;quot;User 23 allowed\n&amp;quot; if access_check_grp( 23, @allowed );
+  print &amp;quot;User 13 allowed\n&amp;quot; if access_check_grp( 13, @allowed );
+  print &amp;quot;User 99 allowed\n&amp;quot; if access_check_grp( 99, @allowed );
+
+  # only &amp;quot;User 23 allowed&amp;quot; will be printed
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;storage&#34;&gt;Storage&lt;/h3&gt;
+
+&lt;p&gt;Probably the most popular storage for system data nowadays is the SQL database. Here is a simple example of how to store users, groups, and mapping between them. Three tables are required:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  SQL CREATE statements:
+
+  create table user  ( id integer primary key, name char(64), pass char(64) );
+  create table group ( id integer primary key, name char(64) );
+  create table map   ( user integer, group integer );
+
+  TABLE USER:
+
+   Column |     Type      | Modifiers
+  --------+---------------+-----------
+   id     | integer       | not null
+   name   | character(64) |
+   pass   | character(64) |
+
+  TABLE GROUP:
+
+   Column |     Type      | Modifiers
+  --------+---------------+-----------
+   id     | integer       | not null
+   name   | character(64) |
+
+  TABLE MAP:
+
+   Column |  Type   | Modifiers
+  --------+---------+-----------
+   user   | integer |
+   group  | integer |
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s fill those tables with some data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  letme=# select id, name from user;
+   id |       name
+  ----+------------------
+    1 | Damian
+    2 | Clive
+    3 | Lana
+  (3 rows)
+
+  letme=# select * from group;
+   id |       name
+  ----+------------------
+    1 | Admin
+    2 | Users
+    3 | Moderators
+  (3 rows)
+
+  letme=# select * from map;
+   user | group
+  -----+-----
+     1 |   1
+     1 |   2
+     3 |   2
+     3 |   3
+     2 |   2
+  (4 rows)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Users in this example are attached to those groups:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Damian: Users, Admin
+  Clive:  Users
+  Lana:   Users, Moderators
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;run-time&#34;&gt;Run-Time&lt;/h3&gt;
+
+&lt;p&gt;Applications apply access control after user login. You can combine it with the login procedure&amp;ndash;for example to allow only specific group of users to connect on weekends. Even so, the access check occurs only after the login succeeds, that is, when the username and password are correct.&lt;/p&gt;
+
+&lt;p&gt;A simple approach for loading required access info is:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Login, check username and password&lt;/li&gt;
+&lt;li&gt;For unsuccessful login, deny access, print message, etc.&lt;/li&gt;
+&lt;li&gt;For successful login, load group list for the user from database&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Check for required group(s) for login&lt;/p&gt;
+
+&lt;p&gt;This may deny login, print a message, or continue.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;User logged in, continue&lt;/p&gt;
+
+&lt;p&gt;All access checks for operations happen after this point.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The run-time storage for a user&amp;rsquo;s groups can be simple hash. It can be either global or inside the user session object, depending on your system design. I&amp;rsquo;ve used a global hash here for simplicity of the examples, but if you copy and paste this code, remember that it is &lt;em&gt;mandatory&lt;/em&gt; for you to clear and recreate this global hash for every request right after the login or user session changes! You can also use some kind of session object to drop all user data at the end of the session, but this is just an option, not the only correct or possible way.&lt;/p&gt;
+
+&lt;p&gt;(Also, a truly robust system would store a well-hashed version of the password, not the literal password, but that&amp;rsquo;s a story for a different article.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+  use strict;
+  use DBI;
+  use Data::Dumper;
+
+  our $USER_NAME;
+  our $USER_ID;
+  our %USER_GROUPS;
+
+  my $DBH = DBI-&amp;gt;connect( &amp;quot;dbi:Pg:dbname=letme&amp;quot;, &amp;quot;postgres&amp;quot;, &amp;quot;&amp;quot;,
+      { AutoCommit =&amp;gt; 0 } );
+
+  # this is just an example!
+  # username and password acquiring depends on the specific application
+  user_login( &#39;Damian&#39;, &#39;secret4&#39; );
+
+  print &amp;quot;User logged in: $USER_NAME\n&amp;quot;;
+  print &amp;quot;User id:        $USER_ID\n&amp;quot;;
+  print &amp;quot;User groups:    &amp;quot; . join( &#39;, &#39;, keys %USER_GROUPS ) . &amp;quot;\n&amp;quot;;
+
+  sub user_login
+  {
+    my $user_name = shift;
+    my $user_pass = shift;
+
+    $USER_NAME   = undef;
+    $USER_ID     = undef;
+    %USER_GROUPS = ();
+
+    # both name and password are required
+    die &amp;quot;Empty user name&amp;quot;     if $user_name eq &#39;&#39;;
+    die &amp;quot;Empty user password&amp;quot; if $user_pass eq &#39;&#39;;
+
+    eval
+    {
+      my $ar = $DBH-&amp;gt;selectcol_arrayref(
+          &#39;SELECT ID FROM USER WHERE NAME = ? AND PASS = ?&#39;,
+                                        {},
+                                        $user_name, $user_pass );
+
+      $USER_ID   = shift @$ar;
+
+      die &amp;quot;Wrong user name or password&amp;quot; unless $USER_ID &amp;gt; 0;
+
+      $USER_NAME = $user_name;
+
+      # loading groups
+      my $ar = $DBH-&amp;gt;selectcol_arrayref( &#39;SELECT GROUP FROM MAP WHERE USER = ?&#39;,
+                                        {},
+                                        $USER_ID );
+
+      %USER_GROUPS = map { $_ =&amp;gt; 1 } @$ar;
+    };
+    if( $@ )
+    {
+      # something failed, it is important to clear user data here
+      $USER_NAME   = undef;
+      $USER_ID     = undef;
+      %USER_GROUPS = ();
+
+      # propagate error
+      die $@;
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If Damian&amp;rsquo;s password is correct, this code will print:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  User logged in: Damian
+  User id:        1
+  User groups:    1, 2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The group access check function now is even simpler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub check_access
+  {
+    my $group = shift;
+    return 0 unless $group &amp;gt; 0;
+    return $USER_GROUPS{ $group };
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sample code for an access check after login will be something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub edit_data
+  {
+    # require user to be in group 1 (admin) to edit data...
+    die &amp;quot;Access denied&amp;quot; unless check_access( 1 );
+
+    # user allowed, group 1 check successful
+    ...
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  if( check_access( 1 ) )
+  {
+    # user ok
+  }
+  else
+  {
+    # access denied
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;access-instructions&#34;&gt;Access Instructions&lt;/h3&gt;
+
+&lt;p&gt;The next problem is how to define which groups can perform specific operations. Where this information is static (most cases), you can store group lists in configuration (text) files:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  LOGIN: 2
+  EDIT:  1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That is, the EDIT operation needs group 1 (admin) and LOGIN needs group 2 (all users).&lt;/p&gt;
+
+&lt;p&gt;Another example is to allow only administrators to log in during weekends:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # all users for mon-fri
+  LOGIN_WEEKDAYS: 2
+
+  # only admin for sat-sun
+  LOGIN_WEEKENDS: 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Administrators will be in both groups (1, 2), so they will be able to log in anytime. All regular users cannot login on weekends.&lt;/p&gt;
+
+&lt;p&gt;This group list includes a moderators group. It could be useful to allow moderators do their job on weekends as well, implying an &lt;code&gt;OR&lt;/code&gt; operation:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # only admin or moderators for sat-sun
+  LOGIN_WEEKENDS: 1, 3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This named set of groups is a &lt;em&gt;policy&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;For now, there&amp;rsquo;s only one level in the policy and an &lt;code&gt;OR&lt;/code&gt; operation between groups in a list. Real-world policies may be more complex. However there is no need to overdesign this. Even large systems may work with just one more level. Here&amp;rsquo;s an &lt;code&gt;AND&lt;/code&gt; operation:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  LOGIN_WEEKENDS: 1+3, 4, 1+5+9
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This policy will match (allowing login on weekend days) only for users in the following groups:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     1 AND 3
+  OR 4
+  OR 1 AND 5 AND 9
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The login procedure must match the &lt;code&gt;LOGIN_WEEKENDS&lt;/code&gt; policy before allowing user to continue with other operations. Thus, you need a procedure for reading policy configuration files:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  our %ACCESS_POLICY;
+
+  sub read_access_config
+  {
+    my $fn = shift; # config file name
+
+    open( my $f, $fn );
+    while( &amp;lt;$f&amp;gt; )
+    {
+      chomp;
+      next unless /\S/; # skip whitespace
+      next if  /^[;#]/; # skip comments
+
+      die &amp;quot;Syntax error: $_\n&amp;quot; unless /^\s*(\S+?):\s*(.+)$/;
+      my $n = uc $1; # policy name: LOGIN_WEEKENDS
+      my $v =    $2; # groups lsit: 1+3, 4, 1+5+9
+
+      # return list of lists:
+      # outer list uses comma separator, inner lists use plus sign separator
+      $ACCESS_POLICY{ $n } = access_policy_parse( $v );
+    }
+    close( $f );
+  }
+
+  sub access_policy_parse
+  {
+    my $policy = shift;
+    return [ map { [ split /[\s\+]+/ ] } split /[\s,]+/, $policy ];
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For the &lt;code&gt;LOGIN_WEEKENDS&lt;/code&gt; policy, the resulting value in &lt;code&gt;%ACCESS_POLICY&lt;/code&gt; will be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $ACCESS_POLICY{ &#39;LOGIN_WEEKENDS&#39; } =&amp;gt;
+
+                [
+                  [ &#39;1&#39;, &#39;3&#39; ],
+                  [ &#39;4&#39; ],
+                  [ &#39;1&#39;, &#39;5&#39;, &#39;9&#39; ]
+                ];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To match this policy, a user must be in every groups listed in any of the inner lists:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub check_policy
+  {
+    my $policy = shift;
+
+    my $out_arr = $ACCESS_POLICY{ $policy };
+    die &amp;quot;Invalid policy name; $policy\n&amp;quot; unless $out_arr;
+
+    return check_policy_tree( $out_arr );
+  }
+
+  sub check_policy_tree
+  {
+    my $out_arr = shift;
+
+    for my $in_arr ( @$out_arr )
+    {
+
+      my $c = 0; # matching groups count
+      for my $group ( @$in_arr )
+      {
+        $c++ if $USER_GROUPS{ $group };
+      }
+
+      # matching groups is equal to all groups count in this list
+      # policy match!
+      return 1 if $c == @$in_arr;
+    }
+
+    # if this code is reached then policy didn&#39;t match
+    return 0;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The example cases will become:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub user_login
+  {
+      # login checks here
+      ...
+
+      # login ok, check weekday policy
+      my $wday = (localtime())[6];
+
+      my $policy;
+      if( $wday == 0 or $wday == 6 )
+      {
+        $policy = &#39;LOGIN_WEEKEND&#39;;
+      }
+      else
+      {
+        $policy = &#39;LOGIN_WEEKDAY&#39;;
+      }
+
+      die &amp;quot;Login denied&amp;quot; unless check_policy( $policy );
+  }
+
+  sub edit_data
+  {
+    # require user to be in group 1 (admin) to edit data...
+    die &amp;quot;Access denied&amp;quot; unless check_policy( &#39;EDIT&#39; );
+
+    # user allowed, &#39;EDIT&#39; policy match
+    ...
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you have all the parts of a working access control scheme:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Policy configuration syntax&lt;/li&gt;
+&lt;li&gt;Policy parser&lt;/li&gt;
+&lt;li&gt;User group storage and mapping&lt;/li&gt;
+&lt;li&gt;User group loading&lt;/li&gt;
+&lt;li&gt;Policy match function&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This scheme may seem complete, but it lacks one thing.&lt;/p&gt;
+
+&lt;h3 id=&#34;data-fences&#34;&gt;Data Fences&lt;/h3&gt;
+
+&lt;p&gt;In a multiuser system there is always some kind of ownership on the data stored in the database. This means that each user must see only those parts of the data that his user groups own.&lt;/p&gt;
+
+&lt;p&gt;This ownership problem solution is separate from the policy scheme. Each row must have one or more fields filled with groups that have access to the data. Any SQL statements for reading data must also check for this field:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $rg  = join &#39;,&#39;, grep { $USER_GROUPS{ $_ } } keys %USER_GROUPS;
+  my $ug  = join &#39;,&#39;, grep { $USER_GROUPS{ $_ } } keys %USER_GROUPS;
+  my $sql = &amp;quot;SELECT * FROM TABLE_NAME
+             WHERE READ_GROUP IN ( $rg ) AND UPDATE_GROUP IN ( $ug )&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The result set will contain only rows with read and update groups inside the current user&amp;rsquo;s group set. Sometimes you may need all of rows with the same read group for display, even though some of those rows have update restrictions the user does not meet. This case will use only the &lt;code&gt;READ_GROUP&lt;/code&gt; field for select and will cut off users when they try to update the record without permission:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $rg  = join &#39;,&#39;, grep { $USER_GROUPS{ $_ } } keys %USER_GROUPS;
+  my $sql = &amp;quot;SELECT * FROM TABLE_NAME WHERE READ_GROUP IN ( $rg )&amp;quot;;
+
+  $sth = $dbh-&amp;gt;prepare( $sql );
+  $sth-&amp;gt;execute();
+  $hr = $sth-&amp;gt;fetchrow_hashref();
+
+  die &amp;quot;Edit access denied&amp;quot; unless check_access( $hr-&amp;gt;{ &#39;UPDATE_GROUP&#39; } );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When access checks are explicitly after &lt;code&gt;SELECT&lt;/code&gt; statements it is possible to store full policy strings inside &lt;code&gt;CHAR&lt;/code&gt; fields:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $hr = $sth-&amp;gt;fetchrow_hashref();
+
+  die &amp;quot;Edit access denied&amp;quot; unless check_policy_record( $hr, &#39;UPDATE_GROUP&#39; );
+
+  sub check_policy_record
+  {
+      my $hr     = shift; # hash with record data
+      my $field  = shift; # field containing policy string
+
+      my $policy = $hr-&amp;gt;{ $field };
+      my $tree   = access_policy_parse( $policy );
+
+      return check_policy_tree( $tree );
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;in-the-middle-of-nowhere&#34;&gt;In the Middle of Nowhere&lt;/h3&gt;
+
+&lt;p&gt;This access control scheme is simple and usable as described. It does not cover all possible cases of access control, but every application has its own unique needs. In certain cases, you can push some of these access controls to lower levels &amp;ndash; your database, for example &amp;ndash; depending on your needs. Good luck with building your own great wall!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

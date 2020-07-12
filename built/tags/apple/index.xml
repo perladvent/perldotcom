@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Apple on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/apple/</link>
+    <description>Recent content in Apple on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 29 Aug 2014 15:03:09 +0000</lastBuildDate>
+    <atom:link href="/tags/apple/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Facing the music with Perl</title>
+      <link>http://localhost:1313/article/111/2014/8/29/Facing-the-music-with-Perl/</link>
+      <pubDate>Fri, 29 Aug 2014 15:03:09 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/111/2014/8/29/Facing-the-music-with-Perl/</guid>
+      <description>&lt;p&gt;My digital music libraries were messed up. Spread across several devices and a couple of flirtations with iTunes Match and iCloud, I didn&amp;rsquo;t have everything in one place—ironically. Not only that, but Apple had replaced some files with what it considered better versions. Although I don&amp;rsquo;t want to perform the experiment to confirm it, I&amp;rsquo;m sure that the new files had different metadata. I needed to sort it out to start on a better system. I thought the task would be arduous, and it was until I settled on a simpler problem that a couple of Perl modules solved quickly.&lt;/p&gt;
+
+&lt;p&gt;For my first step, I needed to find all the music I had. I had backed up my files before I let Apple replace them with better versions. But I seemed to have made several backups, each with a different subset of my music. One backup would have most of the Led Zepplin but none of the Beatles, while another had no Zepplin and some of the Beatles. Another had all of the Beatles but no Cat Stevens.&lt;/p&gt;
+
+&lt;p&gt;I started by collecting all the unique files from the directories in which I had found music. This program has some of my favorite things about Perl, especially since I still have the wounds from moving files around during my C phase.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Digest::MD5 &lt;span style=&#34;color:#e6db74&#34;&gt;qw(md5_hex)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Copy  &lt;span style=&#34;color:#e6db74&#34;&gt;qw(copy)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Find;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Map   &lt;span style=&#34;color:#e6db74&#34;&gt;qw(map_file)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Path  &lt;span style=&#34;color:#e6db74&#34;&gt;qw(make_path)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Spec::Functions &lt;span style=&#34;color:#e6db74&#34;&gt;qw(catfile)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $wanted &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    state $Seen  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {};
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $full_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $File::Find::name;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $full_name;
+
+    map_file &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $map, $full_name, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;+&amp;lt;&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $digest_hex &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; md5_hex( $map );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $Seen&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ $digest_hex }&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $extension )     &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $full_name  &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/(\.[^.]+)\z/&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $n, $m, $o, $p ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $digest_hex &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/\A (..) (..) (..) (..)/x&lt;/span&gt;;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $basename &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; catfile( $new_dir, $n, $m, $o, $p );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $new_file &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; catfile( $dir, $basename );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e $new_file;
+
+    make_path( $dir ) &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $dir;
+
+    copy(
+        $full_name, 
+        catfile( $dir, $basename )
+        );
+    };
+
+find( $wanted, @ARGV );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/File::Find&#34;&gt;File::Find&lt;/a&gt; provides the code to traverse the file structure for me. I give find the list of starting directories, in this case those in &lt;code&gt;@ARGV&lt;/code&gt;, and a callback subroutine as a reference. The meat of my program is in that &lt;code&gt;$wanted&lt;/code&gt; subroutine. The hardest part of this code is remembering that &lt;code&gt;$File::Find::name&lt;/code&gt; is the full path and &lt;code&gt;$_&lt;/code&gt; is the filename only. I put those into variables to remind me which is which.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/File::Map&#34;&gt;File::Map&lt;/a&gt; allows me to access a file&amp;rsquo;s data directly from disk as a memory map rather than reading it into memory. I don&amp;rsquo;t need to change the file to get its digest (using &lt;a href=&#34;https://metacpan.org/pod/Digest::MD5&#34;&gt;Digest::MD5&lt;/a&gt;), so memory mapping is a big win across tens of thousands of music files. If I have seen that digest before, I move on to the next file. Otherwise I do some string manipulations to create new file paths, putting the pieces together with the cross-plaform &lt;a href=&#34;https://metacpan.org/pod/File::Spec&#34;&gt;File::Spec&lt;/a&gt;. I copy the file to the new location with &lt;a href=&#34;https://metacpan.org/pod/File::Copy&#34;&gt;File::Copy&lt;/a&gt;. I specifically make a copy so I leave the original files where they are for now. I anticipate messing up at least a couple of times. The new path is four levels deep with each deeper level based on the next two characters in the file&amp;rsquo;s digest. That way, no directory gets too big, slowing down all directory operations.&lt;/p&gt;
+
+&lt;p&gt;Some rough calculations showed me that no particular music library was more than 85% complete. This was where the real fun began, but also my embarrassing tales of woe. Out of the newly copied files, I needed to select the ones I wanted to keep.&lt;/p&gt;
+
+&lt;p&gt;First, I merely cleaned out my iTunes library and reimported everything to see what I was working with. Most music I had in duplicates, and some in triplicates. iTunes Match had upgraded MP3 files to M4A (encoded in Apple&amp;rsquo;s AAC codec) and had done the same for M4P files, the DRM-ed versions of music I had purchased. Each version had a different digest, so several versions of the same content survived.&lt;/p&gt;
+
+&lt;p&gt;I struggled with the next part of the problem because I have too much computer power at my disposal. I could collect all of the metadata for each file and store it in a database. I could throw it into a NoSQL thingy. I even thought about redis. Any one of these technologies are fun diversions but they require too much work. I started and abandoned several approaches, including a brief attempt to use AppleScript to interact with iTunes directly. Oh, the insanity.&lt;/p&gt;
+
+&lt;p&gt;Working from the digested directory each time was a bad decision. I&amp;rsquo;d have to collect the metadata then group files by album or artist. iTunes had already done that for me, although I didn&amp;rsquo;t realize this for a week. When I imported the music, it copied the files into folders named after the artist and album (something I could have done instead of using the digests). Most of my work would be limited to the files in a single directory. I don&amp;rsquo;t need a data structure to hold all of that. I certainly didn&amp;rsquo;t need a database.&lt;/p&gt;
+
+&lt;p&gt;If I could enter a directory, examine each file in that directory, then process them on the way out of that directory, removing the duplicate files becomes much easier. I remembered that &lt;a href=&#34;https://metacpan.org/pod/File::Find&#34;&gt;File::Find&lt;/a&gt; has a &lt;code&gt;post_process&lt;/code&gt; option that allows me to do this, although I haven&amp;rsquo;t used it in years:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Find &lt;span style=&#34;color:#e6db74&#34;&gt;qw(find)&lt;/span&gt;;
+
+find( 
+    { 
+    wanted      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $wanted,   &lt;span style=&#34;color:#75715e&#34;&gt;#code refs&lt;/span&gt;
+    postprocess &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $post,
+    },
+    @ARGV,
+    );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;While I was in each directory, I could collect information on each file. Each file is already sorted by artist and album but I still need to choose which one of the duplicate files to keep. After a bit of thought, the solution turned out to be simple. I could sort on file extension, looking up the ordering in a hash. When I have two files with the same extension I&amp;rsquo;ll choose the one with the higher bitrate. When the bitrates match, I&amp;rsquo;ll choose the one with the shortest filename. With the various music libraries, I had some files like &lt;em&gt;Susie Q.m4a&lt;/em&gt; and &lt;em&gt;Susie Q 1.m4a&lt;/em&gt;; essentially the same file except for some slight metadata differences. I used &lt;a href=&#34;https://metacpan.org/pod/Music::Tag&#34;&gt;Music::Tag&lt;/a&gt; to get the metadata since it automatically delegated to plugins for the various file formats.&lt;/p&gt;
+
+&lt;p&gt;After sorting, I mark for deletion everything except the first element in the list. I don&amp;rsquo;t delete them right away; I print the list to a file which I can use later to delete files. I&amp;rsquo;ve been around too long to delete files right away.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/Users/brian/bin/perls/perl5.18.1&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.18&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Digest::MD5 &lt;span style=&#34;color:#e6db74&#34;&gt;qw( md5_hex )&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Basename &lt;span style=&#34;color:#e6db74&#34;&gt;qw( basename )&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Find;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Map   &lt;span style=&#34;color:#e6db74&#34;&gt;qw( map_file )&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Copy  &lt;span style=&#34;color:#e6db74&#34;&gt;qw( copy )&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Path  &lt;span style=&#34;color:#e6db74&#34;&gt;qw( make_path )&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Spec::Functions  &lt;span style=&#34;color:#e6db74&#34;&gt;qw(abs2rel rel2abs splitdir)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Music::Tag;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $extensions_order &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+    m4a &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,        
+    mp3 &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+    m4p &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+    };
+
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;gt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;delete_files.txt&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $hash &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {};
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $wanted, $post ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; make_subs( $dir, $hash );
+
+find( 
+    { 
+    wanted      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $wanted,
+    postprocess &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $post,
+    },
+    @ARGV,
+    );
+    
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;make_subs&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $dir, $hash ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#75715e&#34;&gt;# wanted&lt;/span&gt;
+        &lt;span style=&#34;color:#75715e&#34;&gt;# my $path     = $File::Find::name;&lt;/span&gt;
+        &lt;span style=&#34;color:#75715e&#34;&gt;# my $filename = $_;&lt;/span&gt;
+        
+        state $count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;( &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $File::Find::name &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;l $File::Find::name );
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $_ &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.DS_Store&amp;#39;&lt;/span&gt;;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $filename &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; basename( $File::Find::name );
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $relative &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; abs2rel( $File::Find::name, $dir );
+        
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $basename_no_ext &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $filename &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/\.[^.]+\z//&lt;/span&gt;r;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $extension ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $filename &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;m/ \. ( [^.]+ ) \z /x&lt;/span&gt;;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; exists $extensions_order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$extension};
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $this_file &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {};
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $info &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; eval { Music::Tag&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( $filename )&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_tag };
+        
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $title &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; eval{ $info&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;title };
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;( $@ ) { 
+            warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Title had a problem: $@&amp;#34;&lt;/span&gt;;
+            }
+
+        $this_file&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{tag} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+            title   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $title,
+            bitrate &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; eval{ $info&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;bitrate },
+            };    
+        $this_file&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+            extension &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $extension,
+            basename  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $filename,
+            relative  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $relative,
+            no_ext    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $basename_no_ext,
+            &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;File::Find::name&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $File::Find::name,
+            &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;_&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $_,
+            };    
+        
+        push @{ $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$File::Find::dir}{$title} }, $this_file;
+
+        $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{extensions}{$extension}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+        },
+        
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#75715e&#34;&gt;# postprocess        &lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $this &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$File::Find::dir};
+
+        TITLE: &lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $title ( sort keys %$this ) {
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $songs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $this&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ $title };
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; @$songs &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# no duplicates, no problem&lt;/span&gt;
+
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @sorted &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sort {
+              state $e &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $extensions_order;
+                
+              $e&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ $a&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{extension} } &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;=&amp;gt;&lt;/span&gt; $e&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ $b&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{extension} }
+                    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt;
+              length $a&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{basename} &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;=&amp;gt;&lt;/span&gt; length $b&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{basename}
+                    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt;
+              $b&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{tag}{bitrate} &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;=&amp;gt;&lt;/span&gt; $a&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{tag}{bitrate}
+              } @$songs;
+
+            &lt;span style=&#34;color:#75715e&#34;&gt;# everything without the chosen key will be deleted&lt;/span&gt;
+            $sorted[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]{chosen}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+            
+            SONG: &lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $song ( @sorted ) {
+                $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{seen}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; exists $extensions_order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{
+                    $song&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{extension} };
+                $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{examined}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $song&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{chosen};
+                
+                &lt;span style=&#34;color:#75715e&#34;&gt;# ignore other files, such as videos and e-books&lt;/span&gt;
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; exists $extensions_order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{
+                    $song&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{extension} };
+
+                $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{deleted}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; { $fh } &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;delete:\t$song-&amp;gt;{file}{relative}\n&amp;#34;&lt;/span&gt;;
+                }
+            }
+
+        delete $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$File::Find::dir};
+        }
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And that was it. This left behind a couple of problems, such as messed up metadata, but I wasn&amp;rsquo;t going to be able to solve that programmatically anyway. Getting a complete set of files with no duplicates solved most of the problem and leaves me with the joy of flipping through physical albums that only us grey beards remember.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

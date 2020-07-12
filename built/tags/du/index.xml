@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Du on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/du/</link>
+    <description>Recent content in Du on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 06 Oct 2015 13:18:48 +0000</lastBuildDate>
+    <atom:link href="/tags/du/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Display real-time data with Curses</title>
+      <link>http://localhost:1313/article/197/2015/10/6/Display-real-time-data-with-Curses/</link>
+      <pubDate>Tue, 06 Oct 2015 13:18:48 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/197/2015/10/6/Display-real-time-data-with-Curses/</guid>
+      <description>&lt;p&gt;Sometimes a terminal interface is the easiest way to get an answer, and when it is, I like to use Curses to make the experience pleasant. In this article, I&amp;rsquo;ll rewrite a Curses program I&amp;rsquo;ve written many times, mostly because I forget where I had put it the last time I created it (and this time I found that I&amp;rsquo;d posted it to &lt;a href=&#34;http://www.perlmonks.org/index.pl/jacques?node_id=388218&#34;&gt;Perlmonks&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;Every time I reinvent it I write it a little differently than I did before, and now I want to update it for Perl&amp;rsquo;s new features, mainly its &lt;a href=&#34;http://www.effectiveperlprogramming.com/2015/04/use-v5-20-subroutine-signatures/&#34;&gt;subroutine signatures&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;One day I had a small task to prune a directory tree and I wanted to look at the largest files in it. I knew about &lt;code&gt;du&lt;/code&gt; and that it could show me a list of files and their sizes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ du &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;a
+&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/apache2/&lt;/span&gt;extra
+&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/apache2/o&lt;/span&gt;riginal&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;extra
+&lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/apache2/o&lt;/span&gt;riginal
+&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/apache2/o&lt;/span&gt;ther
+&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/apache2/&lt;/span&gt;users
+&lt;span style=&#34;color:#ae81ff&#34;&gt;192&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;apache2
+&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;asl
+&lt;span style=&#34;color:#ae81ff&#34;&gt;104&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;certificates
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;12904&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The problem is the command&amp;rsquo;s depth-first traversal. I could play various tricks to sort the output once I had it, but for a large directory I want to see the results as they come in. Perl, being the Unix glue language (Swiss Army Chainsaw, etc.), is perfect for this. I can read the real-time output of &lt;code&gt;du&lt;/code&gt; and display it how I like.&lt;/p&gt;
+
+&lt;p&gt;The first part is easy. I can open a pipe to the external command (see my earlier article &lt;a href=&#34;http://perltricks.com/article/182/2015/7/15/Stupid-open---tricks&#34;&gt;Stupid open tricks&lt;/a&gt;). This time, I use the three-argument pipe-open instead of the two-argument form I&amp;rsquo;d used earlier.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pipe, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-|&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;du -a&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;After that, I need to display the data. My concept is that the on-screen list will update with the largest files so far. I take each line of output, split it into its size and filename, and add them to the list. I&amp;rsquo;ve created a class to handle that, including the parts that decide which files are large enough to display:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $files &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Local::files&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$pipe&amp;gt;&lt;/span&gt; ) {
+  chomp;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $size, $file ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\s+/&lt;/span&gt;, $_, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $file;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $file &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;.&amp;#34;&lt;/span&gt;;
+  $files&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add( $size, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$file&amp;#34;&lt;/span&gt; );
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The next part I update for Perl 5.12&amp;rsquo;s &lt;a href=&#34;http://www.effectiveperlprogramming.com/2013/08/declare-packages-outside-of-their-block/&#34;&gt;package NAME BLOCK&lt;/a&gt; syntax that allows me to declare the &lt;code&gt;package&lt;/code&gt; outside of its block:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Local::files {
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The rest is list manipulation and Curses stuff. I won&amp;rsquo;t go through the list code. Basically, if the next item is greater than the size of the last element in the list, the new, larger element replaces the existing one. After that, I resort the list.&lt;/p&gt;
+
+&lt;p&gt;The setup for Curses is easy. It knows the screen size already:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;init&lt;/span&gt; ($self) {
+  initscr;
+  curs_set(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;# hide cursor&lt;/span&gt;
+  $win &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Curses&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; MAX; $i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; $i&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt; ) {
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;size_at( $i, undef );
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;name_at( $i, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt; );
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I need to remember to undo all the magic that Curses does by calling &lt;code&gt;endwin&lt;/code&gt; at the end, so I put the &lt;code&gt;DESTROY&lt;/code&gt; right after the part I go through the initial setup:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;DESTROY&lt;/span&gt; { endwin; }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Once I have the sorted list, I have to draw it to the screen. This involves two things. I need to erase what&amp;rsquo;s already there so a shorter filename doesn&amp;rsquo;t leave parts of a longer filename it might replace. The &lt;code&gt;addstr&lt;/code&gt; puts text on the screen (the top-left corner being (1,1)). None of the new text shows up until I call &lt;code&gt;refresh&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;draw&lt;/span&gt; ($self) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; $i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; MAX; $i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;size_at( $i ) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;name_at( $i ) &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+    $win&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;addstr( $i,  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; &amp;#34;&lt;/span&gt; x $Curses::COLS );
+    $win&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;addstr( $i,  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, sprintf( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%8d&amp;#34;&lt;/span&gt;, $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[$i][SIZE] &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt; )  );
+    $win&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;addstr( $i, &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;, $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;name_at( $i ) );
+    $win&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;refresh;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now I have a little script that makes some fancy output to the screen as I sort the list of largest files in real time. Here&amp;rsquo;s a run against my &lt;a href=&#34;https://metacpan.org/pod/CPAN::Mini&#34;&gt;MiniCPAN&lt;/a&gt; directory:&lt;/p&gt;
+
+&lt;p&gt;The way I&amp;rsquo;ve written it, I have to run it from the directory I want to check. I can avoid all sorts of nonsense with taint-checking and weird directory names that way. You could easily make it work otherwise. You could even adapt this program to list something else. The list management stuff is already there and it doesn&amp;rsquo;t really care about the particular problem. The full code is on &lt;a href=&#34;https://github.com/briandfoy/du-curses/blob/master/curses.pl&#34;&gt;GitHub as briandfoy/du-curses&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

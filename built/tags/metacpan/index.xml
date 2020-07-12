@@ -1,0 +1,868 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Metacpan on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/metacpan/</link>
+    <description>Recent content in Metacpan on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 11 Nov 2019 10:34:07 +0000</lastBuildDate>
+    <atom:link href="/tags/metacpan/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Inspecting Catalyst</title>
+      <link>http://localhost:1313/article/inspecting-catalyst/</link>
+      <pubDate>Mon, 11 Nov 2019 10:34:07 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/inspecting-catalyst/</guid>
+      <description>
+
+&lt;p&gt;One of the convenient things about &lt;a href=&#34;https://metacpan.org/pod/Catalyst&#34;&gt;Catalyst&lt;/a&gt; is it lets you register controller methods as actions, so you don&amp;rsquo;t need a separate routing table of URIs to controller methods. A consequence of this though, is that when the web app gets large enough it can be tricky to keep track of all the different paths the app is responding to.&lt;/p&gt;
+
+&lt;p&gt;Catalyst&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Catalyst::DispatchType::Chained&#34;&gt;chained dispatch&lt;/a&gt; promotes code reuse, but exacerbates the issue by obfuscating route matching. Catalyst also permits declaring controller methods which match an unlimited number of paths after a prefix; another recipe for unpredictablity.&lt;/p&gt;
+
+&lt;p&gt;Take a look at the MetaCPAN &lt;a href=&#34;https://github.com/metacpan/metacpan-web&#34;&gt;source code&lt;/a&gt;. Can you tell all of the routes it responds to?&lt;/p&gt;
+
+&lt;p&gt;As far as I know, the only way is to launch the app in debug mode and Catalyst will print a list of all the controller actions and their URIs. I suppose you could try parsing that output, but that feels like a hack. If we&amp;rsquo;re programming a web app, surely we should be able to programmatically retrieve all the routes &lt;em&gt;we&amp;rsquo;ve&lt;/em&gt; created, without having to launch the app.&lt;/p&gt;
+
+&lt;h2 id=&#34;catalyst-plugin-actionpaths&#34;&gt;Catalyst::Plugin::ActionPaths&lt;/h2&gt;
+
+&lt;p&gt;With that straw man sufficiently propped up, allow me to introduce &lt;a href=&#34;https://metacpan.org/pod/Catalyst::Plugin::ActionPaths&#34;&gt;Catalyst::Plugin::ActionPaths&lt;/a&gt;. I wrote it a while ago to implement some &lt;a href=&#34;http://localhost:1313/article/208/2016/1/5/Save-time-with-compile-tests/&#34;&gt;axiomatic&lt;/a&gt; tests at work which checked for misconfigured Catalyst routes.&lt;/p&gt;
+
+&lt;p&gt;The plugin adds the &lt;code&gt;get_action_paths&lt;/code&gt; method to the Catalyst context object. The method returns an arrayref of the application&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Catalyst::Action&#34;&gt;Catalyst::Action&lt;/a&gt; objects. The way Catalyst&amp;rsquo;s routing works is it loops through every action object until it finds one that matches the request, or returns in failure.&lt;/p&gt;
+
+&lt;p&gt;To use the ActionPaths plugin on the MetaCPAN app I forked and cloned the &lt;a href=&#34;https://github.com/dnmfarrell/metacpan-web/commit/08d9a4929887c6bfb39271378415f6190a1a010a&#34;&gt;repo&lt;/a&gt;, and added the ActionPaths plugin to the application &lt;a href=&#34;https://github.com/dnmfarrell/metacpan-web/commit/08d9a4929887c6bfb39271378415f6190a1a010a&#34;&gt;class&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;After installing &lt;a href=&#34;https://metacpan.org/pod/Carton&#34;&gt;Carton&lt;/a&gt; from the root project directory I ran:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ carton install&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Which installed of the applications dependencies into the &lt;code&gt;./local&lt;/code&gt; directory. This is a nice way to avoid clobbering your system or user-installed modules with the application&amp;rsquo;s dependencies.&lt;/p&gt;
+
+&lt;p&gt;I also had to install the libxml2-dev and node-less Ubuntu packages to provide all of the app&amp;rsquo;s dependencies.&lt;/p&gt;
+
+&lt;p&gt;Finally I wrote this &lt;a href=&#34;https://github.com/dnmfarrell/metacpan-web/commit/d17066f41945692a960ba80ed1865f22286efb78&#34;&gt;script&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.16&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Cwd;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Basename;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Spec;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $root_dir;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bin_dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; File::Basename::dirname(__FILE__);
+  $root_dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Cwd::abs_path(File::Spec&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;catdir($bin_dir, File::Spec&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;updir));
+}
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; lib &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$root_dir/local/lib/perl5&amp;#34;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# carton installed deps&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; lib &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$root_dir/lib&amp;#34;&lt;/span&gt;;             &lt;span style=&#34;color:#75715e&#34;&gt;# root application dir&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Catalyst::Test &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;MetaCPAN::Web&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;($res, $c) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ctx_request(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (@{$c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_action_paths}) {
+  say join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\t&amp;#34;&lt;/span&gt;, $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{class}, $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name}, $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{path};
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It begins by figuring out the root application directory, and adding the paths to the local Carton-installed and the MetaCPAN project modules (it uses &lt;a href=&#34;https://metacpan.org/pod/lib&#34;&gt;lib&lt;/a&gt; to catch architecture specific nested paths).&lt;/p&gt;
+
+&lt;p&gt;It uses &lt;a href=&#34;https://metacpan.org/pod/Catalyst::Test&#34;&gt;Catalyst::Test&lt;/a&gt; to load the MetaCPAN::Web application. Catalyst::Test exports the &lt;code&gt;ctx_request&lt;/code&gt; method, which returns the Catalyst context object &lt;code&gt;$c&lt;/code&gt;. From there I can call &lt;code&gt;get_action_paths&lt;/code&gt; and print out all the routes served by MetaCPAN.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ bin/dump-catalyst-paths
+MetaCPAN::Web::Controller::Root   index           /
+MetaCPAN::Web::Controller::Root   default         /...
+MetaCPAN::Web::Controller::About  about           /about/
+MetaCPAN::Web::Controller::About  contact         /about/contact/
+MetaCPAN::Web::Controller::About  contributors    /about/contributors/
+MetaCPAN::Web::Controller::About  development     /about/development/
+MetaCPAN::Web::Controller::About  faq             /about/faq/
+MetaCPAN::Web::Controller::About  meta_hack       /about/meta_hack/
+MetaCPAN::Web::Controller::About  metadata        /about/metadata/
+MetaCPAN::Web::Controller::About  missing_modules /about/missing_modules/
+MetaCPAN::Web::Controller::About  resources       /about/resources/
+MetaCPAN::Web::Controller::About  sponsors        /about/sponsors/
+MetaCPAN::Web::Controller::About  stats           /about/stats/
+MetaCPAN::Web::Controller::Author index           /author/*
+# output truncated&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;An asterisk in the path is a placeholder. An ellipses means the path accepts unlimited(!) placeholders.&lt;/p&gt;
+
+&lt;p&gt;In this case I&amp;rsquo;m just printing the controller methods and URIs they match, but you could implement all kinds of checks on the Catalyst::Action objects to detect violations of agreed upon development best practices.&lt;/p&gt;
+
+&lt;h2 id=&#34;a-better-way&#34;&gt;A better way&lt;/h2&gt;
+
+&lt;p&gt;The solution above works, but it feels a bit gross. I&amp;rsquo;ve added a plugin to the Catalyst app which the app doesn&amp;rsquo;t actually use. The script fakes a request to the app &lt;em&gt;just&lt;/em&gt; to get &lt;code&gt;$c&lt;/code&gt;. I&amp;rsquo;m using a test module but running no tests. Surely there is a better way.&lt;/p&gt;
+
+&lt;p&gt;Typically, Catalyst applications call the &lt;code&gt;setup&lt;/code&gt; method in the application module (for MetaCPAN that&amp;rsquo;s &lt;a href=&#34;https://github.com/dnmfarrell/metacpan-web/blob/7866904ca299701bfa850c10a9e0456f73109bc4/lib/MetaCPAN/Web.pm&#34;&gt;MetaCPAN::Web&lt;/a&gt;). The &lt;code&gt;setup&lt;/code&gt; method bootstraps the web application, doing things like configuring directories, initializing the logger, loading plugins and building the request dispatcher. These are stored in the application package which is a singleton.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Catalyst::Plugin::ActionPaths::get_action_paths&lt;/code&gt; uses the Catalyst context to get the dispatcher object, which is all it needs to extract the paths from the Catalyst app. So instead of using &lt;code&gt;request_ctx&lt;/code&gt; to get the context to get the dispatcher, I can just stand up the application myself and pluck the dispatcher out of the application package:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; MetaCPAN::Web; &lt;span style=&#34;color:#75715e&#34;&gt;# calls setup()&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dispatcher &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; MetaCPAN::Web&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dispatcher;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now if I re-write the &lt;code&gt;get_action_paths&lt;/code&gt; method to just use the dispatcher object directly, I can extract all the paths from the app without using &lt;code&gt;request_ctx&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $actions &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; get_action_paths($dispatcher);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (@{$actions}) {
+  say join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\t&amp;#34;&lt;/span&gt;, $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{class}, $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name}, $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{path};
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This works. Of course if I can dynamically load the MetaCPAN app and extract its routes, then I can do that for any Catalyst app. That&amp;rsquo;s what &lt;a href=&#34;https://gist.github.com/dnmfarrell/cad2c6f6395850cb1ceca48b3ba05b7c&#34;&gt;dump-catalyst-paths&lt;/a&gt; does. To dump a Catalyst app&amp;rsquo;s routes just provide the package name and any additional paths to include:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./dump-catalyst-routes MetaCPAN::Web lib local/lib/perl5&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&#34;postscript&#34;&gt;Postscript&lt;/h2&gt;
+
+&lt;p&gt;We&amp;rsquo;re just a couple of months past the 10th anniversary of the publication of &lt;a href=&#34;https://www.apress.com/gp/book/9781430223658&#34;&gt;Catalyst: The Definitive Guide&lt;/a&gt;. Two of our core applications at work are Catalyst apps. As one of Perl&amp;rsquo;s premier MVC apps, it&amp;rsquo;s remarkable how resilient it&amp;rsquo;s been. That&amp;rsquo;s a testament to the implementation (which got a lot of things right) and more recently the work done by its maintainer &lt;a href=&#34;https://metacpan.org/author/JJNAPIORK&#34;&gt;John Napiorkowski&lt;/a&gt;. Thanks John!&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re considering web application programming with Perl, the &lt;a href=&#34;https://metacpan.org/pod/Dancer2&#34;&gt;Dancer2&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Mojolicious&#34;&gt;Mojolicious&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Kelp&#34;&gt;Kelp&lt;/a&gt; frameworks are modern alternatives to Catalyst.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How to get your Pull Request accepted</title>
+      <link>http://localhost:1313/article/how-to-get-pull-request-accepted-/</link>
+      <pubDate>Tue, 05 Mar 2019 20:35:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/how-to-get-pull-request-accepted-/</guid>
+      <description>
+
+&lt;p&gt;Recently, someone I met online (and a respected name in Perl community), asked me if I could share my tips for how to get a Pull Request accepted. I have been submitting PRs for over 4 years, over the course of which I&amp;rsquo;ve seen a few successful patterns.&lt;/p&gt;
+
+&lt;h2 id=&#34;keep-it-short-and-simple&#34;&gt;Keep it short and simple&lt;/h2&gt;
+
+&lt;p&gt;The golden rule is &amp;ldquo;keep the change simple and minimal&amp;rdquo;. Always remember the distribution owner doesn&amp;rsquo;t have time to go through big changes in a single sitting. So it is better to split the big changes into smaller units. Ideally one commit per PR.&lt;/p&gt;
+
+&lt;p&gt;If you fancy then you may want to have one change per commit in a PR. But the downside is, if a PR has more than 2 commits then you are back to square one, expecting the owner to spend too much time to review. So keep it simple, one PR one commit.&lt;/p&gt;
+
+&lt;h2 id=&#34;pick-active-distributions&#34;&gt;Pick active distributions&lt;/h2&gt;
+
+&lt;p&gt;The second most important thing to keep in mind is to pick an active distribution, i.e. one with regular releases. In my experience, you have more chance of a PR being reviewed and accepted if the author is active. MetaCPAN&amp;rsquo;s recent uploads &lt;a href=&#34;https://metacpan.org/recent?size=500&#34;&gt;page&lt;/a&gt; can help you identify distributions with recent changes.&lt;/p&gt;
+
+&lt;h2 id=&#34;build-rapport&#34;&gt;Build rapport&lt;/h2&gt;
+
+&lt;p&gt;If you can get in the good books of the distribution owner they&amp;rsquo;ll be more likely to accept your PR. Not every PR you submit will be accordance with the owner&amp;rsquo;s coding style or way of thinking. So be prepared to get pushback, or even rejection. This is an opportunity to converse with the owner, find out what they &lt;em&gt;do&lt;/em&gt; want. Maintaining a sense of humor throughout the discussion can go a long way to removing friction.&lt;/p&gt;
+
+&lt;h3 id=&#34;final-thoughts&#34;&gt;Final thoughts&lt;/h3&gt;
+
+&lt;p&gt;Those are my tips for getting your PR accepted. If you&amp;rsquo;d like to get started in Open Source but aren&amp;rsquo;t sure where to start, my previous two articles (&lt;a href=&#34;http://localhost:1313/article/how-to-become-cpan-contributor/&#34;&gt;one&lt;/a&gt;, &lt;a href=&#34;http://localhost:1313/article/how-to-become-cpan-contributor-part-2/&#34;&gt;two&lt;/a&gt;) cover how to identify simple fixes for modules.&lt;/p&gt;
+
+&lt;p&gt;Many people have asked me, where do I get the motivation to submit PRs non-stop for so many years. The real joy for me is when the owner acknowledges my PR and says &amp;ldquo;Thank you&amp;rdquo;. It means a lot to me. If you need any help getting started, feel free to &lt;a href=&#34;mailto:mohammad.anwar@yahoo.com&#34;&gt;email me&lt;/a&gt; and if necessary, we can remote pair program to get you going.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Saying Goodbye to search.cpan.org</title>
+      <link>http://localhost:1313/article/saying-goodbye-to-search-cpan-org/</link>
+      <pubDate>Tue, 26 Jun 2018 17:00:46 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/saying-goodbye-to-search-cpan-org/</guid>
+      <description>
+
+&lt;p&gt;If you&amp;rsquo;ve visited &lt;em&gt;search.cpan.org&lt;/em&gt; in the last day or
+so, you may have noticed that the site is now directing all of its
+traffic to &lt;a href=&#34;https://metacpan.org&#34;&gt;metacpan.org&lt;/a&gt;. Let&amp;rsquo;s talk about what this change
+means.&lt;/p&gt;
+
+&lt;h3 id=&#34;why-is-this-change-taking-place&#34;&gt;Why is this change taking place?&lt;/h3&gt;
+
+&lt;p&gt;The maintainers behind &lt;em&gt;search.cpan.org&lt;/em&gt; have decided
+that it&amp;rsquo;s time to move on. After many, many years of keeping this site up and
+running they have decided to pass on the torch (and the traffic) to
+&lt;a href=&#34;https://metacpan.org&#34;&gt;metacpan.org&lt;/a&gt;. Myself and the rest of the MetaCPAN team
+have been working very hard to prepare for the influx of new traffic (and new
+users). On behalf of Perl users everywhere, the we&amp;rsquo;d like to thank
+&lt;a href=&#34;https://log.perl.org/2018/05/goodbye-search-dot-cpan-dot-org.html&#34;&gt;Graham Barr and all of the crew&lt;/a&gt;
+behind &lt;em&gt;search.cpan.org&lt;/em&gt; for their many years of
+working behind the scenes to keep this valuable resource up and running.&lt;/p&gt;
+
+&lt;h3 id=&#34;how-does-this-change-cpan&#34;&gt;How does this change CPAN?&lt;/h3&gt;
+
+&lt;p&gt;It doesn&amp;rsquo;t. CPAN is the central repository of uploaded Perl modules. Both
+&lt;em&gt;search.cpan.org&lt;/em&gt; and
+&lt;a href=&#34;https://metacpan.org&#34;&gt;metacpan.org&lt;/a&gt; are search interfaces for CPAN data.
+They&amp;rsquo;re layers on top of CPAN. CPAN doesn&amp;rsquo;t know (or care) about them.&lt;/p&gt;
+
+&lt;h3 id=&#34;how-does-this-change-pause&#34;&gt;How does this change PAUSE?&lt;/h3&gt;
+
+&lt;p&gt;See above. Nothing changes on the PAUSE side of things.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-s-the-difference-between-search-cpan-org-and-metacpan-org&#34;&gt;What&amp;rsquo;s the difference between search.cpan.org and metacpan.org?&lt;/h3&gt;
+
+&lt;p&gt;&lt;em&gt;search.cpan.org&lt;/em&gt; was the original CPAN module search.
+MetaCPAN followed many years later. Unlike
+&lt;em&gt;search.cpan.org&lt;/em&gt;, the MetaCPAN site is publicly
+available at &lt;a href=&#34;https://github.com/metacpan&#34;&gt;GitHub&lt;/a&gt;. Contributions to the site
+are welcome and encouraged. It&amp;rsquo;s very easy to get up and running. If you want
+to change the front end of the site, &lt;a href=&#34;https://github.com/metacpan/metacpan-web/#installing-manually&#34;&gt;you can start an app in a couple of
+minutes&lt;/a&gt;. If
+you want to make changes to the MetaCPAN API, you can &lt;a href=&#34;https://github.com/metacpan/metacpan-developer&#34;&gt;spin up a Vagrant
+box&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The MetaCPAN interface has more bells and whistles. This isn&amp;rsquo;t to everyone&amp;rsquo;s
+taste, but there is a planned UI overhaul.&lt;/p&gt;
+
+&lt;p&gt;MetaCPAN&amp;rsquo;s search interface does not always return the same results as
+&lt;em&gt;search.cpan.org&lt;/em&gt; used to.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re interested in helping improve the UI or search results, please get in
+touch either at &lt;a href=&#34;https://github.com/metacpan/metacpan-web&#34;&gt;GitHub&lt;/a&gt; or at
+&lt;code&gt;#metacpan&lt;/code&gt; on irc.perl.org.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;re a small team and keeping this site up and running is a big
+job, so the team is grateful for all contributions.&lt;/p&gt;
+
+&lt;h3 id=&#34;do-i-need-to-create-a-metacpan-account&#34;&gt;Do I need to create a MetaCPAN account?&lt;/h3&gt;
+
+&lt;p&gt;Only if a) you&amp;rsquo;re an author and you want to modify your profile or b) you want
+to use the &amp;ldquo;++&amp;rdquo; buttons to upvote your favorite modules.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-does-this-mean-moving-forward&#34;&gt;What does this mean moving forward?&lt;/h3&gt;
+
+&lt;p&gt;It was nice to have two different interfaces to CPAN, because this provided all
+of us with a fallback for search results as well as some redundancy. If either
+site had downtime, you could just use the other one. This is no longer an
+option. However, the interface which we do have is open source, built on an
+interesting stack and is a place where you can contribute. Don&amp;rsquo;t like
+something?  Please help to fix it.&lt;/p&gt;
+
+&lt;p&gt;MetaCPAN is housed in two different data centers
+(&lt;a href=&#34;https://www.bytemark.co.uk/&#34;&gt;Bytemark&lt;/a&gt; in the UK and &lt;a href=&#34;https://www.liquidweb.com/&#34;&gt;Liquid
+Web&lt;/a&gt; in the US). The MetaCPAN stack uses
+&lt;a href=&#34;https://fastly.com&#34;&gt;Fastly&lt;/a&gt; for caching and redundancy. Other parts
+include: Puppet, vagrant, Debian, &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt;,
+Elasticsearch, &lt;a href=&#34;https://metacpan.org/pod/Minion&#34;&gt;Minion&lt;/a&gt;,
+&lt;a href=&#34;https://metacpan.org/pod/Catalyst&#34;&gt;Catalyst&lt;/a&gt; and
+Bootstrap. If you&amp;rsquo;re interested in learning more about any of these
+technologies, please get involved with the project. We&amp;rsquo;d love to
+have you on board.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Reading remote documentation</title>
+      <link>http://localhost:1313/article/reading-remote-documentation/</link>
+      <pubDate>Sun, 11 Feb 2018 20:41:57 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/reading-remote-documentation/</guid>
+      <description>
+
+&lt;p&gt;When I need to read Perl documentation, I use &lt;a href=&#34;http://localhost:1313/article/155/2015/2/26/Hello-perldoc--productivity-booster/&#34;&gt;perldoc&lt;/a&gt;. I spend most of my time working at the terminal, so it&amp;rsquo;s convenient to drop to a command prompt and bring up the documentation for some module or command right there in the terminal.&lt;/p&gt;
+
+&lt;h3 id=&#34;pod-cpandoc&#34;&gt;Pod::Cpandoc&lt;/h3&gt;
+
+&lt;p&gt;Sometimes I need to check the documentation of a module I don&amp;rsquo;t have installed on my machine, and in those cases, &lt;code&gt;perldoc&lt;/code&gt; can&amp;rsquo;t help me. Instead I could use &lt;a href=&#34;https://metacpan.org/pod/Pod::Cpandoc&#34;&gt;cpandoc&lt;/a&gt;, as it behaves like perldoc, but it will fetch remote documentation if the module is not installed on your system.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpandoc Foo::Bar
+# displays Foo::Bar pod in pager app
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As &lt;code&gt;cpandoc&lt;/code&gt; supports the same options as &lt;code&gt;perldoc&lt;/code&gt;, you can use it for useful &lt;a href=&#34;http://perladvent.org/2011/2011-12-15.html&#34;&gt;tricks&lt;/a&gt; like browsing the source code for a module without installing it.&lt;/p&gt;
+
+&lt;h3 id=&#34;metacpan&#34;&gt;♥ Metacpan ♥&lt;/h3&gt;
+
+&lt;p&gt;Now, reading documentation in the terminal is fine and all, but I really like &lt;a href=&#34;http://metacpan.org&#34;&gt;metacpan&amp;rsquo;s&lt;/a&gt; distribution pages, which not only include documentation, but also incorporate CPAN Testers&amp;rsquo; results, a release history, open issues, and other useful links and data. So lately I&amp;rsquo;ve taken to reading documentation on metacpan.&lt;/p&gt;
+
+&lt;p&gt;Getting there though, can be tiresome. I open a new browser tab, start typing &amp;ldquo;metacpan&amp;rdquo;, my browser then autocompletes it to the most recent metacpan address I viewed, which is inevitably &lt;strong&gt;not&lt;/strong&gt; the one I want, so I highlight the module name in the URL, and replace it with the one I&amp;rsquo;m looking for.&lt;/p&gt;
+
+&lt;p&gt;After having performed this routine more times than I&amp;rsquo;d like to admit, I finally wrote a shell script to do it for me:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/bin/sh
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;URL&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://metacpan.org/pod/&lt;/span&gt;$1&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;[[&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$OSTYPE&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;linux-gnu&amp;#34;&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;]]&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+  xdg-open &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$URL&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &amp;amp;&amp;gt;/dev/null
+&lt;span style=&#34;color:#66d9ef&#34;&gt;elif&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;[[&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$OSTYPE&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;darwin&amp;#34;&lt;/span&gt;*  &lt;span style=&#34;color:#f92672&#34;&gt;]]&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+  open &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$URL&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &amp;amp;&amp;gt;/dev/null
+&lt;span style=&#34;color:#66d9ef&#34;&gt;elif&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;[[&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$OSTYPE&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;cygwin&amp;#34;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;]]&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+  cygstart &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$URL&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &amp;amp;&amp;gt;/dev/null
+&lt;span style=&#34;color:#66d9ef&#34;&gt;elif&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;[[&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$OSTYPE&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;msys&amp;#34;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;]]&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+  start &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$URL&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;elif&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;[[&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$OSTYPE&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;win32&amp;#34;&lt;/span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;]]&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+  start &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$URL&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;elif&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;[[&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$OSTYPE&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;freebsd&amp;#34;&lt;/span&gt;* &lt;span style=&#34;color:#f92672&#34;&gt;]]&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+  xdg-open &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;$URL&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &amp;amp;&amp;gt;/dev/null
+&lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+  echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;OS not recognized&amp;#34;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;fi&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It constructs the metacpan URL using the first argument passed to the script, and then opens the URL in a new browser tab. I named the script &lt;code&gt;pod&lt;/code&gt; and placed it in my local path (I was going to call it &lt;code&gt;mcpan&lt;/code&gt; but that&amp;rsquo;s a little similar to &lt;code&gt;cpanm&lt;/code&gt; for my tastes, plus &amp;ldquo;pod&amp;rdquo; is faster to type). So now if I want to view something on metacpan, all I have to do is type:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ pod Foo::Bar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And the script does the rest. I&amp;rsquo;ve added commands for other operating systems, but I&amp;rsquo;ve only tested it on Linux and MacOS.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How to upload a script to CPAN</title>
+      <link>http://localhost:1313/article/how-to-upload-a-script-to-cpan/</link>
+      <pubDate>Mon, 14 Nov 2016 10:37:03 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/how-to-upload-a-script-to-cpan/</guid>
+      <description>
+
+&lt;p&gt;If you&amp;rsquo;ve got a Perl script that does something useful, you might want to put it on CPAN. Becoming a CPAN author is a rite-of-passage for Perl programmers, you&amp;rsquo;ll learn about the CPAN infrastructure and sharing code is a nice thing to do. Within a few minutes of uploading a distribution to CPAN, it&amp;rsquo;s indexed and installable by anyone with a CPAN client, which is pretty incredible.&lt;/p&gt;
+
+&lt;p&gt;So let&amp;rsquo;s say I&amp;rsquo;ve got this Perl script:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; DateTime;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bar&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dt &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; DateTime&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;now;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($dt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;mon &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $dt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;day &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;31&lt;/span&gt;) {
+   $text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; reverse $text;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$text\n&amp;#34;&lt;/span&gt;;
+exit &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It usually prints &amp;ldquo;bar&amp;rdquo;, but on January 31, &lt;a href=&#34;https://www.daysoftheyear.com/days/backward-day/&#34;&gt;National Backward day&lt;/a&gt;, it prints &amp;ldquo;rab&amp;rdquo;. I&amp;rsquo;ll take you step-by-step through the process of putting it on CPAN.&lt;/p&gt;
+
+&lt;h3 id=&#34;setup-your-distribution-directory&#34;&gt;Setup your distribution directory&lt;/h3&gt;
+
+&lt;p&gt;An upload to CPAN is called a distribution, and each one contains several files, so I need to make a directory to contain all of the files I&amp;rsquo;m going to create. As most applications are uploaded under the namespace &lt;code&gt;App&lt;/code&gt;, that&amp;rsquo;s what I&amp;rsquo;ll use too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ mkdir App-foo
+$ cd App-foo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the root project directory. Now I&amp;rsquo;m going to make a few subdirectories:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ mkdir script
+$ mkdir -p lib/App
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;lib/App&lt;/code&gt; is a parent directory for the stub module that we&amp;rsquo;ll create shortly. The &lt;code&gt;script&lt;/code&gt; directory is where I&amp;rsquo;ll place the &lt;code&gt;foo&lt;/code&gt; script.&lt;/p&gt;
+
+&lt;h3 id=&#34;prepare-the-script-for-cpan&#34;&gt;Prepare the script for CPAN&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ll copy my script to &lt;code&gt;script/foo&lt;/code&gt;. One change I like to make my CPAN scripts is the shebang line. For my personal scripts I typically use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/env perl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The advantage of this is by calling &lt;code&gt;env&lt;/code&gt; the Perl that is executed can be changed by updating my &lt;code&gt;PATH&lt;/code&gt;. This is great when you&amp;rsquo;re running perlbrew or plenv. However not everyone manages multiple installations of Perl this way. Instead, I like to use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!perl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the distribution is installed, the shebang line is automatically changed to the absolute path of the Perl executable used to install the distribution, like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can also use &lt;code&gt;#!/usr/bin/perl&lt;/code&gt; and it will be overwritten by the install process. One reason I like &lt;code&gt;#!perl&lt;/code&gt; is that it won&amp;rsquo;t work without either installing the script or specifying the perl to run it with. This avoids mistakes like accidentally running the script with system Perl.&lt;/p&gt;
+
+&lt;p&gt;I should also add some documentation, so the final script looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; DateTime;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bar&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dt &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; DateTime&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;now;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($dt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;mon &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $dt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;day &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;31&lt;/span&gt;) {
+   $text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; reverse $text;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$text\n&amp;#34;&lt;/span&gt;;
+exit &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;=head1 NAME
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;foo - print bar, usually
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 DESCRIPTION
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;A simple script which usually prints C&amp;lt;bar&amp;gt;. On national backwards day
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;(January 31), it prints C&amp;lt;rab&amp;gt;. This distribution is used to show others
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;how to prepare a script for CPAN.
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 SYNOPSIS
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  $ foo
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  bar
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 AUTHOR
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;David Farrell
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 LICENSE
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;FreeBSD
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 INSTALLATION
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;Using C&amp;lt;cpan&amp;gt;:
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;    $ cpan App::foo
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;Manual install:
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;    $ perl Makefile.PL
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;    $ make
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;    $ make install
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=cut&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve included installation instructions here, you&amp;rsquo;ll see why later.&lt;/p&gt;
+
+&lt;h3 id=&#34;make-a-stub-module&#34;&gt;Make a stub module&lt;/h3&gt;
+
+&lt;p&gt;The CPAN toolchain requires at least one package in every distribution&lt;sup&gt;1&lt;/sup&gt;, so I&amp;rsquo;m going to make a stub &lt;code&gt;lib/App/foo.pm&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; App::foo;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;our&lt;/span&gt; $VERSION &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0.01&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;=head1 NAME
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;App::foo - an app that usually prints &amp;#34;bar&amp;#34;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 DESCRIPTION
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;This is a stub module, see F&amp;lt;script/foo&amp;gt; for details of the app.
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 AUTHOR
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;David Farrell
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 LICENSE
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;FreeBSD
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=cut&lt;/span&gt;
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This stub module does a couple of important things: having the package means CPAN can index the module and it will be searchable on &lt;a href=&#34;https://metacpan.org/&#34;&gt;metacpan&lt;/a&gt; and installable by CPAN clients like &lt;code&gt;cpan&lt;/code&gt; and &lt;code&gt;cpanm&lt;/code&gt;. It sets the distribution version number and it includes some basic documentation to point users towards the &lt;code&gt;foo&lt;/code&gt; script, which is the meat and potatoes of this distribution.&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;sup&gt;1&lt;/sup&gt; You can trick CPAN by editing the META files and not providing a Perl module. Check out &lt;a href=&#34;https://metacpan.org/pod/stasis&#34;&gt;stasis&lt;/a&gt; for an example of this. The downside is it&amp;rsquo;s not clear what other tools in the Perl toolchain might break without a real package. Not recommended.&lt;/p&gt;
+
+&lt;h3 id=&#34;create-a-makefile-pl&#34;&gt;Create a Makefile.PL&lt;/h3&gt;
+
+&lt;p&gt;The other file we need is &lt;code&gt;Makefile.PL&lt;/code&gt;. This is a Perl script which will create the Makefile that builds, tests and installs the module. Later I&amp;rsquo;ll use some of the built-in routines in the Perl toolchain to use our Makefile.PL to do a bit more than that.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.008004&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; ExtUtils::MakeMaker;
+
+WriteMakefile(
+  NAME             &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;App::foo&amp;#39;&lt;/span&gt;,
+  VERSION_FROM     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;lib/App/foo.pm&amp;#39;&lt;/span&gt;,
+  ABSTRACT_FROM    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;lib/App/foo.pm&amp;#39;&lt;/span&gt;,
+  AUTHOR           &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;David Farrell&amp;#39;&lt;/span&gt;,
+  LICENSE          &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;freebsd&amp;#39;&lt;/span&gt;,
+  MIN_PERL_VERSION &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;5.008004&amp;#39;&lt;/span&gt;,
+  EXE_FILES        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;script/foo&amp;#39;&lt;/span&gt;],
+  PREREQ_PM        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;strict&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;warnings&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DateTime&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0.37&amp;#39;&lt;/span&gt;,
+  },
+  (eval { ExtUtils::MakeMaker&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;VERSION(&lt;span style=&#34;color:#ae81ff&#34;&gt;6.46&lt;/span&gt;) } ? (META_MERGE &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;meta-spec&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; { version &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; },
+      resources &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+          repository &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+              type &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;git&amp;#39;&lt;/span&gt;,
+              url  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;https://github.com/dnmfarrell/foo.git&amp;#39;&lt;/span&gt;,
+              web  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;https://github.com/dnmfarrell/foo&amp;#39;&lt;/span&gt;,
+          },
+      }})
+   : ()
+  ),
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This &lt;code&gt;Makefile.PL&lt;/code&gt; script uses &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker&#34;&gt;ExtUtils::MakeMaker&lt;/a&gt;. Right at the top of the script the statement &lt;code&gt;use 5.008004&lt;/code&gt; ensures this script can only be run by Perl version 5.8.4 or higher. The &lt;code&gt;MINIMUM_PERL_VERSION&lt;/code&gt; entry is there so CPAN clients and services like CPAN testers will know what minimum Perl version is required to use the distribution.&lt;/p&gt;
+
+&lt;p&gt;You can see I&amp;rsquo;ve set the version and abstract text to come from the stub module. I&amp;rsquo;ve set the license to be FreeBSD, but there are many &lt;a href=&#34;https://metacpan.org/pod/CPAN::Meta::Spec#license&#34;&gt;others&lt;/a&gt; that are accepted. Both the license and minimum Perl version entries are newer options that may generate warnings in older versions of ExtUtils::MakeMaker - that&amp;rsquo;s fine, they&amp;rsquo;ll be ignored and the build can continue regardless.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;EXE_FILES&lt;/code&gt; line is important; it will make sure the script is copied to an executable directory on installation. &lt;code&gt;PREREQ_PM&lt;/code&gt; is a hashref of the runtime modules used by the script. In this case the first version of &lt;a href=&#34;https://metacpan.org/pod/DateTime&#34;&gt;DateTime&lt;/a&gt; that supported the &lt;code&gt;mon()&lt;/code&gt; method used in the script was 0.37 (technically &lt;code&gt;mon()&lt;/code&gt; is an alias that I could switch to &lt;code&gt;month()&lt;/code&gt; but that would make for a less interesting example). For the strict and warnings pragmas, there is no minimum version so I can just use zero.&lt;/p&gt;
+
+&lt;p&gt;The final part of the script begins with the &lt;code&gt;eval&lt;/code&gt; and it&amp;rsquo;s a little odd. Older versions of ExtUtils::MakeMaker didn&amp;rsquo;t support version 2 of the CPAN meta specification, so using &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker#META_MERGE&#34;&gt;META_MERGE&lt;/a&gt; this will only be included if being built with a modern version. This optional entry can be used if the distribution code is in a repository like GitHub, otherwise it&amp;rsquo;s not needed. Sites like MetaCPAN will include a link to the repo on GitHub if this is present.&lt;/p&gt;
+
+&lt;h3 id=&#34;create-a-readme&#34;&gt;Create a README&lt;/h3&gt;
+
+&lt;p&gt;I like to cheat for this one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perldoc -u script/foo &amp;gt; README.pod
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This writes the raw POD out of the script into &lt;code&gt;README.pod&lt;/code&gt;. One thing to remember is to include installation instructions in this file. This is why I included it in the script POD.&lt;/p&gt;
+
+&lt;h3 id=&#34;add-a-license-file&#34;&gt;Add a LICENSE file&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve already specified this distribution&amp;rsquo;s software license as FreeBSD in the makefile, so I should include a copy of the license in the distribution. This is easy with &lt;a href=&#34;https://metacpan.org/pod/App::Software::License&#34;&gt;App::Software::License&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ software-license --holder &#39;David Farrell&#39; --license FreeBSD --type fulltext &amp;gt; LICENSE
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates a FreeBSD license in my name and writes it to the &lt;code&gt;LICENSE&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;h3 id=&#34;build-the-distribution-tarball&#34;&gt;Build the distribution tarball&lt;/h3&gt;
+
+&lt;p&gt;Ok now the fun begins!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl Makefile.PL
+Generating a Unix-style Makefile
+Writing Makefile for App::foo
+Writing MYMETA.yml and MYMETA.json
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates the &lt;code&gt;Makefile&lt;/code&gt; but also META files which define the metadata of the distribution. These is used by the CPAN toolchain for things like indexing, version control and dependency management (&lt;a href=&#34;https://metacpan.org/pod/CPAN::Meta::Spec&#34;&gt;CPAN::Meta::Spec&lt;/a&gt; describes the metadata specification).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ make manifest
+&amp;quot;/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0&amp;quot; &amp;quot;-MExtUtils::Manifest=mkmanifest&amp;quot; -e mkmanifest
+Added to MANIFEST: lib/App/foo.pm
+Added to MANIFEST: LICENSE
+Added to MANIFEST: Makefile.PL
+Added to MANIFEST: MANIFEST
+Added to MANIFEST: README.pod
+Added to MANIFEST: script/foo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will create the &lt;code&gt;MANIFEST&lt;/code&gt; file, which lists all of the files in a distribution.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ make
+cp lib/App/foo.pm blib/lib/App/foo.pm
+cp README.pod blib/lib/App/README.pod
+cp script/foo blib/script/foo
+&amp;quot;/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0&amp;quot; -MExtUtils::MY -e &#39;MY-&amp;gt;fixin(shift)&#39; -- blib/script/foo
+Manifying 1 pod document
+Manifying 2 pod documents
+
+$ make install
+Manifying 1 pod document
+Manifying 2 pod documents
+Installing /home/dfarrell/.plenv/versions/5.22.0/lib/perl5/site_perl/5.22.0/App/foo.pm
+Installing /home/dfarrell/.plenv/versions/5.22.0/lib/perl5/site_perl/5.22.0/App/README.pod
+Installing /home/dfarrell/.plenv/versions/5.22.0/man/man1/foo.1
+Installing /home/dfarrell/.plenv/versions/5.22.0/man/man3/App::README.3
+Installing /home/dfarrell/.plenv/versions/5.22.0/man/man3/App::foo.3
+Installing /home/dfarrell/.plenv/versions/5.22.0/bin/foo
+Appending installation info to /home/dfarrell/.plenv/versions/5.22.0/lib/perl5/5.22.0/x86_64-linux/perllocal.pod
+cp lib/App/foo.pm blib/lib/App/foo.pm
+cp script/foo blib/script/foo
+&amp;quot;/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0&amp;quot; -MExtUtils::MY -e &#39;MY-&amp;gt;fixin(shift)&#39; -- blib/script/foo
+Manifying 1 pod document
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These commands build the distribution and install it on my computer. I can test run the script now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ foo
+bar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That works, so I&amp;rsquo;ll create the distribution tarball:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ make dist
+rm -rf App-foo-0.01
+&amp;quot;/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0&amp;quot; &amp;quot;-MExtUtils::Manifest=manicopy,maniread&amp;quot; \
+        -e &amp;quot;manicopy(maniread(),&#39;App-foo-0.01&#39;, &#39;best&#39;);&amp;quot;
+mkdir App-foo-0.01
+mkdir App-foo-0.01/lib
+mkdir App-foo-0.01/lib/App
+mkdir App-foo-0.01/script
+Generating META.yml
+Generating META.json
+tar cvf App-foo-0.01.tar App-foo-0.01
+App-foo-0.01/
+App-foo-0.01/script/
+App-foo-0.01/script/foo
+App-foo-0.01/Makefile.PL
+App-foo-0.01/lib/
+App-foo-0.01/lib/App/
+App-foo-0.01/lib/App/foo.pm
+App-foo-0.01/META.json
+App-foo-0.01/META.yml
+App-foo-0.01/MANIFEST
+App-foo-0.01/README.pod
+rm -rf App-foo-0.01
+gzip --best App-foo-0.01.tar
+Created App-foo-0.01.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Almost done, I&amp;rsquo;ll use the Makefile to clean up the build files:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ make clean
+rm -f \
+foo.bso foo.def \
+foo.exp foo.x \
+ blib/arch/auto/App/foo/extralibs.all \
+blib/arch/auto/App/foo/extralibs.ld Makefile.aperl \
+*.a *.o \
+*perl.core MYMETA.json \
+MYMETA.yml blibdirs.ts \
+core core.*perl.*.? \
+core.[0-9] core.[0-9][0-9] \
+core.[0-9][0-9][0-9] core.[0-9][0-9][0-9][0-9] \
+core.[0-9][0-9][0-9][0-9][0-9] libfoo.def \
+mon.out perl \
+perl perl.exe \
+perlmain.c pm_to_blib \
+pm_to_blib.ts so_locations \
+tmon.out
+rm -rf \
+  blib
+mv Makefile Makefile.old &amp;gt; /dev/null 2&amp;gt;&amp;amp;1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;upload-to-cpan&#34;&gt;Upload to CPAN&lt;/h3&gt;
+
+&lt;p&gt;I already have a PAUSE account, so I can skip this step. Otherwise prospective CPAN authors need to &lt;a href=&#34;http://pause.perl.org/pause/query?ACTION=request_id&#34;&gt;register&lt;/a&gt; for a PAUSE account. Don&amp;rsquo;t skip on the &amp;ldquo;A short description of why you would like a PAUSE ID&amp;rdquo; entry - this is one way the PAUSE admins identify human versus bot requests, and you don&amp;rsquo;t want to be mistaken for a bot!&lt;/p&gt;
+
+&lt;p&gt;Once I &lt;a href=&#34;https://pause.perl.org/pause/authenquery&#34;&gt;login&lt;/a&gt; to PAUSE, I can upload the distribution from the &lt;a href=&#34;https://pause.perl.org/pause/authenquery?ACTION=add_uri&#34;&gt;uploads page&lt;/a&gt;. These days I like to do it from the command line with &lt;a href=&#34;https://metacpan.org/pod/CPAN::Uploader&#34;&gt;CPAN::Uploader&lt;/a&gt;. That would work like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpan-upload -u DFARRELL App-foo-0.01.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;cpan-upload&lt;/code&gt; will then prompt for my PAUSE password, and confirm the upload was successful.&lt;/p&gt;
+
+&lt;p&gt;Within a few minutes, I&amp;rsquo;ll receive two emails from PAUSE: one confirms the uploaded distribution file, the other confirms it was indexed. Depending on how fast the CPAN mirrors update their index, users can now install the module at their command line with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpan App::foo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap-up&lt;/h3&gt;
+
+&lt;p&gt;It may seem like a lot of work at first, but I only had to create the stub module and the Makefile.PL, both of which can be copied from elsewhere, and edited. The other files were generated. All the files described in this article are available in the GitHub &lt;a href=&#34;https://github.com/dnmfarrell/App-foo&#34;&gt;repo&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Chapter 12 of &lt;a href=&#34;https://www.amazon.com/Intermediate-Perl-Beyond-Basics-Learning/dp/1449393098&#34;&gt;Intermediate Perl&lt;/a&gt; describes how to create a Perl distribution in greater detail. &lt;a href=&#34;https://perldoc.perl.org/perlnewmod.html&#34;&gt;perlnewmod&lt;/a&gt; is a brief overview of how create a module and prepare it for CPAN.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Who has the best package manager? Part one</title>
+      <link>http://localhost:1313/article/110/2014/8/21/Who-has-the-best-package-manager--Part-one/</link>
+      <pubDate>Thu, 21 Aug 2014 13:03:03 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/110/2014/8/21/Who-has-the-best-package-manager--Part-one/</guid>
+      <description>
+
+&lt;p&gt;Every major language has thousands of libraries which enable programmers to reach higher, further and faster than before. Package managers (the online systems for sharing code) are key to a language&amp;rsquo;s success; Perl, PHP, Python, Ruby and Node.js all have strong offerings. But which one is the best and what can we learn from each of them? This article is the first in a two-part series where I review each package manager. Part one focuses on searching and using packages and part two will look at how easy it is to upload and share packages.&lt;/p&gt;
+
+&lt;h3 id=&#34;terminology&#34;&gt;Terminology&lt;/h3&gt;
+
+&lt;p&gt;The term &amp;ldquo;package manager&amp;rdquo; isn&amp;rsquo;t strictly accurate when referring to the online code sharing systems. &lt;a href=&#34;http://rubygems.org/&#34;&gt;RubyGems&lt;/a&gt; and &lt;a href=&#34;https://www.npmjs.org/&#34;&gt;npm&lt;/a&gt; are described as package managers but for Python &lt;a href=&#34;https://pypi.python.org/pypi&#34;&gt;PyPI&lt;/a&gt; is a package index and &lt;code&gt;pip&lt;/code&gt; is the package manager. Similarly, &lt;a href=&#34;https://metacpan.org&#34;&gt;metacpan&lt;/a&gt; is a search engine for &lt;a href=&#34;http://www.cpan.org/%20&#34;&gt;CPAN&lt;/a&gt;. I use the term &amp;ldquo;package manager&amp;rdquo; to refer to the commonly-used collection of tools used for searching, reviewing, installing and sharing code.&lt;/p&gt;
+
+&lt;h3 id=&#34;inputs-and-scoring-criteria&#34;&gt;Inputs and Scoring Criteria&lt;/h3&gt;
+
+&lt;p&gt;The following package managers were reviewed:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://packagist.org&#34;&gt;Packagist&lt;/a&gt; for PHP&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://pypi.python.org/pypi&#34;&gt;PyPi&lt;/a&gt; for Python&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org&#34;&gt;metacpan&lt;/a&gt; for Perl&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.npmjs.org/&#34;&gt;npm&lt;/a&gt; for Node.js&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://rubygems.org/&#34;&gt;RubyGems&lt;/a&gt; for Ruby&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Every package manager was scored against 5 criteria:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Search - how easy is it to find what you&amp;rsquo;re looking for. An ideal search function would return the most relevant packages first, and provide information to help users differentiate packages.&lt;/li&gt;
+&lt;li&gt;Metadata - what supporting data is provided to give context and enable the user understand the package better: name, description, number of downloads, unit test coverage, portability, dependencies, user reviews etc/&lt;/li&gt;
+&lt;li&gt;Documentation - accessibility and usability of the package documentation. Easy-to-use documentation is clear and consistent in layout and provides useful information for would-be package consumers.&lt;/li&gt;
+&lt;li&gt;Source - accessibility and usability of the source code. The source code should be easily inspect-able which means providing an easily navigable directory tree and presenting the code in a readable, helpful way.&lt;/li&gt;
+&lt;li&gt;Installation - how easy is it to install a package: are instructions provided and does the installation work.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I scored each criterion between 1 and 5, with 5 being best. Clearly this is a subjective approach both in the criteria chosen and strength of the rating given. Whether the results are &lt;em&gt;useful&lt;/em&gt; or not I leave for you, the reader to decide.&lt;/p&gt;
+
+&lt;h3 id=&#34;method&#34;&gt;Method&lt;/h3&gt;
+
+&lt;p&gt;3 search terms were used: &amp;ldquo;selenium&amp;rdquo;, &amp;ldquo;sqlite3&amp;rdquo; and &amp;ldquo;web framework&amp;rdquo;. The search term was unquoted when entered. Selenium should be an easy search term as it&amp;rsquo;s a unique name and common library (bindings to &lt;a href=&#34;http://docs.seleniumhq.org/projects/webdriver/&#34;&gt;Selenium WebDriver&lt;/a&gt;). SQLite3 is slightly more difficult as it includes a version number and many packages named &amp;ldquo;sqlite&amp;rdquo; are intended for SQLite3. Web framework is the most difficult as it is a description rather than a name and yet we wanted the search to return relevant results like Sinatra, Django, and express. For each language I used a recommended list of web frameworks as my target packages. In all searches I considered the sorting of relevant results and the usefulness of information provided in the search results.&lt;/p&gt;
+
+&lt;p&gt;Upon locating a target result in each search, I opened the package page and scored the other criteria. Only the packages returned by the 3 search terms were considered.&lt;/p&gt;
+
+&lt;h3 id=&#34;php-packagist&#34;&gt;PHP: Packagist&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_packagist.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;First up is &lt;a href=&#34;https://packagist.org/statistics&#34;&gt;Packagist&lt;/a&gt;, the largest PHP package search engine, with over 36,000 &lt;a href=&#34;https://packagist.org/statistics&#34;&gt;packages&lt;/a&gt; indexed. Packagist integrates with &lt;a href=&#34;https://getcomposer.org/&#34;&gt;Composer&lt;/a&gt;, a PHP dependency management system.&lt;/p&gt;
+
+&lt;p&gt;Packagist auto-focused to the text search box and provided live search results as I entered the search terms. For every search result Packagist return the package name, description, number of downloads and star count. Search results were paginated and no facility for sorting or filtering the search results was provided.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_packagist_search_selenium.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The search results were mixed: the target &lt;a href=&#34;https://packagist.org/packages/alexandresalome/php-selenium&#34;&gt;selenium package&lt;/a&gt; was returned 3rd on the list of results. The SQLite3 search did not return any useful packages (bindings to SQLite3), but this is perhaps because PHP 5.3 ships with a built in &lt;a href=&#34;http://php.net/manual/en/book.sqlite3.php&#34;&gt;SQLite class&lt;/a&gt;. The Web Framework &lt;a href=&#34;https://packagist.org/search/?q=web%20framework&#34;&gt;search&lt;/a&gt; did not return any &lt;a href=&#34;http://mashable.com/2014/04/04/php-frameworks-build-applications/&#34;&gt;target packages&lt;/a&gt; in the top 20 results, with &lt;a href=&#34;https://packagist.org/packages/laravel/framework&#34;&gt;Laravel&lt;/a&gt; being returned 21&lt;sup&gt;st&lt;/sup&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;search-3-5&#34;&gt;Search: &lt;sup&gt;3&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;Packagist provided a basic set of metadata including: name, description, version number, download statistics, version history and dependencies. No package had license information, unit test coverage, platform compatibility or continuous integration results. There was no facility to &amp;ldquo;star&amp;rdquo; or review a module (presumably the star count on the search results came from GitHub).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_packagist_laravel.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;metadata-2-5&#34;&gt;Metadata: &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;Documentation was sparse - a link was provided to the GitHub repo, which displays the repo readme by default. There seemed to be little consistency across packages in terms of headings or content.&lt;/p&gt;
+
+&lt;h4 id=&#34;documentation-2-5&#34;&gt;Documentation: &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;Packagist linked to the source repos on GitHub. The code was easy to navigate although the directory tree structures were inconsistent.&lt;/p&gt;
+
+&lt;h4 id=&#34;source-3-5&#34;&gt;Source: &lt;sup&gt;3&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;Installation with PHP Composer is done by marking the target package as &amp;ldquo;required&amp;rdquo; in a json file. packages can be installed directly using Composer on the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ composer&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;phar &lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;laravel/framework&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;4.2.8&amp;#34;&lt;/span&gt; &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Helpfully, Packagist listed the required text on every package page.&lt;/p&gt;
+
+&lt;h4 id=&#34;installation-5-5&#34;&gt;Installation: &lt;sup&gt;5&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;h5 id=&#34;packagist-overall-3-0&#34;&gt;Packagist overall: 3.0&lt;/h5&gt;
+
+&lt;h3 id=&#34;python-pypi&#34;&gt;Python: PyPI&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_pypi.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Next up is Python&amp;rsquo;s &lt;a href=&#34;https://pypi.python.org/pypi&#34;&gt;PyPi&lt;/a&gt;, which has over 47,500 packages.&lt;/p&gt;
+
+&lt;p&gt;PyPI&amp;rsquo;s search results returned the package name, a match-strength indicator called &amp;ldquo;weight&amp;rdquo; and a description. The search results for &lt;a href=&#34;https://pypi.python.org/pypi/selenium/2.42.1&#34;&gt;Selenium&lt;/a&gt; and &lt;a href=&#34;https://pypi.python.org/pypi/db-sqlite3/0.0.1&#34;&gt;SQLite3&lt;/a&gt; were good with the target libraries in the top 2 results each time.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_pypi_search_selenium.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The search results for &amp;ldquo;web framework&amp;rdquo; were mixed: I was looking for common Python &lt;a href=&#34;https://wiki.python.org/moin/WebFrameworks&#34;&gt;web frameworks&lt;/a&gt; and only one, &lt;a href=&#34;https://pypi.python.org/pypi/watson-framework/2.2.7&#34;&gt;Watson&lt;/a&gt; was listed in the top 20 results. Django was 280&lt;sup&gt;th&lt;/sup&gt; with Flask arriving 574&lt;sup&gt;th&lt;/sup&gt; in the list. PyPI was the only package manager to not paginate search results, which made it easy to traverse search results results and export them. There was no function to filter or sort the results under different criteria.&lt;/p&gt;
+
+&lt;h4 id=&#34;search-3-5-1&#34;&gt;Search: &lt;sup&gt;3&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;The metadata provided varied from package to package, but PyPI usually provided: the last upload date, number of downloads, author name, package owner and maintainers, package homepage link and a DOAP.xml record. The &lt;a href=&#34;https://pypi.python.org/pypi/watson-framework/2.2.7&#34;&gt;Watson&lt;/a&gt; package included a build status with unit test coverage. Only 1 of the three packages provided a license. There didn&amp;rsquo;t seem to be a facility to provide user reviews or &amp;ldquo;stars&amp;rdquo; which would indicate whether a package was any good or not.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_pypi_selenium.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;metadata-3-5&#34;&gt;Metadata: &lt;sup&gt;3&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;Documentation was mixed with either no documentation or just a high level synopsis provided. In most cases an external link to another site provided more documentation, but it&amp;rsquo;s not consistent (it could be Google code, GitHub or a project-specific website).&lt;/p&gt;
+
+&lt;h4 id=&#34;documentation-2-5-1&#34;&gt;Documentation: &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;All of the packages source code was hosted externally by GitHub or Google code and a link is provided by PyPI. This is fine, but it can take several hops to find the actual source code, and the structure of the source code tree varies from package to package; it might just be a collection of *.py files in a root folder for example.&lt;/p&gt;
+
+&lt;h4 id=&#34;source-2-5&#34;&gt;Source: &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;PyPI provides installation guidance on it&amp;rsquo;s homepage. Additionally most of the reviewed packages&amp;rsquo; documentation contained command line code instructions for installing the packages. All three packages installed without a hitch using &lt;code&gt;pip&lt;/code&gt;, although it appeared that no unit tests were run on install, so whether the packages work or not is an open question.&lt;/p&gt;
+
+&lt;h4 id=&#34;installation-5-5-1&#34;&gt;Installation: &lt;sup&gt;5&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;h5 id=&#34;pypi-overall-3-0&#34;&gt;PyPI overall: 3.0&lt;/h5&gt;
+
+&lt;h3 id=&#34;perl-metacpan&#34;&gt;Perl: metacpan&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_metacpan.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/&#34;&gt;metacpan&lt;/a&gt; is described as a CPAN &lt;a href=&#34;https://metacpan.org/about&#34;&gt;search engine&lt;/a&gt; and provides nearly all of the features of CPAN, plus many features that CPAN doesn&amp;rsquo;t offer. It has been around since 2013, and indexes over 30,000 packages.&lt;/p&gt;
+
+&lt;p&gt;metacpan&amp;rsquo;s search page autofocused on the text input search box and provide predictive text search. The search results contained the package name, description, an average review score (if there are any reviews), a count of &amp;ldquo;++&amp;ldquo;s (which are like GitHub stars) and the author name. Helpfully, sub-packages in the same namespace were indented below higher-level packages.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_cpan_selenium_search.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The Selenium search returned the target package (&lt;a href=&#34;https://metacpan.org/pod/WWW::Selenium&#34;&gt;WWW:Selenium&lt;/a&gt;) first, however SQLite3&amp;rsquo;s target package (&lt;a href=&#34;https://metacpan.org/pod/DBD::SQLite&#34;&gt;DBD::SQLite&lt;/a&gt;) was returned 17th in the search results. The Web Framework search results were not great: the first 20 results were for old frameworks or irrelevant packages. However the target packages (e.g. Catalyst, Dancer, Mojolicious and Kelp) were found in top 40 results. metacpan paginated the search results, 20 per page, which meant the target packages were actually on &lt;a href=&#34;https://metacpan.org/search?p=2&amp;amp;q=web+framework&#34;&gt;page 2&lt;/a&gt; . No method to filter or sort the search results was provided.&lt;/p&gt;
+
+&lt;h4 id=&#34;search-3-5-2&#34;&gt;Search: &lt;sup&gt;3&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_cpan_sqlite.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;metacpan provided a wealth of package metadata: the package name, description, version number, activity histogram, issues list, CPAN Testers &lt;a href=&#34;http://www.cpantesters.org/distro/D/DBD-SQLite.html?oncpan=1&amp;amp;distmat=1&amp;amp;version=1.42&#34;&gt;results&lt;/a&gt; (an external CI platform that runs the package against many different operating systems and Perl versions to detect portability issues), &lt;a href=&#34;http://cpants.cpanauthors.org/kwalitee&#34;&gt;kwalitee&lt;/a&gt; rating, reviews and &amp;ldquo;++&amp;rdquo; counts. It also provides a dependencies list, a dependent packages list and a nifty dependencies chart. This example is for &lt;a href=&#34;https://metacpan.org/pod/WWW::Selenium&#34;&gt;WWW::Selenium&lt;/a&gt;:&lt;/p&gt;
+
+&lt;p&gt;Curiously metacpan did not provide download statistics for any package. This would seem like a useful quality indicator for users. metacpan may suffer a little from &amp;ldquo;information overload&amp;rdquo; - there were so many links and metrics it could be hard for a user to disseminate the important metrics from the noise. Although metacpan listed the license name, it didn&amp;rsquo;t provide a link to the underlying license text which would be useful. Unit test coverage was not reported.&lt;/p&gt;
+
+&lt;h4 id=&#34;metadata-5-5&#34;&gt;Metadata: &lt;sup&gt;5&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;Documentation was extensive, except in the case of the web framework package (Dancer) which includes high-level examples and then links for documentation contained in other packages. What was especially nice was that the documentation was easily accessible and consistently styled across all three packages as it was all presented though metacpan.&lt;/p&gt;
+
+&lt;h4 id=&#34;documentation-5-5&#34;&gt;Documentation: &lt;sup&gt;5&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;A direct link to the source code was provided on every package page. The source code is also hosted on metacpan and consistently styled. Some useful measures were provided: the number of lines of code, the number of lines of documentation and the file size in kilobytes. I was also able to toggle on and off the inline documentation (called &amp;ldquo;Pod&amp;rdquo;) and view the code raw. Another useful feature: every package reference in the source code is a hyperlink to the source code of that package.&lt;/p&gt;
+
+&lt;p&gt;However it was not clear how to navigate the package tree (the links are in the name of the package itself). One package was hosted on GitHub and a direct link to the repo was provided on the package page - so the user has the option of viewing the source on GitHub if they prefer it to metacpan.&lt;/p&gt;
+
+&lt;h4 id=&#34;source-5-5&#34;&gt;Source: &lt;sup&gt;5&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;No information was provided by metacpan on how to install a module.&lt;/p&gt;
+
+&lt;h4 id=&#34;installation-1-5&#34;&gt;Installation: &lt;sup&gt;1&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;h5 id=&#34;metacpan-overall-3-8&#34;&gt;metacpan overall: 3.8&lt;/h5&gt;
+
+&lt;p&gt;Node.js: npm&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_npm.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.npmjs.org/&#34;&gt;npm&lt;/a&gt; is the Node.js package manager. It boasts over 89,500 packages, which is the most of any package manager in this review.&lt;/p&gt;
+
+&lt;p&gt;The npm search results were good: although the target Selenium &lt;a href=&#34;https://www.npmjs.org/package/selenium-webdriver&#34;&gt;package&lt;/a&gt; was 7th in the list of results, both the SQLite3 and Web Framework searches returned the target packages (&lt;a href=&#34;https://www.npmjs.org/package/sqlite3&#34;&gt;sqlite3&lt;/a&gt;, [](&lt;a href=&#34;https://www.npmjs.org/package/express)express&#34;&gt;https://www.npmjs.org/package/express)express&lt;/a&gt;) first in the results list. npm displayed the package name, description, download statistics, a &amp;ldquo;star&amp;rdquo; count and a keyword list. The search results were paginated and no filtering or sorting function was provided.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_npm_search_webf.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;search-5-5&#34;&gt;Search: &lt;sup&gt;5&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;npm provided a useful set of metadata including: download statistics, license, issues link, version, dependencies and dependant packages When available it also pulled the Travis CI status from GitHub. No information was provided regarding unit test coverage or platform availability. There didn&amp;rsquo;t seem to be a function for adding user reviews of packages to npm.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_npm_express.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;metadata-4-5&#34;&gt;Metadata: &lt;sup&gt;4&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;Documentation was poor - npm just displayed the package readme. Although the documentation was consistently styled, it was not consistent in layout or content. Every package used different headings and different content.&lt;/p&gt;
+
+&lt;h4 id=&#34;documentation-2-5-2&#34;&gt;Documentation: &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;npm just provided links to the source repo. The Selenium &lt;a href=&#34;https://code.google.com/p/selenium/&#34;&gt;repo&lt;/a&gt; was on Google Code and npm provided the URL but did not link to it. The Selenium source code link did not even direct to the Node.js package - it went to the main Selenium source code. The other two packages (SQLite3, express) were better: they were GitHub hosted with consistent package trees (lib and test directories) and it was easy to browse the source.&lt;/p&gt;
+
+&lt;h4 id=&#34;source-3-5-1&#34;&gt;Source: &lt;sup&gt;3&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;The npm homepage explained how to install a package, and linked to a more detailed page of examples. Every package page included installation instructions. All three packages installed without issue. It wasn&amp;rsquo;t clear if any unit tests were run as part of installation.&lt;/p&gt;
+
+&lt;h4 id=&#34;installation-5-5-2&#34;&gt;Installation: &lt;sup&gt;5&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;h5 id=&#34;npm-overall-3-8&#34;&gt;npm overall: 3.8&lt;/h5&gt;
+
+&lt;h3 id=&#34;ruby-rubygems&#34;&gt;Ruby: RubyGems&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_gem.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://rubygems.org&#34;&gt;RubyGems&lt;/a&gt; is the Ruby package manager and has over 87,000 packages.&lt;/p&gt;
+
+&lt;p&gt;RubyGems search was mixed, for the SQLite3 and Selenium searches the target package was returned in the top 2 results. However RubyGems returned no results for the Web Framework search, which given the popularity of Ruby on Rails is astonishing. For each search result RubyGems displayed the package name, description and number of downloads. Results were paginated and no facility was provided for sorting or filtering the results returned.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_gem_search_webf.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;search-2-5&#34;&gt;Search: &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;A basic set of metadata was provided: package name, description, author(s), version number, download statistics, license name, dependencies and a version history time line. There was no facility to &amp;ldquo;star&amp;rdquo; or review a module. No information was provided regarding cross platform support or unit test coverage.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_gem_sqlite.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;metadata-2-5-1&#34;&gt;Metadata: &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;RubyGems&amp;rsquo; documentation consisted of a link to an external site. The SQLite3 package used &lt;a href=&#34;http://rubydoc.info/&#34;&gt;RubyDoc&lt;/a&gt; which is like a nicer-looking JavaDoc. Selenium-Webdriver used Google code and in the case of Sinatra, their own &lt;a href=&#34;http://www.sinatrarb.com/&#34;&gt;website&lt;/a&gt;. The documentation was inconsistent in style, layout, content and quality.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/110/pm_gem_sqlite_doc.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;documentation-2-5-3&#34;&gt;Documentation: &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;RubyGems provided a link to the externally hosted repo for 2 packages (&lt;a href=&#34;http://rubygems.org/gems/sinatra&#34;&gt;Sinatra&lt;/a&gt;, &lt;a href=&#34;http://rubygems.org/gems/selenium-webdriver&#34;&gt;Selenium-Webdriver&lt;/a&gt;). The Selenium source code &lt;a href=&#34;https://code.google.com/p/selenium/source/list&#34;&gt;link&lt;/a&gt; was to the base Selenium package, not the Ruby package. For the SQLite3 package no link to the source code was provided.&lt;/p&gt;
+
+&lt;h4 id=&#34;source-2-5-1&#34;&gt;Source: &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;p&gt;Every package page provided command line installation instructions. However on my machine (Fedora 19), 2 of the packages failed to install with the same error: &lt;code&gt;mkmf.rb can&#39;t find header files for ruby&lt;/code&gt;. I was able to install the packages using the Fedora package manager instead.&lt;/p&gt;
+
+&lt;h4 id=&#34;installation-2-5&#34;&gt;Installation: &lt;sup&gt;2&lt;/sup&gt;&amp;frasl;&lt;sub&gt;5&lt;/sub&gt;&lt;/h4&gt;
+
+&lt;h5 id=&#34;rubygems-overall-2-0&#34;&gt;RubyGems overall: 2.0&lt;/h5&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.npmjs.org/&#34;&gt;npm&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/&#34;&gt;metacpan&lt;/a&gt; both scored 3.8 and tied for first place. npm has a great search feature, but needs better documentation. No package manager provided a means for sorting or further filtering the search results, which seems like a missed opportunity - it would be very helpful to be able to sort search results by the date of last upload - this would help the user eliminate stale packages from the results.&lt;/p&gt;
+
+&lt;p&gt;metacpan&amp;rsquo;s search could have been better but it&amp;rsquo;s documentation was excellent. It&amp;rsquo;s interesting that CPAN enforces almost zero requirements on documentation, yet overall it scored the highest. This might be because the underlying CPAN toolchain is 19 years old and has well-established conventions. metacpan also presented the source code nicely with several enhancements to make it easier, such as being able to toggle the display of inline documentation. metacpan should provide installation instructions for every package, which would be easy boilerplate using the &lt;code&gt;cpan&lt;/code&gt; command line tool. The distributed network of CPAN mirrors may mean that download statistics are not easily available to metacpan, but it could be a useful addition to the rich set of package metadata that metacpan provides.&lt;/p&gt;
+
+&lt;p&gt;PyPI and Packagist were all-rounders, with each scoring 3.0. In both cases better documentation and more package metadata would make them more usable.&lt;/p&gt;
+
+&lt;p&gt;RubyGems score of just 2.0 leaves room for improvement in all areas. I&amp;rsquo;m guessing but I think the strange search results could be improved by searching the package description as well as the package name, so that searches for &amp;ldquo;web framework&amp;rdquo; returns results.&lt;/p&gt;
+
+&lt;p&gt;In part two I&amp;rsquo;ll consider how well each of these package managers enables users to upload and share packages.&lt;/p&gt;
+
+&lt;h3 id=&#34;evaluation&#34;&gt;Evaluation&lt;/h3&gt;
+
+&lt;p&gt;The results are subjective but I hope they&amp;rsquo;re approximately representative. Choosing different search terms could have changed the results significantly - perhaps different packages are better documented than others for example. Also the uniform weighting given to each of the criteria could be changed to reflect the relative importance of each criterion (is search is more important than source code accessibility?). Also don&amp;rsquo;t rule out author ignorance :). The list of package managers could also be expanded. I&amp;rsquo;ve focused here on scripting language package managers, but there are &lt;a href=&#34;http://www.modulecounts.com/&#34;&gt;many&lt;/a&gt; to choose from.&lt;/p&gt;
+
+&lt;h3 id=&#34;thanks&#34;&gt;Thanks&lt;/h3&gt;
+
+&lt;p&gt;Thanks to Neil Bowers for providing the initial idea and feedback on this article. All errors are my own.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Subroutine Attributes on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/subroutine-attributes/</link>
+    <description>Recent content in Subroutine Attributes on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 12 Apr 2007 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/subroutine-attributes/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Lightning Strikes Four Times</title>
+      <link>http://localhost:1313/pub/2007/04/12/lightning-four.html/</link>
+      <pubDate>Thu, 12 Apr 2007 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2007/04/12/lightning-four.html/</guid>
+      <description>
+
+&lt;p&gt;by Mike Friedman&lt;/p&gt;
+
+&lt;p&gt;Good software design principles tell us that we should work to separate unrelated concerns. For example, the popular Model-View-Controller (MVC) pattern is common in web application designs. In MVC, separate modular components form a &lt;em&gt;model&lt;/em&gt;, which provides access to a data source, a &lt;em&gt;view&lt;/em&gt;, which presents the data to the end user, and a &lt;em&gt;controller&lt;/em&gt;, which implements the required features.&lt;/p&gt;
+
+&lt;p&gt;Ideally, it&amp;rsquo;s possible to replace any one of these components without breaking the whole system. A templating engine that translates the application&amp;rsquo;s data into HTML (the &lt;em&gt;view&lt;/em&gt;) could be replaced with one that generates YAML or a PDF file. The &lt;em&gt;model&lt;/em&gt; and &lt;em&gt;controller&lt;/em&gt; shouldn&amp;rsquo;t be affected by changing the way that the &lt;em&gt;view&lt;/em&gt; presents data to the user.&lt;/p&gt;
+
+&lt;p&gt;Other concerns are difficult to separate. In the world of aspect-oriented programming, a &lt;em&gt;crosscutting concern&lt;/em&gt; is a facet of a program which is difficult to modularize because it must interact with many disparate pieces of your system.&lt;/p&gt;
+
+&lt;p&gt;Consider an application that logs copious trace data when in debugging mode. In order to ensure that it is operating correctly, you may want to log when it enters and exits each subroutine. A typical way to accomplish this is by conditionally executing a logging function based on the value of a constant, which turns debugging on and off.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use strict;
+    use warnings;
+
+    use constant DEBUG =&amp;gt; 1;
+
+    sub do_something {
+        log_message(&amp;quot;I&#39;m doing something&amp;quot;) if DEBUG;
+
+        # do something here
+
+        log_message(&amp;quot;I&#39;m done doing something&amp;quot;) if DEBUG;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This solution is simple, but it presents a few problems. Perhaps most strikingly, it&amp;rsquo;s simply a lot of code to write. For each subroutine that you want to log, you must write two nearly identical lines of code. In a large system with hundreds or thousands of subroutines, this gets tedious fast, and can lead to inconsistently formatted messages as every copy-paste-edit cycle tweaks them a little bit.&lt;/p&gt;
+
+&lt;p&gt;Further, it offends the simple design goal of an MVC framework, because every component must talk to the logging system directly.&lt;/p&gt;
+
+&lt;p&gt;One way to improve this technique is to automatically wrap every interesting subroutine in a special logging function. There are a few ways to go about this. One of the simplest is to use subroutine attributes to install a dynamically generated wrapper.&lt;/p&gt;
+
+&lt;h3 id=&#34;attributes&#34;&gt;Attributes&lt;/h3&gt;
+
+&lt;p&gt;Perl 5.6 introduced &lt;em&gt;attributes&lt;/em&gt; that allow you to add arbitrary metadata to a variable. Attributes can be attached both to package variables, including subroutines, and lexical variables. Since Perl 5.8, attributes on lexical variables apply at runtime. Attributes on package variables activate at compile-time.&lt;/p&gt;
+
+&lt;p&gt;The interface to Perl attributes is via the &lt;a href=&#34;https://metacpan.org/pod/attributes&#34;&gt;attributes&lt;/a&gt; pragma. (The older attrs is deprecated.) The CPAN module &lt;a href=&#34;https://metacpan.org/pod/Attribute::Handlers&#34;&gt;Attribute::Handlers&lt;/a&gt; makes working with attributes a bit easier. Here&amp;rsquo;s an example of how you might rewrite the logging system using an attribute handler.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use strict;
+    use warnings;
+
+    use constant DEBUG =&amp;gt; 1;
+
+    use Attribute::Handlers;
+
+    sub _log : ATTR(CODE) {
+        my ($pkg, $sym, $code) = @_;
+
+        if( DEBUG ) {
+            my $name = *{ $sym }{NAME};
+
+            no warnings &#39;redefine&#39;;
+
+            *{ $sym } = sub {
+                log_message(&amp;quot;Entering sub $pkg\:\:$name&amp;quot;);
+                my @ret = $code-&amp;gt;( @_ );
+                log_message(&amp;quot;Leaving sub $pkg\:\:$name&amp;quot;);
+                return @ret;
+            };
+        }
+    }
+
+    sub do_something : _log {
+        print &amp;quot;I&#39;m doing something.\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Attributes are declared by placing a colon (:) and the attribute name after a variable or subroutine declaration. Optionally, the attribute can receive some data as a parameter; &lt;code&gt;Attribute::Handlers&lt;/code&gt; goes to great lengths to massage the passed data for you if necessary.&lt;/p&gt;
+
+&lt;p&gt;To set up an attribute handler, the code declares a subroutine, &lt;code&gt;_log&lt;/code&gt;, with the &lt;code&gt;ATTR&lt;/code&gt; attribute, passing the string &lt;code&gt;CODE&lt;/code&gt; as a parameter. &lt;code&gt;Attribute::Handlers&lt;/code&gt; provides &lt;code&gt;ATTR&lt;/code&gt;, and the &lt;code&gt;CODE&lt;/code&gt; parameter tells it that the new handler only applies to subroutines.&lt;/p&gt;
+
+&lt;p&gt;During compile time, any subroutine declared with the &lt;code&gt;_log&lt;/code&gt; attribute causes Perl to call the attribute handler with several parameters. The first three are the package in which the subroutine was compiled, a reference to the typeglob where its symbol lives, and a reference to the subroutine itself. These are sufficient for now.&lt;/p&gt;
+
+&lt;p&gt;If the &lt;code&gt;DEBUG&lt;/code&gt; constant is true, the handler sets to work wrapping the newly compiled subroutine. First, it grabs its name from the typeglob, then it adds a new subroutine to its spot in the symbol table. Because the code redefines a package symbol, it&amp;rsquo;s important to turn off warnings for symbol redefinitions in within this block.&lt;/p&gt;
+
+&lt;p&gt;Because the new function is a lexical closure over &lt;code&gt;$pkg&lt;/code&gt;, &lt;code&gt;$name&lt;/code&gt;, and most importantly &lt;code&gt;$code&lt;/code&gt;, it can use those values to construct the logging messages and call the original function.&lt;/p&gt;
+
+&lt;p&gt;All of this may seem like a lot of work, but once it&amp;rsquo;s done, all you need to do to enable entry and exit logging for any function is to simply apply the &lt;code&gt;_log&lt;/code&gt; attribute. The logging messages themselves get manufactured via closures when the program compiles, so we know they&amp;rsquo;ll always be consistent. If you want to change them, you only have to do it in one place.&lt;/p&gt;
+
+&lt;p&gt;Best of all, because attribute handlers get inherited, if you define your handler in a base class, any subclass can use it.&lt;/p&gt;
+
+&lt;h3 id=&#34;caveats&#34;&gt;Caveats&lt;/h3&gt;
+
+&lt;p&gt;Although this is a powerful technique, it isn&amp;rsquo;t perfect. The code will not properly wrap anonymous subroutines, and it won&amp;rsquo;t necessarily propagate calling context to the wrapped functions. Further, using this technique will significantly increase the number of subroutine dispatches that your program must execute during runtime. Depending on your program&amp;rsquo;s complexity, this may significantly increase the size of your call stack. If blinding speed is a major design goal, this strategy may not be for you.&lt;/p&gt;
+
+&lt;h3 id=&#34;going-further&#34;&gt;Going Further&lt;/h3&gt;
+
+&lt;p&gt;Other common cross-cutting concerns are authentication and authorization systems. Subroutine attributes can wrap functions in a security checker that will refuse to call the functions to callers without the proper credentials.&lt;/p&gt;
+
+&lt;h3 id=&#34;perl-outperforms-c-with-opengl&#34;&gt;Perl Outperforms C with OpenGL&lt;/h3&gt;
+
+&lt;p&gt;by Bob Free&lt;/p&gt;
+
+&lt;p&gt;Desktop developers often assume that compiled languages always perform better than interpreted languages such as Perl.&lt;/p&gt;
+
+&lt;p&gt;Conversely, most LAMP online service developers are familiar with mechanisms for preloading Perl interpreters modules (such as Apache mod_perl and ActivePerl/ISAPI), and know that Perl performance often approaches that of C/C++.&lt;/p&gt;
+
+&lt;p&gt;However, few 3D developers think of Perl when it comes to performance. They should.&lt;/p&gt;
+
+&lt;p&gt;GPUs are increasingly taking the load off of CPUs for number-crunching. Modern GPGPU processing leverages C-like programs and loads large data arrays onto the GPU, where processing executes independent of the CPU. As a result, the overall contribution of CPU-bound programs diminish, while Perl and C differences become statistically insignificant in terms of GPU performance.&lt;/p&gt;
+
+&lt;p&gt;The author has recently published a open source update to CPAN&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/OpenGL&#34;&gt;OpenGL&lt;/a&gt; module, adding support for GPGPU features. With this release, he has also posted OpenGL Perl versus C benchmarks&amp;ndash;demonstrating cases where Perl outperforms C for OpenGL operations.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-is-opengl&#34;&gt;What Is OpenGL?&lt;/h3&gt;
+
+&lt;p&gt;OpenGL is an industry-standard, cross-platform language for rendering 3D images. Originally developed by Silicon Graphics Inc. (SGI), it is now in wide use for 3D CAD/GIS systems, game development, and computer graphics (CG) effects in film.&lt;/p&gt;
+
+&lt;p&gt;With the advent of Graphic Processing Units (GPU), realistic, real-time 3D rendering has become common&amp;ndash;even in game consoles. GPUs are designed to process large arrays of data, such as 3D vertices, textures, surface normals, and color spaces.&lt;/p&gt;
+
+&lt;p&gt;It quickly became clear that the GPU&amp;rsquo;s ability to process large amounts of data could expand well beyond just 3D rendering, and could applied to General Purpose GPU (GPGPU) processing. GPGPUs can process complex physics problems, deal with particle simluations, provide database analytics, etc.&lt;/p&gt;
+
+&lt;p&gt;Over the years, OpenGL has expanded to support GPGPU processing, making it simple to load C-like programs into GPU memory for fast execution, to load large arrays of data in the form of &lt;em&gt;textures&lt;/em&gt;, and to quickly move data between the GPU and CPU via Frame Buffer Objects (FBO).&lt;/p&gt;
+
+&lt;p&gt;While OpenGL is in itself a portable language, it provides no interfaces to operating system (OS) display systems. As a result, Unix systems generally rely on an X11-based library called GLX; Windows relies on a WGL interface. Several libraries, such as &lt;a href=&#34;http://www.opengl.org/resources/libraries/glut/&#34;&gt;GLUT&lt;/a&gt;, help to abstract these differences. However, as OpenGL added new extensions, OS vendors (Microsoft in particular) provided different methods for accessing the new APIs, making it difficult to write cross-platform GPGPU code.&lt;/p&gt;
+
+&lt;h3 id=&#34;perl-opengl-pogl&#34;&gt;Perl OpenGL (POGL)&lt;/h3&gt;
+
+&lt;p&gt;Bob Free of Graphcomp has just released a new, portable, open source Perl OpenGL module (POGL 0.55).&lt;/p&gt;
+
+&lt;p&gt;This module adds support for 52 new OpenGL extensions, including many GPGPU features such as Vertex Arrays, Frame Buffer Objects, Vertext Programs, and Fragment Programs.&lt;/p&gt;
+
+&lt;p&gt;In terms of 3D processing, these extensions allow developers to perform real-time dynamic vertex and texturemap generation and manipulation within the GPU. This module also simplifies GPGPU processing by moving data to and from the CPU through textures, and loading low-level, assembly-like instructions to the GPU.&lt;/p&gt;
+
+&lt;p&gt;POGL 0.55 is a binary Perl module (written in C via XS), that has been tested on Windows (NT/XP/Vista) and Linux (Fedora 6. Ubuntu/Dapper). Source and binaries are available via SVN, PPM, tarball, and ZIP at the &lt;a href=&#34;http://graphcomp.com/opengl&#34;&gt;POGL homepage&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;POGL OS Performance&lt;/p&gt;
+
+&lt;p&gt;The POGL homepage includes initial benchmarks comparing POGL on Vista, Fedora, and Ubuntu. These tests show that static texture rendering on an animated object on Fedora was 10x faster than Vista; Ubuntu was 15x faster (using the same nVidia cards, drivers, and machine).&lt;/p&gt;
+
+&lt;p&gt;A subsequent, tighter benchmark eliminated UI and FPS counters, and focused more on dynamic texturemap generation. These results, posted on &lt;a href=&#34;http://graphcomp.com/opengl/bench.html&#34;&gt;OpenGL C versus Perl benchmarks&lt;/a&gt;, show comparable numbers for Fedora and Ubuntu, with both outperforming Vista by about 60 percent.&lt;/p&gt;
+
+&lt;p&gt;Note: a further performance on these benchmarks could be available through the use of GPU vertex arrays.&lt;/p&gt;
+
+&lt;h3 id=&#34;perl-versus-c-performance&#34;&gt;Perl versus C Performance&lt;/h3&gt;
+
+&lt;p&gt;These benchmarks also compare Perl against C code. It found no statistical difference between overall Perl and C performance on Linux. Inexplicably, Perl frequently outperformed C on Vista.&lt;/p&gt;
+
+&lt;p&gt;In general, C performed better than Perl on Vertex/Fragment Shader operations, while Perl outperformed C on FBO operations. In this benchmark, overall performance was essentially equal between Perl and C.&lt;/p&gt;
+
+&lt;p&gt;The similarity in performance is explained by several factors:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;GPU is performing the bulk of the number-crunching operations&lt;/li&gt;
+&lt;li&gt;POGL is a compiled C module&lt;/li&gt;
+&lt;li&gt;Non-GPU operations are minimal&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In cases where code dynamically generates or otherwise modifies the GPU&amp;rsquo;s vetex/fragment shader code, it is conceivable that Perl would provide even better than C, due to Perl&amp;rsquo;s optimized and interpreted string handling.&lt;/p&gt;
+
+&lt;h3 id=&#34;perl-advantages&#34;&gt;Perl Advantages&lt;/h3&gt;
+
+&lt;p&gt;Given that GPGPU performance will be a wash in most cases, the primary reason for using a compiled language is to obfuscate source for intellectual property (IP) reasons.&lt;/p&gt;
+
+&lt;p&gt;For server-side development, there&amp;rsquo;s really no reason to use a compiled language for GPGPU operations, and several reasons to go with Perl:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Perl OpenGL code is more portable than C; therefore there are fewer lines of code&lt;/li&gt;
+&lt;li&gt;Numerous imaging modules for loading GPGPU data arrays (textures)&lt;/li&gt;
+&lt;li&gt;Portable, open source modules for system and auxiliary functions&lt;/li&gt;
+&lt;li&gt;Perl (under mod-perl/ISAPI) is generally faster than Java&lt;/li&gt;
+&lt;li&gt;It is easier to port Perl to/from C than Python or Ruby&lt;/li&gt;
+&lt;li&gt;As of this writing, there is no FBO support in Java, Python, or Ruby&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There is a side-by-side code comparison between C and Perl posted on the above benchmark page.&lt;/p&gt;
+
+&lt;p&gt;Desktop OpenGL/GPU developers may find it faster to prototype code in Perl (e.g., simpler string handling and garbage collection), and then port their code to C later (if necessary). Developers can code in one window and execute in another&amp;ndash;with no IDE, no compiling&amp;ndash;allowing innovators/researchers to do real-time experiments with new shader algorithms.&lt;/p&gt;
+
+&lt;p&gt;Physicists can quickly develop new models; researchers and media developers can create new experimental effects and reduce their time to market.&lt;/p&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;Performance is not a reason a reason to use C over Perl for OpenGL and GPGPU operations, and there are many cases where Perl is preferable to C (or Java/Python/Ruby).&lt;/p&gt;
+
+&lt;p&gt;By writing your OpenGL/GPU code in Perl, you will likely:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Reduce your R&amp;amp;D costs and time to market&lt;/li&gt;
+&lt;li&gt;Expand your platform/deployment options&lt;/li&gt;
+&lt;li&gt;Accelerate your company&amp;rsquo;s GPGPU ramp up&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;using-test-count&#34;&gt;Using Test::Count&lt;/h3&gt;
+
+&lt;p&gt;by Shlomi Fish&lt;/p&gt;
+
+&lt;p&gt;A typical &lt;a href=&#34;https://metacpan.org/pod/Test::More&#34;&gt;Test::More&lt;/a&gt; test script contains several checks. It is preferable to keep track of the number of checks that the script is running (using &lt;code&gt;use Test::More tests =&amp;gt; $NUM_CHECKS&lt;/code&gt; or the &lt;code&gt;plan tests =&amp;gt; $NUM_CHECKS&lt;/code&gt;), so that if some checks are not run (for whatever reason), the test script will still fail when being run by the harness.&lt;/p&gt;
+
+&lt;p&gt;If you add more checks to a test file, then you have to remember to update the plan. However, how do you keep track of how many tests &lt;em&gt;should&lt;/em&gt; run? I&amp;rsquo;ve already encountered a case where &lt;a href=&#34;http://dbi.perl.org/&#34;&gt;a DBI related module&lt;/a&gt; had a different number of tests with an older version of DBI than with a more recent one.&lt;/p&gt;
+
+&lt;p&gt;Enter &lt;a href=&#34;https://metacpan.org/pod/Test::Count&#34;&gt;Test::Count&lt;/a&gt;. Test::Count originated from a &lt;a href=&#34;http://www.vim.org/&#34;&gt;Vim&lt;/a&gt; script I wrote to keep track of the number of tests by using meta-comments such as &lt;code&gt;# TEST&lt;/code&gt; (for one test) or &lt;code&gt;# TEST*3*5&lt;/code&gt; (for 15 tests). However, there was a limit to what I could do with Vim&amp;rsquo;s scripting language, as I wanted a richer syntax for specifying the tests as well as variables.&lt;/p&gt;
+
+&lt;p&gt;Thus, I wrote the Test::Count module and placed it on CPAN. &lt;a href=&#34;https://metacpan.org/pod/Test::Countlib&#34;&gt;Test::Count::Filter&lt;/a&gt; acts as a filter, counts the tests, and updates them. Here&amp;rsquo;s an example, taken from a code I wrote for a Perl Quiz of the Week:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl -w
+
+# This file implements various functions to remove
+# all periods (&amp;quot;.&amp;quot;&#39;s) except the last from a string.
+
+use strict;
+
+use Test::More tests =&amp;gt; 5;
+use String::ShellQuote;
+
+sub via_split
+{
+    my $s = shift;
+    my @components = split(/\./, $s, -1);
+    if (@components == 1)
+    {
+        return $s;
+    }
+    my $last = pop(@components);
+    return join(&amp;quot;&amp;quot;, @components) . &amp;quot;.&amp;quot; . $last;
+}
+
+# Other Functions snipped.
+
+# TEST:$num_tests=9
+# TEST:$num_funcs=8
+# TEST*$num_tests*$num_funcs
+foreach my $f (@funcs)
+{
+    my $ref = eval (&amp;quot;\\&amp;amp;$f&amp;quot;);
+    is($ref-&amp;gt;(&amp;quot;hello.world.txt&amp;quot;), &amp;quot;helloworld.txt&amp;quot;, &amp;quot;$f - simple&amp;quot;); # 1
+    is($ref-&amp;gt;(&amp;quot;hello-there&amp;quot;), &amp;quot;hello-there&amp;quot;, &amp;quot;$f - zero periods&amp;quot;); # 2
+    is($ref-&amp;gt;(&amp;quot;hello..too.pl&amp;quot;), &amp;quot;hellotoo.pl&amp;quot;, &amp;quot;$f - double&amp;quot;); # 3
+    is($ref-&amp;gt;(&amp;quot;magna..carta&amp;quot;), &amp;quot;magna.carta&amp;quot;, &amp;quot;$f - double at end&amp;quot;); # 4
+    is($ref-&amp;gt;(&amp;quot;the-more-the-merrier.jpg&amp;quot;),
+       &amp;quot;the-more-the-merrier.jpg&amp;quot;, &amp;quot;$f - one period&amp;quot;); # 5
+    is($ref-&amp;gt;(&amp;quot;hello.&amp;quot;), &amp;quot;hello.&amp;quot;, &amp;quot;$f - one period at end&amp;quot;); # 6
+    is($ref-&amp;gt;(&amp;quot;perl.txt.&amp;quot;), &amp;quot;perltxt.&amp;quot;, &amp;quot;$f - period at end&amp;quot;); # 7
+    is($ref-&amp;gt;(&amp;quot;.yes&amp;quot;), &amp;quot;.yes&amp;quot;, &amp;quot;$f - one period at start&amp;quot;); # 8
+    is($ref-&amp;gt;(&amp;quot;.yes.txt&amp;quot;), &amp;quot;yes.txt&amp;quot;, &amp;quot;$f - period at start&amp;quot;); # 9
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Filtering this script through &lt;code&gt;Test::Count::Filter&lt;/code&gt; provides the correct number of tests. I then add this to my &lt;em&gt;.vimrc&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;function! Perl_Tests_Count()
+    %!perl -MTest::Count::Filter -e &#39;Test::Count::Filter-&amp;gt;new({})-&amp;gt;process()&#39;
+endfunction
+
+autocmd BufNewFile,BufRead *.t map &amp;lt;F3&amp;gt; :call Perl_Tests_Count()&amp;lt;CR&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I can press F3 to update the number of checks.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Test::Count&lt;/code&gt; supports +,-,*, /, as well as parentheses, so it is expressive enough for most needs.&lt;/p&gt;
+
+&lt;h3 id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/h3&gt;
+
+&lt;p&gt;Thanks to mrMister from &lt;a href=&#34;http://www.freenode.net/&#34;&gt;Freenode&lt;/a&gt; for going over earlier drafts of this article and correcting some problems.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-s-in-that-scalar&#34;&gt;What&amp;rsquo;s In that Scalar?&lt;/h3&gt;
+
+&lt;p&gt;by brian d foy&lt;/p&gt;
+
+&lt;p&gt;Scalars are simple, right? They hold single values, and you don&amp;rsquo;t even have to care what those values are because Perl figures out if they are numbers or strings. Well, scalars show up just about anywhere and it&amp;rsquo;s much more complicated than single values. I could have &lt;code&gt;undef&lt;/code&gt;, a number or string, or a reference. That reference can be a normal reference, a blessed reference, or even a hidden reference as a tied variable.&lt;/p&gt;
+
+&lt;p&gt;Perhaps I have a scalar variable which should be an object (a blessed reference, which is a single value), but before I call a method on it I want to ensure it is to avoid the &amp;ldquo;unblessed reference&amp;rdquo; error that kills my program. I might try the &lt;code&gt;ref&lt;/code&gt; built-in to get the class name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if( ref $maybe_object ) { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s a bug there. &lt;code&gt;ref&lt;/code&gt; returns an empty string if the scalar isn&amp;rsquo;t an object. It might return &lt;code&gt;0&lt;/code&gt;, a false value, and yes, some Perl people have figured out how to create a package named &lt;code&gt;0&lt;/code&gt; just to mess with this. I might think that checking for defined-ness would work:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if( defined ref $maybe_object ) { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; but the empty string is also defined. I want all the cases where it is not the one value that means it&amp;rsquo;s not a reference.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   unless( &#39;&#39; eq ref $maybe_object ) { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This still doesn&amp;rsquo;t tell me if I have an object. I know it&amp;rsquo;s a reference, but maybe it&amp;rsquo;s a regular data reference. The &lt;code&gt;blessed&lt;/code&gt; function from &lt;a href=&#34;https://metacpan.org/pod/Scalar::Util&#34;&gt;Scalar::Util&lt;/a&gt; can help:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if( blessed $maybe_object ) { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This almost has the same problem as &lt;code&gt;ref&lt;/code&gt;. &lt;code&gt;blessed&lt;/code&gt; returns the package name if it&amp;rsquo;s an object, and &lt;code&gt;undef&lt;/code&gt; otherwise. I really need to check for defined-ness.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if( defined blessed $maybe_object ) { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even if &lt;code&gt;blessed&lt;/code&gt; returns &lt;code&gt;undef&lt;/code&gt;, I still might have a hidden object. If the scalar is a tied variable, there&amp;rsquo;s really an object underneath it, although the scalar acts as if it&amp;rsquo;s a normal variable. Although I normally don&amp;rsquo;t need to interact with the secret object, the &lt;code&gt;tied&lt;/code&gt; built-in returns the secret object if there is one, and &lt;code&gt;undef&lt;/code&gt; otherwise.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $secret_object = tied $maybe_tied_scalar;
+
+        if( defined $secret_object ) { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once I have the secret object in &lt;code&gt;$secret_object&lt;/code&gt;, I treat it like any other object.&lt;/p&gt;
+
+&lt;p&gt;Now I&amp;rsquo;m sure I have an object, but that doesn&amp;rsquo;t mean I know which methods I can call. The &lt;code&gt;isa&lt;/code&gt; function in the &lt;code&gt;UNIVERSAL&lt;/code&gt; package supposedly can figure this out for me. It tells me if a class is somewhere in an object&amp;rsquo;s inheritance tree. I want to know if my object can do what a &lt;code&gt;Horse&lt;/code&gt; can do, even if I have a &lt;code&gt;RaceHorse&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if( UNIVERSAL::isa( $object, &#39;RaceHorse&#39; ) {
+           $object-&amp;gt;method;
+           }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;what if the &lt;code&gt;RaceHorse&lt;/code&gt; class is just a factory for objects in some other class that I&amp;rsquo;m not supposed to know about? I&amp;rsquo;ll make a new object as a prototype just to get its reference:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if( UNIVERSAL::isa( $object, ref RaceHorse-&amp;gt;new() ) {
+           $object-&amp;gt;method;
+           }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A real object-oriented programmer doesn&amp;rsquo;t care what sort of object it is as long as it can respond to the right method. I should use &lt;code&gt;can&lt;/code&gt; instead:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if( UNIVERSAL::can( $object, $method ) {
+           $object-&amp;gt;method;
+           }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This doesn&amp;rsquo;t always work either. &lt;code&gt;can&lt;/code&gt; only knows about defined subroutine names, and only looks in the inheritance tree for them. It can&amp;rsquo;t detect methods from &lt;code&gt;AUTOLOAD&lt;/code&gt; or traits. I could override the &lt;code&gt;can&lt;/code&gt; method to handle those, but I have to call it as a method (this works for &lt;code&gt;isa&lt;/code&gt; too):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if( $object-&amp;gt;can( $method ) ) {
+           $object-&amp;gt;method;
+           }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What if &lt;code&gt;$object&lt;/code&gt; wasn&amp;rsquo;t really an object? I just called a method on a non-object! I&amp;rsquo;m back to my original problem, but I don&amp;rsquo;t want to use all of those tests I just went through. I&amp;rsquo;ll fix this with an &lt;code&gt;eval&lt;/code&gt;, which catches the error for non-objects:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if( eval{ $object-&amp;gt;can( $method ) } ) {
+           $object-&amp;gt;method;
+           }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;but what if someone installed a &lt;code&gt;__DIE__&lt;/code&gt; handler that simply &lt;code&gt;exit&lt;/code&gt;-ed instead of &lt;code&gt;die&lt;/code&gt;-ing? Programmers do that sort of thing forgetting that it affects the entire program.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   $SIG{__DIE__} = sub { exit };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now my &lt;code&gt;eval&lt;/code&gt; tries to &lt;code&gt;die&lt;/code&gt; because it caught the error, but the &lt;code&gt;__DIE__&lt;/code&gt; handler says &lt;code&gt;exit&lt;/code&gt;, so the program stops without an error. I have to localize the &lt;code&gt;__DIE__&lt;/code&gt; handler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if( eval{ local $SIG{__DIE__}; $object-&amp;gt;can( $method ) } ) {
+           $object-&amp;gt;method;
+           }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If I&amp;rsquo;m the guy responsible for the &lt;code&gt;__DIE__&lt;/code&gt; handler, I could use &lt;code&gt;$^S&lt;/code&gt; to see if I&amp;rsquo;m in an &lt;code&gt;eval&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   $SIG{__DIE__} = sub { $^S ? die : exit };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s solved it, right? Not quite. Why do all of that checking? I can just call the method and hope for the best. If I get an error, so be it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   my $result = eval { $object-&amp;gt;method };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I have to wrap all of my method calls in an eval. None of this would really be a problem if Perl were an object language. Or is it? The &lt;a href=&#34;https://metacpan.org/pod/autobox&#34;&gt;autobox&lt;/a&gt; module makes Perl data types look like objects:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   use autobox;
+
+   sub SCALAR::println { print $_[0], &amp;quot;\n&amp;quot; }
+
+   &#39;Hello World&#39;-&amp;gt;println;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That works because it uses a special package &lt;code&gt;SCALAR&lt;/code&gt;, although I need to define methods in it myself. I&amp;rsquo;ll catch unknown methods with &lt;code&gt;AUTOLOAD&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   sub SCALAR::AUTOLOAD {}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or, I can just wait for Perl 6 when these things get much less murky because everything is an object.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

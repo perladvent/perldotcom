@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Automated Testing on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-automated-testing/</link>
+    <description>Recent content in Perl Automated Testing on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 21 Jul 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-automated-testing/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>An Introduction to Test::MockDBI</title>
+      <link>http://localhost:1313/pub/2005/07/21/test_mockdbi.html/</link>
+      <pubDate>Thu, 21 Jul 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/07/21/test_mockdbi.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;prelude&#34;&gt;Prelude&lt;/h3&gt;
+
+&lt;p&gt;How do you test DBI programs:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Without having to modify your current program code or environment settings?&lt;/li&gt;
+&lt;li&gt;Without having to set up multiple test databases?&lt;/li&gt;
+&lt;li&gt;Without separating your test data from your test code?&lt;/li&gt;
+&lt;li&gt;With tests for every bizarre value your program will ever have to face?&lt;/li&gt;
+&lt;li&gt;With complete control over all database return values, along with all DBI method return values?&lt;/li&gt;
+&lt;li&gt;With an easy, regex-based rules interface?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You test with &lt;a href=&#34;https://metacpan.org/pod/Test::MockDBI&#34;&gt;Test::MockDBI&lt;/a&gt;, that&amp;rsquo;s how. Test::MockDBI provides all of this by using Test::MockObject::Extends to mock up the entire DBI API. Without a solution like Test::MockDBI&amp;ndash;a solution that enables direct manipulation of the DBI&amp;ndash;you&amp;rsquo;ll have to trace DBI methods through a series of test databases.&lt;/p&gt;
+
+&lt;p&gt;You can make test databases work, but:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You&amp;rsquo;ll need multiple (perhaps many) databases when you need multiple sets of mutually inconsistent values for complete test coverage.&lt;/li&gt;
+&lt;li&gt;Some DBI failure modes are impossible to generate through any test database.&lt;/li&gt;
+&lt;li&gt;Depending on the database toolset available, it may be difficult to insert all necessary test values&amp;ndash;for example, Unicode values in ASCII applications, or bizarre file types in a document-manager application.&lt;/li&gt;
+&lt;li&gt;Test databases, by definition, are separate from their corresponding test code. This increases the chance that the test code and the test data will fall out of sync with each other.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Using Test::MockDBI avoids these problems. Read on to learn how Test::MockDBI eases the job of testing DBI applications.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-mock-up-of-the-entire-dbi&#34;&gt;A Mock Up of the Entire DBI&lt;/h3&gt;
+
+&lt;p&gt;Test::MockDBI mocks up the entire DBI API by using &lt;a href=&#34;https://metacpan.org/pod/Test::MockObject::Extends&#34;&gt;Test::MockObject::Extends&lt;/a&gt; to substitute a Test::MockObject::Extends object in place of the &lt;a href=&#34;https://metacpan.org/pod/DBI&#34;&gt;DBI&lt;/a&gt;. A feature of this approach is that if the DBI API changes (and you use that change), you will notice during testing if you haven&amp;rsquo;t upgraded Test::MockDBI, as your program will complain about missing DBI API method(s).&lt;/p&gt;
+
+&lt;p&gt;Mocking up the entire DBI means that you can add the DBI testing code into an existing application without changing the initial application code&amp;ndash;using Test::MockDBI is entirely transparent to the rest of your application, as it neither knows nor cares that it&amp;rsquo;s using Test::MockDBI in place of the DBI. This property of transparency is what drove me to develop Test::MockDBI, as it meant I could add the Test::MockDBI DBI testing code to existing client applications without modifying the existing code (handy, for us consultants).&lt;/p&gt;
+
+&lt;p&gt;Further enhancing Test::MockDBI&amp;rsquo;s transparency is the &lt;code&gt;DBI testing type&lt;/code&gt; class value. Testing is only enabled when the DBI testing type is non-zero, so you can just leave the DBI testing code additions in your production code&amp;ndash;users will not even know about your DBI testing code unless you tell them.&lt;/p&gt;
+
+&lt;p&gt;Mocking up the entire DBI also means that you have complete control of the DBI&amp;rsquo;s behavior during testing. Often, you can simulate a &lt;code&gt;SELECT&lt;/code&gt; DBI transaction with a simple state machine that returns just a few rows from the (mocked up) database. Test::MockDBI lets you use a &lt;code&gt;CODEREF&lt;/code&gt; to supply database return values, so you can easily put a simple state machine into the &lt;code&gt;CODEREF&lt;/code&gt; to supply the necessary database values for testing. You could even put a delay loop into the &lt;code&gt;CODEREF&lt;/code&gt; when you need to perform speed tests on your code.&lt;/p&gt;
+
+&lt;h3 id=&#34;rules-based-dbi-testing&#34;&gt;Rules-Based DBI Testing&lt;/h3&gt;
+
+&lt;p&gt;You control the mocked-up DBI of Test::MockDBI with one or more rules that you insert as Test::MockDBI method calls into your program. The default DBI method values provided by Test::MockDBI make the database appear to have a hole in the bottom of it&amp;ndash;all method calls return OK, but you can&amp;rsquo;t get any data out of the database. Rules for DBI methods that return database values (the &lt;code&gt;fetch*()&lt;/code&gt; and &lt;code&gt;select*()&lt;/code&gt; methods) can use either a value that they return directly for matching method calls, or a &lt;code&gt;CODEREF&lt;/code&gt; called to provide a value each time that rule fires. A rule matches when its DBI testing type is the current testing type and the current SQL matches the rule&amp;rsquo;s regular expression. Rules fire in the order in which you declare them, so usually you want to order your rules from most-specific to least-specific.&lt;/p&gt;
+
+&lt;p&gt;The DBI testing type is an unsigned integer matching &lt;code&gt;/^d+$/&lt;/code&gt;. When the DBI testing type is zero, there will be no DBI testing (or at least, no mocked-up DBI testing) performed, and the program will use the DBI normally. A zero DBI testing type value in a rule means the rule could fire for any non-zero DBI testing type value&amp;ndash;that is, zero is the wildcard DBI testing type value for rules. Set the DBI testing type either by a first command-line argument of the form:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;--dbitest[=DTT]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;where the optional &lt;code&gt;DTT&lt;/code&gt; is the DBI testing type (defaulting to one), or through Test::MockDBI&amp;rsquo;s &lt;code&gt;set_dbi_test_type()&lt;/code&gt; method. Setting the DBI testing type through a first command-line argument has the advantage of requiring no modifications to the code under test, as this command-line processing is done so early (during &lt;code&gt;BEGIN&lt;/code&gt; time for Test::MockDBI) that the code under test should be ignorant of whether this processing ever happened.&lt;/p&gt;
+
+&lt;h3 id=&#34;dbi-return-values&#34;&gt;DBI Return Values&lt;/h3&gt;
+
+&lt;p&gt;Test::MockDBI defaults to returning a success (true) value for all DBI method calls. This fits well with the usual techniques of DBI programming, where the first DBI error causes the program to stop what it is doing. Test::MockDBI&amp;rsquo;s &lt;code&gt;bad_method()&lt;/code&gt; method creates a rule that forces a failure return value on the specified DBI method when the current DBI testing type and SQL match those of the rule. Arbitrary DBI method return value failures like these are difficult (at best) to generate with a test database.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI&amp;rsquo;s &lt;code&gt;set_retval_scalar()&lt;/code&gt; and &lt;code&gt;set_retval_array()&lt;/code&gt; methods create rules for what database values to return. Set rules for scalar return values (&lt;code&gt;arrayrefs&lt;/code&gt; and &lt;code&gt;hashrefs&lt;/code&gt;) with &lt;code&gt;set_retval_scalar()&lt;/code&gt; and for array return value rules with &lt;code&gt;set_retval_array()&lt;/code&gt;. You can supply a value to be returned every time the rule matches, which is good when extracting single rows out of the database, such as configuration parameters. Alternatively, pass a &lt;code&gt;CODEREF&lt;/code&gt; that will be called each time the rule fires to return a new value. Commonly, with &lt;code&gt;SELECT&lt;/code&gt; statements, the DBI returns one or more rows, then returns an empty row to signify the end of the data. A &lt;code&gt;CODEREF&lt;/code&gt; can incorporate a state machine that implements this &amp;ldquo;return 1+ rows, then a terminator&amp;rdquo; behavior quite easily. Having individual state machines for each rule is much easier to develop with than having one master state machine embedded into Test::MockDBI&amp;rsquo;s core. (An early alpha of Test::MockDBI used the master state machine approach, so I have empirical evidence of this result&amp;ndash;I am not emptily theorizing here.)&lt;/p&gt;
+
+&lt;p&gt;Depending on what tools you have for creating your test databases, it may be difficult to populate the test database with all of the values you need to test against. Although it is probably not so much the case today, only a few years ago populating a database with Unicode was difficult, given the national-charset-based tools of the day. Even today, a document management system might be difficult to populate with weird file types. Test::MockDBI makes these kinds of tests much easier to carry out, as you directly specify the data for the mock database to return rather than using a separate test database.&lt;/p&gt;
+
+&lt;p&gt;This ease of database value testing also applies when you need to test against combinations of database values that are unlikely to occur in practice (the old &amp;ldquo;comparing apples to battleships&amp;rdquo; problem). If you need to handle database value corruption&amp;ndash;as in network problems causing the return of partial values from a Chinese database when the program is in the U.S.&amp;ndash;this ability to completely specify the database return values could be invaluable in testing. Test::MockDBI lets you take complete control of your database return values without separating test code and test data.&lt;/p&gt;
+
+&lt;h3 id=&#34;simplicity-test-mockdbi-s-standard-output-based-interface&#34;&gt;Simplicity: Test::MockDBI&amp;rsquo;s Standard-Output-Based Interface&lt;/h3&gt;
+
+&lt;p&gt;This modern incarnation of the age-old stubbed-functions technique also uses the old technique of &amp;ldquo;&lt;code&gt;printf()&lt;/code&gt; and scratch head&amp;rdquo; as its output interface. This being Perl we are working with, and not FORTRAN IV (thank goodness), we have multiple options beyond the use of unvarnished standard output.&lt;/p&gt;
+
+&lt;p&gt;One option that I think integrates well with DBI-using module testing is to redirect standard output into a string using &lt;a href=&#34;https://metacpan.org/pod/IO::String&#34;&gt;IO::String&lt;/a&gt;. You can then match the string against the regex you are looking for. As you have already guessed, use of pure standard output integrates well with command-line program testing.&lt;/p&gt;
+
+&lt;p&gt;What you will look for, irrespective of where your code actually looks, is the output of each DBI method as it executes&amp;ndash;the method name and arguments&amp;ndash;along with anything else your code writes to standard output.&lt;/p&gt;
+
+&lt;h3 id=&#34;bind-test-data-to-test-code&#34;&gt;Bind Test Data to Test Code&lt;/h3&gt;
+
+&lt;p&gt;Because DBI and database return values are bound to your test programs when using Test::MockDBI, there is less risk of test data getting out of sync with the test code. A separate test database introduces another point of failure in your testing process. Multiple test databases add yet another point of failure for each database. Whatever you use to generate the test databases also introduces another point of failure for each database. I can imagine cases where special-purpose programs for generating test databases might create multiple points of failure, especially if the programs have to integrate data from multiple sources to generate the test data (such as a VMS Bill of Materials database and a Solaris PCB CAD file for a test database generation program running on Linux).&lt;/p&gt;
+
+&lt;p&gt;One of the major advances in software engineering is the increasing ability to gather and control related information together&amp;ndash;the 1990s advance of object-oriented programming in common languages is a testimony to this, from which we Perl programmers reap the benefits in our use of CPAN. For many testing purposes, there is no need for separate test databases. Without that need for a separate test database, separating test data from test code only complicates the testing process. Test::MockDBI lets you bind together your test code and test data into one nice, neat package. Binding is even closer than code and comments, as comments can get out of sync with their code, while the test code and test data for Test::MockDBI cannot get out of sync too far without causing their tests to fail unexpectedly.&lt;/p&gt;
+
+&lt;h3 id=&#34;when-to-use-test-mockdbi&#34;&gt;When to Use Test::MockDBI&lt;/h3&gt;
+
+&lt;p&gt;DBI&amp;rsquo;s &lt;code&gt;trace()&lt;/code&gt;, &lt;a href=&#34;https://metacpan.org/pod/DBD::Mock&#34;&gt;DBD::Mock&lt;/a&gt;, and Test::MockDBI are complementary solutions to the problem of testing DBI software. DBI&amp;rsquo;s &lt;code&gt;trace()&lt;/code&gt; is a pure tracing mechanism, as it does not change the data returned from the database or the DBI method return values. DBD::Mock works at level of a database driver, so you have to look at your DBI testing from the driver&amp;rsquo;s point of view, rather than the DBI caller&amp;rsquo;s point of view. DBD::Mock also requires that your code supports configurable DBI DSNs, which may not be the case in all circumstances, especially when you must maintain or enhance legacy DBI software.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI works at the DBI caller&amp;rsquo;s level, which is (IMHO) more natural for testing DBI-using software (possibly a matter of taste: TMTOWTDI). Test::MockDBI&amp;rsquo;s interface with your DBI software is a set of easy-to-program, regex-based rules, which incorporate a lot of power into one or a few lines of code, thereby using Perl&amp;rsquo;s built-in regex support to best advantage. This binds test data and test code tightly together, reducing the chance of synchronization problems between the test data and the test code. Using Test::MockDBI does not require modifying the current code of the DBI software being tested, as you only need additional code to enable Test::MockDBI-driven DBI testing.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI takes additional coding effort when you need to test DBI program performance. It may be that for performance testing, you want to use test databases rather than Test::MockDBI. If you were in any danger of your copy of &lt;em&gt;DBI.pm&lt;/em&gt; becoming corrupted, I don&amp;rsquo;t know whether you could adequately test that condition with Test::MockDBI, depending on the corruption. You would probably have to create a special mock DBI to test corrupted DBI code handling, though you could start building the special mock DBI by inheriting from Test::MockDBI without any problems from Test::MockDBI&amp;rsquo;s design, as it should be inheritance-friendly.&lt;/p&gt;
+
+&lt;h3 id=&#34;some-examples&#34;&gt;Some Examples&lt;/h3&gt;
+
+&lt;p&gt;To make:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh = DBI-&amp;gt;connect(&amp;quot;dbi:AZ:universe&amp;quot;, &amp;quot;mortal&amp;quot;, &amp;quot;(none)&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;fail, add the rule:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;bad_method(&amp;quot;connect&amp;quot;, 1,
+    &amp;quot;CONNECT TO dbi:AZ:universe AS mortal WITH \\(none\\)&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(where &lt;code&gt;$tmd&lt;/code&gt; is the only Test::MockDBI object, which you obtain through Test::MockDBI&amp;rsquo;s &lt;code&gt;get_instance()&lt;/code&gt; method).&lt;/p&gt;
+
+&lt;p&gt;To make a SQL &lt;code&gt;SELECT&lt;/code&gt; failure when using &lt;code&gt;DBI::execute()&lt;/code&gt;, use the rule:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;bad_method(&amp;quot;execute&amp;quot;, 1,
+    &amp;quot;SELECT zip_plus_4 from zipcodes where state=&#39;IN&#39;&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This rule implies that:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;DBI::connect()&lt;/code&gt; &lt;code&gt;succeeded()&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;DBI::prepare()&lt;/code&gt; &lt;code&gt;succeeded()&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;But the &lt;code&gt;DBI::execute()&lt;/code&gt; failed as it should.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A common use of direct scalar return values is returning configuration data, such as a U.S. zip code for an address:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;set_retval_scalar(1,
+ &amp;quot;zip5.*&#39;IN&#39;.*&#39;NOBLESVILLE&#39;.*&#39;170 WESTFIELD RD&#39;&amp;quot;,
+ [ 46062 ]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This demonstrates using a regular expression, as matching SQL could then look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT
+  zip5
+FROM
+  zipcodes
+WHERE
+  state=&#39;IN&#39; AND
+  city=&#39;NOBLESVILLE&#39; AND
+  street_address=&#39;170 WESTFIELD RD&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the rule would match.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;SELECT&lt;/code&gt;s that return one or more rows from the database are the common case:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $counter = 0;                    # name counter
+sub possibly_evil_names {
+    $counter++;
+    if ($counter == 1) {
+        return (&#39;Adolf&#39;, &#39;Germany&#39;);
+    } elsif ($counter == 2) {
+        return (&#39;Josef&#39;, &#39;U.S.S.R.&#39;);
+    } else {
+        return ();
+    }
+}
+$tmd-&amp;gt;set_retval_array(1,
+   &amp;quot;SELECT\\s+name,\\s+country.*possibly_evil_names&amp;quot;,
+   \&amp;amp;possibly_evil_names);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using a &lt;code&gt;CODEREF&lt;/code&gt; (&lt;code&gt;\&amp;amp;possibly_evil_names&lt;/code&gt;) lets you easily add the state machine for implementing a return of two names followed by an empty array (because the code uses &lt;code&gt;fetchrow_array()&lt;/code&gt; to retrieve each row). SQL for this query could look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT
+  name,
+  country
+FROM
+  possibly_evil_names
+WHERE
+  year &amp;lt; 2000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;Albert Einstein once said, &amp;ldquo;Everything should be made as simple as possible, but no simpler.&amp;rdquo; This is what I have striven for while developing Test::MockDBI&amp;ndash;the simplest possible useful module for testing DBI programs by mocking up the entire DBI.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI gives you:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Complete control of DBI return values and database-returned data.&lt;/li&gt;
+&lt;li&gt;Returned database values from either direct value specifications or &lt;code&gt;CODEREF&lt;/code&gt;-generated values.&lt;/li&gt;
+&lt;li&gt;Easy, regex-based rules that govern the DBI&amp;rsquo;s behavior, along with intelligent defaults for the common cases.&lt;/li&gt;
+&lt;li&gt;Complete transparency to other code, so the code under test neither knows nor cares that you are testing it with Test::MockDBI.&lt;/li&gt;
+&lt;li&gt;Test data tightly bound to test code, which promotes cohesiveness in your testing environment, thereby reducing the chance that your tests might silently fail due to loss of synchronization between your test data and your test code.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Test::MockDBI is a valuable addition to the arsenal of DBI testing techniques.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

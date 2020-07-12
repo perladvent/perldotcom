@@ -25,7 +25,7 @@ As businesses grow, they move into situations they didn't anticipate and often h
 
 Modulinos isn't an idea that I invented, but it's something I popularized. I first got the idea from a talk by [Mark Jason Dominus](http://blog.plover.com) and the [diagnostics](https://github.com/Perl/perl5/blob/blead/lib/diagnostics.pm) module, written by Tom Christiansen way back in 1995. In this article I'll talk a little about the trick, but more about why and how I've used it.
 
-The trick involves using [caller](http://perldoc.perl.org/functions/caller.html) to decide how a Perl file should act depending on how it's loaded. When run from the command line, it acts like a program, but when loaded as a module, it doesn't run anything while still making its subroutines and packages available. In the second edition of [Mastering Perl](http://www.masteringperl.org/), I expanded this a bit to check for the presence of a test harness so it could run methods that start with `test_`, a Python feature I've liked.
+The trick involves using [caller]({{</* perlfunc "caller" */>}}) to decide how a Perl file should act depending on how it's loaded. When run from the command line, it acts like a program, but when loaded as a module, it doesn't run anything while still making its subroutines and packages available. In the second edition of [Mastering Perl](http://www.masteringperl.org/), I expanded this a bit to check for the presence of a test harness so it could run methods that start with `test_`, a Python feature I've liked.
 
 You can see the basic structure in [Modulino::Test]({{<mcpan "Modulino::Test" >}}), part of the [Modulino::Demo](https://metacpan.org/release/Modulino-Demo) distribution:
 

@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mail and Usenet News on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/mail-and-usenet-news/</link>
+    <description>Recent content in Mail and Usenet News on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 13 Feb 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/mail-and-usenet-news/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Mail to WAP Gateways</title>
+      <link>http://localhost:1313/pub/2004/02/13/mbox2wap.html/</link>
+      <pubDate>Fri, 13 Feb 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/02/13/mbox2wap.html/</guid>
+      <description>
+
+&lt;p&gt;It&amp;rsquo;s coming up to Valentine&amp;rsquo;s day again, and invariably my thoughts turn back to last year&amp;rsquo;s rather memorable weekend-break to Stockholm, in which I learned two things:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Stockholm makes a great Valentine&amp;rsquo;s destination.&lt;/li&gt;
+&lt;li&gt;My girlfriend of the time was not happy with me cracking out my iBook and checking my email halfway into the break.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The relationship, predictably, didn&amp;rsquo;t last much longer, but it did occur to me that a quick and easy way to check my email when away from my computer would be very useful. One of the items that travels everywhere with me, and has some limited Internet access is my phone &amp;ndash; although admittedly this has only WAP access. WAP access, it seemed, would have to do&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;The tool I ended up building fills &lt;strong&gt;my&lt;/strong&gt; needs very well, but possibly won&amp;rsquo;t be such a great match for others. This article looks at considerations when rendering email for display online, especially when space is very limited.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-overview-of-messages-overview-of-messages-span&#34;&gt;&lt;span id=&#34;Overview_of_messages&#34;&gt;Overview of Messages&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The first challenge is reading the contents of our target mailbox. For this, we turn to the Perl Email Project&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Email::Folder&#34;&gt;&lt;code&gt;Email::Folder&lt;/code&gt;&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Email::Folder;
+
+ my $folder = Email::Folder-&amp;gt;new( &#39;/home/sheriff/mbox&#39; );
+
+ for my $message ( $folder-&amp;gt;messages ) {
+
+        ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Email::Folder&#34;&gt;&lt;code&gt;Email::Folder&lt;/code&gt;&lt;/a&gt;&amp;rsquo;s messages() function returns &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt; objects. For my folder-view, I chose to group messages by date, and use the sender&amp;rsquo;s &amp;ldquo;real name&amp;rdquo; as the subject. Something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 30 Jan 2004
+    Michael Roberts
+  * Paul Makepeace
+    Uri Guttman
+ 29 Jan 2004
+    Kate Pugh
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Extracting header fields from &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt; objects couldn&amp;rsquo;t be simpler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $from = $message-&amp;gt;header(&#39;from&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But people familiar with the various email RFCs will know that since email headers have to use only printable US-ASCII, they&amp;rsquo;re very often encoded: your header field might well look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  =?iso-8859-1?q?Pete=20Sergeant?= &amp;lt;pete@clueball.com&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will not look pretty if you use it literally. Thankfully, &lt;a href=&#34;https://metacpan.org/pod/MIME::WordDecoder&#34;&gt;&lt;code&gt;MIME::WordDecoder&lt;/code&gt;&lt;/a&gt; exports the function &lt;code&gt;unmime&lt;/code&gt; &amp;ndash; rendering the above as &amp;ldquo;Pete Sergeant &amp;lt;pete@clueball.com&amp;gt;.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Getting the date from an email is also somewhat nontrivial &amp;ndash; an example &amp;ldquo;Date&amp;rdquo; header looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Fri, 30 Jan 2004 14:09:51 -0000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that&amp;rsquo;s if you&amp;rsquo;re lucky, and it&amp;rsquo;s well-formed, without starting to think about time zones. If we want to do anything useful with dates, we&amp;rsquo;re going to want the date as an epoch time. Luckily, &lt;a href=&#34;https://metacpan.org/pod/DateTime::Format::Mail&#34;&gt;&lt;code&gt;DateTime::Format::Mail&lt;/code&gt;&lt;/a&gt; steps in, and not only parses our date, but returns a highly useful &lt;a href=&#34;https://metacpan.org/pod/DateTime&#34;&gt;&lt;code&gt;DateTime&lt;/code&gt;&lt;/a&gt; object, allowing us to do all kinds of fun date stuff. To simply reformat the date as Day/Month/Year:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $datetime = DateTime::Format::Mail-&amp;gt;new( loose =&amp;gt; 1 );
+ my $time = $datetime-&amp;gt;parse_datetime( $message-&amp;gt;header(&#39;date&#39;) );
+ my $day_month_year = $time-&amp;gt;dmy;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, we&amp;rsquo;re going to want to know if an email is new or not. Luckily, most MUAs will set/edit an email&amp;rsquo;s status header. Rather than checking if an email is new, we check if it&amp;rsquo;s been read &amp;ndash; denoted by a &lt;code&gt;R&lt;/code&gt; in the status header:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $new_flag++ if $message-&amp;gt;header(&#39;Status&#39;) !~ m/R/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s put this all together to produce a listing of a folder. We&amp;rsquo;ll use the well-known Schwartzian transform to make the sorting efficient, but unlike the usual practice, we keep the array reference around, as we&amp;rsquo;ll be using the date as well.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Email::Folder;
+ use MIME::WordDecoder qw( unmime );
+ use DateTime::Format::Mail;
+
+ my $folder = Email::Folder-&amp;gt;new( &#39;/home/sheriff/mbox&#39; );
+ my @to_sort;
+ my $prev_date = &amp;quot;&amp;quot;;
+ for (sort { $a-&amp;gt;[1] cmp $b-&amp;gt;[1]    }
+      map  { [$_, message2dmy($_) ] } 
+      $folder-&amp;gt;messages) {
+     my ($message, $date) = @$_;
+     if ($date ne $prev_date) { print $date, &amp;quot;\n&amp;quot;; $prev_date = $date; }
+     print $message-&amp;gt;header(&#39;Status&#39;) =~ m/R/ ? &amp;quot;   &amp;quot; : &amp;quot; * &amp;quot;;
+     print unmime($message-&amp;gt;header(&#39;from&#39;)), &amp;quot;\n&amp;quot;;
+ }
+
+ sub message2dmy {
+     my $message = shift;
+     my $datetime = DateTime::Format::Mail-&amp;gt;new( loose =&amp;gt; 1 );
+     my $time = $datetime-&amp;gt;parse_datetime( $message-&amp;gt;header(&#39;date&#39;) );
+     my $day_month_year = $time-&amp;gt;dmy;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-displaying-individual-messages-displaying-individual-messages-span&#34;&gt;&lt;span id=&#34;Displaying_individual_messages&#34;&gt;Displaying Individual Messages&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Those are the main challenges of a folder-view. Viewing an individual message presents a different set of challenges.&lt;/p&gt;
+
+&lt;p&gt;First and foremost is the appalling habit people have of sending each other HTML-&amp;ldquo;enriched&amp;rdquo; emails, with all sorts of attachments. If you&amp;rsquo;re trying to read the email on a cell phone over a slow connection, you don&amp;rsquo;t want to be battling with this &amp;ndash; you want a nice plain-text representation of the email. So, &lt;a href=&#34;https://metacpan.org/pod/Email::StripMIME&#34;&gt;&lt;code&gt;Email::StripMIME&lt;/code&gt;&lt;/a&gt; is your friend. Assuming we have an &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt; object, we can simply:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $string = $email_simple_object-&amp;gt;as_string();
+ $string = Email::StripMIME::strip_mime( $string );
+ $email_simple_object = Email::Simple-&amp;gt;new( $string );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, if we really wanted to cut down on the amount of content we&amp;rsquo;re receiving, and we&amp;rsquo;re only using this tool to get an overview of our messages, we can cut out quoted text, remnants of the email that the sender was replying to, and so on. &lt;a href=&#34;https://metacpan.org/pod/Text::Original&#34;&gt;&lt;code&gt;Text::Original&lt;/code&gt;&lt;/a&gt; does just this for us, as well as stripping out attribution lines:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $body = $email_simple_object-&amp;gt;body();
+ $body = first_lines( $body, 20);
+ $email_simple_object-&amp;gt;body( $body );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The final problem is in creating actual real WML. Sadly, this is nontrivial, and in the past, I&amp;rsquo;ve tended to resort to outputting it by hand. But it doesn&amp;rsquo;t have to be that way &amp;ndash;; &lt;a href=&#34;https://metacpan.org/pod/CGI::WML&#34;&gt;&lt;code&gt;CGI::WML&lt;/code&gt;&lt;/a&gt; just about handles the task for us. &lt;a href=&#34;https://metacpan.org/pod/CGI::WML&#34;&gt;&lt;code&gt;CGI::WML&lt;/code&gt;&lt;/a&gt; is a subclass of &lt;a href=&#34;https://metacpan.org/pod/CGI&#34;&gt;&lt;code&gt;CGI&lt;/code&gt;&lt;/a&gt;, with methods specific to WAP.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;Conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There is no fully working demo at the end of this article. My personal tool works in a way that&amp;rsquo;s probably a little too specific for most people&amp;rsquo;s needs. Hopefully however, it&amp;rsquo;s introduced you to one or more modules you didn&amp;rsquo;t know existed, and given you some inspiration to tinker around with Perl and email-handling.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Mail Filtering</title>
+      <link>http://localhost:1313/pub/2002/08/27/filtering.html/</link>
+      <pubDate>Tue, 27 Aug 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/08/27/filtering.html/</guid>
+      <description>
+
+&lt;p&gt;There are many ways to filter your e-mail with Perl. Two of the more popular and interesting ways are to use &lt;code&gt;PerlMx&lt;/code&gt; or &lt;code&gt;Mail::Audit&lt;/code&gt;. I took a long look at both, and this is what I thought of them.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-perlmx-perlmx-span&#34;&gt;&lt;span id=&#34;perlmx&#34;&gt;&lt;code&gt;PerlMx&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; is a server product from ActiveState that uses the milter support in recent versions of sendmail to hook in at almost every stage of the mail-handling process.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; comes with its own copy of Perl, and all the supporting modules it needs - it can&amp;rsquo;t run from a normal Perl, as it needs Perl to be built with various options such as ithreads support and multiplicity. This means you need to install any modules you want to use with &lt;code&gt;PerlMx&lt;/code&gt; twice if you already have them installed somewhere else on your system.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; provides a persistent daemon that processes e-mail for an entire mail-server - it avoids the overhead of starting a Perl process to handle each e-mail by running forever, and by using threads to ensure it can service more than one e-mail at a time.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; ships with two main filters - the Spam and Virus filters. The Virus filtering looks interesting, but ultimately I don&amp;rsquo;t receive that many viruses in e-mail, so I was unable to test it beyond establishing that it didn&amp;rsquo;t mangle my e-mail.&lt;/p&gt;
+
+&lt;p&gt;The Spam filtering in PerlMX is much more interesting - it seems to be based on &lt;a href=&#34;http://www.spamassassin.org/&#34;&gt;Mail::SpamAssassin&lt;/a&gt;, a popular spam filtering module often used with Mail::Audit, procmail, or other ways of processing e-mail.&lt;/p&gt;
+
+&lt;p&gt;In two weeks of testing with &lt;code&gt;PerlMx&lt;/code&gt;, using it to process a copy of all my personal e-mail, I found a lot useful functionality, and a few minor problems.&lt;/p&gt;
+
+&lt;p&gt;The first hassles were setup - I don&amp;rsquo;t normally use sendmail, but &lt;code&gt;PerlMx&lt;/code&gt; requires it for the milter API, so I installed sendmail, set it up, and hooked it into &lt;code&gt;PerlMx&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once you have sendmail setup, and built with milter support (as the default build from Debian Linux I used was), it&amp;rsquo;s easy to add a connection to &lt;code&gt;PerlMx&lt;/code&gt; with one line in your sendmail.mc file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;INPUT_MAIL_FILTER(`C&amp;lt;PerlMx&amp;gt;&#39;, `S=inet:3366@localhost, F=T,
+     T=S:3m;R:3m;E:8m&#39;&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; essentially works out of the box - it asks a number of simple questions when you install and set it up, and assuming you get these right, no further configuration will be required.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;INPUT_MAIL_FILTER&lt;/code&gt; line also sets several key options, including the timeouts for communication between sendmail and &lt;code&gt;PerlMx&lt;/code&gt; - I had to raise these significantly to deal with a problem I found where &lt;code&gt;PerlMx&lt;/code&gt; was taking too much time to process spam (it appear to be doing DNS lookups), sendmail was timing out the connection to &lt;code&gt;PerlMx&lt;/code&gt;, and refusing to accept mail.&lt;/p&gt;
+
+&lt;p&gt;In &lt;code&gt;PerlMx&lt;/code&gt; 2.1, it even ships with its own sendmail install, pre-configured for use with &lt;code&gt;PerlMx&lt;/code&gt;, but you can choose to ignore this and use an existing system sendmail.&lt;/p&gt;
+
+&lt;p&gt;Once you&amp;rsquo;ve done this, suddenly all the mail that goes through your mail-server is spam filtered, and virus checked. Mail that looks likely to be spam, or that contains a virus is stopped and held in a quarantine queue, the rest are sent to the user, possibly with a spam header added to indicate a score representing how likely to be spam they are. The quarantine queue is a systemwide collection of messages which, for one reason or another, weren&amp;rsquo;t appropriate to deliver to the user - this will be normally as they are either suspected to contain viruses or spam.&lt;/p&gt;
+
+&lt;p&gt;If the filters supplied with &lt;code&gt;PerlMx&lt;/code&gt; aren&amp;rsquo;t to your tastes, then it comes supplied with an extension API, and extensive documentation and samples to allow you to write your own.&lt;/p&gt;
+
+&lt;p&gt;While testing &lt;code&gt;PerlMx&lt;/code&gt;, I never managed to bounce or accidentally lose my e-mail - I made many configuration errors, which meant mail wasn&amp;rsquo;t processed and a lot of stuff was somewhat over-enthusiastically marked as spam when it was actually valid. But as far as I can tell, nothing bounced or disappeared into the system - this is pretty impressive, as when configuring most new bits of e-mail I usually manage to delete everything I send to it in the first few attempts, or, worse, make myself look stupid by sending errors back to random people unfortunate enough to be on the same mailing list as me.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mail-audit-mail-audit-span&#34;&gt;&lt;span id=&#34;mail::audit&#34;&gt;&lt;code&gt;Mail::Audit&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Audit&lt;/code&gt; is very different from &lt;code&gt;PerlMx&lt;/code&gt;. For starters, once you&amp;rsquo;ve installed it, by default it doesn&amp;rsquo;t do anything. &lt;code&gt;Mail::Audit&lt;/code&gt; is just a Perl module - it&amp;rsquo;s a powerful tool for implementing mail filters, but mostly you have to write them yourself. &lt;code&gt;PerlMx&lt;/code&gt; ships with spam filtering and virus checking configured by default, &lt;code&gt;Mail::Audit&lt;/code&gt; provides duplicate killing, a mailing list processing module (based on Mail::ListDetector), and a few simple spam filtering options based on Realtime Blackhole Lists or Vipul&amp;rsquo;s Razor.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Audit&lt;/code&gt; is not designed to be used with an entire mail-server in the same way as &lt;code&gt;PerlMx&lt;/code&gt;. Instead, it allows you to easily write little e-mail filter programs that can be triggered from the &lt;em&gt;.forward&lt;/em&gt; file of a particular user. &lt;code&gt;Mail::Audit&lt;/code&gt; can be easily configured and used on a per-user basis, whereas &lt;code&gt;PerlMx&lt;/code&gt; takes over an entire mail-server and is an all-or-nothing choice.&lt;/p&gt;
+
+&lt;p&gt;The default &lt;code&gt;Mail::Audit&lt;/code&gt; configuration starts one Perl process for each mail handled - normally this won&amp;rsquo;t be a problem, but if you&amp;rsquo;re processing large volumes of mail, or have a system which is already at or near capacity, it may be enough to tip the balance and cause performance problems (Translation: Long ago I installed &lt;code&gt;Mail::Audit&lt;/code&gt; on an old, spare machine I was using as a mail-server, received 200 e-mails in less than a minute, and spent quite a while waiting for the system to stop gazing at its navel and start responding to the outside world again). If your mail comes to you via POP3, or can be made to do so (possibly by installing a POP3 daemon if you do not have one already), then a simple script supplied with &lt;code&gt;Mail::Audit&lt;/code&gt; called &lt;em&gt;popread&lt;/em&gt; provides a base you can use to feed articles from a POP3 server into &lt;code&gt;Mail::Audit&lt;/code&gt; in a single Perl process, improving performance. I didn&amp;rsquo;t do this myself, as I wanted to use what appeared to be the &amp;lsquo;recommended&amp;rsquo; approach to &lt;code&gt;Mail::Audit&lt;/code&gt; setup - the one that is, if not actively promoted in the documentation, most strongly suggested by it, of running a &lt;code&gt;Mail::Audit&lt;/code&gt; script from a user&amp;rsquo;s .forward file.&lt;/p&gt;
+
+&lt;p&gt;A popular &lt;code&gt;Mail::Audit&lt;/code&gt; addition is SpamAssassin (the same codebase as &lt;code&gt;PerlMx&lt;/code&gt;&amp;rsquo;s mail processing is loosely based on) - this comes as a &lt;code&gt;Mail::Audit&lt;/code&gt; plugin, among other forms.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Audit&lt;/code&gt; makes it easy to write mail filters that work on a per-user basis, whereas &lt;code&gt;PerlMx&lt;/code&gt; by default applies to all mail processed on a given mailserver.&lt;/p&gt;
+
+&lt;p&gt;If you wanted to install &lt;code&gt;Mail::Audit&lt;/code&gt; systemwide, then many mail-servers (such as exim) provide a way to configure a custom local delivery agent on flexible criteria. For example, &lt;a href=&#34;http://web.archive.org/web/20050323053241/http://bogmog.sourceforge.net/&#34;&gt;this article&lt;/a&gt; (&lt;i&gt;archived site&lt;/i&gt;) provides some documentation on how to do this with exim.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-testing-1-2-3-testing-1-2-3-span&#34;&gt;&lt;span id=&#34;testing... 1... 2... 3...&#34;&gt;Testing &amp;hellip; 1 &amp;hellip; 2 &amp;hellip; 3 &amp;hellip;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I decided to do an extended comparison of both &lt;code&gt;PerlMx&lt;/code&gt; and &lt;code&gt;Mail::Audit&lt;/code&gt;. As one of the most common applications of mail filtering tools is for spam filtering, I set up recent versions of both the tools on my personal e-mail, by various nefarious means, ran them for a week, and compared the results on two main criteria:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;False positives (legitimate email recognized as spam)&lt;/li&gt;
+&lt;li&gt;False negatives (spam not recognized as spam)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Audit&lt;/code&gt; doesn&amp;rsquo;t come with much spam filtering technology by default, so I decided to add SpamAssassin (&lt;a href=&#34;http://www.spamassassin.org/&#34;&gt;http://www.spamassassin.org/&lt;/a&gt;) to the testing, as it can be used as a &lt;code&gt;Mail::Audit&lt;/code&gt; extension.&lt;/p&gt;
+
+&lt;p&gt;I used procmail to copy all my incoming e-mail to two pop3 mailboxes setup for the purposes of testing - one would contain mail to be processed by &lt;code&gt;Mail::Audit&lt;/code&gt;, the other mail to be processed by &lt;code&gt;PerlMx&lt;/code&gt;&amp;rsquo;s spam filtering. fetchmail was used to pull the mail down into the domain of &lt;code&gt;Mail::Audit&lt;/code&gt; and &lt;code&gt;PerlMx&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once I had &lt;code&gt;Mail::Audit&lt;/code&gt; and SpamAssassin setup, I started feeding mail into the test box with fetchmail, and was reminded that as the &lt;code&gt;Mail::Audit&lt;/code&gt; approach of setting up a perl program to run from a .forward file has &amp;hellip; unpleasant effects if you receive more than a few e-mails in quick succession. As my test mail-server collapsed under the load, I checked the &lt;code&gt;PerlMx&lt;/code&gt; machine, started at roughly the same time, and found that while it was working through the e-mail more slowly, it hadn&amp;rsquo;t put any serious load on the machine.&lt;/p&gt;
+
+&lt;p&gt;Due to a &lt;code&gt;PerlMx&lt;/code&gt; configuration error on my part, of the first 171 messages processed, 10 were quarantined as spam AND delivered to the inbox of my test user. &lt;code&gt;PerlMx&lt;/code&gt; runs by default in &amp;lsquo;training mode&amp;rsquo; when processing spam - in this mode, mail is spamchecked as normal, but even if it is found to be spam and quarantined, it is also delivered to the user.&lt;/p&gt;
+
+&lt;p&gt;I decided to keep track of any mail lost or mislaid during initial setup problems, so I could see what problems could arise from the tools being misconfigured. An important aspect of any software is not only how it behaves when configured right, but how much it punishes you when you get the configuration wrong.&lt;/p&gt;
+
+&lt;p&gt;Waking up the next morning, I found I&amp;rsquo;d bounced several hundred e-mails back to the account from which I was forwarding all the test e-mails, someone of which appeared to have gone back and forth, or found their way into the &lt;code&gt;PerlMx&lt;/code&gt; test mailbox. Most of the problems appeared to be internal errors from within SpamAssassin. My mail-server still hadn&amp;rsquo;t recovered.&lt;/p&gt;
+
+&lt;p&gt;I later found this was because of an compatibility issue with SpamAssassin / &lt;code&gt;Mail::Audit&lt;/code&gt;, and there was a recommended fix in the SpamAssassin FAQ involving the &lt;em&gt;nomime&lt;/em&gt; option to &lt;code&gt;Mail::Audit&lt;/code&gt; (but not, sadly, in the documentation for the Mail::SpamAssassin module itself).&lt;/p&gt;
+
+&lt;p&gt;The SpamAssassin / &lt;code&gt;Mail::Audit&lt;/code&gt; script I ended up using in the end was:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/local/bin/perl -w
+
+  use strict;
+  use C&amp;lt;Mail::Audit&amp;gt;;
+  use Mail::SpamAssassin;
+
+  # create C&amp;lt;Mail::Audit&amp;gt; object, log to /tmp, disable mime processing
+  # for SpamAssassin compatibility, and store mail in ~/emergency_mbox
+  # if processing fails
+  my $mail = C&amp;lt;Mail::Audit&amp;gt;-&amp;gt;new(emergency=&amp;gt;&amp;quot;~/emergency_mbox&amp;quot;,
+                              log =&amp;gt; &#39;/tmp/audit.log&#39;,
+                              loglevel =&amp;gt; 4, nomime =&amp;gt; 1);
+
+  my $spamtest = Mail::SpamAssassin-&amp;gt;new;
+
+  # check mail with SpamAssassin
+  my $status = $spamtest-&amp;gt;check($mail);
+
+  # if it was spam, rewrite to indicate what the problem was, and
+  # store in the file ass-spam in our home directory
+  if ($status-&amp;gt;is_spam) {
+          $status-&amp;gt;rewrite_mail;
+          $mail-&amp;gt;accept(&amp;quot;/home/spam1/ass-spam&amp;quot;);
+  # if if wasn&#39;t spam, accept it as normal mail
+  } else {
+          $mail-&amp;gt;accept;
+  }
+
+  exit 0;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After clearing down all my mail, and losing two days of testing, I started again. It was only the nature of the testing setup that meant the bounce mail went to me and not the original sender. So, at 23:25 on Tuesday, I had another go. This time I knew enough to limit SpamAssassin to receiving messages in batches of five (using fetchmail) - something I could do in testing, but wouldn&amp;rsquo;t be an easy option in most production setups. This meant my test machine could just about cope with delivering mail using SpamAssassin.&lt;/p&gt;
+
+&lt;p&gt;At 10 p.m. Sunday, I declared the testing closed, and examined the accuracy or otherwise of each system.&lt;/p&gt;
+
+&lt;p&gt;During the testing between Aug. 6 and 11, &lt;code&gt;Mail::Audit&lt;/code&gt; marked 16 pieces of e-mail as spam. Seven of these e-mails proved to be false positives - mail that I had actually solicited and would have liked to have received. Six spam emails were accepted into my Inbox. There were 874 e-mails received in all. &lt;code&gt;Mail::Audit&lt;/code&gt; appeared to receive 15 pieces of spam mail in total.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; marked 14 e-mails as spam. Two of these e-mails proved to be false positives - mail that was not spam. Impressively, it received 886 e-mails in the same period that &lt;code&gt;Mail::Audit&lt;/code&gt; received 874 e-mails. I was unable to work out the exact cause of this, although the power-cut in the middle of the testing period will always be a major suspect. Eleven spam messages were incorrectly allowws through into my Inbox. &lt;code&gt;PerlMx&lt;/code&gt; appeared to receive 23 pieces of spam mail in total.&lt;/p&gt;
+
+&lt;p&gt;The sample was small, as all I had was my own personal e-mail to work with, and I get what I&amp;rsquo;m told is surprisingly little spam, but it shows that &lt;code&gt;Mail::Audit&lt;/code&gt; / SpamAssassin seems to decide more mail is spam than &lt;code&gt;PerlMx&lt;/code&gt; does, but is also wrong more of the time. &lt;code&gt;PerlMx&lt;/code&gt; marked slightly less e-mail as spam, and let more spam through, but when it did claim e-mail was spam it was right more of the time.&lt;/p&gt;
+
+&lt;p&gt;These tests would benefit significantly from being re-run during a long period of time on a larger mail-server, but I had neither the time nor the mail-server available.&lt;/p&gt;
+
+&lt;p&gt;Both tools can be extensively configured in terms of what is considered spam, and are likely to need regular updating to ensure they keep up to date with new tricks of the spammers. Here I only considered the behavior with the default configuration of the latest release at the time I ran my tests.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-feature-comparison-feature-comparison-span&#34;&gt;&lt;span id=&#34;feature comparison&#34;&gt;Feature Comparison&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;To help you choose, I&amp;rsquo;ve summarized the basic characteristics of both systems below. Some of the points are quite subjective and are more my impressions of the tools rather than hard facts - these are marked separately.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;PerlMX&lt;/td&gt;
+&lt;td&gt;Mail::Audit&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Scalable&lt;/td&gt;
+&lt;td&gt;Yes - persistent server&lt;/td&gt;
+&lt;td&gt;Maybe - depends on config - obvious default configurations scale poorly&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Ships with wide range of existing filtering functionality&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;Limited range, more available from third-parties&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Target use&lt;/td&gt;
+&lt;td&gt;System-wide mail filtering for mailservers&lt;/td&gt;
+&lt;td&gt;Per-use mail filtering as a replacement for programs like procmail&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Extensible?&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Licensing&lt;/td&gt;
+&lt;td&gt;Commercial&lt;/td&gt;
+&lt;td&gt;Open-source&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Mail Server Compatibility&lt;/td&gt;
+&lt;td&gt;Sendmail&lt;/td&gt;
+&lt;td&gt;Almost any mail server&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Spam filtering&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;Third-party extension&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Virus filtering&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Easy to setup&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;Not so easy, requires custom code&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Efficient and Scalable&lt;/td&gt;
+&lt;td&gt;Very scalable - easily separated from the mailserver, and no noticable performance impact during testing&lt;/td&gt;
+&lt;td&gt;Performance problems during testing in default configuration&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&#34;span-id-conclusions-conclusions-span&#34;&gt;&lt;span id=&#34;conclusions&#34;&gt;Conclusions&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;During testing, &lt;code&gt;PerlMx&lt;/code&gt; was significantly more reliable, both in terms of the amount of mail bounced due to configuration problems (none), and in terms of the load put in the mailserver (minimal) than &lt;code&gt;Mail::Audit&lt;/code&gt;. Although &lt;code&gt;Mail::Audit&lt;/code&gt; appears able to be setup for good performance, the obvious suggested configuration showed extremely poor scalability during testing. Also, as &lt;code&gt;Mail::Audit&lt;/code&gt; requires writing some filtering code, bugs, mostly in this code, resulted in nontrivial quantities of mail being bounced during testing due to code/configuration errors, a problem that simply didn&amp;rsquo;t occur with &lt;code&gt;PerlMx&lt;/code&gt;&amp;rsquo;s more pre-supplied, configuration file based system.&lt;/p&gt;
+
+&lt;p&gt;Both &lt;code&gt;PerlMx&lt;/code&gt; and &lt;code&gt;Mail::Audit&lt;/code&gt; provide good mail filtering solutions using Perl, but are targeted at entirely different markets. &lt;code&gt;PerlMx&lt;/code&gt; is a systemwide solution providing drop-in functionality on mailservers, with Perl extensibility as well, whereas &lt;code&gt;Mail::Audit&lt;/code&gt; is a more low-level tool, mostly focused on use by individuals, designed to let users build their own mail processing tools more easily.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

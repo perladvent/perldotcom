@@ -60,7 +60,7 @@ Those rules were developed during a one-hour meeting with all development staff.
 
 Our standards then go on to give a few extra guidelines for each language. For Perl, we have the following standards:
 
-1. Read [`perldoc perlstyle`](http://perldoc.perl.org/perlstyle.html) and follow all suggestions contained therein, except where they disagree with the general coding standards, which take precedence.
+1. Read [`perldoc perlstyle`]({{</* perldoc "perlstyle" */>}}) and follow all suggestions contained therein, except where they disagree with the general coding standards, which take precedence.
 
 2. Use the `-w` command line flag and the `strict` pragma at all times, and `-T` (taint checking) where appropriate.
 

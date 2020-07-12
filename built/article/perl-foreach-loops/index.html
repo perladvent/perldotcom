@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Perl foreach loops </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The basics, the gotchas and advanced techniques"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/perl-foreach-loops/" />
+<meta property="og:title" content="Perl foreach loops" />
+<meta property="og:description" content="The basics, the gotchas and advanced techniques">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2018-09-09T09:09:09Z" />
+<meta property="og:image" content="http://localhost:1313/images/perl-foreach-loops/thumb_blackboard-foreach.png" />
+<meta property="og:article:tag" content="foreach" />
+<meta property="og:article:tag" content="loop" />
+<meta property="og:article:tag" content="refaliasing" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Perl foreach loops</h1>
+              <p class="blog-post-meta">Sep 23, 2018 by
+              
+              
+                
+                
+                <a href="#author-bio-brian-d-foy">brian d foy</a>
+              
+              </p>
+              <img alt="" src="/images/perl-foreach-loops/blackboard-foreach.png"/>
+                
+
+<p>A <a href="https://perldoc.perl.org/perlsyn.html#Foreach-Loops">foreach</a> loop runs a block of code for each element of a list. No big whoop, &ldquo;perl foreach&rdquo; continues to be one of the most popular on Google searches for the language. So we thought we&rsquo;d see what&rsquo;s happened in 20 years. I expand on Tom Christiansen&rsquo;s <a href="https://www.perl.com/doc/FMTEYEWTK/style/slide22.html/">slide</a> that&rsquo;s part of his longer presentation then add a new but experimental feature at the end. If you want more, there&rsquo;s plenty to read in <a href="https://perldoc.perl.org/perlsyn.html">perlsyn</a> or my book <a href="https://www.learning-perl.com">Learning Perl</a>.</p>
+
+<h2 id="going-through-a-list">Going through a list</h2>
+
+<p>Unless you say otherwise, <code>foreach</code> aliases the current element to the topic variable <code>$_</code>. You can specify that list directly in the parentheses after <code>foreach</code>, use an array variable, or use the result of a subroutine call (amongst other ways to get a list):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> ( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span> ) {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$_ is $_&#34;</span>;
+	}</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> @numbers <span style="color:#f92672">=</span> ( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span> );
+<span style="color:#66d9ef">foreach</span> ( @numbers ) {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$_ is $_&#34;</span>;
+	}</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">numbers</span>{ <span style="color:#66d9ef">return</span> ( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span> ) }
+<span style="color:#66d9ef">foreach</span> ( numbers() ) {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$_ is $_&#34;</span>;
+	}</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">numbers</span>{ keys %some_hash }
+<span style="color:#66d9ef">foreach</span> ( numbers() ) {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$_ is $_&#34;</span>;
+	}</code></pre></div>
+<p>Some people like to use the synonym <code>for</code>. There&rsquo;s a proper C-style <a href="https://perldoc.perl.org/perlsyn.html#For-Loops">for</a> that has three semicolon-separated parts in the parentheses. If Perl doesn&rsquo;t see the two semicolons it treats <code>for</code> just like a <code>foreach</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">for</span> ( <span style="color:#66d9ef">my</span> $i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; $i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">5</span>; $i<span style="color:#f92672">++</span> ) {  <span style="color:#75715e"># C style</span>
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$i is $i&#34;</span>;
+	}
+
+<span style="color:#66d9ef">for</span> ( <span style="color:#ae81ff">0</span> <span style="color:#f92672">..</span> <span style="color:#ae81ff">4</span> ) {  <span style="color:#75715e"># foreach synonym</span>
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$_ is $_&#34;</span>;
+	}</code></pre></div>
+<h2 id="element-source-gotchas">Element source gotchas</h2>
+
+<p>The aliasing is only temporary. After the <code>foreach</code> the topic variable returns to its original value:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">$_ <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Original value&#34;</span>;
+<span style="color:#66d9ef">my</span> @numbers <span style="color:#f92672">=</span> ( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span> );
+<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$_ before: $_\n&#34;</span>;
+<span style="color:#66d9ef">foreach</span> ( @numbers ) {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$_ is $_\n&#34;</span>;
+	$_ <span style="color:#f92672">=</span> $_ <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>;
+	}
+<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$_ after: $_\n&#34;</span>;</code></pre></div>
+<p>The output shows that <code>$_</code> appears unaffected by the <code>foreach</code>:</p>
+
+<pre><code>$_ before: Original value
+$_ is 1
+$_ is 3
+$_ is 7
+$_ after: Original value
+</code></pre>
+
+<p>This is an alias instead of a copy, which is a shortcut that allows your program to be a little faster by not moving data around. If you change the topic you change the original value if the list source is an array (the values are read-only otherwise and you&rsquo;ll get an error):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> @numbers <span style="color:#f92672">=</span> ( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span> );
+<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;Before: @numbers\n&#34;</span>;  <span style="color:#75715e"># Before: 1 3 7</span>
+<span style="color:#66d9ef">foreach</span> ( @numbers ) {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$_ is $_\n&#34;</span>;
+	$_ <span style="color:#f92672">=</span> $_ <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>;
+	}
+<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;After: @numbers\n&#34;</span>;   <span style="color:#75715e"># After: 2 6 14</span></code></pre></div>
+<p>Not only that, but if you change the source by adding or removing elements you can screw up the <code>foreach</code>. This loops infinitely processing the same element because each go through the block moves the array elements over one position; when the iterator moves onto the next position it finds the same one it just saw:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> @numbers <span style="color:#f92672">=</span> ( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span> );
+<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$number before: $number\n&#34;</span>;
+<span style="color:#66d9ef">foreach</span> $number ( @numbers ) {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$number is $number\n&#34;</span>;
+	unshift @numbers, <span style="color:#e6db74">&#34;Added later&#34;</span>;
+	}</code></pre></div>
+<p>This output will go on forever:</p>
+
+<pre><code>$number is 1
+$number is 1
+$number is 1
+$number is 1
+</code></pre>
+
+<h2 id="naming-your-own-topic-variable">Naming your own topic variable</h2>
+
+<p>The <code>$_</code> is often handy because it&rsquo;s the default variable for several Perl functions, such as <a href="https://perldoc.perl.org/functions/chomp.html">chomp</a> or <a href="https://perldoc.perl.org/functions/split.html">split</a>. You can use your own name by specifying a scalar variable between the <code>foreach</code> and the parentheses. Usually you don&rsquo;t want to use that variable for something other than the loop so the usual style declares it inline with the <code>foreach</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $number ( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span> ) {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$number is $number&#34;</span>;
+	}</code></pre></div>
+<p>Since Perl flattens lists into one big list, you can use more than one list source in the parentheses:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> @numbers      <span style="color:#f92672">=</span> ( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span> );
+<span style="color:#66d9ef">my</span> @more_numbers <span style="color:#f92672">=</span> ( <span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">13</span> );
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $number ( @numbers, @more_numbers ) {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$number is $number&#34;</span>;
+	}</code></pre></div>
+<p>Or a mix of source types:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> @numbers      <span style="color:#f92672">=</span> ( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span> );
+<span style="color:#66d9ef">my</span> @more_numbers <span style="color:#f92672">=</span> ( <span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">13</span> );
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $number ( @numbers, numbers(), keys %hash ) {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;\$number is $number&#34;</span>;
+	}</code></pre></div>
+<p>Using your own named topic variable acts just like what you saw with <code>$_</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> @numbers      <span style="color:#f92672">=</span> ( <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span> );
+
+<span style="color:#66d9ef">my</span> $number <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Original value&#39;</span>;
+say <span style="color:#e6db74">&#34;Before: $number&#34;</span>;
+<span style="color:#66d9ef">foreach</span> $number ( @numbers ) {
+	say <span style="color:#e6db74">&#34;\$number is $number&#34;</span>;
+	}
+say <span style="color:#e6db74">&#34;After: $number&#34;</span>;</code></pre></div>
+<p>The output shows the aliasing effect and that the original value is restored after the <code>foreach</code>:</p>
+
+<pre><code>Before: Original value
+$number is 1
+$number is 3
+$number is 7
+After: Original value
+</code></pre>
+
+<h2 id="controlling">Controlling</h2>
+
+<p>There are three keywords that let you control the operation of the <code>foreach</code> (and other looping structures): <code>last</code>, <code>next</code>, and <code>redo</code>.</p>
+
+<p>The <code>last</code> stops the current iteration. It&rsquo;s as if you immediately go past the last statement in the block then breaks out of the loop. It does not look at the next item. You often use this with a postfix conditional:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> $number ( <span style="color:#ae81ff">0</span> <span style="color:#f92672">..</span> <span style="color:#ae81ff">5</span> ) {
+	say <span style="color:#e6db74">&#34;Starting $number&#34;</span>;
+	<span style="color:#66d9ef">last</span> <span style="color:#66d9ef">if</span> $number <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">3</span>;
+	say <span style="color:#e6db74">&#34;\$number is $number&#34;</span>;
+	say <span style="color:#e6db74">&#34;Ending $number&#34;</span>;
+	}
+say <span style="color:#e6db74">&#39;Past the loop&#39;</span>;</code></pre></div>
+<p>You start the block for element <code>3</code> but end the loop there and continue the program after the loop:</p>
+
+<pre><code>Starting 0
+$number is 0
+Ending 0
+Starting 1
+$number is 1
+Ending 1
+Starting 2
+$number is 2
+Ending 2
+Starting 3
+Past the loop
+</code></pre>
+
+<p>The <code>next</code> stops the current iteration and moves on to the next one. This makes it easy to skip elements that you don&rsquo;t want to process:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $number ( <span style="color:#ae81ff">0</span> <span style="color:#f92672">..</span> <span style="color:#ae81ff">5</span> ) {
+	say <span style="color:#e6db74">&#34;Starting $number&#34;</span>;
+	<span style="color:#66d9ef">next</span> <span style="color:#66d9ef">if</span> $number % 2;
+	say <span style="color:#e6db74">&#34;\$number is $number&#34;</span>;
+	say <span style="color:#e6db74">&#34;Ending $number&#34;</span>;
+	}</code></pre></div>
+<p>The output shows that you run the block with each element but only the even numbers make it past the <code>next</code>:</p>
+
+<pre><code>Starting 0
+$number is 0
+Ending 0
+Starting 1
+Starting 2
+$number is 2
+Ending 2
+Starting 3
+Starting 4
+$number is 4
+Ending 4
+Starting 5
+</code></pre>
+
+<p>The <code>redo</code> restarts the current iteration of a block. You can use it with a <code>foreach</code> although it&rsquo;s more commonly used with looping structures that aren&rsquo;t meant to go through a list of items.</p>
+
+<p>Here&rsquo;s an example where you want to get three &ldquo;good&rdquo; lines of input. You iterate through the number of lines that you want and read standard input each time. If you get a blank line, you restart the same loop with</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> $lines_needed <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>;
+<span style="color:#66d9ef">my</span> @lines;
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $animal ( <span style="color:#ae81ff">1</span> <span style="color:#f92672">..</span> $lines_needed ) {
+	chomp( <span style="color:#66d9ef">my</span> $line <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;STDIN&gt;</span> );
+	<span style="color:#66d9ef">redo</span> <span style="color:#66d9ef">if</span> $line <span style="color:#f92672">=~</span> <span style="color:#e6db74">/\A \s* \z/x</span>;  <span style="color:#75715e"># skip &#34;blank&#34; lines</span>
+	push @lines, $line;
+	}
+
+say <span style="color:#e6db74">&#34;Lines are:\n\t&#34;</span>, join <span style="color:#e6db74">&#34;\n\t&#34;</span>, @lines;</code></pre></div>
+<p>The output shows that the loop effectively ignore the blank lines and goes back to the top of the loop. It does not use the next item in the list though. After getting a blank line when it tries to read the second line, it tries the second line again:</p>
+
+<pre><code>Reading line 1
+First line
+Reading line 2
+
+Reading line 2
+
+Reading line 2
+Second line
+Reading line 3
+
+Reading line 3
+
+Reading line 3
+Third line
+Lines are:
+    First line
+    Second line
+    Third line
+</code></pre>
+
+<p>That&rsquo;s not very Perly though but this is an article about <code>foreach</code>. A better style might be to read lines with <code>while</code> to the point that <code>@lines</code> is large enough:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> $lines_needed <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>;
+<span style="color:#66d9ef">my</span> @lines;
+<span style="color:#66d9ef">while</span>( <span style="color:#e6db74">&lt;STDIN&gt;</span> ) {
+	<span style="color:#66d9ef">next</span> <span style="color:#66d9ef">if</span> <span style="color:#e6db74">/\A \s* \z/x</span>;
+	chomp;
+	push @lines, $_;
+	<span style="color:#66d9ef">last</span> <span style="color:#66d9ef">if</span> @lines <span style="color:#f92672">==</span> $lines_needed;
+	}
+say <span style="color:#e6db74">&#34;Lines are:\n\t&#34;</span>, join <span style="color:#e6db74">&#34;\n\t&#34;</span>, @lines;</code></pre></div>
+<p>There&rsquo;s more that you can do with these. The work with labels and nested loops. You can read more about them in <a href="https://perldoc.perl.org/perlsyn.html">perlsyn</a> or <a href="https://www.learning-perl.com">Learning Perl</a>.</p>
+
+<h2 id="a-common-file-reading-gotcha">A common file-reading gotcha</h2>
+
+<p>Since <code>foreach</code> goes through each element of a list, some people reach for it when they want to go through each line in a file:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $line ( <span style="color:#e6db74">&lt;STDIN&gt;</span> ) { <span style="color:#f92672">...</span> }</code></pre></div>
+<p>This is usually not a good idea. The <code>foreach</code> needs to have to entire list all at once. This isn&rsquo;t a lazy construct like you&rsquo;d see in some other languages. This means that the <code>foreach</code> reads in all of standard input before it does anything. And, if standard input doesn&rsquo;t close, the program appears to hang. Or worse, it tries to completely read terabytes of data from that filehandle. Memory is cheap, but not that cheap.</p>
+
+<p>A suitable replacement is the <code>while</code> idiom that reads and processes one line at a time:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">while</span>( <span style="color:#e6db74">&lt;STDIN&gt;</span> ) { <span style="color:#f92672">...</span> }</code></pre></div>
+<p>This is really a shortcut for an assignment in scalar context. That reads only one line from the filehandle:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">while</span>( defined( $_ <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;STDIN&gt;</span> ) ) { <span style="color:#f92672">...</span> }</code></pre></div>
+<h2 id="an-experimental-convenience">An experimental convenience</h2>
+
+<p>Perl v5.22 added an <a href="https://www.effectiveperlprogramming.com/2015/08/create-named-variable-aliases-with-ref-aliasing/">experimental <code>refaliasing</code> feature</a>. Assigning to a reference makes the thing on the right an alias for the thing on the left. Here&rsquo;s a small demonstration where you assign an anonymous hash to a reference to a named hash variable. Now <code>%h</code> is another name (the alias) for that hash reference:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> feature <span style="color:#e6db74">qw(refaliasing)</span>;
+<span style="color:#66d9ef">use</span> Data::Dumper;
+
+<span style="color:#f92672">\</span><span style="color:#66d9ef">my</span> %h <span style="color:#f92672">=</span> { <span style="color:#e6db74">qw(a 1 b 2)</span> };
+say Dumper( <span style="color:#f92672">\</span>%h );</code></pre></div>
+<p>This is handy in a <code>foreach</code> where the elements of the list are hash references. First, here&rsquo;s how you might do this without the feature. Inside the block you interact the <code>$hash</code> as a reference; you must dereference it to get to a value:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> @mascots <span style="color:#f92672">=</span> (
+	{
+		type <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;camel&#39;</span>,
+		name <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;Amelia&#39;</span>,
+	},
+	{
+		type <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;butterfly&#39;</span>,
+		name <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;Camelia&#39;</span>,
+	},
+	{
+		type  <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;go&#39;</span>,
+		name  <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;Go Gopher&#39;</span>,
+	},
+	{
+		type  <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;python&#39;</span>,
+		name  <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;Monty&#39;</span>,
+	},
+	);</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $hash ( @mascots ) {
+	say $hash<span style="color:#f92672">-&gt;</span>{<span style="color:#e6db74">&#39;name&#39;</span>}
+	}</code></pre></div>
+<p>With v5.22&rsquo;s <code>refaliasing</code> feature you can use a named hash variable as the topic. Inside the block you interact with the current element as a named hash. There&rsquo;s no <code>-&gt;</code> for a dereference:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.22</span>;
+<span style="color:#66d9ef">use</span> feature <span style="color:#e6db74">qw(refaliasing)</span>;
+<span style="color:#66d9ef">use</span> Data::Dumper;
+
+<span style="color:#66d9ef">my</span> @mascots <span style="color:#f92672">=</span> (
+	{
+		type <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;camel&#39;</span>,
+		name <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;Amelia&#39;</span>,
+	},
+	{
+		type <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;butterfly&#39;</span>,
+		name <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;Camelia&#39;</span>,
+	},
+	{
+		type  <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;go&#39;</span>,
+		name  <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;Go Gopher&#39;</span>,
+	},
+	{
+		type  <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;python&#39;</span>,
+		name  <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;Monty&#39;</span>,
+	},
+	);
+
+<span style="color:#66d9ef">foreach</span> <span style="color:#f92672">\</span><span style="color:#66d9ef">my</span> %hash ( @mascots ) {
+	say $hash{<span style="color:#e6db74">&#39;name&#39;</span>}
+	}</code></pre></div>
+<p>The output is the same in both programs:</p>
+
+<pre><code>Amelia
+Camelia
+Go Gopher
+Monty
+Aliasing via reference is experimental at ...
+</code></pre>
+
+<p>There&rsquo;s a warning from this experimental feature (and, all such features). The feature might change or even disappear according to <a href="https://perldoc.perl.org/perlpolicy.html">Perl&rsquo;s feature policy</a>. Disable the warning if you are comfortable with that:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">no</span> warnings <span style="color:#e6db74">qw(experimental::refaliasing)</span>;</code></pre></div>
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The <code>foreach</code> is a handy way to go through a list an element at a time. Use it when you already have the list completely constructed (and not to process a filehandle). Define your own topic variable to choose a descriptive name.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/syntax">syntax</a></div>
+                
+                  <div class="tag"><a href="/tags/foreach">foreach</a></div>
+                
+                  <div class="tag"><a href="/tags/loop">loop</a></div>
+                
+                  <div class="tag"><a href="/tags/refaliasing">refaliasing</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-brian-d-foy">
+  <div class="col-sm-2">
+    
+    <a href="/authors/brian-d-foy/"><div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/brian-d-foy/"><h3>brian d foy</h3></a>
+    <p><a href="http://www.pair.com/~comdog/">brian d foy</a> is a Perl trainer and writer, and a senior editor at Perl.com. He&rsquo;s the author of <a href="https://www.masteringperl.org">Mastering Perl</a>, <a href="https://leanpub.com/mojo_web_clients">Mojolicious Web Clients</a>, <a href="https://leanpub.com/learning_perl_exercises">Learning Perl Exercises</a>, and co-author of <a href="https://www.programmingperl.org">Programming Perl</a>, <a href="https://www.learning-perl.com">Learning Perl</a>, <a href="https://www.intermediateperl.com">Intermediate Perl</a> and <a href="https://www.effectiveperlprogramming.com">Effective Perl Programming</a>.</p>
+    <h5><a href="/authors/brian-d-foy/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/perl-foreach-loops.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

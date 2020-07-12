@@ -1,0 +1,1411 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Michael Schwern on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/michael-schwern/</link>
+    <description>Recent content in Michael Schwern on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 23 Mar 2010 06:00:01 -0800</lastBuildDate>
+    <atom:link href="/authors/michael-schwern/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>perl5i Makes More Simple Things Simple</title>
+      <link>http://localhost:1313/pub/2010/03/perl5i-makes-more-simple-things-simple.html/</link>
+      <pubDate>Tue, 23 Mar 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/perl5i-makes-more-simple-things-simple.html/</guid>
+      <description>&lt;p&gt;Suppose that you want to load a module dynamically (you have the name in a scalar), then alias a function from that module to a new name in another class. In other words, you want a renaming import. How do you do that in Perl 5?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+    no strict &#39;refs&#39;;
+    eval qq{require $class} or die $@;
+    *{$other_class.&amp;quot;::&amp;quot;.$alias} = $class-&amp;gt;can($func);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s a lot of magic going on there. Aliasing requires using symbolic refs which means turning off &lt;code&gt;strict&lt;/code&gt;. Because you want &lt;code&gt;strict&lt;/code&gt; off in as small a hunk of code as possible you have to enclose it in braces. Then, &lt;code&gt;require Class&lt;/code&gt; and &lt;code&gt;require $class&lt;/code&gt; work differently, so you have to trick &lt;code&gt;require&lt;/code&gt; into seeing a bareword by &lt;code&gt;eval&lt;/code&gt;ing it. Don&amp;rsquo;t forget to catch and rethrow the error! Finally, to do the aliasing you need to get a code ref with &lt;code&gt;can()&lt;/code&gt; and assign it to the symbol table via the magic of typeglobs.&lt;/p&gt;
+
+&lt;p&gt;Guh. There&amp;rsquo;s an idea in interface design called &lt;a href=&#34;http://www.usabilityfirst.com/glossary/gulf-of-execution/&#34;&gt;The Gulf of Execution&lt;/a&gt; which measures the distance between the user&amp;rsquo;s goal and the actions she must take to achieve that goal. The goals here are to:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Load a class from a variable.&lt;/li&gt;
+&lt;li&gt;Alias a function in that class.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The actions are:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Enclose the code in a block.&lt;/li&gt;
+&lt;li&gt;Turn off &lt;code&gt;strict&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;require $class&lt;/code&gt; in an &lt;code&gt;eval&lt;/code&gt; block to turn it into a bareword.&lt;/li&gt;
+&lt;li&gt;Catch and rethrow any error which might result.&lt;/li&gt;
+&lt;li&gt;Use &lt;code&gt;can()&lt;/code&gt; to get a reference to the function.&lt;/li&gt;
+&lt;li&gt;Construct a fully qualified name for the alias.&lt;/li&gt;
+&lt;li&gt;Turn that into a typeglob.&lt;/li&gt;
+&lt;li&gt;Assign the code ref to the typeglob.&lt;/li&gt;
+&lt;li&gt;Drink.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Try explaining that to a non-Perl guru.&lt;/p&gt;
+
+&lt;p&gt;Now consider the &lt;a href=&#34;https://metacpan.org/pod/perl5i&#34;&gt;perl5i&lt;/a&gt; (specifically perl5i::2) way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$class-&amp;gt;require
+      -&amp;gt;can($func)
+      -&amp;gt;alias($other_class, $alias);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Release the breath you&amp;rsquo;ve been holding in for the last 15 years of Perl 5.&lt;/p&gt;
+
+&lt;p&gt;Through the magic of &lt;a href=&#34;https://metacpan.org/pod/autobox&#34;&gt;autoboxing&lt;/a&gt;, perl5i lets you call methods on unblessed scalars, hashes, arrays, regexes, references&amp;hellip; anything. It also implements some handy methods. Some, like &lt;code&gt;require()&lt;/code&gt;, are core functions redone as methods. Others, like &lt;code&gt;alias()&lt;/code&gt;, should be core functions never made it in for whatever reason. autoboxing gives perl5i the freedom to add handy features without polluting the global function/method namespace with new keywords.&lt;/p&gt;
+
+&lt;p&gt;Recall the goals:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Load a class from a variable.&lt;/li&gt;
+&lt;li&gt;Alias a function in that class.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&amp;hellip; and consider perl5i&amp;rsquo;s actions:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Call &lt;code&gt;require()&lt;/code&gt; to load the class.&lt;/li&gt;
+&lt;li&gt;Call &lt;code&gt;can()&lt;/code&gt; to get a reference to the function.&lt;/li&gt;
+&lt;li&gt;Call &lt;code&gt;alias()&lt;/code&gt; on that reference to alias it to the other class.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The gulf has narrowed to a stream you can hop over while hardly getting your feet wet.&lt;/p&gt;
+
+&lt;p&gt;The goal of perl5i is to bring modern conveniences back to Perl 5. In the 15 years since the release of Perl 5, we&amp;rsquo;ve learned a lot. Our views of good practices have changed. 15 years ago, aliasing a function was black magic available only to the wildest of gurus. Now it&amp;rsquo;s a technique many module authors take advantage of. Why should it remain complicated and error prone?&lt;/p&gt;
+
+&lt;p&gt;Autoboxing is a big part of perl5i, allowing it to add convenience methods without having to add new keywords. Adding new keywords&amp;ndash;which contracts the function names available to programmers&amp;ndash;is a big thing holding Perl 5 back! Every potential new keyword is a debate over compatibility. Autoboxing eliminates that debate. It takes off the brakes.&lt;/p&gt;
+
+&lt;p&gt;Some other examples: &lt;a href=&#34;https://perldoc.perl.org/perlfaq4.html#How-do-I-determine-whether-a-scalar-is-a-number/whole/integer/float?&#34;&gt;How do I check if a scalar contains a number, an integer, or a float?&lt;/a&gt; The Perl FAQ entry on the subject is two pages long offering five different possibilities, two of which require pasting code. Code in FAQs tends to rot, and perlfaq is no exception; without testing nobody noticed that those venerable regexes fail to catch &amp;ldquo;+1.23&amp;rdquo;. How does perl5i do it?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;say &amp;quot;It&#39;s a number&amp;quot;   if $thing-&amp;gt;is_number;
+say &amp;quot;It&#39;s an integer&amp;quot; if $thing-&amp;gt;is_integer;
+say &amp;quot;It&#39;s a decimal&amp;quot;  if $thing-&amp;gt;is_decimal;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s clear, simple, fast, and tested. TMTOWTDI is great and all, but FAQs are about getting things done, not about writing dissertations on the subject. perl5i picks one way that&amp;rsquo;s pretty good and makes it available with no fuss.&lt;/p&gt;
+
+&lt;p&gt;The bar for what is &amp;ldquo;simple&amp;rdquo; has moved since Perl 5 first came out. perl5i takes the goal of &amp;ldquo;simple things should be simple&amp;rdquo; and helps us all catch up.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>A Refactoring Example</title>
+      <link>http://localhost:1313/pub/2003/10/09/refactoring.html/</link>
+      <pubDate>Thu, 09 Oct 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/10/09/refactoring.html/</guid>
+      <description>
+
+&lt;p&gt;About a year ago, a person asked the &lt;a href=&#34;http://www.technofile.org/technofile/depts/mlists/fwp.html&#34;&gt;Fun With Perl&lt;/a&gt; mailing list about some code they had written to do database queries. It&amp;rsquo;s important to note that this person was posting from an .it address; why will become apparent later. The code was reading records in from a text file and then doing a series of queries based on that information. They wanted to make it faster.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s his code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+$nump++;
+chop($riga);
+$pagina[$nump] = $riga;
+
+$sth= $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+pageid=&#39;$pagina[$nump]&#39; and data&amp;gt;=&#39;$startdate&#39;&amp;quot;);
+$sth-&amp;gt;execute;
+$totalvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+$sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+(pageid=&#39;$pagina[$nump]&#39; and data=&#39;$dataoggi&#39;)&amp;quot;);
+$sth-&amp;gt;execute;
+$totalvisittoday[$nump] = $sth-&amp;gt;fetchrow_array();
+
+ $sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+(pageid=&#39;$pagina[$nump]&#39; and data=&#39;$dataieri&#39;)&amp;quot;);
+$sth-&amp;gt;execute;
+$totalyvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+ $sth= $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+(pageid=&#39;$pagina[$nump]&#39; and data&amp;lt;=&#39;$fine30gg&#39; and data&amp;gt;=&#39;$inizio30gg&#39;)&amp;quot;);
+$sth-&amp;gt;execute;
+$totalmvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I decided that rather than try to read through this code and figure out what it&amp;rsquo;s doing and how to make it faster, I&amp;rsquo;d clean it up first. Clean it up &lt;strong&gt;before&lt;/strong&gt; you figure out how it works? Yes, using a technique called &lt;em&gt;Refactoring&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;refactoring&#34;&gt;Refactoring?&lt;/h3&gt;
+
+&lt;p&gt;In his book, Martin Fowler defines Refactoring as &lt;em&gt;&amp;ldquo;the process of changing a software system in such a way that it does not alter the external behavior of the code yet improves its internal structure.&amp;rdquo;&lt;/em&gt; In other words, you clean up your code but don&amp;rsquo;t change what it does.&lt;/p&gt;
+
+&lt;p&gt;Refactoring can be as simple as changing this code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$exclamation = &#39;I like &#39;.$pastry.&#39;!&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$exclamation = &amp;quot;I like $pastry!&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Still does the same thing, but it&amp;rsquo;s easier to read.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s important to note that I don&amp;rsquo;t need to know anything about the contents of &lt;code&gt;$pastry&lt;/code&gt; or how &lt;code&gt;$exclamation&lt;/code&gt; is used. The change is completely self-contained and does not affect surrounding code or change what it does. This is Refactoring.&lt;/p&gt;
+
+&lt;p&gt;On the principle of &amp;ldquo;show me don&amp;rsquo;t tell me,&amp;rdquo; rather than talk about it, we&amp;rsquo;ll dive right into refactoring our bit of code.&lt;/p&gt;
+
+&lt;h3 id=&#34;fix-the-indentation&#34;&gt;Fix the Indentation&lt;/h3&gt;
+
+&lt;p&gt;Your first impulse when faced with a hunk of code slammed against the left margin is to indent it. This is our first refactoring.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    $sth= $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+                         pageid=&#39;$pagina[$nump]&#39; and data&amp;gt;=&#39;$startdate&#39;&amp;quot;);
+    $sth-&amp;gt;execute;
+    $totalvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+                          (pageid=&#39;$pagina[$nump]&#39; and data=&#39;$dataoggi&#39;)&amp;quot;);
+    $sth-&amp;gt;execute;
+    $totalvisittoday[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+                          (pageid=&#39;$pagina[$nump]&#39; and data=&#39;$dataieri&#39;)&amp;quot;);
+    $sth-&amp;gt;execute;
+    $totalyvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth= $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+                         (pageid=&#39;$pagina[$nump]&#39; and data&amp;lt;=&#39;$fine30gg&#39; 
+                         and data&amp;gt;=&#39;$inizio30gg&#39;)&amp;quot;);
+    $sth-&amp;gt;execute;
+    $totalmvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Already it looks better. We can see that we&amp;rsquo;re iterating over a file, performing some SELECTs on each line and shoving the results into a bunch of arrays.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-single-simple-change&#34;&gt;A Single, Simple Change&lt;/h3&gt;
+
+&lt;p&gt;One of the most important principles of Refactoring is that you work in small steps. This re-indentation is a single step. And part of this single step includes running the test suite, logging the change, and checking it into CVS.&lt;/p&gt;
+
+&lt;p&gt;Checking into CVS after something this simple? Yes. Many programmers ask the question, &amp;ldquo;When should I check in?&amp;rdquo; When you&amp;rsquo;re refactoring it&amp;rsquo;s simple: check in when you&amp;rsquo;ve done one refactoring and have tested that it works. Our re-indentation is one thing; we test that it works and check it in.&lt;/p&gt;
+
+&lt;p&gt;This may seem excessive, but it prevents us from entangling two unrelated changes together. By doing one change at a time we know that any new bugs were introduced by that one change. Also, you will often decide in the middle of a refactoring that it&amp;rsquo;s not such a good idea. When you&amp;rsquo;ve checked in at every one you can simply rollback to the last version rather than having to undo it by hand. Convenient, and you&amp;rsquo;re sure no stray bits of your aborted change are hanging around.&lt;/p&gt;
+
+&lt;p&gt;So our procedure for doing a proper refactoring is:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Make one logical change to the code.&lt;/li&gt;
+&lt;li&gt;Make sure it passes tests.&lt;/li&gt;
+&lt;li&gt;Log and check in.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;big-refactorings-from-small&#34;&gt;Big Refactorings from Small&lt;/h3&gt;
+
+&lt;p&gt;The goal of this refactoring is to make the code go faster. One of the simplest ways to do achieve that is to pull necessary code out of the loop. Preparing four new statements in every iteration of the loop seems really unnecessary. We&amp;rsquo;d like to pull those &lt;code&gt;prepare()&lt;/code&gt; statements out of the loop. This is a refactoring. To achieve this larger refactoring, a series of smaller refactorings must be done.&lt;/p&gt;
+
+&lt;h3 id=&#34;use-bind-variables&#34;&gt;Use Bind Variables&lt;/h3&gt;
+
+&lt;p&gt;Each time through the loop, a new set of SQL statements is created based on the line read in. But they&amp;rsquo;re all basically the same, just the data is changing. If we could pull that data out of the statement we&amp;rsquo;d be closer to our goal of pulling the &lt;code&gt;prepare()&lt;/code&gt;s out of the loop.&lt;/p&gt;
+
+&lt;p&gt;So my next refactoring pulls variables out of the SQL statements and replaces them with placeholders. Then the data is bound to the statement using bind variables. This means we&amp;rsquo;re now &lt;code&gt;prepare()&lt;/code&gt;ing the same statements every time through the loop.&lt;/p&gt;
+
+&lt;p&gt;Before refactoring:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$sth= $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+                     pageid=&#39;$pagina[$nump]&#39; and data&amp;gt;=&#39;$startdate&#39;&amp;quot;);
+$sth-&amp;gt;execute;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After refactoring:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$sth= $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE 
+                     pageid=? and data&amp;gt;=?&#39;);
+$sth-&amp;gt;execute($pagina[$nump], $startdate);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Bind variables also protect against a naughty user from trying to slip some extra SQL into your program via the data you read in. As a side-effect of our code cleanup, we&amp;rsquo;ve closed a potential security hole.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    $sth= $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE 
+                         pageid=? and data&amp;gt;=?&#39;);
+    $sth-&amp;gt;execute($pagina[$nump], $startdate);
+    $totalvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                          (pageid=? and data=?)&#39;);
+    $sth-&amp;gt;execute($pagina[$nump], $dataoggi);
+    $totalvisittoday[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                          (pageid=? and data=?)&#39;);
+    $sth-&amp;gt;execute($pagina[$nump], $dataieri);
+    $totalyvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth= $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                         (pageid=? and data&amp;lt;=? and data&amp;gt;=?)&#39;);
+    $sth-&amp;gt;execute($pagina[$nump], $fine30gg, $inizio30gg);
+    $totalmvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;split-a-poorly-reused-variable&#34;&gt;Split a Poorly Reused Variable&lt;/h3&gt;
+
+&lt;p&gt;The next stumbling block to pulling the &lt;code&gt;prepare()&lt;/code&gt; statements out of the loop is that they all use the same variable, &lt;code&gt;$sth&lt;/code&gt;. We&amp;rsquo;ll have to change it so they all use different variables. While we&amp;rsquo;re at it, we&amp;rsquo;ll name those statement handles something more descriptive of what the statement does. Since at this point we haven&amp;rsquo;t figured out what the statements do, we can base the name on the array it gets assigned to.&lt;/p&gt;
+
+&lt;p&gt;While we&amp;rsquo;re at it, throw in some &lt;code&gt;my()&lt;/code&gt; declarations to limit the scope of these variables to just the loop.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    my $totalvisit_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE 
+                                        pageid=? and data&amp;gt;=?&#39;);
+    $totalvisit_sth-&amp;gt;execute($pagina[$nump], $startdate);
+    $totalvisit[$nump] = $totalvisit_sth-&amp;gt;fetchrow_array();
+
+    my $totalvisittoday_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                             (pageid=? and data=?)&#39;);
+    $totalvisittoday_sth-&amp;gt;execute($pagina[$nump], $dataoggi);
+    $totalvisittoday[$nump] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    my $totalyvisit_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                         (pageid=? and data=?)&#39;);
+    $totalyvisit_sth-&amp;gt;execute($pagina[$nump], $dataieri);
+    $totalyvisit[$nump] = $totalyvisit_sth-&amp;gt;fetchrow_array();
+
+    my $totalmvisit_sth= $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                        (pageid=? and data&amp;lt;=? and data&amp;gt;=?)&#39;);
+    $totalmvisit_sth-&amp;gt;execute($pagina[$nump], $fine30gg, $inizio30gg);
+    $totalmvisit[$nump] = $totalmvisit_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;getting-better-all-the-time&#34;&gt;Getting Better All the Time&lt;/h3&gt;
+
+&lt;p&gt;The new names are better, but they&amp;rsquo;re not great. This is ok. Naming is something people often get hung up on. One can spend hours wracking their brains thinking of the perfect name for a variable or a function. If you can think of a better one than what&amp;rsquo;s there right now, use it. The beauty of Refactoring is you an always improve upon it later.&lt;/p&gt;
+
+&lt;p&gt;This is an important lesson of Refactoring. Voltare said, &amp;ldquo;the best is the enemy of the good&amp;rdquo;. We often get so wound up trying to make code &lt;em&gt;great&lt;/em&gt; that we fail to improve it at all. In refactoring, it&amp;rsquo;s not so important to make your code great in one leap, just a little better all the time (it&amp;rsquo;s a little known fact John Lennon was into Refactoring.) These small improvements will build up into a clean piece of code, with less bugs, more surely than a large-scale code cleanup would.&lt;/p&gt;
+
+&lt;h3 id=&#34;pull-code-out-of-the-loop&#34;&gt;Pull Code Out of the Loop&lt;/h3&gt;
+
+&lt;p&gt;Now it&amp;rsquo;s a simple cut and paste to pull the four &lt;code&gt;prepare()&lt;/code&gt; statements out of the loop.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $totalvisit_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE 
+                                    pageid=? and data&amp;gt;=?&#39;);
+
+my $totalvisittoday_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                         (pageid=? and data=?)&#39;);
+
+my $totalyvisit_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                     (pageid=? and data=?)&#39;);
+
+my $totalmvisit_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                     (pageid=? and data&amp;lt;=? and data&amp;gt;=?)&#39;);
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    $totalvisit_sth-&amp;gt;execute($pagina[$nump], $startdate);
+    $totalvisit[$nump] = $totalvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pagina[$nump], $dataoggi);
+    $totalvisittoday[$nump] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalyvisit_sth-&amp;gt;execute($pagina[$nump], $dataieri);
+    $totalyvisit[$nump] = $totalyvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalmvisit_sth-&amp;gt;execute($pagina[$nump], $fine30gg, $inizio30gg);
+    $totalmvisit[$nump] = $totalmvisit_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Already the code is looking better. With the SQL separated, the inner workings of the loop are much less daunting.&lt;/p&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-place-to-stop&#34;&gt;A Place to Stop&lt;/h3&gt;
+
+&lt;p&gt;Remember our goal, to make this code run faster. By pulling the &lt;code&gt;prepare()&lt;/code&gt; statements outside the loop we&amp;rsquo;ve likely achieved this goal. Additionally, it still does exactly what it did before even though we still don&amp;rsquo;t fully understand what that is. If this were a real project, you&amp;rsquo;d do some benchmarking to see if the code is fast enough and move on to another task.&lt;/p&gt;
+
+&lt;p&gt;Since this is an example, I&amp;rsquo;ll continue with more refactorings with the goal of clarifying the code further and figuring out what it does.&lt;/p&gt;
+
+&lt;p&gt;Keep in mind that after every refactoring the code still does &lt;em&gt;exactly what it did before&lt;/em&gt;. This means we can stop choose to stop after any refactoring. If a more pressing task suddenly pops up we can pause our refactoring work and attend to that feeling confident we didn&amp;rsquo;t leave any broken code lying around.&lt;/p&gt;
+
+&lt;h3 id=&#34;reformat-sql-for-better-readability&#34;&gt;Reformat SQL for Better Readability&lt;/h3&gt;
+
+&lt;p&gt;In order to make sense of the code, we have to make sense of the SQL. The simplest way to better understand the SQL is to put it into a clearer format.&lt;/p&gt;
+
+&lt;p&gt;The three major parts of an SQL SELECT statement are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The rows (ie. &lt;code&gt;SELECT count(*)&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;The table (ie. &lt;code&gt;FROM lognew&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;The predicate (ie. &lt;code&gt;WHERE pageid = ...&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I&amp;rsquo;ve chosen a new format that highlights these parts.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve also removed some unnecessary parenthesis because they just serve to clutter things up rather than disambiguate an expression.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve also decided to change the quoting style from single quotes to a here-doc. It would have also been okay to use &lt;code&gt;q{}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $totalvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $totalvisittoday_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $totalyvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $totalmvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    $totalvisit_sth-&amp;gt;execute($pagina[$nump], $startdate);
+    $totalvisit[$nump] = $totalvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pagina[$nump], $dataoggi);
+    $totalvisittoday[$nump] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalyvisit_sth-&amp;gt;execute($pagina[$nump], $dataieri);
+    $totalyvisit[$nump] = $totalyvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalmvisit_sth-&amp;gt;execute($pagina[$nump], $fine30gg, $inizio30gg);
+    $totalmvisit[$nump] = $totalmvisit_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;remove-redundancy&#34;&gt;Remove Redundancy&lt;/h3&gt;
+
+&lt;p&gt;With the SQL in a more readable format, some commonalities become clear.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;All the statements are doing a &lt;code&gt;count(*)&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;They&amp;rsquo;re all using the &lt;code&gt;lognew&lt;/code&gt; table&lt;/li&gt;
+&lt;li&gt;They&amp;rsquo;re all looking for a certain &lt;code&gt;pageid&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In fact, &lt;code&gt;$totalvisittoday_sth&lt;/code&gt; and &lt;code&gt;$totalyvisit_sth&lt;/code&gt; are exactly the same! Let&amp;rsquo;s eliminate one of them, doesn&amp;rsquo;t matter which, we&amp;rsquo;re going to rename them in a moment anyway. &lt;code&gt;$totalyvisit_sth&lt;/code&gt; goes away, making sure to change all references to it to &lt;code&gt;$totalvisittoday_sth&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $totalvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $totalvisittoday_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $totalmvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    $totalvisit_sth-&amp;gt;execute($pagina[$nump], $startdate);
+    $totalvisit[$nump] = $totalvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pagina[$nump], $dataoggi);
+    $totalvisittoday[$nump] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pagina[$nump], $dataieri);
+    $totalyvisit[$nump] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalmvisit_sth-&amp;gt;execute($pagina[$nump], $fine30gg, $inizio30gg);
+    $totalmvisit[$nump] = $totalmvisit_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;fix-conflicting-styles&#34;&gt;Fix Conflicting Styles&lt;/h3&gt;
+
+&lt;p&gt;Now the only difference between the statements is the choice of &lt;code&gt;data&lt;/code&gt; ranges.&lt;/p&gt;
+
+&lt;p&gt;Using the variables are passed into each statement we can make some more deductions. Let&amp;rsquo;s have a look&amp;hellip;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$startdate&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$dataoggi&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$dataieri&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$fine30gg, $inizio30gg&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;em&gt;One of these things is not like the other.&lt;/em&gt; What&amp;rsquo;s &lt;code&gt;$startdate&lt;/code&gt; doing there? Everything else is talking about &amp;lsquo;data&amp;rsquo;. What&amp;rsquo;s &amp;lsquo;ieri&amp;rsquo;? &amp;lsquo;oggi&amp;rsquo;? Remember, the programmer who submitted this code is Italian. Maybe the names are in Italian. Grabbing an &lt;a href=&#34;http://dictionaries.travlang.com/ItalianEnglish/&#34;&gt;Italian-English dictionary&lt;/a&gt; we find out that &amp;lsquo;data&amp;rsquo; is Italian for &amp;lsquo;date&amp;rsquo;! Now it makes sense, this code was probably originally written in English, then worked on by an Italian (or vice-versa).&lt;/p&gt;
+
+&lt;p&gt;This code has committed a cardinal stylistic sin. It uses two different languages for naming variables. Not just different languages, languages which have different meanings for the same words. Taken out of context, we can&amp;rsquo;t know if &lt;code&gt;$data&lt;/code&gt; represents a hunk of facts or &amp;ldquo;Thursday.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Since the styles conflict, one of them has to go. Since I don&amp;rsquo;t speak Italian, I&amp;rsquo;m going to translate it into English.&lt;/p&gt;
+
+&lt;p&gt;Pulling out our Italian-to-English dictionary&amp;hellip;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&amp;ldquo;riga&amp;rdquo; is &amp;ldquo;line&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;pagina&amp;rdquo; is &amp;ldquo;page&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;nump&amp;rdquo; is probably short for &amp;ldquo;numero pagina&amp;rdquo; which is &amp;ldquo;page number&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;data&amp;rdquo; is &amp;ldquo;date&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;oggi&amp;rdquo; is &amp;ldquo;today&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;ieri&amp;rdquo; is &amp;ldquo;yesterday&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;inizio&amp;rdquo; is &amp;ldquo;start&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;fine&amp;rdquo; is &amp;ldquo;end&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;gg&amp;rdquo; is probably short for &amp;ldquo;giorni&amp;rdquo; which is &amp;ldquo;days&amp;rdquo;
+
+&lt;ul&gt;
+&lt;li&gt;&amp;ldquo;fine30gg&amp;rdquo; would then be &amp;ldquo;the end of 30 days&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;inizio30gg&amp;rdquo; would be &amp;ldquo;the beginning of 30 days&amp;rdquo;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;It would be a straightforward matter of a bunch of search-and-replaces in any good editor but for one snag, the SQL column &amp;lsquo;data.&amp;rsquo; We&amp;rsquo;d like to change this to its English &amp;lsquo;date&amp;rsquo;, but databases are very global with possibly lots of other programs using it. So we can&amp;rsquo;t change the column name without breaking other code. While in a well-organized programming shop you might have the ability to find all the code which uses your database, we won&amp;rsquo;t assume we have that luxury here. For the moment then, we&amp;rsquo;ll leave that be and deal with it in a separate refactoring.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $totalvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $totalvisittoday_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $totalmvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($line=&amp;lt;INPUT&amp;gt;){
+    $page_num++;
+    chop($line);
+    $pages[$page_num] = $line;
+
+    $totalvisit_sth-&amp;gt;execute($pages[$page_num], $start_date);
+    $totalvisit[$page_num] = $totalvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pages[$page_num], $today);
+    $totalvisittoday[$page_num] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pages[$page_num], $yesterday);
+    $totalyvisit[$page_num] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalmvisit_sth-&amp;gt;execute($pages[$page_num], $end_of_30_days,
+                                                 $start_of_30_days);
+    $totalmvisit[$page_num] = $totalmvisit_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;better-names&#34;&gt;Better Names&lt;/h3&gt;
+
+&lt;p&gt;With decent variable names in place, the purpose of the program becomes &lt;strong&gt;much&lt;/strong&gt; clearer. This is a program to calculate the number of visits to a page for various date ranges. Based on this new information we can give the statement handles and the arrays they put data into better names.&lt;/p&gt;
+
+&lt;p&gt;Looking at the SQL we see we&amp;rsquo;ve got:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;One to get all the visits up to a single day.&lt;/li&gt;
+&lt;li&gt;One to get the visits for a certain date.&lt;/li&gt;
+&lt;li&gt;One to get the visits for a range of dates.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A good set of new names would be:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;daily&lt;/li&gt;
+&lt;li&gt;up to&lt;/li&gt;
+&lt;li&gt;range&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Also, Total Visits is too long. We could shorten that to just Visits, or even shorter to Hits.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($line=&amp;lt;INPUT&amp;gt;){
+    $page_num++;
+    chop($line);
+    $pages[$page_num] = $line;
+
+    $hits_upto_sth-&amp;gt;execute($pages[$page_num], $start_date);
+    $totalvisit[$page_num] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($pages[$page_num], $today);
+    $totalvisittoday[$page_num] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($pages[$page_num], $yesterday);
+    $totalyvisit[$page_num] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($pages[$page_num], $end_of_30_days,
+                                                $start_of_30_days);
+    $totalmvisit[$page_num] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;changing-global-variable-names&#34;&gt;Changing Global Variable Names&lt;/h3&gt;
+
+&lt;p&gt;The array names need work, too. Currently, they&amp;rsquo;re rather ambiguous. &lt;code&gt;@totalyvisit&lt;/code&gt;, what does the &lt;em&gt;y&lt;/em&gt; mean? Looking at each variable name and the variables that got passed to &lt;code&gt;execute()&lt;/code&gt; to produce it&amp;hellip;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@totalvisit&lt;/code&gt; comes up to a &lt;code&gt;$start_date&lt;/code&gt;. So that can be &lt;code&gt;@hits_upto&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@totalvisittoday&lt;/code&gt; comes from &lt;code&gt;$today&lt;/code&gt; and is pretty obvious. &lt;code&gt;@hits_today&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@totalyvisit&lt;/code&gt; comes from &lt;code&gt;$yesterday&lt;/code&gt; so &amp;lsquo;y&amp;rsquo; must be for &amp;lsquo;yesterday&amp;rsquo;. &lt;code&gt;@hits_yesterday&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@totalmvisit&lt;/code&gt; comes from the range produced by the $start_of_30_days and the $end_of_30_days. So &amp;rsquo;m&amp;rsquo; must be &amp;lsquo;month&amp;rsquo;. &lt;code&gt;@hits_monthly&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- --&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($line=&amp;lt;INPUT&amp;gt;){
+    $page_num++;
+    chop($line);
+    $pages[$page_num] = $line;
+
+    $hits_upto_sth-&amp;gt;execute($pages[$page_num], $start_date);
+    $hits_upto[$page_num] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($pages[$page_num], $today);
+    $hits_today[$page_num] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($pages[$page_num], $yesterday);
+    $hits_yesterday[$page_num] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($pages[$page_num], $end_of_30_days,
+                                                $start_of_30_days);
+    $hits_monthly[$page_num] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test&amp;hellip; uh-oh, test failed!&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s something &lt;strong&gt;very&lt;/strong&gt; different about this change compared to the others. The variables we changed were &lt;em&gt;not&lt;/em&gt; declared in our little code block. Likely they&amp;rsquo;re used in other parts of the code, such as our test which caused it to break.&lt;/p&gt;
+
+&lt;p&gt;In the Real World, we would be sure to &lt;strong&gt;replace all occurrences of the variable&lt;/strong&gt;. The simplest way to do this is to use your editor to perform a search and replace rather than doing it by your all too fallible hands. If it could be used over a set of files, grepping through those files for all occurrences of it and changing those as well would be necessary.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# If you don&#39;t have rgrep, grep -r does the same thing.
+rgrep &#39;[@$]totalvisit&#39; /path/to/your/project
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I do this so often that I&amp;rsquo;ve taken to calling grep -r, &amp;lsquo;Refactoring Grep&amp;rsquo;. Other languages who&amp;rsquo;s syntax is &amp;ndash; ummm &amp;ndash; not as inspired as Perl&amp;rsquo;s, such as Java, C++ and Python, have tools for doing this sort of thing automatically. Because of the complexity of Perl&amp;rsquo;s syntax, we still have to do it mostly by hand, though there are some efforts underway to rectify this.&lt;/p&gt;
+
+&lt;p&gt;Changing the array names in our test as well we get them to pass.&lt;/p&gt;
+
+&lt;p&gt;Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;improve-overly-generic-names&#34;&gt;Improve Overly Generic Names&lt;/h3&gt;
+
+&lt;p&gt;Continuing with our variable name improvements, we&amp;rsquo;re left with the last few unimproved names. Let&amp;rsquo;s start with &lt;code&gt;$line&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Since we can see clearly that &lt;code&gt;$line = &amp;lt;INPUT&amp;gt;&lt;/code&gt;, calling the variable &amp;lsquo;line&amp;rsquo; tells us nothing new. A better name might be what each line contains. Looking at how the line is used we see &lt;code&gt;$pages[$page_num] = $line&lt;/code&gt; and how that is then used in the SQL. It&amp;rsquo;s a page id.&lt;/p&gt;
+
+&lt;p&gt;But it doesn&amp;rsquo;t make much sense to put a page id into an array called &lt;code&gt;@pages&lt;/code&gt;. It doesn&amp;rsquo;t contain pages, it contains &lt;code&gt;@page_ids&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;What about &lt;code&gt;$page_num&lt;/code&gt;? It doesn&amp;rsquo;t contain a page number, it contains the line number of the file we&amp;rsquo;re reading in. Or more conventionally, an &lt;code&gt;$index&lt;/code&gt; or &lt;code&gt;$idx&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chop($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_ids[$idx], $start_date);
+    $hits_upto[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $today);
+    $hits_today[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $yesterday);
+    $hits_yesterday[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_ids[$idx], $end_of_30_days,
+                                                   $start_of_30_days);
+    $hits_monthly[$idx] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;fixing-odd-interfaces&#34;&gt;Fixing Odd Interfaces&lt;/h3&gt;
+
+&lt;p&gt;What&amp;rsquo;s wrong with this picture?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$hits_range_sth-&amp;gt;execute($page_ids[$idx], $end_of_30_days,
+                                               $start_of_30_days);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Isn&amp;rsquo;t it a little odd to specify a date range with the end first? Sure is. It also guarantees someone is going to get it backwards. Reverse it. Don&amp;rsquo;t forget the SQL, too.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chop($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_ids[$idx], $start_date);
+    $hits_upto[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $today);
+    $hits_today[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $yesterday);
+    $hits_yesterday[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_ids[$idx], $start_of_30_days,
+                                                   $end_of_30_days);
+    $hits_monthly[$idx] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;s-chop-chomp&#34;&gt;s/chop/chomp/&lt;/h3&gt;
+
+&lt;p&gt;Now that we&amp;rsquo;ve stared at the code for a while, you might have noticed the use of &lt;code&gt;chop()&lt;/code&gt;. Using &lt;code&gt;chop()&lt;/code&gt; to strip a newline is asking for portability problems, so let&amp;rsquo;s fix it by using &lt;code&gt;chomp()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Technically this &lt;em&gt;isn&amp;rsquo;t&lt;/em&gt; a refactoring since we altered the behavior of the code by fixing the bug. But using &lt;code&gt;chop()&lt;/code&gt; where you meant &lt;code&gt;chomp()&lt;/code&gt; is such a common mistake we&amp;rsquo;ll make it an honorary refactoring.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chomp($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_ids[$idx], $start_date);
+    $hits_upto[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $today);
+    $hits_today[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $yesterday);
+    $hits_yesterday[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_ids[$idx], $start_of_30_days,
+                                                   $end_of_30_days,);
+    $hits_monthly[$idx] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;collect-related-variables-into-hashes&#34;&gt;Collect Related Variables into Hashes&lt;/h3&gt;
+
+&lt;p&gt;The common prefix &lt;code&gt;hits_&lt;/code&gt; is a dead giveaway that much of the data in this code is related. Related variables should be grouped together into a single structure, probably a hash to make the relation obvious and allow them to be passed around to subroutines more easily. Its easier to move around one hash than four arrays.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve decided to collect together all the &lt;code&gt;@hit_&lt;/code&gt; arrays into a single hash &lt;code&gt;%hits&lt;/code&gt; since they&amp;rsquo;ll probably be used together parts of the program. If this code snippet represents a function it means I can return one hash reference rather than four array refs. It also makes future expansion easier, rather than returning an additional array it simply becomes another key in the hash.&lt;/p&gt;
+
+&lt;p&gt;Before.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$hits{upto}[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$hits_upto[$idx]  = $hits_upto_sth-&amp;gt;fetchrow_array();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s interesting to note what a small, natural change this is. Circumstantial evidence that this is a good refactoring.&lt;/p&gt;
+
+&lt;p&gt;As before, since these arrays are global data, we must be sure to change them everywhere. This includes the tests.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chomp($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_ids[$idx], $start_date);
+    $hits{upto}[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $today);
+    $hits{today}[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $yesterday);
+    $hits{yesterday}[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_ids[$idx], $start_of_30_days,
+                                                   $end_of_30_days,);
+    $hits{monthly}[$idx] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;when-not-to-refactor&#34;&gt;When Not to Refactor&lt;/h3&gt;
+
+&lt;p&gt;The statement handles are also related, but I&amp;rsquo;m not going to collect them together into a hash. The statement handles are short-lived lexicals, they&amp;rsquo;re never likely to be passed around. Their short scope and grouping within the code makes their relationship obvious. The design would not be improved by the refactoring.&lt;/p&gt;
+
+&lt;p&gt;Refactoring is not a set of rules to be slavishly followed, it&amp;rsquo;s a collection of tools. And like any other tool you must carefully consider when and when not to use it. Since collecting the statement handles together doesn&amp;rsquo;t improve the design, I won&amp;rsquo;t do it.&lt;/p&gt;
+
+&lt;h3 id=&#34;eliminate-unnecessary-longhand&#34;&gt;Eliminate Unnecessary Longhand&lt;/h3&gt;
+
+&lt;p&gt;Boy, we sure use &lt;code&gt;$page_ids[$idx]&lt;/code&gt; a lot. It&amp;rsquo;s the current page ID. But don&amp;rsquo;t we have a variable for that?&lt;/p&gt;
+
+&lt;p&gt;Replace all the unnecessary array accesses and just use the more concise and descriptive &lt;code&gt;$page_id&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chomp($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    $hits{upto}[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $today);
+    $hits{today}[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $yesterday);
+    $hits{yesterday}[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_id, $start_of_30_days,
+                                       $end_of_30_days,);
+    $hits{monthly}[$idx] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;rearrange-data-structures-to-fit-their-use&#34;&gt;Rearrange Data Structures to Fit Their Use&lt;/h3&gt;
+
+&lt;p&gt;Currently, &lt;code&gt;%hits&lt;/code&gt; is accessed by the order the page ID was read out of the file. Well, that doesn&amp;rsquo;t seem very useful at all. Its purpose seems to be for listing the page counts in exactly the same order as you read them in. Even then you need to iterate through &lt;code&gt;@page_ids&lt;/code&gt; simultaneously because no where in &lt;code&gt;%hits&lt;/code&gt; is the page ID stored.&lt;/p&gt;
+
+&lt;p&gt;Consider a common operation, looking up the hit counts for a given page ID. You have to iterate through the whole list of page IDs to do it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;foreach my $idx (0..$#page_ids) {
+    if( $page_ids[$idx] eq $our_page_id ) {
+        print &amp;quot;Hits for $our_page_id today: $hits{today}[$idx]\n&amp;quot;;
+        last;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Cumbersome. A much better layout would be a hash keyed on the page ID.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$hits{upto}{$page_id} = $hits_upto_sth-&amp;gt;fetchrow_array();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can directly access the data for a given page ID. If necessary, we can still list the hits in the same order they were read in by iterating through &lt;code&gt;@page_ids&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chomp($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    $hits{upto}{$page_id} = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $today);
+    $hits{today}{$page_id} = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $yesterday);
+    $hits{yesterday}{$page_id} = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_id, $start_of_30_days,
+                                       $end_of_30_days,);
+    $hits{monthly}{$page_id} = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;eliminate-unnecessary-variables&#34;&gt;Eliminate Unnecessary Variables&lt;/h3&gt;
+
+&lt;p&gt;Now that &lt;code&gt;%hits&lt;/code&gt; is no longer ordered by how it was read in, &lt;code&gt;$idx&lt;/code&gt; isn&amp;rsquo;t used much anymore. It&amp;rsquo;s only used to stick &lt;code&gt;$page_id&lt;/code&gt; onto the end of &lt;code&gt;@page_ids&lt;/code&gt;, but we can do that with &lt;code&gt;push&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is minor but little things build up to cause big messes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    chomp($page_id);
+    push @page_ids, $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    $hits{upto}{$page_id} = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $today);
+    $hits{today}{$page_id} = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $yesterday);
+    $hits{yesterday}{$page_id} = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_id, $start_of_30_days,
+                                       $end_of_30_days,);
+    $hits{monthly}{$page_id} = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;pull-logical-chunks-out-into-functions&#34;&gt;Pull Logical Chunks Out into Functions&lt;/h3&gt;
+
+&lt;p&gt;Our final refactoring is one of the most common and most useful.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s assume that we need to generate page counts somewhere else in the code. Rather than repeat the code to do this, we want to put it in a subroutine so it can be reused. One subroutine for each statement.&lt;/p&gt;
+
+&lt;p&gt;In order to do this, start by identifying the code that would go into the routine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+$hits{upto}{$page_id} = $hits_upto_sth-&amp;gt;fetchrow_array();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then wrap a subroutine around it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub hits_upto {
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    $hits{upto}{$page_id} = $hits_upto_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now look at all the variables used.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;$hits_upto_sth&lt;/code&gt; is a global (well, file-scoped lexical) and is defined entirely outside the function. We can keep using it in our subroutine in the same way we are now.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;$hits{upto}{$page_id}&lt;/code&gt; is receiving the result of the calculation. It contains the return value. So it goes outside the function to receive the return value. Where its assignment was, we put a &lt;code&gt;return&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub hits_upto {
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    return $hits_upto_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$page_id&lt;/code&gt; and &lt;code&gt;$start_date&lt;/code&gt; vary from call to call. These are our function arguments.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub hits_upto {
+    my($page_id, $start_date) = @_;
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    return $hits_upto_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, rename things in a more generic manner. This is a subroutine for calculating the number of hits up to a certain date. Instead of &lt;code&gt;$start_date&lt;/code&gt; which was specific to one calculation, we&amp;rsquo;d call it &lt;code&gt;$date&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub hits_upto {
+    my($page_id, $date) = @_;
+    $hits_upto_sth-&amp;gt;execute($page_id, $date);
+    return $hits_upto_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that&amp;rsquo;s our new subroutine, does the same thing as the original code. Then it&amp;rsquo;s a simple matter to use it in the code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $hits{upto}{$page_id} = hits_upto($page_id, $start_date);
+
+
+my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    chomp($page_id);
+    push @page_ids, $page_id;
+
+    $hits{upto}{$page_id}      = hits_upto($page_id, $start_date);
+    $hits{today}{$page_id}     = hits_daily($page_id, $today);
+    $hits{yesterday}{$page_id} = hits_daily($page_id, $yesterday);
+    $hits{monthly}{$page_id}   = hits_range($page_id, $start_of_30_days,
+                                                        $end_of_30_days,);
+}
+
+sub hits_upto {
+    my($page_id, $date) = @_;
+    $hits_upto_sth-&amp;gt;execute($page_id, $date);
+    return scalar $hits_upto_sth-&amp;gt;fetchrow_array();
+}
+
+sub hits_daily {
+    my($page_id, $date) = @_;
+    $hits_daily_sth-&amp;gt;execute($page_id, $date);
+    return scalar $hits_daily_sth-&amp;gt;fetchrow_array();
+}
+
+sub hits_range {
+    my($page_id, $start, $end) = @_;
+    $hits_range_sth-&amp;gt;execute($page_id, $start, $end);
+    return scalar $hits_range_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;undo&#34;&gt;Undo.&lt;/h3&gt;
+
+&lt;p&gt;Some may balk at putting that small of a snippet of code into a subroutine like that. There are definite performance concerns about adding four subroutine calls to a loop. But I&amp;rsquo;m not worried about that at all.&lt;/p&gt;
+
+&lt;p&gt;One of the beauties of Refactoring is that it&amp;rsquo;s reversible. Refactorings don&amp;rsquo;t change how the program works. We can reverse any of these refactorings and the code will work exactly the same. If a refactoring turns out to be a bad idea, undo it. Logging each refactoring in version control makes the job even easier.&lt;/p&gt;
+
+&lt;p&gt;So if it turns out moving the executes into their own functions causes a performance problem the change can easily be undone.&lt;/p&gt;
+
+&lt;h3 id=&#34;done&#34;&gt;Done?&lt;/h3&gt;
+
+&lt;p&gt;At this point, things are looking pretty nice. The code is well structured, readable, and efficient. The variables are sensibly named. The data is organized in a fairly flexible manner.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s good enough. This is not to say that there&amp;rsquo;s not more that could be done, but we don&amp;rsquo;t need to. And Refactoring is about doing as much redesign as you need instead of what you might need.&lt;/p&gt;
+
+&lt;h3 id=&#34;refactoring-and-the-swiss-army-knife&#34;&gt;Refactoring and the Swiss Army Knife&lt;/h3&gt;
+
+&lt;p&gt;As programmers we have a tendency towards over-design. We like to design our code to deal with any possible situation that might arise, since it was hard to change the design later. This is known as Big Design Up Front (BDUF). It&amp;rsquo;s like one of those &lt;a href=&#34;http://www.victorinox.com/newsite/en/produkte/neu/inhalt2.cfm?pid=1-6795-XLT&#34;&gt;enormous Swiss Army Knives with 50 functions&lt;/a&gt;. Most of the time all you need is &lt;a href=&#34;http://www.victorinox.com/newsite/en/produkte/neu/inhalt2.cfm?pid=2-2363&#34;&gt;a knife with something to open your beer with and then maybe pick your teeth afterwards&lt;/a&gt; but you never know. So you over-engineer because it&amp;rsquo;s hard to improve it later. If it never gets used then a lot of effort has been wasted.&lt;/p&gt;
+
+&lt;p&gt;Refactoring turns design on its ear. Now you can continually evolve your design as needed. There&amp;rsquo;s no longer a need to write for every possible situation up front so you can focus on just what you need right now. If you need more flexibility later, you can add that flexibility through refactoring. It&amp;rsquo;s like having a Swiss Army knife that you can add tools to as you need them.&lt;/p&gt;
+
+&lt;h3 id=&#34;further-reference&#34;&gt;Further Reference&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://groups.google.com/groups?th=11b4e3caaafb9849&amp;amp;seekm=20021005063711.GE15102%40ool-18b93024.dyn.optonline.net#link1&#34;&gt;The original thread on Fun With Perl&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;The &lt;a href=&#34;http://www.c2.com/cgi/wiki?WelcomeVisitors&#34;&gt;Portland Pattern Repository&lt;/a&gt; answers the question &amp;ndash; &lt;a href=&#34;http://www.c2.com/cgi/wiki?WhatIsRefactoring&#34;&gt;WhatIsRefactoring?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.amazon.com/exec/obidos/tg/detail/-/0201485672&#34;&gt;The Refactoring Book&lt;/a&gt; by &lt;a href=&#34;http://www.martinfowler.com&#34;&gt;Martin Fowler&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Taking Lessons From Traffic Lights</title>
+      <link>http://localhost:1313/pub/2001/05/22/trafficlights.html/</link>
+      <pubDate>Tue, 22 May 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/05/22/trafficlights.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;http://conferences.oreilly.com/oscon/&#34;&gt;O&amp;#39;Reilly Open Source Convention&lt;/a&gt;
+&lt;em&gt;Michael Schwern will be speaking at the &lt;a href=&#34;http://conferences.oreilly.com/oscon/&#34;&gt;O&amp;rsquo;Reilly Open Source Convention&lt;/a&gt; in San Diego, CA, July 23-27, 2001.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Excuse me, I&amp;rsquo;m going to ramble a bit about traffic lights as they relate to language design to see whether something interesting falls out.&lt;/p&gt;
+
+&lt;p&gt;I was riding my bike to work today and started thinking about the trouble we were having with string concatenation in Perl 6 &lt;a href=&#34;#1&#34;&gt;[1]&lt;/a&gt; and how the basic problem is that we&amp;rsquo;ve run out of ASCII characters. I briefly thought about Unicode, but it&amp;rsquo;s not nearly well-supported.&lt;/p&gt;
+
+&lt;p&gt;Then I stopped at a traffic light (the police in Belfast get annoyed by bikes blowing through lights, even at 2a.m. on an otherwise empty road. And they drive unmarked cars). Traffic lights convey their signals through color. I briefly thought it would be neat to convey Perl grammar via color, but that can&amp;rsquo;t be done for similar reasons to Unicode.&lt;/p&gt;
+
+&lt;h3 id=&#34;color-coding-vs-position&#34;&gt;Color Coding vs. Position&lt;/h3&gt;
+
+&lt;p&gt;The interesting thing about traffic lights is that the color is just for clarification. The real communication is through position. Stop on top, caution in middle, go at the bottom (some communities do this a bit differently, but it&amp;rsquo;s all locally consistent). This is important, because a large section of the population is color blind, but even if you saw a traffic light in black-and-white you could still make out the signals by their position.&lt;/p&gt;
+
+&lt;p&gt;If you ask anyone on the street what &amp;ldquo;stop&amp;rdquo; and &amp;ldquo;go&amp;rdquo; are on a traffic light, they&amp;rsquo;ll probably say &amp;lsquo;red&amp;rsquo; and &amp;lsquo;green&amp;rsquo; without even thinking. But if you asked them to draw a traffic light they&amp;rsquo;d be sure to put the red on top and green on bottom. It&amp;rsquo;s interesting that although we respond strongly to color cues, we subconsciously remember the positional cues. It&amp;rsquo;s especially interesting given that we&amp;rsquo;re never actually taught &amp;ldquo;go is on the bottom&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s a thin analogy to syntax highlighting of code, where the color is just there to highlight and position conveys the actual meaning.&lt;/p&gt;
+
+&lt;p&gt;This idea of having redundant syntax that exists to merely make something easier to remember is perhaps one we can explore.&lt;/p&gt;
+
+&lt;h3 id=&#34;sequence&#34;&gt;Sequence&lt;/h3&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;hr /&gt;
+O&amp;#39;Reilly Open Source Convention Featured Speaker&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;http://conferences.oreillynet.com/cs/os2001/view/e_spkr/324&#34;&gt;Michael Schwern&lt;/a&gt; will be presenting four sessions at the &lt;a href=&#34;http://conferences.oreilly.com/oscon/&#34;&gt;O&#39;Reilly Open Source Convention&lt;/a&gt; in San Diego, CA, July 23-27, 2001. Rub elbows with Open Source leaders while relaxing on the beautiful Sheraton San Diego Hotel and Marina waterfront. For more information, visit our &lt;a href=&#34;http://conferences.oreilly.com/oscon/&#34;&gt;conference home page&lt;/a&gt;.&lt;/strong&gt;&lt;/p&gt;
+&lt;hr /&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Now, color and position aren&amp;rsquo;t the only tools a traffic light has. Order is another. Stop, Go, Caution, Stop, Go, Caution &amp;hellip; that&amp;rsquo;s the way it goes. Again, most people know this subconsciously even if they&amp;rsquo;ve never been taught it or ever thought about it. It&amp;rsquo;s a pattern that&amp;rsquo;s picked up on and expected. Go follows Stop. Caution precedes Stop. If a light were to suddenly jump from Go to Stop, drivers would be momentarily confused and indecisive.&lt;/p&gt;
+
+&lt;p&gt;The lesson there is simple: be consistent.&lt;/p&gt;
+
+&lt;p&gt;So while order doesn&amp;rsquo;t convey any extra information, its consistency can be important. I experienced this when I came to Belfast. The lights here go: Stop, Caution, Get Ready, Go where &amp;ldquo;Get Ready&amp;rdquo; is conveyed by a combination of red and yellow. Very useful (especially if you drive a stick or have toe-clips on your bike and need a moment to get ready) but a bit confusing the first few times.&lt;/p&gt;
+
+&lt;p&gt;This directly contradicts the above lesson, eschew consistency if it&amp;rsquo;s going to add a useful feature. People may be taken back the first few times, but the utility will shine through in the long run. This could be considered a learning curve.&lt;/p&gt;
+
+&lt;h3 id=&#34;combinations&#34;&gt;Combinations&lt;/h3&gt;
+
+&lt;p&gt;Which brings us to another tool: combinations. Although rarely done, you can squeeze more meaning out a set of lights by combining them. Just like a three-bit number. The red-yellow combination is the only one I can think of, and probably rightly so. While there&amp;rsquo;s still three more combinations available, they would rapidly get confusing if used.&lt;/p&gt;
+
+&lt;p&gt;Perhaps the lesson is: Just because you can wedge more meaning in doesn&amp;rsquo;t mean you should.&lt;/p&gt;
+
+&lt;p&gt;The final method of communication is flashing. Flashing red is like a stop sign. Flashing yellow, proceed with caution. I don&amp;rsquo;t think flashing green is ever used or what it could mean &lt;a href=&#34;#2&#34;&gt;[2]&lt;/a&gt;. Most flashing lights are there to draw attention. Emergency vehicles, gaudy advertisements, navigation lights. Flashing signals are deliberately jarring. They&amp;rsquo;re also rarely used in combination with the normal signals. This is very important. The normal confusion associated with a break in the pattern isn&amp;rsquo;t there since the normal pattern is totally absent. The meaning of the flashing signals is close to their normal solid meaning, which allows most drivers to know what they mean without thinking about it.&lt;/p&gt;
+
+&lt;p&gt;Flashing signals are also rather rare. They&amp;rsquo;re used at times when there&amp;rsquo;s few cars on the road (late at night) or on roads that carry little traffic.&lt;/p&gt;
+
+&lt;p&gt;The lesson there, if you&amp;rsquo;re going to be inconsistent, is make sure you don&amp;rsquo;t do it in a way that will mix with the normal pattern of things. Think about how the inconsistent feature will be used and make sure it will be used in spots that are distanced from normal use. Also, the potential uses of the inconsistent feature should be relatively rare.&lt;/p&gt;
+
+&lt;p&gt;As an aside, when I was young and on vacation with my family, we visited my uncle in the middle of the Mohave Desert. He worked at a borax mine (yep, mining for soap). Aside from the 40-foot-high dump trucks, the thing I remember most is the speed-limit signs. Has to be 15 years ago and I still remember this. The speed limit was &amp;ldquo;12 &lt;sup&gt;1&lt;/sup&gt;&amp;frasl;&lt;sub&gt;2&lt;/sub&gt; MPH.&amp;rdquo; Why? Not because you&amp;rsquo;ll get pulled over if you go 13 MPH, but so you&amp;rsquo;ll take notice. Consistency can ease understanding, but it can also encourage complacency.&lt;/p&gt;
+
+&lt;p&gt;Back to flashing. Although it will vary from light to light, a single light will only use one frequency. They could use more. In fact, an almost infinite amount of information could be conveyed by various frequencies of flashing. This technique is in active use today by most Navies of the world as a method of secure, short-range ship-to-ship communication. Powerful signal lamps with shutters are used to flash Morse code between ships. More commonly, FM (Frequency Modulation) radio is essentially just a big flashing traffic light.&lt;/p&gt;
+
+&lt;p&gt;Traffic lights chose to use only one frequency. Why? Simplicity. There is flashing and there is not flashing. That&amp;rsquo;s it. Easy to remember, but more importantly, easy (and quick) to recognize. Very important when a car is approaching at 65 mph.&lt;/p&gt;
+
+&lt;p&gt;There comes a point when you&amp;rsquo;re cutting the syntax too fine. When the distinctions between one meaning and another take too much careful examination to distinguish. A good example being the string concat proposals that wanted to use certain whitespace combinations to distinguish, or special uses of quotes. Perl 6 must be careful of this sort of thing as we strive to shove more and more information into just 95 lights (the set of printable ASCII characters). There&amp;rsquo;s a reason the Navy employs highly trained men on those signal lamps.&lt;/p&gt;
+
+&lt;h3 id=&#34;sound-as-syntax-or-grammar&#34;&gt;Sound as Syntax or Grammar&lt;/h3&gt;
+
+&lt;p&gt;Finally, there&amp;rsquo;s sound. I lived in Pittsburgh for a while near a school for blind children and a clinic for the blind. The major intersections for a few blocks around all had the normal walk-don&amp;rsquo;t-walk pedestrian signals, but these are a bit different. Rather than the usual Walk with the green, Don&amp;rsquo;t Walk with the red, it would be Don&amp;rsquo;t Walk in all directions. When Walk came on, all lights would go red and pedestrians could cross in any direction.&lt;/p&gt;
+
+&lt;p&gt;This was accompanied by a distinct, very loud &amp;ldquo;koo-koo&amp;rdquo; sound to let the blind know it was time to cross. Also, there was a speaker at each corner to give them something to walk toward.&lt;/p&gt;
+
+&lt;p&gt;Sound as syntax. It would be interesting to use sound as grammar, especially since we already have a grammar to represent sound (i.e. sheet music). However, I don&amp;rsquo;t know about you, but I&amp;rsquo;m not about to start dragging around a Moog with me to code Perl &amp;hellip; though playing chords to represent code would be neat. Imagine the twisted noises coding a particularly nasty regex might produce.&lt;/p&gt;
+
+&lt;p&gt;Rambling along this thread, it has been reported that London.pm recently attempted to encode DeCSS as an interpretive dance. Perhaps DeCSS will surpass the Tarentella as the &amp;ldquo;Forbidden Dance&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;There are also some attempts at translating Perl code to music. I think someone hooked Perl code run through the DNA module into something that generates music from genetic code. But I digress.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-function-of-traffic-lights&#34;&gt;The Function of Traffic Lights&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s think about what traffic lights are used for. Well, they&amp;rsquo;re there to control the flow of traffic. Theoretically, you&amp;rsquo;d want to use them to maximize use of the available roads and get the most cars to their destinations as quickly and efficiently as possible. You&amp;rsquo;d do things like time the lights down a stretch of road so someone going the speed limit never hit a red light. You&amp;rsquo;d want to keep the lights green as long as possible on the major roads at intersections. You&amp;rsquo;ll want sensors to detect when no car is waiting for a red so it can keep the other side green longer. By doing this you&amp;rsquo;ll get everyone coordinated and moving about quickly.&lt;/p&gt;
+
+&lt;p&gt;But then traffic lights can be used for the exact opposite. They can be used to deliberately slow and minimize traffic, say around a school or in a shopping district with lots of pedestrians. Lights will be deliberately set to prevent drivers from going continuously down a road, making them stop often and keeping their awareness up (but perhaps their frustration and gasoline consumption as well). All sides of an intersection can be stopped at once to allow pedestrians to pass safely. Flashing yellows can be employed to warn of a school zone. Lights can be placed at dangerous intersections (or ones where children are known to be about) even though drivers should be able to self-regulate.&lt;/p&gt;
+
+&lt;p&gt;So the same device and features can be combined and used in different ways to produce contradictory effects. Perl 6 must have this nature, as is clearly evident from the wildly differing and contradictory RFCs presented, often in direct opposition to each other. We should design Perl features to be like traffic lights. The same feature can be used for different and contradictory effects. This will ease the pressure to squeeze more and more grammar out of our limited syntax possibilities.&lt;/p&gt;
+
+&lt;p&gt;Oddly enough, varying the number of traffic lights can effect efficiency. By over-regulating you can choke off traffic. Constant fiddling with the setups and timings, trying to control each and every intersection to maximize throughput leads to grid lock, zero throughput. The exact opposite of what was intended.&lt;/p&gt;
+
+&lt;p&gt;We are in danger of doing just that. By wanting to correct, streamline and optimize each bump and snag in Perl we may cross some imaginary line and have syntactical grid lock where the language design descends into a morass of continual minor adjustment. By backing off we can often find a much more sweeping solution than just putting up lights on each corner. A perfect example is Larry&amp;rsquo;s &amp;ldquo;module&amp;rdquo; solution to the Perl 6 vs. Perl 5 interpretation (although it still needs a few extra lights here and there to make it really work).&lt;/p&gt;
+
+&lt;h3 id=&#34;life-without-traffic-lights&#34;&gt;Life without Traffic Lights&lt;/h3&gt;
+
+&lt;p&gt;There is an alternative to all this. I&amp;rsquo;ve been working in Ireland for the past three months, and like most Americans I have met that peculiar English invention, the roundabout. &lt;a href=&#34;#3&#34;&gt;[3]&lt;/a&gt; Three, four, five, even six-way intersections are handled seamlessly by this apparently anarchistic piece of the transportation landscape. All without any traffic lights.&lt;/p&gt;
+
+&lt;p&gt;First few times, I fearfully creeped across, pushing my bike along as a pedestrian, too frightened to try and enter the unending flow of traffic. After a while, and asking around a bit, the underlying rule became obvious: yield to traffic in the circle. With this revelation I was able to zip through confidently. I rather like them now and appreciate how they keep the traffic flowing even for the most complicated intersections. The apparent complexity of the details (lots of cars zipping about, merging and leaving from many points) all stems from a single rule.&lt;/p&gt;
+
+&lt;p&gt;Contrast this with the typical American four-way intersection. Roads placed at right angles, traffic lights poised in each direction. Cars jerk forward hesitantly and the system rapidly breaks down under heavy traffic. Initially easier to learn, anyone can understand a traffic light, but the devilish complexity of right-of-way and subtleties of making a proper left turn betray that what seems at first simple, might actually be clunky in the long run. And that which seems complex and frightening will yield its underlying simplicity with time and experience.&lt;/p&gt;
+
+&lt;p&gt;So the lesson there, aside from &amp;ldquo;roundabouts are neat&amp;rdquo; is about learning curves and the wisdom of focusing design on &amp;ldquo;beginners.&amp;rdquo; While effort must be made to flatten the learning curve, don&amp;rsquo;t short-change the ultimate goal just to make it easier initially. After all, we are only beginners for so long. &lt;a href=&#34;#4&#34;&gt;[4]&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;foot-notes&#34;&gt;Foot Notes&lt;/h3&gt;
+
+&lt;p&gt;&lt;span id=&#34;1&#34;&gt;[1]&lt;/span&gt; It has been decided that &lt;code&gt;.&lt;/code&gt; will be used instead of &lt;code&gt;-&amp;gt;&lt;/code&gt; for method calls in Perl 6. This leaves the problem of how to concatenate strings. Everyone and their dog seemed to have a proposal on the perl6-language mailing list, all of them a bit contrived as we&amp;rsquo;ve run out of characters.&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;2&#34;&gt;[2]&lt;/span&gt; It has been reported by two sources that there is a flashing green light outside of Boston that meant &amp;ldquo;this light will rarely go red.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;3&#34;&gt;[3]&lt;/span&gt; Some may call them &amp;ldquo;traffic circles.&amp;rdquo; Most Americans know them best from &amp;ldquo;National Lampoon&amp;rsquo;s European Vacation&amp;rdquo; (&amp;ldquo;Look kids! Big Ben, Parliament!&amp;rdquo;) They&amp;rsquo;re used in a couple places in the U.S.: Oregon, Florida, New England. &amp;ldquo;&lt;a href=&#34;http://www.engr.orst.edu/~taekrtha/round.html%0A&#34;&gt;Modern Roundabouts&lt;/a&gt;&amp;rdquo; gives a nice explanation and visualization from an American point-of-view (i.e. the right side of the road).&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;4&#34;&gt;[4]&lt;/span&gt; Of course, this can get a little out of hand: &amp;ldquo;&lt;a href=&#34;http://www.swindonweb.com/life/lifemagi0.htm%0A&#34;&gt;Swindon&amp;rsquo;s Magic Roundabout&amp;rdquo;&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

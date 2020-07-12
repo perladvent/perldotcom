@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sleep on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/sleep/</link>
+    <description>Recent content in Sleep on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 26 Apr 2016 20:42:41 +0000</lastBuildDate>
+    <atom:link href="/tags/sleep/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Fixing a sluggish Linux after suspend-resume</title>
+      <link>http://localhost:1313/article/fixing-a-sluggish-linux-after-suspend-resume/</link>
+      <pubDate>Tue, 26 Apr 2016 20:42:41 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/fixing-a-sluggish-linux-after-suspend-resume/</guid>
+      <description>
+
+&lt;p&gt;Occasionally when I suspend my Linux laptop (sleep mode) and later resume working the machine is sluggish. Perceptible pauses occur every time I change applications, scrolling is fractured and text edits are delayed. Monitoring tools like &lt;a href=&#34;http://hisham.hm/htop/&#34;&gt;htop&lt;/a&gt; and &lt;a href=&#34;http://guichaz.free.fr/iotop/&#34;&gt;iotop&lt;/a&gt; give no indication of system resources being under heavy load. I can close all applications and the sluggishness persists.&lt;/p&gt;
+
+&lt;p&gt;Apparently this is a bug where the CPU frequency has been pinned to a very low level. Linux uses CPU frequency scaling to save power; when the machine is resumed, it should start increasing the CPU frequency to meet the demands of the system, but it doesn&amp;rsquo;t always do that. A reboot fixes the problem, but who has time for that? The good news is that it&amp;rsquo;s an easy fix with the &lt;code&gt;cpupower&lt;/code&gt; utility.&lt;/p&gt;
+
+&lt;h3 id=&#34;get-the-cpupower-utility&#34;&gt;Get the cpupower utility&lt;/h3&gt;
+
+&lt;p&gt;You may have &lt;code&gt;cpupower&lt;/code&gt; already installed, but if not it&amp;rsquo;s easy to get with via a package manager. On Ubuntu &lt;a href=&#34;http://manpages.ubuntu.com/manpages/trusty/man1/cpupower.1.html&#34;&gt;cpupower&lt;/a&gt; is part of the &lt;code&gt;linux-tools-common&lt;/code&gt; package. You can install it at the terminal with this command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo apt-get install linux-tools-common
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On RHEL based distributions like Fedora and CentOS, &lt;code&gt;cpupower&lt;/code&gt; is bundled with the &lt;code&gt;kernel-tools&lt;/code&gt; package. On CentOS and older Fedoras you can install it with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum install kernel-tools
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On newer Fedoras you can use &lt;code&gt;dnf&lt;/code&gt; to install it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf install kernel-tools
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;switch-back-to-performance-mode&#34;&gt;Switch back to performance mode&lt;/h3&gt;
+
+&lt;p&gt;CPU frequency scaling for modern Intel CPUs is provided by the &lt;a href=&#34;https://www.kernel.org/doc/Documentation/cpu-freq/intel-pstate.txt&#34;&gt;intel_pstate driver&lt;/a&gt;. It supports two modes (called &amp;ldquo;governors&amp;rdquo;) of operation: performance and powersave. Performance mode is not necessarily &amp;ldquo;all guns blazing&amp;rdquo; performance. Likewise, powersave doesn&amp;rsquo;t cripple your system either. Both are intelligent governors that responds to system loads by scaling the CPU frequency. I&amp;rsquo;ve found that switching governors immediately resolves my sluggish system issue.&lt;/p&gt;
+
+&lt;p&gt;To confirm which governors are available, I use &lt;code&gt;cpupower&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpupower frequency-info --governors
+analyzing CPU 0:
+performance powersave
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here you can see my system printed both &amp;ldquo;performance&amp;rdquo; and &amp;ldquo;powersave&amp;rdquo; as expected. To switch to the performance governor, I can use the following command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo cpupower frequency-set --governor performance
+Setting cpu: 0
+Setting cpu: 1
+Setting cpu: 2
+Setting cpu: 3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;frequency-info&lt;/code&gt; subcommand will show me which governor is active:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpupower frequency-info
+analyzing CPU 0:
+  driver: intel_pstate
+  CPUs which run at the same hardware frequency: 0
+  CPUs which need to have their frequency coordinated by software: 0
+  maximum transition latency: 0.97 ms.
+  hardware limits: 500 MHz - 2.70 GHz
+  available cpufreq governors: performance, powersave
+  current policy: frequency should be within 500 MHz and 2.70 GHz.
+                  The governor &amp;quot;performance&amp;quot; may decide which speed to use
+                  within this range.
+  current CPU frequency is 2.28 GHz.
+  boost state support:
+    Supported: yes
+    Active: yes
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &amp;ldquo;current policy&amp;rdquo; section describes the active governor, which in my case is showing the performance governor as active.&lt;/p&gt;
+
+&lt;h3 id=&#34;cpupower-resources&#34;&gt;cpupower resources&lt;/h3&gt;
+
+&lt;p&gt;The Redhat Linux documentation includes an CPU frequency setup &lt;a href=&#34;https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Power_Management_Guide/cpufreq_setup.html#enabling_a_cpufreq_governor&#34;&gt;guide&lt;/a&gt; with instruction on how to load additional drivers. The Arch Linux CPU frequency scaling &lt;a href=&#34;https://wiki.archlinux.org/index.php/CPU_Frequency_Scaling&#34;&gt;documentation&lt;/a&gt; contains lots of useful information including which files control frequency settings.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;cpupower&lt;/code&gt; manpage is pretty sparse. Once you have installed &lt;code&gt;cpupower&lt;/code&gt; try running the &lt;code&gt;help&lt;/code&gt; command to get started:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpupower help
+Usage:  cpupower [-d|--debug] [-c|--cpu cpulist ] &amp;lt;command&amp;gt; [&amp;lt;args&amp;gt;]
+Supported commands are:
+        frequency-info
+        frequency-set
+        idle-info
+        idle-set
+        set
+        info
+        monitor
+        help
+
+Not all commands can make use of the -c cpulist option.
+
+Use &#39;cpupower help &amp;lt;command&amp;gt;&#39; for getting help for above commands.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

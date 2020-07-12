@@ -1,0 +1,78 @@
+######################
+# ProcessTransaction #
+######################
+# Code to  process the transaction
+# A more robust system would log each and every transaction
+# We just display the results
+# 
+sub processTransaction {
+  my ($name, $value, $data, @vars);
+  debug("+processTransaction");
+ 
+  # This code looks for a file called "call_pfpro.pl"
+  # if it is found, it will load it, redefining the call_pfpro
+  # subroutine.  Thus, it is extremely simple way to override the
+  # simulator with real code.
+
+  # skip if simulator explictly requested
+  unless ($config->{HOST} =~ /simulate/) {      
+     require "call_pfpro.pl" if -e "call_pfpro.pl";
+  }
+
+  # We will create a local copy of the transaction structure
+  my $ltrans;
+  foreach $name (keys %$trans) {
+    next if $name =~ /_/;      # _VAR doesn't get passed
+    $ltrans->{$name} = $trans->{$name};
+  }
+
+  # Translate the verbose transaction types to codes
+  $ltrans->{TRXTYPE} = $trxtypetranslate->{$ltrans->{TRXTYPE}};
+
+  # support for F (force voice transactions)
+  # Munge ORIGID into AUTHCODE
+  if ($ltrans->{TRXTYPE} eq 'F') {
+    $ltrans->{AUTHCODE} = $ltrans->{ORIGID};
+    undef $ltrans->{ORIGID};
+  }
+  
+  # create the data stream from the input paramaters
+  my $data = "USER=$config->{USER}&PWD=$config->{PWD}&";
+
+  foreach $name (keys %$ltrans) {
+    $data .= "$name=$ltrans->{$name}&";
+  }
+  chop $data;
+
+  debug($data);
+
+  # clear the output display
+  foreach (keys %$results) {
+    $results->{$_} = '';
+  }
+
+  # Show user the completed transaction request
+  $trans->{_PARAM} = $data;   
+
+
+  my $result = call_pfpro($config->{HOST},
+                           $config->{PORT},
+                           $data,
+                           30,          # timeout
+                           $config->{P_ADDR},
+                           $config->{P_PORT},
+                           $config->{P_LOGON},
+                           $config->{P_PASSWORD} );
+
+  # Create the results list (disply them as a side effect)
+  $results->{RESP} = $result;
+  (@vars) = split "&", $result;
+  foreach (@vars) {
+    ($name, $value) = split "=";
+    $results->{$name} = $value;
+  }
+
+  debug("-processTransaction");
+}
+
+

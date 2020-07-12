@@ -18,7 +18,7 @@
 ℞ 9: Unicode named sequences
 ----------------------------
 
-Unicode includes the feature of [named character sequences](http://www.unicode.org/reports/tr34/), which combine multiple Unicode characters behind a single name. The [charnames](http://perldoc.perl.org/charnames.html) pragma allows the use of these named sequences in literals, just as it allows [the use of Unicode named characters in literals](/pub/2012/04/perlunicook-unicode-named-characters.html).
+Unicode includes the feature of [named character sequences](http://www.unicode.org/reports/tr34/), which combine multiple Unicode characters behind a single name. The [charnames]({{</* perldoc "charnames" */>}}) pragma allows the use of these named sequences in literals, just as it allows [the use of Unicode named characters in literals](/pub/2012/04/perlunicook-unicode-named-characters.html).
 
 In Perl, these named character sequences look just like character names but return multiple codepoints. Notice the `%vx` vector-print behavior of `printf`:
 

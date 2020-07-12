@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Process on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/process/</link>
+    <description>Recent content in Process on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 04 Nov 2015 13:03:49 +0000</lastBuildDate>
+    <atom:link href="/tags/process/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Run only one instance of a program at a time</title>
+      <link>http://localhost:1313/article/2/2015/11/4/Run-only-one-instance-of-a-program-at-a-time/</link>
+      <pubDate>Wed, 04 Nov 2015 13:03:49 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/2/2015/11/4/Run-only-one-instance-of-a-program-at-a-time/</guid>
+      <description>
+
+&lt;p&gt;Recently I wanted to schedule a Perl app to run every minute on a server, but if an instance of the app was already running, it should exit and do nothing. This is a common problem and I was able to solve it with a lockfile. Let&amp;rsquo;s see how to use lockfiles in Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;lockfiles-you-say&#34;&gt;Lockfiles you say?&lt;/h3&gt;
+
+&lt;p&gt;Most operating systems support file locking - it&amp;rsquo;s an essential tool to prevent multiple processes updating a file at the same time and causing data loss. Processes obtain file locks when they are accessing a file to prevent other processes changing them, and release the file lock when they&amp;rsquo;re done, freeing the file to be used by other processes again.&lt;/p&gt;
+
+&lt;p&gt;Programs can use the lock file principle to prevent multiple instances of themselves running at the same time. When the program starts it tries to lock the lockfile, if successful it executes the program, else it exits. When the program process ends, any locks it obtained are removed by the OS. You may have seen lockfiles before, they are usually ordinary files with a &lt;code&gt;.lock&lt;/code&gt; extension.&lt;/p&gt;
+
+&lt;h3 id=&#34;file-locking-in-perl&#34;&gt;File locking in Perl&lt;/h3&gt;
+
+&lt;p&gt;Perl provides the &lt;a href=&#34;https://perldoc.perl.org/functions/flock.html&#34;&gt;flock&lt;/a&gt; function for file locking. It takes a filehandle and a constant value for the lock type. So to get an exclusive lock on a file, I could do:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;gt;&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;app.lock&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+flock $file, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Unable to lock file $!&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;# we have the lock&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code starts by opening a write filehandle to the file &lt;code&gt;app.lock&lt;/code&gt;. If successful, it attempts to get an exclusive lock on the file by calling flock with the number 2. An exclusive lock means no other process can access the file whilst the lock is active. Remembering the constant values for lock types can be a pain, so helpfully the &lt;a href=&#34;https://metacpan.org/pod/Fcntl&#34;&gt;Fcntl&lt;/a&gt; module will export constant names if you ask nicely. I&amp;rsquo;ll update the code to do that:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Fcntl &lt;span style=&#34;color:#e6db74&#34;&gt;qw(:flock)&lt;/span&gt;;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;gt;&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;app.lock&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+flock $file, LOCK_EX &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Unable to lock file $!&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;# we have the lock&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code does the same thing as before but we don&amp;rsquo;t need to remember the constant value for the lock type (LOCK_EX == exclusive lock). Note there is no need to unlock the file - when the program exits, the lock will be removed automatically.&lt;/p&gt;
+
+&lt;h3 id=&#34;non-blocking-flock&#34;&gt;Non-blocking flock&lt;/h3&gt;
+
+&lt;p&gt;So far so good but we have a problem. If the file is locked, &lt;code&gt;flock&lt;/code&gt; will block and keep our program waiting around until the lock is removed. I want is the program to exit immediately if it can&amp;rsquo;t obtain the lock. The only way to check if a file is locked is with &lt;code&gt;flock&lt;/code&gt; though! Fortunately the &lt;code&gt;flock&lt;/code&gt; developers had considered this issue, and I can pass an extra argument to indicate I want a non-blocking lock.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Fcntl &lt;span style=&#34;color:#e6db74&#34;&gt;qw(:flock)&lt;/span&gt;;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;gt;&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;app.lock&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+flock $file, LOCK_EX&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;LOCK_NB &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Unable to lock file $!&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;# we have the lock&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve added &lt;code&gt;|LOCK_NB&lt;/code&gt; to the flock arguments and now it will return false immediately if it cannot obtain an exclusive lock.This provides the non-blocking behavior I need.&lt;/p&gt;
+
+&lt;h3 id=&#34;testing-it-out&#34;&gt;Testing it out&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m going to put this locking code into a quick script so I can test the lock functionality:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Fcntl &lt;span style=&#34;color:#e6db74&#34;&gt;qw(:flock)&lt;/span&gt;;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;gt;&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;app.lock&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+flock $file, LOCK_EX&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;LOCK_NB &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Unable to lock file: $!&amp;#34;&lt;/span&gt;;
+
+sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ll save the script as &lt;code&gt;sleep60.pl&lt;/code&gt; and test it at the terminal:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ chmod &lt;span style=&#34;color:#ae81ff&#34;&gt;700&lt;/span&gt; sleep60&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;sleep60&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;
+[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#ae81ff&#34;&gt;21505&lt;/span&gt;
+$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;sleep60&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+Unable to lock file Resource temporarily unavailable at &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;sleep60&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl line &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Looking good! I tried to run the script twice and the second time, the system printed the expected error message and exited.&lt;/p&gt;
+
+&lt;h3 id=&#34;avoiding-external-files&#34;&gt;Avoiding external files&lt;/h3&gt;
+
+&lt;p&gt;Using an external file feels kind-of-dirty. What I&amp;rsquo;d really like to do is tidy up by deleting the lockfile once the program has finished. However unlocking and deleting the file involves extra steps which may introduce a &lt;a href=&#34;https://en.wikipedia.org/wiki/Race_condition&#34;&gt;race condition&lt;/a&gt;. Instead of deleting the file, what if we never created it? One way to do this is to use the &lt;a href=&#34;http://perltricks.com/article/24/2013/5/11/Perl-tokens-you-should-know&#34;&gt;__DATA__&lt;/a&gt; filehandle, like so:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Fcntl &lt;span style=&#34;color:#e6db74&#34;&gt;qw(:flock)&lt;/span&gt;;
+flock DATA, LOCK_EX&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;LOCK_NB &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Unable to lock file $!&amp;#34;&lt;/span&gt;;
+
+sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;);
+__DATA__&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This version of the script opens a lock on the &lt;code&gt;DATA&lt;/code&gt; filehandle and creates no external files. Mark Jason Dominus &lt;a href=&#34;http://perl.plover.com/yak/flock/samples/slide006.html&#34;&gt;showed&lt;/a&gt; this ingenious trick years ago. Another trick Mark showed was to open the lockfile on the program file itself:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Fcntl &lt;span style=&#34;color:#e6db74&#34;&gt;qw(:flock)&lt;/span&gt;;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;our&lt;/span&gt; $file, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, $0 &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+flock $file, LOCK_EX&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;LOCK_NB &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Unable to lock file $!&amp;#34;&lt;/span&gt;;
+
+sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This frees up &lt;code&gt;DATA&lt;/code&gt; and has the added benefit that the code can be exported by a module (by using &lt;code&gt;our&lt;/code&gt; instead of &lt;code&gt;my&lt;/code&gt;). Note that the &lt;code&gt;open&lt;/code&gt; arguments have been changed to use a read-only filehandle to avoid truncating the source code of the program! If you need this behavior, you can implement it yourself as shown above, or use my module &lt;a href=&#34;https://metacpan.org/pod/IPC::Lockfile&#34;&gt;IPC::Lockfile&lt;/a&gt;, which will do it for you. If you need more refined lockfile functionality, have a look at &lt;a href=&#34;https://metacpan.org/pod/Sys::RunAlone&#34;&gt;Sys::RunAlone&lt;/a&gt; which uses the same trick (thanks to &lt;a href=&#34;https://metacpan.org/author/BOOK&#34;&gt;BooK&lt;/a&gt; for the reference). There are also plenty of other options on &lt;a href=&#34;https://metacpan.org/search?size=20&amp;amp;q=lockfile&amp;amp;search_type=modules&#34;&gt;CPAN&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; &lt;em&gt;added Sys::RunAlone reference - 2015-11-28.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

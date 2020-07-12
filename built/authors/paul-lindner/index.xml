@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Paul Lindner on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/paul-lindner/</link>
+    <description>Recent content in Paul Lindner on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 20 Feb 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/paul-lindner/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Preventing Cross-site Scripting Attacks</title>
+      <link>http://localhost:1313/pub/2002/02/20/css.html/</link>
+      <pubDate>Wed, 20 Feb 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/02/20/css.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;The cross-site scripting attack is one of the most common, yet overlooked, security problems facing web developers today. A web site is vulnerable if it displays user-submitted content without checking for malicious script tags.&lt;/p&gt;
+
+&lt;p&gt;Luckily, Perl and mod_perl provide us with easy solutions to this problem. We highlight these built-in solutions and also a introduce a new mod_perl module: &lt;em&gt;Apache::TaintRequest&lt;/em&gt;. This module helps you secure mod_perl applications by applying perl&amp;rsquo;s powerful &amp;ldquo;tainting&amp;rdquo; rules to HTML output.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-is-cross-site-scripting&#34;&gt;What is &amp;ldquo;Cross-Site Scripting&amp;rdquo;?&lt;/h3&gt;
+
+&lt;p&gt;Lately the news has been full of reports on web site security lapses. Some recent headlines include the following grim items: &lt;a href=&#34;http://news.cnet.com/news/0-1003-200-7764433.html&#34;&gt;Security problems open Microsoft&amp;rsquo;s Wallet&lt;/a&gt;, &lt;a href=&#34;http://news.cnet.com/news/0-1007-200-4030388.html&#34;&gt;Schwab financial site vulnerable to attack&lt;/a&gt;, or &lt;a href=&#34;http://techupdate.zdnet.com/techupdate/stories/main/0,14179,2808729,00.html&#34;&gt;New hack poses threat to popular Web services&lt;/a&gt;. In all these cases the root problem was caused by a &lt;em&gt;Cross-Site Scripting&lt;/em&gt; attack. Instead of targeting holes in your server&amp;rsquo;s operating system or web server software, the attack works directly against the users of your site. It does this by tricking a user into submitting web scripting code (JavaScript, Jscript, etc.) to a dynamic form on the targeted web site. If the web site does not check for this scripting code it may pass it verbatim back to the user&amp;rsquo;s browser where it can cause all kinds of damage.&lt;/p&gt;
+
+&lt;p&gt;Consider the following URL:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;http://www.example.com/search.pl?text=&amp;lt;script&amp;gt;alert(document.cookie)&amp;lt;/script&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;If an attacker can get us to select a link like this,and the Web application does not validate input, then our browser will pop up an alert showing our current set of cookies.This particular example is harmless; an attacker can do much more damage, including stealing passwords, resetting your home page, or redirecting you to another Web site.&lt;/p&gt;
+
+&lt;p&gt;Even worse, you might not even need to select the link for this to happen. If the attacker can make your application display a chunk of html, you&amp;rsquo;re in trouble. Both the &lt;strong&gt;IMG&lt;/strong&gt; and &lt;strong&gt;IFRAME&lt;/strong&gt; tags allow for a new URL to load when html is displayed. For example the following HTML chunk is sent by the &lt;a href=&#34;http://www.cert.org/incident_notes/IN-2001-14.html&#34;&gt;BadTrans&lt;/a&gt; Worm. This worm uses the load-on-view feature provided by the IFRAME tag to infect systems running Outlook and Outlook Express.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  --====_ABC1234567890DEF_====
+  Content-Type: multipart/alternative;
+           boundary=&amp;quot;====_ABC0987654321DEF_====&amp;quot;
+
+  --====_ABC0987654321DEF_====
+  Content-Type: text/html;
+           charset=&amp;quot;iso-8859-1&amp;quot;
+  Content-Transfer-Encoding: quoted-printable
+
+
+  &amp;lt;HTML&amp;gt;&amp;lt;HEAD&amp;gt;&amp;lt;/HEAD&amp;gt;&amp;lt;BODY bgColor=3D#ffffff&amp;gt;
+  &amp;lt;iframe src=3Dcid:EA4DMGBP9p height=3D0 width=3D0&amp;gt;
+  &amp;lt;/iframe&amp;gt;&amp;lt;/BODY&amp;gt;&amp;lt;/HTML&amp;gt;
+  --====_ABC0987654321DEF_====--
+
+  --====_ABC1234567890DEF_====
+  Content-Type: audio/x-wav;
+           name=&amp;quot;filename.ext.ext&amp;quot;
+  Content-Transfer-Encoding: base64
+  Content-ID: &amp;lt;EA4DMGBP9p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This particular example results in executable code running on the target computer. The attacker could just as easily insert HTML using the URL format described earlier, like this:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;iframe src=&amp;quot;http://www.example.com/search.pl?text=&amp;lt;script&amp;gt;alert(document.cookie)&amp;lt;/script&amp;gt;&amp;quot;&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The &amp;ldquo;cross-site&amp;rdquo; part of &amp;ldquo;cross-site scripting&amp;rdquo; comes into play when dealing with the web browser&amp;rsquo;s internal restrictions on cookies. The JavaScript interpreter built into modern web browsers only allows the originating site to access it&amp;rsquo;s own private cookies. By taking advantage of poorly coded scripts the attacker can bypass this restriction.&lt;/p&gt;
+
+&lt;p&gt;Any poorly coded script, written in Perl or otherwise, is a potential target. The key to solving cross-site scripting attacks is to never, ever trust data that comes from the web browser. Any input data should be considered guilty unless proven innocent.&lt;/p&gt;
+
+&lt;h3 id=&#34;solutions&#34;&gt;Solutions&lt;/h3&gt;
+
+&lt;p&gt;There are a number of ways of solving this problem for Perl and mod_perl systems. All are quite simple, and should be used everywhere there might be the potential for user submitted data to appear on the resulting web page.&lt;/p&gt;
+
+&lt;p&gt;Consider the following script &lt;em&gt;search.pl&lt;/em&gt;. It is a simple CGI script that takes a given parameter named &amp;lsquo;text&amp;rsquo; and prints it on the screen.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        #!/usr/bin/perl
+        use CGI;
+
+        my $cgi = CGI-&amp;gt;new();
+        my $text = $cgi-&amp;gt;param(&#39;text&#39;);
+
+        print $cgi-&amp;gt;header();
+        print &amp;quot;You entered $text&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This script is vulnerable to cross-site scripting attacks because it blindly prints out submitted form data. To rid ourselves of this vulnerability we can either perform input validation, or insure that user-submitted data is always HTML escaped before displaying it.&lt;/p&gt;
+
+&lt;p&gt;We can add input validation to our script by inserting the following line of code before any output. This code eliminates everything but letters, numbers, and spaces from the submitted input.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $text =~ s/[^A-Za-z0-9 ]*/ /g;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This type of input validation can be quite a chore. Another solution involves escaping any HTML in the submitted data. We can do this by using the HTML::Entities module bundled in the libwww-perl CPAN distribution. The HTML::Entities module provides the function HTML::Entities::encode(). It encodes HTML characters as HTML entity references. For example, the character &lt;strong&gt;&amp;lt;&lt;/strong&gt; is converted to &lt;strong&gt;&amp;lt;&lt;/strong&gt;, &lt;strong&gt;&amp;ldquo;&lt;/strong&gt; is converted to &lt;strong&gt;&amp;quot;&lt;/strong&gt;, and so on. Here is a version of &lt;em&gt;search.pl&lt;/em&gt; that uses this new feature.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        #!/usr/bin/perl
+        use CGI;
+        use HTML::Entities;
+
+        my $cgi = CGI-&amp;gt;new();
+        my $text = $cgi-&amp;gt;param(&#39;text&#39;);
+
+        print $cgi-&amp;gt;header();
+        print &amp;quot;You entered &amp;quot;, HTML::Entities::encode($text);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;solutions-for-mod-perl&#34;&gt;Solutions for mod_perl&lt;/h3&gt;
+
+&lt;p&gt;All of the previous solutions apply to the mod_perl programmer too. An Apache::Registry script or mod_perl handler can use the same techniques to eliminate cross-site scripting holes. For higher performance you may want to consider switching calls from HTML::Entities::encode() to mod_perl&amp;rsquo;s much faster Apache::Util::escape_html() function. Here&amp;rsquo;s an example of an Apache::Registry script equivilant to the preceding &lt;em&gt;search.pl&lt;/em&gt; script.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use Apache::Util;
+        use Apache::Request;
+
+        my $apr = Apache::Request-&amp;gt;new(Apache-&amp;gt;request);
+
+        my $text = $apr-&amp;gt;param(&#39;text&#39;);
+
+        $r-&amp;gt;content_type(&amp;quot;text/html&amp;quot;);
+        $r-&amp;gt;send_http_header;
+        $r-&amp;gt;print(&amp;quot;You entered &amp;quot;, Apache::Util::html_encode($text));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After a while you may find that typing Apache::Util::html_encode() over and over becomes quite tedious, especially if you use input validation in some places, but not others. To simplify this situation consider using the Apache::TaintRequest module. This module is available from CPAN or from the &lt;a href=&#34;http://www.modperlcookbook.org/&#34;&gt;mod_perl Developer&amp;rsquo;s Cookbook&lt;/a&gt; web site.&lt;/p&gt;
+
+&lt;p&gt;Apache::TaintRequest automates the tedious process of HTML escaping data. It overrides the print mechanism in the mod_perl Apache module. The new &lt;em&gt;print&lt;/em&gt; method tests each chunk of text for taintedness. If it is tainted the module assumes the worst and html-escapes it before printing.&lt;/p&gt;
+
+&lt;p&gt;Perl contains a set of built-in security checks know as &lt;em&gt;taint mode&lt;/em&gt;. These checks protect you by insuring that &lt;em&gt;tainted&lt;/em&gt; data that comes from somewhere outside your program is not used directly or indirectly to alter files, processes, or directories. Apache::TaintRequest extends this list of &lt;em&gt;dangerous&lt;/em&gt; operations to include printing HTML to a web client. To &lt;em&gt;untaint&lt;/em&gt; your data just process it with a regular expression. Tainting is the Perl web developer&amp;rsquo;s most powerful defense against security problems. Consult the &lt;strong&gt;perlsec&lt;/strong&gt; man page and use it for every web application you write.&lt;/p&gt;
+
+&lt;p&gt;To activate Apache::TaintRequest simply add the following directive to your httpd.conf.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;       PerlTaintCheck on    
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This activates taint mode for the entire mod_perl server.&lt;/p&gt;
+
+&lt;p&gt;The next thing we need to do modify our script or handler to use Apache::TaintRequest instead of Apache::Request. The preceding script might look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use Apache::TaintRequest;
+
+        my $apr = Apache::TaintRequest-&amp;gt;new(Apache-&amp;gt;request);
+
+        my $text = $apr-&amp;gt;param(&#39;text&#39;);
+
+        $r-&amp;gt;content_type(&amp;quot;text/html&amp;quot;);
+        $r-&amp;gt;send_http_header;
+
+        $r-&amp;gt;print(&amp;quot;You entered &amp;quot;, $text);
+
+        $text =~ s/[^A-Za-z0-9 ]//;
+        $r-&amp;gt;print(&amp;quot;You entered &amp;quot;, $text);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This script starts by storing the tainted form data &amp;lsquo;text&amp;rsquo; in $text. If we print this data we will find that it is automatically HTML escaped. Next we do some input validation on the data. The following print statement does not result in any HTML escaping of data.&lt;/p&gt;
+
+&lt;h3 id=&#34;tainting-apache-request-apache-taintrequest&#34;&gt;Tainting + Apache::Request&amp;hellip;. Apache::TaintRequest&lt;/h3&gt;
+
+&lt;p&gt;The implementation code for Apache::TaintRequest is quite simple. It&amp;rsquo;s a subclass of the Apache::Request module, which provides the form field and output handling. We override the &lt;em&gt;print&lt;/em&gt; method, because that is where we HTML escape the data. We also override the &lt;em&gt;new&lt;/em&gt; method &amp;ndash; this is where we use Apache&amp;rsquo;s TIEHANDLE interface to insure that output to STDOUT is processed by our print() routine.&lt;/p&gt;
+
+&lt;p&gt;Once we have output data we need to determine if it is tainted. This is where the &lt;em&gt;Taint&lt;/em&gt; module (also available from CPAN) becomes useful. We use it in the &lt;em&gt;print&lt;/em&gt; method to determine if a printable string is tainted and needs to be HTML escaped. If it is tainted we use the mod_perl function Apache::Util::html_escape() to escape the html.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Apache::TaintRequest;
+
+use strict;
+use warnings;
+
+use Apache;
+use Apache::Util qw(escape_html);
+use Taint qw(tainted);
+
+$Apache::TaintRequest::VERSION = &#39;0.10&#39;;
+@Apache::TaintRequest::ISA = qw(Apache);
+
+sub new {
+  my ($class, $r) = @_;
+
+  $r ||= Apache-&amp;gt;request;
+
+  tie *STDOUT, $class, $r;
+
+  return tied *STDOUT;
+}
+
+
+sub print {
+  my ($self, @data) = @_;
+
+  foreach my $value (@data) {
+    # Dereference scalar references.
+    $value = $$value if ref $value eq &#39;SCALAR&#39;;
+
+    # Escape any HTML content if the data is tainted.
+    $value = escape_html($value) if tainted($value);
+  }
+
+  $self-&amp;gt;SUPER::print(@data);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To finish off this module we just need the TIEHANDLE interface we specified in our &lt;em&gt;new()&lt;/em&gt; method. The following code implements a &lt;em&gt;TIEHANDLE&lt;/em&gt; and &lt;em&gt;PRINT&lt;/em&gt; method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub TIEHANDLE {
+  my ($class, $r) = @_;
+
+  return bless { r =&amp;gt; $r }, $class;
+}
+
+sub PRINT {
+  shift-&amp;gt;print(@_);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The end result is that Tainted data is escaped, and untainted data is passed unaltererd to the web client.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusions&#34;&gt;Conclusions&lt;/h3&gt;
+
+&lt;p&gt;Cross-site scripting is a serious problem. The solutions, input validation and HTML escaping are simple but must be applied every single time. An application with a single overlooked form field is just as insecure as one that does no checking whatsoever.&lt;/p&gt;
+
+&lt;p&gt;To insure that we always check our data Apache::TaintRequest was developed. It builds upon Perl&amp;rsquo;s powerful data tainting feature by automatically HTML escaping data that is not input validated when it is printed.&lt;/p&gt;
+
+&lt;h3 id=&#34;resources&#34;&gt;Resources&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.cert.org/advisories/CA-2000-02.html&#34;&gt;CERT Advisory CA-2000-02 Malicious HTML Tags Embedded in Client Web Requests&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.modperlcookbook.org&#34;&gt;The mod_perl Developer&amp;rsquo;s Cookbook&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.modperlcookbook.org/code.html&#34;&gt;Download Apache::TaintRequest&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

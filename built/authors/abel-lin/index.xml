@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Abel Lin on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/abel-lin/</link>
+    <description>Recent content in Abel Lin on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 08 Apr 2008 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/abel-lin/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Using Amazon S3 from Perl</title>
+      <link>http://localhost:1313/pub/2008/04/08/using-amazon-s3-from-perl.html/</link>
+      <pubDate>Tue, 08 Apr 2008 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2008/04/08/using-amazon-s3-from-perl.html/</guid>
+      <description>
+
+&lt;p&gt;Data management is a critical and challenging aspect for any online resource. With exponentially growing data sizes and popularity of rich media, even small online resources must effectively manage and distribute a significant amount of data. Moreover, the peace of mind associated with an additional offsite data storage resource is invaluable to everyone involved.&lt;/p&gt;
+
+&lt;p&gt;At &lt;a href=&#34;http://www.sundaymorningrides.com/&#34;&gt;SundayMorningRides.com&lt;/a&gt;, we manage a growing inventory of GPS and general GIS (Geography Information Systems) data and web content (text, images, videos, etc.) for the end users. In addition, we must also effectively manage daily snapshots, backups, as well as multiple development versions of our web site and supporting software. For any small organization, this can add up to significant costs &amp;ndash; not only as an initial monetary investment but also in terms of ongoing labor costs for maintenance and administration.&lt;/p&gt;
+
+&lt;p&gt;Amazon Simple Storage Service (S3) was released specifically to address the problem of data management for online resources &amp;ndash; with the aim to provide &amp;ldquo;reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.&amp;rdquo; Amazon S3 provides a web service interface that allows developers to store and retrieve any amount of data. S3 is attractive to companies like SundayMorningRides.com as it frees us from upfront costs and the ongoing costs of purchasing, administration, maintenance, and scaling our own storage servers.&lt;/p&gt;
+
+&lt;p&gt;This article covers the Perl, REST, and the Amazon S3 REST module, walking through the development of a collection of Perl-based tools for UNIX command-line based interaction to Amazon S3. I&amp;rsquo;ll also show how to set access permissions so that you can serve images or other data directly to your site from Amazon S3.&lt;/p&gt;
+
+&lt;h4 id=&#34;a-bit-on-web-services&#34;&gt;A Bit on Web Services&lt;/h4&gt;
+
+&lt;p&gt;Web services have become the de-facto method of exposing information and, well, services via the Web. Intrinsically, web services provide a means of interaction between two networked resources. Amazon S3 is accessible via both Simple Object Access Protocol (SOAP) or representational state transfer (REST).&lt;/p&gt;
+
+&lt;p&gt;The SOAP interface organizes features into custom-built operations, similar to remote objects when using Java Remote Method Invocation (RMI) or Common Object Resource Broker Architecture (CORBA). Unlike RMI or CORBA, SOAP uses XML embedded in the body of HTTP requests as the application protocol.&lt;/p&gt;
+
+&lt;p&gt;Like SOAP, REST also uses HTTP for transport. Unlike SOAP, REST operations are the standard HTTP operations &amp;ndash; GET, POST, PUT, and DELETE. I think of REST operations in terms of the CRUD semantics associated with relational databases: POST is Create, GET is Retrieve, PUT is Update, and DELETE is Delete.&lt;/p&gt;
+
+&lt;h4 id=&#34;storage-for-the-internet&#34;&gt;&amp;ldquo;Storage for the Internet&amp;rdquo;&lt;/h4&gt;
+
+&lt;p&gt;Amazon S3 represents the data space in three core concepts: &lt;em&gt;objects&lt;/em&gt;, &lt;em&gt;buckets&lt;/em&gt;, and &lt;em&gt;keys&lt;/em&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Objects are the base level entities within Amazon S3. They consist of both object data and metadata. This metadata is a set of name-attribute pairs defined in the HTTP header.&lt;/li&gt;
+&lt;li&gt;Buckets are collections of objects. There is no limit to the number of objects in a bucket, but each developer is limited to 100 buckets.&lt;/li&gt;
+&lt;li&gt;Keys are unique identifiers for objects.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Without wading through the details, I tend think of buckets as folders, objects as files, and keys as filenames. The purpose of this abstraction is to create a unique HTTP namespace for every object.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll assume that you have already signed up for &lt;a href=&#34;http://aws.amazon.com/s3&#34;&gt;Amazon S3&lt;/a&gt; and received your Access Key ID and Secret Access Key. If not, please do so.&lt;/p&gt;
+
+&lt;p&gt;Please note that the &lt;code&gt;S3::*&lt;/code&gt; modules aren&amp;rsquo;t the only Perl modules available for connecting to Amazon S3. In particular, &lt;a href=&#34;https://metacpan.org/pod/Net::Amazon::S3&#34;&gt;Net::Amazon::S3&lt;/a&gt; hides a lot of the details of the S3 service for you. For now, I&amp;rsquo;m going to use a simpler module to explain how the service works internally.&lt;/p&gt;
+
+&lt;h4 id=&#34;connecting-creating-and-listing-buckets&#34;&gt;Connecting, Creating, and Listing Buckets&lt;/h4&gt;
+
+&lt;p&gt;Connecting to Amazon S3 is as simple as supplying your Access Key ID and your Secret Access Key to create a connection, called here &lt;code&gt;$conn&lt;/code&gt;. Here&amp;rsquo;s how to create and list the contents of a bucket as well as list all buckets.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+
+use S3::AWSAuthConnection;
+use S3::QueryStringAuthGenerator;
+
+use Data::Dumper;
+
+my $AWS_ACCESS_KEY_ID     = &#39;YOUR ACCESS KEY&#39;;
+my $AWS_SECRET_ACCESS_KEY = &#39;YOUR SECRET KEY&#39;;
+
+my $conn = S3::AWSAuthConnection-&amp;gt;new($AWS_ACCESS_KEY_ID,
+                                      $AWS_SECRET_ACCESS_KEY);
+
+my $BUCKET = &amp;quot;foo&amp;quot;;
+
+print &amp;quot;creating bucket $BUCKET \n&amp;quot;;
+print $conn-&amp;gt;create_bucket($BUCKET)-&amp;gt;message, &amp;quot;\n&amp;quot;;
+
+print &amp;quot;listing bucket $BUCKET \n&amp;quot;;
+print Dumper @{$conn-&amp;gt;list_bucket($BUCKET)-&amp;gt;entries}, &amp;quot;\n&amp;quot;;
+
+print &amp;quot;listing all my buckets \n&amp;quot;;
+print Dumper @{$conn-&amp;gt;list_all_my_buckets()-&amp;gt;entries}, &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because every S3 action takes place over HTTP, it is good practice to check for a 200 response.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $response = $conn-&amp;gt;create_bucket($BUCKET);
+if ($response-&amp;gt;http_response-&amp;gt;code == 200) {
+    # Good
+} else {
+    # Not Good
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see from the output, the results come back in a hash. I&amp;rsquo;ve used &lt;a href=&#34;https://metacpan.org/pod/Data::Dumper&#34;&gt;Data::Dumper&lt;/a&gt; as a convenient way to view the contents. If you are running this for the first time, you will obviously not see anything listed in the bucket.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;listing bucket foo
+$VAR1 = {
+          &#39;Owner&#39; =&amp;gt; {
+                     &#39;ID&#39; =&amp;gt; &#39;xxxxx&#39;,
+                     &#39;DisplayName&#39; =&amp;gt; &#39;xxxxx&#39;
+                   },
+          &#39;Size&#39; =&amp;gt; &#39;66810&#39;,
+          &#39;ETag&#39; =&amp;gt; &#39;&amp;quot;xxxxx&amp;quot;&#39;,
+          &#39;StorageClass&#39; =&amp;gt; &#39;STANDARD&#39;,
+          &#39;Key&#39; =&amp;gt; &#39;key&#39;,
+          &#39;LastModified&#39; =&amp;gt; &#39;2007-12-18T22:08:09.000Z&#39;
+        };
+$VAR4 = &#39;
+&#39;;
+listing all my buckets
+$VAR1 = {
+          &#39;CreationDate&#39; =&amp;gt; &#39;2007-11-28T17:31:48.000Z&#39;,
+          &#39;Name&#39; =&amp;gt; &#39;foo&#39;
+        };
+&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;writing-an-object&#34;&gt;Writing an Object&lt;/h4&gt;
+
+&lt;p&gt;Writing an object is simply a matter of using the HTTP PUT method. Be aware that there is nothing to prevent you from overwriting an existing object; Amazon S3 will automatically update the object with the more recent write request. Also, it&amp;rsquo;s currently not possible to append to or otherwise modify an object in place without replacing it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %headers = (
+    &#39;Content-Type&#39; =&amp;gt; &#39;text/plain&#39;
+);
+$response = $conn-&amp;gt;put( $BUCKET, $KEY, S3Object-&amp;gt;new(&amp;quot;this is a test&amp;quot;),
+                        \%headers);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Likewise, you can read a file from STDIN:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %headers;
+
+FILE: while(1) {
+    my $n = sysread(STDIN, $data, 1024 * 1024, length($data));
+    if ($n &amp;lt; 0) {
+        print STDERR &amp;quot;Error reading input: $!\n&amp;quot;;
+        exit 1;
+    }
+    last FILE if $n == 0;
+}
+$response = $conn-&amp;gt;put(&amp;quot;$BUCKET&amp;quot;, &amp;quot;$KEY&amp;quot;, $data, \%headers);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To add custom metadata, simply add to the &lt;code&gt;S3Object&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;S3Object-&amp;gt;new(&amp;quot;this is a test&amp;quot;, { name =&amp;gt; &amp;quot;attribute&amp;quot; })
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default, every object has private access control when written. This allows only the user that stored the object to read it back. You can change these settings. Also, note that each object can hold a maximum of 5 GB of data.&lt;/p&gt;
+
+&lt;p&gt;You are probably wondering if it is also possible to upload via a standard HTTP POST. The folks at Amazon are working on it as we speak &amp;ndash; see &lt;a href=&#34;http://developer.amazonwebservices.com/connect/thread.jspa?threadID=18616&amp;amp;tstart=0&#34;&gt;HTTP POST beta discussion&lt;/a&gt; for more information. Until that&amp;rsquo;s finished, you&amp;rsquo;ll have to perform web-based uploads via an intermediate server.&lt;/p&gt;
+
+&lt;h4 id=&#34;reading-an-object&#34;&gt;Reading an Object&lt;/h4&gt;
+
+&lt;p&gt;Like writing objects, there are several ways to read data from Amazon S3. One way is to generate a temporary URL to use with your favorite client (for example, wget or Curl) or even a browser to view or retrieve the object. All you have to do is generate the URL used to make the REST call.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $generator = S3::QueryStringAuthGenerator-&amp;gt;new($AWS_ACCESS_KEY_ID,
+    $AWS_SECRET_ACCESS_KEY);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;and then perform a simple HTTP GET request. This is a great trick if all you want to do is temporarily view or verify the data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$generator-&amp;gt;expires_in(60);
+my $url = $generator-&amp;gt;get($BUCKET, &amp;quot;$KEY&amp;quot;);
+print &amp;quot;$url \n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can also programmatically read the data directly from the initial connection. This is handy if you have to perform additional processing of the data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $response = $conn-&amp;gt;get(&amp;quot;$BUCKET&amp;quot;, &amp;quot;$KEY&amp;quot;);
+my $data     = $response-&amp;gt;object-&amp;gt;data;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another cool feature is &lt;a href=&#34;http://docs.amazonwebservices.com/AmazonS3/2006-03-01/&#34;&gt;the ability to use BitTorrent to download files from Amazon S3&lt;/a&gt; . You can access any object that has anonymous access privileges via BitTorrent.&lt;/p&gt;
+
+&lt;h4 id=&#34;delete-an-object&#34;&gt;Delete an Object&lt;/h4&gt;
+
+&lt;p&gt;By now you probably have the hang of the process. If you&amp;rsquo;re going to create objects, you&amp;rsquo;re probably going to have to delete them at some point.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$conn-&amp;gt;delete(&amp;quot;$BUCKET&amp;quot;, &amp;quot;$KEY&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;set-access-permissions-and-publish-to-a-website&#34;&gt;Set Access Permissions and Publish to a Website&lt;/h4&gt;
+
+&lt;p&gt;As you may have noticed from the previous examples, all Amazon S3 objects access goes through HTTP. This makes Amazon S3 particularly useful as a online repository. In particular, it&amp;rsquo;s useful to manage and serve website media. You could almost imagine Amazon S3 serving as mini Content Delivery Network for media on your website. This example will demonstrate how to build a very simple online page where the images are served dynamically via Amazon S3.&lt;/p&gt;
+
+&lt;p&gt;The first thing to do us to upload some images and set the ACL permissions to public. I&amp;rsquo;ve modified the previous example with one difference. To make objects publicly readable, include the header &lt;code&gt;x-amz-acl: public-read&lt;/code&gt; with the HTTP PUT request.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %headers = (
+    &#39;x-amz-acl&#39; =&amp;gt; &#39;public-read&#39;,
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Additional ACL permissions include:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;private (default setting if left blank)&lt;/li&gt;
+&lt;li&gt;public-read&lt;/li&gt;
+&lt;li&gt;public-read-write&lt;/li&gt;
+&lt;li&gt;authenticated-read&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Now you know enough to put together a small script that will automatically display all images in the bucket to a web page (you&amp;rsquo;ll probably want to spruce up the formatting).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;...
+my $BUCKET   = &amp;quot;foobar&amp;quot;;
+my $response = $conn-&amp;gt;list_bucket(&amp;quot;$BUCKET&amp;quot;);
+
+for my $entry (@{$response-&amp;gt;entries}) {
+    my $public_url   = $generator-&amp;gt;get($BUCKET, $entry-&amp;gt;{Key});
+    my ($url, undef) = split (/\?/, $public_url);
+    $images         .= &amp;quot;&amp;lt;img src=\&amp;quot;$url\&amp;quot;&amp;gt;&amp;lt;br /&amp;gt;&amp;quot;;
+}
+($webpage =  &amp;lt;&amp;lt;&amp;quot;WEBPAGE&amp;quot;);
+&amp;lt;html&amp;gt;&amp;lt;body&amp;gt;$images&amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;
+WEBPAGE
+print $q-&amp;gt;header();
+print $webpage;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To add images to this web page, upload more files into the bucket and they will automatically appear the next time you load the page.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s also simple to link to media one at a time for a webpage. If you examine the HTML generated by this example, you&amp;rsquo;ll see that all Amazon S3 URLs have the basic form &lt;code&gt;http://bucketname.s3.amazon.com/objectname&lt;/code&gt;. Also note that the namespace for buckets is shared with all Amazon S3 users. You may have already picked up on this.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Amazon S3 is a great tool that can help with the data management needs of all sized organizations by offering cheap and unlimited storage. For personal use, it&amp;rsquo;s a great tool for backups (also good for organizations) and general file storage. It&amp;rsquo;s also a great tool for collaboration. Instead of emailing files around, just upload a file and set the proper access controls &amp;ndash; no more dealing with 10 MB attachment restrictions!&lt;/p&gt;
+
+&lt;p&gt;At &lt;a href=&#34;http://www.sundaymorningrides.com/&#34;&gt;SundayMorningRides.com&lt;/a&gt; we use S3 as part of our web serving infrastructure to reduce the load on our hardware when serving media content.&lt;/p&gt;
+
+&lt;p&gt;When combined with other Amazon Web Services such as SimpleDB (for structured data queries) and Elastic Compute Cloud (for data processing) it&amp;rsquo;s easy to envision a low cost solution for web-scale computing and data management.&lt;/p&gt;
+
+&lt;h4 id=&#34;more-resources-and-references&#34;&gt;More Resources and References&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://aws.amazon.com/s3&#34;&gt;Amazon S3 Homepage&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://developer.amazonwebservices.com/&#34;&gt;Amazon Webservices Developer Connection&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://developer.amazonwebservices.com/connect/entry.jspa?externalID=133&amp;amp;categoryID=47&#34;&gt;Amazon S3 Library for REST in Perl&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://aws.typepad.com/&#34;&gt;Amazon Web Services Blog&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

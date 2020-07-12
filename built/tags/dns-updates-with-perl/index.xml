@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Dns Updates With Perl on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/dns-updates-with-perl/</link>
+    <description>Recent content in Dns Updates With Perl on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 24 Mar 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/dns-updates-with-perl/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Automating Windows (DNS) with Perl</title>
+      <link>http://localhost:1313/pub/2005/03/24/perl_dns.html/</link>
+      <pubDate>Thu, 24 Mar 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/03/24/perl_dns.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;driving-windows-dns-server&#34;&gt;Driving Windows DNS Server&lt;/h3&gt;
+
+&lt;p&gt;If you happen to manage a DNS server running on Windows 2000 or Windows 2003 with more than just a couple of dozen resource records on it, you&amp;rsquo;ve probably already hit the limits of the MMC DNS plugin, the Windows administrative GUI for the DNS server implementation. Doing mass operations like creating 20 new records at once, moving a bunch of A records from one zone to another, or just searching for the next free IP in a reverse zone, can challenge your patience. To change the name part of an A record, you have to delete the entire record and re-create it from scratch using the new name. You&amp;rsquo;ve probably thought to yourself, &amp;ldquo;There MUST be another way to do this.&amp;rdquo; There is!&lt;/p&gt;
+
+&lt;p&gt;Silently, almost shyly, behind the scenes and without the usual bells and whistles, Microsoft has arrived at the &lt;a href=&#34;http://www.pragmaticprogrammer.com/ppbook/extracts/rule_list.html&#34;&gt;power of the command shell&lt;/a&gt;. For the DNS services[1], the command line utility &lt;code&gt;dnscmd&lt;/code&gt; is available as part of the AdminPac for the server operating systems. &lt;code&gt;dnscmd&lt;/code&gt; is a very solid command line utility, with lots of options and subcommands, that allows you to do almost every possible operation on your DNS server. These include starting and stopping the server, adding and deleting zones and resource records, and controlling a lot of its behavior.&lt;/p&gt;
+
+&lt;p&gt;This article explores how to run &lt;code&gt;dnscmd&lt;/code&gt; from Perl. In that respect, it is a classic &amp;ldquo;Perl-as-a-driver&amp;rdquo; script, invoking &lt;code&gt;dnscmd&lt;/code&gt; with various options and working on its outputs.&lt;/p&gt;
+
+&lt;h3 id=&#34;dnscmd&#34;&gt;DNSCMD&lt;/h3&gt;
+
+&lt;p&gt;Invoke &lt;code&gt;dnscmd /?&lt;/code&gt; to see a top-level list of available subcommands and type &lt;code&gt;dnscmd /subcommand&lt;/code&gt; /? for more specific help for this subcommand. &lt;code&gt;dnscmd /?&lt;/code&gt; shows that there is a subcommand &lt;code&gt;RecordDelete&lt;/code&gt;, and &lt;code&gt;dnscmd /recorddelete /?&lt;/code&gt; (case not significant) explains that you need a zone name (like &amp;ldquo;my.dom.ain&amp;rdquo;), a node name within this zone (like &amp;ldquo;host1&amp;rdquo;), a record type (like &amp;ldquo;A&amp;rdquo;), and the data part of the resource record to delete (like &amp;ldquo;10.20.40.5&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;The first argument to &lt;code&gt;dnscmd&lt;/code&gt;, if you actually want to do something with it, is the name of the DNS server to use. A full working command looks something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;dnscmd dnssrv.my.dom.ain /RecordDelete my.dom.ain host1 A 10.20.40.5
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This opens the very welcome opportunity to run &lt;code&gt;dnscmd&lt;/code&gt; remotely—from your workstation, for example—which frees you from the need to log in to your DNS server.&lt;/p&gt;
+
+&lt;h3 id=&#34;wdns-pl-media-pub-2005-03-24-perl-dns-wdns-pl-the-script&#34;&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2005_03_24_perl_dns/wdns.pl&#34;&gt;WDNS.PL&lt;/a&gt; (The Script)&lt;/h3&gt;
+
+&lt;p&gt;The script in the current version only handles A and PTR records. There is no handling of CNAME records, for example. Within this limitation, it is also very A record-oriented: you can add or delete A records, change the IP or name of an A record, or move the A record to a different zone. It keeps PTR records in sync with these changes, creating or deleting a corresponding PTR record with its A record. This is mostly what you want.&lt;/p&gt;
+
+&lt;p&gt;The most important thing to understand with this script is the format and the meaning of the input data it takes (&amp;ldquo;Show me your data &amp;hellip;&amp;rdquo;)[2]. The format is simple, just:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;name1&amp;gt;      &amp;lt;target1&amp;gt;
+    &amp;lt;name2&amp;gt;      ...
+    ...          ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Separate &lt;code&gt;name&lt;/code&gt; and &lt;code&gt;target&lt;/code&gt; by whitespace. A name is a relative or fully- qualified domain name. A target can be one of these:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;another domain name, meaning to rename to that name;&lt;/li&gt;
+&lt;li&gt;an IP, meaning to change to this IP;&lt;/li&gt;
+&lt;li&gt;nothing or undef, meaning to delete this name.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This mirrors the basic functions of the script. To add some extra candy, the target parameter has two other possibilities which have proven very useful in my environment. A target can also be:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;a C net, given as a triple of IP buckets (like &amp;ldquo;10.20.40&amp;rdquo;);&lt;/li&gt;
+&lt;li&gt;a net segment identifier (&amp;ldquo;v1&amp;rdquo;, &amp;ldquo;v2&amp;rdquo;, and so on, in my example).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In both cases, the script will give the name a free IP (if possible) from either the C net or the net segment specified by its identifier. I&amp;rsquo;ll return to this idea soon.&lt;/p&gt;
+
+&lt;p&gt;To pull all of the various possibilities together, here is a list of sample input lines, each representing one of the mentioned possibilities for the target:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          pcthe                10.20.90.53     -- new ip
+          pcthe.my.dom.ain     10.20.90.53     -- new ip full qualified
+          pcthe                10.20.90        -- search free ip in range
+          pcthe                @v8             -- search free ip in net segment v8
+          pcthe                pcthe2          -- rename host
+          pcthe                pcthe.oth.dom   -- rename host full qualified
+          pcthe                                -- delete host (with -r option)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Pass this data to the script through either an input file or STDIN[3].&lt;/p&gt;
+
+&lt;h4 id=&#34;init&#34;&gt;&lt;code&gt;init()&lt;/code&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now to the code. At startup, &lt;code&gt;wdns.pl&lt;/code&gt; pulls in the list of primary zones from the given DNS server, both forward (names as lookup keys) and reverse (IPs as lookup keys) zones. This is handy, because it will use this list again and again.&lt;/p&gt;
+
+&lt;h4 id=&#34;mv-ip&#34;&gt;&lt;code&gt;mv_ip()&lt;/code&gt;&lt;/h4&gt;
+
+&lt;p&gt;The main worker routine is the sub &lt;code&gt;mv_ip&lt;/code&gt;. (Don&amp;rsquo;t think too much about the name; it&amp;rsquo;s from the time when the only function of the script was to change the IP of a given name). For any given name/target pair, it does the following: First it tries to find a FQDN for the name. If it finds a host for the given name, it uses the FQDN as a basis to construct the name part of the targeted record. If it cannot find a name, it assumes that it should create an entirely new record. If the options permit (&lt;code&gt;-c&lt;/code&gt;), it constructs one.&lt;/p&gt;
+
+&lt;p&gt;Then it inspects the target. Depending on its type, the program prepares to assign a new IP to the name, rename an existing A record while retaining the IP, search for a free IP in a certain range, or just delete existing records. When everything settles, the actual changes take place, using &lt;code&gt;dnscmd&lt;/code&gt; to delete and add A and PTR records as appropriate. (There is no &lt;code&gt;UpdateRecord&lt;/code&gt; function in &lt;code&gt;dnscmd&lt;/code&gt;, so updating is in fact a combination of delete and create).&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s it! The rest of the code is lower-level functions that help to achieve this.&lt;/p&gt;
+
+&lt;h4 id=&#34;create-and-delete&#34;&gt;&lt;code&gt;create_*&lt;/code&gt; and &lt;code&gt;delete_*&lt;/code&gt;&lt;/h4&gt;
+
+&lt;p&gt;The four subs &lt;code&gt;create_A&lt;/code&gt;, &lt;code&gt;create_PTR&lt;/code&gt;, &lt;code&gt;delete_A&lt;/code&gt;, and &lt;code&gt;delete_PTR&lt;/code&gt; are wrapper functions around the respective invocations of &lt;code&gt;dnscmd&lt;/code&gt;. An additional issue of interest is that Windows DNS will delete a PTR record once you delete the corresponding A record, so you don&amp;rsquo;t have to do so explicitly.&lt;/p&gt;
+
+&lt;h4 id=&#34;get-rev-zone-and-get-fwd-zone&#34;&gt;&lt;code&gt;get_rev_zone()&lt;/code&gt; and &lt;code&gt;get_fwd_zone()&lt;/code&gt;&lt;/h4&gt;
+
+&lt;p&gt;One of the major issues when manipulating DNS resource records is picking the right zone to do the change in. If you have just one forward and one reverse zone, this is simple. However, if you are maintaining a lot of zones with domains and nested subdomains, while other subdomains of the same parent have their own zones, this might be tedious.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;wdns.pl&lt;/code&gt; can offload this task for you. The subs &lt;code&gt;get_rev_zone&lt;/code&gt; and &lt;code&gt;get_fwd_zone&lt;/code&gt; use the initially retrieved list of primary zones from your server. They take an IP or a fully qualified domain name respectively, and split it into the node part and the zone part. So the IP 10.20.40.5 might split into 10.20.40 and 5 (if the proper zone of this IP is 40.20.10.in-addr.arpa) or 10 and 20.40.5 (if 10.in-addr.arpa happens to be the enclosing zone), depending on your zone settings. The same applies for domain names. Other routines use this information to add or delete resource records in their appropriate zones.&lt;/p&gt;
+
+&lt;h4 id=&#34;ip-lookup-functions&#34;&gt;IP Lookup Functions&lt;/h4&gt;
+
+&lt;p&gt;There is a set of subs I called &amp;ldquo;IP lookup functions&amp;rdquo;. They all help to find a free IP in an appropriate range. Depending on the target specification, they will search a certain C net or a whole net segment of unused address. This searching breaks down to finding the appropriate zone, the appropriate node (&amp;ldquo;subdomain&amp;rdquo;), and then listing the already existing leaf nodes in this range. Once it has the list of used nodes, it starts scanning for gaps or unused nodes off the end of the list.&lt;/p&gt;
+
+&lt;p&gt;An additional feature of these routines is that they honor certain reservations in the ranges, either through fixed directives (&amp;ldquo;leave the first 50 addresses free at the beginning of each net segment&amp;rdquo;) or through inspecting dedicated TXT records on the DNS server that contain the &lt;code&gt;RESERVED&lt;/code&gt; keyword. (The actual format of these records is &lt;code&gt;RESERVED:&amp;lt;range-spec&amp;gt;:&amp;lt;free text&amp;gt;&lt;/code&gt;, where &lt;code&gt;range-spec&lt;/code&gt; is a colon-separated list of IPs or IP ranges. An example is &lt;code&gt;RESERVED:1,3,5,10-20,34:IPs reserved for the VPN switches&lt;/code&gt;). This helps avoid re-using reserved IPs accidentally through the automatic script, and also helps avoid messing things up when time is short.&lt;/p&gt;
+
+&lt;p&gt;In the case of these TXT records, I used &lt;code&gt;dnscmd&lt;/code&gt; to retrieve them, not &lt;code&gt;nslookup&lt;/code&gt;, which would have been equally possible.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-word-about-the-net-segments&#34;&gt;A Word About the Net Segments&lt;/h3&gt;
+
+&lt;p&gt;If your IPs reside in a segmented network, which is likely to be the case for most sites, make sure that your hosts have addresses for the segments to which they attach. For this script I have chosen a poor man&amp;rsquo;s approach to represent the segments just by the list of their respective C nets in the script itself (see the hash &lt;code&gt;%netsegs&lt;/code&gt; in the &amp;ldquo;Config section&amp;rdquo;). There might be a more clever way to do this. If you are going to run the script in your environment, edit this hash to reflect your network topology.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;dns_lookup&lt;/code&gt; sub looks up the current DNS entries. It runs the extern command &lt;code&gt;nslookup&lt;/code&gt; and parses its output. If you need more sophisticated DNS lookups (and &lt;code&gt;nslookup&lt;/code&gt;&amp;rsquo;s options just won&amp;rsquo;t do), you might want to resort to &lt;code&gt;dig&lt;/code&gt; (which has a Windows version) or &lt;a href=&#34;https://metacpan.org/pod/Net::DNS&#34;&gt;Net::DNS&lt;/a&gt; (which runs on Windows in any case). This simple way of doing it was just enough for my needs.&lt;/p&gt;
+
+&lt;h4 id=&#34;footnotes&#34;&gt;Footnotes&lt;/h4&gt;
+
+&lt;ol&gt;
+&lt;li&gt;In the Windows world, server processes are usually referred to as &amp;ldquo;services&amp;rdquo;; I tend to mix this term with &amp;ldquo;server&amp;rdquo; every now and then.&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;Show me your functions, and I will be confused. Show me your data, and your functions will be obvious&amp;rdquo;, to re-coin a famous quote from Frederick Brooks&amp;rsquo; &lt;em&gt;The Mythical Man-month&lt;/em&gt;.&lt;/li&gt;
+&lt;li&gt;Depending on your Windows command shell, you might have to tinker a bit to get the STDIN input to work as desired. Cygwin&amp;rsquo;s bash works like a breeze and takes Ctrl-Z&amp;lt;RET&amp;gt; as the EOF sequence.&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Benchmarking subroutine signatures </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="We review native subroutine signatures speed and show you how to make them faster"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/88/2014/5/12/Benchmarking-subroutine-signatures/" />
+<meta property="og:title" content="Benchmarking subroutine signatures" />
+<meta property="og:description" content="We review native subroutine signatures speed and show you how to make them faster">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2014-05-05T05:05:05Z" />
+<meta property="og:image" content="http://localhost:1313/images/author/david-farrell.jpg" />
+<meta property="og:article:tag" content="subroutine" />
+<meta property="og:article:tag" content="method" />
+<meta property="og:article:tag" content="optimization" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Benchmarking subroutine signatures</h1>
+              <p class="blog-post-meta">May 12, 2014 by
+              
+              
+                
+                
+                <a href="#author-bio-david-farrell">David Farrell</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p><em>Subroutine signatures will be released to the Perl core in just a few days. But how do they performance compared with traditional methods like direct variable assignment and the <a href="https://metacpan.org/pod/Method::Signatures">Method::Signatures</a> module? I benchmarked all three with interesting results.</em></p>
+
+<h3 id="background">Background</h3>
+
+<p>I <a href="http://perltricks.com/article/72/2014/2/24/Perl-levels-up-with-native-subroutine-signatures">covered</a> the new subroutine signatures features when they first appeared in the Perl development release 5.19.9. For these benchmarks I used the latest Perl development release (5.19.11).</p>
+
+<h3 id="method">Method</h3>
+
+<p>All of the benchmarks came from variations of this code:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> strict;
+<span style="color:#66d9ef">use</span> warnings;
+<span style="color:#66d9ef">use</span> Benchmark::Forking <span style="color:#e6db74">&#39;cmpthese&#39;</span>;
+<span style="color:#66d9ef">use</span> feature <span style="color:#e6db74">&#39;signatures&#39;</span>;
+<span style="color:#66d9ef">no</span> warnings <span style="color:#e6db74">&#39;experimental::signatures&#39;</span>;
+<span style="color:#66d9ef">use</span> Method::Signatures;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">native_assignment</span> { 
+    die <span style="color:#e6db74">&#34;Too few arguments for subroutine $!&#34;</span> <span style="color:#66d9ef">unless</span> @_ <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>; 
+    <span style="color:#66d9ef">my</span> ($var) <span style="color:#f92672">=</span> @_;
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">native_signature</span> ($var) {}
+
+func method_signature ($var) {}
+
+cmpthese(<span style="color:#f92672">-</span><span style="color:#ae81ff">5</span>, {
+    native_assignment<span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> { native_assignment(<span style="color:#ae81ff">1</span>)},
+    native_signature <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> { native_signature(<span style="color:#ae81ff">1</span>) },
+    method_signature <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> { method_signature(<span style="color:#ae81ff">1</span>) },
+});</code></pre></div>
+<p>The code begins by importing the necessary libraries. The line &ldquo;no warnings &lsquo;experimental::signatures&rsquo; stops Perl from warning about the use of subroutine signatures. The code then declares the three subroutines we want to test: one is the normal variable assignment, one native subroutine signature and one for Method::Signatures (&ldquo;func&rdquo;).</p>
+
+<p>Because the benchmark module executes tests in alphabetical order, every benchmark was run three times with the tests renamed each time to change the test order (every test was run first, second and third across the three benchmarks).</p>
+
+<h3 id="results">Results</h3>
+
+<p>Running this benchmark returned the following results:</p>
+
+<table>
+<colgroup>
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">native_signature</th>
+<th align="left">method_signature</th>
+<th align="left">native_assignment</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">native_signature</td>
+<td align="left">--</td>
+<td align="left">-10%</td>
+<td align="left">-27%</td>
+</tr>
+<tr class="even">
+<td align="left">method_signature</td>
+<td align="left">12%</td>
+<td align="left">--</td>
+<td align="left">-19%</td>
+</tr>
+<tr class="odd">
+<td align="left">native_assignment</td>
+<td align="left">38%</td>
+<td align="left">23%</td>
+<td align="left">--</td>
+</tr>
+</tbody>
+</table>
+
+<p>The results showed native subroutine signatures to be about 12% slower than the Method::Signatures function and 38% slower than the native assignment subroutine. So is this the price of the cleaner syntax? Actually it&rsquo;s not the whole story.</p>
+
+<h3 id="changing-the-number-of-variables">Changing the number of variables</h3>
+
+<p>Would changing the number of variables assigned in the subroutine affect the relative performance of the three subroutine types? I re-ran the benchmarks, only this time incrementing the number of variables being assigned and plotted the results:</p>
+
+<p><img src="/images/88/signatures%20comparison.png" alt="Comparison of signatures speed with increasing number of variables" /></p>
+
+<p>The results showed that increasing the number of variables improved the relative speed of native subroutine signatures against Method::Signatures. With two variable assignments their speed is about par. With three or more variables, native subroutine signatures outperforms, up to 18% faster. When I discussed these results with Ricardo Signes, he confirmed that the native subroutine signatures code had been optimized for multiple variable assignments, which correlates with the results shown above.</p>
+
+<h3 id="faster-subroutine-signatures">Faster subroutine signatures</h3>
+
+<p>It could be argued that the native subroutine signatures are plenty fast as they are and offer several benefits over both variable assignments and Method::Signatures. However, Ricardo did share a trick with me to make subroutine signatures run even faster, which I can&rsquo;t resist sharing.</p>
+
+<p>Adding a nameless slurpy parameter (&ldquo;@&rdquo;) to the subroutine signature removes the upper limit on how many arguments can be passed to the subroutine. Let&rsquo;s add the slurpy parameter to the subroutine signature in our benchmark code. I&rsquo;ve also updated the code to take two parameters - the level where previously Method::Signatures and subroutine signatures exhibited similar performance:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> strict;
+<span style="color:#66d9ef">use</span> warnings;
+<span style="color:#66d9ef">use</span> Benchmark::Forking <span style="color:#e6db74">&#39;cmpthese&#39;</span>;
+<span style="color:#66d9ef">use</span> feature <span style="color:#e6db74">&#39;signatures&#39;</span>;
+<span style="color:#66d9ef">no</span> warnings <span style="color:#e6db74">&#39;experimental::signatures&#39;</span>;
+<span style="color:#66d9ef">use</span> Method::Signatures;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">native_assignment</span> { 
+    die <span style="color:#e6db74">&#34;Too few arguments for subroutine $!&#34;</span> <span style="color:#66d9ef">unless</span> @_ <span style="color:#f92672">==</span> <span style="color:#ae81ff">2</span>; 
+    <span style="color:#66d9ef">my</span> ($var1, $var2) <span style="color:#f92672">=</span> @_;
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">native_signature</span> ($var1, $var2, @) {}
+
+func method_signature ($var1, $var2) {}
+
+cmpthese(<span style="color:#f92672">-</span><span style="color:#ae81ff">5</span>, {
+    native_assignment<span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> { native_assignment(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>)},
+    native_signature <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> { native_signature(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>) },
+    method_signature <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> { method_signature(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>) },
+});</code></pre></div>
+<p>And here are the results:</p>
+
+<table>
+<colgroup>
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">method_signature</th>
+<th align="left">native_signature</th>
+<th align="left">native_assignment</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">method_signature</td>
+<td align="left">--</td>
+<td align="left">-23%</td>
+<td align="left">-37%</td>
+</tr>
+<tr class="even">
+<td align="left">native_signature</td>
+<td align="left">30%</td>
+<td align="left">--</td>
+<td align="left">-18%</td>
+</tr>
+<tr class="odd">
+<td align="left">native_assignment</td>
+<td align="left">60%</td>
+<td align="left">23%</td>
+<td align="left">--</td>
+</tr>
+</tbody>
+</table>
+
+<p>By adding the slurpy parameter, native subroutine signatures performance improved by 30%! This is because the subroutine no longer has to run a variable count check against the upper limit of variables accepted by the signature. It&rsquo;s up to you if you want to remove this check for the performance gain or not - I can&rsquo;t think of a use case where this would be worth it, but you never know.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>Subroutine variable assignment is a relatively inexpensive operation and unlikely to be a bottleneck in your code running time. However the speed benchmarks show that by switching to subroutine signatures is unlikely to regress and in some cases will improve run time speed. So use them with confidence!</p>
+
+<h3 id="thanks">Thanks</h3>
+
+<p>Thanks to Perl pumpking Ricardo Signes for providing detail on the subroutine signatures implementation and slury parameter optimization.</p>
+
+<p>Enjoyed this article? Help us out and <a href="https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F88%2F2014%2F5%2F12%2FBenchmarking-subroutine-signatures&amp;text=Benchmarking+subroutine+signatures&amp;tw_p=tweetbutton&amp;url=http%3A%2F%2Fperltricks.com%2Farticle%2F88%2F2014%2F5%2F12%2FBenchmarking-subroutine-signatures&amp;via=perltricks">tweet</a> about it!</p>
+
+<p>*<strong>Edit:</strong> article code and benchmarks corrected for single variable assignment on 2014/05/12*</p>
+
+<p><br />
+<em>This article was originally posted on <a href="http://perltricks.com">PerlTricks.com</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/subroutine">subroutine</a></div>
+                
+                  <div class="tag"><a href="/tags/method">method</a></div>
+                
+                  <div class="tag"><a href="/tags/optimization">optimization</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-david-farrell">
+  <div class="col-sm-2">
+    
+    <a href="/authors/david-farrell/"><div class="circle-avatar" style="background-image:url(/images/author/david-farrell.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/david-farrell/"><h3>David Farrell</h3></a>
+    <p>David is the editor of Perl.com. An organizer of the <a href="http://www.meetup.com/The-New-York-Perl-Meetup-Group/">New York Perl Meetup</a>, he works for ZipRecruiter as a software developer, and sometimes <a href="https://twitter.com/perltricks">tweets</a> about Perl and Open Source.</p>
+    <h5><a href="/authors/david-farrell/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/benchmarking-subroutine-signatures.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

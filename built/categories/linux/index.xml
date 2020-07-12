@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Linux on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/categories/linux/</link>
+    <description>Recent content in Linux on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 26 Apr 2016 20:42:41 +0000</lastBuildDate>
+    <atom:link href="/categories/linux/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Fixing a sluggish Linux after suspend-resume</title>
+      <link>http://localhost:1313/article/fixing-a-sluggish-linux-after-suspend-resume/</link>
+      <pubDate>Tue, 26 Apr 2016 20:42:41 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/fixing-a-sluggish-linux-after-suspend-resume/</guid>
+      <description>
+
+&lt;p&gt;Occasionally when I suspend my Linux laptop (sleep mode) and later resume working the machine is sluggish. Perceptible pauses occur every time I change applications, scrolling is fractured and text edits are delayed. Monitoring tools like &lt;a href=&#34;http://hisham.hm/htop/&#34;&gt;htop&lt;/a&gt; and &lt;a href=&#34;http://guichaz.free.fr/iotop/&#34;&gt;iotop&lt;/a&gt; give no indication of system resources being under heavy load. I can close all applications and the sluggishness persists.&lt;/p&gt;
+
+&lt;p&gt;Apparently this is a bug where the CPU frequency has been pinned to a very low level. Linux uses CPU frequency scaling to save power; when the machine is resumed, it should start increasing the CPU frequency to meet the demands of the system, but it doesn&amp;rsquo;t always do that. A reboot fixes the problem, but who has time for that? The good news is that it&amp;rsquo;s an easy fix with the &lt;code&gt;cpupower&lt;/code&gt; utility.&lt;/p&gt;
+
+&lt;h3 id=&#34;get-the-cpupower-utility&#34;&gt;Get the cpupower utility&lt;/h3&gt;
+
+&lt;p&gt;You may have &lt;code&gt;cpupower&lt;/code&gt; already installed, but if not it&amp;rsquo;s easy to get with via a package manager. On Ubuntu &lt;a href=&#34;http://manpages.ubuntu.com/manpages/trusty/man1/cpupower.1.html&#34;&gt;cpupower&lt;/a&gt; is part of the &lt;code&gt;linux-tools-common&lt;/code&gt; package. You can install it at the terminal with this command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo apt-get install linux-tools-common
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On RHEL based distributions like Fedora and CentOS, &lt;code&gt;cpupower&lt;/code&gt; is bundled with the &lt;code&gt;kernel-tools&lt;/code&gt; package. On CentOS and older Fedoras you can install it with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum install kernel-tools
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On newer Fedoras you can use &lt;code&gt;dnf&lt;/code&gt; to install it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf install kernel-tools
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;switch-back-to-performance-mode&#34;&gt;Switch back to performance mode&lt;/h3&gt;
+
+&lt;p&gt;CPU frequency scaling for modern Intel CPUs is provided by the &lt;a href=&#34;https://www.kernel.org/doc/Documentation/cpu-freq/intel-pstate.txt&#34;&gt;intel_pstate driver&lt;/a&gt;. It supports two modes (called &amp;ldquo;governors&amp;rdquo;) of operation: performance and powersave. Performance mode is not necessarily &amp;ldquo;all guns blazing&amp;rdquo; performance. Likewise, powersave doesn&amp;rsquo;t cripple your system either. Both are intelligent governors that responds to system loads by scaling the CPU frequency. I&amp;rsquo;ve found that switching governors immediately resolves my sluggish system issue.&lt;/p&gt;
+
+&lt;p&gt;To confirm which governors are available, I use &lt;code&gt;cpupower&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpupower frequency-info --governors
+analyzing CPU 0:
+performance powersave
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here you can see my system printed both &amp;ldquo;performance&amp;rdquo; and &amp;ldquo;powersave&amp;rdquo; as expected. To switch to the performance governor, I can use the following command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo cpupower frequency-set --governor performance
+Setting cpu: 0
+Setting cpu: 1
+Setting cpu: 2
+Setting cpu: 3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;frequency-info&lt;/code&gt; subcommand will show me which governor is active:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpupower frequency-info
+analyzing CPU 0:
+  driver: intel_pstate
+  CPUs which run at the same hardware frequency: 0
+  CPUs which need to have their frequency coordinated by software: 0
+  maximum transition latency: 0.97 ms.
+  hardware limits: 500 MHz - 2.70 GHz
+  available cpufreq governors: performance, powersave
+  current policy: frequency should be within 500 MHz and 2.70 GHz.
+                  The governor &amp;quot;performance&amp;quot; may decide which speed to use
+                  within this range.
+  current CPU frequency is 2.28 GHz.
+  boost state support:
+    Supported: yes
+    Active: yes
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &amp;ldquo;current policy&amp;rdquo; section describes the active governor, which in my case is showing the performance governor as active.&lt;/p&gt;
+
+&lt;h3 id=&#34;cpupower-resources&#34;&gt;cpupower resources&lt;/h3&gt;
+
+&lt;p&gt;The Redhat Linux documentation includes an CPU frequency setup &lt;a href=&#34;https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Power_Management_Guide/cpufreq_setup.html#enabling_a_cpufreq_governor&#34;&gt;guide&lt;/a&gt; with instruction on how to load additional drivers. The Arch Linux CPU frequency scaling &lt;a href=&#34;https://wiki.archlinux.org/index.php/CPU_Frequency_Scaling&#34;&gt;documentation&lt;/a&gt; contains lots of useful information including which files control frequency settings.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;cpupower&lt;/code&gt; manpage is pretty sparse. Once you have installed &lt;code&gt;cpupower&lt;/code&gt; try running the &lt;code&gt;help&lt;/code&gt; command to get started:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpupower help
+Usage:  cpupower [-d|--debug] [-c|--cpu cpulist ] &amp;lt;command&amp;gt; [&amp;lt;args&amp;gt;]
+Supported commands are:
+        frequency-info
+        frequency-set
+        idle-info
+        idle-set
+        set
+        info
+        monitor
+        help
+
+Not all commands can make use of the -c cpulist option.
+
+Use &#39;cpupower help &amp;lt;command&amp;gt;&#39; for getting help for above commands.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Prevent harmful Linux updates with versionlock</title>
+      <link>http://localhost:1313/article/prevent-harmful-updates-with-versionlock/</link>
+      <pubDate>Mon, 21 Mar 2016 20:46:17 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/prevent-harmful-updates-with-versionlock/</guid>
+      <description>
+
+&lt;p&gt;On my home machine I run Fedora, a Linux distro famous for being at the cutting-edge of Linux development. My laptop is the &lt;a href=&#34;http://perltricks.com/article/187/2015/8/18/Laptop-review--Dell-XPS-13-2015/&#34;&gt;Dell XPS 13&lt;/a&gt; which uses some fairly advanced hardware. In Open Source this can be dangerous combination: older Linux kernels can&amp;rsquo;t handle my machine&amp;rsquo;s hardware, and brand new kernels often break it too. Every time I do a software update, I&amp;rsquo;m walking a tightrope.&lt;/p&gt;
+
+&lt;p&gt;The way I handle this is with a package manager plugin called &lt;a href=&#34;https://github.com/rpm-software-management/dnf-plugins-extras&#34;&gt;versionlock&lt;/a&gt;. It lets me tell the package manager to lock certain packages at their current version and voilà! I can blindly apply all software updates and know that those troublesome packages will not be upgraded.&lt;/p&gt;
+
+&lt;h3 id=&#34;installation&#34;&gt;Installation&lt;/h3&gt;
+
+&lt;p&gt;The versionlock plugin is available for both dnf and yum, so pick which package manager your system is using. For dnf:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf install python-dnf-plugins-extras-versionlock
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And for yum:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum install yum-plugin-versionlock
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;lock-a-package&#34;&gt;Lock a package&lt;/h3&gt;
+
+&lt;p&gt;To add a package to the locked list, simply run the package manager program with the &lt;code&gt;versionlock&lt;/code&gt; and &lt;code&gt;add&lt;/code&gt; commands:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf versionlock add my-package
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The yum version:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum versionlock add my-package
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, the commands for dnf and yum are the same. You can lock multiple packages in one command. Here&amp;rsquo;s how I prevent my system from upgrading the kernel packages:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf versionlock add kernel-0:4.3.5-300.fc23 kernel-modules-0:4.3.5-300.fc23 kernel-core-0:4.3.5-300.fc23 kernel-devel-0:4.3.5-300.fc23
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;list-locked-packages&#34;&gt;List locked packages&lt;/h3&gt;
+
+&lt;p&gt;To see which packages are locked, use the &lt;code&gt;list&lt;/code&gt; command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ dnf versionlock list
+Last metadata expiration check: 0:00:00 ago on Mon Mar 21 20:58:57 2016.
+kernel-0:4.3.5-300.fc23.*
+kernel-modules-0:4.3.5-300.fc23.*
+kernel-core-0:4.3.5-300.fc23.*
+kernel-devel-0:4.3.5-300.fc23.*
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;unlock-a-package&#34;&gt;Unlock a package&lt;/h3&gt;
+
+&lt;p&gt;To remove one package from the lock list, use &lt;code&gt;delete&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo dnf versionlock delete my-package
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To remove all packages from the lock list, use &lt;code&gt;clear&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum versionlock clear
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;help&#34;&gt;Help&lt;/h3&gt;
+
+&lt;p&gt;If you ever forget these commands, you can list the available commands with &lt;code&gt;help&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ dnf help versionlock
+versionlock [add|exclude|list|delete|clear] [&amp;lt;package-nevr-spec&amp;gt;]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;how-many-installers-do-you-need&#34;&gt;How many installers do you need?&lt;/h3&gt;
+
+&lt;p&gt;On Fedora I also remove the &lt;a href=&#34;https://wiki.gnome.org/Apps/Software&#34;&gt;Gnome Software&lt;/a&gt; program (&lt;code&gt;gnome-software&lt;/code&gt; package). Whilst it&amp;rsquo;s useful to be reminded of pending updates via the GUI, any package installed via Gnome Software is not part of the dnf history. That makes it harder when it&amp;rsquo;s necessary to downgrade or remove a troublesome package.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Managing packages can be a pain, but versionlock makes life easier. If you use Debian or Ubuntu you can use &lt;code&gt;apt-mark hold my-package&lt;/code&gt; and &lt;code&gt;apt-mark unhold my-package&lt;/code&gt; to similar effect.
+&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl and Mandrakelinux</title>
+      <link>http://localhost:1313/pub/2005/02/24/mandrakelinux.html/</link>
+      <pubDate>Thu, 24 Feb 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/02/24/mandrakelinux.html/</guid>
+      <description>&lt;p&gt;&lt;em&gt;Perl programmers have a special reason for choosing &lt;a href=&#34;http://www.mandrakelinux.com/&#34;&gt;Mandrakelinux&lt;/a&gt; as their desktop operating system. Mandrakelinux uses Perl for dozens of the graphical &amp;ldquo;value added&amp;rdquo; utilities included with the distribution, including much of the Mandrakelinux Control Center. I asked Mandrakelinux for an interview with a top Perl contributor and they sent &lt;a href=&#34;http://rgarciasuarez.free.fr/&#34;&gt;Rafael Garcia-Suarez&lt;/a&gt; my way. Besides being heavily involved with Perl at Mandrakesoft, Rafael is also the pumpking for the Perl 5.10 release. Rafael answered my questions about using Perl for GUI programming and how he balances his day job with being pumpking.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;O&amp;rsquo;Reilly Network:&lt;/strong&gt; Briefly tell us about the Perl work you do for Mandrakelinux.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rafael:&lt;/strong&gt; My main responsibility is to maintain and enhance the command-line tool urpmi (and its GUI counterpart rpmdrake), which are the Mandrakelinux equivalent of Debian&amp;rsquo;s apt or Fedora&amp;rsquo;s yum; that is, fetching RPMs and their dependencies and installing or upgrading them.&lt;/p&gt;
+
+&lt;p&gt;This job extends to whatever pertains to installing RPMs; that means that I also participate in enhancing Mandrakelinux&amp;rsquo;s installer. All those tools are written in Perl.&lt;/p&gt;
+
+&lt;p&gt;Besides this, I also maintain the RPM of perl itself and of a load of CPAN modules for Mandrakelinux.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ORN:&lt;/strong&gt; Perl is uncommon choice for graphical programming, yet Mandrakelinux has used Perl for over 50 graphical applications. Many of these tools are specific to Mandrakelinux, adding value to the distribution. What can you tell us about why Mandrakelinux uses Perl for this important role?&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rafael:&lt;/strong&gt; Not all tools were always written in Perl. However using consistently a same language allows to share and reuse libraries across all tools, be it the perl/rpmlib bindings or custom graphical toolboxes. Thus, for example, the OS installer shares code with urpmi and rpmdrake. A scripting language was preferred because of rapidity of development and ease of debug &amp;ndash; attempts at writing rpmdrake in C were painful, although that was before I was hired by Mandrakesoft. Perl was a natural choice since there were already very good in-house skills for it.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editors note: Recently, the &lt;a href=&#34;http://www.linspire.com/&#34;&gt;Linspire&lt;/a&gt; distributionexemplified the use of dynamic languages to bring a graphical application to market quickly. Their &lt;a href=&#34;http://info.linspire.com/lsongs/&#34;&gt;Lsongs&lt;/a&gt; nd &lt;a href=&#34;http://info.linspire.com/lphoto/&#34;&gt;Lphoto&lt;/a&gt; programs use Python.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ORN:&lt;/strong&gt; Could you give a specific example of where Perl has made a noticeable difference in shortening development time?&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rafael:&lt;/strong&gt; I think that using a scripting language in general shortens the development time, notably due to the shorter write code / compile / test / debug cycle. However perl is particularly useful due to the high number of development modules available on CPAN. For example running the OS installer under &lt;a href=&#34;https://metacpan.org/pod/Devel::Trace&#34;&gt;Devel::Trace&lt;/a&gt; produces lots of logs, but is tremendously helpful to trace obscure bugs. You can&amp;rsquo;t do this in C without adding &lt;code&gt;printf&lt;/code&gt;s everywhere and recompiling the whole stuff.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ORN:&lt;/strong&gt; What tools does Mandrakelinux use for automated testing of graphical Perl applications?&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rafael:&lt;/strong&gt; Er, interns ?&lt;/p&gt;
+
+&lt;p&gt;More seriously, there is no automated testing for GUIs. Automated testing of such applications raises several difficult problems, since they often modify a system&amp;rsquo;s configuration or necessitate some specific hardware (and I&amp;rsquo;m not even speaking of the OS installer GUI).&lt;/p&gt;
+
+&lt;p&gt;Writing more unit tests is definitively something I want to do in the future, however; it would be very useful to have complete sets of regression tests for the urpmi dependency solver, for example.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ORN:&lt;/strong&gt; What has been the response of the Perl community to Mandrakelinux Perl-based tools, especially in terms of contributing patches back to your organization?&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rafael:&lt;/strong&gt; The people who send patches for the tools are mostly interested in improving the distribution they use; even if they might belong to the Perl community as well, their point of view is the one of a Mandrakelinux user. That&amp;rsquo;s one of the reasons why the tools have little visibility outside the MDK community.&lt;/p&gt;
+
+&lt;p&gt;Another reason is that there never was a strong motivation in Mandrakesoft for splitting the libraries in what is and is not MDK-specific, and to write clear and comprehensive documentation: both need efforts, don&amp;rsquo;t pay immediately and are likely to be postponed when you have deadlines.&lt;/p&gt;
+
+&lt;p&gt;However, the CVS repository in which the tools&amp;rsquo; source code is kept is openly accessible; some contributors (i.e. non Mandrakesoft employees) have been granted commit access to it. We now need to make the learning curve softer.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ORN:&lt;/strong&gt;What advice do have for Perl programmers interested in contributing to the Perl-based Mandrakelinux utilities? Any helpful hints for getting started?&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rafael:&lt;/strong&gt; As with any open-source project, if you want to learn how it&amp;rsquo;s done and to contribute, use the latest version available. In the case of Mandrakelinux, that would be &amp;ldquo;cooker&amp;rdquo;, the development distribution. Subscribe to the mailing list, become familiar with the tools, have a checkout from the CVS repository, get yourself a Bugzilla account and don&amp;rsquo;t be afraid to ask questions. Learning to build RPMs, at least to be able to rebuild the RPMs of the tools, would be helpful too. Those questions are covered in the wiki; a good page to begin with is:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;http://qa.mandrakesoft.com/twiki/bin/view/Main/HowTo&#34;&gt;http://qa.mandrakesoft.com/twiki/bin/view/Main/HowTo&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;strong&gt;ORN:&lt;/strong&gt; What challenges have you faced maintaining Perl as a core part of the operating system, with so many key utilities depending on it?&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rafael:&lt;/strong&gt; There are two kinds of challenges: spatial and temporal, would I say.&lt;/p&gt;
+
+&lt;p&gt;First, spatially, you have to devise how to split the standard Perl distribution on smaller packages (&amp;ldquo;perl-base&amp;rdquo; for the essentials, &amp;ldquo;perl&amp;rdquo; for the rest of modules, &amp;ldquo;perl-devel&amp;rdquo; for Perl development tools and &amp;ldquo;perl-doc&amp;rdquo; for, well, perldoc itself and the standard documentation.) This split is not arbitrary. When you maintain a core tool like urpmi, which is essential to system administration, you don&amp;rsquo;t want it to require too many Perl modules, or even too many core modules. (The same goes for the installer, that must not take all the space on the installation CDs). So perl-base contains the modules used by urpmi, and urpmi doesn&amp;rsquo;t use modules that are in perl but not in perl-base.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ORN:&lt;/strong&gt; Perl has a reputation for being &amp;ldquo;slow&amp;rdquo; when used for graphical programming. How is that addressed in Mandrakelinux applications?&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rafael:&lt;/strong&gt; I think that Perl doesn&amp;rsquo;t deserve this reputation, only some Perl programs do ! The MDK tools use the perl-Gtk2 bindings (mostly for historical reasons, the Qt bindings weren&amp;rsquo;t mature enough when the development of those tools started); and since they&amp;rsquo;re pretty close to the C lib, performance is very acceptable.&lt;/p&gt;
+
+&lt;p&gt;Did you know that the game &lt;a href=&#34;http://www.frozen-bubble.org/&#34;&gt;Frozen Bubble&lt;/a&gt;, written by a former Mandrakesoft employee, is implemented in Perl ? It&amp;rsquo;s not anywhere near slow. Actually people are often surprised to learn that Frozen Bubble or the MDK tools are written in Perl, since they don&amp;rsquo;t give the impression of slowness generally associated to scripted GUIs.&lt;/p&gt;
+
+&lt;p&gt;In fact, it appears that the speed bottlenecks of the MDK tools are, like in other programs, data processing, not display.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ORN:&lt;/strong&gt; You&amp;rsquo;ve recently become the pumpking for Perl 5.10. How does your this interact with your day job and how do you balance the two positions?&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rafael:&lt;/strong&gt; I was deeply involved in the development of Perl 5 before that, taking time to review and apply patches and so on. So I was mostly working on it on evenings and week-ends. I can now work on Perl 5 during my dayjob, since Mandrakesoft allows its developers to work on free projects they like part time. However, I&amp;rsquo;d point out that my day job is a bit special, since, contrary to proprietary projects, I&amp;rsquo;m always in contact with its community of users, via mail, IRC or other internet-based media (and even sometimes in real life.) Thus I&amp;rsquo;m sometimes led to work during my free time as well&amp;hellip; In other words the frontier between day job and other open source development is blurred. In both cases things have to be done. The only difference is that for the day job thing, I have deadlines, and they pay me for it.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ORN:&lt;/strong&gt; Do you have a favorite Perl module that more people should know about?&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rafael:&lt;/strong&gt; I don&amp;rsquo;t really know, I learn new modules mostly by hanging around in places where the cool kids discover them before me &amp;ndash; mailing lists, mongers, &lt;a href=&#34;http://use.perl.org/&#34;&gt;use.perl&lt;/a&gt;. I use &lt;a href=&#34;https://metacpan.org/pod/B::Concise&#34;&gt;B::Concise&lt;/a&gt; all the time, but I suspect it&amp;rsquo;s not useful for people who are not familiar with the internals of perl. Also, recently, I found &lt;a href=&#34;https://metacpan.org/pod/encoding::warnings&#34;&gt;encoding::warnings&lt;/a&gt; useful for debugging Unicode-related bugs.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

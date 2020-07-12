@@ -23,7 +23,7 @@
 }
 
 
-Recently the tech media have been foaming at the mouth over a serious Bash [bug](https://securityblog.redhat.com/2014/09/24/bash-specially-crafted-environment-variables-code-injection-attack/) called Shellshock. The media [hype machine](http://www.wired.com/2014/09/internet-braces-crazy-shellshock-worm/) was in full-swing, replete with the absurd doomsday-like predictions that are rolled out every time a significant security vulnerability is found (remember heartbleed the "[ultimate web nightmare](http://mashable.com/2014/04/09/heartbleed-nightmare/)"?). Whilst it's wise to ignore the hype, don't ignore the issue; Shellshock is a serious risk that allows remote code injection and execution using Bash environment variables. This is also important for Perl as Perl has several touchpoints with the system shell, from the built-in functions [exec](http://perldoc.perl.org/functions/exec.html) and [system](http://perldoc.perl.org/functions/system.html) to the `%ENV` global variable.
+Recently the tech media have been foaming at the mouth over a serious Bash [bug](https://securityblog.redhat.com/2014/09/24/bash-specially-crafted-environment-variables-code-injection-attack/) called Shellshock. The media [hype machine](http://www.wired.com/2014/09/internet-braces-crazy-shellshock-worm/) was in full-swing, replete with the absurd doomsday-like predictions that are rolled out every time a significant security vulnerability is found (remember heartbleed the "[ultimate web nightmare](http://mashable.com/2014/04/09/heartbleed-nightmare/)"?). Whilst it's wise to ignore the hype, don't ignore the issue; Shellshock is a serious risk that allows remote code injection and execution using Bash environment variables. This is also important for Perl as Perl has several touchpoints with the system shell, from the built-in functions [exec]({{</* perlfunc "exec" */>}}) and [system]({{</* perlfunc "system" */>}}) to the `%ENV` global variable.
 
 ### Is system "x" affected?
 
@@ -71,7 +71,7 @@ $ perl -e 'system "echo test"'
 test
 ```
 
-Hmm what happened here? The command ran fine but "danger" was not printed - Shellshock failed. It turns out that Perl doesn't *always* invoke the shell using: `/bin/sh -c`. Instead to be more efficient, Perl will usually call [execvp](http://www.csl.mtu.edu/cs4411.ck/www/NOTES/process/fork/exec.html). According to [perldoc](http://perldoc.perl.org/functions/system.html), only when the system command contains [metacharacters](http://www.sal.ksu.edu/faculty/tim/unix_sg/shell/metachar.html), will Perl invoke the shell directly. Let's test that:
+Hmm what happened here? The command ran fine but "danger" was not printed - Shellshock failed. It turns out that Perl doesn't *always* invoke the shell using: `/bin/sh -c`. Instead to be more efficient, Perl will usually call [execvp](http://www.csl.mtu.edu/cs4411.ck/www/NOTES/process/fork/exec.html). According to [perldoc]({{</* perlfunc "system" */>}}), only when the system command contains [metacharacters](http://www.sal.ksu.edu/faculty/tim/unix_sg/shell/metachar.html), will Perl invoke the shell directly. Let's test that:
 
 ```perl
 $ perl -e 'system "echo test >> test.log"'

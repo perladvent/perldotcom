@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Import on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/import/</link>
+    <description>Recent content in Import on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 16 Dec 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/import/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Perl Code Kata: Testing Imports</title>
+      <link>http://localhost:1313/pub/2004/12/16/import_kata.html/</link>
+      <pubDate>Thu, 16 Dec 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/12/16/import_kata.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/pub/2004/10/21/taint_testing_kata.html&#34;&gt;Perl Taint Test Kata&lt;/a&gt; introduced the idea of Perl Test Kata, small exercises designed to improve your understanding of Perl and your ability to write test-driven code. This article is the second in the series.&lt;/p&gt;
+
+&lt;h3 id=&#34;import-testing-kata&#34;&gt;Import Testing Kata&lt;/h3&gt;
+
+&lt;p&gt;Perl 5 added the ideas of namespaces and modules, making code reusable and easier to maintain. To allow convenience, it also added an importing mechanism to put code from a module into the current namespace.&lt;/p&gt;
+
+&lt;p&gt;Behind the scenes, when you &lt;code&gt;use&lt;/code&gt; a module, Perl loads it from disk and, if successful, calls the special method &lt;code&gt;import()&lt;/code&gt;. By convention, this generally imports functions. Much of the time, &lt;code&gt;import()&lt;/code&gt; mundanely installs subroutines into the current namespace. That&amp;rsquo;s why so many modules use Exporter to provide a default &lt;code&gt;import()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;However, it&amp;rsquo;s also a general module-loading hook that can perform many different types of manipulations. For example, &lt;a href=&#34;https://metacpan.org/pod/Filter::Simple&#34;&gt;Filter::Simple&lt;/a&gt; allows the use of source filters to transform code that looks entirely unlike Perl into valid code in the using module. Other modules change their behavior depending on any arguments passed to &lt;code&gt;import()&lt;/code&gt;. This includes &lt;a href=&#34;https://metacpan.org/pod/Test::More&#34;&gt;Test::More&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Test::Simple&#34;&gt;Test::Simple&lt;/a&gt;, which interpret their arguments as information about how many tests to run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More &#39;no_plan&#39;;
+
+# or
+
+use Test::More tests =&amp;gt; 100;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This feature is both powerful and important. Because of its importance, it needs good tests. Because of its power and flexibility, it may seem difficult to test an &lt;code&gt;import()&lt;/code&gt; well. Here are three sample implementations for you to practice testing.&lt;/p&gt;
+
+&lt;h4 id=&#34;basic-exporting&#34;&gt;Basic Exporting&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;package Basic::Exports;
+
+use strict;
+
+use base &#39;Exporter&#39;;
+use vars &#39;@EXPORT&#39;;
+
+@EXPORT = qw( foo bar );
+
+sub foo { &#39;foo&#39; }
+sub bar { &#39;bar&#39; }
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The tests should check that using Basic::Exports exports &lt;code&gt;foo()&lt;/code&gt; and &lt;code&gt;bar()&lt;/code&gt; to the appropriate namespace and that they return the appropriate values. Another test is that the code &lt;code&gt;use Basic::Exports ();&lt;/code&gt; exports &lt;em&gt;neither&lt;/em&gt; function.&lt;/p&gt;
+
+&lt;h4 id=&#34;optional-exports&#34;&gt;Optional Exports&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;package Optional::Exports;
+
+use strict;
+
+use base &#39;Exporter&#39;;
+use vars &#39;@EXPORT_OK&#39;;
+
+@EXPORT_OK = qw( foo bar baz );
+
+sub foo { &#39;foo&#39; }
+sub bar { &#39;bar&#39; }
+sub baz { &#39;baz&#39; }
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The tests should check that Optional::Exports exports nothing by default and only those functions named, if there are any.&lt;/p&gt;
+
+&lt;h4 id=&#34;load-time-behavior&#34;&gt;Load-time Behavior&lt;/h4&gt;
+
+&lt;p&gt;A few modules have curious behavior. My Pod::ToDemo behaves differently when invoked from the command line versus when used within a module. This makes it substantially more difficult to test. Rather than make you reinvent the tests there, here&amp;rsquo;s a simpler custom &lt;code&gt;import()&lt;/code&gt; that does different things based on its invocation. If invoked from the command line, it prints a message to standard output. If used from a module, it exports the same &lt;code&gt;foo()&lt;/code&gt; subroutine as before.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Export::Weird;
+
+use strict;
+
+sub import
+{
+    my ($package, undef, $line) = caller();
+
+    if ( $line == 0 )
+    {
+        print &amp;quot;Invoked from command-line\n&amp;quot;;
+    }
+    else
+    {
+        no strict &#39;refs&#39;;
+        *{ $package . &#39;::foo&#39; } = sub { &#39;foo&#39; };
+    }
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only really tricky test here must exercise the behavior of the module when invoked from the command line. Assume that the documentation of the module suggests invoking it via:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -MExport::Weird -e 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next page explains some techniques for testing these examples. For best results, spend between 30 and 45 minutes working through the kata on your own before looking at the hints. For more information on how modules, &lt;code&gt;use&lt;/code&gt;, and &lt;code&gt;require&lt;/code&gt; work, see &lt;code&gt;perldoc perlmod&lt;/code&gt; and &lt;code&gt;perldoc perlfunc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;tips-tricks-and-suggestions&#34;&gt;Tips, Tricks, and Suggestions&lt;/h3&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve worked your way through writing tests for the three examples, here are the approaches I would take. They&amp;rsquo;re not the only ways to test these examples, but they do work. First, here is some background information on what&amp;rsquo;s happening.&lt;/p&gt;
+
+&lt;h4 id=&#34;reloading&#34;&gt;Reloading&lt;/h4&gt;
+
+&lt;p&gt;To test &lt;code&gt;import()&lt;/code&gt; properly, you must understand its implications. When Perl encounters a &lt;code&gt;use module;&lt;/code&gt; statement, it executes a two-step process &lt;em&gt;immediately&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;BEGIN
+{
+    require module;
+    module-&amp;gt;import();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can subvert both of these processes. To force Perl to reload a module, you can delete its entry from &lt;code&gt;%INC&lt;/code&gt;. Note that all of the keys of this special hash represent pathnames in Unix format. For example, even if you use Windows or VMS or Mac OS 9 or earlier, loading Filter::Simple successfully should result in &lt;code&gt;%INC&lt;/code&gt; containing a true value for the key of &lt;code&gt;Filter/Simple.pm&lt;/code&gt;. (You may also want to use the &lt;code&gt;delete_package()&lt;/code&gt; function of the Symbol module to clear out the namespace, though beware of the caveats there.) Now you can &lt;code&gt;require&lt;/code&gt; the module again.&lt;/p&gt;
+
+&lt;h4 id=&#34;re-importing&#34;&gt;Re-importing&lt;/h4&gt;
+
+&lt;p&gt;Next, you&amp;rsquo;ll have to call &lt;code&gt;import()&lt;/code&gt; manually. It&amp;rsquo;s a normal class method call, however, so you can provide all of the arguments as you would to a function or method call.&lt;/p&gt;
+
+&lt;p&gt;You can also switch packages, though make sure that you qualify any calls to Test::* module functions appropriately:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Some::Other::Package;
+
+module-&amp;gt;import( @args );
+
+main::ok( 1, &#39;some test label&#39; );
+
+# or 
+
+::ok( 1, &#39;some test label&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;testing-exports&#34;&gt;Testing Exports&lt;/h4&gt;
+
+&lt;p&gt;There are at least two techniques for checking the import of functions. One is the use of the &lt;code&gt;defined&lt;/code&gt; keyword and the other is through the &lt;code&gt;can()&lt;/code&gt; class method. For example, tests for Example #1 might be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use_ok( &#39;Basic::Exports&#39; );
+ok( defined &amp;amp;foo,              &#39;module should export foo()&#39; )
+ok( __PACKAGE__-&amp;gt;can( &#39;bar&#39; ), &#39;... and should export bar()&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To test that these are the right functions, call them as normal and check their return values.&lt;/p&gt;
+
+&lt;p&gt;By the way, the presence of the &lt;code&gt;__PACKAGE__&lt;/code&gt; symbol there allows this test to take place in other namespaces. If you haven&amp;rsquo;t imported the &lt;code&gt;ok()&lt;/code&gt; test function into this namespace, remember to qualify it, import it manually, or alias it so that the test program will itself run. (It may fail, which is fine, but errors in your tests are difficult and embarrassing to fix.)&lt;/p&gt;
+
+&lt;h4 id=&#34;testing-non-exports&#34;&gt;Testing Non-Exports&lt;/h4&gt;
+
+&lt;p&gt;It&amp;rsquo;s difficult to prove a negative conclusively, but if you reverse the condition of a test, you can have good confidence that the module hasn&amp;rsquo;t provided anything unwanted.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use_ok( &#39;Optional::Exports&#39; );
+ok( ! __PACKAGE__-&amp;gt;can( &#39;foo&#39; ),
+    &#39;module should not export foo() by default&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only tricky part of the tests here is in trying to import functions again. Call &lt;code&gt;import()&lt;/code&gt; explicitly as a class method of the module. Switching packages within the test can make this easier; you don&amp;rsquo;t have to unload the module if you do this.&lt;/p&gt;
+
+&lt;h4 id=&#34;testing-weird-exports&#34;&gt;Testing Weird Exports&lt;/h4&gt;
+
+&lt;p&gt;The easist way to test an &lt;code&gt;import()&lt;/code&gt; function that relies on command-line invocation or produces weird side effects that you may not want to handle in your current program is to launch it as a separate program. There are plenty of options for this, from &lt;code&gt;system&lt;/code&gt; to &lt;code&gt;fork&lt;/code&gt; and &lt;code&gt;exec&lt;/code&gt; to tricks with pipes and shell redirection. &lt;a href=&#34;https://metacpan.org/pod/IPC::Open3&#34;&gt;IPC::Open3&lt;/a&gt; is one good approach, if you want to use it in your test suite:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#! perl
+
+use strict;
+use warnings;
+
+use blib;
+use IPC::Open3;
+
+use Test::More tests =&amp;gt; 3;
+
+use_ok( &#39;Export::Weird&#39; );
+
+my $pid = open3(
+    undef, my $reader, undef,
+    $^X, &#39;-Mblib&#39;, &#39;-MExport::Weird&#39;, &#39;-e&#39;, &#39;1&#39;
+);
+
+my @out = &amp;lt;$reader&amp;gt;;
+is( @out,                                1,
+    &#39;cli invocation should print one line&#39; );
+is( $out[0], &amp;quot;Invoked from command-line\n&amp;quot;,
+    &#39;... with the right message&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$^X&lt;/code&gt; represents the path to the Perl binary currently executing this program. The &lt;code&gt;-Mblib&lt;/code&gt; switch loads the &lt;code&gt;blib&lt;/code&gt; module to set &lt;code&gt;@INC&lt;/code&gt; in the program appropriately. Depending on how you&amp;rsquo;ve set up your directories and invoke this program, you may have to change this. The other commands follow the invocation scheme given in Example #3.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;You should now have several ideas on how to test &lt;code&gt;import()&lt;/code&gt; methods of various kinds. For more details, read the tests of &lt;a href=&#34;https://metacpan.org/pod/Pod::ToDemo&#34;&gt;Pod::ToDemo&lt;/a&gt; or &lt;a href=&#34;https://metacpan.org/pod/Test::Builder&#34;&gt;Test::Builder&lt;/a&gt;, which play strange games to achieve good test coverage.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve found a differently workable approach, I&amp;rsquo;d like to hear from you. Also, if you have suggestions for another kata (or would like to write one), please let me know.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;chromatic is the author of &lt;a href=&#34;http://onyxneon.com/books/modern_perl/&#34;&gt;Modern Perl&lt;/a&gt;. In his spare time, he has been working on &lt;a href=&#34;https://trendshare.org/how-to-invest/&#34;&gt;helping novices understand stocks and investing&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

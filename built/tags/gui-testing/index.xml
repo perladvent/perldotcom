@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Gui Testing on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/gui-testing/</link>
+    <description>Recent content in Gui Testing on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 02 Feb 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/gui-testing/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Test-Driving X11 GUIs</title>
+      <link>http://localhost:1313/pub/2006/02/02/x11_gui_testing.html/</link>
+      <pubDate>Thu, 02 Feb 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/02/02/x11_gui_testing.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;driving-x11-guis-using-x11-guitest&#34;&gt;Driving X11 GUIs using X11::GUITest&lt;/h3&gt;
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;Interfaces to GUI applications like &lt;a href=&#34;http://developer.kde.org/documentation/library/kdeqt/kde3arch/dcop.html&#34;&gt;DCOP&lt;/a&gt; or &lt;a href=&#34;http://www.freedesktop.org/Software/dbus&#34;&gt;D-BUS&lt;/a&gt; allow you to interact with GUI applications in order to get at their internal states or set some arbitrary states.&lt;/p&gt;
+
+&lt;p&gt;Sometimes GUIs don&amp;rsquo;t allow for such interaction and you need to &amp;ldquo;click&amp;rdquo; them. If you&amp;rsquo;re writing such an application, you need some sort of regression tests for it to make sure your widget/windows are as accessible as they should be. If this is the case, there is a Perl module to help you: &lt;a href=&#34;https://metacpan.org/pod/X11::GUITest&#34;&gt;X11::GUITest&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Be aware that &lt;code&gt;X11::GUITest&lt;/code&gt; allows you to drive a GUI, but you can&amp;rsquo;t &amp;ldquo;read&amp;rdquo; data written in a widget, such as a button or an edit box. More on this in the Limitations section below.&lt;/p&gt;
+
+&lt;p&gt;To install &lt;code&gt;X11::GUITest&lt;/code&gt;, run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -MCPAN -e &#39;shell&#39;
+install X11::GUITest
+quit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;a-simple-example&#34;&gt;A Simple Example&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve included two example programs. One is &lt;a href=&#34;http://localhost:1313/media/_pub_2006_02_02_x11_gui_testing/tested.pl&#34;&gt;&lt;em&gt;tested.pl&lt;/em&gt;&lt;/a&gt; and it serves as an example GUI. The other is &lt;a href=&#34;http://localhost:1313/media/_pub_2006_02_02_x11_gui_testing/tester.pl&#34;&gt;&lt;em&gt;tester.pl&lt;/em&gt;&lt;/a&gt; that starts and drives the tested program.&lt;/p&gt;
+
+&lt;p&gt;You need Tk installed for the tested GUI. Tk comes as a package in most GNU/Linux distributions or other *NIX OSes. Download both files in the same folder, run &lt;em&gt;./tester.pl&lt;/em&gt;, and watch.&lt;/p&gt;
+
+&lt;p&gt;What are they doing and how do they work?&lt;/p&gt;
+
+&lt;h3 id=&#34;starting-a-gui&#34;&gt;Starting a GUI&lt;/h3&gt;
+
+&lt;p&gt;First thing to do prior to driving a GUI is to start the driven program. While you can use &lt;code&gt;fork&lt;/code&gt; and &lt;code&gt;exec&lt;/code&gt; or any other means, &lt;code&gt;X11::GUITest&lt;/code&gt; comes with a routine of its own.&lt;/p&gt;
+
+&lt;p&gt;Use &lt;code&gt;StartApp( $tested_application );&lt;/code&gt; to start a GUI, which results in starting the desired application in an asynchronous manner.&lt;/p&gt;
+
+&lt;p&gt;If you want to start an application and wait for it to finish before going on, use &lt;code&gt;RunApp&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;finding-a-window&#34;&gt;Finding a Window&lt;/h3&gt;
+
+&lt;p&gt;After having the GUI started, you need to search for it among the other open windows on your desktop. For this, use &lt;code&gt;FindWindowLike()&lt;/code&gt;, &lt;code&gt;WaitWindowLike()&lt;/code&gt;, or &lt;code&gt;WaitWindowViewable()&lt;/code&gt;, depending on what you need. Their names are pretty much self-explanatory.&lt;/p&gt;
+
+&lt;p&gt;Usually you need to have only one instance of the tested application started:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@windows = FindWindowLike( $tested_app_title );
+print &amp;quot;* Number of $tested_app_title windows found: &amp;quot;, scalar @windows, &amp;quot;\n&amp;quot;;
+
+if ( @windows == 1 ) {
+     print &amp;quot;* Only one instance found, going on ...\n&amp;quot;;
+} else {
+    print &amp;quot;* The number of $tested_app_title instances is different than 1\n&amp;quot;;
+    print &amp;quot;exiting ...\n&amp;quot;;
+    exit;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;FindWindowLike()&lt;/code&gt; returns a list of windows that match the search criteria, which is a regular expression to match against the window title. In case there is more than one window that matches the criteria, either you have the same window started multiple times, or the regular expression isn&amp;rsquo;t specific enough.&lt;/p&gt;
+
+&lt;h3 id=&#34;sending-keyboard-events-to-an-application&#34;&gt;Sending Keyboard Events to an Application&lt;/h3&gt;
+
+&lt;p&gt;Having found the window, (when you know that there is only one, you can access it as the first element of &lt;code&gt;@windows&lt;/code&gt;, namely &lt;code&gt;$windows[0]&lt;/code&gt;), you probably want to send it some keystrokes. Use &lt;code&gt;SendKeys()&lt;/code&gt; to do this.&lt;/p&gt;
+
+&lt;p&gt;If you are having a busy X server, or just want your testing to be easy for the human eye to watch, set the delay between the keystrokes (in milliseconds) with &lt;code&gt;SetKeySendDelay()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SetKeySendDelay( $delay );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To send &lt;code&gt;Alt&lt;/code&gt;+&lt;code&gt;O&lt;/code&gt;, followed by a delay of &lt;code&gt;$delay&lt;/code&gt; milliseconds, then &lt;code&gt;e&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SendKeys( &#39;%(o)e&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Besides sending plain text to an application, like sending the infamous &amp;ldquo;Hello World&amp;rdquo; to an editor window, you may have noticed that the previous example sent a combination of keys. Do so by using modifiers. The modifier keys are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;^&lt;/code&gt;, &lt;code&gt;Ctrl&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;%&lt;/code&gt;, &lt;code&gt;Alt&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;+&lt;/code&gt;, &lt;code&gt;Shift&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The &lt;code&gt;X11::GUITest&lt;/code&gt; documentation has a complete list of special keys and their &amp;ldquo;encodings.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;You may also find it useful to use &lt;code&gt;QuoteStringForSendKeys()&lt;/code&gt; in the case of complicated strings.&lt;/p&gt;
+
+&lt;h3 id=&#34;sending-mouse-events-to-an-application&#34;&gt;Sending Mouse Events to an Application&lt;/h3&gt;
+
+&lt;p&gt;Sending keys may be not enough in some situations. Having an application that has keyboard shortcuts is nice, but not all of them support it. Sometimes you may need to send mouse events.&lt;/p&gt;
+
+&lt;p&gt;To get the absolute position of the appropriate window on your desktop:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my ($x, $y, $width, $height) = GetWindowPos($edit_windows[0]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Suppose that you want to click right in the middle of it. First, compute the position of the middle of the window:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$x += $width  / 2;
+$y += $height / 2;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now move the mouse:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;MoveMouseAbs( $x, $y );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then press the right mouse button:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PressMouseButton M_RIGHT;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Do something useful, and then release the mouse button. (Don&amp;rsquo;t forget to do that when you&amp;rsquo;re using &lt;code&gt;PressMouseButton&lt;/code&gt;; otherwise, you may experience &amp;ldquo;strange&amp;rdquo; desktop behavior when your testing application exits.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ReleaseMouseButton M_RIGHT
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You could replace &lt;code&gt;PressMouseButton()&lt;/code&gt; and &lt;code&gt;ReleaseMouseButton()&lt;/code&gt; with &lt;code&gt;ClickMouseButton()&lt;/code&gt; if you don&amp;rsquo;t have anything to do between pressing and releasing the mouse button.&lt;/p&gt;
+
+&lt;p&gt;In the example programs, there&amp;rsquo;s something to do&amp;ndash;navigating the context menu with keystrokes.&lt;/p&gt;
+
+&lt;h3 id=&#34;moving-a-window&#34;&gt;Moving a Window&lt;/h3&gt;
+
+&lt;p&gt;This is a neat and interesting feature: the ability to move windows. While it is useful to impress your friends with having their favorite mail program moving up and down, its utility lies in the fact that you can arrange the tested windows on the desktop so they are all visible.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;MoveWindow( $window_id, $x, $y );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;limitations&#34;&gt;Limitations&lt;/h3&gt;
+
+&lt;p&gt;As you may have noticed reading the example code, there is almost no way of validating the fact that you are indeed interacting with the right widget or window. The functions you can use for this are &lt;code&gt;FindWindow*&lt;/code&gt; or &lt;code&gt;WaitWindow*&lt;/code&gt;, which return a list of windows whose titles match an arbitrary regexp, and the functions that deal with child windows, such as &lt;code&gt;IsChild()&lt;/code&gt; and &lt;code&gt;GetChildWindows()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;While you may pass the window ID to a testing program, using external means to validate the tested application (such as indicating the coordinates on the screen), the problem is that you can&amp;rsquo;t grab a widget&amp;rsquo;s contents.&lt;/p&gt;
+
+&lt;p&gt;Also, while you might be tempted to parse the child tree of an application to get from the main window to one of its children, this doesn&amp;rsquo;t work every time. Plenty of GUIs spawn other windows at the top level, and the spawned windows have as root window the topmost window (which is the desktop).&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s an example of the problem that uses Mozilla Firefox. Before running the test, you must meet some prerequisites:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Back up your preferences before running the tests.&lt;/li&gt;
+&lt;li&gt;Go to Edit -&amp;gt; Preferences -&amp;gt; General -&amp;gt; Connection Settings and set it to &amp;ldquo;Direct connection to the Internet.&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;Click OK, and then OK, and close the browser.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Now run the &lt;em&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2006_02_02_x11_gui_testing/Firefox.pl&#34;&gt;Firefox.pl&lt;/a&gt;&lt;/em&gt; example code.&lt;/p&gt;
+
+&lt;p&gt;The test program assumes that when the Preferences window pops up, the General menu is selected.&lt;/p&gt;
+
+&lt;p&gt;Open Mozilla Firefox again, go to Preferences, select the Web Features menu, click OK, and exit the browser.&lt;/p&gt;
+
+&lt;p&gt;Rerun the &lt;em&gt;Firefox.pl&lt;/em&gt; program, and watch it.&lt;/p&gt;
+
+&lt;p&gt;It has no idea which menu is selected, because every menu component belongs to the same window, having the same title.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-guis-for-testability&#34;&gt;Writing GUIs for Testability&lt;/h3&gt;
+
+&lt;p&gt;Having in mind the strengths and weaknesses of &lt;code&gt;X11::GUITest&lt;/code&gt;, it&amp;rsquo;s critical to design graphical user interfaces that are easy to test. This way, you shorten your maintenance time, as you can have a tester program that can help check that the GUI hasn&amp;rsquo;t lost some of its windows in the development/maintenance process.&lt;/p&gt;
+
+&lt;p&gt;Of course, when displaying a license text when your GUI starts, you don&amp;rsquo;t have the means to check that the contents are unchanged using &lt;code&gt;X11::GUITest&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;What you can do is to ensure that all child windows are &amp;ldquo;in place&amp;rdquo; and that a user can access them in the same way as he/she could in previous versions.&lt;/p&gt;
+
+&lt;p&gt;If you define ways of navigating the GUI using keyboard shortcuts so that you can reach any &amp;ldquo;leaf&amp;rdquo; window starting from the top-level window, then it&amp;rsquo;s trivial for a test program to navigate the same way you do and ensure that all windows are reachable as they were in previous versions.&lt;/p&gt;
+
+&lt;p&gt;Consider the following code based on the tested Tk program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$menu{&#39;OTHER&#39;} = $menu_bar-&amp;gt;cascade(
+    -label   =&amp;gt; &#39;Other&#39;,
+    -tearoff =&amp;gt; 0,
+);
+
+$menu{&#39;OTHER&#39;}-&amp;gt;command(
+    -label   =&amp;gt; &#39;Editor&#39;,
+    -command =&amp;gt; sub {
+        edit_window();
+    }
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It defines a piece of menu from the overall menu of the application. As you may notice, there are no keyboard shortcuts that you can use to access the Editor window.&lt;/p&gt;
+
+&lt;p&gt;Thinking of testability, you could go to some lengths to test this piece of code to ensure that the Editor window is reachable and that it indeed pops up. You could record the application&amp;rsquo;s position on the screen and then click the Other button, then move the mouse over the Editor button and click it. I&amp;rsquo;m sure you can spot some caveats here, among them:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You need to make sure that the application is always on the screen at some known coordinates (use &lt;code&gt;GetWindowPos()&lt;/code&gt;) or maybe that the test always moves the window to the same place (use &lt;code&gt;MoveWindow()&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;You have to take into consideration font size changes, localization, and resolution changes so that you are sure you are clicking in the right place.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This kind of testing is fragile and error-prone. You can make things simpler and more robust: add keyboard shortcuts for each action. You gain two main benefits: you make some users (like me) happier and ease the testing process. You just need to define all the &amp;ldquo;paths&amp;rdquo; that you need to &amp;ldquo;walk&amp;rdquo; and define the child window titles so you know you&amp;rsquo;ve reached them.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a slight adjustment to the tested application so that it provides keyboard shortcuts:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$menu{&#39;OTHER&#39;} = $menu_bar-&amp;gt;cascade(
+    -label   =&amp;gt; &#39;~Other&#39;,
+    -tearoff =&amp;gt; 0,
+);
+
+$menu{&#39;OTHER&#39;}-&amp;gt;command(
+    -label   =&amp;gt; &#39;~Editor&#39;,
+    -command =&amp;gt; sub {
+        edit_window();
+    }
+);
+
+sub edit_window {
+    # some initialization code here ...
+
+    $edit_window = $main_window-&amp;gt;Toplevel();
+
+    # Set the title of the Editor window
+    $edit_window-&amp;gt;title(&amp;quot;This is an edit window&amp;quot;);
+
+    # the rest of the code here ....
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This piece of code is easier to test. Navigate the application until you reach the Editor window:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SendKeys(&#39;%(o)e&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you should have the Editor window spawned. Grab a list of windows having the title matching the Editor window&amp;rsquo;s title:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@edit_windows = FindWindowLike( $edit_title );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Check to see whether the Editor window is present. Also, there should be only one Editor window started:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ( @edit_windows == 1 ) {
+    # code here
+} else {
+    # we have zero or more than one Editor window, so something is not quite
+    # right
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This kind of code is easy to extend, as you can store the application window hierarchy in some external file outside of the program source (in some sort of markup language file, or anything that suits your needs). Having this external definition of the windows&amp;rsquo; hierarchy and their properties, the tester program can read the same file the tested application uses; thus, both know the same keyboard shortcuts and window titles.&lt;/p&gt;
+
+&lt;p&gt;Program logic errors and/or bugs in underlying libraries used are easier to catch before you release the software.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;As you can see, there is no easy way to test an entire GUI application with &lt;code&gt;X11::GUITest&lt;/code&gt;, but you can test the important parts. Also, for some actions you can use a mixed approach, such as initiating an event using the application interface (connecting to a remote server protected with a user/password auth scheme) and picking the results from a log file.&lt;/p&gt;
+
+&lt;p&gt;While the testing done in the previous paragraph is necessary, it is not sufficient. It would be great if there were someone willing to pick up the module and research whether it could be possible for &lt;code&gt;X11::GUITest&lt;/code&gt; to be able to fetch data from the widgets, making it possible to &amp;ldquo;read&amp;rdquo; the contents of a window (from a text widget, for example).&lt;/p&gt;
+
+&lt;p&gt;This kind of testing is more complete than simply driving the GUI.&lt;/p&gt;
+
+&lt;p&gt;Of course, you could also use &lt;code&gt;X11::GUITest&lt;/code&gt; to write a &amp;ldquo;record and playback&amp;rdquo; application. You might only need &lt;code&gt;GetMousePos()&lt;/code&gt;, &lt;code&gt;IsMouseButtonPressed()&lt;/code&gt;, and the other mouse functions. As I said earlier, in my opinion this kind of testing is too fragile.&lt;/p&gt;
+
+&lt;p&gt;The problem is that you can&amp;rsquo;t validate the contents of the windows.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Automated GUI Testing</title>
+      <link>http://localhost:1313/pub/2005/08/11/win32guitest.html/</link>
+      <pubDate>Thu, 11 Aug 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/08/11/win32guitest.html/</guid>
+      <description>
+
+&lt;p&gt;You use Perl at work. Sometimes you are unhappy because there is one application you always have to click on and fill all those input boxes. It&amp;rsquo;s very boring. Why not let Perl do that while you go grab a coffee? Also, maybe you sometimes feel frustrated that you need to start that nice app and want someone else type in for you. Let Perl do that, too.&lt;/p&gt;
+
+&lt;h3 id=&#34;why-perl&#34;&gt;Why Perl?&lt;/h3&gt;
+
+&lt;p&gt;Simply put: because you like Perl.&lt;/p&gt;
+
+&lt;p&gt;The long story is that there are all sorts of software packages that you may use to automate graphical applications. Are they really good fits for what you want to do?&lt;/p&gt;
+
+&lt;p&gt;Windows has many libraries that help you automate such things, but do the applications you use support those automation libraries? Too many do not. Moreover, is this enough for you to say you have tested a certain GUI feature? If not, read on.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-you-need&#34;&gt;What You Need&lt;/h3&gt;
+
+&lt;p&gt;You need a working installation of Perl, with Perl/Tk included. I recommend &lt;a href=&#34;http://www.activestate.com/&#34;&gt;ActiveState&lt;/a&gt;&amp;rsquo;s ActivePerl. You also need the &lt;a href=&#34;https://metacpan.org/pod/Win32::GuiTest&#34;&gt;Win32::GuiTest&lt;/a&gt; module. Install it from the CPAN or, ideally, through PPM.&lt;/p&gt;
+
+&lt;h3 id=&#34;example-code&#34;&gt;Example Code&lt;/h3&gt;
+
+&lt;p&gt;Download the &lt;a href=&#34;http://localhost:1313/media/_pub_2005_08_11_win32guitest/tester.pl&#34;&gt;&lt;em&gt;tester.pl&lt;/em&gt;&lt;/a&gt; and the &lt;a href=&#34;http://localhost:1313/media/_pub_2005_08_11_win32guitest/tested.pl&#34;&gt;&lt;em&gt;tested.pl&lt;/em&gt;&lt;/a&gt; programs. They need to both be in the same directory. First run the &lt;em&gt;tested.pl&lt;/em&gt; program in order to see the windows it has and how it looks. The program does nothing by itself; it just serves as a &amp;ldquo;run&amp;rdquo; application. &lt;em&gt;tester.pl&lt;/em&gt; is more interesting. It spawns &lt;em&gt;tested.pl&lt;/em&gt; and starts sending it input (mouse moves, mouse clicks, and keystrokes).&lt;/p&gt;
+
+&lt;p&gt;I tested these two programs on Windows 2000 Professional and Windows XP Home Edition using ActiveState&amp;rsquo;s distribution of Perl.&lt;/p&gt;
+
+&lt;p&gt;The &lt;em&gt;tested.pl&lt;/em&gt; program is just a dummy GUI used to demonstrate the examples. It uses Tk, so although it is a Win32 GUI, it isn&amp;rsquo;t a native one. This has the effect that not all of the functions you can use with Win32::GuiTest will work as you would expect them to work against a native Win32 GUI. Fortunately, there are workarounds.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-few-words-about-windows&#34;&gt;A Few Words About Windows&lt;/h3&gt;
+
+&lt;p&gt;Graphical user interfaces manage windows. Windows are just reusable objects with which users can interact. Almost all GUIs have more than just one window. I use &amp;ldquo;window&amp;rdquo; just as a generic term for any graphical object that an application may produce. This means that &amp;ldquo;window&amp;rdquo; is an abstract term after all.&lt;/p&gt;
+
+&lt;p&gt;Windows have common elements that you need to consider before writing a program that interacts with a GUI.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Each window belongs to a window class (making it possible to search them by class).&lt;/li&gt;
+&lt;li&gt;Windows have an organizational hierarchy; every GUI has at least one root window, and every window may have child windows. Windows form a tree. This makes them searchable (by class or not) in depth: start from a root window and search among its siblings.&lt;/li&gt;
+&lt;li&gt;Some windows have text attached to them. This is useful to identify windows.&lt;/li&gt;
+&lt;li&gt;Windows have an numeric ID that uniquely identifies them.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This means that you can identify windows by any of their text, class, and parent window attributes. You can also pinpoint a window by its ID.&lt;/p&gt;
+
+&lt;h3 id=&#34;finding-windows&#34;&gt;Finding Windows&lt;/h3&gt;
+
+&lt;p&gt;When testing a GUI, first make sure the application you want to test has started. To do this, use the Win32::GuiTest exported function named &lt;code&gt;FindWindowLike()&lt;/code&gt;. Remember that hierarchy of Windows? If you search for an &lt;em&gt;Edit&lt;/em&gt; window, you may find it in the wrong place. That There can be multiple different GUIs started that &lt;em&gt;have&lt;/em&gt; editor windows. There should be a way to differentiate between these hypothetical editor windows&amp;ndash;and the hierarchical organization of windows helps.&lt;/p&gt;
+
+&lt;p&gt;First look for the main window of the application, and then descend the hierarchy (that you have to know beforehand) until you reach the desired window.&lt;/p&gt;
+
+&lt;p&gt;How can you know the windows hierarchy? There are two main ways. If you have written the GUI yourself or have access to its sources and have enough experience, you may find out what the hierarchy of windows is. Unfortunately, that&amp;rsquo;s quite tricky and prone to error.&lt;/p&gt;
+
+&lt;p&gt;Another much simpler way to do this on Windows platforms is to use the free &lt;a href=&#34;http://www.catch22.net/software/winspy.asp&#34;&gt;WinSpy++&lt;/a&gt; program. Basically, it allows you to &lt;a href=&#34;http://www.piotrkaluski.com/files/winguitest/docs/ch02.html&#34;&gt;peek at an application&amp;rsquo;s window structure&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;When you use WinSpy++ to look at an application windowing structure, you will notice that every window has a numeric handle, expressed in hex. However, Perl expresses in decimal. This will come up again in a moment.&lt;/p&gt;
+
+&lt;p&gt;The syntax for &lt;code&gt;FindWindowLike&lt;/code&gt; is: &lt;code&gt;FindWindowLike($window,$titleregex,$classregex,$childid,   $maxlevel)&lt;/code&gt;. It returns a list of found windows. The parameters are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$window&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the (numeric) handle of the parent window to search under (remember the hierarchical organization of windows in a GUI). You may use &lt;em&gt;undef&lt;/em&gt; in order to search for all windows.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;$window&lt;/em&gt; should be a decimal value, so if you know the window&amp;rsquo;s hex handle (as displayed by WinSpy++) you need to convert it.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$titleregex&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the most often used parameter. It is a regular expression for &lt;code&gt;FindWindowLike&lt;/code&gt; to match against window titles to find the appropriate window(s).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$classregex&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This matches against a window class. Suppose that you want to find all buttons in an application. Use the function like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @windows = FindWindowLike(undef,&amp;quot;&amp;quot;,&amp;quot;Button&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Note:&lt;/code&gt; if you don&amp;rsquo;t care what the class of the window is, do not omit the &lt;code&gt;$classregex&lt;/code&gt; parameter. Instead, use an empty string.&lt;/p&gt;
+
+&lt;p&gt;Currently the &lt;code&gt;FindWindowLike()&lt;/code&gt; function does not check if &lt;code&gt;$classregex&lt;/code&gt; is undefined, so you will end up with a lot of Perl warnings.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$childid&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;If you pass this argument, then the function will match all windows with this ID.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;$maxlevel&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Maximum depth level to match windows.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As you may have noticed, the &lt;code&gt;tested&lt;/code&gt; program has a title that matches the string &amp;ldquo;Tested&amp;rdquo;. Thus, the &lt;code&gt;tester&lt;/code&gt; starts by searching windows matching this title:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@windows = FindWindowLike( undef, &amp;quot;Tested&amp;quot;, &amp;quot;&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;@windows&lt;/em&gt; will contain a list of window IDs that have a title matching the string. The point here is that you probably don&amp;rsquo;t want the &lt;code&gt;tested&lt;/code&gt; program to start more than once simultaneously.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ( @windows &amp;gt; 1 ) {
+     print &amp;quot;* The \&amp;quot;tested\&amp;quot; program is started more than once!\n&amp;quot;;
+     ...
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If there is no &lt;code&gt;tested&lt;/code&gt; application already running, the program can start it and repeat the procedure, searching for windows that match our criteria (they contain the string &amp;ldquo;Tested&amp;rdquo; in their titles). If it&amp;rsquo;s running just once, its ID is &lt;code&gt;$windows[0]&lt;/code&gt;. In fact, this is the root window of the application.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s no point in going further with the program if the GUI hasn&amp;rsquo;t started, so the code checks this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;unless ( @windows ) {
+     print &amp;quot;* The program hasn&#39;t started!\n&amp;quot;;
+     exit 1;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;setting-a-specific-window-to-foreground&#34;&gt;Setting a Specific Window to Foreground&lt;/h3&gt;
+
+&lt;p&gt;Finding a window is sometimes not enough. Often, you need to send some input to the window. Obviously, the window should be in the foreground. The appropriate functions are &lt;code&gt;SetActiveWindow()&lt;/code&gt; and &lt;code&gt;SetForegroundWindow()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Because of the way windows work under Win32, this may be trickier than it seems. Basically, if the caller is not in the foreground, it can not give another window &amp;ldquo;focus.&amp;rdquo; MSDN explains this in the documentation of the &lt;a href=&#34;http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/windows/windowreference/windowfunctions/setforegroundwindow.asp&#34;&gt;&lt;code&gt;SetForegroundWindow&lt;/code&gt;&lt;/a&gt; and &lt;a href=&#34;http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/userinput/keyboardinput/keyboardinputreference/keyboardinputfunctions/setactivewindow.asp&#34;&gt;&lt;code&gt;SetActiveWindow&lt;/code&gt;&lt;/a&gt; functions.&lt;/p&gt;
+
+&lt;p&gt;While this behavior is easy to explain if you consider that you usually don&amp;rsquo;t want applications that run in background to be able to annoy you (at least) by grabbing focus, there is at least one drawback. If you are running a GUI (perhaps remotely) to which you will send sensitive input for some reason, you may send those secrets to another, possibly malicious, application if the tested application does not have focus!&lt;/p&gt;
+
+&lt;p&gt;Another problem is in running tester programs remotely, or at regular intervals. Suppose that your tester program spawns the tested program, then starts sending it events (mouse events and/or keystrokes). If the computer is in a &amp;ldquo;locked&amp;rdquo; state, according to Microsoft documentation, no application can be in the foreground. You may have unexpected results.&lt;/p&gt;
+
+&lt;p&gt;If the GUI you are automating receives sensitive input (such as passwords), you have to find a means to &amp;ldquo;isolate&amp;rdquo; that machine&amp;rsquo;s input/output devices, such as keyboard/mouse/monitor, so that no one unauthorized can peek at what your Perl program is typing in. Good luck.&lt;/p&gt;
+
+&lt;p&gt;In my opinion, every time you send input to a GUI, the Win32::GuiTest program should check if the application is in the foreground. If it isn&amp;rsquo;t, it should try to bring it to the front. If it can&amp;rsquo;t do that, it should fail and not continue.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a sample routine that &lt;em&gt;tester.pl&lt;/em&gt; uses:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub bring_window_to_front {
+     my $window  = shift;
+     my $success = 1;
+
+     if ( SetActiveWindow($window) ) {
+         print &amp;quot;* Successfully set the window id: $window active\n&amp;quot;;
+     }
+     else {
+         print &amp;quot;* Could not set the window id: $window active\n&amp;quot;;
+         $success = 0;
+     }
+     if ( SetForegroundWindow($window) ) {
+         print &amp;quot;* Window id: $window brought to foreground\n&amp;quot;;
+     }
+     else {
+         print &amp;quot;* Window id: $window could not be brought to foreground\n&amp;quot;;
+         $success = 0;
+     }
+
+     return $success;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In case you don&amp;rsquo;t want to bring a window to front but expect it to be in front, use &lt;code&gt;GetForegroundWindow()&lt;/code&gt;. That way, you can just check the return value with a window ID and find out if it is in front.&lt;/p&gt;
+
+&lt;h3 id=&#34;key-pressing&#34;&gt;Key Pressing&lt;/h3&gt;
+
+&lt;p&gt;You have found your window and have made sure that it has focus. What next?&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s time to send data to the window. This is the purpose of the &lt;code&gt;SendKeys()&lt;/code&gt; function. You can send to an application not only basic keypresses, but combinations of keys too. Here&amp;rsquo;s an example from the &lt;em&gt;tester.pl&lt;/em&gt; program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @keys = ( &amp;quot;%{F}&amp;quot;, &amp;quot;{RIGHT}&amp;quot;, &amp;quot;E&amp;quot;, );
+for my $key (@keys) {
+    SendKeys( $key, $pause_between_keypress );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code starts with an array containing the keypresses. Note the format of the first three elements. The keypresses are: &lt;code&gt;Alt&lt;/code&gt;+&lt;code&gt;F&lt;/code&gt;, right arrow, and &lt;code&gt;E&lt;/code&gt;. With the application open, this navigates the menu in order to open the editor.&lt;/p&gt;
+
+&lt;p&gt;For a full listing of &amp;ldquo;special&amp;rdquo; keystrokes or combinations of keys, consult the function&amp;rsquo;s documentation.&lt;/p&gt;
+
+&lt;h3 id=&#34;finding-text-in-your-application&#34;&gt;Finding Text in Your Application&lt;/h3&gt;
+
+&lt;p&gt;You may want to learn how you can &amp;ldquo;read&amp;rdquo; text written in GUI windows. Unfortunately, you can&amp;rsquo;t read everything. You &lt;em&gt;can&lt;/em&gt; read the text written in the title of windows (useful for identifying a window by its title). You can also read text in &lt;code&gt;Edit&lt;/code&gt; class windows; for example, the part of Internet Explorer where you type in a URL, or the list items in a &lt;code&gt;ListBox&lt;/code&gt;. There may be other window classes from where you can fetch text; just verify with WinSpy++ whether you can &amp;ldquo;read&amp;rdquo; from a window, before writing your program, in order to avoid frustration.&lt;/p&gt;
+
+&lt;p&gt;Remember that you can&amp;rsquo;t (at least now) read everything written in a window. Maybe a future version of Win32::GuiTest will provide a means by which to fetch text from a window, no matter what class that window is. In my humble opinion, it would be an awesome feature.&lt;/p&gt;
+
+&lt;p&gt;The two functions useful for grabbing text are &lt;code&gt;GetWindowText()&lt;/code&gt; and &lt;code&gt;WMGetText()&lt;/code&gt;. Both take as a parameter the window ID:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$text = GetWindowText($window);
+$text = WMGetText($window);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;pushing-buttons&#34;&gt;Pushing Buttons&lt;/h3&gt;
+
+&lt;p&gt;Pushing buttons can be tricky. The syntax is &lt;code&gt;PushButton($button[,$delay])&lt;/code&gt;, and the variable &lt;code&gt;$button&lt;/code&gt; can be either the text of the button (its caption) or the button ID. As Piotr Kaluski points out in &amp;ldquo;&lt;a href=&#34;http://www.piotrkaluski.com/files/automation/gui/carfl_pushcb.html&#34;&gt;Be Careful with &lt;code&gt;PushChildButton&lt;/code&gt;&lt;/a&gt;,&amp;rdquo; you sometimes want to specify a button ID, but instead the function matches a button having text like the one you used in the regexp. He posted &lt;a href=&#34;http://groups.yahoo.com/group/perlguitest/message/876?threaded=1&#34;&gt;a patch to the &lt;em&gt;perlguitest&lt;/em&gt; mailing list&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Also note that when using Tk, as I do in this example, you can&amp;rsquo;t identify buttons by their text&amp;ndash;you need to use their IDs (if you know them). With native Win32 applications, you can identify buttons by their text. To check the differences, use WinSpy++ to look at a Tk button&amp;rsquo;s caption and a native Win32 button&amp;rsquo;s caption.&lt;/p&gt;
+
+&lt;p&gt;Although &lt;code&gt;PushButton()&lt;/code&gt; works fine on native Win32 buttons, I couldn&amp;rsquo;t make it work on my Tk application, so in &lt;em&gt;tester.pl&lt;/em&gt;, I use a trick in the &lt;code&gt;push_button()&lt;/code&gt; subroutine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub push_button {
+    my $parent_window_title = shift;
+    my @button;
+    my @window;
+
+    SendKeys(&amp;quot;%{F}&amp;quot;);
+    SendKeys(&amp;quot;O&amp;quot;);
+    sleep 1;
+
+    @window = FindWindowLike( undef, $parent_window_title, &amp;quot;&amp;quot; );
+
+    if ( !bring_window_to_front( $window[0] ) ) {
+        print &amp;quot;* Could not bring to front $window[0]\n&amp;quot;;
+    }
+
+    @button = FindWindowLike( $window[0], &amp;quot;&amp;quot;, &amp;quot;Button&amp;quot; );
+    sleep 1;
+
+    print &amp;quot;* Trying to push button id: $button[0]\n&amp;quot;;
+    PushChildButton( $window[0], $button[0], 0.25 );
+    sleep 1;
+
+    click_on_the_middle_of_window( $button[0] );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that the function depends on the &lt;em&gt;tested.pl&lt;/em&gt; application, as it has hard-coded the way to spawn the &lt;code&gt;Button&lt;/code&gt; window (by navigating the menu using keystrokes). It is easy to adapt it to be more flexible and to be less coupled with the rest of the code.&lt;/p&gt;
+
+&lt;p&gt;After sending the right combination of keys (&lt;code&gt;Alt&lt;/code&gt;+&lt;code&gt;F&lt;/code&gt;, &lt;code&gt;O&lt;/code&gt;), the code expects that the window containing the &lt;code&gt;Button&lt;/code&gt; will pop up. Then it uses &lt;code&gt;FindWindowLike()&lt;/code&gt; again, using as a search item the title of the window containing the button (in this case, &lt;code&gt;here&lt;/code&gt;). Remember what I said about the windows hierarchy?&lt;/p&gt;
+
+&lt;p&gt;Next, it ensures that the &lt;code&gt;Button&lt;/code&gt; window has the focus, although this is not entirely necessary at this point. After bringing the window to the front, the code searches for a button in the window (I already know that there&amp;rsquo;s only one button there).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@button = FindWindowLike( $window[0], &amp;quot;&amp;quot;, &amp;quot;Button&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This narrows down the search: &amp;ldquo;Search for a window of the class &lt;code&gt;Button&lt;/code&gt; under the window that has the ID &lt;code&gt;$window[0]&lt;/code&gt;,&amp;rdquo; the window having the ID in &lt;code&gt;$window[0]&lt;/code&gt; having been previously found by its title.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PushChildButton( $window[0], $button[0], 0.25 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is here just for the power of example, as it doesn&amp;rsquo;t work for the Tk button. It would work for a native Win32 button.&lt;/p&gt;
+
+&lt;p&gt;The trick is that the code can still push it using the mouse! Having the button ID, as returned by &lt;code&gt;FindWindowLike()&lt;/code&gt;, the code calls the &lt;code&gt;click_on_the_middle_of_window&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub click_on_the_middle_of_window {
+    my $window = shift;
+
+    print &amp;quot;* Moving the mouse over the window id: $window\n&amp;quot;;
+
+    my ( $left, $top, $right, $bottom ) = GetWindowRect($window);
+
+    MouseMoveAbsPix( ( $right + $left ) / 2, ( $top + $bottom ) / 2 );
+
+    sleep(1);
+
+    print &amp;quot;* Left Clicking on the window id: $window\n&amp;quot;;
+    SendMouse(&amp;quot;{LeftClick}&amp;quot;);
+    sleep(1);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The function takes a window ID as its parameter, searches its rectangle using &lt;code&gt;GetWindowRect()&lt;/code&gt;, and then moves the mouse pointer right in the middle of it with &lt;code&gt;MouseMoveAbsPix()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;With the pointer over the button, sending &lt;code&gt;LeftClick&lt;/code&gt; presses the button.&lt;/p&gt;
+
+&lt;h3 id=&#34;moving-around-with-the-mouse&#34;&gt;Moving Around with the Mouse&lt;/h3&gt;
+
+&lt;p&gt;As seen earlier, moving the mouse is straightforward: just use &lt;code&gt;MouseMoveAbsPix()&lt;/code&gt;. It takes as parameters the coordinates where you want the pointer to be (horizontal and vertical positions) in pixels.&lt;/p&gt;
+
+&lt;p&gt;It is useful to use other two functions in conjunction: &lt;code&gt;SendMouse()&lt;/code&gt; and &lt;code&gt;GetWindowRect()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;SendMouse&lt;/code&gt; sends a mouse action to the &lt;code&gt;Desktop&lt;/code&gt;. It takes only one parameter: a mouse action such as &lt;code&gt;{LeftDown}&lt;/code&gt;, &lt;code&gt;{LeftUp}&lt;/code&gt;, or &lt;code&gt;{LeftClick}&lt;/code&gt;. For more details, see the function&amp;rsquo;s documentation.&lt;/p&gt;
+
+&lt;p&gt;You can also move the mouse wheel using &lt;code&gt;MouseMoveWheel()&lt;/code&gt;. It takes a positive or a negative argument, indicating the direction of the motion.&lt;/p&gt;
+
+&lt;p&gt;To send an action, you need to know where we send it. Usually you will move the mouse pointer over a window. &lt;code&gt;GetWindowRect()&lt;/code&gt; is useful to find the coordinates of a window.&lt;/p&gt;
+
+&lt;p&gt;It can be simpler to create a wrapper around these three functions in order to move the mouse pointer over a selected window, and then generate a mouse action, as I did with &lt;code&gt;click_on_the_middle_of_window()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;further-reading&#34;&gt;Further Reading&lt;/h3&gt;
+
+&lt;p&gt;Here are some links you may find useful.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Win32::GuiTest&#34;&gt;Win32::GuiTest documentation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Win32::GuiTest::Examples&#34;&gt;Win32::GuiTest::Examples&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;The &lt;a href=&#34;http://groups.yahoo.com/group/perlguitest/&#34;&gt;PerlGuiTest group&lt;/a&gt; on Yahoo; this is quite an active group.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.piotrkaluski.com/files/winguitest/docs/index.html&#34;&gt;Win32::GuiTest extended tutorial&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

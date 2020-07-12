@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Curtis Poe on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/curtis-poe/</link>
+    <description>Recent content in Curtis Poe on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 05 Jan 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/curtis-poe/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Lexing Your Data</title>
+      <link>http://localhost:1313/pub/2006/01/05/parsing.html/</link>
+      <pubDate>Thu, 05 Jan 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/01/05/parsing.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;s-shooting-yourself-in-the-foot-head-g&#34;&gt;&lt;code&gt;s/(?&amp;lt;!SHOOTING YOURSELF IN THE )FOOT/HEAD/g&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;Most of us have tried at one time or another to use regular expressions to do things we shouldn&amp;rsquo;t: parsing HTML, obfuscating code, washing dishes, etc. This is what the technical term &amp;ldquo;showing off&amp;rdquo; means. I&amp;rsquo;ve done it too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$html =~ s{
+             (&amp;lt;a\s(?:[^&amp;gt;](?!href))*href\s*)
+             (&amp;amp;(&amp;amp;[^;]+;)?(?:.(?!\3))+(?:\3)?)
+             ([^&amp;gt;]+&amp;gt;)
+          }
+          {$1 . decode_entities($2) .  $4}gsexi;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I was strutting like a peacock when I wrote that, followed quickly by eating crow when I ran it. I never did get that working right. I&amp;rsquo;m still not sure what I was trying to do. That regular expression forced me to learn how to use &lt;a href=&#34;https://metacpan.org/pod/HTML::TokeParser&#34;&gt;&lt;code&gt;HTML::TokeParser&lt;/code&gt;&lt;/a&gt;. More importantly, that was the regular expression that taught me how difficult regular expressions can be.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-problem-with-regular-expressions&#34;&gt;The Problem with Regular Expressions&lt;/h4&gt;
+
+&lt;p&gt;Look at that regex again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; /(&amp;lt;a\s(?:[^&amp;gt;](?!href))*href\s*)(&amp;amp;(&amp;amp;[^;]+;)?(?:.(?!\3))+(?:\3)?)([^&amp;gt;]+&amp;gt;)/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Do you know that matches? Exactly? Are you &lt;em&gt;sure&lt;/em&gt;? Even if it works, how easily can you modify it? If you don&amp;rsquo;t know what it was trying to do (and to be fair, don&amp;rsquo;t forget it&amp;rsquo;s broken), how long did you spend trying to figure it out? When&amp;rsquo;s the last time a single line of code gave you such fits?&lt;/p&gt;
+
+&lt;p&gt;The problem, of course, is that this regular expression is trying to do far more work than a single line of code is likely to do. When facing with a regular expression like that, there are a few things I like to do.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Document it carefully.&lt;/li&gt;
+&lt;li&gt;Use the &lt;code&gt;/x&lt;/code&gt; switch so I can expand it over several lines.&lt;/li&gt;
+&lt;li&gt;Possibly, encapsulate it in a subroutine.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Sometimes, though, there&amp;rsquo;s a fourth option: &lt;em&gt;lexing&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;lexing&#34;&gt;Lexing&lt;/h4&gt;
+
+&lt;p&gt;When developing code, we typically take a problem and break it down into a series of smaller problems that are easier to solve. Regular expressions are code and you can break them down into a series of smaller problems that are easier to solve. One technique is to use lexing to facilitate this.&lt;/p&gt;
+
+&lt;p&gt;Lexing is the act of breaking data down into discrete tokens and assigning meaning to those tokens. There&amp;rsquo;s a bit of fudging in that statement, but it pretty much covers the basics.&lt;/p&gt;
+
+&lt;p&gt;Parsing typically follows lexing to convert the tokens into something more useful. Parsing is frequently the domain of some tool that applies a well-defined grammar to the lexed tokens.&lt;/p&gt;
+
+&lt;p&gt;Sometimes well-defined grammars are not practical for extracting and reporting information. There might not be a grammar available for a company&amp;rsquo;s ad-hoc log file format. Other times you might find it easier to process the tokens manually then to spend the time writing a grammar. Still other times you might only care about part of the data you&amp;rsquo;ve lexed, not all of it. All three of these reasons apply to some problems.&lt;/p&gt;
+
+&lt;h4 id=&#34;parsing-sql&#34;&gt;Parsing SQL&lt;/h4&gt;
+
+&lt;p&gt;Recently, on Perlmonks (&lt;a href=&#34;http://perlmonks.org/index.pl?node_id=472684&#34;&gt;parse a query string&lt;/a&gt;), someone had some SQL to parse:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;select the_date as &amp;quot;date&amp;quot;,
+round(months_between(first_date,second_date),0) months_old
+,product,extract(year from the_date) year
+,case
+  when a=b then &#39;c&#39;
+  else &#39;d&#39;
+  end tough_one
+from ...
+where ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The poster needed the alias for each column from that SQL. In this case, the aliases are &lt;code&gt;date&lt;/code&gt;, &lt;code&gt;months_old&lt;/code&gt;, &lt;code&gt;product&lt;/code&gt;, &lt;code&gt;year&lt;/code&gt;, and &lt;code&gt;tough_one&lt;/code&gt;. Of course, this was only one example. There&amp;rsquo;s actually plenty of generated SQL, all with subtle variations on the column aliases, so this is not a trivial task. What&amp;rsquo;s interesting about this, though, is that we don&amp;rsquo;t give a fig about anything except the column aliases. The rest of the text is merely there to help us find those aliases.&lt;/p&gt;
+
+&lt;p&gt;Your first thought might be to parse this with &lt;a href=&#34;https://metacpan.org/pod/SQL::Statement&#34;&gt;&lt;code&gt;SQL::Statement&lt;/code&gt;&lt;/a&gt;. As it turns out, this module does not handle &lt;code&gt;CASE&lt;/code&gt; statements. Thus, you must figure out how to patch &lt;code&gt;SQL::Statement&lt;/code&gt;, submit said patch, and hope it gets accepted and released in a timely fashion. (Note that &lt;code&gt;SQL::Statement&lt;/code&gt; uses &lt;a href=&#34;https://metacpan.org/pod/SQL::Parser&#34;&gt;&lt;code&gt;SQL::Parser&lt;/code&gt;&lt;/a&gt;, so the latter is also not an option.)&lt;/p&gt;
+
+&lt;p&gt;Second, many of us have worked in environments where we have problems to solve in production &lt;em&gt;now&lt;/em&gt;, but we still have to wait three weeks to get the necessary modules installed, if we can get them approved at all.&lt;/p&gt;
+
+&lt;p&gt;The most important reason, though, is even if &lt;code&gt;SQL::Statement&lt;/code&gt; could handle this problem, this would be an awfully short article if you used it instead of a lexer.&lt;/p&gt;
+
+&lt;h4 id=&#34;lexing-basics&#34;&gt;Lexing Basics&lt;/h4&gt;
+
+&lt;p&gt;As mentioned earlier, lexing is essentially the task of analyzing data and breaking it down into a series of easy-to-use tokens. While the data may be in other forms, usually this means analyzing strings. To give a trivial example, consider the expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;x = (3 + 2) / y
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When lexed, you might get a series of tokens, such as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @tokens = (
+  [ OP  =&amp;gt; &#39;x&#39; ],
+  [ OP  =&amp;gt; &#39;=&#39; ],
+  [ OP  =&amp;gt; &#39;(&#39; ],
+  [ INT =&amp;gt; &#39;3&#39; ],
+  [ VAR =&amp;gt; &#39;+&#39; ],
+  [ INT =&amp;gt; &#39;2&#39; ],
+  [ OP  =&amp;gt; &#39;)&#39; ],
+  [ OP  =&amp;gt; &#39;/&#39; ],
+  [ VAR =&amp;gt; &#39;y&#39; ],
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With a proper grammar, you could then read this series of tokens and take actions based upon their values, perhaps to build a simple language interpreter or translate this code into another programming language. Even without a grammar, you can find these tokens useful.&lt;/p&gt;
+
+&lt;h4 id=&#34;identifying-tokens&#34;&gt;Identifying Tokens&lt;/h4&gt;
+
+&lt;p&gt;The first step in building a lexer is identifying the tokens you wish to parse. Look again at the SQL.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;select the_date as &amp;quot;date&amp;quot;,
+round(months_between(first_date,second_date),0) months_old
+,product,extract(year from the_date) year
+,case
+  when a=b then &#39;c&#39;
+    else &#39;d&#39;
+  end tough_one
+from ...
+where ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s nothing really to care about anything after the &lt;code&gt;from&lt;/code&gt; keyword. In looking at this closer, everything you do care about is immediately prior to a comma or the &lt;code&gt;from&lt;/code&gt; keyword. However, splitting on commas isn&amp;rsquo;t enough, as there are some commas embedded in function parentheses.&lt;/p&gt;
+
+&lt;p&gt;The first thing to do is to identify the various things you can match with simple regular expressions.&lt;/p&gt;
+
+&lt;p&gt;These &amp;ldquo;things&amp;rdquo; appear to be parentheses, commas, operators, keywords, and random text. A first pass at it might look something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $lparen  = qr/\(/;
+my $rparen  = qr/\)/;
+my $keyword = qr/(?i:select|from|as)/; # this is all this problem needs
+my $comma   = qr/,/;
+my $text    = qr/(?:\w+|&#39;\w+&#39;|&amp;quot;\w+&amp;quot;)/;
+my $op      = qr{[-=+*/&amp;lt;&amp;gt;]};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The text matching is somewhat naive and you might want &lt;a href=&#34;https://metacpan.org/pod/Regexp::Common&#34;&gt;&lt;code&gt;Regexp::Common&lt;/code&gt;&lt;/a&gt; for some of the regular expressions, but keep this simple for now.&lt;/p&gt;
+
+&lt;p&gt;The operators are a bit more involved. Assume that some SQL might have math statements embedded in them.&lt;/p&gt;
+
+&lt;p&gt;Now create the actual lexer. One way to do this is to make your own. It might look something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub lexer {
+    my $sql = shift;
+    return sub {
+        LEXER: {
+            return [&#39;KEYWORD&#39;, $1] if $sql =~ /\G ($keyword) /gcx;
+            return [&#39;COMMA&#39;,   &#39;&#39;] if $sql =~ /\G ($comma)   /gcx;
+            return [&#39;OP&#39;,      $1] if $sql =~ /\G ($op)      /gcx;
+            return [&#39;PAREN&#39;,    1] if $sql =~ /\G $lparen    /gcx;
+            return [&#39;PAREN&#39;,   -1] if $sql =~ /\G $rparen    /gcx;
+            return [&#39;TEXT&#39;,    $1] if $sql =~ /\G ($text)    /gcx;
+            redo LEXER             if $sql =~ /\G \s+        /gcx;
+        }
+    };
+}
+
+my $lexer = lexer($sql);
+
+while (defined (my $token = $lexer-&amp;gt;())) {
+    # do something with the token
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Without going into the detail of how that works, it&amp;rsquo;s fair to say that this is not the best solution. By looking at &lt;a href=&#34;http://perlmonks.org/index.pl?node_id=472701&#34;&gt;the original Perlmonks post&lt;/a&gt;, you should find that you need to make two passes through the data to extract what you want. I&amp;rsquo;ve left the explanation an exercise for the reader.&lt;/p&gt;
+
+&lt;p&gt;To make this simpler, use the &lt;a href=&#34;https://metacpan.org/pod/HOP::Lexer&#34;&gt;&lt;code&gt;HOP::Lexer&lt;/code&gt;&lt;/a&gt; module from the CPAN. This module, described by Mark Jason Dominus in his book &lt;em&gt;Higher Order Perl&lt;/em&gt;, makes creating lexers a rather trivial task and makes them a bit more powerful than the example. Here&amp;rsquo;s the new code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use HOP::Lexer &#39;make_lexer&#39;;
+my @sql   = $sql;
+my $lexer = make_lexer(
+    sub { shift @sql },
+    [ &#39;KEYWORD&#39;, qr/(?i:select|from|as)/          ],
+    [ &#39;COMMA&#39;,   qr/,/                            ],
+    [ &#39;OP&#39;,      qr{[-=+*/]}                      ],
+    [ &#39;PAREN&#39;,   qr/\(/,      sub { [shift,  1] } ],
+    [ &#39;PAREN&#39;,   qr/\)/,      sub { [shift, -1] } ],
+    [ &#39;TEXT&#39;,    qr/(?:\w+|&#39;\w+&#39;|&amp;quot;\w+&amp;quot;)/, \&amp;amp;text  ],
+    [ &#39;SPACE&#39;,   qr/\s*/,     sub {}              ],
+);
+
+sub text {
+    my ($label, $value) = @_;
+    $value =~ s/^[&amp;quot;&#39;]//;
+    $value =~ s/[&amp;quot;&#39;]$//;
+    return [ $label, $value ];
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This certainly doesn&amp;rsquo;t look any easier to read, but bear with me.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;make_lexer&lt;/code&gt; subroutine takes as its first argument an iterator, which returns the text to match on every call. In this case, you only have one snippet of text to match, so merely shift it off of an array. If you were reading lines from a log file, the iterator would be quite handy.&lt;/p&gt;
+
+&lt;p&gt;After the first argument comes a series of array references. Each reference takes two mandatory and one optional argument(s):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[ $label, $pattern, $optional_subroutine ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;$label&lt;/code&gt; is the name of the token. The pattern should match whatever the label identifies. The third argument, a subroutine reference, takes as arguments the label and the &lt;em&gt;text&lt;/em&gt; the label matched, and returns whatever you wish for a token.&lt;/p&gt;
+
+&lt;p&gt;Consider how you typically use the &lt;code&gt;make_lexer&lt;/code&gt; subroutine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[ &#39;KEYWORD&#39;, qr/(?i:select|from|as)/ ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here&amp;rsquo;s an example of how to transform the data before making the token:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[ &#39;TEXT&#39;, qr/(?:\w+|&#39;\w+&#39;|&amp;quot;\w+&amp;quot;)/, \&amp;amp;text  ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As mentioned previously, the regular expression might be naive, but leave that for now and focus on the &lt;code&gt;&amp;amp;text&lt;/code&gt; subroutine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub text {
+    my ($label, $value) = @_;
+    $value =~ s/^[&amp;quot;&#39;]//;
+    $value =~ s/[&amp;quot;&#39;]$//;
+    return [ $label, $value ];
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This says, &amp;ldquo;Take the label and the value, strip leading and trailing quotes from the value and return them in an array reference.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;To strip the white space you don&amp;rsquo;t care about, simply return nothing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; &#39;SPACE&#39;, qr/\s*/, sub {} ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now that you have your lexer, put it to work. Remember that column aliases are the &lt;code&gt;TEXT&lt;/code&gt; not in parentheses, but immediately prior to commas or the &lt;code&gt;from&lt;/code&gt; keyword. How do we know if you&amp;rsquo;re inside of parentheses? Cheat a little bit:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[ &#39;PAREN&#39;, qr/\(/, sub { [shift,  1] } ],
+[ &#39;PAREN&#39;, qr/\)/, sub { [shift, -1] } ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With that, you can add a one whenever you get to an opening parenthesis and subtract it when you get to a closing one. Whenever the result is zero, you know that you&amp;rsquo;re outside of parentheses.&lt;/p&gt;
+
+&lt;p&gt;To get the tokens, call the &lt;code&gt;$lexer&lt;/code&gt; iterator repeatedly.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;while ( defined (my $token = $lexer-&amp;gt;() ) { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The tokens look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[  &#39;KEYWORD&#39;,      &#39;select&#39; ]
+[  &#39;TEXT&#39;,       &#39;the_date&#39; ]
+[  &#39;KEYWORD&#39;,          &#39;as&#39; ]
+[  &#39;TEXT&#39;,           &#39;date&#39; ]
+[  &#39;COMMA&#39;,             &#39;,&#39; ]
+[  &#39;TEXT&#39;,          &#39;round&#39; ]
+[  &#39;PAREN&#39;,               1 ]
+[  &#39;TEXT&#39;, &#39;months_between&#39; ]
+[  &#39;PAREN&#39;,               1 ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And so on.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s how to process the tokens:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 1:  my $inside_parens = 0;
+ 2:  while ( defined (my $token = $lexer-&amp;gt;()) ) {
+ 3:      my ($label, $value) = @$token;
+ 4:      $inside_parens += $value if &#39;PAREN&#39; eq $label;
+ 5:      next if $inside_parens || &#39;TEXT&#39; ne $label;
+ 6:      if (defined (my $next = $lexer-&amp;gt;(&#39;peek&#39;))) {
+ 7:          my ($next_label, $next_value) = @$next;
+ 8:          if (&#39;COMMA&#39; eq $next_label) {
+ 9:              print &amp;quot;$value\n&amp;quot;;
+10:          }
+11:          elsif (&#39;KEYWORD&#39; eq $next_label &amp;amp;&amp;amp; &#39;from&#39; eq $next_value) {
+12:              print &amp;quot;$value\n&amp;quot;;
+13:              last; # we&#39;re done
+14:          }
+15:      }
+16:  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is pretty straightforward, but there are some tricky bits. Each token is a two-element array reference, so line 3 makes the label and value fairly explicit. Lines 4 and 5 use the &amp;ldquo;cheat&amp;rdquo; for handling parentheses. Line 5 also skips anything that isn&amp;rsquo;t text and therefore cannot be a column alias.&lt;/p&gt;
+
+&lt;p&gt;Line 6 is a bit odd. In &lt;code&gt;HOP::Lexer&lt;/code&gt;, passing the string &lt;code&gt;peek&lt;/code&gt; to the lexer will return the next token without actually advancing the &lt;code&gt;$lexer&lt;/code&gt; iterator. From there, it&amp;rsquo;s straightforward logic to find out if the value is a column alias that matches the criteria.&lt;/p&gt;
+
+&lt;p&gt;Putting all of this together makes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+
+use strict;
+use warnings;
+use HOP::Lexer &#39;make_lexer&#39;;
+
+my $sql = &amp;lt;&amp;lt;END_SQL;
+select the_date as &amp;quot;date&amp;quot;,
+round(months_between(first_date,second_date),0) months_old
+,product,extract(year from the_date) year
+,case
+  when a=b then &#39;c&#39;
+    else &#39;d&#39;
+      end tough_one
+      from XXX
+END_SQL
+
+my @sql   = $sql;
+my $lexer = make_lexer(
+    sub { shift @sql },
+    [ &#39;KEYWORD&#39;, qr/(?i:select|from|as)/          ],
+    [ &#39;COMMA&#39;,   qr/,/                            ],
+    [ &#39;OP&#39;,      qr{[-=+*/]}                      ],
+    [ &#39;PAREN&#39;,   qr/\(/,      sub { [shift,  1] } ],
+    [ &#39;PAREN&#39;,   qr/\)/,      sub { [shift, -1] } ],
+    [ &#39;TEXT&#39;,    qr/(?:\w+|&#39;\w+&#39;|&amp;quot;\w+&amp;quot;)/, \&amp;amp;text  ],
+    [ &#39;SPACE&#39;,   qr/\s*/,     sub {}              ],
+);
+
+sub text {
+    my ( $label, $value ) = @_;
+    $value =~ s/^[&amp;quot;&#39;]//;
+    $value =~ s/[&amp;quot;&#39;]$//;
+    return [ $label, $value ];
+}
+
+my $inside_parens = 0;
+while ( defined ( my $token = $lexer-&amp;gt;() ) ) {
+    my ( $label, $value ) = @$token;
+    $inside_parens += $value if &#39;PAREN&#39; eq $label;
+    next if $inside_parens || &#39;TEXT&#39; ne $label;
+    if ( defined ( my $next = $lexer-&amp;gt;(&#39;peek&#39;) ) ) {
+        my ( $next_label, $next_value ) = @$next;
+        if ( &#39;COMMA&#39; eq $next_label ) {
+            print &amp;quot;$value\n&amp;quot;;
+        }
+        elsif ( &#39;KEYWORD&#39; eq $next_label &amp;amp;&amp;amp; &#39;from&#39; eq $next_value ) {
+            print &amp;quot;$value\n&amp;quot;;
+            last; # we&#39;re done
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That prints out the column aliases:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;date
+months_old
+product
+year
+tough_one
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So are you done? No, probably not. What you really need now are many other examples of the SQL generated in the first problem statement. Maybe the &lt;code&gt;&amp;amp;text&lt;/code&gt; subroutine is naive. Maybe there are other operators you forgot. Maybe there are floating-point numbers embedded in the SQL. When you have to lex data by hand, fine-tuning the lexer to match your actual data can take a few tries.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s also important to note that precedence is very important here. &lt;code&gt;&amp;amp;make_lexer&lt;/code&gt; evaluates each array reference passed in the order it receives them. If you passed the &lt;code&gt;TEXT&lt;/code&gt; array reference before the &lt;code&gt;KEYWORD&lt;/code&gt; array reference, the &lt;code&gt;TEXT&lt;/code&gt; regular expression would match keywords before the &lt;code&gt;KEYWORD&lt;/code&gt; could, thus generating spurious results.&lt;/p&gt;
+
+&lt;p&gt;Happy lexing!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

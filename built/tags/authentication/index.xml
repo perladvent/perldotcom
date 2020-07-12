@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Authentication on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/authentication/</link>
+    <description>Recent content in Authentication on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 28 Apr 2014 03:14:13 +0000</lastBuildDate>
+    <atom:link href="/tags/authentication/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Is your login page secure?</title>
+      <link>http://localhost:1313/article/84/2014/4/28/Is-your-login-page-secure-/</link>
+      <pubDate>Mon, 28 Apr 2014 03:14:13 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/84/2014/4/28/Is-your-login-page-secure-/</guid>
+      <description>
+
+&lt;p&gt;How many criteria do you think there are for a web application to securely login its users? &lt;a href=&#34;http://www.amazon.com/gp/product/1118026470/ref=as_li_qf_sp_asin_il_tl?ie=UTF8&amp;amp;camp=1789&amp;amp;creative=9325&amp;amp;creativeASIN=1118026470&amp;amp;linkCode=as2&amp;amp;tag=perltrickscom-20&#34;&gt;The Web Application Hacker&amp;rsquo;s Handbook&lt;/a&gt; (affiliate link) lists 5:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Prevent information leaks&lt;/li&gt;
+&lt;li&gt;Handle credentials secretively&lt;/li&gt;
+&lt;li&gt;Validate credentials properly&lt;/li&gt;
+&lt;li&gt;Prevent brute-force attacks&lt;/li&gt;
+&lt;li&gt;Log, monitor and notify&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;So there are 5 criteria, but how you do implement them? I&amp;rsquo;ve created a &lt;a href=&#34;https://github.com/dnmfarrell/SecApp_login&#34;&gt;new web application&lt;/a&gt; called &amp;ldquo;SecApp&amp;rdquo; using Perl&amp;rsquo;s Catalyst web framework that attempts to satisfy these criteria - we&amp;rsquo;ll step through each one and you can judge for yourself if it does.&lt;/p&gt;
+
+&lt;h3 id=&#34;how-to-setup-the-app&#34;&gt;How to setup the app&lt;/h3&gt;
+
+&lt;p&gt;If you&amp;rsquo;d like to download the app and follow along you can, but this step is optional. You&amp;rsquo;re going to need at least Perl 5.14.4 and a git installed. To download the app from our github page, just open up the command line and enter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ git clone https:&lt;span style=&#34;color:#e6db74&#34;&gt;//gi&lt;/span&gt;thub&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/dnmfarrell/&lt;/span&gt;SecApp_login&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;There&amp;rsquo;s no way around it; this app has a lot of dependencies. To ease the burden, start by installing &lt;a href=&#34;https://metacpan.org/pod/App::cpanminus&#34;&gt;cpanminus&lt;/a&gt; at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan App::cpanminus&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I prefer to use cpanminus when installing lots of modules: it&amp;rsquo;s less of a memory hog than cpan, outputs less line noise by default, and has the useful &amp;ldquo;&amp;ndash;notest&amp;rdquo; option if you want to install modules without testing them (and save a lot of time). Now change into the newly cloned app directory, and use cpanminus to install the app&amp;rsquo;s dependencies:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cd SecApp_login
+$ cpanm &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;installdeps &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;--&amp;gt;&lt;/span&gt; Working on &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+Configuring SecApp&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.01&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; OK
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;==&lt;/span&gt; Installed dependencies &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt; Finishing&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &amp;ldquo;&amp;ndash;installdeps&amp;rdquo; switch instructs cpanminus to search the current directory for dependencies. All of of the app&amp;rsquo;s dependencies are listed in Makefile.PL, so cpanminus finds those and begins installing all of the Perl modules that the app requires but your system does not have installed. If you&amp;rsquo;re working with a fresh install of Perl, this can take up to an hour or so, so go make a cup of coffee or something else whilst the installs happen.&lt;/p&gt;
+
+&lt;p&gt;Once all the modules are installed, test run the application with the following command:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ TESTING&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; script&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;secapp_server&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl 
+HTTP::Server::PSGI: Accepting connections at http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;3000&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Open your browsers and navigate to &lt;a href=&#34;http://localhost:3000&#34;&gt;http://localhost:3000&lt;/a&gt;. You see this simple welcome message:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/84/secapp_welcome.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;If you visit &lt;a href=&#34;http://localhost/login&#34;&gt;http://localhost/login&lt;/a&gt;, it should load the login page:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/84/secapp_login.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Using the username &amp;ldquo;test_user_01&amp;rdquo; and &amp;ldquo;Hfa *-£(&amp;amp;&amp;amp;%HBbWqpV%&amp;rdquo;_=asd&amp;rdquo; you should be able to login.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/84/secapp_login_credentials.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;A successful login will display a simple message and logout link:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/84/secapp_landing.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;1-prevent-information-leaks&#34;&gt;1. Prevent information leaks&lt;/h3&gt;
+
+&lt;p&gt;Information leaks give would-be attackers clues that undermine the login security. One way they do this is by giving information about the software running the web application (which may have known weaknesses).&lt;/p&gt;
+
+&lt;p&gt;In SecApp I&amp;rsquo;ve turned off the typical Catalyst information leaks. In the root application file &lt;a href=&#34;https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp.pm&#34;&gt;SecApp.pm&lt;/a&gt; the &amp;ldquo;-Debug&amp;rdquo; plugin has been removed, which prints a full stack trace in the case of an error:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Catalyst &lt;span style=&#34;color:#e6db74&#34;&gt;qw/
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    Static::Simple
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    Authentication
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    Session
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    Session::Store::File
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    Session::State::Cookie
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Further down the same file, the &amp;ldquo;X-Catalyst&amp;rdquo; HTTP header has been disabled by modifying the package configuration. This stops the header from being inserted to every response:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Disable X-Catalyst header&lt;/span&gt;
+enable_catalyst_header &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;These two changes stop the application from informing users the underlying application framework and language. Now they won&amp;rsquo;t know if they&amp;rsquo;re dealing with a Ruby, Python or Perl application!&lt;/p&gt;
+
+&lt;p&gt;The other type of information leak we need to prevent is indicating logical vulnerabilities by responding differently to similar requests. For example, by responding to login attempts with incorrect usernames with the error message &amp;ldquo;incorrect username&amp;rdquo;, attackers can brute-force attack the username until they receive the message &amp;ldquo;incorrect password&amp;rdquo;, at which point they know they have guessed a correct username.&lt;/p&gt;
+
+&lt;p&gt;In SecApp, we want to respond with a generic message every time the login attempt fails, and not indicate which field was incorrect. The login function is implemented in our &lt;a href=&#34;https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp/Controller/Root.pm#L42&#34;&gt;Root.pm&lt;/a&gt; controller - we&amp;rsquo;ll look at the code later, but for now you can see that there is only one error message returned.&lt;/p&gt;
+
+&lt;h3 id=&#34;2-handle-credentials-secretively&#34;&gt;2. Handle credentials secretively&lt;/h3&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://www.amazon.com/gp/product/1118026470/ref=as_li_qf_sp_asin_il_tl?ie=UTF8&amp;amp;camp=1789&amp;amp;creative=9325&amp;amp;creativeASIN=1118026470&amp;amp;linkCode=as2&amp;amp;tag=perltrickscom-20&#34;&gt;The Web Application Hacker&amp;rsquo;s Handbook&lt;/a&gt; summarizes this as:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;All credentials should be created, stored, and transmitted in a manner that does not lead to unauthorized disclosure.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;In SecApp &lt;a href=&#34;https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp/Controller/Root.pm#L11&#34;&gt;Root.pm&lt;/a&gt;, we use Catalyst&amp;rsquo;s auto Controller function to check that every request is over SSL:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# this method will be called everytime&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;auto&lt;/span&gt; :Private {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $c) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# 404 unless https/testing &amp;amp; request method is GET/HEAD/POST&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt;( ( $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;req&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;secure &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;config&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{testing} &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; )
+            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; grep &lt;span style=&#34;color:#e6db74&#34;&gt;/^(?:GET|HEAD|POST)$/&lt;/span&gt;, $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;req&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;method )
+        {
+            $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;detach(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;default&amp;#39;&lt;/span&gt;);
+        }
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The method &amp;ldquo;$c-&amp;gt;req-&amp;gt;secure&amp;rdquo; will return true if the connection is via SSL. If it isn&amp;rsquo;t we detach the request to the &amp;ldquo;default&amp;rdquo; method, which returns a 404 request error. The clause &amp;ldquo;or $c-&amp;gt;config-&amp;gt;{testing} == 1&amp;rdquo; is so that when testing the application we can try out the functions without needing SSL, as Catalyst&amp;rsquo;s test server does not support it.&lt;/p&gt;
+
+&lt;p&gt;Now it could be irritating for users who try to load the login page and get a 404 error. So using Catalyst&amp;rsquo;s end method, we also set the Strict-Transport-Security HTTP header which instructs browsers to load all pages via https. This is the code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;end&lt;/span&gt; : ActionClass(&amp;#39;RenderView&amp;#39;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $c) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# don&amp;#39;t require TLS for testing&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; ($c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;config&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{testing} &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+    $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;header(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Strict-Transport-Security&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;max-age=3600&amp;#39;&lt;/span&gt;);
+  }
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;SecApp sets several other security headers in the &lt;a href=&#34;https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp/Controller/Root.pm#L90&#34;&gt;end method&lt;/a&gt;, you can read about what they do &lt;a href=&#34;http://perltricks.com/article/81/2014/3/31/Perl-web-application-security-HTTP-headers&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;SecApp only authenticates login requests received via POST. We achieve this by using Catalyst&amp;rsquo;s chained dispatching and HTTP method matching:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;login&lt;/span&gt; :Chained(&amp;#39;/&amp;#39;) PathPart(&amp;#39;login&amp;#39;) CaptureArgs(0) {}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;login_auth&lt;/span&gt; :Chained(&amp;#39;login&amp;#39;) PathPart(&amp;#39;&amp;#39;) Args(0) POST {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# authentication code&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# authentication failed, load the login form&lt;/span&gt;
+    $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;forward(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;login_form&amp;#39;&lt;/span&gt;);
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;login_form&lt;/span&gt; :Chained(&amp;#39;login&amp;#39;) PathPart(&amp;#39;&amp;#39;) Args(0) GET {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $c) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# load the login template&lt;/span&gt;
+    $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;stash(template &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;login.tt&amp;#39;&lt;/span&gt;);
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;a href=&#34;https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp/Controller/Root.pm#L42&#34;&gt;code&lt;/a&gt; has been abbreviated here for clarity. But effectively the &amp;ldquo;login_auth&amp;rdquo; subroutine will only fire if the request to &amp;ldquo;/login&amp;rdquo; was made via POST, else just load the login page with the &amp;ldquo;login_form&amp;rdquo; sub. Cool right? Catalyst project manager John Napiorkowski mused on these features in an illustrative &lt;a href=&#34;http://jjnapiorkowski.typepad.com/modern-perl/2013/08/thoughts-on-catalyst-soa-and-web-services.html#.U11rEjnXvqg&#34;&gt;blog post&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, SecApp stores the passwords in an hashed format, using a relatively strong algorithm (bcrypt). The following code in &lt;a href=&#34;https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp/Schema/Result/User.pm#L130&#34;&gt;User.pm&lt;/a&gt; adds the functionality:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;__PACKAGE__&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add_columns(
+            &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;password&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+                passphrase &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;rfc2307&amp;#39;&lt;/span&gt;,
+                passphrase_class &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;BlowfishCrypt&amp;#39;&lt;/span&gt;,
+                passphrase_args &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+                    cost &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;14&lt;/span&gt;,
+                    salt_random &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;,
+                },
+                passphrase_check_method &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;check_password&amp;#39;&lt;/span&gt;,
+            });&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So even if attackers obtained the application password file, the passwords are salted and hashed and not easily broken. SecApp comes with a sample SQLite3 test database with one test user account already created.&lt;/p&gt;
+
+&lt;h3 id=&#34;3-validate-credentials-properly&#34;&gt;3. Validate credentials properly&lt;/h3&gt;
+
+&lt;p&gt;The code that validates credentials can also contain weaknesses. Passwords should be validated in full, without modification or truncation and in a case-sensitive comparison. Multi-stage login processes are particularly susceptible to attacks. The login code should be peer-reviewed and substantially tested for errors.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/Catalyst::Plugin::Authentication&#34;&gt;Catalyst::Plugin::Authentication&lt;/a&gt; module makes authentication easy. SecApp keeps the login process simple: just a username and password form, with an optional CAPTCHA. Here is the full login code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;login_auth&lt;/span&gt; :Chained(&amp;#39;login&amp;#39;) PathPart(&amp;#39;&amp;#39;) Args(0) POST {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $c) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $captcha_response 
+    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;params&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{recaptcha_response_field};
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $captcha_challenge 
+    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;params&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{recaptcha_challenge_field};
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# proceed if config has switched off CAPTCHA, or if the submission is valid, proceed&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;config&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{Captcha}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{enabled} &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+      &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; Captcha::reCAPTCHA&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;check_answer(
+                   $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;config&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{Captcha}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{private_key},
+                   $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;address,
+                   $captcha_challenge,
+                   $captcha_response)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{is_valid})
+  {
+    $username &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;req&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;params&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{username};
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $password &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;req&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;params&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{password};
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# if username and passwords were supplied, authenticate&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($username &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $password) {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;authenticate({ username &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $username,
+                             password &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $password } ))
+      {
+      &lt;span style=&#34;color:#75715e&#34;&gt;# authentication success, check user active and redirect to the secure landing page&lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_object&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;active) {
+          $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;redirect($c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;uri_for($c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;controller(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Admin&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;action_for(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;landing&amp;#39;&lt;/span&gt;)));
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+        }
+      }
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+        $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;stash(error_msg &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Bad username or password.&amp;#34;&lt;/span&gt;);
+      }
+    }
+  }
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;forward(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;login_form&amp;#39;&lt;/span&gt;);
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let&amp;rsquo;s walk through the code. If the CAPTCHA functionality is enabled, the login function will attempt to validate the CAPTCHA. If successful, the code then retrieves the username and password, and if they exist, attempts to validate them using the authenticate method. The authenticate method checks both username and password in full against the database. If the username and password are validated, then the user will be re-directed to the landing page which is in the secure Admin.pm controller. Else an error message will set indicating a bad username or password. In all failing cases, the login form will be reloaded and displayed.&lt;/p&gt;
+
+&lt;p&gt;So the code looks good, but how do we know if it will do the right thing in all cases? Fortunately &lt;a href=&#34;https://metacpan.org/pod/Catalyst::Test&#34;&gt;Catalyst::Test&lt;/a&gt; can make unit testing an application&amp;rsquo;s methods easy. SecApp has the test file &lt;a href=&#34;https://github.com/dnmfarrell/SecApp_login/blob/master/t/Root.t&#34;&gt;Root.t&lt;/a&gt; which tests the login function with many different combinations of credentials, such as null, zero-length string, correct username incorrect password etc. Running these tests makes it easy to confirm that the login function does the right thing. Want to check for yourself? At the command line run:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ TESTING&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Ilib t&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;Root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;t&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;4-prevent-brute-force-attacks&#34;&gt;4. Prevent brute-force attacks&lt;/h3&gt;
+
+&lt;p&gt;Brute force attacks are attempts to crack the username and password of an account by repeatedly trying different combinations until one succeeds. SecApp uses &lt;a href=&#34;https://metacpan.org/pod/Captcha::reCAPTCHA&#34;&gt;Captcha::reCAPTCHA&lt;/a&gt; to prevent automated brute force attacks. You&amp;rsquo;ll need a Google account and web domain to sign up for it (it&amp;rsquo;s free). The difficulty of the captcha puzzles presented are very difficult to reliably pass with automation. If you do have a Google &lt;a href=&#34;https://www.google.com/recaptcha/intro/index.html&#34;&gt;reCAPtCHA account&lt;/a&gt;, you can try it out with SecApp by updating &lt;a href=&#34;https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp.pm#L54&#34;&gt;SecApp.pm&lt;/a&gt; with your account credentials.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/84/secapp_login_catpcha.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Seeing as brute-force attacks can only succeed if they can try millions of attempts, why not just add a time-delay like &amp;ldquo;sleep(2)&amp;rdquo; to the login function? The problem with that defence is that it opens the web application up to another attack-vector: denial of service. If an attacker can issue several requests every 2 seconds to the login function, it may tie up all of the application&amp;rsquo;s processes and stop it from responding to regular web requests. Not good!&lt;/p&gt;
+
+&lt;p&gt;Using CAPTCHA combined with front-end proxy web server request and connection limiting methods that can largely eliminate the brute-force risk.&lt;/p&gt;
+
+&lt;h3 id=&#34;5-log-monitor-and-notify&#34;&gt;5. Log, monitor and notify&lt;/h3&gt;
+
+&lt;p&gt;Catalyst comes with built-in logging capabilities. If you&amp;rsquo;re using Catalyst::Plugin::Authentication, any failed login attempt automatically logs a critical error. So the good news is if you&amp;rsquo;re using a web server like nginx, Catalyst will write the critical error to the server error log (this is a simplification). SecApp does not implement any monitoring or notification services, but I think this is more the domain of the server and not the web application. It&amp;rsquo;s trivial to configure &lt;a href=&#34;http://www.fail2ban.org/wiki/index.php/Main_Page&#34;&gt;fail2ban&lt;/a&gt; to monitor the error.log and jail any suspicious repeat login attempts.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Is the SecApp login function secure? One thing to consider is that although it utilizes many good practices, user registration and password reset is not implemented. These features must be secure too, else they can undermine the login security altogether, for example by allowing weak passwords to be set. We&amp;rsquo;ll consider these areas of authentication in a future article. In the meantime, SecApp is released under the Artistic 2.0 license, feel free to use it.&lt;/p&gt;
+
+&lt;p&gt;Enjoyed this article? Help us out and &lt;a href=&#34;https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F84%2F2014%2F4%2F28%2FIs-your-login-page-secure-&amp;amp;text=Is+your+login+page+secure%3F&amp;amp;tw_p=tweetbutton&amp;amp;url=http%3A%2F%2Fperltricks.com%2Farticle%2F84%2F2014%2F4%2F28%2FIs-your-login-page-secure-&amp;amp;via=perltricks&#34;&gt;tweet&lt;/a&gt; about it!&lt;/p&gt;
+
+&lt;p&gt;*&lt;strong&gt;Updated:&lt;/strong&gt; corrected hashing algorithm name and description 04/28/2014*&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Cover image &lt;a href=&#34;https://creativecommons.org/licenses/by/2.0/&#34;&gt;©&lt;/a&gt; &lt;a href=&#34;https://www.flickr.com/photos/motograf/1269439152/in/photolist-2Wbd2W-9VxeqP-8v6WhC-8v3ToK-8v6W4h-fcDhWQ-6boP72-LNv8s-4pkUnM-aj6wD3-4rL1UA-9Ziy7V-jP5Sc-51f4ck-4ppX9S-dWGQed-dWGuMs-dQRyD-b9SUT-9cBRYL-5UB8BE-8BFgnW-6boNpR-6bsWUQ-6bsX9C-FXJTL-8AuQei-8AuRVc-8AuSzH-6gA6Lx-8v5M9x-91rH7R-dWsFmy-ZQRR-jP6a9-4HKkvg-4HPzk1-5eWG8T-8v8Q6d-8v8Q7N-4HKmZ6-kJrvqx-fcp9cZ-4rsdJ3-aFebHa-4HPALy-7HrEuY-6Pk9RC-hX3MVF-7xoEF6&#34;&gt;motograf&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

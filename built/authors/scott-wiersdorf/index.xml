@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Scott Wiersdorf on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/scott-wiersdorf/</link>
+    <description>Recent content in Scott Wiersdorf on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 12 Dec 2011 06:00:01 -0800</lastBuildDate>
+    <atom:link href="/authors/scott-wiersdorf/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Building Telephony Applications with Perl and TwiML</title>
+      <link>http://localhost:1313/pub/2011/12/building-telephony-applications-with-perl-and-twiml.html/</link>
+      <pubDate>Mon, 12 Dec 2011 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/12/building-telephony-applications-with-perl-and-twiml.html/</guid>
+      <description>
+
+&lt;p&gt;Perl makes writing Twilio telephony applications simple and enjoyable. My previous article, &lt;a href=&#34;http://localhost:1313/pub/2011/09/automating-telephony-with-perl-and-twilio.html&#34;&gt;Automating Telephony with Perl and Twilio&lt;/a&gt; showed how to use &lt;a href=&#34;https://metacpan.org/pod/WWW::Twilio::API&#34;&gt;WWW::Twilio::API&lt;/a&gt; to make a phone survey using Twilio&amp;rsquo;s text-to-speech synthesizer as well as send an SMS message to a phone number of your choice.&lt;/p&gt;
+
+&lt;p&gt;This article builds an easy phone menu application using Twilio&amp;rsquo;s &lt;a href=&#34;http://www.twilio.com/docs/api/twiml/&#34;&gt;TwiML&lt;/a&gt; application language, &lt;a href=&#34;https://metacpan.org/pod/WWW::Twilio::TwiML&#34;&gt;WWW::Twilio::TwiML&lt;/a&gt;, and &lt;a href=&#34;http://mojolicio.us/&#34;&gt;Mojolicious&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;installation-and-twilio-account-creation&#34;&gt;&lt;strong&gt;Installation and Twilio account creation&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;To begin, install WWW::Twilio::TwiML and Mojolicious using your &lt;a href=&#34;http://www.cpan.org/modules/INSTALL.html&#34;&gt;favorite method&lt;/a&gt; (see the previous article for more ideas). You&amp;rsquo;ll need a &lt;a href=&#34;http://www.twilio.com/&#34;&gt;Twilio&lt;/a&gt; account (it&amp;rsquo;s free to create an account, plus Twilio gives new users US $30 for calls&amp;ndash;plenty for several weeks of testing). The previous article covers installation and getting setup with a Twilio account in more detail. With WWW::Twilio::TwiML and Mojolicious installed and a Twilio account active, it&amp;rsquo;s a great time to get a little more familiar with Twilio&amp;rsquo;s Dashboard.&lt;/p&gt;
+
+&lt;h2 id=&#34;twilio-dashboard&#34;&gt;&lt;strong&gt;Twilio Dashboard&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://www.twilio.com/user/account&#34;&gt;Twilio Dashboard&lt;/a&gt; is where to find your Twilio sandbox information. The sandbox section of the dashboard is located below the fold of the dashboard page:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_12_building-telephony-applications-with-perl-and-twiml/dashboard.png&#34; alt=&#34;Twilio Dashboard&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;You should see the sandbox number and pin. You can set our inbound voice and inbound SMS handler URLs there (I&amp;rsquo;ll explain those soon.) First, a primer on how Twilio works.&lt;/p&gt;
+
+&lt;h2 id=&#34;twiml-in-the-twilio-flow&#34;&gt;&lt;strong&gt;TwiML in the Twilio flow&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Twilio&amp;rsquo;s basic flow goes something like:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_12_building-telephony-applications-with-perl-and-twiml/twilio-inbound-full.png&#34; alt=&#34;Handling an inbound call to Twilio&#34; /&gt;
+(This diagram is not an official Twilio diagram; it merely describes the author&amp;rsquo;s mental model of how Twilio works and may differ wildly from Twilio&amp;rsquo;s actual implementation.)
+1.  The caller dials (or sends an SMS to) &amp;ldquo;555-867-5309&amp;rdquo; on their phone&amp;ndash;this is your Twilio sandbox or purchased number. Twilio&amp;rsquo;s inbound call dispatcher receives the call or text.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Once the connection is made, the dispatcher makes an HTTP &lt;code&gt;GET&lt;/code&gt; or &lt;code&gt;POST&lt;/code&gt; to the Voice or SMS URL specified given for this number. Remember the Voice URL in the Sandbox App of the Twilio Dashboard shown above? That&amp;rsquo;s the one. For purchased Twilio numbers, you set the voice and SMS URLs under the &amp;ldquo;Numbers&amp;rdquo; tab in the Dashboard.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The Voice or SMS URL specified in the Sandbox App responds to the Twilio request with a &lt;em&gt;TwiML document&lt;/em&gt;. Twilio&amp;rsquo;s TwiML parser reads this document, then executes the &amp;ldquo;verbs&amp;rdquo; specified in the TwiML document. For example, if the TwiML document contained a &lt;code&gt;&amp;lt;Say&amp;gt;&lt;/code&gt; verb, Twilio&amp;rsquo;s text-to-speech synthesizer would &amp;ldquo;read&amp;rdquo; the text to the caller. If the document specified a &lt;code&gt;&amp;lt;Dial&amp;gt;&lt;/code&gt; verb and number, Twilio would dial the number and connect the caller to it. &lt;code&gt;&amp;lt;Redirect&amp;gt;&lt;/code&gt; verbs tell Twilio to fetch another TwiML document.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;You may recall an example in the previous article which used Twilio&amp;rsquo;s &lt;a href=&#34;http://labs.twilio.com/twimlets/voicemail&#34;&gt;voicemail TwiML handler&lt;/a&gt; to conduct a brief phone survey. While you can sometimes manipulate third-party TwiML applications to do what you want, TwiML is so simple to use that you&amp;rsquo;ll find it&amp;rsquo;s often easier to write your own.&lt;/p&gt;
+
+&lt;h2 id=&#34;twiml-basics&#34;&gt;&lt;strong&gt;TwiML basics&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;TwiML is a subset of XML. Here is a TwiML document that when read by Twilio&amp;rsquo;s parser, will say to the caller, &amp;ldquo;Foosball at 10 o&amp;rsquo;clock!&amp;rdquo; using the text-to-speech synthesizer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; ?&amp;gt;
+&amp;lt;Response&amp;gt;
+  &amp;lt;Say voice=&amp;quot;man&amp;quot;&amp;gt;Foosball at 10 o&amp;amp;apos;clock!&amp;lt;/Say&amp;gt;
+&amp;lt;/Response&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some TwiML verbs are nestable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; ?&amp;gt;
+&amp;lt;Response&amp;gt;
+  &amp;lt;Gather action=&amp;quot;/menu.cgi&amp;quot; numDigits=&amp;quot;1&amp;quot; method=&amp;quot;GET&amp;quot;&amp;gt;
+    &amp;lt;Say voice=&amp;quot;man&amp;quot;&amp;gt;
+      Ping pong at high noon!
+      Hit 1 if you&amp;amp;apos;re with me.
+      Hit 2 if you&amp;amp;apos;re a loser.
+    &amp;lt;/Say&amp;gt;
+  &amp;lt;/Gather&amp;gt;
+
+  &amp;lt;Say&amp;gt;You must make a choice!&amp;lt;/Say&amp;gt;
+&amp;lt;/Response&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;&amp;lt;Gather&amp;gt;&lt;/code&gt; verb tells Twilio to start gathering key presses. Meanwhile, Twilio will hand off the contents of the &lt;code&gt;&amp;lt;Say&amp;gt;&lt;/code&gt; verb to the text-to-speech handler. Nesting the &lt;code&gt;&amp;lt;Say&amp;gt;&lt;/code&gt; inside of the &lt;code&gt;&amp;lt;Gather&amp;gt;&lt;/code&gt; lets the caller push a key anytime during the &lt;code&gt;&amp;lt;Say&amp;gt;&lt;/code&gt; verb to interrupt it and process your choice. The final &lt;code&gt;&amp;lt;Say&amp;gt;&lt;/code&gt; element only executes if the &lt;code&gt;&amp;lt;Gather&amp;gt;&lt;/code&gt; fails (e.g., the caller doesn&amp;rsquo;t press a key).&lt;/p&gt;
+
+&lt;p&gt;Twilio&amp;rsquo;s excellent documentation details &lt;a href=&#34;http://www.twilio.com/docs/api/twiml/&#34;&gt;all of the available TwiML verbs&lt;/a&gt;. Armed with a little knowledge, you&amp;rsquo;re dangerouly close to making something useful.&lt;/p&gt;
+
+&lt;h2 id=&#34;simple-phone-menu&#34;&gt;&lt;strong&gt;Simple phone menu&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;You&amp;rsquo;ve been asked to build a phone menu system for a young urban professional and his family. The application should accept an incoming call, prompt the caller with a numeric menu, and connect the caller with the number of their choice.&lt;/p&gt;
+
+&lt;p&gt;No problem. Start with a simple static TwiML document called &lt;em&gt;menu.xml&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; ?&amp;gt;
+&amp;lt;Response&amp;gt;
+  &amp;lt;Gather method=&amp;quot;GET&amp;quot; action=&amp;quot;/menu_handler&amp;quot; numDigits=&amp;quot;1&amp;quot;&amp;gt;
+    &amp;lt;Say&amp;gt;Press 1 for Ryan&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 2 for Liz&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 3 for Jason&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 4 for Erin&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 5 for Rachel&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 6 for Gilligan&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 7 for Potsie&amp;lt;/Say&amp;gt;
+  &amp;lt;/Gather&amp;gt;
+&amp;lt;/Response&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can put this file on the web and update the URL in the &amp;ldquo;Voice URL&amp;rdquo; field of the Sandbox section of the Dashboard. Anyone who dials the sandbox number, will hear a Twilio&amp;rsquo;s text-to-speech voice reading the menu options. Anybody remember the &amp;ldquo;S.A.M.&amp;rdquo; speech synthesizer from the mid 80&amp;rsquo;s (Commodore 64 or Atari 800)? You&amp;rsquo;ve come a long way, baby!&lt;/p&gt;
+
+&lt;p&gt;While this static TwiML file would work, it does mean you&amp;rsquo;ll have two files to update when a phone number changes. Fix that by consolidating the &lt;code&gt;/menu&lt;/code&gt; and &lt;code&gt;/menu_handler&lt;/code&gt; &amp;ldquo;routes&amp;rdquo; (the Mojolicious word for URL handlers) into a single program to generate TwiML dynamically.&lt;/p&gt;
+
+&lt;h2 id=&#34;www-twilio-twiml-briefly&#34;&gt;&lt;strong&gt;WWW::Twilio::TwiML, briefly&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;WWW::Twilio::TwiML is a special-purpose XML generator and supports several programming styles. For example, the following two code snippets create this TwiML document:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; ?&amp;gt;
+&amp;lt;Response&amp;gt;
+    &amp;lt;Say voice=&amp;quot;man&amp;quot;&amp;gt;Kilroy was here&amp;lt;/Say&amp;gt;
+&amp;lt;/Response&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Snippet number 1:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $say = WWW::Twilio::TwiML-&amp;gt;new();
+$say−&amp;gt;name(&#39;Say&#39;);
+$say−&amp;gt;content(&amp;quot;Kilroy was here&amp;quot;);
+$say−&amp;gt;attributes({voice =&amp;gt; &amp;quot;man&amp;quot;});
+
+my $resp = WWW::Twilio::TwiML-&amp;gt;new();
+$resp−&amp;gt;name(&#39;Response&#39;);
+$resp−&amp;gt;content($say);
+
+my $tw = WWW::Twilio::TwiML-&amp;gt;new();
+$tw−&amp;gt;content($resp);
+print $tw−&amp;gt;to_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And snippet number 2:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tw = WWW::Twilio::TwiML-&amp;gt;new();
+$tw−&amp;gt;Response−&amp;gt;Say({voice =&amp;gt; &amp;quot;man&amp;quot;}, &amp;quot;Kilroy was here&amp;quot;);
+print $tw−&amp;gt;to_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The second snippet uses a technique called &amp;ldquo;method chaining&amp;rdquo;; if you&amp;rsquo;ve used the jQuery module for Javascript, you may already know how powerful chaining object methods can be in certain contexts. &lt;code&gt;WWW::Twilio::TwiML&lt;/code&gt; makes chaining possible because each TwiML verb method is a constructor of another &lt;code&gt;WWW::Twilio::TwiML&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;p&gt;When you chain TwiML objects like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tw-&amp;gt;Response-&amp;gt;Say(&amp;quot;Eat at Joe&amp;amp;apos;&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;Response&lt;/code&gt; object is created as a child of the top &lt;code&gt;$tw&lt;/code&gt; object. The &lt;code&gt;Say&lt;/code&gt; object is created as the child of the &lt;code&gt;Response&lt;/code&gt; object. When the &lt;code&gt;$tw&lt;/code&gt; object&amp;rsquo;s &lt;code&gt;to_string&lt;/code&gt; method is invoked, like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;print $tw-&amp;gt;to_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;WWW:Twilio::TwiML&lt;/code&gt; crawls down &lt;code&gt;$tw&lt;/code&gt;&amp;rsquo;s list of children, recursively invoking &lt;code&gt;to_string&lt;/code&gt; until the last child. The whole process creates this output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; ?&amp;gt;
+&amp;lt;Response&amp;gt;
+    &amp;lt;Say&amp;gt;Eat at Joe&amp;amp;apos;&amp;lt;/Say&amp;gt;
+&amp;lt;/Response&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s may look a little foreign, but it makes for concise and readable TwiML.&lt;/p&gt;
+
+&lt;h2 id=&#34;getting-your-mojo-on&#34;&gt;&lt;strong&gt;Getting your mojo on&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Now that you have a feel for creating TwiML documents, you need a way to serve them from the web.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://mojolicio.us/&#34;&gt;Mojolicious&lt;/a&gt; is an easy-to-use web application framework. Just a few lines and you have a sweet little web app to serve TwiML. Feel free to read a little of the Mojolicious documentation. This author highly recommends going through the &lt;a href=&#34;http://mojolicio.us/perldoc/Mojolicious/Lite&#34;&gt;Mojolicious::Lite&lt;/a&gt; documentation first: almost everything you learn in Mojolicious::Lite also applies to the larger Mojolicious application framework.&lt;/p&gt;
+
+&lt;p&gt;To write just enough Mojolicious to do what you&amp;rsquo;ve already done with the static TwiML document, you need only two modules for this entire application. (Neither has any dependencies&amp;ndash;you&amp;rsquo;re welcome.) Keep in mind that &lt;code&gt;Mojolicious::Lite&lt;/code&gt; enables &amp;lsquo;warnings&amp;rsquo; and &amp;lsquo;strict&amp;rsquo; by default: no sloppy programming allowed!&lt;/p&gt;
+
+&lt;p&gt;This application implements a Mojolicious handler for the &lt;code&gt;/menu&lt;/code&gt; route which is only called when the application receives an HTTP &lt;code&gt;GET&lt;/code&gt; to the &lt;code&gt;/menu&lt;/code&gt; URI.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/env perl
+
+use Mojolicious::Lite;
+use WWW::Twilio::TwiML;
+
+get &#39;/menu&#39; =&amp;gt; sub {
+    my $self = shift;
+
+    $self-&amp;gt;render(format =&amp;gt; &#39;xml&#39;,
+                  text   =&amp;gt; &amp;lt;&amp;lt;&#39;_TWIML_&#39;);
+&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; ?&amp;gt;
+&amp;lt;Response&amp;gt;
+  &amp;lt;Gather method=&amp;quot;GET&amp;quot; action=&amp;quot;/menu_handler&amp;quot; numDigits=&amp;quot;1&amp;quot;&amp;gt;
+    &amp;lt;Say&amp;gt;Press 1 for Ryan&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 2 for Liz&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 3 for Jason&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 4 for Erin&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 5 for Rachel&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 6 for Gilligan&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 7 for Potsie&amp;lt;/Say&amp;gt;
+  &amp;lt;/Gather&amp;gt;
+&amp;lt;/Response&amp;gt;
+_TWIML_
+};
+
+app-&amp;gt;start;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s all it takes for a Mojolicious application (source &lt;a href=&#34;http://localhost:1313/media/_pub_2011_12_building-telephony-applications-with-perl-and-twiml/menu_static&#34;&gt;here&lt;/a&gt;). Mojolicious packs a full stack HTTP 1.1 web server, making tests easy. In one shell, start your Mojolicious program as a daemon (use Ctrl-c to stop when finished):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl menu_part daemon
+[Mon Nov 14 21:41:34 2011] [info] Server listening (http://*:3000)
+Server available at http://127.0.0.1:3000.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In another shell, pretend you&amp;rsquo;re Twilio&amp;rsquo;s application server and fetch the TwiML:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl http://localhost:3000/menu
+&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; ?&amp;gt;
+&amp;lt;Response&amp;gt;
+  &amp;lt;Gather method=&amp;quot;GET&amp;quot; action=&amp;quot;/menu_handler&amp;quot; numDigits=&amp;quot;1&amp;quot;&amp;gt;
+    &amp;lt;Say&amp;gt;Press 1 for Ryan&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 2 for Liz&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 3 for Jason&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 4 for Erin&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 5 for Rachel&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 6 for Gilligan&amp;lt;/Say&amp;gt;
+    &amp;lt;Say&amp;gt;Press 7 for Potsie&amp;lt;/Say&amp;gt;
+  &amp;lt;/Gather&amp;gt;
+&amp;lt;/Response&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Is this progress? This is same TwiML as in &lt;em&gt;menu.xml&lt;/em&gt;, but now it&amp;rsquo;s created with Mojolicious. At this point you can upload your app to a publicly accessible server, and, assuming Mojolicious is also installed there, you can start your application. Then go to the Twilio Dashboard and replace the existing Voice URL with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://your.server.org:3000/menu
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;important-note-about-mojolicious-and-http-get&#34;&gt;Important note about Mojolicious and HTTP GET&lt;/h3&gt;
+
+&lt;p&gt;Mojolicious&amp;rsquo;s &lt;code&gt;get&lt;/code&gt; method only responds to HTTP &lt;code&gt;GET&lt;/code&gt; method requests. Make sure that when you set the Voice URL in the Twilio Dashboard, you also change the HTTP method to &lt;code&gt;GET&lt;/code&gt;. Alternatively, you could use Mojolicious&amp;rsquo;s &lt;code&gt;post&lt;/code&gt; method, which only responds to HTTP &lt;code&gt;POST&lt;/code&gt;, or the &lt;code&gt;any&lt;/code&gt; method, which accepts both &lt;code&gt;GET&lt;/code&gt; and &lt;code&gt;POST&lt;/code&gt; (as well as &lt;code&gt;PUT&lt;/code&gt; and &lt;code&gt;DELETE&lt;/code&gt;), but making Twilio use HTTP &lt;code&gt;GET&lt;/code&gt; seems more appropriate.&lt;/p&gt;
+
+&lt;h2 id=&#34;putting-it-all-together&#34;&gt;&lt;strong&gt;Putting it all together&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Now it&amp;rsquo;s time to improve the program because it still serves static TwiML. It also needs a programmatic way tell Twilio what to do when the caller presses a key.&lt;/p&gt;
+
+&lt;p&gt;Start over and make a hash for the phone menu. This could be put into a separate file&amp;ndash;and probably should be&amp;ndash;but it wouldn&amp;rsquo;t be a proper tutorial without &lt;em&gt;something&lt;/em&gt; left as an exercise.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/env perl
+
+use Mojolicious::Lite;
+use WWW::Twilio::TwiML;
+
+my %list = ( 1 =&amp;gt; { name =&amp;gt; &#39;Ryan&#39;,
+                    number =&amp;gt; &#39;+19165557720&#39; },
+             2 =&amp;gt; { name =&amp;gt; &#39;Liz&#39;,
+                    number =&amp;gt; &#39;+19165551211&#39; },
+             3 =&amp;gt; { name =&amp;gt; &#39;Jason&#39;,
+                    number =&amp;gt; &#39;+19285550122&#39; },
+             4 =&amp;gt; { name =&amp;gt; &#39;Erin&#39;,
+                    number =&amp;gt; &#39;+19285551729&#39; },
+             5 =&amp;gt; { name =&amp;gt; &#39;Rachel&#39;,
+                    number =&amp;gt; &#39;+18015553992&#39; },
+             6 =&amp;gt; { name =&amp;gt; &#39;Gilligan&#39;,
+                    recording =&amp;gt; &#39;http://www.televisiontunes.com/&#39;
+                              .     &#39;themesongs/Gilligans%20Island.mp3&#39; },
+             7 =&amp;gt; { name =&amp;gt; &#39;Potsie&#39;,
+                    recording =&amp;gt; &#39;http://www.televisiontunes.com/&#39;
+                              .     &#39;themesongs/Happy%20Days%20-%20Season%202.mp3&#39; },
+           );
+
+get &#39;/menu&#39; =&amp;gt; sub {
+    my $self = shift;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This should looks mostly familiar so far. Now create &lt;code&gt;$msg&lt;/code&gt; which holds all of the text you want Twilio to &amp;ldquo;Say&amp;rdquo; to the caller:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $msg = join &#39;. &#39;,
+      map { &amp;quot;Press $_ for $list{$_}-&amp;gt;{name}&amp;quot; }
+        sort keys %list;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s time to build the TwiML document, and this could use some error handling in case the caller doesn&amp;rsquo;t press a key. Finally, print everything via Mojolicious&amp;rsquo;s &lt;code&gt;render()&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $tw   = WWW::Twilio::TwiML-&amp;gt;new();
+    my $resp = $tw-&amp;gt;Response;
+    $resp-&amp;gt;Gather({action    =&amp;gt; $self-&amp;gt;url_for(&#39;/menu_handler&#39;),
+                   method    =&amp;gt; &#39;GET&#39;,
+                   numDigits =&amp;gt; 1})
+         -&amp;gt;Say({voice =&amp;gt; &#39;woman&#39;}, $msg);
+
+    $resp-&amp;gt;Say(&amp;quot;You need to make a choice or hang up.&amp;quot;);
+    $resp-&amp;gt;Redirect(&amp;quot;/menu&amp;quot;);
+
+    $self-&amp;gt;render(format =&amp;gt; &#39;xml&#39;,
+                  text   =&amp;gt; $tw-&amp;gt;to_string);
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember to start Mojolicious&amp;rsquo;s event loop; this code should always go at the end of your application, as it never returns:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;app-&amp;gt;start;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Source &lt;a href=&#34;http://localhost:1313/media/_pub_2011_12_building-telephony-applications-with-perl-and-twiml/menu_part&#34;&gt;here&lt;/a&gt;). If declarative-style programming is new to you, don&amp;rsquo;t fret: under the hood, Mojolicious simply creates a map for itself that says &amp;ldquo;when I receive an HTTP &lt;code&gt;GET&lt;/code&gt; for &amp;lsquo;/menu&amp;rsquo;, I should execute this subroutine&amp;rdquo;. The &lt;code&gt;app-&amp;gt;start&lt;/code&gt; routine begins a loop that waits for said request, then handles it as you&amp;rsquo;ve defined (declared) it.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-menu-handler-route&#34;&gt;&lt;strong&gt;The menu handler route&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Most of the hard work is done now. As specified in the &lt;code&gt;Gather&lt;/code&gt;&amp;rsquo;s &lt;code&gt;action&lt;/code&gt; attribute above, when the caller presses a key, Twilio will perform an HTTP &lt;code&gt;GET&lt;/code&gt; on &lt;code&gt;/menu_handler&lt;/code&gt;. Add one more Mojolicious route:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/menu_handler&#39; =&amp;gt; sub {
+    my $self   = shift;
+    my $choice = $self-&amp;gt;param(&#39;Digits&#39;) || 0;
+
+    my $tw     = WWW::Twilio::TwiML-&amp;gt;new();
+    my $resp   = $tw-&amp;gt;Response;
+
+    unless( exists $list{$choice} ) {
+        $resp-&amp;gt;Say({voice =&amp;gt; &#39;woman&#39;},
+                   &amp;quot;Sorry, that&#39;s not a valid option.&amp;quot;);
+
+        $resp-&amp;gt;Redirect({method =&amp;gt; &#39;GET&#39;}, &amp;quot;/menu&amp;quot;);
+
+        $self-&amp;gt;render(format =&amp;gt; &#39;xml&#39;,
+                      text   =&amp;gt; $tw-&amp;gt;to_string);
+        return;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Twilio always passes a &lt;code&gt;Digits&lt;/code&gt; parameter to URLs it fetches as a result of a &lt;code&gt;Gather&lt;/code&gt; action (see &lt;a href=&#34;http://www.twilio.com/docs/api/twiml/gather&#34;&gt;Twilio&amp;rsquo;s Gather verb documentation&lt;/a&gt;); &lt;code&gt;Digits&lt;/code&gt; contains the digit or digits pressed by the caller. HTTP &lt;code&gt;GET&lt;/code&gt; (and &lt;code&gt;POST&lt;/code&gt;) parameters are available to Mojolicious through the &lt;code&gt;param()&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;The code then checks to see if the option the caller has selected exists. If it doesn&amp;rsquo;t, it generates a TwiML response to tell Twilio to &lt;code&gt;Say&lt;/code&gt; to the caller &amp;ldquo;Sorry, that&amp;rsquo;s not a valid option.&amp;rdquo; then sends a redirect back to the main menu.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s polite to let the caller know what&amp;rsquo;s going on, so add a status message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$resp-&amp;gt;Say({voice =&amp;gt; &#39;woman&#39;},
+           &amp;quot;I&#39;ll try connecting you now.&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember that all this code does is &lt;em&gt;build&lt;/em&gt; the TwiML response object; only when the complete, stringified TwiML object is sent to Twilio&amp;rsquo;s application server does the document have any effect on the application flow.&lt;/p&gt;
+
+&lt;p&gt;The next step is to look up the caller&amp;rsquo;s choice in the &lt;code&gt;%list&lt;/code&gt; hash. If the caller&amp;rsquo;s selection had a phone number associated with it, create a &lt;code&gt;Dial&lt;/code&gt;, &lt;code&gt;Play&lt;/code&gt;, or &lt;code&gt;Say&lt;/code&gt; TwiML object, depending on whether &lt;code&gt;%list&lt;/code&gt; specifies a number to call, a URL to an audio file to fetch and play, or neither (respectively):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if( $list{$choice}-&amp;gt;{number} ) {
+        $resp-&amp;gt;Dial($list{$choice}-&amp;gt;{number});
+    }
+
+    elsif( $list{$choice}-&amp;gt;{recording} ) {
+        $resp-&amp;gt;Play($list{$choice}-&amp;gt;{recording});
+    }
+
+    else {
+        $resp-&amp;gt;Say({voice =&amp;gt; &#39;woman&#39;},
+                   &amp;quot;Sorry, that option isn&#39;t working.&amp;quot;);
+        $resp-&amp;gt;Redirect({method =&amp;gt; &#39;GET&#39;}, &amp;quot;/menu&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, invoke Mojolicious&amp;rsquo;s &lt;code&gt;render()&lt;/code&gt; method to create an XML &lt;em&gt;Content-type&lt;/em&gt; header and send the stringified TwiML object to &lt;code&gt;stdout&lt;/code&gt; (which Twilio&amp;rsquo;s application server will read):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $self-&amp;gt;render(format =&amp;gt; &#39;xml&#39;,
+                  text   =&amp;gt; $tw-&amp;gt;to_string);
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2011_12_building-telephony-applications-with-perl-and-twiml/menu&#34;&gt;Here is the full source&lt;/a&gt; for your enjoyment. If you&amp;rsquo;ve already set Twilio&amp;rsquo;s Voice URL in uour Sandbox, nothing further needs to be done on Twilio&amp;rsquo;s side. Just upload the new application to the web server and start it (Mojolicious supports a variety of &lt;a href=&#34;http://mojolicio.us/perldoc/Mojolicious/Guides/Cookbook#DEPLOYMENT&#34;&gt;deployment options&lt;/a&gt; including Morbo, CGI, FastCGI, or Plack).&lt;/p&gt;
+
+&lt;p&gt;You&amp;rsquo;ve made a simple phone menu here, but you&amp;rsquo;ve only learned a few of &lt;a href=&#34;http://www.twilio.com/docs/api/twiml/&#34;&gt;Twilio&amp;rsquo;s TwiML verbs&lt;/a&gt;. With &lt;a href=&#34;https://metacpan.org/pod/WWW::Twilio::API&#34;&gt;WWW::Twilio::API&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/WWW::Twilio::TwiML&#34;&gt;WWW::Twilio::TwiML&lt;/a&gt;, and &lt;a href=&#34;http://mojolicio.us&#34;&gt;Mojolicious&lt;/a&gt; you can also create conference rooms, make voice recordings, send and receive SMS messages, reject calls from unwanted numbers, and do other useful actions in just a few lines of code.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Automating Telephony with Perl and Twilio</title>
+      <link>http://localhost:1313/pub/2011/09/automating-telephony-with-perl-and-twilio.html/</link>
+      <pubDate>Wed, 21 Sep 2011 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/09/automating-telephony-with-perl-and-twilio.html/</guid>
+      <description>
+
+&lt;p&gt;Perl can make your phone ring.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.twilio.com/&#34;&gt;Twilio&lt;/a&gt; allows developers to write applications that can make and receive voice calls or SMS messages (though Twilio can do many other interesting telephony things). Twilio’s RESTful API, text-to-speech synthesizer, speech transcription services, and Javascript client make it easy to knock out a conference call application, an in-browser customer service voice application, a weather-by-SMS application, reminder by phone—anything, really—in minutes. This article shows how to make a couple of small applications, one to help you pronounce words correctly and the other to transcribe awkward condiment phone survey answers.&lt;/p&gt;
+
+&lt;h2 id=&#34;twilio-setup&#34;&gt;&lt;strong&gt;Twilio Setup&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;First, head over to &lt;a href=&#34;http://www.twilio.com/&#34;&gt;Twilio.com&lt;/a&gt; and click the “Try Twilio Free” link. While inbound calls cost US $0.01 per minute and outbound calls cost US $0.02 per minute, Twilio has historically given new users a generous account balance to start with for free (currently US $30)—it’s plenty of credit to kick the tires and take it for a spin.&lt;/p&gt;
+
+&lt;p&gt;Go ahead and register (I’ll wait here). When you’ve finished, you’ll have an account SID (beginning with “AC”) and an auth token, available from your Twilio Dashboard. These are your Twilio API username and password; you’ll need them for any API application you write.&lt;/p&gt;
+
+&lt;h2 id=&#34;twilio-basics&#34;&gt;&lt;strong&gt;Twilio Basics&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The Twilio website is full of well-organized documentation and sample applications. I recommend starting with “How It Works” (one of the main navigation links on the home page). Browse the documentation under “Docs” as well.&lt;/p&gt;
+
+&lt;p&gt;H. H. Munroe said, “A little inaccuracy sometimes saves tons of explanation.” Keeping that in mind, inbound calls (calls to a Twilio number) work like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_09_automating-telephony-with-perl-and-twilio/twilio-inbound.png&#34; alt=&#34;&#34; /&gt;
+&lt;em&gt;Inbound calls to a Twilio number&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;1) the user calls “555-867-5309” on their phone&lt;/p&gt;
+
+&lt;p&gt;2) Twilio accepts the call, then makes an HTTP POST to &lt;a href=&#34;http://example.com/jenny.xml&#34;&gt;http://example.com/jenny.xml&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;3) example.com responds with a “TwiML” document (TwiML is a simple XML language that describes how Twilio will interact with callers):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; ?&amp;gt;
+&amp;lt;Response&amp;gt;
+  &amp;lt;Say voice=&amp;quot;woman&amp;quot;&amp;gt;This is Jenny!&amp;lt;/Say&amp;gt;
+&amp;lt;/Response&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;4) Twilio’s TwiML parser and text-to-speech synthesizer read this document and then says to the user (in a voice from the uncanny valley), “This is Jenny!”&lt;/p&gt;
+
+&lt;p&gt;When you setup a sandbox number, you tell Twilio to map a URL to that number. Twilio will GET/POST to that URL when receiving calls.&lt;/p&gt;
+
+&lt;p&gt;Outbound calls (calls from a Twilio number) work like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_09_automating-telephony-with-perl-and-twilio/twilio-outbound.png&#34; alt=&#34;&#34; /&gt;
+&lt;em&gt;Outbound calls from a Twilio number&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;1) An application makes an HTTP POST to Twilio’s “Calls” API with the parameters:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;From=+15558675309
+To=+19991234567
+Url=http://example.com/jenny.xml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;2) Twilio places the call and waits for an answer&lt;/p&gt;
+
+&lt;p&gt;3) Once the user answers, Twilio retrieves the URL specified in the POST (which should return a TwiML document)&lt;/p&gt;
+
+&lt;p&gt;4) Twilio parses the TwiML document and passes it to the text-to-speech synthesizer&lt;/p&gt;
+
+&lt;p&gt;5) The synthesizer says to the user “This is Jenny!”&lt;/p&gt;
+
+&lt;p&gt;Twilio can also record voice input, transcribe it, send and receive SMS messages, make conference calls, and a few other useful things, all using the same familiar RESTful API and TwiML.&lt;/p&gt;
+
+&lt;h2 id=&#34;twilio-meet-perl&#34;&gt;&lt;strong&gt;Twilio, meet Perl&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;CPAN makes writing Twilio applications easy, thanks to &lt;a href=&#34;https://metacpan.org/pod/WWW::Twilio::API&#34;&gt;WWW::Twilio::API&lt;/a&gt;. My (current) favorite way to install CPAN modules comes from the Mojolicious project:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;curl -L cpanmin.us | perl - WWW::Twilio::API
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;cpanmin.us returns a Perl program which handles all of the build dependencies for you. If you’re leery of running code from a website directly on the command line, install &lt;a href=&#34;https://metacpan.org/pod/App::cpanminus&#34;&gt;App::cpanminus&lt;/a&gt; and use its &lt;code&gt;cpanm&lt;/code&gt; program instead.&lt;/p&gt;
+
+&lt;p&gt;If you’re like me and don’t want to mess up your clean development environment, tell cpanmin.us or &lt;code&gt;cpanm&lt;/code&gt; to install things into a temporary location:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ mkdir ~/perl-test
+$ export PERL5LIB=~/perl-test/lib/perl5
+$ curl -L cpanmin.us | perl - --local-lib=~/perl-test WWW::Twilio::API
+# or
+$ cpanm --local-lib=~/perl-test WWW::Twilio::API
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;See &lt;a href=&#34;http://www.cpan.org/modules/INSTALL.html&#34;&gt;How to install CPAN modules&lt;/a&gt; for more information and options.&lt;/p&gt;
+
+&lt;h2 id=&#34;getting-all-the-necessary-twilio-information&#34;&gt;&lt;strong&gt;Getting all the necessary Twilio information&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;After you install &lt;a href=&#34;https://metacpan.org/pod/WWW::Twilio::API&#34;&gt;WWW::Twilio::API&lt;/a&gt;, but before you make your first call, you need several pieces of information from your Twilio Dashboard:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;AccountSid: this is a long string begining with “AC”&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;AuthToken: another long hex string, next to the AccountSid; you may have to click a lock icon to reveal it&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Sandbox number: found on the bottom half of the Dashboard page under “Sandbox App”&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;That’s all! Now you’re ready to go.&lt;/p&gt;
+
+&lt;h2 id=&#34;your-first-phone-call&#34;&gt;&lt;strong&gt;Your first phone call&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Fire up your favorite editor:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use WWW::Twilio::API;
+
+my $twilio = WWW::Twilio::API-&amp;gt;( AccountSid  =&amp;gt; &#39;ACxxxxxxxxx&#39;,
+                                 AuthToken   =&amp;gt; &#39;xxxxxxxxxxx&#39;,
+                                 API_VERSION =&amp;gt; &#39;2010-04-01&#39; );
+
+## A hollow voice says &#39;plugh&#39;
+my $response = $twilio-&amp;gt;POST( &#39;Calls&#39;,
+                              To   =&amp;gt; &#39;+15556667777&#39;, ## maybe your cell phone
+                              From =&amp;gt; &#39;+12223334444&#39;, ## your Twilio sandbox
+                              Url  =&amp;gt; &#39;http://twimlets.com/message?&#39;
+                                    . &#39;Message%5B0%5D=plugh&#39; );
+
+print STDERR $response-&amp;gt;{content};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That’s the entire application. Run it, and if all went well, you should see a long XML string returned which resembles:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot;?&amp;gt;
+&amp;lt;TwilioResponse&amp;gt;
+  &amp;lt;Call&amp;gt;
+    &amp;lt;To&amp;gt;+15556667777&amp;lt;/To&amp;gt;
+    &amp;lt;From&amp;gt;+12223334444&amp;lt;/From&amp;gt;
+    &amp;lt;Status&amp;gt;queued&amp;lt;/Status&amp;gt;
+    &amp;lt;Direction&amp;gt;outbound-api&amp;lt;/Direction&amp;gt;
+  &amp;lt;/Call&amp;gt;
+&amp;lt;/TwilioResponse&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;… and then your phone should ring. I’ve always wondered how to pronounce “plugh”—now I know.&lt;/p&gt;
+
+&lt;h2 id=&#34;what-could-possibly-go-wrong&#34;&gt;&lt;strong&gt;What could possibly go wrong?&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Early on in Twilio development, you’re likely to experience a few little gotchas. For example, you might get this message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;LWP will support https URLs if the LWP::Protocol::https module
+is installed.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That’s LWP telling you to install &lt;a href=&#34;https://metacpan.org/pod/LWP::Protocol::https&#34;&gt;LWP::Protocol::https&lt;/a&gt;. (It will also install or update a few other modules, including &lt;a href=&#34;https://metacpan.org/pod/Net::SSLeay&#34;&gt;Net::SSLeay&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;If you see XML after running the script, your development environment is probably fine. You might instead see:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;TwilioResponse&amp;gt;
+  &amp;lt;RestException&amp;gt;
+    &amp;lt;Status&amp;gt;401&amp;lt;/Status&amp;gt;
+    &amp;lt;Message&amp;gt;Authenticate&amp;lt;/Message&amp;gt;
+    &amp;lt;Code&amp;gt;20003&amp;lt;/Code&amp;gt;
+    &amp;lt;MoreInfo&amp;gt;http://www.twilio.com/docs/errors/20003&amp;lt;/MoreInfo&amp;gt;
+  &amp;lt;/RestException&amp;gt;
+&amp;lt;/TwilioResponse&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice the “401”? If you’re familiar with &lt;a href=&#34;http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html&#34;&gt;HTTP status codes&lt;/a&gt;, you might remember that 401 means “Unauthorized”. You either didn’t present any authorization information, or it was incorrect. In this case, it usually means the AccountSid or AuthToken are incorrect. Log into Twilio.com, go to the Dashboard and make sure your AccountSid and AuthToken are correct.&lt;/p&gt;
+
+&lt;h2 id=&#34;what-else-can-we-do&#34;&gt;&lt;strong&gt;What else can we do?&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Everything depends on what you put in for the Url parameter. You can browse some of the free applications at &lt;a href=&#34;http://labs.twilio.com/twimlets/&#34;&gt;Twilio Labs&lt;/a&gt;, though most of those are for inbound calls.&lt;/p&gt;
+
+&lt;p&gt;Here’s a silly example of using the voicemail Twimlet to conduct a brief phone survey and have the callee’s response transcribed and emailed. Start by changing the Url line in the POST:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $email    = &#39;you@example.com&#39;;  ## your email
+my $msg      = &#39;Please+tell+us+what+you+think+of+Tabasco+sauce&#39;;
+my $response = $twilio-&amp;gt;POST( &#39;Calls&#39;,
+                              To   =&amp;gt; &#39;+15556667777&#39;,
+                              From =&amp;gt; &#39;+12223334444&#39;,
+                              Url  =&amp;gt; &amp;quot;http://twimlets.com/voicemail?&amp;quot;
+                                    . &amp;quot;Email=$email&amp;amp;Message=$msg&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that this Twimlet’s arguments are case-sensitive. ‘Email’ and ‘Message’ are not the same as ‘email’ and ‘message’. Make sure you use the correct case.&lt;/p&gt;
+
+&lt;p&gt;Also, be sure to substitute your phone number for the To parameter and your Twilio Sandbox phone number (also found on your Twilio Dashboard) for the From parameter. Twilio phone numbers always use the international calling prefix (e.g., United States numbers use “+1” followed by the three digit area code followed by the seven digit phone number).&lt;/p&gt;
+
+&lt;p&gt;When you run this, you’ll get a call from Twilio asking you to share your insights into Tabasco sauce. Please be honest. Once you’ve given your opinion, Twilio will then transcribe your message and email it to the email address you specified.&lt;/p&gt;
+
+&lt;h2 id=&#34;i-m-sending-out-an-sms&#34;&gt;&lt;strong&gt;I’m sending out an SMS&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;SMS messages are even easier: no TwiML needed. Instead of the Calls API, use the &lt;em&gt;SMS/Messages&lt;/em&gt; API:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $response = $twilio-&amp;gt;POST( &#39;SMS/Messages&#39;,
+                              To   =&amp;gt; &#39;+15556667777&#39;,
+                              From =&amp;gt; &#39;+12223334444&#39;,
+                              Body =&amp;gt; &#39;Rescue me before &#39;
+                                   .  &#39;I fall into despair&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That’s all you have to do to send an SMS message using Twilio (though the 160 character limit applies).&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusion&#34;&gt;&lt;strong&gt;Conclusion&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Twilio and Perl make a potent pair: so much is possible with so little code. The next installment will cover writing larger applications with TwiML.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

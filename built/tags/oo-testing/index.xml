@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Oo Testing on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/oo-testing/</link>
+    <description>Recent content in Oo Testing on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 10 Jul 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/oo-testing/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>A Test::MockObject Illustrated Example</title>
+      <link>http://localhost:1313/pub/2002/07/10/tmo.html/</link>
+      <pubDate>Wed, 10 Jul 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/07/10/tmo.html/</guid>
+      <description>
+
+&lt;p&gt;People like to find excuses to avoid writing tests for their code. One of the most common goes something like, &amp;ldquo;It&amp;rsquo;s not feasible to test this, because it relies on external objects&amp;rdquo; - CGI code, code using the &lt;code&gt;Apache&lt;/code&gt; request object, TCP/IP servers, and so on.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;Test::MockObject&lt;/code&gt; module makes it much easier to isolate code that uses such objects. For example, if your code uses a CGI object, then you &lt;strong&gt;could&lt;/strong&gt; fiddle with query strings and faked &lt;code&gt;STDIN&lt;/code&gt;, trying to persuade &lt;code&gt;CGI.pm&lt;/code&gt; to produce testable values. It&amp;rsquo;s easier to use &lt;code&gt;Test::MockObject&lt;/code&gt; to create an object that looks and behaves like a CGI object &amp;ndash; but that is completely under your control.&lt;/p&gt;
+
+&lt;p&gt;This comes in handy in large software projects, where objects encapsulate tremendous amounts of hidden behavior. If your application follows good design principles by hiding complexity behind well-defined interfaces, then you can replace nearly any component with its interface equivalent. (The internals, of course, are free to change. That&amp;rsquo;s why this is possible.) Often, it&amp;rsquo;s sufficient just to accept certain arguments and to return specific values.&lt;/p&gt;
+
+&lt;p&gt;Using a mock object, you can test whether the code in question uses a particular interface correctly. It&amp;rsquo;s possible to do this by hand, but &lt;code&gt;Test::MockObject&lt;/code&gt; has several utility methods to add fake methods and verify calls. It integrates with &lt;code&gt;Test::Builder&lt;/code&gt;, so it works correctly with &lt;code&gt;Test::Simple&lt;/code&gt;, &lt;code&gt;Test::More&lt;/code&gt;, and their cousins.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-the-background-you-need-to-know-the-background-you-need-to-know-span&#34;&gt;&lt;span id=&#34;the_background_you_need_to_know&#34;&gt;The Background You Need to Know&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;I assume that you are already familiar with &lt;code&gt;Test::More&lt;/code&gt;. Perhaps you&amp;rsquo;ve read &lt;code&gt;Test::Tutorial&lt;/code&gt;, which comes with the &lt;code&gt;Test::Simple&lt;/code&gt; distribution. You may also have read &lt;a href=&#34;http://localhost:1313/pub/2001/12/04/testing.html&#34;&gt;my earlier introduction&lt;/a&gt; to the subject. If not, then you may wish to do so. (My roommate tried it out of order and hurt his head. If you fare any better, then the Perl QA group is interested in your natural talent!)&lt;/p&gt;
+
+&lt;p&gt;My example comes from the unit tests for the &lt;a href=&#34;http://everydevel.com/&#34;&gt;Everything Engine&lt;/a&gt;. I chose it for two reasons. First, it&amp;rsquo;s a project near and dear to my heart. Second, it needs more users, testers and developers. More importantly, it&amp;rsquo;s where I came up with the ideas that led to &lt;code&gt;Test::MockObject&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;My colleague on the Engine, Darrick Brown, devised a clever technique he dubbed Form Objects. These are used to bind menu choices to nodes. (Everything in Everything is a node. It&amp;rsquo;s the base unit of data and behavior.) Form objects control the creation of HTML widgets, verify submitted data and ultimately update nodes. They all inherit strongly from &lt;code&gt;Everything::FormObject&lt;/code&gt; and operate on node objects, so they&amp;rsquo;re an ideal candidate for mock objects.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mock-objects-mock-objects-span&#34;&gt;&lt;span id=&#34;mock_objects&#34;&gt;Mock Objects&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This article focuses on white-box unit testing with mock objects. &amp;ldquo;White box&amp;rdquo; testing means that you&amp;rsquo;re allowed and encouraged to look at the internals of the thing being tested. This is scarily possible, with Perl. By contrast, &amp;ldquo;black box&amp;rdquo; testing happens when you cannot know the internal details: you just know allowed inputs and the expected outputs. (If you don&amp;rsquo;t know that, then you can&amp;rsquo;t do much testing.)&lt;/p&gt;
+
+&lt;p&gt;Unit testing, of course, is testing individual components of the program in isolation, as far as possible. This is different from integration testing, which exercises the program as a whole, and acceptance testing, which explores the desired end-user behavior of the program. No type of testing is better or worse than any other. Done properly, they are complementary: Unit tests are capable of exploring internal behaviors that are difficult to prove with acceptance tests; integration tests demonstrate the interoperability between different components that unit tests usually cannot guarantee.&lt;/p&gt;
+
+&lt;p&gt;The points of a mock object is to isolate the units being tested from their dependencies, and to give testers more complete control over the testing environments. This follows from standard programming principles: If you can fake the interfaces your unit relies on, then you can control and monitor its behavior.&lt;/p&gt;
+
+&lt;p&gt;Perl makes this particularly easy.&lt;/p&gt;
+
+&lt;h1 id=&#34;span-id-the-example-the-example-span&#34;&gt;&lt;span id=&#34;the_example&#34;&gt;The Example&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;I&amp;rsquo;m writing a test for &lt;code&gt;Everything::HTML::FormObject::AuthorMenu&lt;/code&gt;. This class represents an HTML select box used to set the author of a node. It has two methods. &lt;code&gt;genObject()&lt;/code&gt; produces the HTML necessary for the select widget. It is called when the Engine builds a page to display to the user. The other method, &lt;code&gt;cgiVerify()&lt;/code&gt;, is called when receiving data from a user submission. It checks to see whether the requested author exists and has write access to the node.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-looking-inside-looking-inside-span&#34;&gt;&lt;span id=&#34;looking_inside&#34;&gt;Looking Inside&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;The module begins rather simply:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use strict;
+        use Everything;
+        use Everything::HTML;
+        use Everything::HTML::FormObject;
+
+        use vars qw(@ISA);
+        @ISA = (&amp;quot;Everything::HTML::FormObject&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Testing this is all very easy. I&amp;rsquo;d like to make sure that the module continues to load all of these modules, so I need some way to catch their use. (Don&amp;rsquo;t laugh &amp;ndash; I&amp;rsquo;ve forgotten to load important modules before, causing really tricky errors. It&amp;rsquo;s better to be precise. Now you can laugh.) Because &lt;code&gt;use&lt;/code&gt; calls &lt;code&gt;import()&lt;/code&gt; behind the scenes, if I can install my own &lt;code&gt;import()&lt;/code&gt; before AuthorMenu is compiled, then I can test that these modules are actually used. As a side benefit, doing so prevents these other classes from loading, making it easier to mock them. The test starts:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        package Everything::HTML::FormObject::AuthorMenu;
+        use vars qw( $DB );
+
+        package main;
+
+        use Test::More &#39;no_plan&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because I&amp;rsquo;m faking the other packages, anything the true modules would normally import will not be imported. The only thing that really matters at this point is the &lt;code&gt;$DB&lt;/code&gt; object, exported from the Everything package. (I&amp;rsquo;m cheating a little bit. I know I&amp;rsquo;ll use it later, and I know where it&amp;rsquo;s defined and how it&amp;rsquo;s used. At this point, I should probably say, ``The module will fail to compile unless I fake it here,&amp;rdquo; and leave it at that.)&lt;/p&gt;
+
+&lt;p&gt;Because I&amp;rsquo;m not ready to implement &lt;code&gt;$DB&lt;/code&gt;, I just switch to the package to be tested and declare it as a global variable. When the package is compiled, it&amp;rsquo;s already there, so it&amp;rsquo;ll compile successfully. Then I return to the main package so I don&amp;rsquo;t accidentally clobber anything important and use the testing module.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my @imports;
+        for ( &#39;Everything&#39;, &#39;Everything::HTML&#39;,
+                &#39;Everything::HTML::FormObject&#39;) {
+                no strict &#39;refs&#39;;
+                *{ $_ . &#39;::import&#39; } = sub {
+                        push @imports, $_[0];
+                };
+                (my $modpath = $_) =~ s!::!/!g;
+                $INC{ $modpath . &#39;.pm&#39; } = 1;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here&amp;rsquo;s where it starts to get tricky. Because I want to ensure that these three modules are loaded correctly, I have to make Perl think they&amp;rsquo;re already loaded. &lt;code&gt;%INC&lt;/code&gt; comes to the rescue. When you &lt;code&gt;use()&lt;/code&gt; or &lt;code&gt;require()&lt;/code&gt; a module successfully, Perl adds an entry to &lt;code&gt;%INC&lt;/code&gt; with the module pathname, relative to one of the directories in &lt;code&gt;@INC&lt;/code&gt;. That way, if you &lt;code&gt;use()&lt;/code&gt; or &lt;code&gt;require()&lt;/code&gt; the module again, then Perl knows that it&amp;rsquo;s already been loaded.&lt;/p&gt;
+
+&lt;p&gt;As mentioned before, my preferred way to check that a module is loaded is to trap all calls to &lt;code&gt;import()&lt;/code&gt;. That&amp;rsquo;s why I install fake import subroutines. They simply save the name of the package by which they&amp;rsquo;re identified. The tests are simple to write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use_ok( &#39;Everything::HTML::FormObject::AuthorMenu&#39; );
+
+        is( $imports[0], &#39;Everything&#39;, &#39;Module should use 
+            Everything&#39; );
+        is( $imports[1], &#39;Everything::HTML&#39;,
+                &#39;Module should use Everything::HTML&#39; );
+        is( $imports[2], &#39;Everything::HTML::FormObject&#39;,
+                &#39;Module should use 
+                     Everything::HTML::FormObject&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because &lt;code&gt;use_ok()&lt;/code&gt; fires at runtime, it&amp;rsquo;s safe not to wrap this whole section in a BEGIN block. (If you&amp;rsquo;re curious about this, see what &lt;em&gt;perlfunc&lt;/em&gt; has to say about &lt;code&gt;use()&lt;/code&gt; and its equivalent.)&lt;/p&gt;
+
+&lt;p&gt;That works, but it&amp;rsquo;s a little messy and uses some tricks that might scare (or at least confuse) the average Perl hacker. One of the goals of the Test::* modules is to do away with the ``evil black magic&amp;rdquo; you&amp;rsquo;d normally have to use. So, now I show you a more excellent way.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-making-that-last-bit-easier-making-that-last-bit-easier-span&#34;&gt;&lt;span id=&#34;making_that_last_bit_easier&#34;&gt;Making That Last Bit Easier&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Having found myself writing that code way too often (at least twice), I added it to &lt;code&gt;Test::MockObject&lt;/code&gt;. Using the module, the corresponding loop is now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my @imports;
+        for ( &#39;Everything&#39;, &#39;Everything::HTML&#39;,
+                &#39;Everything::HTML::FormObject&#39;) {
+                Test::MockObject-&amp;gt;fake_module(
+                        $_,
+                        import =&amp;gt; sub { push @imports,
+                              $_[0] }
+                );
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Behind the scenes, the module does exactly what the loop did. The nice thing is that you don&amp;rsquo;t have to remember how to fake that a module is loaded or how to test &lt;code&gt;import()&lt;/code&gt;. It&amp;rsquo;s already done and it&amp;rsquo;s nicely encapsulated in a module. (I inadvertently drove this point home to myself when writing this section. It turns out that version 0.04 of &lt;code&gt;Test::MockObject&lt;/code&gt; populated &lt;code&gt;%ENV&lt;/code&gt; instead of &lt;code&gt;%INC&lt;/code&gt;. I make that typo often. This time, it was in both the module and the test. Get at least version 0.08, as this article has led to bug fixes and new conveniences. :)&lt;/p&gt;
+
+&lt;p&gt;This isn&amp;rsquo;t the most important feature of &lt;code&gt;Test::MockObject&lt;/code&gt;, though. It&amp;rsquo;s just a convenient addition. At some point, it should probably be spun off into &lt;code&gt;Test::MockPackage&lt;/code&gt; or &lt;code&gt;Test::MockModule&lt;/code&gt;. (Want to contribute?)&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-testing-an-actual-method-testing-an-actual-method-span&#34;&gt;&lt;span id=&#34;testing_an_actual_method&#34;&gt;Testing an Actual Method&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Once the module is loaded and ready, I like to test my methods in the order in which they appear. This helps to keep the test suite and the module somewhat synchronized. The first method is &lt;code&gt;genObject()&lt;/code&gt;. It&amp;rsquo;s fairly simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $this = shift @_;
+        my ($query, $bindNode, $field, $name, $default) =
+                getParamArray(
+                &amp;quot;query, bindNode, field, name, 
+                     default&amp;quot;, @_);
+
+        $name ||= $field;
+
+        my $html = $this-&amp;gt;SUPER::genObject(
+                $query, $bindNode, $field, $name) . 
+                     &amp;quot;\n&amp;quot;;
+
+        if(ref $bindNode)
+        {
+                my $author = $DB-&amp;gt;getNode($$bindNode{$field});
+                if($author &amp;amp;&amp;amp; $author-&amp;gt;isOfType(&#39;user&#39;))
+                {
+                        $default ||= $$author{title};
+                }
+                elsif($author)
+                {
+                        $default ||= &amp;quot;&amp;quot;;
+                }
+        }
+
+        $html .= $query-&amp;gt;textfield(-name =&amp;gt; $name, 
+                -default =&amp;gt; $default,
+                -size =&amp;gt; 15, -maxlength =&amp;gt; 255,
+                -override =&amp;gt; 1) . &amp;quot;\n&amp;quot;;
+
+        return $html;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I can see several spots that need tests. First, I want to make sure that &lt;code&gt;getParamArray()&lt;/code&gt; is called with the proper arguments. (This function makes it possible to pass parameters by position or in &lt;code&gt;name =&amp;gt; value&lt;/code&gt; pair style, similar to &lt;a href=&#34;https://metacpan.org/pod/Sub::NamedParams&#34;&gt;Sub::NamedParams&lt;/a&gt;.) Next, I&amp;rsquo;ll test that &lt;code&gt;SUPER::genObject()&lt;/code&gt; is called correctly, with the proper values. (This call looks odder than it is, due to the way the Engine handles node inheritance. For a good time, read &lt;code&gt;Everything::Node::AUTOLOAD()&lt;/code&gt;, or take up bowling.) After that, there&amp;rsquo;s the conditional statement. I&amp;rsquo;ll have to call the function at least three times to test the branches effectively. The function ends with a &lt;code&gt;textfield()&lt;/code&gt; call I want to test, and has a return value where I can check some other things. It&amp;rsquo;s not as complex as it looks.&lt;/p&gt;
+
+&lt;p&gt;One of the side benefits of testing is that you&amp;rsquo;ll start to write smaller and smaller functions. This is especially evident if you write tests before you write code to pass them. Besides being easier to read and debug, this tends to produce code that&amp;rsquo;s more flexible and much more powerful.&lt;/p&gt;
+
+&lt;p&gt;Having identified several things to test, I next write test names. These are short descriptions of the intent of the tests. When confronted with a piece of existing code, I usually try to figure out what kinds of things can break, and what the important behavior really is. With experience, you can look at a piece of well-written code and figure it out intuitively. There&amp;rsquo;s room to be explicit when you&amp;rsquo;re just starting, though.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        # genObject() should call getParamArray()
+        # ... passing a string of desired parameters
+        # ... and its arguments, minus the object
+        # ... should call SUPER::genObject()
+        # ... passing the important parameters
+        # ... and should call textfield()
+        # ... with the important parameters
+        # ... returning its and its parents results
+        # ... if node is bound, should call getNode()
+        # ... on bound node field
+        # ... checking for an author node
+        # ... and setting the default to the author name
+        # ... or nothing, if it is not an author node
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s a pretty good rough draft. Going through the list reveals the need to make at least two more passes through the code. Getting this in the right order takes a little work, but once you know how to set up the mocking conditions correctly, it&amp;rsquo;s really fast and easy. The best way I&amp;rsquo;ve found to handle this is just to jump right in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        can_ok( &#39;Everything::HTML::FormObject::AuthorMenu&#39;, 
+            &#39;genObject&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, I want to make sure this method exists. Why? It&amp;rsquo;s part of the ``Do the simplest thing that could possibly work&amp;rdquo; principle. Whenever I add a method, I first check to see whether it exists. It sounds too stupid to have any use, but this is a thing that &lt;strong&gt;could&lt;/strong&gt; possibly break. First, I&amp;rsquo;ve been known to misspell method names occasionally. This&amp;rsquo;ll catch that immediately. Second, it gives me a place to start and a test that passes with little work. That&amp;rsquo;s a nice psychological boost that moves me on to the next test. I&amp;rsquo;ve kept this habit when writing tests for existing code.&lt;/p&gt;
+
+&lt;p&gt;Next, I want to test the call to &lt;code&gt;getParamArray()&lt;/code&gt;. Since it&amp;rsquo;s not a method, I can&amp;rsquo;t use a mock object. I&amp;rsquo;ll have to mock it sideways. Though the function comes from &lt;code&gt;Everything.pm&lt;/code&gt;, it would normally be exported into this package. I&amp;rsquo;ll use a variant of the &lt;code&gt;import()&lt;/code&gt;-mockery earlier:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my ($gpa, @gpa);
+        $mock-&amp;gt;fake_module( $package,
+            getParamArray =&amp;gt; sub { push @gpa, \@_; return $gpa }
+        );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I can count the elements of &lt;code&gt;@gpa&lt;/code&gt; to see whether it was called, and pull the arguments out of the array. &lt;code&gt;$gpa&lt;/code&gt; allows me to control the output. The test itself is easy to write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $result = genObject();
+        is( @gpa, 1, &#39;genObject() should call getParamArray&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;OK, it&amp;rsquo;s a little easier to write than it should have been. If you&amp;rsquo;re paying attention, then you should wonder why the &lt;code&gt;genObject()&lt;/code&gt; call works, as I&amp;rsquo;m still in the main package and the method is in the class. I&amp;rsquo;ve just added a variable with the tested package name, as well as an &lt;code&gt;AUTOLOAD()&lt;/code&gt; function. I&amp;rsquo;m already tired of typing the big long package name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        # near the start
+        use vars qw( $AUTOLOAD );
+        my $package = &#39;Everything::HTML::FormObject::AuthorMenu&#39;;
+
+        ...
+
+        # way down at the end
+        sub AUTOLOAD {
+                my ($subname) = $AUTOLOAD =~ /([^:]+)$/;
+                if (my $sub = UNIVERSAL::can( $package,
+                     $subname )) {
+                        $sub-&amp;gt;( @_ );
+                } else {
+                        warn &amp;quot;Cannot call &amp;lt;$subname&amp;gt; 
+                             in ($package)\n&amp;quot;;
+                }
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With all of that infrastructure in place, it&amp;rsquo;s a little disappointing to realize that the test dies. Since I&amp;rsquo;m calling the method as a function, there&amp;rsquo;s no object on which to call &lt;code&gt;SUPER::genObject()&lt;/code&gt;. This is easily solved. Remember that $mock (a mock object) was created earlier? Here&amp;rsquo;s one bit of Perl&amp;rsquo;s magic that drives some OO purists crazy, but makes it oh-so-easy to test. &lt;em&gt;A method call is a function call with a special first argument.&lt;/em&gt; If &lt;code&gt;$this&lt;/code&gt;, inside &lt;code&gt;genObject()&lt;/code&gt;, can do everything that an &lt;code&gt;Everything::HTML::FormObject::AuthorMenu&lt;/code&gt; object can do, then it&amp;rsquo;ll just work. Hooray for polymorphism!&lt;/p&gt;
+
+&lt;p&gt;To make the &lt;code&gt;SUPER::genObject()&lt;/code&gt; call pass, that call will also have to be mocked. The method resolves to &lt;code&gt;Everything::HTML::FormObject::genObject()&lt;/code&gt;, so I&amp;rsquo;ll add a function of the appropriate name and package. (This test code is starting to look familiar. Again, &lt;code&gt;Test::MockModule&lt;/code&gt;, anyone?)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my @go;
+        $mock-&amp;gt;fake_module( &#39;Everything::HTML::FormObject&#39;,
+            genObject =&amp;gt; sub { push @go, \@_; 
+                 return &#39;some html&#39; }
+        );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I modify the &lt;code&gt;genObject()&lt;/code&gt; call, passing in my mock object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $result = genObject( $mock );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I get further before things fail. Since there&amp;rsquo;s nothing passed in for the &lt;code&gt;$query&lt;/code&gt; variable to hold, the &lt;code&gt;textfield()&lt;/code&gt; call fails. Now I can finally use my mock object to good effect. First, I&amp;rsquo;m going to change what &lt;code&gt;getParamArray()&lt;/code&gt; returns, using &lt;code&gt;$package&lt;/code&gt; again to save on typing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my (%gpa, @gpa);
+        $mock-&amp;gt;fake_module( $package,
+            getParamArray =&amp;gt; sub { push @gpa, \@_; return 
+            @gpa{qw( q bn f n d )}}
+        );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since AuthorMenu expects to receive its arguments in order, I&amp;rsquo;ll create a hash where I can store them. I might use more descriptive key names, but they seem to make sense now. Next, I&amp;rsquo;ll make sure that &amp;lsquo;q&amp;rsquo; returns something controllable. In this case, that means that it supports the &lt;code&gt;textfield()&lt;/code&gt; method and returns something sane:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $mock-&amp;gt;set_always( &#39;textfield&#39;, &#39;more html&#39; );
+        $gpa{q} = $mock;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I could create a new mock object for this, but since there&amp;rsquo;s no name collision yet, it&amp;rsquo;s not a big priority. Whether you do this is a matter of personal style.&lt;/p&gt;
+
+&lt;p&gt;For now, &lt;code&gt;genObject()&lt;/code&gt; does not die, and all tests pass. Whew. Next up, I test to see whether the first argument to &lt;code&gt;getParamArray()&lt;/code&gt; is correct.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        is( $gpa[0][0], &#39;query, bindNode, field, name, default&#39;,
+            &#39;... requesting the appropriate arguments&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It is, so I&amp;rsquo;ll make sure that it passes along the rest of the method arguments, minus the object itself:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        like( join(&#39; &#39;, @{ $gpa[0] }), qr/1 2 3$/,
+                &#39;... with the method arguments&#39; );
+        unlike( join(&#39; &#39;, @{ $gpa[0] }), qr/$mock/,
+                &#39;... but not the object itself&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Only the first of these fails, and that&amp;rsquo;s because I&amp;rsquo;m not passing any other arguments to the method call. I&amp;rsquo;ll modify it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $result = genObject( $mock, 1, 2, 3 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This gives me nine tests that pass. I&amp;rsquo;m also following the test names fairly closely. (In between writing those and actually writing this code, a couple of days passed. Their similarities make me think I&amp;rsquo;m on the right track.)&lt;/p&gt;
+
+&lt;p&gt;Since the next piece of the code tries to load a bound node and I&amp;rsquo;m not passing one in, I&amp;rsquo;ll test to see that &lt;code&gt;getNode()&lt;/code&gt; is &lt;strong&gt;not&lt;/strong&gt; called. Since the call is on the &lt;code&gt;$DB&lt;/code&gt; object, I&amp;rsquo;ll set it to the mock object. I&amp;rsquo;ll also use the &lt;code&gt;called()&lt;/code&gt; method to make sure that nothing happens. For that to happen, I need to mock &lt;code&gt;getNode()&lt;/code&gt;. The code to implement all of this is pretty simple. (Note that it must go in various places):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $Everything::HTML::FormObject::AuthorMenu::DB = $mock;
+        $mock-&amp;gt;set_series( &#39;getNode&#39;, 0, 1, 2 );
+
+        # genObject() calls skipped in this example...
+
+        ok( ! $mock-&amp;gt;called( &#39;getNode&#39; ),
+                &#39;... should not fetch bound node without one&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Two things bear more explanation. First, since I don&amp;rsquo;t really know what I want &lt;code&gt;getNode()&lt;/code&gt; to return, I&amp;rsquo;ll give it a dummy series. (I&amp;rsquo;m pretty sure I&amp;rsquo;ll be using &lt;code&gt;set_series()&lt;/code&gt; on it, because I&amp;rsquo;ve done tests like this before. I can&amp;rsquo;t explain it much beyond intuitive experience.) Second, I&amp;rsquo;m negating the return value of &lt;code&gt;called()&lt;/code&gt; so it will fit with &lt;code&gt;ok()&lt;/code&gt;. This can be a little hard to see, sometimes.&lt;/p&gt;
+
+&lt;p&gt;The last few tests of the first pass all revolve around the &lt;code&gt;textfield()&lt;/code&gt; call. I&amp;rsquo;ve already mocked it, so now I&amp;rsquo;ll see whether it was called with the correct arguments:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my ($method, $args) = $mock-&amp;gt;next_call();
+        shift @$args;
+        my %args = @$args;
+
+        is( $method, &#39;textfield&#39;, &#39;... and should create 
+             a text field&#39; );
+        is( join(&#39; &#39;, sort keys %args ),
+        join(&#39; &#39;, sort qw( -name -default -size 
+             -maxlength -override )), &#39;... passing the 
+             essential arguments&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Several bits here stick out. The &lt;code&gt;next_call()&lt;/code&gt; method iterates through the call stack of mocked methods, in order. It doesn&amp;rsquo;t track every method called, just the ones you&amp;rsquo;ve added through one of &lt;code&gt;Test::MockObject&lt;/code&gt;&amp;rsquo;s helper methods. &lt;code&gt;next_call()&lt;/code&gt; returns the name of the method (in scalar context) or the name of the method an an anonymous array containing the arguments (in list context).&lt;/p&gt;
+
+&lt;p&gt;Since I want to check the arguments passed to &lt;code&gt;textfield()&lt;/code&gt;, I call it in list context. Because the arguments are passed as key =&amp;gt; value pairs, the most natural comparison seems to be as a hash. I use the join-sort idiom quite often, as I&amp;rsquo;ve never quite been comfortable with the list comparison functions of &lt;code&gt;Test::More&lt;/code&gt;. This test would probably be much simpler if I used them.&lt;/p&gt;
+
+&lt;p&gt;I explicitly sort both arrays just so a hardcoded list order won&amp;rsquo;t cause unnecessary test failures. (This has bitten me when writing code that ought to work on EBCDIC machines, not just ASCII ones. Of course, if you get Everything up and going on a mainframe, then this is probably the least of your concerns.)&lt;/p&gt;
+
+&lt;p&gt;Finally, I test to see whether the returned data is created properly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        is( $result, &amp;quot;some html\nmore html\n&amp;quot;,
+            &#39;... returning the parent object plus the 
+             new textfield html&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So far, all 13 of the tests succeed. At this point, I started my second pass through the method, but noticed that I hadn&amp;rsquo;t yet tested that &lt;code&gt;$name&lt;/code&gt; would get its default value from &lt;code&gt;$field&lt;/code&gt;. I&amp;rsquo;ll add &amp;lsquo;field&amp;rsquo; to %gpa before the first pass:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $gpa{f} = &#39;field&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This test ought to go before the final test in this pass, so I add it there, too. This finishes the first pass:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        is( $args{-name}, &#39;field&#39;,
+                &#39;... and widget name should default 
+                to field name&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For the second pass, I will test what happens when I provide a node to which to bind the form object. In an unmocked Everything, this node comes as an argument to the function. In the tests, I &lt;strong&gt;must&lt;/strong&gt; return them from the mocked getParamArray(), so that&amp;rsquo;s where I will start. I also set the &amp;lsquo;field&amp;rsquo; value in the mock object to a sentinel value I&amp;rsquo;ll check for later. Since the value of &lt;code&gt;$field&lt;/code&gt; will be &amp;lsquo;field,&amp;rsquo; it works out nicely. (There&amp;rsquo;s room to be much more creative on these names, especially if you&amp;rsquo;re trying to sneak the name of a friend into your software.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $gpa{bn} = $mock;
+        $mock-&amp;gt;{field} = &#39;bound node&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because &lt;code&gt;getNode()&lt;/code&gt; has a series set on it and hasn&amp;rsquo;t been called before, it will return 0. That means that &lt;code&gt;isOfType()&lt;/code&gt; won&amp;rsquo;t be called on the author object, and the default choice won&amp;rsquo;t be modified from its undefined value. These tests are fairly easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        genObject( $mock );
+
+        ($method, $args) = $mock-&amp;gt;next_call();
+        isnt( $method, &#39;isOfType&#39;,
+        &#39;... not checking bound node type if it is not found&#39; );
+
+        shift @$args;
+        %args = @$args;
+        is( $args{-default}, undef, &#39;... and not modifying 
+             default selection&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As before, &lt;code&gt;next_call()&lt;/code&gt; comes in handy. Since I already know that &lt;code&gt;textarea()&lt;/code&gt; will be the first (and last, for this pass) method called, I can make sure that &lt;code&gt;isOfType()&lt;/code&gt; was &lt;strong&gt;not&lt;/strong&gt; called.&lt;/p&gt;
+
+&lt;p&gt;Two tests follow. One ensures that the code checks the node&amp;rsquo;s type. The other makes sure that the default value becomes a blank string if the type is incorrect. To make this work, I had to modify the existing &lt;code&gt;getNode()&lt;/code&gt; series to return two instances of &lt;code&gt;$mock&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $mock-&amp;gt;{title} = &#39;bound title&#39;;
+        $mock-&amp;gt;set_series( &#39;isOfType&#39;, 0, 1 );
+
+        genObject( $mock );
+
+        ($method, $args) = $mock-&amp;gt;next_call( 2 );
+        is( $method, &#39;isOfType&#39;, &#39;... if bound node 
+            is found, should check type&#39; );
+        is( $args-&amp;gt;[1], &#39;user&#39;, &#39;... (the user type)&#39; );
+
+        ($method, $args) = $mock-&amp;gt;next_call();
+        shift @$args;
+        %args = @$args;
+        is( $args{-default}, &#39;&#39;,
+            &#39;... setting default to blank string 
+                 if it is not a user&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only new idea here is of passing an argument to &lt;code&gt;next_call()&lt;/code&gt;. I know &lt;code&gt;getNode()&lt;/code&gt; is the first mocked method, so I can safely skip it. These tests all pass. The final testable condition is where the bound node exists and is a &amp;lsquo;user&amp;rsquo; type node. The &lt;code&gt;set_series()&lt;/code&gt; call in the last test block makes &lt;code&gt;isOfType()&lt;/code&gt; return true for this pass:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        genObject( $mock );
+        ($method, $args) = $mock-&amp;gt;next_call( 3 );
+        shift @$args;
+        %args = @$args;
+        is( $args{-default}, &#39;bound title&#39;, &#39;... but using 
+             node title if it is&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I now have 22 successful tests. My original test name plan had 14 tests, but that number generally grows as I see more logic branches. I could add more tests, making sure that default values are not overwritten, and that the essential (hardcoded) attributes of the &lt;code&gt;textfield()&lt;/code&gt; are set, but I&amp;rsquo;m reasonably confident in the tests as they stand. If something breaks, then I&amp;rsquo;ll add a test to catch the bug before I fix it, but what&amp;rsquo;s left is simple enough; I doubt it will break. (Writing that is a good way to have to eat my words later.)&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-testing-another-method-a-less-detailed-example-testing-another-method-a-less-detailed-example-span&#34;&gt;&lt;span id=&#34;testing_another_method_(a_less_detailed_example)&#34;&gt;Testing Another Method (A Less Detailed Example)&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;One method remains for this form Object: &lt;code&gt;cgiVerify()&lt;/code&gt;. When the Engine processes input from submitted Form Object forms, it must rebuild the objects. Then, it checks the input against allowed values for the widgets. This method does just that. Its code is slightly longer, and reads:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my ($this, $query, $name, $USER) = @_;
+
+        my $bindNode = $this-&amp;gt;getBindNode($query, $name);
+        my $author = $query-&amp;gt;param($name);
+        my $result = {};
+
+        if($author)
+        {
+                my $AUTHOR = $DB-&amp;gt;getNode($author, &#39;user&#39;);
+
+                if($AUTHOR)
+                {
+                        # We have an author!!  Set the CGI param 
+                        # so that the
+                        # inherited cgiUpdate() will just do 
+                        # what it needs to!
+                        $query-&amp;gt;param($name, $$AUTHOR{node_id});
+                }
+                else
+                {
+                        $$result{failed} = &amp;quot;User &#39;$author&#39; 
+                             does not exist!&amp;quot;;
+                }
+        }
+
+        if($bindNode)
+        {
+                $$result{node} = $bindNode-&amp;gt;getId();
+                $$result{failed} = &amp;quot;You do not have permission&amp;quot;
+                        unless($bindNode-&amp;gt;hasAccess($USER, &#39;w&#39;));
+        }
+
+        return $result;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Rather than describing the writing of the tests (and my steps and missteps therein), I&amp;rsquo;ll just comment on the tests themselves.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $qmock = Test::MockObject-&amp;gt;new();
+        $mock-&amp;gt;set_series( &#39;getBindNode&#39;, 0, 0, 0, 
+             $mock, $mock );
+        $qmock-&amp;gt;set_series( &#39;param&#39;, 0, &#39;author&#39;, &#39;author&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because of the way this method handles things, it&amp;rsquo;s clearer to create another mock object to pass in as &lt;code&gt;$query&lt;/code&gt;. I&amp;rsquo;m also setting up the two main series used for the several passes through this method. While writing the tests, I kept adding new values to these series. This is what remained at the end. This approach makes more sense to me than setting each mock before each pass, but it&amp;rsquo;s a matter of style, and either way will work.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $result = cgiVerify( $mock, $qmock, &#39;boundname&#39; );
+
+        ($method, $args) = $mock-&amp;gt;next_call();
+        is( $method, &#39;getBindNode&#39;, &#39;cgiVerify() should get 
+             bound node&#39; );
+        is( join(&#39; &#39;, @$args), &amp;quot;$mock $qmock boundname&amp;quot;,
+                &#39;... with query object and query 
+                     parameter name&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the reason I used separate mock objects: to tell them apart as arguments in the &lt;code&gt;getBindNode()&lt;/code&gt; call.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        ($method, $args) = $qmock-&amp;gt;next_call();
+        is( $method, &#39;param&#39;, &#39;... fetching parameter&#39; );
+        is( $args-&amp;gt;[1], &#39;boundname&#39;, &#39;... by name&#39; );
+
+        isa_ok( $result, &#39;HASH&#39;, &#39;... and should return a data 
+             structure which&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The weird test name here is another of my little idioms. &lt;code&gt;isa_ok()&lt;/code&gt; adds &amp;lsquo;isa (reference type)&amp;rsquo; to the end of its test names, and I want them to be as clear as possible when they&amp;rsquo;re displayed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $mock-&amp;gt;set_series( &#39;getNode&#39;, 0, { node_id =&amp;gt; 
+             &#39;node_id&#39; } );
+        $result = cgiVerify( $mock, $qmock, &#39;boundname&#39; );
+
+        ($method, $args) = $mock-&amp;gt;next_call( 2 );
+        is( $method, &#39;getNode&#39;, &#39;... fetching the node, if an 
+             author is found&#39; );
+        is( join(&#39; &#39;, @$args), &amp;quot;$mock author user&amp;quot;,
+                &#39;... with the author, for the user type&#39; );
+
+        is( $result-&amp;gt;{failed}, &amp;quot;User &#39;author&#39; does not exist!&amp;quot;,
+                &#39;... setting a failure message on failure&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I like the approach of joining the arguments in a string and doing an &lt;code&gt;is()&lt;/code&gt; or a &lt;code&gt;like()&lt;/code&gt; call on them. The benefit of &lt;code&gt;like()&lt;/code&gt; is that you can ignore the &lt;code&gt;$self&lt;/code&gt; passed as the first argument, because it&amp;rsquo;s the mock object. I used &lt;code&gt;is()&lt;/code&gt; here to make it more explicit what I&amp;rsquo;m expecting.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $qmock-&amp;gt;clear();
+        $result = cgiVerify( $mock, $qmock, &#39;boundname&#39; );
+        ($method, $args) = $qmock-&amp;gt;next_call( 2 );
+        is( $method, &#39;param&#39;, &#39;... setting parameters, 
+             on success&#39; );
+        is( join(&#39; &#39;, @$args), &amp;quot;$qmock boundname node_id&amp;quot;,
+             &#39;... with the name and node id&#39; );
+        is( $result-&amp;gt;{failed}, undef, 
+             &#39;... and no failure message&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This bit of code gave me trouble until I added the &lt;code&gt;clear()&lt;/code&gt; call. It&amp;rsquo;s worth remembering that a mock object&amp;rsquo;s stack of mocked calls persists through passes. I had forgotten that, and was using the first &lt;code&gt;param()&lt;/code&gt; call instead of the second. Oops.&lt;/p&gt;
+
+&lt;p&gt;Another thing worth noting is that I pass &amp;lsquo;undef&amp;rsquo; as the expected result to &lt;code&gt;is()&lt;/code&gt;. Conveniently, &lt;code&gt;Test::More&lt;/code&gt; silently does the right thing.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $mock-&amp;gt;set_always( &#39;getId&#39;, &#39;id&#39; );
+        $mock-&amp;gt;set_series( &#39;hasAccess&#39;, 0, 1 );
+        $result = cgiVerify( $mock, $qmock, 
+             &#39;boundname&#39;, &#39;user&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here, I exercise the method&amp;rsquo;s final clause. These tests are more complex than the code being tested! Sometimes, it works out that way.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $mock-&amp;gt;called_pos_ok( -2 , &#39;getId&#39;,
+                &#39;... should get bound node id, if it exists&#39; );
+        is( $result-&amp;gt;{node}, &#39;id&#39;,
+                &#39;... setting it in the resulting node field&#39; );
+
+        $mock-&amp;gt;called_pos_ok( -1, &#39;hasAccess&#39;, 
+             &#39;... checking node access &#39;);
+        is( $mock-&amp;gt;call_args_string( -1, &#39; &#39; ), 
+             &amp;quot;$mock user w&amp;quot;, 
+             &#39;... for user with write permission&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;ve moved away from the &lt;code&gt;next_call()&lt;/code&gt; approach to the older &lt;code&gt;Test::MockObject&lt;/code&gt; behavior of using positions in the call stack. I&amp;rsquo;m still not quite pleased with the names of these methods, but the negative subscripts are handy. (Maybe I need to add &lt;code&gt;prev_call()&lt;/code&gt;). All I have to do is remember that &lt;code&gt;hasAccess()&lt;/code&gt; is called last, and that &lt;code&gt;getId()&lt;/code&gt; should be called as the second-to-last method.&lt;/p&gt;
+
+&lt;p&gt;The other new method here is &lt;code&gt;call_args_string()&lt;/code&gt;, which simply joins the arguments at the specified call position together. It saves a bit of typing, most of which is offset by the long method name.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        is( $result-&amp;gt;{failed}, &#39;You do not have permission&#39;,
+                &#39;... setting a failure message if user lacks 
+                 write permission&#39; );
+
+        $result = cgiVerify( $mock, $qmock, &#39;boundname&#39;, &#39;user&#39; );
+        is( $result-&amp;gt;{failed}, undef, &#39;... and none if the user 
+             has it&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These final two tests demonstrate how, at the end of a long series of tests, the available options are whittled down. By the final couple of passes, I&amp;rsquo;m generally testing only one thing at a time. That always seems mathematically poetic, to me, as if I&amp;rsquo;m refining with Newton&amp;rsquo;s method.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;This whole exercise has produced 39 tests. My next step is to update the test plan with this information.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        # way back at the top
+        use Test::More tests =&amp;gt; 39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This makes it easier to see whether too many or too few tests were run. I get better results about failures and successes this way, too. As it turns out, writing the tests for &lt;code&gt;cgiVerify()&lt;/code&gt; took about 20 minutes, give or take some laundry-related distractions. That seems about right for 17 tests on code I haven&amp;rsquo;t read in several months &amp;ndash; about one a minute, when you know what you&amp;rsquo;re doing.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s worth noting the features of this module that lead me to consider mock objects. Mostly, the process of fetching and building nodes is complex enough that I didn&amp;rsquo;t really want to hook up a fake database, just so I could go through all of the code paths required to test that an author is really an author. If the code had gone through some simple mathematical or textual manipulations, then I would probably have used black-box testing. Code that relies on a database abstraction layer (as does Everything) generally makes me reach for &lt;code&gt;Test::MockObject&lt;/code&gt;, however.&lt;/p&gt;
+
+&lt;p&gt;For more information on what the module can do, please see its documentation. The current stable version is 0.08, though 0.09 will probably have been released by the time this article is stable.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;chromatic is the author of &lt;a href=&#34;http://onyxneon.com/books/modern_perl/&#34;&gt;Modern Perl&lt;/a&gt;. In his spare time, he has been working on &lt;a href=&#34;http://trendshare.org/how-to-invest/&#34;&gt;helping novices understand stocks and investing&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

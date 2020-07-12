@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Symbol_table on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/symbol_table/</link>
+    <description>Recent content in Symbol_table on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 29 Jun 2016 08:37:20 +0000</lastBuildDate>
+    <atom:link href="/tags/symbol_table/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Untangling subroutine attributes</title>
+      <link>http://localhost:1313/article/untangling-subroutine-attributes/</link>
+      <pubDate>Wed, 29 Jun 2016 08:37:20 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/untangling-subroutine-attributes/</guid>
+      <description>
+
+&lt;p&gt;Subroutine attributes are optional labels that can be included in a subroutine declaration. They&amp;rsquo;re a curious feature with a clunky interface and minimal documentation. They seem underused, but it&amp;rsquo;s hard to think of legitimate uses for them. In my opinion the coolest thing about subroutine attributes is that they run at compile time. This means you can execute custom code before the main program is run, and seeing as Perl gives you access to the symbol table, you can basically do wizardy things.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-lvalue-trick&#34;&gt;The lvalue trick&lt;/h3&gt;
+
+&lt;p&gt;Perl has several subroutine attributes built-in. A useful one is &lt;code&gt;lvalue&lt;/code&gt; which tells Perl that the subroutine refers to a variable that persists beyond individual calls. A common case is using them as method getter/setters:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Foo;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;new&lt;/span&gt; { bless {}, shift }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;bar&lt;/span&gt; :lvalue {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# must return the variable for lvalue-ness&lt;/span&gt;
+  $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{bar};
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; main;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $foo &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Foo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;();
+
+$foo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;bar &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;dogma&amp;#34;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# not $foo-&amp;gt;bar(&amp;#34;dogma&amp;#34;);&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $foo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;bar;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;By adding the attribute &lt;code&gt;:lvalue&lt;/code&gt; to the &lt;code&gt;bar&lt;/code&gt; subroutine, I can use it like a variable, getting, setting and substituting and so on.&lt;/p&gt;
+
+&lt;h3 id=&#34;custom-attributes&#34;&gt;Custom attributes&lt;/h3&gt;
+
+&lt;p&gt;To use custom attributes in a package, you must provide a subroutine called &lt;code&gt;MODIFY_CODE_ATTRIBUTES&lt;/code&gt;. Perl will call this subroutine during compilation if it find any custom subroutine attributes. It&amp;rsquo;s called once for every subroutine with custom attributes. &lt;code&gt;MODIFY_CODE_ATTRIBUTES&lt;/code&gt; receives the package name, a coderef to the subroutine and a list of the attributes it declared:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Sub::Attributes;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;MODIFY_CODE_ATTRIBUTES&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($package, $coderef, @attributes) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ();
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;_internal_function&lt;/span&gt; :Private {
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve created a new package with the required subroutine - all it does is return an empty list. I&amp;rsquo;ve then declared an empty subroutine called &lt;code&gt;_internal_function&lt;/code&gt; which has a custom attribute, &lt;code&gt;Private&lt;/code&gt;. I want to do the impossible and create truly private subroutines in Perl by making any subroutine with the &lt;code&gt;Private&lt;/code&gt; attribute only callable by its own package. But what if I misspell &lt;code&gt;Private&lt;/code&gt;?  If we received any attributes we didn&amp;rsquo;t recognize, &lt;code&gt;MODIFY_CODE_ATTRIBUTES&lt;/code&gt; can add them to a list and Perl will throw a compile time error:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Sub::Attributes;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;MODIFY_CODE_ATTRIBUTES&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($package, $coderef, @attributes, @disallowed) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  push @disallowed, grep { $_ &lt;span style=&#34;color:#f92672&#34;&gt;ne&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Private&amp;#39;&lt;/span&gt; } @attributes;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; @disallowed;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;_internal_function&lt;/span&gt; :Private {
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve updated to code to declare and return &lt;code&gt;@disallowed&lt;/code&gt; - an array of any unrecognized subroutine attributes. Even though it&amp;rsquo;s declared in the first line of the subroutine, it will always be empty because &lt;code&gt;@attributes&lt;/code&gt; gobbles up all remaining arguments passed to the subroutine. Next I grep through the list of attributes received and if any don&amp;rsquo;t match &amp;ldquo;Private&amp;rdquo;, I add them to the disallowed array.&lt;/p&gt;
+
+&lt;h3 id=&#34;adding-compile-time-behavior&#34;&gt;Adding compile time behavior&lt;/h3&gt;
+
+&lt;p&gt;Now any subroutine in the package can use the attribute &lt;code&gt;Private&lt;/code&gt; but it doesn&amp;rsquo;t do anything. I need to add some behavior!&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Sub::Attributes;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; B &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;svref_2object&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;MODIFY_CODE_ATTRIBUTES&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($package, $coderef, @attributes, @disallowed) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $subroutine_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; svref_2object($coderef)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;GV&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;NAME;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %allowed &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+    Private &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($coderef, @args) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($calling_package, $filename, $line, $sub) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;);
+        croak &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Only the object may call this sub&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $sub &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $sub &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^Sub\:\:Attributes\:\:/&lt;/span&gt;;
+        $coderef&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(@args);
+      },
+  );
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $attribute (@attributes) {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# parse the attribute into name and value&lt;/span&gt;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# attribute not known, compile error&lt;/span&gt;
+    push(@disallowed, $attribute) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; exists $allowed{$attribute};
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# override subroutine with attribute coderef&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $overrider &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $allowed{$attribute};
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $old_coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $coderef;
+    $coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { $overrider&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;($old_coderef, @_) };
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Sub:\:Attributes:\:$subroutine_name&amp;#34;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $coderef;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; @disallowed;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;_internal_function&lt;/span&gt; :Private {
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;call_internal_function&lt;/span&gt; {
+  _internal_function();
+}
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code imports the &lt;code&gt;svref_2object&lt;/code&gt; function from the &lt;a href=&#34;https://metacpan.org/pod/B&#34;&gt;B&lt;/a&gt; module. This handy function takes a reference and returns an object with the data from Perl&amp;rsquo;s internals. In this case, passing a coderef returns a &lt;a href=&#34;https://metacpan.org/pod/B#B::CV-Methods&#34;&gt;B::CV&lt;/a&gt; object. I use this to get the subroutine name and overrride the subroutine later.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve created a hash called &lt;code&gt;%allowed&lt;/code&gt; which is where I can declare any permitted custom attributes and their associated code. For &lt;code&gt;Private&lt;/code&gt; I made a coderef that checks the caller is in the same package and croaks if it&amp;rsquo;s not, else it will call it.&lt;/p&gt;
+
+&lt;p&gt;Next I loop through any attributes received, and check they exist in &lt;code&gt;%attributes&lt;/code&gt;. If they don&amp;rsquo;t, I push them into &lt;code&gt;@disallowed&lt;/code&gt; and skip to the next attribute. If the attribute does exist, I assign the coderef to &lt;code&gt;$overrider&lt;/code&gt; and declare a new coderef which will call &lt;code&gt;$overrider&lt;/code&gt; passing the old coderef to be called.&lt;/p&gt;
+
+&lt;p&gt;Finally I override the &lt;code&gt;Private&lt;/code&gt; subroutine with the new coderef:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;*{&amp;quot;Sub:\:Attributes:\:$subroutine_name&amp;quot;} = $coderef;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is how you override subroutines using a &lt;a href=&#34;https://perldoc.perl.org/perldata.html#Typeglobs-and-Filehandles&#34;&gt;typeglob&lt;/a&gt; (&lt;a href=&#34;https://www.amazon.com/Mastering-Perl-brian-d-foy/dp/144939311X/&#34;&gt;Mastering Perl&lt;/a&gt; has a whole chapter dedicated to features like these, highly recommended). But what about that backslash in the middle of the colons &lt;code&gt;:\:&lt;/code&gt;?. That escape is necessary for the code to run on Perl versions 5.16 through 5.18 (thanks to Andreas König for debugging this).&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re wondering why I bothered to create &lt;code&gt;$old_coderef&lt;/code&gt; at all, it&amp;rsquo;s so that a subroutine can have multiple attributes with new behaviors nested inside each other.&lt;/p&gt;
+
+&lt;p&gt;Now any calls to &lt;code&gt;_internal_function&lt;/code&gt; will croak unless they come from within Sub::Attributes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Sub::Attributes;
+
+Sub::Attributes::call_internal_function(); &lt;span style=&#34;color:#75715e&#34;&gt;# ok&lt;/span&gt;
+Sub::Attributes::_internal_function(); &lt;span style=&#34;color:#75715e&#34;&gt;# croak!&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;making-it-re-useable&#34;&gt;Making it re-useable&lt;/h3&gt;
+
+&lt;p&gt;If it seems dumb to create custom attributes and then elsewhere in the same code, validate those attributes, join the club. To get the most out of this system, you have to make your custom attributes re-usable. Fortunately, just a few changes are needed:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Sub::Attributes;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; B &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;svref_2object&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;MODIFY_CODE_ATTRIBUTES&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($package, $coderef, @attributes, @disallowed) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $subroutine_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; svref_2object($coderef)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;GV&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;NAME;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %allowed &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+    Private &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $package &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($coderef, @args) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($calling_package, $filename, $line, $sub) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;);
+          croak &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Only the object may call this sub&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $sub &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $sub &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^$package\:\:/&lt;/span&gt;;
+          $coderef&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(@args);
+        }
+      },
+  );
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $attribute (@attributes) {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# parse the attribute into name and value&lt;/span&gt;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# attribute not known, compile error&lt;/span&gt;
+    push(@disallowed, $attribute) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; exists $allowed{$attribute};
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# execute compile time code&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $overrider &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $allowed{$attribute}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;($package);
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $overrider;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# override the subroutine if necessary&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $old_coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $coderef;
+    $coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { $overrider&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;($old_coderef, @_) };
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$package:\:$subroutine_name&amp;#34;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $coderef;
+  }
+
+  $Sub::Attributes::attributes{$package}{$subroutine_name} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;@attributes;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; @disallowed;
+};
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Rather than hardcoding the package name, I&amp;rsquo;ve made it dynamic. The key change here is that the coderef for &lt;code&gt;Private&lt;/code&gt; has been changed to a coderef that returns another coderef. Now I can execute some arbitrary code at compile time and optionally manufacture a new coderef that uses compile time information. In the case of &lt;code&gt;Private&lt;/code&gt;, I want to pass the package name of the private subroutine, so I can check later that the caller is from within the same package.&lt;/p&gt;
+
+&lt;p&gt;Why optionally return a coderef? Imagine if I created an attribute called &lt;code&gt;After&lt;/code&gt; which behaved like the &lt;code&gt;after&lt;/code&gt; function in &lt;a href=&#34;https://metacpan.org/pod/Class::Method::Modifiers&#34;&gt;Class::Method::Modifiers&lt;/a&gt;. In this case the subroutine with the private attribute would be reference a &lt;em&gt;different&lt;/em&gt; subroutine. That might look like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;foo&lt;/span&gt; { }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;logger&lt;/span&gt; :After(foo) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;foo() was called!\n&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here &lt;code&gt;logger&lt;/code&gt; should be executed after &lt;code&gt;foo&lt;/code&gt;. So logger itself never changes, and doesn&amp;rsquo;t need to be overridden.&lt;/p&gt;
+
+&lt;p&gt;I store the attributes for a subroutine under the package name in the symbol table for &lt;code&gt;Sub::Attributes&lt;/code&gt;. I could add them to the package&amp;rsquo;s symbol table, but I might inadvertently overwrite something else, so I keep the data within the &lt;code&gt;Sub::Attributes&lt;/code&gt; namespace.&lt;/p&gt;
+
+&lt;p&gt;$Sub::Attributes::attributes{$package}{$subroutine_name} = \@attributes;&lt;/p&gt;
+
+&lt;h3 id=&#34;why-no-fetch-code-attributes&#34;&gt;Why no FETCH_CODE_ATTRIBUTES?&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;attribute&lt;/code&gt; &lt;a href=&#34;https://perldoc.perl.org/attributes.html&#34;&gt;docs&lt;/a&gt; mention another subroutine, called &lt;code&gt;FETCH_CODE_ATTRIBUTES&lt;/code&gt; that given a coderef, should return the attributes for the referenced subroutine. When &lt;code&gt;attributes::get&lt;/code&gt; is called, it passes the class of the declaring package, which is &lt;code&gt;Sub::Attributes&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# $class == &amp;#34;Sub::Attributes&amp;#34;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;FETCH_CODE_ATTRIBUTES&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($class, $coderef) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $cv &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; svref_2object($coderef);
+  &lt;span style=&#34;color:#75715e&#34;&gt;# $class should be subclass name, not Sub::Attributes&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; @{$Sub::Attributes::attributes{$class}{ $cv&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;GV&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;NAME }};
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I don&amp;rsquo;t see a way to find out the package name of the original subroutine. &lt;code&gt;FETCH_CODE_ATTRIBUTTES&lt;/code&gt; is not required and if it&amp;rsquo;s not there Perl won&amp;rsquo;t throw an exception if &lt;code&gt;attributes::get&lt;/code&gt; is called. Instead I provided the &lt;code&gt;sub_attributes&lt;/code&gt; method which does work:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sub_attributes&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($package) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $class_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ref $package &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; $package;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $Sub::Attributes::attributes{ $class_name };
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This returns the attributes stored for a package. This might be useful if other packages want to inspect the attributes for a package&amp;rsquo;s subroutine. it can be called as an object method or class method:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Foo;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; base &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Sub::Attributes&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+
+Foo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sub_attributes(); &lt;span style=&#34;color:#75715e&#34;&gt;# works&lt;/span&gt;
+$foo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;sub_attributes(); &lt;span style=&#34;color:#75715e&#34;&gt;# works also&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;squashing-warnings&#34;&gt;Squashing warnings&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s generally good practice to use the &lt;code&gt;strict&lt;/code&gt; and &lt;code&gt;warnings&lt;/code&gt; pragmas to help detect issues with our code. However the code so far will emit some warnings and an exception if we add those pragmas as-is. This code will add the pragmas but make Perl ignore the violations:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; strict &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;refs&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;qw(reserved redefine)&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;reserved&lt;/code&gt; warning is of particular interest here. This would be caused by using custom subroutine attributes, so no matter what, you&amp;rsquo;d want to turn that off. Redefine is a warning emitted whenever a subroutine is over-written, strict references means no interpolating of variable names in symbol table lookups; we need these features so we can dynamically patch subroutines like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;*{&amp;quot;$class:\:$subroutine&amp;quot;} = $coderef
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;making-it-extensible&#34;&gt;Making it extensible&lt;/h3&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve gone to the hard work of setting up the code for inheritable custom attributes, why not make it extensible? That way consuming packages can add their own custom attributes.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Sub::Attributes;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; strict &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;refs&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;qw(reserved redefine)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; B &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;svref_2object&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;our&lt;/span&gt; %allowed &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+    Private &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $package &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($coderef, @args) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($calling_package, $filename, $line, $sub) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;);
+          croak &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Only the object may call this sub&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $sub &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $sub &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^$package\:\:/&lt;/span&gt;;
+          $coderef&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(@args);
+        }
+      },
+    &lt;span style=&#34;color:#75715e&#34;&gt;# compile time override, run a coderef after running the subroutine&lt;/span&gt;
+    After &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($package, $value, $coderef) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+      &lt;span style=&#34;color:#75715e&#34;&gt;# full name of the sub to override&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fq_sub &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$package:\:$value&amp;#34;&lt;/span&gt;;
+
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target_coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&amp;amp;&lt;/span&gt;{$fq_sub};
+      &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{$fq_sub} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @rv &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $target_coderef&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(@_);
+        $coderef&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(@_);
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; wantarray ? @rv : $rv[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];
+      };
+
+      &lt;span style=&#34;color:#75715e&#34;&gt;# we didn&amp;#39;t change the method with the attribute&lt;/span&gt;
+      &lt;span style=&#34;color:#75715e&#34;&gt;# so we return undef as we have no runtime changes&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; undef;
+    },
+  );
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;MODIFY_CODE_ATTRIBUTES&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($package, $coderef, @attributes, @disallowed) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $subroutine_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; svref_2object($coderef)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;GV&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;NAME;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $attribute (@attributes) {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# parse the attribute into name and value&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($name, $value) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $attribute &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qr/^ (\w+) (?:\((\S+?)\))? $/&lt;/span&gt;x;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# attribute not known, compile error&lt;/span&gt;
+    push(@disallowed, $name) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; exists $Sub::Attributes::allowed{$name};
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# execute compile time code&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $overrider &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $Sub::Attributes::allowed{$name}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;($package, $value, $coderef);
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $overrider;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# override the subroutine if necessary&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $old_coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $coderef;
+    $coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { $overrider&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;($old_coderef, @_) };
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$package:\:$subroutine_name&amp;#34;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $coderef;
+  }
+
+  $Sub::Attributes::attributes{$package}{$subroutine_name} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;@attributes;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; @disallowed;
+};
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sub_attributes&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($package) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $class_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ref $package &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; $package;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $Sub::Attributes::attributes{ $class_name };
+}
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve moved the &lt;code&gt;%allowed&lt;/code&gt; hash into a &lt;code&gt;BEGIN&lt;/code&gt; block - this has to be declared at compile time so it&amp;rsquo;s available for &lt;code&gt;MODIFY_CODE_ATTRIBUTES&lt;/code&gt;. Now new custom attributes can be added by modifying &lt;code&gt;%Sub::Attributes::attributes&lt;/code&gt;. I also added a new custom attribute &lt;code&gt;After&lt;/code&gt; which implements causes the subroutine to be called after another one, like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;foo&lt;/span&gt; { }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;bar&lt;/span&gt; :After(foo) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;foo() was called!\n&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I added a regex which captures the attribute name and value when passing attributes (so for &lt;code&gt;After(foo)&lt;/code&gt; &amp;ldquo;After&amp;rdquo; is the name and &amp;ldquo;foo&amp;rdquo; is the value). The &lt;code&gt;$value&lt;/code&gt; and &lt;code&gt;$coderef&lt;/code&gt; are now passed to the custom attribute&amp;rsquo;s subroutine to allow compile-time overrides of other subroutines.&lt;/p&gt;
+
+&lt;h3 id=&#34;resources&#34;&gt;Resources&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/attributes.html&#34;&gt;attributes&lt;/a&gt; is the official documentation on attributes.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Sub::Attributes&#34;&gt;Sub::Attributes&lt;/a&gt; is my module which implements the above code, and adds a few more custom attributes.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perldata.html#Typeglobs-and-Filehandles&#34;&gt;perldata&lt;/a&gt; has an entry on typeglobs and the symbol table.&lt;/li&gt;
+&lt;li&gt;Chapters 7 &amp;amp; 8 of &lt;a href=&#34;https://www.amazon.com/Mastering-Perl-brian-d-foy/dp/144939311X/&#34;&gt;Mastering Perl&lt;/a&gt; second edition cover the symbol table and overrriding subroutines in detail.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perlsub.html&#34;&gt;perlsub&lt;/a&gt; has information on lvalue subroutines.&lt;/li&gt;
+&lt;li&gt;Two useful blog posts by mascip on &lt;a href=&#34;http://blogs.perl.org/users/mascip/2014/02/subroutine-attributes-how-to-use-them-and-what-for.html&#34;&gt;possible uses&lt;/a&gt; and &lt;a href=&#34;http://blogs.perl.org/users/mascip/2014/02/three-ways-to-introduce-othogonal-behavior-aspects-method-modifiers-and-subroutine-attributes.html&#34;&gt;when to use&lt;/a&gt; subroutine attributes.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Attribute::Handlers&#34;&gt;Attribute::Handlers&lt;/a&gt; provides a mechanism for calling subroutines via attributes.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Implementing Did You Mean in Perl</title>
+      <link>http://localhost:1313/article/122/2014/10/31/Implementing-Did-You-Mean-in-Perl/</link>
+      <pubDate>Fri, 31 Oct 2014 15:31:18 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/122/2014/10/31/Implementing-Did-You-Mean-in-Perl/</guid>
+      <description>
+
+&lt;p&gt;A couple of weeks ago Yuki Nishijima released a clever Ruby &lt;a href=&#34;http://www.yukinishijima.net/2014/10/21/did-you-mean-experience-in-ruby.html&#34;&gt;gem&lt;/a&gt; called &amp;ldquo;Did You Mean&amp;rdquo;, that intercepts failed method calls and suggests the closest matching (correct) method in the exception message. I wanted to create an equivalent module in Perl, and so armed with a limited appreciation of &lt;code&gt;AUTOLOAD&lt;/code&gt; I set about creating &lt;a href=&#34;https://metacpan.org/pod/Devel::DidYouMean&#34;&gt;Devel::DidYouMean&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-the-module&#34;&gt;Using the module&lt;/h3&gt;
+
+&lt;p&gt;Devel::DidYouMean is available on CPAN now, you can install it at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan Devel::DidYouMean&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To use the module, just import it with &lt;code&gt;use&lt;/code&gt; like any other module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# script.pl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Devel::DidYouMean;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; substring(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;have a nice day&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code calls a builtin function &amp;ldquo;substring&amp;rdquo;, which does not exist. Running the above code we get a more &lt;em&gt;helpful&lt;/em&gt; error message:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Undefined subroutine &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;substring&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; found in main&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; Did you mean substr? at script&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl line &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;how-it-works&#34;&gt;How it works&lt;/h3&gt;
+
+&lt;p&gt;As I alluded to in the introduction, DidYouMean.pm defines a subroutine using the &lt;code&gt;AUTOLOAD&lt;/code&gt; function which catches missed subroutine calls. But by default this subroutine only exists within the Devel::DidYouMean namespace so it would only fire when there was a missed method call like &lt;code&gt;Devel::DidYouMean-&amp;gt;some_method;&lt;/code&gt;. This is not very useful! So I used some symbol-table black magic to load the module into every namespace at runtime:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CHECK&lt;/span&gt; {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# add autoload to main&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{ main::AUTOLOAD } &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Devel::DidYouMean::AUTOLOAD;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# add to every other module in memory&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (keys %INC)
+    {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $module &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $_;
+        $module &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/\//::/g&lt;/span&gt;;
+        $module &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; substr($module, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;);
+        $module &lt;span style=&#34;color:#f92672&#34;&gt;.=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;::AUTOLOAD&amp;#39;&lt;/span&gt;;
+
+        &lt;span style=&#34;color:#75715e&#34;&gt;# skip if the package already has an autoload&lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; defined &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{ $module };
+
+        &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{ $module } &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Devel::DidYouMean::AUTOLOAD;
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Walking through this code, you might be wondering what that strange &lt;code&gt;CHECK&lt;/code&gt; block is for. This ensures that the code within the block is loaded after the program compilation phase has finished, reducing the risk of the program loading another module after DidYouMean.pm has already exported it&amp;rsquo;s &lt;code&gt;AUTOLOAD&lt;/code&gt; subroutine. Perl defines several named code &lt;a href=&#34;https://perldoc.perl.org/perlmod.html#BEGIN%2c-UNITCHECK%2c-CHECK%2c-INIT-and-END&#34;&gt;blocks&lt;/a&gt; (you are probably familiar with &lt;code&gt;BEGIN&lt;/code&gt;). The downside of using a check block is if the module is loaded using &lt;code&gt;require&lt;/code&gt; instead of &lt;code&gt;use&lt;/code&gt;, this block will not be executed at all.&lt;/p&gt;
+
+&lt;p&gt;The code then adds the &lt;code&gt;AUTOLOAD&lt;/code&gt;subroutine to main (the namespace of the executing program) and every other namespace in the symbol table. I got the syntax for this from the &amp;ldquo;Dynamic Subroutines&amp;rdquo; chapter of &lt;a href=&#34;http://shop.oreilly.com/product/0636920012702.do&#34;&gt;Mastering Perl&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The code for the autoloaded &lt;a href=&#34;https://github.com/sillymoose/Devel-DidYouMean/blob/master/lib/Devel/DidYouMean.pm#L97&#34;&gt;subroutine&lt;/a&gt;is long, so I won&amp;rsquo;t reproduce it here. High level, it extracts the name of the failed subroutine called from &lt;code&gt;$AUTOLOAD&lt;/code&gt; and using the &lt;a href=&#34;https://metacpan.org/pod/Text::Levenshtein&#34;&gt;Text::Levenshtein&lt;/a&gt; module, calculates the Levenshtein distance between the name of the failed subroutine call and every available subroutine in the calling namespace. It then croaks displaying the usual undefined subroutine error message with a list of matching subroutines.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Although the module &amp;ldquo;works&amp;rdquo;, it feels heavy-handed to export a subroutine to every namespace in memory. An alternative approach that I considered but couldn&amp;rsquo;t get to work would be to define the code in an &lt;code&gt;END&lt;/code&gt; block, and then check if the program is ending with an &amp;ldquo;unknown subroutine&amp;rdquo; error. This challenge with this is that in the end phase, Perl has already nullified the error variable &lt;code&gt;$!&lt;/code&gt; so it&amp;rsquo;s hard to know why the program is ending (tieing &lt;code&gt;$!&lt;/code&gt; might get around this). If you&amp;rsquo;re interested in tackling this challenge, the repo is hosted on &lt;a href=&#34;https://github.com/sillymoose/Devel-DidYouMean&#34;&gt;GitHub&lt;/a&gt;, pull requests are welcome :) The module &lt;a href=&#34;https://metacpan.org/pod/Devel::DidYouMean&#34;&gt;documentation&lt;/a&gt; has more examples of Devel::DidYouMean in action.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt;&lt;em&gt;Devel::DidYouMean now uses a signal handling approach and avoids AUTOLOAD altogether 2014-11-09&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

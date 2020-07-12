@@ -1,0 +1,2047 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl/</link>
+    <description>Recent content in Perl on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 10 Jan 2020 13:37:00 +0000</lastBuildDate>
+    <atom:link href="/tags/perl/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Porting a Dancer plugin to Dancer2</title>
+      <link>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</link>
+      <pubDate>Fri, 10 Jan 2020 13:37:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</guid>
+      <description>
+
+&lt;p&gt;In my &lt;a href=&#34;https://metacpan.org/pod/Dancer2&#34;&gt;Dancer2&lt;/a&gt; web application, I want to know which requests come from smartphones.  There’s a plugin for that — but only in the older &lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer (v1)&lt;/a&gt; framework.  I’m no expert, but even I was easily able to port the Dancer plugin, &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::MobileDevice&#34;&gt;Dancer::Plugin::MobileDevice&lt;/a&gt;, to Dancer2!  In this article, we’ll explore Dancer2 and the way it handles plugins.  We’ll get our hands dirty working with the framework, and examine the main changes I made to port the plugin from Dancer to Dancer2.  By the end of this article, you’ll be ready to rock &lt;em&gt;and&lt;/em&gt; you’ll have a handy reference to use when porting plugins yourself.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-dancer2-web-framework&#34;&gt;The Dancer2 web framework&lt;/h2&gt;
+
+&lt;p&gt;Dancer2 applications run on a Web server and process requests from a browser.  The application’s Perl code uses keywords in Dancer2’s domain-specific language (DSL) to access information about a request.&lt;/p&gt;
+
+&lt;p&gt;Try it out: Install &lt;a href=&#34;https://metacpan.org/pod/Task::Dancer2&#34;&gt;Task::Dancer2&lt;/a&gt;.  Then, save this as &lt;code&gt;app.psgi&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hello, &amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; (query_parameters&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;world&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;!&amp;#39;&lt;/span&gt;;
+};
+to_app;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and run &lt;code&gt;plackup&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Enter the URL &lt;code&gt;http://localhost:5000&lt;/code&gt; in a browser and you will see “Hello, world!”, or visit &lt;code&gt;http://localhost:5000/?name=genius&lt;/code&gt; to see “Hello, genius!”.  The “genius” comes from &lt;code&gt;query_parameters&lt;/code&gt;, a DSL keyword that returns the values after the &lt;code&gt;?&lt;/code&gt; in the URL.  You can use those values when building a response to a request.&lt;/p&gt;
+
+&lt;h2 id=&#34;dancer-and-dancer2-plugins&#34;&gt;Dancer and Dancer2 plugins&lt;/h2&gt;
+
+&lt;p&gt;Dancer and Dancer2 plugins define new DSL keywords for the plugin’s users.  They also install “hooks,” subroutines that run while Dancer processes a request.  The hooks collect information for the DSL keywords to access.&lt;/p&gt;
+
+&lt;p&gt;For example, a hook in Dancer::Plugin::MobileDevice detects whether a request is coming from a mobile device.  The plugin defines the &lt;code&gt;is_mobile_device&lt;/code&gt; DSL keyword so your code can react appropriately. To port the plugin, I changed code for the keyword, the hooks, and the test suite.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-keywords&#34;&gt;Porting keywords&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins use the Dancer DSL and a &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin&#34;&gt;plugin-specific DSL&lt;/a&gt; to define DSL keywords. In Dancer (v1), the &lt;code&gt;is_mobile_device&lt;/code&gt; keyword is created with the &lt;code&gt;register&lt;/code&gt; plugin-DSL function (code examples simplified to focus on the porting):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;register &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+};
+register_plugin;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 plugins are &lt;a href=&#34;https://metacpan.org/pod/Moo&#34;&gt;Moo&lt;/a&gt; objects, and new DSL keywords are member functions on those objects.  Therefore, I changed &lt;code&gt;is_mobile_device()&lt;/code&gt; to a member function:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;is_mobile_device&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;       &lt;span style=&#34;color:#75715e&#34;&gt;# get the plugin’s object instance&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ($self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; ;
+}
+plugin_keywords &lt;span style=&#34;color:#e6db74&#34;&gt;qw(is_mobile_device)&lt;/span&gt;;   &lt;span style=&#34;color:#75715e&#34;&gt;# replaces register_plugin()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the body of the function, the Dancer plugin directly accessed the DSL keyword &lt;code&gt;request&lt;/code&gt;.  The Dancer2 plugin instead accesses the request via &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;request&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-hooks&#34;&gt;Porting hooks&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins add hooks using the DSL &lt;code&gt;hook&lt;/code&gt; keyword.  For example, this &lt;code&gt;before_template&lt;/code&gt; hook makes &lt;code&gt;is_mobile_device&lt;/code&gt; available in templates:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;hook before_template &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; is_mobile_device();
+};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 handles hooks very differently.  The plugin’s Moo constructor, &lt;code&gt;BUILD&lt;/code&gt;, is called when a plugin instance is created.  In &lt;code&gt;BUILD&lt;/code&gt;, the plugin registers the hook.  I added &lt;code&gt;BUILD&lt;/code&gt; and called
+&lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; to add the hook:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;BUILD&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;hook( before_template_render &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+        $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{is_mobile_device} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $plugin&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;is_mobile_device;
+    });
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If your hook functions are too long to move into &lt;code&gt;BUILD&lt;/code&gt;, you can leave them where they are and say &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook( hook_name =&amp;gt; \&amp;amp;sub_name );&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-the-tests&#34;&gt;Porting the tests&lt;/h2&gt;
+
+&lt;p&gt;Dancer::Plugin::MobileDevice has a full test suite.  These tests are extremely useful to developers, as they allow you to to see if a Dancer2 port behaves the same as the Dancer original. That said, you have to port the tests themselves before you can use them to test your ported plugin! We’ll look at the Dancer way, then I’ll show you the Dancer2 changes.&lt;/p&gt;
+
+&lt;p&gt;The Dancer tests define a simple Web application using the plugin.  They exercise that application using helpers in &lt;a href=&#34;https://metacpan.org/pod/Dancer::Test&#34;&gt;Dancer::Test&lt;/a&gt;.  For example (simplified from &lt;code&gt;t/01-is-mobile-device.t&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;{   &lt;span style=&#34;color:#75715e&#34;&gt;# The simple application&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Plugin::MobileDevice;
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Test;
+
+$ENV{HTTP_USER_AGENT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dancer_response GET &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;# dancer_response() is from Dancer::Test&lt;/span&gt;
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{content}, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2, on the other hand, uses the &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt; ecosystem for testing instead of its own helpers.  To work in that ecosystem, I changed the
+above test as described in the
+&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Manual#TESTING&#34;&gt;Dancer2 manual’s “testing” section&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Plack::Test;                        &lt;span style=&#34;color:#75715e&#34;&gt;# Additional testing modules&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; HTTP::Request::Common;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; TestApp;     &lt;span style=&#34;color:#75715e&#34;&gt;# Still a simple application, but now with a name&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2::Plugin::MobileDevice;
+
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dut &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Plack::Test&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;create(TestApp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_app);     &lt;span style=&#34;color:#75715e&#34;&gt;# a fake Web server&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $dut&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request(GET &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;User-Agent&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;);
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;content, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 tests use more boilerplate than Dancer tests, but Dancer2 tests are more modular and flexible than Dancer tests.  With Plack, you don’t have to use the global state (&lt;code&gt;%ENV&lt;/code&gt;) any more, and you can test more than one application or use case per &lt;code&gt;.t&lt;/code&gt; file.  Seeing the tests pass is good indication that your porting job is done.&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;I am a newbie at Dancer2, and have never used Dancer.  But I was able to port Dancer::Plugin::MobileDevice to Dancer2 in less than a day — including time to read the documentation and figure out how!  When you need a Dancer function in Dancer2, grab the quick reference below and you’ll be off and running!&lt;/p&gt;
+
+&lt;h2 id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/h2&gt;
+
+&lt;p&gt;My thanks to Kelly Deltoro-White for her insights, and to the authors of Dancer::Plugin::MobileDevice and Dancer2 for a strong foundation to build on.&lt;/p&gt;
+
+&lt;h2 id=&#34;more-information-on-dancer2-plugins&#34;&gt;More information on Dancer2 plugins&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;“&lt;a href=&#34;http://advent.perldancer.org/2016/22&#34;&gt;The new Dancer2 plugin system&lt;/a&gt;” by Sawyer X, for an overview&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Plugin&#34;&gt;Dancer2::Plugin&lt;/a&gt;, for details&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;quick-reference-porting-plugins-from-dancer-to-dancer2&#34;&gt;Quick reference: porting plugins from Dancer to Dancer2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Port keywords:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Make keywords freestanding &lt;code&gt;sub&lt;/code&gt;s, not arguments of &lt;code&gt;register&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Access data through &lt;code&gt;$self&lt;/code&gt; rather than DSL keywords&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;register_plugin&lt;/code&gt; to &lt;code&gt;plugin_keywords&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port hooks:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Add a &lt;code&gt;BUILD&lt;/code&gt; function&lt;/li&gt;
+&lt;li&gt;Move the hook functions into &lt;code&gt;BUILD&lt;/code&gt;, or refer to them from &lt;code&gt;BUILD&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Wrap each hook function in a &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; call&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port tests:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Import &lt;a href=&#34;https://metacpan.org/pod/Plack::Test&#34;&gt;Plack::Test&lt;/a&gt; and
+&lt;a href=&#34;https://metacpan.org/pod/HTTP::Request::Common&#34;&gt;HTTP::Request::Common&lt;/a&gt;
+instead of Dancer::Test&lt;/li&gt;
+&lt;li&gt;Give the application under test a &lt;code&gt;package&lt;/code&gt; statement&lt;/li&gt;
+&lt;li&gt;Create a Plack::Test instance representing the application&lt;/li&gt;
+&lt;li&gt;Create requests using HTTP::Request::Common methods&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;$response-&amp;gt;{content}&lt;/code&gt; to &lt;code&gt;$response-&amp;gt;content&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Setup your computer for CPAN-PRC</title>
+      <link>http://localhost:1313/article/setup-your-computer-for-cpan-prc/</link>
+      <pubDate>Wed, 21 Feb 2018 23:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/setup-your-computer-for-cpan-prc/</guid>
+      <description>
+
+&lt;p&gt;Earlier I wrote about &lt;a href=&#34;http://localhost:1313/article/why-should-you-join-cpan-prc/&#34;&gt;why should you join CPAN Pull Request Challenge&lt;/a&gt;. Now I will explain how to get your computer ready to work on your assignment. You can grab a Docker image and start hacking right away, or you can install everything you need on your computer.&lt;/p&gt;
+
+&lt;h3 id=&#34;option-1-the-docker-way&#34;&gt;Option 1: The Docker Way&lt;/h3&gt;
+
+&lt;p&gt;By using a Docker image that has everything you need, you can start working in minutes.&lt;/p&gt;
+
+&lt;h4 id=&#34;1-install-docker&#34;&gt;1: Install Docker&lt;/h4&gt;
+
+&lt;p&gt;On Ubuntu:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo apt-get install docker.io
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Alternatively, see the instructions for &lt;a href=&#34;https://docs.docker.com/docker-for-mac/install/&#34;&gt;macOS&lt;/a&gt; and &lt;a href=&#34;https://docs.docker.com/docker-for-windows/install/&#34;&gt;Windows&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;2-fork-clone-the-repo&#34;&gt;2: Fork &amp;amp; clone the repo&lt;/h4&gt;
+
+&lt;p&gt;Now you need to fork and clone the Github repository you were assigned for the PRC. For example, I created this &lt;a href=&#34;https://github.com/kyzn/App-p&#34;&gt;fork&lt;/a&gt;, and can clone it with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git clone https://github.com/kyzn/App-p ~/Desktop/App-p
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;3-run-docker&#34;&gt;3: Run Docker&lt;/h4&gt;
+
+&lt;p&gt;I have prepared a docker &lt;a href=&#34;https://github.com/kyzn/perlbrew-prc-dockerimage&#34;&gt;image&lt;/a&gt; which comes with a stable version of Perl, &lt;a href=&#34;https://metacpan.org/pod/App::perlbrew&#34;&gt;perlbrew&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/App::cpanminus&#34;&gt;cpanm&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla&#34;&gt;dzil&lt;/a&gt;, all pre-installed.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s how I would run docker on the repo I cloned in step 3:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ docker run -v ~/Desktop/App-p:/App-p -it kyzn/perlbrew-prc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Where:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;~/Desktop/App-p&lt;/code&gt; is the local path to the repo&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;/App-p&lt;/code&gt; is the path of the directory inside the Docker image&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This will launch an Ubuntu image as root user, mounting the repository to &lt;code&gt;/App-p&lt;/code&gt;. Git is installed, but you need to use your local (non-Docker) terminal to pull/push. The text editors nano, vim, and emacs are installed in the image as well. You can also use your local text editor.&lt;/p&gt;
+
+&lt;h4 id=&#34;building-a-docker-image&#34;&gt;Building a Docker Image&lt;/h4&gt;
+
+&lt;p&gt;Alternatively, you can build the docker image by hand. Note that this will take some time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git clone https://github.com/kyzn/perlbrew-prc-dockerimage
+$ cd perlbrew-prc-dockerimage
+$ docker build -t kyzn/perlbrew-prc:my_build .
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then use the same &lt;code&gt;docker run&lt;/code&gt; command with your own &lt;code&gt;my_build&lt;/code&gt; tag.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h3 id=&#34;option-2-the-local-way&#34;&gt;Option 2: The Local Way&lt;/h3&gt;
+
+&lt;p&gt;You can install the same tools to your computer; I&amp;rsquo;ve prepared instructions for macOS and Ubuntu. This usually takes about one to two hours.&lt;/p&gt;
+
+&lt;h4 id=&#34;notes-for-macos-users&#34;&gt;Notes for macOS users&lt;/h4&gt;
+
+&lt;p&gt;Perl, during its installation, will ask for permission for incoming network connections. Denying that request doesn&amp;rsquo;t break anything for CPAN-PRC purposes.&lt;/p&gt;
+
+&lt;p&gt;Installing modules via &lt;code&gt;cpanm&lt;/code&gt; might give you a permission error. In the terminal, run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo chown -R $USER:staff ~/.cpanm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This command changes the owner of the cpanm folder, which usually fixes the issue.&lt;/p&gt;
+
+&lt;p&gt;You need to install homebrew:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ ruby -e &amp;quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;1-install-perlbrew&#34;&gt;1: Install Perlbrew&lt;/h4&gt;
+
+&lt;p&gt;Most systems come with a certain version of Perl installed. Yet it is often recommended not to tamper system Perl, as applications depend on its state. That&amp;rsquo;s why we want to install a separate Perl for development purposes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl -L https://install.perlbrew.pl | bash
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once it&amp;rsquo;s done, it will ask you to add &lt;code&gt;source ~/perl5/perlbrew/etc/bashrc&lt;/code&gt; to your &lt;code&gt;~/.bashrc&lt;/code&gt;. You should do as instructed right away.&lt;/p&gt;
+
+&lt;h4 id=&#34;2-install-perl&#34;&gt;2: Install Perl&lt;/h4&gt;
+
+&lt;p&gt;Now that we have Perlbrew in place, we can go ahead and install a Perl on our own, keeping system Perl alone. I am going to suggest installing latest stable-version. You may run &lt;code&gt;perlbrew available&lt;/code&gt; to see most common versions. Note that this will take a while.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perlbrew install -j 4 stable
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are two ways to use a Perl version with Perlbrew: &lt;code&gt;use&lt;/code&gt; and &lt;code&gt;switch&lt;/code&gt;. &lt;code&gt;use&lt;/code&gt; is temporary, it goes away once you close the terminal. That&amp;rsquo;s why I recommend &lt;code&gt;switch&lt;/code&gt;, which will make it permanent. Change the version to the one you just installed. You can run &lt;code&gt;perlbrew list&lt;/code&gt; to see installed versions.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perlbrew switch $(perlbrew list)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make sure switch worked, check your Perl version in the terminal:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -v
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;3-install-cpanm&#34;&gt;3: Install cpanm&lt;/h4&gt;
+
+&lt;p&gt;This is a &lt;a href=&#34;https://metacpan.org/pod/App::cpanminus&#34;&gt;script&lt;/a&gt; that will help you install CPAN modules. There already is a client installed, called &lt;code&gt;cpan&lt;/code&gt;. But, &lt;code&gt;cpan&lt;/code&gt; requires configuration and is more verbose and slower than &lt;code&gt;cpanm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perlbrew install-cpanm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To be sure you&amp;rsquo;re using the perlbrew installed cpanm, run this command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ which cpanm | grep perlbrew
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the terminal displays any matching output, it worked.&lt;/p&gt;
+
+&lt;h4 id=&#34;4-install-dzil&#34;&gt;4: Install dzil&lt;/h4&gt;
+
+&lt;p&gt;Many CPAN authors use &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla&#34;&gt;dzil&lt;/a&gt; to build and release their modules. The chances of your PRC assignment having a dist.ini file (dzil configuration) are high.&lt;/p&gt;
+
+&lt;p&gt;First you need to install a non-Perl dependency, openssl. On macOS:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ brew install openssl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And on Ubuntu:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo apt-get install libssl-dev
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then install Dist::Zilla with cpanm. Note that this will take a while, as it has a lot of dependencies.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpanm Dist::Zilla
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;5-install-reply-optional&#34;&gt;5: Install reply (optional)&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;reply&lt;/code&gt; is a nice interactive shell that lets you play around.&lt;/p&gt;
+
+&lt;p&gt;Ubuntu users will need to install these missing dependencies:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo apt-get install libncurses5-dev libreadline-dev
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now install &lt;code&gt;reply&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cpanm Term::ReadLine::Gnu Reply
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Now you are ready to work on your assignment! Good luck!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Why should you join CPAN-PRC?</title>
+      <link>http://localhost:1313/article/why-should-you-join-cpan-prc/</link>
+      <pubDate>Thu, 25 Jan 2018 09:23:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/why-should-you-join-cpan-prc/</guid>
+      <description>
+
+&lt;p&gt;The CPAN Pull Request Challenge (PRC) aims to improve the quality of code on &lt;a href=&#34;https://www.cpan.org/&#34;&gt;CPAN&lt;/a&gt;, the online archive of Perl modules, by having participants submit pull requests to CPAN module authors.&lt;/p&gt;
+
+&lt;p&gt;Every month participants are assigned a new module to improve, and submit &lt;a href=&#34;https://help.github.com/articles/about-pull-requests/&#34;&gt;pull requests&lt;/a&gt; to the module repo on GitHub. Participants are not competing with each other, rather the &amp;ldquo;challenge&amp;rdquo; is to keep up with your monthly assignments.&lt;/p&gt;
+
+&lt;h3 id=&#34;how-to-sign-up&#34;&gt;How to sign up&lt;/h3&gt;
+
+&lt;p&gt;You can join as an individual or as a team. A team could be your company, you and a few friends, or your local Perl Mongers group.&lt;/p&gt;
+
+&lt;p&gt;Simply email Neil Bowers (&amp;ldquo;neil at bowers dot com&amp;rdquo;) your GitHub username and PAUSE ID if you have one, or if joining as a group, your GitHub organization name. Tell him you want to join the challenge, and you are in!&lt;/p&gt;
+
+&lt;h3 id=&#34;how-it-works&#34;&gt;How it works&lt;/h3&gt;
+
+&lt;p&gt;Once per month, you will receive an email noting your assigned distribution:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/why-should-you-join-cpan-prc/pr-assignment.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;You can fix a failing test, fix an issue, correct a typo, any kind of improvement. If you&amp;rsquo;re not sure where to start, there are services on top of CPAN that can help identify issues:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpantesters.org/&#34;&gt;CPAN Testers&lt;/a&gt; is a Continuous Integration service that often identifies issues with failing tests and/or platform specific bugs&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://rt.cpan.org/&#34;&gt;Request Tracker&lt;/a&gt; is the default bug tracker for CPAN modules (issues may also be listed on GitHub)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://cpancover.com&#34;&gt;CPAN Cover&lt;/a&gt; reports on code coverage for tests&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cpants.cpanauthors.org/&#34;&gt;CPANTS&lt;/a&gt; is a &amp;ldquo;kwalitee&amp;rdquo; assessment tool&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A good place to start is &lt;a href=&#34;https://metacpan.org&#34;&gt;metacpan&lt;/a&gt;, a CPAN search engine which links to all of the above services. Scan through the module documentation and related information, to try and find things that need fixing or enhancing.&lt;/p&gt;
+
+&lt;p&gt;Once you&amp;rsquo;ve identified the changes you&amp;rsquo;d like to make, fork the module on GitHub, commit your changes and open a pull request with the new changes. Then reply to your assignment email saying &amp;ldquo;It&amp;rsquo;s done!&amp;rdquo;, and link to your pull requests on GitHub:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/why-should-you-join-cpan-prc/pr-done.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Although it&amp;rsquo;s better to do your assignments every month, you may not be willing to commit to it, and that is fine! If something comes up, you can skip a month. If you need more time for a module, you can stick to your assignment for longer. There&amp;rsquo;s a solution as long as you want to keep participating.&lt;/p&gt;
+
+&lt;h3 id=&#34;why-join&#34;&gt;Why join?&lt;/h3&gt;
+
+&lt;p&gt;One reason is that this year might be your &lt;a href=&#34;http://neilb.org/2018/01/01/cpan-prc-2018.html&#34;&gt;last chance!&lt;/a&gt; It may &lt;a href=&#34;http://neilb.org/2018/01/06/what-after-prc.html&#34;&gt;evolve&lt;/a&gt;, but this will most likely be the &lt;strong&gt;last year&lt;/strong&gt; you can get a CPAN module assignment.&lt;/p&gt;
+
+&lt;p&gt;I joined this challenge &lt;a href=&#34;https://kyzn.org/2015-01-17-cpan-pr-challenge-012015.html&#34;&gt;in 2015&lt;/a&gt; when I was still at college. It motivated me to read other people&amp;rsquo;s code, even though I had a hard time understanding it. It also taught me a lot about the Open Source ecosystem. I did 4 assignments in 2015, another 4 in 2016, and doubled to 8 in 2017. I am also part of &lt;a href=&#34;https://github.com/ziprecruiter&#34;&gt;Team-ZipRecruiter&lt;/a&gt;, which has been participating since April 2017. It really is fun!&lt;/p&gt;
+
+&lt;p&gt;If you are looking for more reasons, here are few:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;It&amp;rsquo;s a great way to study &amp;ldquo;production ready&amp;rdquo; code and communicate with fellow programmers&lt;/li&gt;
+&lt;li&gt;You can contribute to open source code, support Perl and build your resume&lt;/li&gt;
+&lt;li&gt;Assignments introduce you to code on CPAN that you otherwise might have missed&lt;/li&gt;
+&lt;li&gt;If you&amp;rsquo;re part of a group it could be a fun team-building event&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Sounds interesting? Then send an email to Neil (&amp;ldquo;neil at bowers dot com&amp;rdquo;) with your GitHub username!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/why-should-you-join-cpan-prc/pr-merged.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Hacktoberfest is here</title>
+      <link>http://localhost:1313/article/hacktoberfest-is-here/</link>
+      <pubDate>Sun, 02 Oct 2016 10:51:01 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/hacktoberfest-is-here/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;https://hacktoberfest.digitalocean.com/&#34;&gt;Hacktoberfest&lt;/a&gt; is here, and you can be part of the effort to make Perl the most popular language in the month long festival of patches and pull requests.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.digitalocean.com/&#34;&gt;DigitalOcean&lt;/a&gt; and &lt;a href=&#34;https://www.github.com/&#34;&gt;GitHub&lt;/a&gt; have teamed up to encourage new users to participate in open source. Make four pull requests to any GitHub project and they&amp;rsquo;ll give you a limited-edition Hacktoberfest t-shirt. It might not sound like much, but consider what you get besides the shirt: you&amp;rsquo;re in the commit logs of four projects and your profile has some history. That&amp;rsquo;s the first step in building your open source résumé.&lt;/p&gt;
+
+&lt;p&gt;The sponsors suggest that projects that want to participate label their issues with &amp;ldquo;Hacktoberfest&amp;rdquo;. That&amp;rsquo;s not strictly necessary, but you can &lt;a href=&#34;https://github.com/search?q=state%3Aopen+label%3Ahacktoberfest&amp;amp;type=Issues&#34;&gt;search&lt;/a&gt; for issues that projects think are suitable for new users. I think all of my projects are suitable (I may be optimistic), so I wanted a way to label all of my issues across all of my projects.&lt;/p&gt;
+
+&lt;p&gt;I found out about this as I was building some other GitHub tools. I looked at &lt;a href=&#34;https://metacpan.org/pod/Net::GitHub&#34;&gt;Net::GitHub&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Pithub&#34;&gt;Pithub&lt;/a&gt;, and Marchex&amp;rsquo;s &lt;a href=&#34;https://github.com/marchex/github-api-tools&#34;&gt;github-api-tools&lt;/a&gt; but I wanted to iterate through long lists of paged results and process each item as I received them. The &lt;a href=&#34;https://developer.github.com/v3/&#34;&gt;GitHub Developer API&lt;/a&gt; is quite nice and even if you are re-inventing the wheel you&amp;rsquo;re learning about wheels, making this a fun night of work.&lt;/p&gt;
+
+&lt;p&gt;The result is &lt;a href=&#34;https://github.com/briandfoy/ghojo/blob/master/examples/hacktoberfest.pl&#34;&gt;hacktoberfest.pl&lt;/a&gt; in my &lt;a href=&#34;https://github.com/briandfoy/ghojo&#34;&gt;ghojo&lt;/a&gt; repo. It will log in, list all of my repos (there are a couple hundred), create the &amp;ldquo;Hacktoberfest&amp;rdquo; label in each, and then apply the label to each open issue.&lt;/p&gt;
+
+&lt;p&gt;The ghojo project is still very much in its infancy (which means there&amp;rsquo;s all sorts of pull request opportunities). But I allow quite a bit of flexibility by accepting a callback for things I expect to return many items:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Ghojo;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ghojo &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Ghojo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( { token &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; } );
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $callback &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $item &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+  };
+
+$ghojo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;repos( $repo_callback );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Each time I find a repo—and you don&amp;rsquo;t have to know how I do that—I run that callback. It&amp;rsquo;s a little bit like &lt;a href=&#34;https://metacpan.org/pod/File::Find&#34;&gt;File::Find&lt;/a&gt;&amp;rsquo;s use of the &lt;code&gt;wanted&lt;/code&gt; coderef. You don&amp;rsquo;t see the very nice API paging going on either; &lt;code&gt;repos&lt;/code&gt; keeps fetching more results as long as there are more results.&lt;/p&gt;
+
+&lt;p&gt;That callback deals with a repo, but each repo has a list of issues. I want to process this list of issues as I run into them. So what I need is a callback to process a repo with a nested callback for the issues:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.24&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Ghojo;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ghojo &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Ghojo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( { token &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; } );
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $label_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hacktoberfest&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $callback &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; ( $item ) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $user, $repo ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;m{/}&lt;/span&gt;, $item&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{full_name};
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $repo &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $ghojo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_repo_object( $owner, $repo );
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# get the labels for that repo&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %labels &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; map { $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@{ &lt;span style=&#34;color:#e6db74&#34;&gt;qw(name color)&lt;/span&gt; } } $repo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;labels&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;*;&lt;/span&gt;
+
+  unless( exists $labels{$label_name} ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $rc &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $repo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;create_label( $label_name, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ff5500&amp;#39;&lt;/span&gt; );
+    say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\tCreated $label_name label&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $rc;
+    }
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $callback &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; ( $item ) {
+    $repo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add_labels_to_issue( $item&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{number}, $label_name );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $item;
+    };
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $issues &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $repo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;issues( $callback );
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $repo;
+  };
+
+
+$ghojo&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;repos( $repo_callback );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Curiously, within a couple of hours of uploading the program, I received my first Hacktoberfest &lt;a href=&#34;https://github.com/briandfoy/ghojo/pull/14&#34;&gt;pull request&lt;/a&gt;. &lt;a href=&#34;https://github.com/haydenty&#34;&gt;haydenty&lt;/a&gt; added the &lt;a href=&#34;https://github.com/briandfoy/ghojo/blob/master/CONTRIBUTING.md&#34;&gt;CONTRIBUTING.md&lt;/a&gt; file to my ghojo repo. It&amp;rsquo;s something I&amp;rsquo;ve been meaning to add to all of my repos. Now I&amp;rsquo;m considering adding an issue to each repo to note that and label each one &amp;ldquo;Hacktoberfest&amp;rdquo;. Or someone who wants to get started with something simple can create the issues for me, or send the pull requests right off.&lt;/p&gt;
+
+&lt;p&gt;If you have lots of repos, label your issues to help push Perl up in &lt;a href=&#34;https://github.com/search?q=state%3Aopen+label%3Ahacktoberfest&amp;amp;type=Issues&#34;&gt;the rankings&lt;/a&gt;. By the time we reach the end of the month, I&amp;rsquo;ll have a program to reverse the labeling.&lt;/p&gt;
+
+&lt;p&gt;Some of this I&amp;rsquo;m doing for fun, and some of this I&amp;rsquo;m doing because some organizations want better GitHub tools. Somehow how October is when all of that is coming together. If you&amp;rsquo;d like me to work on this sort of stuff for you, &lt;a href=&#34;mailto:brian.d.foy@gmail.com&#34;&gt;let me know&lt;/a&gt;! But submit those pull requests first so you get that t-shirt.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>The History of the Schwartzian Transform</title>
+      <link>http://localhost:1313/article/the-history-of-the-schwartzian-transform/</link>
+      <pubDate>Fri, 02 Sep 2016 11:18:55 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/the-history-of-the-schwartzian-transform/</guid>
+      <description>
+
+&lt;p&gt;The history of the Schwartzian Transform is fascinating, full of intrigue, competing philosophies, and cross-language reluctant cooperation. The Schwartzian Transform is the name applied to a particular implementation of a cached-key sorting algorithm.&lt;/p&gt;
+
+&lt;p&gt;The first public appearance is probably Randal Schwartz&amp;rsquo;s Usenet &lt;a href=&#34;https://groups.google.com/d/msg/comp.unix.shell/MdqXDOuzDG0/gcmc1IG9GckJ&#34;&gt;post&lt;/a&gt; on December 16, 1994 in response to Ken Brown&amp;rsquo;s request for help:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;I&amp;rsquo;m having trouble sorting on the *last* word of the last field in a record&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Ken Brown&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Randal included the following code in his reply:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# new features, new bugs!&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;
+  map { $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] }
+  sort { $a&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;cmp&lt;/span&gt; $b&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] }
+  map { [$_, &lt;span style=&#34;color:#e6db74&#34;&gt;/(\S+)$/&lt;/span&gt;] }
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Randal didn&amp;rsquo;t name it. He wrote the code and essentially dropped the mic. He says that he was on a break from teaching a Perl class, so his response was brief and unexplicated - typical for an experienced Usenet denizen (he said that he was there when you could read all of Usenet in a half hour). I don&amp;rsquo;t think he expected it to be as troublesome as it turned out to be.&lt;/p&gt;
+
+&lt;p&gt;His code isn&amp;rsquo;t that complex. It&amp;rsquo;s a big statement, but when I teach it in Perl classes, I tell people to read it from the end toward the beginning (a handy technique for any list pipeline):&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;The first step computes the key to sort on. It combines that with the original value in a tuple.&lt;/li&gt;
+&lt;li&gt;The middle step sorts of the computed element in the tuple.&lt;/li&gt;
+&lt;li&gt;The last step extracts the original value from the tuple.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;You probably can&amp;rsquo;t imagine how shocking this could be back then. Perl 5 was officially released in October 1994, but the first development versions had been around since the middle of 1993. Randal was surely playing with Perl 5 as soon as it came out. This means that most Perl programmers had not yet seen new features like the &lt;a href=&#34;https://perldoc.perl.org/functions/map.html&#34;&gt;map&lt;/a&gt; function or references. They certainly weren&amp;rsquo;t comfortable with those ideas.&lt;/p&gt;
+
+&lt;p&gt;Randal, however, knew the &lt;em&gt;decorate-sort-undecorate&lt;/em&gt; technique from LISP, especially since he&amp;rsquo;s solidly in the emacs camp in the editor wars. Renzo on &lt;a href=&#34;http://codereview.stackexchange.com/a/138436/13050&#34;&gt;Code Review&lt;/a&gt; fixed up my attempt at a LISP version:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;(defun schwartzian&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;transform (list costly&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;function predicate)
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;sort a list of objects over the value of a function applied to them,
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;by applying the Schwartzian Transform (https://en.wikipedia.org/wiki/Schwartzian_transform)
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;the parameters are the list, the function, and the predicate for the sort.&amp;#34;&lt;/span&gt;
+  (mapcar &lt;span style=&#34;color:#75715e&#34;&gt;#&amp;#39;cdr&lt;/span&gt;
+      (stable&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;sort (mapcar (lambda (x)
+                 (cons (funcall costly&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;function x) x))
+                 list)
+             predicate
+             :key &lt;span style=&#34;color:#75715e&#34;&gt;#&amp;#39;car)))&lt;/span&gt;
+
+(&lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; :sb&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;posix)
+(schwartzian&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;transform
+ (directory &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/etc/*&amp;#34;&lt;/span&gt;)
+ (lambda (x) (sb&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;posix:stat&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;mtime (sb&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;posix:stat x)))
+ &lt;span style=&#34;color:#75715e&#34;&gt;#&amp;#39;&amp;lt;=)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Even with a little LISP knowledge you can tease out the same algorithm. You see the &lt;code&gt;mapcar&lt;/code&gt;, &lt;code&gt;stable-sort&lt;/code&gt;, and &lt;code&gt;mapcar&lt;/code&gt;. (I used &lt;a href=&#34;http://www.sbcl.org&#34;&gt;SBCL&lt;/a&gt; for this).&lt;/p&gt;
+
+&lt;p&gt;In 1995 Tom Christiansen wrote &lt;a href=&#34;http://www.perl.com/doc/FMTEYEWTK/sort.html&#34;&gt;Far More Than Everything You&amp;rsquo;ve Ever Wanted to Know About Sorting&lt;/a&gt; and extensively covered Randal&amp;rsquo;s code even though he hadn&amp;rsquo;t labeled yet. He didn&amp;rsquo;t like it that much, but, to be fair, he says at the end:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;I&amp;rsquo;m not ragging on Randal, merely teasing a bit. He&amp;rsquo;s just trying to be clever, and that&amp;rsquo;s what he does. I&amp;rsquo;m just submitting a sample chapter for his perusal for inclusion the mythical Alpaca Book :-)&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Tom Christiansen&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Tom refers to &lt;em&gt;Learning Perl Objects, References, Objects, and Modules&lt;/em&gt;, which wouldn&amp;rsquo;t show up until 2003 (it&amp;rsquo;s now called &lt;a href=&#34;http://www.intermediateperl.com&#34;&gt;Intermediate Perl&lt;/a&gt;). Curiously, in that same year &lt;a href=&#34;https://books.google.com/books?id=GxKWdn7u4w8C&amp;amp;pg=PA113&amp;amp;dq=schwartzian+transform&amp;amp;hl=en&amp;amp;sa=X&amp;amp;ved=0ahUKEwir89e-krvNAhXMdz4KHW4uAqQQ6AEILjAC#v=onepage&amp;amp;q=schwartzian%20transform&amp;amp;f=false&#34;&gt;Text Processing in Python&lt;/a&gt; (Google Books) mentioned it.&lt;/p&gt;
+
+&lt;p&gt;A month after his Usenet posting, Randal wrote about his decorate-sort-undecorate idiom in his &lt;a href=&#34;http://www.stonehenge.com/merlyn/UnixReview/col06.html&#34;&gt;Unix Review column&lt;/a&gt; for January 1996, but he hadn&amp;rsquo;t labeled the technique by then either.&lt;/p&gt;
+
+&lt;h3 id=&#34;getting-the-name&#34;&gt;Getting the name&lt;/h3&gt;
+
+&lt;p&gt;In August 1995, &lt;a href=&#34;https://groups.google.com/forum/?hl=en#!topic/comp.lang.perl.misc/fLo0RNV8oW8&#34;&gt;Bennett Todd answers a sorting question&lt;/a&gt; with a &amp;ldquo;Schwartz transformation&amp;rdquo;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Or for possibly more efficiency, ensure that the calls only happen once per
+record, rather than approximately NlogN times, with the Schwartz
+transformation:-)&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Bennett Todd&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code&gt;@keys = map { $_-&amp;gt;[0] }
+    sort { $a-&amp;gt;[1] &amp;lt;=&amp;gt; $b-&amp;gt;[1] or $a cmp $b }
+    map { [ $_, datexform($foo{$_}) ] } keys %foo;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the first instance I could find where Randal&amp;rsquo;s last name was attached to the technique. People have seen and understood the technique and it has the start of a name, but it&amp;rsquo;s not quite an idiom yet. It also hasn&amp;rsquo;t settled on a name.&lt;/p&gt;
+
+&lt;p&gt;Tom Christiansen&amp;rsquo;s April 1996 post in &lt;em&gt;comp.lang.perl.misc&lt;/em&gt; for &lt;a href=&#34;https://groups.google.com/d/msg/comp.lang.perl.misc/pw-Hl4byLnc/yzejRnku3RoJ&#34;&gt;Read directory in timestamp order?&lt;/a&gt; showed some benchmarks for sorting methods. He labeled one the &amp;ldquo;Schwartzian Transform&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;In July, Colin Howarth started the thread &lt;a href=&#34;https://groups.google.com/d/msg/comp.lang.perl.misc/6NEeX4XJx54/nmpMmReMIbcJ&#34;&gt;&amp;ldquo;Schwartzian transform of %$self &amp;hellip; help?&amp;rdquo;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;In October, Tom posted &lt;a href=&#34;https://groups.google.com/d/msg/comp.lang.perl.misc/VIKNMCeNFAM/18UApg1hWy8J&#34;&gt;an expanded draft of perllol&lt;/a&gt; as part of his &lt;a href=&#34;http://www.perl.com/doc/FMTEYEWTK/pdsc/&#34;&gt;Perl Data Structures Cookbook&lt;/a&gt;, which turned into &lt;a href=&#34;https://perldoc.perl.org/perldsc.html&#34;&gt;perldsc&lt;/a&gt; and &lt;a href=&#34;https://perldoc.perl.org/perllol.html&#34;&gt;perllol&lt;/a&gt;. He uses the full term &amp;ldquo;Schwartzian Transform&amp;rdquo;. The term was catching on.&lt;/p&gt;
+
+&lt;h3 id=&#34;gaining-notoriety&#34;&gt;Gaining notoriety&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;https://groups.google.com/d/msg/comp.lang.perl.misc/fPx42DB2jd8/cC_6osV70mMJ&#34;&gt;I&amp;rsquo;m still pissed at Randal for having posted it&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Tom Christiansen&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Tom wrote that in December and he didn&amp;rsquo;t mince words. It might look catty now, but at the time, Tom was on a mission to make people fall in love with Perl. He evangelized the language and didn&amp;rsquo;t want to scare people off with weird looking code. He was everywhere that people were talking about Perl, and that was good for us. That meant he was effectively supporting code he didn&amp;rsquo;t write, he didn&amp;rsquo;t like, and people didn&amp;rsquo;t understand. In his role of Perl&amp;rsquo;s apostle, he was besieged with people asking about something he wouldn&amp;rsquo;t have written himself.&lt;/p&gt;
+
+&lt;p&gt;Later, in that same thread, he&amp;rsquo;d give it another name, the &lt;a href=&#34;https://groups.google.com/d/msg/comp.lang.perl.misc/fPx42DB2jd8/cC_6osV70mMJ&#34;&gt;Black Transform&lt;/a&gt;. He played on the translation of Randal&amp;rsquo;s &lt;a href=&#34;https://en.wikipedia.org/wiki/Schwartz_(surname)&#34;&gt;Germanic surname&lt;/a&gt; that reflected his own opinion. That name didn&amp;rsquo;t stick.&lt;/p&gt;
+
+&lt;p&gt;As with most long Usenet threads, it&amp;rsquo;s not entirely clear what people specifically didn&amp;rsquo;t like about the code, or even that there&amp;rsquo;s a consensus complaint. Some complaints spiral around Randal&amp;rsquo;s lack of comments. Some people want Perl to be accessible at first glance to someone who doesn&amp;rsquo;t know the language. Others who were comfortable with advanced programming skills weren&amp;rsquo;t bothered at all. That&amp;rsquo;s a tension even today.&lt;/p&gt;
+
+&lt;p&gt;Remember, references and method notation were new syntax. People skilled with Perl 4 were still learning Perl 5. Perl hadn&amp;rsquo;t developed idioms for list processing (LISP, natch), so people apparently weren&amp;rsquo;t that comfortable with stacked list operations. Some people merely hated functional programming and LISP.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s also a segment of people who would rather have programming languages that are easy to learn over more powerful but more opaque.&lt;/p&gt;
+
+&lt;p&gt;Around that time, Joseph Hall wrote &lt;a href=&#34;http://web.archive.org/web/19961228210914/http://www.5sigma.com/perl/schwtr.html&#34;&gt;More about the Schwartzian Transform (Internet Archive)&lt;/a&gt;. It&amp;rsquo;s tough to tell exactly when he wrote this, but the earliest copy in the Internet archive notes it was last modified in January 1997. Joseph used his PeGS (Perl Graphical Structures) to show them in action. This might be the first mention outside of Usenet. It&amp;rsquo;s also the basis for the item that appears in his 1998 book &lt;a href=&#34;http://www.effectiveperlprogramming.com&#34;&gt;Effective Perl Programming&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Also, around that time, Joseph was working with Randal at Stonehenge Consulting Services to develop the Perl courses. I&amp;rsquo;m fuzzy on that timeline, but his coursework turned into the book &lt;em&gt;Learning Perl Objects, References, and Modules&lt;/em&gt; (later renamed &lt;a href=&#34;https://www.intermediateperl.com&#34;&gt;Intermediate Perl&lt;/a&gt;). He&amp;rsquo;s the one who came up with the Gilligan&amp;rsquo;s Island as examples, but his handiwork with PeGS and the Schwartzian Transform show up in that book and in the class.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.effectiveperlprogramming.com&#34;&gt;Effective Perl Programming&lt;/a&gt; might be the first book to mention the transform, using what he&amp;rsquo;d already written. Even though I worked on the second edition of that book, I think &lt;a href=&#34;https://www.amazon.com/gp/product/0201419750/ref=as_li_qf_sp_asin_il_tl?ie=UTF8&amp;amp;tag=hashbang09-20&amp;amp;camp=1789&amp;amp;creative=9325&amp;amp;linkCode=as2&amp;amp;creativeASIN=0201419750&amp;amp;linkId=b8a4558fd65ec4c4bb17add6e194e5e4&#34;&gt;Joseph&amp;rsquo;s original is still worth the $4 on Amazon.com&lt;/a&gt;. It&amp;rsquo;s some of the best Perl writing in the history of Perl.&lt;/p&gt;
+
+&lt;p&gt;In 1998 the transform also showed up in the first edition of &lt;a href=&#34;https://books.google.com/books?id=7q5QAAAAMAAJ&amp;amp;q=schwartzian+transform+%22programming+perl%22&amp;amp;dq=schwartzian+transform+%22programming+perl%22&amp;amp;hl=en&amp;amp;sa=X&amp;amp;ved=0ahUKEwjplePak7vNAhWSZj4KHYK9AtUQ6AEINDAD&#34;&gt;The Perl Cookbook&lt;/a&gt;, where Tom called it the Schwartzian Transform. I don&amp;rsquo;t know who first typed it into a manuscript, so perhaps it&amp;rsquo;s a tie. Tom and Joseph might have to figure that out between them.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://books.google.com/books?id=4ju67sMPwEkC&amp;amp;pg=PA111&amp;amp;dq=schwartzian+transform&amp;amp;hl=en&amp;amp;sa=X&amp;amp;ved=0ahUKEwir89e-krvNAhXMdz4KHW4uAqQQ6AEIOjAE#v=onepage&amp;amp;q=schwartzian%20transform&amp;amp;f=false&#34;&gt;Mastering Perl Algorithms (Google Books)&lt;/a&gt; covered the transform in 1999 and &lt;a href=&#34;https://books.google.com/books?id=gGNQ-O1WWQAC&amp;amp;pg=PA310&amp;amp;dq=schwartzian+transform&amp;amp;hl=en&amp;amp;sa=X&amp;amp;ved=0ahUKEwjo79KEk7vNAhWBMj4KHcBFDEY4ChDoAQhNMAg#v=onepage&amp;amp;q=schwartzian%20transform&amp;amp;f=false&#34;&gt;CGI Programming in Perl (Google Books)&lt;/a&gt; mentioned it in 2000. After that, the term &amp;ldquo;Schwartzian Transform&amp;rdquo; turns up quite a bit, even in some Ruby, Python, the Jython books.&lt;/p&gt;
+
+&lt;p&gt;Some other interesting quotes from that long thread, which seem quaint twenty years later. My favorite was prophetic:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;https://groups.google.com/d/msg/comp.lang.perl.misc/fPx42DB2jd8/CTRmyWyJW6MJ&#34;&gt;I wonder if this chunk of code will haunt us forever.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Eric Arnold&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Indeed it has haunted us since then, but that&amp;rsquo;s not the end of the story.&lt;/p&gt;
+
+&lt;h3 id=&#34;variations&#34;&gt;Variations&lt;/h3&gt;
+
+&lt;p&gt;Randal&amp;rsquo;s use of the anonymous array is interesting, but it&amp;rsquo;s not the only way to decorate the original value. You could compute the values and store them in a hash. Joseph Hall came up with something called the Orcish Maneuver - a clever pun on &lt;a href=&#34;http://lotr.wikia.com/wiki/Orcs&#34;&gt;Orc&lt;/a&gt; (perhaps) and &amp;ldquo;OR Cache&amp;rdquo;. This doesn&amp;rsquo;t use the &lt;a href=&#34;https://perldoc.perl.org/functions/map.html&#34;&gt;map&lt;/a&gt; function  or references:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @sorted &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sort {
+  ( $times{$a} &lt;span style=&#34;color:#f92672&#34;&gt;||=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;M $a ) &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;=&amp;gt;&lt;/span&gt;
+  ( $times{$b} &lt;span style=&#34;color:#f92672&#34;&gt;||=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;M $b )
+} @old_array;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Joseph uses a hash to store the potentially expensive sort value. If that key does not yet exist, he calculates and stores it for next time. This idiom relies on the feature that a Perl assignment returns the value assigned.&lt;/p&gt;
+
+&lt;p&gt;Thanks to the &lt;a href=&#34;http://act.yapc.eu/alpineperl2016/&#34;&gt;Alpine Perl Workshop 2016&lt;/a&gt; in Innsbruck for sponsoring the accompanying talk on this history. You can find &lt;a href=&#34;http://bit.ly/2bHNNx4&#34;&gt;the slides for that talk on Slideshare&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;For what it&amp;rsquo;s worth, you&amp;rsquo;ll find plenty more Lord of the Rings references in the perl source.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Write multiline programs at the terminal</title>
+      <link>http://localhost:1313/article/write-multiline-programs-at-the-terminal/</link>
+      <pubDate>Tue, 05 Jul 2016 11:18:55 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/write-multiline-programs-at-the-terminal/</guid>
+      <description>
+
+&lt;p&gt;Perl one liners are incredibly useful, and when I&amp;rsquo;m working I write several a day. Whether it&amp;rsquo;s to test if a new module compiles, check the syntax of a function, or edit a file, one liners do the trick. Sometimes when I need to do something more involved, instead of a one liner I&amp;rsquo;ll write a throwaway script. Of course I usually forget to delete the script and that&amp;rsquo;s why my machine is littered with Perl files like &amp;lsquo;tmp.pl&amp;rsquo;, &amp;lsquo;getname.pl&amp;rsquo; etc. But I&amp;rsquo;ve since found a better way - using a shell here-doc!&lt;/p&gt;
+
+&lt;h3 id=&#34;shell-here-docs&#34;&gt;Shell here-docs&lt;/h3&gt;
+
+&lt;p&gt;In the terminal I can use the here-doc syntax to write an entire Perl script at the command line. Here&amp;rsquo;s an example using &lt;a href=&#34;https://metacpan.org/pod/HTTP::Tiny&#34;&gt;HTTP::Tiny&lt;/a&gt; to print out the HTTP headers returned by this website.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl - &amp;lt;&amp;lt;&#39;EOF&#39;
+&amp;gt; use HTTP::Tiny;
+&amp;gt; use Data::Dumper;
+&amp;gt; my $res = HTTP::Tiny-&amp;gt;new-&amp;gt;get(&#39;http://perltricks.com/&#39;);
+&amp;gt; print Dumper($res-&amp;gt;{headers});
+&amp;gt; EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What&amp;rsquo;s happening here? The syntax &lt;code&gt;perl -&lt;/code&gt; primes Perl to execute STDIN. The syntax for a shell here-doc is &lt;code&gt;&amp;lt;&amp;lt;&#39;word&#39;&lt;/code&gt; where &amp;ldquo;word&amp;rdquo; is the value to terminate the here-doc with (I tend to use &lt;code&gt;EOF&lt;/code&gt; or &lt;code&gt;END&lt;/code&gt;). After typing the first line and pressing enter, the shell caret will move to a new line, prefixed with &lt;code&gt;&amp;gt;&lt;/code&gt;. It would look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl - &amp;lt;&amp;lt;&#39;EOF&#39;
+&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At this point, you can type the lines of the Perl script, pressing enter for a new line. Or you can paste in code from an existing script. Once you type the terminating word on a new line, the terminal sends the script to &lt;code&gt;perl&lt;/code&gt; via STDIN. Unlike with one-liners, you&amp;rsquo;re free to use both single and double quotes in the program text. Yay!&lt;/p&gt;
+
+&lt;p&gt;If I want shell parameter expansion, I leave the terminator unquoted:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl - &amp;lt;&amp;lt;EOF
+&amp;gt; print &amp;quot;$HOME\n&amp;quot;
+&amp;gt; EOF
+/home/dfarrell
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I can write throwaway scripts in the terminal, and not leave them littered all over my hard drive. Just like other successful commands, Bash will store the script in it&amp;rsquo;s history, so you can search for, edit and re-execute the scripts over and over again.&lt;/p&gt;
+
+&lt;p&gt;This trick isn&amp;rsquo;t specific to Perl. Shell here-docs can be used in the same way to execute code in Perl 6, Python, Ruby &amp;hellip; any binary which can execture code from STDIN.&lt;/p&gt;
+
+&lt;h3 id=&#34;editing-tips&#34;&gt;Editing tips&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s say you just ran a throwaway script using a here-doc, and now you want to edit it and run it again. If you press the up arrow, Bash will display the command, but you can&amp;rsquo;t press up again, else Bash will display the previous command. Instead, use the left and right arrow keys to move to the beginning and end of lines, and the caret will automatically jump to the next line.&lt;/p&gt;
+
+&lt;p&gt;When editing a throwaway script, I start by deleting the terminator word (&amp;ldquo;EOF&amp;rdquo; or whatever). That way when I press enter, I can add more lines to the script. If the command you&amp;rsquo;re looking for is an old one, you can search your terminal history with &lt;code&gt;&amp;lt;Ctrl&amp;gt;&amp;lt;shift&amp;gt;r&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The Wikipedia &lt;a href=&#34;https://en.wikipedia.org/wiki/Heredoc#Unix_shells&#34;&gt;here-docs entry&lt;/a&gt; has examples of shell here-doc syntax.&lt;/li&gt;
+&lt;li&gt;The bash manpage (&lt;code&gt;man bash&lt;/code&gt;) has a concise but useful entry on shell here-docs and the different types.&lt;/li&gt;
+&lt;li&gt;The more common way to use here-docs is inside Perl code. Read about &lt;em&gt;those&lt;/em&gt; in &lt;a href=&#34;https://perldoc.perl.org/perlop.html&#34;&gt;perlop&lt;/a&gt;, the official Perl documentation.Read it in the terminal with &lt;code&gt;perldoc perlop&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/HTTP::Tiny&#34;&gt;HTTP::Tiny&lt;/a&gt; is a lightweight, &lt;em&gt;fast&lt;/em&gt; Perl user agent that comes bundled with Perl (since version 5.14.0). You probably have it installed already, so you can read it&amp;rsquo;s documentation with &lt;code&gt;perldoc HTTP::Tiny&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;N.B. When reading documentation in the terminal, type &lt;code&gt;/search-term&amp;lt;enter&amp;gt;&lt;/code&gt; to jump to the next search match. Pressing &lt;code&gt;n&lt;/code&gt; will jump to the next match and &lt;code&gt;N&lt;/code&gt; the previous match. Pressing &lt;code&gt;h&lt;/code&gt; will display the help page. (all of this assumes your terminal reader is &lt;code&gt;less&lt;/code&gt;, which is typical).&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Promoting Perl community articles</title>
+      <link>http://localhost:1313/article/promoting-perl-community-articles/</link>
+      <pubDate>Thu, 26 May 2016 08:53:36 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/promoting-perl-community-articles/</guid>
+      <description>
+
+&lt;p&gt;The last part of Justin Searls&amp;rsquo; &lt;a href=&#34;https://vimeo.com/165527044#t=28m10s&#34;&gt;talk&lt;/a&gt; has some great advice for promoting Ruby that applies to Perl too. If you haven&amp;rsquo;t seen it, I&amp;rsquo;d encourage you to watch it. Justin points out that some tech projects like Ruby on Rails are essentially, done. They&amp;rsquo;re feature complete and achieve everything they set out to accomplish. This means that they&amp;rsquo;re no longer cutting edge tech, and consequently fewer articles are written about them.&lt;/p&gt;
+
+&lt;p&gt;We see this with Perl too. Modules like &lt;a href=&#34;https://metacpan.org/pod/Moose&#34;&gt;Moose&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Mojolicious&#34;&gt;Mojolicious&lt;/a&gt; are battle-tested, proven libraries that do a wonderful job. So we don&amp;rsquo;t see many hype articles about them either. The solution to this is to focus on evergreen story telling:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Tell stories that help people solve problems. And if you love Ruby, tell your story in Ruby.&lt;/p&gt;
+
+&lt;p&gt;Justin Searls&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;As Perl programmers we&amp;rsquo;re using the language to solve problems every day. And we&amp;rsquo;ll never run out of problems to solve: there are always new systems to integrate, new data challenges, algorithms to implement and bugs to fix. That&amp;rsquo;s why it doesn&amp;rsquo;t matter that so much has already been written about Perl - new experiences will always be around the corner. And new is good.&lt;/p&gt;
+
+&lt;p&gt;So let&amp;rsquo;s tell more stories in Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;promoting-content&#34;&gt;Promoting content&lt;/h3&gt;
+
+&lt;p&gt;Many Perl programmers are regularly writing about Perl, so another thing we can always improve on is promoting new Perl content. This isn&amp;rsquo;t an exhaustive list, just a few suggestions on how to help.&lt;/p&gt;
+
+&lt;p&gt;Last week I added the &amp;ldquo;Community Articles&amp;rdquo; toolbar to this website. It&amp;rsquo;s a JavaScript widget that&amp;rsquo;s powered by &lt;a href=&#34;https://github.com/dnmfarrell/Perly-Bot&#34;&gt;Perly::Bot&lt;/a&gt;. You can add this widget to your website with the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;script src=&amp;quot;https://perltricks.com/widgets/toplinks/toplinks.js&amp;quot; type=&amp;quot;text/javascript&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
+&amp;lt;div id=&amp;quot;toplinks&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The list of links is updated hourly, served over HTTPS and hosted on GitHub pages. The widget is clever enough to skip links to articles from the host domain too (it never shows links to PerlTricks.com on this site).&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;d rather not add that sidebar, consider adding a &lt;a href=&#34;https://www.reddit.com/r/perl/widget&#34;&gt;widget&lt;/a&gt; for &lt;code&gt;/r/perl&lt;/code&gt;. The Reddit widget respects Do Not Track.&lt;/p&gt;
+
+&lt;p&gt;Finally, participate on &lt;a href=&#34;https://reddit.com/r/perl&#34;&gt;/r/perl&lt;/a&gt; and Twitter! Link to Perl resources and content you like; upvote or retweet Perl-related tweets. If you have something to say, reply to tweets or add yours comments to the subreddit links. Use the &lt;code&gt;#perl&lt;/code&gt; hashtag.&lt;/p&gt;
+
+&lt;h3 id=&#34;stuff-we-re-already-good-at&#34;&gt;Stuff we&amp;rsquo;re already good at&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://stackoverflow.com/questions/tagged/perl&#34;&gt;StackOverflow.com&lt;/a&gt; has excellent Perl answers that are regularly updated; this is a great resource for Perl programmers. &lt;a href=&#34;http://perlweekly.com&#34;&gt;PerlWeekly&lt;/a&gt; is a fantastic newsletter that links to the best Perl content of the week, subscribe if you haven&amp;rsquo;t already. &lt;a href=&#34;http://perlmonks.org&#34;&gt;PerlMonks&lt;/a&gt; has tonnes of in-depth Perl guides and resources.&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;em&gt;Cover image by &lt;a href=&#34;http://newspaper.jaguarpaw.co.uk/&#34;&gt;jaguarpaw&lt;/a&gt;&lt;/em&gt;&lt;br/&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Displaying the Git branch in the terminal prompt with and without Perl</title>
+      <link>http://localhost:1313/article/displaying-the-git-branch-in-the-terminal-prompt-with-perl/</link>
+      <pubDate>Fri, 13 May 2016 07:57:42 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/displaying-the-git-branch-in-the-terminal-prompt-with-perl/</guid>
+      <description>
+
+&lt;p&gt;One way to evolve as a programmer is to pay attention to things you do repeatedly, and replace that action with an efficient alternative. It took me a shamefully long time to realize I was typing &lt;code&gt;git branch&lt;/code&gt; many times a day to check which branch I was committing code to. A more efficient way is to display the current branch name in the terminal prompt. Ideally I&amp;rsquo;d like to see something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/some/path [master]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;the-branch-command&#34;&gt;The branch command&lt;/h3&gt;
+
+&lt;p&gt;With Git version control, code changes are committed to branches. The active branch is the context for work. For example I might be working on a new feature, so I create a new branch called &amp;ldquo;new-feature-x&amp;rdquo; and start writing code. Any changes I make to the code whilst in this branch, do not affect the master branch of code. This makes knowing the active branch really important - I don&amp;rsquo;t want to commit code to the wrong branch.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;branch&lt;/code&gt; command displays a list of all local branches and places an asterisk next to the active one. So in my fictional example, it might look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch
+  master
+* new-feature-x
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Git prepends an asterisk to highlight the active branch name. Sometimes I use this to remind myself which branches are available locally, but most of the time I&amp;rsquo;m checking it to see which branch I&amp;rsquo;m currently working on. The Git &lt;a href=&#34;https://git-scm.com/docs/git-branch&#34;&gt;branch documentation&lt;/a&gt; has more information on the ins and outs of &lt;code&gt;branch&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;parsing-git-branch-with-perl&#34;&gt;Parsing git branch with Perl&lt;/h3&gt;
+
+&lt;p&gt;This is the one liner I want to use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch 2&amp;gt; /dev/null | perl -ne &#39;print &amp;quot; [$_]&amp;quot; if s/^\*\s+// &amp;amp;&amp;amp; chomp&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It runs &lt;code&gt;git branch&lt;/code&gt; redirecting error messages to the netherworld. That means if the current working directory is not a git repository, the ensuing error message will be ignored. We pipe the list of git branches to Perl, which uses the &lt;code&gt;-n&lt;/code&gt; option to loop through each line of input, running the quoted code.&lt;/p&gt;
+
+&lt;p&gt;The code operates on the default variable &lt;code&gt;$_&lt;/code&gt; which is the line of output from &lt;code&gt;git branch&lt;/code&gt; being looped over. The active branch name always begins with an asterisk, So &lt;code&gt;s/^\*\s+//&lt;/code&gt; tries to substitute the leading asterisk and whitespace from the branch name. Substitute returns the number of characters it replaced, so for all lines except the active branch, that will be zero and evaluate to false. If it&amp;rsquo;s true, the code then chomps the trailing newline character from the branch name and prints it.&lt;/p&gt;
+
+&lt;p&gt;I can add this as a function to my &lt;code&gt;.bashrc&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;function current_git_branch {
+  git branch &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/dev/&lt;/span&gt;null &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;ne&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print &amp;#34; [$_]&amp;#34; if s/^\*\s+// &amp;amp;&amp;amp; chomp&amp;#39;&lt;/span&gt;
+}
+PS1&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\w\$(current_git_branch) &amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;PS1&lt;/code&gt; variable defines the terminal prompt content and style. Here I&amp;rsquo;ve defined it as follows: &lt;code&gt;\w&lt;/code&gt; is the current working directory path, e.g. &lt;code&gt;~/Projects/work/&lt;/code&gt; or whatever. This is followed by the call to &lt;code&gt;current_git_branch&lt;/code&gt;. Once those edits are saved in my &lt;code&gt;.bashrc&lt;/code&gt;, I need to save the file and reload it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ . ~/.bashrc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now my terminal prompt looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/Projects/work [new-feature-x]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And if I checkout a different branch it will change:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/Projects/work [new-feature-x] git checkout master
+~/Projects/work [master]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;some-other-ways&#34;&gt;Some other ways&lt;/h3&gt;
+
+&lt;p&gt;One easy alternative would be to use Perl 6:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch 2&amp;gt; /dev/null | perl6 -ne &#39;print &amp;quot; [$_]&amp;quot; if s/^\*\s+// &amp;amp;&amp;amp; .chomp&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code is almost the same as before, only &lt;code&gt;chomp&lt;/code&gt; has been changed to a method call. A regex capture could be used instead too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch 2&amp;gt; /dev/null | perl -ne &#39;print &amp;quot; [$1]&amp;quot; if /^\*\s+(\S+)/&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;ve also seen &lt;a href=&#34;https://askubuntu.com/questions/730754/how-do-i-show-the-git-branch-with-colours-in-bash-prompt&#34;&gt;examples&lt;/a&gt; using &lt;code&gt;sed&lt;/code&gt; to parse the output instead of Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;bash-only&#34;&gt;Bash only&lt;/h3&gt;
+
+&lt;p&gt;Perhaps a more efficient approach is to have Git emit only the active branch name, and then we don&amp;rsquo;t need another program to parse the output at all, we can just use bash. Credit goes to &lt;a href=&#34;http://randalschwartz.com&#34;&gt;Randal Schwartz&lt;/a&gt; for showing me this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git rev-parse --abbrev-ref HEAD
+new-feature-x
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This emits the active branch only. So now the code in my &lt;code&gt;.bashrc&lt;/code&gt; becomes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;function current_git_branch {
+  local branch&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;$&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;git rev&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;parse &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;abbrev&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;ref HEAD &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/dev/&lt;/span&gt;null);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; [[ &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;n $branch ]];&lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+    echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; [$branch]&amp;#34;&lt;/span&gt;;
+  fi
+}
+PS1&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\w\$(current_git_branch) &amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code assigns the output of the git command to the variable &lt;code&gt;branch&lt;/code&gt;. It then echoes the branch name as long as it&amp;rsquo;s not a zero length string (which happens when the current working directory is not a git repository). But wait a second, what happened to that newline at the end of the branch name? Bash has some interesting behavior with nested &lt;code&gt;echo&lt;/code&gt; commands. Check this out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ echo -n $(echo -e &amp;quot;\n\n\n\n&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you run that command at the terminal you should get no output, even though it includes 4 newline characters, plus another newline appended by the &lt;code&gt;echo&lt;/code&gt; subcommand. The outer &lt;code&gt;echo&lt;/code&gt; ignores all newlines returned by the subcommand, and the &lt;code&gt;-n&lt;/code&gt; option suppresses its own newline append (thanks to Ben Grimm for the explanation).&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m going with the bash variant, but whichever method you use, displaying the branch name in the terminal is a nice time saver.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Jam VI: April Trolls</title>
+      <link>http://localhost:1313/article/april_fools/</link>
+      <pubDate>Wed, 04 May 2016 20:37:57 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/april_fools/</guid>
+      <description>
+
+&lt;p&gt;For an April Fool&amp;rsquo;s joke, I wanted to parody the &lt;a href=&#34;http://perltricks.com/article/netanel-rubins-perljam-circus/&#34;&gt;Perl Jam circus&lt;/a&gt; where the author has an idea that something is wrong but gets the explanation half-wrong. I wrote &lt;a href=&#34;http://perltricks.com/article/perl-jam-iv-return-of-the-camel/&#34;&gt;Perl Jam VI: The Return of the Camel&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I thought I&amp;rsquo;d catch some people out if I was clever enough with the first example and increasingly lazy. I might have been too clever, but I also think that April Fool&amp;rsquo;s is probably over. Not only that, I still felt guilty about not doing the work to explain things properly or giving you proper pointers where to look for good solutions.&lt;/p&gt;
+
+&lt;h4 id=&#34;perl-s-rounding-problem&#34;&gt;Perl&amp;rsquo;s rounding problem&lt;/h4&gt;
+
+&lt;p&gt;Rounding is a problem for people who really care about numbers and where slight biases in numeric functions can skew results. Most people will probably never care about this because they don&amp;rsquo;t have to care. However, I used to work with scads of data from nuclear physics experiments where it could have mattered.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s particular issue is its reliance on someone else making the decision. When I first starting teaching Perl, many of my students had experience with C. They knew the issues with their libc. &lt;code&gt;perl&lt;/code&gt; defers many decisions on to that libc. This means that you can get different results with a different &lt;code&gt;perl&lt;/code&gt;s. Perl may run virtually everywhere, but it doesn&amp;rsquo;t guarantee you&amp;rsquo;ll get the same answer everywhere.&lt;/p&gt;
+
+&lt;p&gt;There is plenty of literature out there on different methods, and there are more than several methods. Just that fact shows that people don&amp;rsquo;t agree on how it should work. If rounding might impact your results, you should be aware that you have many ways to deal with it. The &lt;a href=&#34;https://metacpan.org/pod/Math::Round&#34;&gt;Math::Round&lt;/a&gt; handles most of them.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-modulus-of-negative-numbers&#34;&gt;The modulus of negative numbers&lt;/h4&gt;
+
+&lt;p&gt;The modulus operator was a bit more interesting since it actually has some problems and undefined behavior. I presented the table of operand combinations and noted which ones are defined in Perl. Some of the situations don&amp;rsquo;t have defined behavior.&lt;/p&gt;
+
+&lt;p&gt;I didn&amp;rsquo;t think that many people would take this section seriously since the modulus operator isn&amp;rsquo;t that popular. The &lt;a href=&#34;https://perldoc.perl.org/integer.html&#34;&gt;integer pragma &lt;/a&gt; may fix the problem:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Internally, native integer arithmetic (as provided by your C compiler) is used. This means that Perl&amp;rsquo;s own semantics for arithmetic operations may not be preserved. One common source of trouble is the modulus of negative numbers, which Perl does one way, but your hardware may do another.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The StackOverflow question &lt;a href=&#34;https://stackoverflow.com/a/32090446/2766176&#34;&gt;Perl: understanding modulo operation on negative numbers&lt;/a&gt; goes into more detail about Perl&amp;rsquo;s behavior.&lt;/p&gt;
+
+&lt;p&gt;If this matters for your application, you can implement your own modulo operation (perhaps in &lt;a href=&#34;https://metacpan.org/pod/Inline::C&#34;&gt;Inline::C&lt;/a&gt;?) to do it exactly how you like to get the results you expect no matter where you run your program.&lt;/p&gt;
+
+&lt;h4 id=&#34;fake-random-numbers&#34;&gt;Fake random numbers&lt;/h4&gt;
+
+&lt;p&gt;When we say &amp;ldquo;random numbers&amp;rdquo;, experienced programmers generally understand that they aren&amp;rsquo;t actually using numbers that are random. They are &lt;a href=&#34;https://www.random.org/randomness/&#34;&gt;pseudo-random&lt;/a&gt;, although that&amp;rsquo;s too much to say over and over again. We shorten it to &amp;ldquo;random&amp;rdquo; to keep the sentences short. If you are seeding a random number generator, you&amp;rsquo;re using the fake kind.&lt;/p&gt;
+
+&lt;p&gt;For the odd homework assignment or selecting a unique value you haven&amp;rsquo;t used yet, Perl&amp;rsquo;s &lt;a href=&#34;https://perldoc.perl.org/functions/rand.html&#34;&gt;rand&lt;/a&gt; may be fine. If you are doing something where you want real randomness, you don&amp;rsquo;t want something deterministic. You want &amp;ldquo;true&amp;rdquo; random numbers.&lt;/p&gt;
+
+&lt;p&gt;Several modules provide an interface to better sources:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::Random&#34;&gt;Net::Random&lt;/a&gt; can connect to internet services that send back random numbers. You have to trust the internet though.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Crypt::Random&#34;&gt;Crypt::Random&lt;/a&gt; connects to the local &lt;a href=&#34;http://man7.org/linux/man-pages/man4/random.4.html&#34;&gt;/dev/random&lt;/a&gt;. That uses environmental noise to generate bytes. The /dev/urandom device might drop down to pseudo-randomness though. Neither is a good source for long sequences of numbers.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;An &lt;a href=&#34;http://www.entropykey.co.uk&#34;&gt;Entropy Key&lt;/a&gt; is a small USB device that helps the &lt;em&gt;/dev/random&lt;/em&gt; device fill up its entropy sink. This allows you to read from the device more frequently without dropping into pseudorandomness.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://www.random.org/integers/&#34;&gt;Random.org&lt;/a&gt; provides data based on atmospheric noise. In the StackOverflow question &lt;a href=&#34;http://stackoverflow.com/a/4093822/2766176&#34;&gt;How to generate an array with random values, without using a loop?&lt;/a&gt;, I presented a way to override Perl&amp;rsquo;s &lt;a href=&#34;https://perldoc.perl.org/functions/rand.html&#34;&gt;rand&lt;/a&gt; to use this source. Some other answers are illuminating as well.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As with most everything else, there&amp;rsquo;s no answer that covers every use. That you discover other sources is a rite of passage for a programmer.&lt;/p&gt;
+
+&lt;h4 id=&#34;perl-lets-anyone-program&#34;&gt;Perl lets anyone program&lt;/h4&gt;
+
+&lt;p&gt;I joked that Perl&amp;rsquo;s real problem was that it existed, essentially, and that people could use it. It&amp;rsquo;s a variation on the joke about the world&amp;rsquo;s most secure computer is one that&amp;rsquo;s turned off, encased in concrete, and dropped to the bottom of the ocean. And, we&amp;rsquo;re not even sure even then.&lt;/p&gt;
+
+&lt;p&gt;But, I had a more interesting point in mind. Despite any technical limitations or gotchas, documented or not, it&amp;rsquo;s people who make programs and the decisions about what programs will do. Knowing the syntax of a language is a start, but the biggest failures come from human decisions while programming. For entertaining illustrations of this idea, you might like Paul Fenwick&amp;rsquo;s &lt;a href=&#34;https://www.youtube.com/watch?v=73vQglu-4H4&#34;&gt;An Illustrated History of Failure&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Jam VI: The Return of the Camel</title>
+      <link>http://localhost:1313/article/perl-jam-iv-return-of-the-camel/</link>
+      <pubDate>Fri, 01 Apr 2016 08:32:57 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/perl-jam-iv-return-of-the-camel/</guid>
+      <description>
+
+&lt;p&gt;A couple of recent presentations about Perl&amp;rsquo;s security have focused on the &lt;a href=&#34;https://metacpan.org/pod/CGI&#34;&gt;CGI module&lt;/a&gt; and &lt;a href=&#34;https://www.bugzilla.org&#34;&gt;Bugzilla&lt;/a&gt;. David Farrell responded to these in &lt;a href=&#34;http://perltricks.com/article/netanel-rubins-perljam-circus/&#34;&gt;Netanel Rubin&amp;rsquo;s Perl Jam circus&lt;/a&gt;. There are much worse problems with Perl that we should think about.&lt;/p&gt;
+
+&lt;h3 id=&#34;perl-s-rounding-problem&#34;&gt;Perl&amp;rsquo;s rounding problem&lt;/h3&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s approved way of rounding numbers goes through &lt;code&gt;(s)printf&lt;/code&gt;, but there&amp;rsquo;s a problem. In short, it does the wrong thing.&lt;/p&gt;
+
+&lt;p&gt;Most people were taught the rule that 1, 2, 3, 4 round down to 0, and that 5, 6, 7, 8, and 9 round up to the next 0. That means that more digits round up than round down, introducing a systematic bias into any computations where you might round. You shouldn&amp;rsquo;t have to watch &lt;a href=&#34;http://www.imdb.com/title/tt0086393/&#34;&gt;Superman III&lt;/a&gt; to realize the disasterous global consequences this has.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s more than one way to round a number. Most want to get to the nearest number, but if you are half way between, there are options. There are more than two ways. There are more than three. There are, well, a lot of ways:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Round half up&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Round half down&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Round half toward zero&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Round half away from zero&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Round half to even&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Round half to odd&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Round half alternately up and down&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Round half stochastically&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you use the GNU C compiler (or something based on it), you round half to even as the default. Perl relies on this behavior.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -e &#39;printf &amp;quot;%.0f\n&amp;quot;, shift&#39; 1.5
+2
+
+$ perl -e &#39;printf &amp;quot;%.0f\n&amp;quot;, shift&#39; 2.5
+2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Every time you try this you get the same answer (so, no stochastic or alternate rounding). The GNU C compiler can also use floor, ceiling, or truncate, but those have similar problems.&lt;/p&gt;
+
+&lt;p&gt;As you are rounding, you are going to get more even numbers than odd numbers. If you are writing banking software, &lt;a href=&#34;http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.91.8055&amp;amp;rep=rep1&amp;amp;type=pdf&#34;&gt;assymetric currency rounding&lt;/a&gt; could destabilize a currency. The Risks Digest has several entries for &lt;a href=&#34;http://catless.ncl.ac.uk/php/risks/search.php?query=rounding&#34;&gt;security problems in rounding&lt;/a&gt;. These issues are much worse than some lame &amp;ldquo;attack&amp;rdquo; on CGI.pm because a programmer can&amp;rsquo;t read.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-modulus-of-negative-numbers&#34;&gt;The modulus of negative numbers&lt;/h3&gt;
+
+&lt;p&gt;Among the heated technical debates, such as vi or emacs, tabs or spaces, or Star Wars or Star Trek (the first answer in each is the right one), the ones that matter, such as the correct value of modulo addition with negative numbers, are overlooked.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Binary &amp;ldquo;%&amp;rdquo; is the modulo operator, which computes the division remainder of its first argument with respect to its second argument. Given integer operands $m and $n : If $n is positive, then $m % $n is $m minus the largest multiple of $n less than or equal to $m. If $n is negative, then $m % $n is $m minus the smallest multiple of $n that is not less than $m (that is, the result will be less than or equal to zero).&lt;/p&gt;
+
+&lt;p&gt;&amp;ndash; &lt;cite&gt;The perldoc documentation for the % operators&lt;/cite&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The modulo operators take two numbers and does something to them. For &lt;code&gt;$m % $n&lt;/code&gt;, you have:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;$m&lt;/th&gt;
+&lt;th&gt;$n&lt;/th&gt;
+&lt;th&gt;%&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;undefined&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;+&lt;/td&gt;
+&lt;td&gt;+&lt;/td&gt;
+&lt;td&gt;$m - $n * $i ∈ $n * $i &amp;lt;= $m and ($m - $n * $i) &amp;lt; $n&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;+&lt;/td&gt;
+&lt;td&gt;-&lt;/td&gt;
+&lt;td&gt;$m - $n * $i ∈ $n * $i &amp;gt;= $m and ($m - $n * $i) &amp;lt; $n&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;-&lt;/td&gt;
+&lt;td&gt;+&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;-&lt;/td&gt;
+&lt;td&gt;-&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $m, $n ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @ARGV;
+
+$m &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;137&lt;/span&gt;;
+$n &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $template &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;&amp;lt;&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;HERE&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;m = %d  n = %d
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;   $m %  $n = %d
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  -$m %  $n = %d
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;   $m % -$n = %d
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  -$m % -$n = %d
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;HERE&lt;/span&gt;
+
+printf $template,
+   $m, $n,
+   $m %  &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt;n,
+  &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;$m %  &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt;n,
+   $m % &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;-$&lt;/span&gt;n,
+  &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;$m % &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;-$&lt;/span&gt;n;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Running this give different results depending on the location of the unary minus operator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl modulo.pl 137 12
+m = 137  n = 12
+
+   $m %  $n = 5
+  -$m %  $n = 7
+   $m % -$n = -7
+  -$m % -$n = -5
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That unary minus operator is two precedence levels above the modulo operator. That Perl makes one operator better than another is a whole other issue, but that&amp;rsquo;s the way it is and we can&amp;rsquo;t fix it now. Try it again. Use the parentheses (a feature Perl stole from LISP, which had some extra to spare) to separate the operators:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $m, $n ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @ARGV;
+
+$m &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;137&lt;/span&gt;;
+$n &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $template &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;&amp;lt;&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;HERE&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;m = %d  n = %d
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    $m %  $n  = %d
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  -($m %  $n) = %d
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    $m % -$n  = %d
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  -($m % -$n) = %d
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;HERE&lt;/span&gt;
+
+printf $template,
+    $m, $n,
+    $m %  &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt;n,
+  &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;($m %  &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt;n),
+    $m % &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;-$&lt;/span&gt;n,
+  &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;($m % &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;-$&lt;/span&gt;n);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You get different numbers this time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;m = 137  n = 12
+
+    $m %  $n  = 5
+  -($m %  $n) = -5
+    $m % -$n  = -7
+  -($m % -$n) = 7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But it&amp;rsquo;s even worse, because those numbers aren&amp;rsquo;t what the documentation says they should be. &amp;ldquo;If &lt;code&gt;$n&lt;/code&gt; is positive, then &lt;code&gt;$m % $n&lt;/code&gt; is &lt;code&gt;$m&lt;/code&gt; minus the largest multiple of &lt;code&gt;$n&lt;/code&gt; less than or equal to &lt;code&gt;$m&lt;/code&gt;&amp;rdquo;. Let&amp;rsquo;s take the case of -137 and 12. There are a couple of ways to look at this. If a &amp;ldquo;multiple&amp;rdquo; we call &lt;code&gt;$i&lt;/code&gt; must be positive, there is no value such that &lt;code&gt;$n * $i&lt;/code&gt; will be less than or equal to any negative value. If that &lt;code&gt;$i&lt;/code&gt; can be negative, the word &amp;ldquo;largest&amp;rdquo;  is a bit troublesome. Wikipedia says &lt;a href=&#34;https://en.wikipedia.org/wiki/Large_numbers&#34;&gt;large numbers are positive&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;fake-random-numbers&#34;&gt;Fake random numbers&lt;/h3&gt;
+
+&lt;p&gt;Perl has a &lt;a href=&#34;https://perldoc.perl.org/functions/rand.html&#34;&gt;rand&lt;/a&gt; function. It claims to return &amp;ldquo;a random fractional number greater than or equal to 0&amp;rdquo;, but it doesn&amp;rsquo;t. It&amp;rsquo;s not random. It&amp;rsquo;s fake random in a way that might work if you only want to use one of them to complete a homework assignment in a beginning programming course in middle school. Although the documentation includes a footnote saying &amp;ldquo;You should not rely on it in security-sensitive situations&amp;rdquo;, it does not say &amp;ldquo;Don&amp;rsquo;t ever use this.&amp;rdquo; like it should. Try this program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -le &#39;srand(137); print rand for 1 .. 10&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It outputs some numbers, which might look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;0.470744323291914
+0.278795581867115
+0.263413724062172
+0.646815254210146
+0.958771364426031
+0.3733677954733
+0.561358958619476
+0.537256242282716
+0.967152799238111
+0.846555037715689
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Run it again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;0.470744323291914
+0.278795581867115
+0.263413724062172
+0.646815254210146
+0.958771364426031
+0.3733677954733
+0.561358958619476
+0.537256242282716
+0.967152799238111
+0.846555037715689
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Not only do you get the same numbers, but you get them in the same order. Perl tries to hide this from you by automatically calling &lt;code&gt;srand&lt;/code&gt; and giving it a &amp;ldquo;random&amp;rdquo; number to start the completely repeatable sequence.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s not the only problem with these fake random numbers (which, again, Perl&amp;rsquo;s documentation never calls &amp;ldquo;fake&amp;rdquo;). They can only represent certain discrete values. See, for instance, the thread that &lt;a href=&#34;https://www.quora.com/Why-does-perl-rand-on-Win32-never-generate-a-value-between-0-890655528357032-and-0-890685315537721&#34;&gt;Why does perl rand() on Win32 never generate a value between 0.890655528357032 and 0.890685315537721?&lt;/a&gt;. On Windows, Perl uses 15 bits to represent the range of the fake random numbers instead of the 53 bits Perl could use.&lt;/p&gt;
+
+&lt;p&gt;There are a variety of ways this can screw up if you use it in an application that keeps going and going. Eventually you come back to the beginning of the sequence, perhaps colliding with existing customer data.&lt;/p&gt;
+
+&lt;h3 id=&#34;perl-lets-anyone-program&#34;&gt;Perl lets anyone program&lt;/h3&gt;
+
+&lt;p&gt;Perhaps the biggest problem with Perl is that anyone with a text editor can write a program and upload it to the internet. It&amp;rsquo;s a feature that Perl allows someone to get their work done, but the problem shows up when someone tries to generalize that to other people&amp;rsquo;s work. Projects such as &lt;a href=&#34;http://nms-cgi.sourceforge.net/&#34;&gt;Not Matt&amp;rsquo;s Scripts&lt;/a&gt; try to mitigate this by fixing the problem one script at a time. There are simply too many scripts to get to in the lifetime of the Universe.&lt;/p&gt;
+
+&lt;h3 id=&#34;in-conclusion&#34;&gt;In conclusion&lt;/h3&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve made it this far without complaining on Twitter, Reddit, or Hacker News, congratulations. You know what day of the year it is.&lt;/p&gt;
+
+&lt;p&gt;These are real issues, though, and if your application is senstive to small differences in numbers (such as calculating fundamental constants of the universe or pension fund allocations), you&amp;rsquo;re probably using sophisticated number libraries and have various levels of audits to verify the results.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What is the Perl Core?</title>
+      <link>http://localhost:1313/article/what-is-the-perl-core-/</link>
+      <pubDate>Wed, 09 Mar 2016 10:04:57 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/what-is-the-perl-core-/</guid>
+      <description>
+
+&lt;p&gt;When I use the term &amp;ldquo;Perl Core&amp;rdquo; I mean the standard library of modules (distributions actually) that ship with the &lt;code&gt;perl&lt;/code&gt; interpreter, and I think that&amp;rsquo;s what most people mean when they use that term. Knowing which modules are in the Perl Core is useful; it enables developers to build programs without external dependencies over which the developer has little control. The perldoc site has a handy &lt;a href=&#34;https://perldoc.perl.org/index-modules-A.html&#34;&gt;alphabetized list&lt;/a&gt; of core modules and I generally check there first to browse which modules are in core. The problem though, is that it can be wrong.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-modules-are-included-in-the-perl-core&#34;&gt;What modules are included in the Perl Core?&lt;/h3&gt;
+
+&lt;p&gt;Did you know that &lt;a href=&#34;https://metacpan.org/pod/HTTP::Tiny&#34;&gt;HTTP::Tiny&lt;/a&gt; has shipped with Perl since 2011 (version 5.14.0)? It&amp;rsquo;s not listed on &lt;a href=&#34;http://perldoc.perl.org&#34;&gt;perldoc&lt;/a&gt; (although that is on the list to be fixed at the next &lt;a href=&#34;http://act.qa-hackathon.org/qa2016/&#34;&gt;QA Hackathon&lt;/a&gt;). Luckily there is a better solution: the &lt;code&gt;corelist&lt;/code&gt; program. This is supplied with &lt;a href=&#34;https://metacpan.org/pod/Module::CoreList&#34;&gt;Module::CoreList&lt;/a&gt;. Let&amp;rsquo;s see when Module::CoreList first shipped with Perl:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ corelist -a Module::CoreList
+
+Data for 2015-06-01
+Module::CoreList was first released with perl v5.8.9
+  v5.8.9     2.17
+  v5.9.2     1.99
+  v5.9.3     2.02
+  v5.9.4     2.08
+  v5.9.5     2.12
+  v5.10.0    2.13
+  ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;ve truncated the output and kept the key details. It shows that Module::CoreList has been included since Perl version 5.8.9. At home I run Fedora 23, which comes with Perl version 5.22.1. Running the system Perl &lt;code&gt;corelist&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo corelist -a Module::CoreList
+sudo: corelist: command not found
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The program doesn&amp;rsquo;t exist; the Fedora team didn&amp;rsquo;t include it for some reason. Not only that, but great core modules like &lt;a href=&#34;http://perltricks.com/article/59/2014/1/10/Solve-almost-any-datetime-need-with-Time--Piece/&#34;&gt;Time::Piece&lt;/a&gt; aren&amp;rsquo;t included either!&lt;/p&gt;
+
+&lt;p&gt;If you don&amp;rsquo;t have &lt;code&gt;corelist&lt;/code&gt;, but want to view a list of distributions that &lt;em&gt;should&lt;/em&gt; have been bundled with your version of Perl, you can read &lt;code&gt;perldoc perlmodlib&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;which-modules-do-i-have&#34;&gt;Which modules do I have?&lt;/h3&gt;
+
+&lt;p&gt;Sometimes instead of asking which modules are in the Perl Core what we really mean is: &amp;ldquo;which modules do I have installed?&amp;rdquo; For non-core modules, I use &lt;a href=&#34;http://perltricks.com/article/14/2013/4/7/List-all-Perl-modules-installed-via-CPAN/&#34;&gt;perldoc&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;perldoc&lt;/code&gt; won&amp;rsquo;t show us the core modules that we already have, and in the case of missing core modules, Module::CoreList can&amp;rsquo;t help either (its results are based on internal lists of modules that &lt;em&gt;should&lt;/em&gt; be there, not which files are actually present). A simple way I handle this is to use the following script to search the contents of &lt;code&gt;@INC&lt;/code&gt;; the directories which &lt;code&gt;perl&lt;/code&gt; searches for modules:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.10.3&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Path::Tiny &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;path&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Getopt::Long &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;GetOptions&amp;#39;&lt;/span&gt;;
+
+GetOptions(
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;dir=s&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dirpath,
+) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Unrecognized option\n&amp;#34;&lt;/span&gt;;
+die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;--dir is required\n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $dirpath &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $dirpath;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# append a slash if missing&lt;/span&gt;
+$dirpath &lt;span style=&#34;color:#f92672&#34;&gt;.=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; substr($dirpath, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $iter &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; path($dirpath)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;iterator({recurse &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;});
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $path &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $iter&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;()) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$path&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qr/.pm$/&lt;/span&gt;;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# remove the parent dir and trailing .pm from filename&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $module &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; substr(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$path&amp;#34;&lt;/span&gt;, length($dirpath), length(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$path&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;length($dirpath)&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;);
+  $module &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/\//::/g&lt;/span&gt;;
+  say $module;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I run it like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ chmod 755 list_modules
+$ /usr/bin/perl -e &#39;for(@INC){ system &amp;quot;./list_modules -d $_&amp;quot; }&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;m using the absolute path &lt;code&gt;/usr/bin/perl&lt;/code&gt; to ensure I get my system&amp;rsquo;s &lt;code&gt;perl&lt;/code&gt; and not the local one I manage with &lt;a href=&#34;https://github.com/tokuhirom/plenv&#34;&gt;plenv&lt;/a&gt;. One downside of this approach is it lists every module (&lt;code&gt;.pm&lt;/code&gt; file) rather than every distribution, (see this &lt;a href=&#34;http://perltricks.com/article/96/2014/6/13/Perl-distributions--modules--packages-explained/&#34;&gt;explanation&lt;/a&gt; if you&amp;rsquo;re not familiar with the distinction). Another issue is it will list duplicate modules when the system uses symlinks. So the program output needs to be tidied up in a text editor.&lt;/p&gt;
+
+&lt;p&gt;What about programs? To search for Perl programs I prepared a list of Perl programs from the source for Perl 5.22, called &lt;code&gt;perl522_programs&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;c2ph
+corelist
+cpan
+enc2xs
+encguess
+h2ph
+h2xs
+instmodsh
+json_pp
+libnetcfg
+perl
+perl5.22.1
+perlbug
+perldoc
+perlivp
+perlthanks
+piconv
+pl2pm
+pod2html
+pod2man
+pod2text
+pod2usage
+podchecker
+podselect
+prove
+pstruct
+ptar
+ptardiff
+ptargrep
+shasum
+splain
+xsubpp
+zipdetails
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then I used the following script, called &lt;code&gt;find_binary&lt;/code&gt; to check for the programs:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bin &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;You must provide a binary name to search for\n&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; ( &lt;span style=&#34;color:#e6db74&#34;&gt;qw(/sbin /bin /usr/sbin /usr/bin)&lt;/span&gt; )
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $path &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$_/$bin&amp;#34;&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$path\n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e $path;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I run it like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ chmod 755 find_binary
+$ perl -ne &#39;chomp;system &amp;quot;./find_binary $_&amp;quot;&#39; perl522_programs
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This line calls the &lt;code&gt;find_binary&lt;/code&gt; script on every program listed in the file &lt;code&gt;perl522_programs&lt;/code&gt;. I &lt;code&gt;chomp&lt;/code&gt; the line before searching for it to remove the trailing newline character. This method isn&amp;rsquo;t perfect though; sneaky Ubuntu ships with a program called &lt;code&gt;perldoc&lt;/code&gt; but if you run it the system prints:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;You need to install the perl-doc package to use this program.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;core-modules-and-programs-missing-from-system-perls&#34;&gt;Core modules and programs missing from system perls&lt;/h3&gt;
+
+&lt;p&gt;Using the code above I did a comparison of the modules and programs shipped with Perl and those shipped with the following systems. Here&amp;rsquo;s what missing:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Fedora 23&lt;/th&gt;
+&lt;th&gt;Ubuntu 14.04 LTS&lt;/th&gt;
+&lt;th&gt;OSX Yosemite 10.10.5&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;B::Debug&lt;/td&gt;
+&lt;td&gt;CGI::Fast&lt;/td&gt;
+&lt;td&gt;GDBM_File&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Config::Perl::V&lt;/td&gt;
+&lt;td&gt;ODBM_File&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;CPANPLUS&lt;/td&gt;
+&lt;td&gt;perldoc&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;DB_File&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Devel::PPPort&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;ExtUtils::Embed&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;ExtUtils::MakeMaker::Locale&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;ExtUtils::Miniperl&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;File::Fetch&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;File::Spec::VMS&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Filter::Simple&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;IO::Compress::Adapter::Bzip2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;IO::Uncompress::Adapter::Bunzip2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Math::BigFloat&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Math::BigInt&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Math::BigRat&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Math::Complex&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Math::Trig&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Module::Loaded&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;PerlIO&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Text::Balanced&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Time::Piece&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Time::Seconds&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Unicode::Collate&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;autodie&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;bigint&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;bignum&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;bigrat&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;experimental&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;perlfaq&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;corelist&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;enc2xs&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;libnetcfg&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Ubuntu and OSX ship with Perl 5.18 so I looked for missing programs and modules against the 5.18 source code. For Fedora I compared the system &lt;code&gt;perl&lt;/code&gt; against the 5.22 source. These results show that Fedora is missing quite a few modules and programs: experimental, corelist, autodie, the Math:: modules and Time::Piece strike me as significant omissions (they are supplied by the &lt;code&gt;perl-core&lt;/code&gt; package, which is must be installed separately). For Ubuntu, excluding &lt;code&gt;perldoc&lt;/code&gt; is a &lt;a href=&#34;http://perltricks.com/article/155/2015/2/26/Hello-perldoc--productivity-booster/&#34;&gt;real shame&lt;/a&gt;. OSX came away gleaming though: nearly all core modules and programs were present.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;When writing programs that use core Perl modules be careful, especially if you&amp;rsquo;re using any of the modules or programs found to be missing earlier. One way around this is the use &lt;a href=&#34;https://metacpan.org/pod/App::FatPacker&#34;&gt;App::FatPacker&lt;/a&gt; to compile all the modules used into a single file. Another way would be to use &lt;a href=&#34;https://metacpan.org/pod/pp&#34;&gt;pp&lt;/a&gt; to create a compiled binary. Finally for modules like Time::Piece, you could always consider wrapping Perl&amp;rsquo;s built-in functions like &lt;code&gt;gmtime&lt;/code&gt; and &lt;code&gt;localtime&lt;/code&gt; in subroutines that give the behavior you need, rather than using the module.&lt;/p&gt;
+
+&lt;p&gt;Of course it&amp;rsquo;s always easier to work with a locally-installed &lt;code&gt;perl&lt;/code&gt; than the system version. The local Perls provided by &lt;a href=&#34;http://perlbrew.pl&#34;&gt;perlbrew&lt;/a&gt; and &lt;a href=&#34;https://github.com/tokuhirom/plenv&#34;&gt;plenv&lt;/a&gt; contain all the core modules and utilities. You can always &lt;a href=&#34;http://perlmaven.com/how-to-build-perl-from-source-code&#34;&gt;compile&lt;/a&gt; your own Perl too, it&amp;rsquo;s easy. &lt;a href=&#34;http://www.strawberryperl.com&#34;&gt;Strawberry Perl&lt;/a&gt; for Windows even comes with some useful extra modules and C libraries. If you do have to rely on the system Perl, you may find a core module isn&amp;rsquo;t there at all.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Updates&lt;/strong&gt; &lt;em&gt;Added reference to perl-core Fedora package, thanks to Grant McLean. 2016-03-21&lt;/em&gt;
+&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Controlling insanity by parsing IR codes with Linux::IRPulses</title>
+      <link>http://localhost:1313/article/controlling-insanity-by-parsing-ir-codes-with-linux--irpulses/</link>
+      <pubDate>Tue, 08 Mar 2016 08:37:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/controlling-insanity-by-parsing-ir-codes-with-linux--irpulses/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Sending information with pulsing invisible light can be surprisingly complex.
+Disentangle the problem with LIRC and Linux::IRPulses.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Infrared remotes are one of those things where every manufacturer thinks they have the
+One True Way&amp;trade; of doing it. You would think that there&amp;rsquo;s only one or two straightforward
+ways to pulse a little IR light. Clearly, we&amp;rsquo;re all wrong, because the home entertainment
+industry invents new ones all the time. That&amp;rsquo;s not even counting the other sectors and
+hobbyist projects that come up with entirely different methods.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://www.lirc.org&#34;&gt;Linux Infrared Remote Control&lt;/a&gt; (LIRC) project has
+produced mappings for a lot of remotes out there. That doesn&amp;rsquo;t help
+with some of the more fringe devices. Also, some of the components at the top of the stack
+are geared towards executing a program after detecting a valid series of pulses.&lt;/p&gt;
+
+&lt;p&gt;If we would rather take the pulses and handle them within our own program, then
+we need to ignore the top layers of LIRC and parse the pulse data directly. That is
+what &lt;a href=&#34;https://metacpan.org/pod/Linux::IRPulses&#34;&gt;Linux::IRPulses&lt;/a&gt; does.&lt;/p&gt;
+
+&lt;p&gt;We first need the hardware to detect the pulses. On a regular computer, there are many
+modules available which can be plugged in to a USB port. On a single board
+computer like the Raspberry Pi, we have General Purpose Input/Output (GPIO) pins,
+which can read the timing of the pulses.&lt;/p&gt;
+
+&lt;h3 id=&#34;setting-up-the-raspberry-pi&#34;&gt;Setting up the Raspberry Pi&lt;/h3&gt;
+
+&lt;p&gt;Skip this section if you&amp;rsquo;re using a regular IR device. If you want to set up a
+module on the Raspberry Pi&amp;rsquo;s GPIO pins, then read on.&lt;/p&gt;
+
+&lt;p&gt;First, you need a module of the right frequency for the IR data you&amp;rsquo;re trying to
+receive. If you&amp;rsquo;re using a remote from an old TV, then searching around for
+&amp;ldquo;&lt;manufacturer&gt; IR protocol&amp;rdquo; should get you the right answer. 38 KHz is a common
+frequency, but this is just the first thing that manufacturers all did differently.&lt;/p&gt;
+
+&lt;p&gt;The TSOP38138 is an IR remote receiver that runs at 38KHz. It&amp;rsquo;s part of a family of
+devices that run at different frequencies, any of which are likely adequate.&lt;/p&gt;
+
+&lt;p&gt;IR receivers for picking up remote data have three pins: power, ground, and data.
+Connect power to a +3.3V pin on the Raspberry Pi, ground to ground, and data to
+GPIO 23. See &lt;a href=&#34;https://www.raspberrypi.org/documentation/usage/gpio-plus-and-raspi2/&#34;&gt;the Raspberry Pi GPIO documentation&lt;/a&gt; for the location of the pins.&lt;/p&gt;
+
+&lt;p&gt;Now we need to configure LIRC. Start with a simple installation of the package with
+&lt;code&gt;apt-get install lirc&lt;/code&gt;. Next, we need to load the kernel module,
+tell LIRC where to find the pin, and also configure some Raspberry Pi boot options.&lt;/p&gt;
+
+&lt;p&gt;In &lt;code&gt;/etc/modules-load.d/modules.conf&lt;/code&gt;, put:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;lirc_dev
+lirc_rpi gpio_in_pin&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;23&lt;/span&gt; gpio_out_pin&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;22&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That will make GPIO 23 as your input pin. LIRC can also be setup to send IR data, so
+we set GPIO 22 for that as long as we&amp;rsquo;re here. Next, modify &lt;code&gt;/etc/lirc/hardware.conf&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# /etc/lirc/hardware.conf&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Arguments which will be used when launching lircd&lt;/span&gt;
+LIRCD_ARGS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;--uinput&amp;#34;&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;#Don&amp;#39;t start lircmd even if there seems to be a good config file&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#START_LIRCMD=false&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;#Don&amp;#39;t start irexec, even if a good config file seems to exist.&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#START_IREXEC=false&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;#Try to load appropriate kernel modules&lt;/span&gt;
+LOAD_MODULES&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;true
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Run &amp;#34;lircd --driver=help&amp;#34; for a list of supported drivers.&lt;/span&gt;
+DRIVER&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;default&amp;#34;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# usually /dev/lirc0 is the correct setting for systems using udev&lt;/span&gt;
+DEVICE&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/dev/lirc0&amp;#34;&lt;/span&gt;
+MODULES&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;lirc_rpi&amp;#34;&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Default configuration files for your hardware if any&lt;/span&gt;
+LIRCD_CONF&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;
+LIRCMD_CONF&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The particularly important things to note here are &lt;code&gt;DEVICE&lt;/code&gt; for the
+device path, and &lt;code&gt;MODULES&lt;/code&gt; for the Raspberry Pi GPIO driver.&lt;/p&gt;
+
+&lt;p&gt;Finally, edit &lt;code&gt;/boot/config.txt&lt;/code&gt; and add this somewhere in the file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;dtoverlay&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;lirc&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;rpi,gpio_in_pin&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;23&lt;/span&gt;,gpio_out_pin&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;22&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And then reboot. Once you&amp;rsquo;re back up, you can test it by plugging in your IR module
+to the right pins and pointing a remote at it. Using &lt;code&gt;mode2 -d /dev/lirc0&lt;/code&gt;,
+you should see the &lt;code&gt;pulse&lt;/code&gt; and &lt;code&gt;space&lt;/code&gt; data being sent.&lt;/p&gt;
+
+&lt;h3 id=&#34;decoding-the-undecodable&#34;&gt;Decoding the undecodable&lt;/h3&gt;
+
+&lt;p&gt;Sony runs their remotes at 40KHz. It starts by sending a header of a 2400μs pulse and
+600μs space. After the header, a 1 bit is sent by a 1200μs pulse, and a zero with a
+600μs. Between those ones and zeros are 600μs spaces. Codes could be 12, 15, or 20
+bits long depending on the remote. This is about as straightforward as things get.&lt;/p&gt;
+
+&lt;p&gt;NEC uses a 38KHz carrier frequency. There&amp;rsquo;s a 9000μs header followed by a 4500μs space.
+A 1 bit is sent by a 562.5μs pulse. A 0 bit is sent by a 562.5μs pulse. Wait, what? No,
+that&amp;rsquo;s not a typo. NEC differentiates ones and zeros by the length of the space that
+comes after the pulse: 1687.5μs for 1, and 562.5μs for 0.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.easyracelaptimer.com&#34;&gt;EasyRaceLapTimer&lt;/a&gt; (an Open Source
+quadcopter race timer system) is on a 38KHz frequency. It sends a 300μs pulse followed
+by a 300μs space. It then alternates sending pulses and spaces, with a 1 bit being
+600μs, and a 0 bit being 300μs.&lt;/p&gt;
+
+&lt;p&gt;All the timing numbers above are big fat lies. The noisy, analog nature of the world
+means the actual values coming from the IR receiver will be different from the
+specified values, perhaps by as much as 15%. It&amp;rsquo;s safe to assume that reverse
+engineered specifications are only guessing at the actual values that the manufacturer
+intended.&lt;/p&gt;
+
+&lt;p&gt;All that is to say that we have a complicated job on our hands, and the above only
+covers a few of the examples out there.&lt;/p&gt;
+
+&lt;h3 id=&#34;linux-irpulses&#34;&gt;Linux::IRPulses&lt;/h3&gt;
+
+&lt;p&gt;The goal of this module is to simplify the process reading these pulses and spaces
+while tolerating the numbers being off.&lt;/p&gt;
+
+&lt;p&gt;At present, the module works by parsing the output of LIRC&amp;rsquo;s &lt;code&gt;mode2&lt;/code&gt;
+program. This may change to reading directly from &lt;code&gt;/dev/lirc0&lt;/code&gt; in the future.
+For now, we&amp;rsquo;ll start by opening a pipe to &lt;code&gt;mode2&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $in, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-|&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;mode2 -d /dev/lirc0&amp;#39;&lt;/span&gt; ) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Can&amp;#39;t exec mode2: $!\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We now need to define the protocol to Linux::IRPluses&amp;rsquo;s constructor. To help with this,
+adding a &lt;code&gt;use Linux::IRPulses&lt;/code&gt; will export the subroutines &lt;code&gt;pulse()&lt;/code&gt;,
+&lt;code&gt;space()&lt;/code&gt;, and &lt;code&gt;pulse_or_space()&lt;/code&gt;.  These are used to specify what you
+expect to come in for pulses or spaces.&lt;/p&gt;
+
+&lt;p&gt;For instance, we know that NEC sends a 9000μs pulse and 4500μs space for its header.
+We tell the constructor this with:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Linux::IRPulses&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;({
+    header &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [ pulse &lt;span style=&#34;color:#ae81ff&#34;&gt;9000&lt;/span&gt;, space &lt;span style=&#34;color:#ae81ff&#34;&gt;4500&lt;/span&gt; ],
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The parser goes through each entry in the array, checking off that the given pulse or
+space data is what we expect. Once it reaches the end of the header array, it marks the
+header as good and then looks for valid data for ones and zeros. We specify those in
+much the same way. We&amp;rsquo;ll add in the other constructor parameters here, as well:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Linux::IRPulses&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;({
+    header &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [ pulse &lt;span style=&#34;color:#ae81ff&#34;&gt;9000&lt;/span&gt;, space &lt;span style=&#34;color:#ae81ff&#34;&gt;4500&lt;/span&gt; ],
+    zero &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [ pulse &lt;span style=&#34;color:#ae81ff&#34;&gt;563&lt;/span&gt;, space &lt;span style=&#34;color:#ae81ff&#34;&gt;563&lt;/span&gt; ],
+    one &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [ pulse &lt;span style=&#34;color:#ae81ff&#34;&gt;563&lt;/span&gt;, space &lt;span style=&#34;color:#ae81ff&#34;&gt;1688&lt;/span&gt; ],
+    bit_count &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;,
+    callback &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($args) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $code &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{code};
+        say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Received code $code&amp;#34;&lt;/span&gt;;
+    },
+});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The parser will continue looking for ones and zeros until it&amp;rsquo;s collected enough for the
+given &lt;code&gt;bit_count&lt;/code&gt;. Once the right number has been met, it calls the subref
+specified in &lt;code&gt;callback&lt;/code&gt; with a hashref. The hashref contains keys for
+&lt;code&gt;code&lt;/code&gt; (the IR code that was detected) and &lt;code&gt;pulse_obj&lt;/code&gt; (the
+Linux::IRPulses object). All the length numbers are checked with a tolerance of 20%.&lt;/p&gt;
+
+&lt;p&gt;We don&amp;rsquo;t promise you will keep your sanity after working with IR data, but hopefully
+&lt;code&gt;Linux::IRPulses&lt;/code&gt; can help you go mad with dignity.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;(Original photo CC-BY 2.0 by Stefanus Ming at &lt;a href=&#34;https://flic.kr/p/7djHYP&#34;&gt;https://flic.kr/p/7djHYP&lt;/a&gt;)&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Kitchen coding nightmares: JavaScript scope</title>
+      <link>http://localhost:1313/article/204/2015/12/17/Kitchen-coding-nightmares--JavaScript-scope/</link>
+      <pubDate>Thu, 17 Dec 2015 14:13:13 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/204/2015/12/17/Kitchen-coding-nightmares--JavaScript-scope/</guid>
+      <description>
+
+&lt;p&gt;Lately at the &lt;a href=&#34;https://www.recurse.com/&#34;&gt;Recurse Center&lt;/a&gt; I&amp;rsquo;ve been developing a JavaScript client for my Settlers game. As a Perl developer working with JavaScript, it has been a fun experience. JavaScript feels very perly - both share a flexible syntax, first class functions and objects as hashes. And both languages have a lax interpreter which should have been put in strict mode in the first place (ha-ha!). One way in which JavaScript is very different from Perl is its scoping rules. I was burned by these more than once, and so if you&amp;rsquo;re new to JavaScript, you might find the following summary and recommendations useful.&lt;/p&gt;
+
+&lt;h3 id=&#34;functional-scoping&#34;&gt;Functional scoping&lt;/h3&gt;
+
+&lt;p&gt;Variables are declared with the &lt;code&gt;var&lt;/code&gt; keyword:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;var name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Variables are functionally-scoped, which means that if declared within a function, the variable is private to the function block. Variables declared outside of functions are globally scoped. And there is no other type of block scoping (such as within if-else or for loops).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;var name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David&amp;#34;&lt;/span&gt;;
+
+function log_name (name) &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; private
+{
+  console&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;log(name);
+}
+
+var names &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Jen&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Jim&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Jem&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Jon&amp;#34;&lt;/span&gt;];
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (var i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; names&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;length; i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;)
+{
+  var name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; names[i]; &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; overwriting the global
+}
+console&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;log(name); &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; Jon NOT David&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;functions-as-variables&#34;&gt;Functions as variables&lt;/h3&gt;
+
+&lt;p&gt;Function names are stored as variables under the same scoping rules as ordinary variables. There are two ways to declare functions:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;function log_name () { }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;var log_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; function () { }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Both of these are the same. Which means it&amp;rsquo;s possible to inadvertently overwrite a function with another variable declaration:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;function name () { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David&amp;#34;&lt;/span&gt;; }
+var name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;John&amp;#34;&lt;/span&gt;;
+name(); &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; error, name is &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; a function anymore&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;hoisting&#34;&gt;Hoisting&lt;/h3&gt;
+
+&lt;p&gt;JavaScript interpreters have a initial-runtime phase, (similar to Perl&amp;rsquo;s &lt;code&gt;BEGIN&lt;/code&gt;), where all variable declarations are executed before other code. This is known as &amp;ldquo;hoisting&amp;rdquo;, but practically what it means is that you can use a variable before you declare it!&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;console&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;log(name); &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; yep, this works
+var name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;bind&#34;&gt;Bind&lt;/h3&gt;
+
+&lt;p&gt;JavaScript makes heavy use of anonymous functions and callbacks.To modify the scope of a function, JavaScript&lt;sup&gt;1&lt;/sup&gt; provides &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind?redirectlocale=en-US&amp;amp;redirectslug=JavaScript%2FReference%2FGlobal_Objects%2FFunction%2Fbind&#34;&gt;bind&lt;/a&gt;. This is easier to understand by example. If I have a point object and I want a method to draw it to the canvas, by loading an image:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Point&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;prototype&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;draw &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; function()
+{
+  var ctx &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; get_canvas_context(); &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; declared elsewhere
+  var img &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Image();
+  img&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;onload &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; function () {  &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; anonymous function
+    ctx&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;drawImage(img, this&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;x, this&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;y);   
+  }&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;bind(this);
+  img&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;src &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/point.png&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here I use &lt;code&gt;bind&lt;/code&gt; to inject the point object&amp;rsquo;s scope into the anonymous function. Otherwise I wouldn&amp;rsquo;t be able to access the &lt;code&gt;x&lt;/code&gt; and &lt;code&gt;y&lt;/code&gt; properties of the point as &lt;code&gt;this&lt;/code&gt; would be referencing something else.&lt;/p&gt;
+
+&lt;p&gt;For a more thorough explanation of JavaScript scope, I recommend Todd Motto&amp;rsquo;s article, &lt;a href=&#34;https://toddmotto.com/everything-you-wanted-to-know-about-javascript-scope/&#34;&gt;Everything you wanted to know about JavaScript scope&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;coping-with-scoping&#34;&gt;Coping with scoping&lt;/h3&gt;
+
+&lt;p&gt;OK so that was the bad news; the good news is there are plenty of techniques for handling JavaScript&amp;rsquo;s scoping rules. Depending on the context you may find some or all of these methods useful.&lt;/p&gt;
+
+&lt;h4 id=&#34;naming-conventions&#34;&gt;Naming conventions&lt;/h4&gt;
+
+&lt;p&gt;The first thing you can do to avoid clashes is adopt a naming convention. For example, name all functions with verb-noun constructs (like &amp;ldquo;get_address&amp;rdquo;) and all value variables with plain nouns (like &amp;ldquo;addresses&amp;rdquo;). This is not a complete solution, but at a minimum it will reduce the chances of a function being replaced by a value variable.&lt;/p&gt;
+
+&lt;h4 id=&#34;one-var-per-scope&#34;&gt;One var per scope&lt;/h4&gt;
+
+&lt;p&gt;Another technique for managing variable scope is to only allow one &lt;code&gt;var&lt;/code&gt; statement per scope. So a typical program might look like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; declare global scope variables
+var foo &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/root/assets&amp;#34;&lt;/span&gt;,
+    bar &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+function execute (foo)
+{
+  var i, j, bar; &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; functional scope
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; foo&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;length; i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;)
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (j &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; j &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; foo&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;length; j&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;)
+    {
+      &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; something
+    }
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4 id=&#34;use-strict&#34;&gt;Use strict&lt;/h4&gt;
+
+&lt;p&gt;This is a convention all Perl programmers should be comfortable with. Enable &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode&#34;&gt;strict mode&lt;/a&gt; in JavaScript. Just like with Perl, JavaScript&amp;rsquo;s strict mode can catch &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode#Changes_in_strict_mode&#34;&gt;several&lt;/a&gt; cases of variable-related bugs. Enable it globally with:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;use strict&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Generally JavaScript experts &lt;a href=&#34;http://yuiblog.com/blog/2010/12/14/strict-mode-is-coming-to-town/&#34;&gt;recommend&lt;/a&gt; using a functionally-scoped version of strict - in this case the declaration is placed inside a function block. This is useful to prevent script concatenation errors (where an imported script does not satisfy the strict rules).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;(function () {
+   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;use strict&amp;#34;&lt;/span&gt;;
+   &lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; this function is strict&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}());&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4 id=&#34;objects-as-namespaces&#34;&gt;Objects as namespaces&lt;/h4&gt;
+
+&lt;p&gt;If you were thinking a simple way to solve all of the namespace clashes was with modules, allow me to be the first to tell you that JavaScript has no notion of modules (being a &lt;a href=&#34;https://en.wikipedia.org/wiki/Prototype-based_programming&#34;&gt;prototyped language&lt;/a&gt;). There is no &lt;code&gt;import&lt;/code&gt; keyword. In HTML any code that is loaded with a &lt;code&gt;script&lt;/code&gt; tag is simply concatenated to the current scope.&lt;/p&gt;
+
+&lt;p&gt;There are solutions to this limitation though. In &lt;a href=&#34;http://www.amazon.com/JavaScript-Definitive-Guide-Activate-Guides/dp/0596805527/ref=dp_ob_title_bk&#34;&gt;JavaScript the Definitive Guide&lt;/a&gt;, author David Flanagan proposes using objects as namespaces (sixth edition, section 9.9.1). Each object&amp;rsquo;s scope can be used to encapsulate the behavior and data specific to that domain. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; everything is scoped to point&lt;span style=&#34;color:#f92672&#34;&gt;.*&lt;/span&gt;
+var point &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {};
+point&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Point &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; function (_x, _y) {
+  this&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;x &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; _x;
+  this&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;y &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; _y
+}
+
+point&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Point&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;prototype&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;coordinates &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; function ()
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; [this&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;x, this&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;y];
+}
+
+&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt; now lets try it out &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+var p &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; point&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Point(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;);
+console&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;log(p&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;coordinates());&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To package code as modules, there is the &lt;a href=&#34;http://www.adequatelygood.com/JavaScript-Module-Pattern-In-Depth.html&#34;&gt;module pattern&lt;/a&gt;. Finally although JavaScript has no native import method, there are several external libraries that can provide that behavior, like &lt;a href=&#34;http://www.requirejs.org/&#34;&gt;RequireJS&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;let&#34;&gt;Let&lt;/h4&gt;
+
+&lt;p&gt;The next major version of JavaScript, ES6 provides &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let&#34;&gt;let&lt;/a&gt;. This keyword provides block-level scoping of variables, similar to other mainstream languages. ES6 is not supported everywhere yet, but you can use a transpiler like &lt;a href=&#34;https://babeljs.io/&#34;&gt;Babel&lt;/a&gt; to convert ES6 JavaScript back to ES5.&lt;/p&gt;
+
+&lt;h4 id=&#34;use-a-code-linter&#34;&gt;Use a code linter&lt;/h4&gt;
+
+&lt;p&gt;Browsers do not throw enough exceptions when processing JavaScript. Instead they try to soldier on and do what the programmer &lt;em&gt;meant&lt;/em&gt; rather than what they typed. This is good&lt;sup&gt;2&lt;/sup&gt; for users as they get a uninterrupted browsing experience, but for us programmers this is definitely a bad thing™. Browser robustness makes JavaScript difficult to debug, and which is where a code linter steps in - it analyzes code and reports any errors or warnings they find. For JavaScript I like &lt;a href=&#34;http://jshint.com/&#34;&gt;JSHint&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;sup&gt;1&lt;/sup&gt; Introduced in ES5 JavaScript - which is supported by all modern browsers. For solutions for older JavaScript versions, use &lt;code&gt;call&lt;/code&gt; or &lt;code&gt;apply&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;sup&gt;2&lt;/sup&gt; It&amp;rsquo;s probably a bad thing for users too - the overhead in processing syntactically wrong code degrades performance and worse, encourages more incorrect code to be written.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Gzipping data directly from Perl</title>
+      <link>http://localhost:1313/article/162/2015/3/27/Gzipping-data-directly-from-Perl/</link>
+      <pubDate>Fri, 27 Mar 2015 12:48:28 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/162/2015/3/27/Gzipping-data-directly-from-Perl/</guid>
+      <description>
+
+&lt;p&gt;Perl can read and write gzipped streams through its IO layers. &lt;a href=&#34;https://metacpan.org/author/NWCLARK&#34;&gt;Nicholas Clark&lt;/a&gt; recently updated &lt;a href=&#34;https://metacpan.org/pod/PerlIO::gzip&#34;&gt;PerlIO::gzip&lt;/a&gt; (with patches from &lt;a href=&#34;https://metacpan.org/author/ZEFRAM&#34;&gt;Zefram&lt;/a&gt;), after nine years since the last release. Now it works with Perl v5.20 and the upcoming v5.22, although it still has problems on Windows. But as we are used to, there is more then one way to do it.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-pipe-way&#34;&gt;The pipe way&lt;/h3&gt;
+
+&lt;p&gt;Perl is versatile, and being the Unix duct tape that it is, reading or writing from the standard filehandles is easy. You might know about the three-argument &lt;a href=&#34;https://perldoc.perl.org/functions/open.html&#34;&gt;open&lt;/a&gt;, but I can give it as many arguments as I like. For a piped open, I can set the mode as the second argument and the command as a list as I would for &lt;a href=&#34;https://perldoc.perl.org/functions/system.html&#34;&gt;system&lt;/a&gt; (see the &amp;ldquo;Secure Programming Chapter&amp;rdquo; of &lt;a href=&#34;https://www.masteringperl.org&#34;&gt;Mastering Perl&lt;/a&gt;). I remember where to put the &lt;code&gt;-&lt;/code&gt; on the side of the &lt;code&gt;|&lt;/code&gt; where the command would go:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ENV{PATH} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $z, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-|&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/bin/gunzip&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;moby_dick.txt.gz&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$z&amp;gt;&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;;
+    }
+
+close $z
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;There was a problem with the pipe open!&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I could go the other way too by printing through a pipe to a command that will &lt;em&gt;gzip&lt;/em&gt; the data for me. The &lt;code&gt;-&lt;/code&gt; flips to the other side of the &lt;code&gt;|&lt;/code&gt; and I use shell redirection to move the result of &lt;em&gt;gzip&lt;/em&gt; into a file. I don&amp;rsquo;t use the list form since I want the &lt;code&gt;&amp;gt;&lt;/code&gt; in the command to be special (if only &lt;em&gt;gzip&lt;/em&gt; had a switch to set the output filename):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ENV{PATH} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $z, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;|-&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/bin/gzip &amp;gt; data.gz&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(  ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; { $z } $_;
+    }
+
+close $z
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;There was a problem with the pipe open!&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That&amp;rsquo;s the general form that I can use with any sort of command. It has the drawbacks of multiple processes and the reliance of an external command in a particular place. If I can do it directly in the Perl process, I don&amp;rsquo;t have those drawbacks. Fortunately, I can, because Perl is like that.&lt;/p&gt;
+
+&lt;h3 id=&#34;reading-gzipped-data&#34;&gt;Reading gzipped data&lt;/h3&gt;
+
+&lt;p&gt;To read a gzippped file in Perl, I can use the &lt;code&gt;gzip&lt;/code&gt; I/O layer (see &lt;a href=&#34;https://perldoc.perl.org/perlopentut.html&#34;&gt;perlopen&lt;/a&gt;). Once I open the file, I can read its lines (assuming it&amp;rsquo;s text) like I would a &amp;ldquo;normal&amp;rdquo; text file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:gzip&amp;#39;&lt;/span&gt; $filename
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not read from $filename: $!&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$fh&amp;gt;&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Or, I can read octets if the data aren&amp;rsquo;t text:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:gzip&amp;#39;&lt;/span&gt; $filename
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not read from $filename: $!&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( read( $fh, $buffer, &lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt; ) ) {
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# do something with $buffer (... is a v5.12 feature!)&lt;/span&gt;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If I can&amp;rsquo;t use the I/O layers, perhaps because the operating system does not support it or it&amp;rsquo;s broken on my version of Perl, I can use the IO::Compress modules instead. This example uses its object interface to create the write filehandle:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IO::Compress::Gunzip;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $z &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; IO::Compress::Gunzip&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( $filename )
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not read from $filename: $GunzipError&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$z&amp;gt;&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The I/O layer is faster than the module, but the PerlIO documentation notes that we shouldn&amp;rsquo;t trust our data to it. People have been using it without major problems, but you could be that one person who loses all their data. Sinan Ünür writes about the performance in &lt;a href=&#34;http://www.nu42.com/2013/02/large-gzipped-files-long-lines.html&#34;&gt;Large gzipped files, long lines, extracting columns etc&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-gzipped-data&#34;&gt;Writing gzipped data&lt;/h3&gt;
+
+&lt;p&gt;I can also directly write gzipped data to a file. It&amp;rsquo;s similar my previous examples with the filehandles moved around. This one uses the I/O layer:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;gt;:gzip&amp;#39;&lt;/span&gt; $filename
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not write to $filename: $!&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(  ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; { $fh } $_;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And this one uses &lt;a href=&#34;https://metacpan.org/pod/IO::Compress::Gzip&#34;&gt;IO::Compress::Gzip&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IO::Compress::Gzip;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $z &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; IO::Compress::Gzip&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( $filename )
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not write to $filename: $GzipError&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(  ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; { $z } $_;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;an-advanced-tip&#34;&gt;An advanced tip&lt;/h3&gt;
+
+&lt;p&gt;I can read multiple streams of gzipped data with a single filehandle. The &lt;code&gt;MultiStream&lt;/code&gt; option in &lt;a href=&#34;https://metacpan.org/pod/IO::Uncompress::Gunzip&#34;&gt;IO::Uncompress::Gunzip&lt;/a&gt; allows the decompressor to reset itself when it thinks it has detected a new stream and continue to provide output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IO::Uncompress::Gunzip &lt;span style=&#34;color:#e6db74&#34;&gt;qw($GunzipError)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $z &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; IO::Uncompress::Gunzip&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;STDIN, MultiStream &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; )
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not make uncompress object: $GunzipError&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$z&amp;gt;&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;With this I can read several gzipped files at the same time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cat *.gz |  ./multistream.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This sort of thing is quite handy for rotated logs when I want to read them all and don&amp;rsquo;t care that they were split up.&lt;/p&gt;
+
+&lt;h3 id=&#34;and-a-small-bonus&#34;&gt;And, a small bonus&lt;/h3&gt;
+
+&lt;p&gt;If you want to know more about the gzip compression, &lt;a href=&#34;http://jvns.ca/blog/2013/10/24/day-16-gzip-plus-poetry-equals-awesome/&#34;&gt;Julia Evans created a nice animation of gzip working in real time on &lt;em&gt;The Raven&lt;/em&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;You can see a bit more abstract &lt;a href=&#34;http://www.data-compression.com/lempelziv.html%0A&#34;&gt;animation&lt;/a&gt; at www.data-compression.com. You can see how this single-pass method works and how it can work from a possibly infinite stream like I provide in this article.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Build a Twitter bot with Perl</title>
+      <link>http://localhost:1313/article/154/2015/2/23/Build-a-Twitter-bot-with-Perl/</link>
+      <pubDate>Mon, 23 Feb 2015 14:12:06 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/154/2015/2/23/Build-a-Twitter-bot-with-Perl/</guid>
+      <description>
+
+&lt;p&gt;Following on from last week&amp;rsquo;s Reddit bot &lt;a href=&#34;http://perltricks.com/article/151/2015/2/9/Build-a-Reddit-bot-with-Perl&#34;&gt;article&lt;/a&gt;, let&amp;rsquo;s look at how to build a Twitter bot using Perl. As you&amp;rsquo;d expect, Perl makes it easy to do, but before we get to the code, let&amp;rsquo;s talk about advantages.&lt;/p&gt;
+
+&lt;p&gt;Adding tweet automation to an existing app can bring several benefits. Firstly it&amp;rsquo;s a time saver, allowing you to focus on other higher-value activities. Automation provides protection from manual transcription errors like misspelled words and broken urls. Automation also means it&amp;rsquo;s cheaper to increase your tweet volume and all else being equal, a higher tweet volume will lead to more Twitter followers. Sound good? Excellent, let&amp;rsquo;s get to the code then!&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-tweets&#34;&gt;Writing tweets&lt;/h3&gt;
+
+&lt;p&gt;The core code for writing tweets is very simple. I&amp;rsquo;m using the &lt;a href=&#34;https://metacpan.org/pod/Net::Twitter::Lite&#34;&gt;Net::Twitter::Lite&lt;/a&gt; distribution, which supports the latest version of the Twitter &lt;a href=&#34;https://dev.twitter.com/rest/public&#34;&gt;API&lt;/a&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Twitter::Lite::WithAPIv1_1;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;tweet&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($text) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $twitter &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::Twitter::Lite::WithAPIv1_1&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(
+    access_token_secret &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_ACCESS_SECRET},
+    consumer_secret     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_CONSUMER_SECRET},
+    access_token        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_ACCESS_TOKEN},
+    consumer_key        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_CONSUMER_KEY},
+    user_agent          &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;TwitterBotExample&amp;#39;&lt;/span&gt;,
+    ssl &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+  );
+  $twitter&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;update($text);
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The code imports &lt;code&gt;Net::Twitter::Lite::WithAPIv1_1&lt;/code&gt; to use the new Twitter API. The subroutine &lt;code&gt;tweet&lt;/code&gt; takes some text as an argument. It then creates a new &lt;code&gt;Net::Twitter::Lite::WithAPIv1_1&lt;/code&gt; object, using environment vars as credentials. If you don&amp;rsquo;t have these credentials already, it&amp;rsquo;s free to register an application for your own Twitter account and &lt;a href=&#34;https://dev.twitter.com/oauth/overview/application-owner-access-tokens&#34;&gt;generate the tokens&lt;/a&gt;. Finally the subroutine calls the &lt;code&gt;update&lt;/code&gt; method to tweet the text.&lt;/p&gt;
+
+&lt;p&gt;Now I can send one tweet by adding this line to my code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;tweet(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;This is a computer speaking!&amp;#34;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;safety-first&#34;&gt;Safety first&lt;/h3&gt;
+
+&lt;p&gt;So far so good huh? However this code isn&amp;rsquo;t very safe. What if &lt;code&gt;$text&lt;/code&gt; is not provided as an argument, or our environment variables are not declared, or the call to Twitter fails? I&amp;rsquo;ll add some checks to handle these scenarios:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Twitter::Lite::WithAPIv1_1;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Try::Tiny;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;tweet&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($text) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tweet requires text as an argument&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $text;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; ($ENV{TWITTER_CONSUMER_KEY}
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $ENV{TWITTER_CONSUMER_SECRET}
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $ENV{TWITTER_ACCESS_TOKEN}
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $ENV{TWITTER_ACCESS_SECRET})
+  {
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Required Twitter Env vars are not all defined&amp;#39;&lt;/span&gt;;
+  }
+
+  try
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $twitter &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::Twitter::Lite::WithAPIv1_1&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(
+      access_token_secret &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_ACCESS_SECRET},
+      consumer_secret     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_CONSUMER_SECRET},
+      access_token        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_ACCESS_TOKEN},
+      consumer_key        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_CONSUMER_KEY},
+      user_agent          &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;TwitterBotExample&amp;#39;&lt;/span&gt;,
+      ssl &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+    );
+    $twitter&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;update($text);
+  }
+  catch
+  {
+    die join(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error tweeting $text&amp;#34;&lt;/span&gt;,
+                   $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;code, $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;message, $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;error);
+  };
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code is largely the same as before, except now it checks for the required variables before processing. The code also imports &lt;a href=&#34;https://metacpan.org/pod/Try::Tiny&#34;&gt;Try::Tiny&lt;/a&gt; as I added a try/catch block around the twitter code. The catch block will activate if the Twitter interaction throws an exception. Because Net::Twitter::Lite throws structured exceptions, the catch block builds an exception string by extracting information from the structured exception, then calls &lt;code&gt;die&lt;/code&gt; itself.&lt;/p&gt;
+
+&lt;p&gt;You might be wondering if it&amp;rsquo;s necessary to call &lt;code&gt;die&lt;/code&gt; at all. Can&amp;rsquo;t we just return &lt;code&gt;undef&lt;/code&gt; instead and keep our code running? The advantage of calling &lt;code&gt;die&lt;/code&gt; is that the caller of the &lt;code&gt;tweet&lt;/code&gt; subroutine is better placed to decide how to handle the issue, and so we defer that decision to them. If the calling code doesn&amp;rsquo;t handle &lt;code&gt;die&lt;/code&gt; correctly, we know the program will exit. But if we returned &lt;code&gt;undef&lt;/code&gt;, we would have no such assurances. This doesn&amp;rsquo;t mean however that the code &lt;em&gt;has&lt;/em&gt; to exit. Let&amp;rsquo;s assume I had hundreds of tweets to send out, maybe I just want to log the error somewhere and keep going:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $text (@tweet_texts)
+{
+  try
+  {
+    tweet($text);
+  }
+  catch
+  {
+    log_error($_);
+  };
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If I was printing a sequence of tweets, where ordering is important, I could still log the error but then call &lt;code&gt;die&lt;/code&gt; to exit the program:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $text (@sequence_of_texts)
+{
+  try
+  {
+    tweet($text);
+  }
+  catch
+  {
+    log_error($_);
+    die $_; &lt;span style=&#34;color:#75715e&#34;&gt;# exit the program&lt;/span&gt;
+  };
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;better-text-handling&#34;&gt;Better text handling&lt;/h3&gt;
+
+&lt;p&gt;So now the code is safer, how else can it be improved? One famous restriction is that a tweet cannot be longer than 140 characters. Right now if the &lt;code&gt;tweet()&lt;/code&gt; subroutine received a text string longer than 140 characters, the Twitter API would reject it, raise and exception and the code would die. I think we can do better than that.&lt;/p&gt;
+
+&lt;p&gt;When I think about the contents of tweets that I send, I&amp;rsquo;m usually tweeting links to articles about Perl. Invariably they will include some text, a url and a hashtag. It&amp;rsquo;s useful to break these out into separate arguments to &lt;code&gt;tweet()&lt;/code&gt; because to make everything fit, you could truncate the text, but you wouldn&amp;rsquo;t want to truncate a url or hashtag as it might change the meaning and/or break the url.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::Twitter::Lite::WithAPIv1_1;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Try::Tiny;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;tweet&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($text, $url, $hashtag) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; ($text &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $url &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $hashtag)
+  {
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tweet requires text, url and hashtag arguments&amp;#39;&lt;/span&gt;;
+  }
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; ($ENV{TWITTER_CONSUMER_KEY}
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $ENV{TWITTER_CONSUMER_SECRET}
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $ENV{TWITTER_ACCESS_TOKEN}
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $ENV{TWITTER_ACCESS_SECRET})
+  {
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Required Twitter Env vars are not all defined&amp;#39;&lt;/span&gt;;
+  }
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# build tweet, max 140 chars&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tweet;
+  
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (length(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$text $hashtag&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;118&lt;/span&gt;)
+  {
+    $tweet &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$text $url $hashtag&amp;#34;&lt;/span&gt;;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; (length($text) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;118&lt;/span&gt;)
+  {
+    $tweet &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$text $url&amp;#34;&lt;/span&gt;;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# shorten text, drop the hashtag&lt;/span&gt;
+  {
+    $tweet &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; substr($text, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;113&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;... &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $url;
+  }
+
+  try
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $twitter &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::Twitter::Lite::WithAPIv1_1&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(
+      access_token_secret &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_ACCESS_SECRET},
+      consumer_secret     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_CONSUMER_SECRET},
+      access_token        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_ACCESS_TOKEN},
+      consumer_key        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{TWITTER_CONSUMER_KEY},
+      user_agent          &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;TwitterBotExample&amp;#39;&lt;/span&gt;,
+      ssl &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+    );
+    $twitter&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;update($tweet);
+  }
+  catch
+  {
+    die join(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error tweeting $text $url $hashtag&amp;#34;&lt;/span&gt;,
+                   $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;code, $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;message, $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;error);
+  };
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Twitter treats urls as having a length of 12 characters. Now the code checks the length of our arguments, truncating &lt;code&gt;$text&lt;/code&gt; if necessary. The hashtag will be included only if there is enough space.&lt;/p&gt;
+
+&lt;p&gt;This code works for me, but you may want to do things a little differently. The Twitter credentials could be stored in a &lt;a href=&#34;http://perltricks.com/article/29/2013/9/17/How-to-Load-YAML-Config-Files&#34;&gt;configuration&lt;/a&gt; file, instead of environment variables. The &lt;code&gt;$hashtag&lt;/code&gt; argument could be an arrayref of hashtags, that are incrementally added to the tweet text, instead of a single text string which restricts it to an all-or-nothing basis.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

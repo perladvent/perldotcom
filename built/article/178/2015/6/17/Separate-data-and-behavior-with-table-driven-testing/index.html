@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Separate data and behavior with table-driven testing </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Optimize code re-use and test coverage"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/178/2015/6/17/Separate-data-and-behavior-with-table-driven-testing/" />
+<meta property="og:title" content="Separate data and behavior with table-driven testing" />
+<meta property="og:description" content="Optimize code re-use and test coverage">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2015-06-06T06:06:06Z" />
+<meta property="og:image" content="http://localhost:1313/images/author/brian-d-foy.jpg" />
+<meta property="og:article:tag" content="data" />
+<meta property="og:article:tag" content="unit_testing" />
+<meta property="og:article:tag" content="sprintf" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Separate data and behavior with table-driven testing</h1>
+              <p class="blog-post-meta">Jun 17, 2015 by
+              
+              
+                
+                
+                <a href="#author-bio-brian-d-foy">brian d foy</a>
+              
+              </p>
+              <img alt="" src=""/>
+                <p>How can I easily run the same tests on different data without duplicating a lot of code? If I follow my usual pattern, I start off with a couple of tests where I write some code then cut-and-paste that a couple of times. I add a few more tests before I realize I have a mess. If I had the foresight to know that I would make a mess (again), I would have started with a table of data and a little bit of code that went through it.</p>
+
+<p>Consider a silly and small example of testing <code>sprintf</code>-like behavior of <a href="https://metacpan.org/pod/String::Sprintf">String::Sprintf</a>. I can use this module to create my own format specifiers, such as one to commify a number. I stole this mostly from its documentation, although I threw in the <a href="http://www.effectiveperlprogramming.com/2015/04/use-v5-20-subroutine-signatures/">v5.20 signatures feature</a> and the <a href="http://www.effectiveperlprogramming.com/2010/09/use-the-r-substitution-flag-to-work-on-a-copy/">v5.14 non-destructive substitution operator</a> because I love those features:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.20</span>;
+<span style="color:#66d9ef">use</span> feature <span style="color:#e6db74">qw(signatures)</span>;
+<span style="color:#66d9ef">no</span> warnings <span style="color:#e6db74">qw(experimental::signatures)</span>;
+
+<span style="color:#66d9ef">use</span> String::Sprintf;
+
+<span style="color:#66d9ef">my</span> $f <span style="color:#f92672">=</span> String::Sprintf<span style="color:#f92672">-&gt;</span>formatter(
+  N <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> {
+    <span style="color:#66d9ef">my</span>($width, $value, $values, $letter) <span style="color:#f92672">=</span> @_;
+    <span style="color:#66d9ef">return</span> commify(sprintf <span style="color:#e6db74">&#34;%${width}f&#34;</span>, $value);
+  });
+
+say <span style="color:#e6db74">&#34;Numbers are: &#34;</span> <span style="color:#f92672">.</span> 
+  $f<span style="color:#f92672">-&gt;</span>sprintf(
+    <span style="color:#e6db74">&#39;%10.2N, %10.2N&#39;</span>, 
+    <span style="color:#ae81ff">12345678.901</span>, <span style="color:#ae81ff">87654.321</span>
+  );
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">commify</span> ( $n ) {
+  $n <span style="color:#f92672">=~</span> <span style="color:#e6db74">s/(\.\d+)|(?&lt;=\d)(?=(?:\d\d\d)+\b)/$1 || &#39;,&#39;/</span>rge;
+}</code></pre></div>
+<pre><code>Numbers are: 12,345,678.90,   87,654.32
+</code></pre>
+
+<p>The mess I might make to test this starts with a single input and output with the <a href="https://metacpan.org/pod/Test::More">Test::More</a> function <code>is</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.20</span>;
+<span style="color:#66d9ef">use</span> feature <span style="color:#e6db74">qw(signatures)</span>;
+<span style="color:#66d9ef">no</span> warnings <span style="color:#e6db74">qw(experimental::signatures)</span>;
+
+<span style="color:#66d9ef">use</span> Test::More;
+    
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">commify</span> ( $n ) {
+  $n <span style="color:#f92672">=~</span> <span style="color:#e6db74">s/(\.\d+)|(?&lt;=\d)(?=(?:\d\d\d)+\b)/$1 || &#39;,&#39;/</span>rge;
+}
+
+<span style="color:#66d9ef">my</span> $class <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;String::Sprintf&#39;</span>;  
+use_ok( $class );
+    
+<span style="color:#66d9ef">my</span> $f <span style="color:#f92672">=</span> String::Sprintf<span style="color:#f92672">-&gt;</span>formatter(
+  N <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> {
+    <span style="color:#66d9ef">my</span>($width, $value, $values, $letter) <span style="color:#f92672">=</span> @_;
+    <span style="color:#66d9ef">return</span> commify(sprintf <span style="color:#e6db74">&#34;%${width}f&#34;</span>, $value);
+  });
+    
+isa_ok(  $f, $class );
+can_ok( $f, <span style="color:#e6db74">&#39;sprintf&#39;</span> );
+
+is(  $f<span style="color:#f92672">-&gt;</span>sprintf( <span style="color:#e6db74">&#39;%.2N&#39;</span>, <span style="color:#e6db74">&#39;1234.56&#39;</span> ), <span style="color:#e6db74">&#39;1,234.56&#39;</span> );
+
+done_testing();</code></pre></div>
+<p>I decide to test another value, and I think the easiest thing to do is to duplicate that line with <code>is</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">is(  $f<span style="color:#f92672">-&gt;</span>sprintf( <span style="color:#e6db74">&#39;%.2N&#39;</span>, <span style="color:#e6db74">&#39;1234.56&#39;</span> ), <span style="color:#e6db74">&#39;1,234.56&#39;</span> );
+is(  $f<span style="color:#f92672">-&gt;</span>sprintf( <span style="color:#e6db74">&#39;%.2N&#39;</span>, <span style="color:#e6db74">&#39;1234&#39;</span> ),    <span style="color:#e6db74">&#39;1,234.00&#39;</span> );</code></pre></div>
+<p>The particular thing to test isn&rsquo;t the point of this article. It&rsquo;s all the stuff around it that I want to highlight. Or, more correctly, I want to de-emphasize all this stuff around it. I had to duplicate the test although most of the structure is the same.</p>
+
+<p>I can convert those tests to a structure to hold the data and another structure for the behavior:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> @data <span style="color:#f92672">=</span> (
+    [ ( <span style="color:#ae81ff">1234.56</span>, <span style="color:#e6db74">&#39;1,234.56&#39;</span> ) ],
+    [ ( <span style="color:#ae81ff">1234</span>,    <span style="color:#e6db74">&#39;1,234.00&#39;</span> ) ],
+);
+
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $row ( @data ) {
+  is(  $f<span style="color:#f92672">-&gt;</span>sprintf( <span style="color:#e6db74">&#39;%.2N&#39;</span>, $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>] ), $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">1</span>] );
+}</code></pre></div>
+<p>I can add many more rows to <code>@data</code> but the meat of the code, that <code>foreach</code> loop, doesn&rsquo;t change.</p>
+
+<p>I can improve this though. So far I only test that one <code>sprintf</code> template. I can add that to <code>@data</code> too, and use that to make a label for the test:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> $ndot2_f <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;%.2N&#39;</span>;
+
+<span style="color:#66d9ef">my</span> @data <span style="color:#f92672">=</span> (
+    [ $ndot2_f,( <span style="color:#ae81ff">1234.56</span>, <span style="color:#e6db74">&#39;1,234.56&#39;</span> ) ],
+    [ $ndot2_f, ( <span style="color:#ae81ff">1234</span>,    <span style="color:#e6db74">&#39;1,234.00&#39;</span> ) ],
+);
+
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $row ( @data ) {
+  is( $f<span style="color:#f92672">-&gt;</span>sprintf( $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>], $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">1</span>] ), $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">2</span>],
+       <span style="color:#e6db74">&#34;$row-&gt;[1] with format $row-&gt;[0] returns $row-&gt;[2]&#34;</span>
+   );
+}</code></pre></div>
+<p>I can add another test with a different format. If I had kept going the way I started, this would look like a new test because the format changed. Now the format is just part of the input:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> $ndot2_f <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;%.2N&#39;</span>;
+
+<span style="color:#66d9ef">my</span> @data <span style="color:#f92672">=</span> (
+    [ $ndot2_f, ( <span style="color:#ae81ff">1234.56</span>, <span style="color:#e6db74">&#39;1,234.56&#39;</span> ) ],
+    [ $ndot2_f, ( <span style="color:#ae81ff">1234</span>,    <span style="color:#e6db74">&#39;1,234.00&#39;</span> ) ],
+    [ <span style="color:#e6db74">&#39;%.0N&#39;</span>  , ( <span style="color:#ae81ff">1234.49</span>, <span style="color:#e6db74">&#39;1,234&#39;</span>    ) ],
+);
+
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $row ( @data ) {
+  is( $f<span style="color:#f92672">-&gt;</span>sprintf( $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>], $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">1</span>] ), $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">2</span>],
+       <span style="color:#e6db74">&#34;$row-&gt;[1] with format $row-&gt;[0] returns $row-&gt;[2]&#34;</span>
+  );
+}</code></pre></div>
+<p>As I go on things get more complicated. If a test fails, I want some extra information about which one failed. I&rsquo;ll change up how I go through the table. In this case, I&rsquo;ll use the <a href="http://www.effectiveperlprogramming.com/2010/05/perl-5-12-lets-you-use-each-on-an-array/">v5.12 feature</a> that allows <code>each</code> on an array so I get back the index and the value:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">while</span>( <span style="color:#66d9ef">my</span>( $index, $row ) <span style="color:#f92672">=</span> each @data ) {
+  is( $f<span style="color:#f92672">-&gt;</span>sprintf( $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>], $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">1</span>] ), $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">2</span>],
+       <span style="color:#e6db74">&#34;$index: $row-&gt;[1] with format $row-&gt;[0] returns $row-&gt;[2]&#34;</span>
+  );
+}</code></pre></div>
+<p>My code for the test behavior changed but I didn&rsquo;t have to mess with the input data at all. The particular code in this case doesn&rsquo;t matter. This table-driven testing separates the inputs and the tests; that&rsquo;s what you should pay attention to.</p>
+
+<p>It can get even better. So far, I&rsquo;ve put all the input data in the test file itself, but now that it&rsquo;s separate from the test code, I can grab the input from somewhere else. That might be a tab-separated values file:</p>
+
+<pre><code>%.2N   1234.56 1,234.56 
+%.2N    1234    1,234.00
+%.0N    1234.49 1,234
+</code></pre>
+
+<p>I create <code>@data</code> in the test file by reading and parsing the external file:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open <span style="color:#66d9ef">my</span> $test_data_fh, <span style="color:#e6db74">&#39;&lt;&#39;</span>, $test_file_name <span style="color:#f92672">or</span> die <span style="color:#f92672">...</span>;
+
+<span style="color:#66d9ef">my</span> @data;
+<span style="color:#66d9ef">while</span>( <span style="color:#e6db74">&lt;$test_data_fh&gt;</span> ) {
+  chomp;
+  push @data, split <span style="color:#e6db74">/\t/</span>;
+}</code></pre></div>
+<p>Now none of the data are in the test file. And, there&rsquo;s nothing special about a simple text file. I could do a little bit more work to take the data from an Excel file (perhaps the most useful wizard skill in business) or even a database:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> DBI;
+    
+<span style="color:#66d9ef">my</span> $dbh <span style="color:#f92672">=</span> DBI<span style="color:#f92672">-&gt;</span>connect( <span style="color:#f92672">...</span> );
+<span style="color:#66d9ef">my</span> $sth <span style="color:#f92672">=</span> $dbh<span style="color:#f92672">-&gt;</span>prepare( <span style="color:#e6db74">&#39;SELECT * FROM tests&#39;</span> );
+    
+$sth<span style="color:#f92672">-&gt;</span>execute();
+    
+<span style="color:#66d9ef">while</span>( <span style="color:#66d9ef">my</span> $row <span style="color:#f92672">=</span> $sth<span style="color:#f92672">-&gt;</span>fetchrow_arrayref ) {
+  state $index <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+
+  is( $f<span style="color:#f92672">-&gt;</span>sprintf( $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>], $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">1</span>] ), $row<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">2</span>],
+       $index<span style="color:#f92672">++</span> <span style="color:#f92672">.</span> <span style="color:#e6db74">&#34;: $row-&gt;[1] with format $row-&gt;[0] returns $row-&gt;[2]&#34;</span>
+  );
+}</code></pre></div>
+<p>That&rsquo;s the idea. I separate the data and the tests to give myself some flexibility. How I access the data and how I test depend on my particular problems.</p>
+
+<p><br />
+<em>This article was originally posted on <a href="http://perltricks.com">PerlTricks.com</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/testing">testing</a></div>
+                
+                  <div class="tag"><a href="/tags/data">data</a></div>
+                
+                  <div class="tag"><a href="/tags/unit_testing">unit_testing</a></div>
+                
+                  <div class="tag"><a href="/tags/sprintf">sprintf</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-brian-d-foy">
+  <div class="col-sm-2">
+    
+    <a href="/authors/brian-d-foy/"><div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/brian-d-foy/"><h3>brian d foy</h3></a>
+    <p><a href="http://www.pair.com/~comdog/">brian d foy</a> is a Perl trainer and writer, and a senior editor at Perl.com. He&rsquo;s the author of <a href="https://www.masteringperl.org">Mastering Perl</a>, <a href="https://leanpub.com/mojo_web_clients">Mojolicious Web Clients</a>, <a href="https://leanpub.com/learning_perl_exercises">Learning Perl Exercises</a>, and co-author of <a href="https://www.programmingperl.org">Programming Perl</a>, <a href="https://www.learning-perl.com">Learning Perl</a>, <a href="https://www.intermediateperl.com">Intermediate Perl</a> and <a href="https://www.effectiveperlprogramming.com">Effective Perl Programming</a>.</p>
+    <h5><a href="/authors/brian-d-foy/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/separate-data-and-behavior-with-table-driven-testing.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

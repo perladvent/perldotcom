@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Devel Linetrace on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/devel-linetrace/</link>
+    <description>Recent content in Devel Linetrace on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 31 Mar 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/devel-linetrace/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>More Lightning Articles</title>
+      <link>http://localhost:1313/pub/2005/03/31/lightning2.html/</link>
+      <pubDate>Thu, 31 Mar 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/03/31/lightning2.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-emacsperl-customizing-emacs-with-perl-span&#34;&gt;&lt;span id=&#34;emacsperl&#34;&gt;Customizing Emacs with Perl&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;by Bob DuCharme&lt;/p&gt;
+
+&lt;p&gt;Over time, I&amp;rsquo;ve accumulated a list of Emacs customizations I wanted to implement when I got the chance. For example, I&amp;rsquo;d like macros to perform certain global replaces just within a marked block, and I&amp;rsquo;d like a macro to reformat an Outlook formatted date to an ISO 8609 formatted date. I&amp;rsquo;m not overly intimidated by the elisp language used to customize Emacs behavior; I&amp;rsquo;ve copied elisp code and modified it to make some tweaks before, I had a healthy dose of Scheme and LISP programming in school, and I&amp;rsquo;ve done extensive work with XSLT, a descendant of these grand old languages. Still, as with a lot of postponed editor customization work, I knew I&amp;rsquo;d have to use these macros many, many times before they earned back the time invested in creating them, because I wasn&amp;rsquo;t that familiar with string manipulation and other basic operations in a LISP-based language. I kept thinking to myself, &amp;ldquo;This would be so easy if I could just do the string manipulation in Perl!&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Then, I figured out how I could write Emacs functions that called Perl to operate on a marked block (or, in Emacs parlance, a &amp;ldquo;region&amp;rdquo;). Many Emacs users are familiar with the &lt;code&gt;Escape+|&lt;/code&gt; keystroke, which invokes the &lt;code&gt;shell-command-on-region&lt;/code&gt; function. It brings up a prompt in the minibuffer where you enter the command to run on the marked region, and after you press the Enter key Emacs puts the command&amp;rsquo;s output in the minibuffer if it will fit, or into a new &amp;ldquo;*Shell Command Output*&amp;rdquo; buffer if not. For example, after you mark part of an HTML file you&amp;rsquo;re editing as the region, pressing &lt;code&gt;Escape+|&lt;/code&gt; and entering &lt;code&gt;wc&lt;/code&gt; (for &amp;ldquo;word count&amp;rdquo;) at the minibuffer&amp;rsquo;s &amp;ldquo;Shell command on region:&amp;rdquo; prompt will feed the text to this command line utility if you have it in your path, and then display the number of lines, words, and characters in the region at the minibuffer. If you enter &lt;code&gt;sort&lt;/code&gt; at the same prompt, Emacs will run that command instead of &lt;code&gt;wc&lt;/code&gt; and display the result in a buffer.&lt;/p&gt;
+
+&lt;p&gt;Entering &lt;code&gt;perl /some/path/foo.pl&lt;/code&gt; at the same prompt will run the named Perl script on the marked region and display the output appropriately. This may seem like a lot of keystrokes if you just want to do a global replace in a few paragraphs, but remember: &lt;code&gt;Ctrl+|&lt;/code&gt; calls Emacs&amp;rsquo;s built-in &lt;code&gt;shell-command-on-region&lt;/code&gt; function, and you can call this same function from a new function that you define yourself. My recent great discovery was that along with parameters identifying the region boundaries and the command to run on the region, &lt;code&gt;shell-command-on-region&lt;/code&gt; takes an optional parameter that lets you tell it to replace the input region with the output region. When you&amp;rsquo;re editing a document with Emacs, this allows you to pass a marked region outside of Emacs to a Perl script, let the Perl script do whatever you like to the text, and then Emacs will replace the original text with the processed version. (If your Perl script mangled the text, Emacs&amp;rsquo; excellent &lt;code&gt;undo&lt;/code&gt; command can come to the rescue.)&lt;/p&gt;
+
+&lt;p&gt;Consider an example. When I take notes about a project at work, I might write that Joe R. sent an e-mail telling me that a certain system won&amp;rsquo;t need any revisions to handle the new data. I want to make a note of when he told me this, so I copy and paste the date from the e-mail he sent. We use Microsoft Outlook at work, and the dates have a format following the model &amp;ldquo;Tue 2/22/2005 6:05 PM&amp;rdquo;. I already have an Emacs macro bound to &lt;code&gt;alt+d&lt;/code&gt; to insert the current date and time (also handy when taking notes) and I wanted the date format that refers to e-mails to be the same format as the ones inserted with my &lt;code&gt;alt+d&lt;/code&gt; macro: an ISO 8609 format of the form &amp;ldquo;2005-02-22T18:05&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;em&gt;.emacs&lt;/em&gt; startup file holds customized functions that you want available during your Emacs session. The following shows a bit of code that I put in mine so that I could convert these dates:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;(defun OLDate2ISO ()
+  (interactive)
+  (shell-command-on-region (point)
+         (mark) &amp;quot;perl c:/util/OLDate2ISO.pl&amp;quot; nil t))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;(interactive)&lt;/code&gt; declaration tells Emacs that the function being defined can be invoked interactively as a command. For example, I can enter &amp;ldquo;OLDate2ISO&amp;rdquo; at the Emacs minibuffer command prompt, or I can press a keystroke or select a menu choice bound to this function. The &lt;code&gt;point&lt;/code&gt; and &lt;code&gt;mark&lt;/code&gt; functions are built into Emacs to identify the boundaries of the currently marked region, so they&amp;rsquo;re handy for the first and second arguments to &lt;code&gt;shell-command-on-region&lt;/code&gt;, which tell it which text is the region to act on. The third argument is the actual command to execute on the region; enter any command available on your operating system that can accept standard input. To define your own Emacs functions that call Perl functions, just change the script name in this argument from &lt;code&gt;OLDate2ISO&lt;/code&gt; to anything you like and then change this third argument to &lt;code&gt;shell-command-on-region&lt;/code&gt; to call your own Perl script.&lt;/p&gt;
+
+&lt;p&gt;Leave the last two arguments as &lt;code&gt;nil&lt;/code&gt; and &lt;code&gt;t&lt;/code&gt;. Don&amp;rsquo;t worry about the fourth parameter, which controls the buffer where the shell output appears. (Setting it to &lt;code&gt;nil&lt;/code&gt; means &amp;ldquo;don&amp;rsquo;t bother.&amp;rdquo;) The fifth parameter is the key to the whole trick: when non-nil, it tells Emacs to replace the marked text in the editing buffer with the output of the command described in the third argument instead of sending the output to a buffer.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re familiar with Perl, there&amp;rsquo;s nothing particularly interesting about the &lt;em&gt;OLDate2ISO.pl&lt;/em&gt; script. It does some regular expression matching to split up the string, converts the time to a 24 hour clock, and rearranges the pieces:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Convert Outlook format date to ISO 8309 date 
+#(e.g. Wed 2/16/2005 5:27 PM to 2005-02-16T17:27)
+while (&amp;lt;&amp;gt;) {
+  if (/\w+ (\d+)\/(\d+)\/(\d{4}) (\d+):(\d+) ([AP])M/) {
+     $AorP = $6;
+     $minutes = $5;
+     $hour = $4;
+     $year = $3;
+     $month = $1;
+     $day = $2;
+     $day = &#39;0&#39; . $day if ($day &amp;lt; 10);
+     $month = &#39;0&#39; . $month if ($month &amp;lt; 10);
+     $hour = $hour + 12 if ($6 eq &#39;P&#39;);
+     $hour = &#39;0&#39; . $hour if ($hour &amp;lt; 10);
+     $_ = &amp;quot;$year-$month-$day&amp;quot; . &amp;quot;T$hour:$minutes&amp;quot;;
+  }
+  print;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you start up Emacs with a function definition like the &lt;code&gt;defun OLDate2ISO&lt;/code&gt; one shown above in your &lt;em&gt;.emacs&lt;/em&gt; file, the function is available to you like any other in Emacs. Press &lt;code&gt;Escape+x&lt;/code&gt; to bring up the Emacs minibuffer command line and enter &amp;ldquo;OLDate2ISO&amp;rdquo; there to execute it on the currently marked buffer. Like any other interactive command, you can also assign it to a keystroke or a menu choice.&lt;/p&gt;
+
+&lt;p&gt;There might be a more efficient way to do the Perl coding shown above, but I didn&amp;rsquo;t spend too much time on it. That&amp;rsquo;s the beauty of it: with five minutes of Perl coding and one minute of elisp coding, I had a new menu choice to quickly do the transformation I had always wished for.&lt;/p&gt;
+
+&lt;p&gt;Another example of something I always wanted is the following &lt;em&gt;txt2htmlp.pl&lt;/em&gt; script, which is useful after plugging a few paragraphs of plain text into an HTML document:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Turn lines of plain text into HTML p elements.
+while (&amp;lt;&amp;gt;) {
+  chop($_);
+  # Turn ampersands and &amp;lt; into entity references.
+  s/\&amp;amp;/\&amp;amp;amp\;/g;
+  s/&amp;lt;/\&amp;amp;lt\;/g;
+  # Wrap each non-blank line in a &amp;quot;p&amp;quot; element.
+  print &amp;quot;&amp;lt;p&amp;gt;$_&amp;lt;/p&amp;gt;\n\n&amp;quot; if (!(/^\s*$/));
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Again, it&amp;rsquo;s not a particularly innovative Perl script, but with the following bit of elisp in my &lt;em&gt;.emacs&lt;/em&gt; file, I have something that greatly speeds up the addition of hastily written notes into a web page, especially when I create an Emacs menu choice to call this function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;(defun txt2htmlp ()
+  (interactive)
+  (shell-command-on-region (point) 
+         (mark) &amp;quot;perl c:/util/txt2htmlp.pl&amp;quot; nil t))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sometimes when I hear about hot new editors, I wonder whether they&amp;rsquo;ll ever take the place of Emacs in my daily routine. Now that I can so easily add the power of Perl to my use of Emacs, it&amp;rsquo;s going to be a lot more difficult for any other editor to compete with Emacs on my computer.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-linetrace-debug-your-programs-with-devel-linetrace-span&#34;&gt;&lt;span id=&#34;linetrace&#34;&gt;Debug Your Programs with Devel::LineTrace&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;by Shlomi Fish&lt;/p&gt;
+
+&lt;p&gt;Often, programmers find a need to use print statements to output information to the screen, in order to help them analyze what went wrong in running the script. However, including these statements verbatim in the script is not such a good idea. If not promptly removed, these statements can have all kinds of side-effects: slowing down the script, destroying the correct format of its output (possibly ruining test-cases), littering the code, and confusing the user. It would be a better idea not to place them within the code in the first place. How, though, can you debug without debugging?&lt;/p&gt;
+
+&lt;p&gt;Enter &lt;a href=&#34;https://metacpan.org/pod/Devel::LineTrace&#34;&gt;Devel::LineTrace&lt;/a&gt;, a Perl module that can assign portions of code to execute at arbitrary lines within the code. That way, the programmer can add print statements in relevant places in the code without harming the program&amp;rsquo;s integrity.&lt;/p&gt;
+
+&lt;h4 id=&#34;verifying-that-use-lib-has-taken-effect&#34;&gt;Verifying That &lt;code&gt;use lib&lt;/code&gt; Has Taken Effect&lt;/h4&gt;
+
+&lt;p&gt;One example I recently encountered was that I wanted to use a module I wrote from the specialized directory where I placed it, while it was already installed in the Perl&amp;rsquo;s global include path. I used a &lt;code&gt;use lib &amp;quot;./MyPath&amp;quot;&lt;/code&gt; directive to make sure this was the case, but now had a problem. What if there was a typo in the path of the &lt;code&gt;use lib&lt;/code&gt; directive, and as a result, Perl loaded the module from the global path instead? I needed a way to verify it.&lt;/p&gt;
+
+&lt;p&gt;To demonstrate how &lt;code&gt;Devel::LineTrace&lt;/code&gt; can do just that, consider a similar script that tries to use a module named &lt;code&gt;CGI&lt;/code&gt; from the path &lt;em&gt;./MyModules&lt;/em&gt; instead of the global Perl path. (It is a bad idea to name your modules after names of modules from CPAN or from the Perl distribution, but this is just for the sake of the demonstration.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl -w
+
+use strict;
+use lib &amp;quot;./MyModules&amp;quot;;
+
+use CGI;
+
+my $q = CGI-&amp;gt;new();
+
+print $q-&amp;gt;header();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Name this script &lt;em&gt;good.pl&lt;/em&gt;. To test that Perl loaded the &lt;code&gt;CGI&lt;/code&gt; module from the &lt;em&gt;./MyModules&lt;/em&gt; directory, direct &lt;code&gt;Devel::LineTrace&lt;/code&gt; to print the relevant entry from the &lt;code&gt;%INC&lt;/code&gt; internal variable, at the first line after the &lt;code&gt;use CGI&lt;/code&gt; one.&lt;/p&gt;
+
+&lt;p&gt;To do so, prepare this file and call it &lt;em&gt;test-good.txt&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;good.pl:8
+    print STDERR &amp;quot;\$INC{CGI.pm} == &amp;quot;, $INC{&amp;quot;CGI.pm&amp;quot;}, &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Place the file and the line number at which the trace should be inserted on the first line. Then comes the code to evaluate, indented from the start of the line. After the first trace, you can put other traces, by starting the line with the filename and line number, and putting the code in the following (indented) lines. This example is simple enough not to need that though.&lt;/p&gt;
+
+&lt;p&gt;After you have prepared &lt;em&gt;test-good.txt&lt;/em&gt;, run the script through &lt;code&gt;Devel::LineTrace&lt;/code&gt; by executing the following command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ PERL5DB_LT=&amp;quot;test-good.txt&amp;quot; perl -d:LineTrace good.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(This assumes a Bourne-shell derivative.). The &lt;code&gt;PERL5DB_LT&lt;/code&gt; environment variable contains the path of the file to use for debugging, and the &lt;code&gt;-d:LineTrace&lt;/code&gt; directive to Perl instructs it to debug the script through the &lt;code&gt;Devel::LineTrace&lt;/code&gt; package.&lt;/p&gt;
+
+&lt;p&gt;As a result, you should see either the following output to standard error:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$INC{CGI.pm} == MyModules/CGI.pm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;meaning that Perl indeed loaded the module from the &lt;em&gt;MyModules&lt;/em&gt; sub-directory of the current directory. Otherwise, you&amp;rsquo;ll see something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$INC{CGI.pm} == /usr/lib/perl5/vendor_perl/5.8.4/CGI.pm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;which means that it came from the global path and something went wrong.&lt;/p&gt;
+
+&lt;h4 id=&#34;limitations-of-devel-linetrace&#34;&gt;Limitations of &lt;code&gt;Devel::LineTrace&lt;/code&gt;&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;Devel::LineTrace&lt;/code&gt; has two limitations:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Because it uses the Perl debugger interface and stops at every line (to check whether it contains a trace), program execution is considerably slower when the program is being run under it.&lt;/li&gt;
+&lt;li&gt;It assigns traces to line numbers, and therefore you must update it if the line numbering of the file changes.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Nevertheless, it is a good solution for keeping those pesky &lt;code&gt;print&lt;/code&gt; statements out of your programs. Happy LineTracing!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mockdbi-using-test-mockdbi-span&#34;&gt;&lt;span id=&#34;mockdbi&#34;&gt;Using Test::MockDBI&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;by Mark Leighton Fisher&lt;/p&gt;
+
+&lt;p&gt;What if you could test your program&amp;rsquo;s use of the DBI just by creating a set of rules to guide the DBI&amp;rsquo;s behavior—without touching a database (unless you want to)? That is the promise of &lt;a href=&#34;https://metacpan.org/pod/Test::MockDBI&#34;&gt;Test::MockDBI&lt;/a&gt;, which by mocking-up the entire DBI API gives you unprecedented control over every aspect of the DBI&amp;rsquo;s interface with your program.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Test::MockDBI&lt;/code&gt; uses &lt;a href=&#34;https://metacpan.org/pod/Test::MockObject::Extends&#34;&gt;Test::MockObject::Extends&lt;/a&gt; to mock all of the DBI transparently. The rest of the program knows nothing about using &lt;code&gt;Test::MockDBI&lt;/code&gt;, making &lt;code&gt;Test::MockDBI&lt;/code&gt; ideal for testing programs that you are taking over, because you only need to add the &lt;code&gt;Test::MockDBI&lt;/code&gt; invocation code— you do not have to modify any of the other program code. (I have found this very handy as a consultant, as I often work on other people&amp;rsquo;s code.)&lt;/p&gt;
+
+&lt;p&gt;Rules are invoked when the current SQL matches the rule&amp;rsquo;s SQL pattern. For finer control, there is an optional numeric DBI testing type for each rule, so that a rule only fires when the SQL matches &lt;em&gt;and&lt;/em&gt; the current DBI testing type is the specified DBI testing type. You can specify this numeric DBI testing type (a simple integer matching &lt;code&gt;/^\d+$/&lt;/code&gt;) from the command line or through &lt;code&gt;Test::MockDBI::set_dbi_test_type()&lt;/code&gt;. You can also set up rules to fail a transaction if a specific &lt;code&gt;DBI::bind_param()&lt;/code&gt; parameter is a specific value. This means there are three types of conditions for &lt;code&gt;Test::MockDBI&lt;/code&gt; rules:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The current SQL&lt;/li&gt;
+&lt;li&gt;The current DBI testing type&lt;/li&gt;
+&lt;li&gt;The current &lt;code&gt;bind_param()&lt;/code&gt; parameter values&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Under &lt;code&gt;Test::MockDBI&lt;/code&gt;, &lt;code&gt;fetch*()&lt;/code&gt; and &lt;code&gt;select*()&lt;/code&gt; methods default to returning nothing (the empty array, the empty hash, or undef for scalars). &lt;code&gt;Test::MockDBIM&lt;/code&gt; lets you take control of their returned data with the methods &lt;code&gt;set_retval_scalar()&lt;/code&gt; and &lt;code&gt;set_retval_array()&lt;/code&gt;. You can specify the returned data directly in the &lt;code&gt;set_retval_*()&lt;/code&gt; call, or pass a CODEREF that generates a return value to use for each call to the matching &lt;code&gt;fetch*()&lt;/code&gt; or &lt;code&gt;select*()&lt;/code&gt; method. CODEREFs let you both simulate DBI&amp;rsquo;s interaction with the database more accurately (as you can return a few rows, then stop), and add in any kind of state machine or other processing needed to precisely test your code.&lt;/p&gt;
+
+&lt;p&gt;When you need to test that your code handles database or DBI failures, &lt;code&gt;bad_method()&lt;/code&gt; is your friend. It can fail any DBI method, with the failures dependent on the current SQL and (optionally) the current DBI testing type. This capability is necessary to test code that handles bad database &lt;code&gt;UPDATE&lt;/code&gt;s, &lt;code&gt;INSERT&lt;/code&gt;s, or &lt;code&gt;DELETE&lt;/code&gt;s, along with being handy for testing failing &lt;code&gt;SELECT&lt;/code&gt;s.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Test::MockDBI&lt;/code&gt; extends your testing capabilities to testing code that is difficult or impossible to test on a live, working database. &lt;code&gt;Test::MockDBI&#39;s&lt;/code&gt; mock-up of the entire DBI API lets you add &lt;code&gt;Test::MockDBI&lt;/code&gt; to your programs without having to modify their current DBI code. Although it is not finished (not all of the DBI is mocked-up yet), &lt;code&gt;Test::MockDBI&lt;/code&gt; is already a powerful tool for testing DBI programs.&lt;/p&gt;
+
+&lt;h3 id=&#34;unnecessary-unbuffering-unbuffering&#34;&gt;&lt;a href=&#34;#unbuffering&#34;&gt;Unnecessary Unbuffering&lt;/a&gt;&lt;/h3&gt;
+
+&lt;p&gt;by chromatic&lt;/p&gt;
+
+&lt;p&gt;A great joy in a programmer&amp;rsquo;s life is removing useless code, especially when its absence improves the program. Often this happens in old codebases or codebases thrown together hastily. Sometimes it happens in code written by novice programmers who try several different ideas all together and fail to undo their changes.&lt;/p&gt;
+
+&lt;p&gt;One such persistent idiom is wholesale, program-wide unbuffering, which can take the form of any of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;local $| = 1;
+$|++;
+$| = 1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sometimes this is valuable. Sometimes it&amp;rsquo;s vital. It&amp;rsquo;s not the default for very good reason, though, and at best, including one of these lines in your program is useless code.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-s-unbuffering&#34;&gt;What&amp;rsquo;s Unbuffering?&lt;/h4&gt;
+
+&lt;p&gt;By default, modern operating systems don&amp;rsquo;t send information to output devices directly, one byte at a time, nor do they read information from input devices directly, one byte at a time. IO is so slow, especially for networks, compared to processors and memory that adding buffers and trying to fill them before sending and receiving information can improve performance.&lt;/p&gt;
+
+&lt;p&gt;Think of trying to fill a bathtub from a hand pump. You &lt;em&gt;could&lt;/em&gt; pump a little water into a bucket and walk back and forth to the bathtub, or you could fill a trough at the pump and fill the bucket from the trough. If the trough is empty, pumping a little bit of water into the bucket will give you a faster start, but it&amp;rsquo;ll take longer in between bucket loads than if you filled the trough at the start and carried water back and forth between the trough and the bathtub.&lt;/p&gt;
+
+&lt;p&gt;Information isn&amp;rsquo;t exactly like water, though. Sometimes it&amp;rsquo;s more important to deliver a message immediately even if it doesn&amp;rsquo;t fill up a bucket. &amp;ldquo;Help, fire!&amp;rdquo; is a very short message, but waiting to send it when you have a full load of messages might be the wrong thing.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s why modern operating systems also let you unbuffer specific filehandles. When you print to an unbuffered filehandle, the operating system will handle the message immediately. That doesn&amp;rsquo;t guarantee that whoever&amp;rsquo;s on the other side of the handle will respond immediately; there might be a pump and a trough there.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-s-the-damage&#34;&gt;What&amp;rsquo;s the Damage?&lt;/h4&gt;
+
+&lt;p&gt;According to Mark-Jason Dominus&amp;rsquo; &lt;a href=&#34;http://perl.plover.com/FAQs/Buffering.html&#34;&gt;Suffering from Buffering?&lt;/a&gt;, one sample showed that buffered reading was 40% faster than unbuffered reading, and buffered writing was 60% faster. The latter number may only improve when considering network communications, where the overhead of sending and receiving a single packet of information can overwhelm short messages.&lt;/p&gt;
+
+&lt;p&gt;In simple interactive applications though, there may be no benefit. When attached to a terminal, such as a command line, Perl operates in line-buffered mode. Run the following program and watch the output carefully:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+# buffer flushed at newline
+loop_print( 5, &amp;quot;Line-buffered\n&amp;quot; );
+
+# buffer not flushed until newline
+loop_print( 5, &amp;quot;Buffered  &amp;quot; );
+print &amp;quot;\n&amp;quot;;
+
+# buffer flushed with every print
+{
+    local $| = 1;
+    loop_print( 5, &amp;quot;Unbuffered  &amp;quot; );
+}
+
+sub loop_print
+{
+    my ($times, $message) = @_;
+
+    for (1 .. $times)
+    {
+        print $message;
+        sleep 1;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first five greetings appear individually and immediately. Perl flushes the buffer for STDOUT when it sees the newlines. The second set appears after five seconds, all at once, when it sees the newline after the loop. The third set appears individually and immediately because Perl flushes the buffer after every &lt;code&gt;print&lt;/code&gt; statement.&lt;/p&gt;
+
+&lt;p&gt;Terminals are different from everything else, though. Consider the case of writing to a file. In one terminal window, create a file named &lt;em&gt;buffer.log&lt;/em&gt; and run &lt;code&gt;tail -f buffer.log&lt;/code&gt; or its equivalent to watch the growth of the file in real time. Then add the following lines to the previous program and run it again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open( my $output, &#39;&amp;gt;&#39;, &#39;buffer.log&#39; ) or die &amp;quot;Can&#39;t open buffer.log: $!&amp;quot;;
+select( $output );
+loop_print( 5, &amp;quot;Buffered\n&amp;quot; );
+{
+      local $| = 1;
+      loop_print( 5, &amp;quot;Unbuffered\n&amp;quot; );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first five messages appear in the log in a batch, all at once, even though they all have newlines. Five messages aren&amp;rsquo;t enough to fill the buffer. Perl only flushes it when it unbuffers the filehandle on assignment to &lt;code&gt;$|&lt;/code&gt;. The second set of messages appear individually, one second after another.&lt;/p&gt;
+
+&lt;p&gt;Finally, the STDERR filehandle is hot by default. Add the following lines to the previous program and run it yet again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;select( STDERR );
+loop_print( 5, &amp;quot;Unbuffered STDERR &amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Though no code disables the buffer on STDERR, the five messages should print immediately, just as in the other unbuffered cases. (If they don&amp;rsquo;t, your OS is weird.)&lt;/p&gt;
+
+&lt;h4 id=&#34;what-s-the-solution&#34;&gt;What&amp;rsquo;s the Solution?&lt;/h4&gt;
+
+&lt;p&gt;Buffering exists for a reason; it&amp;rsquo;s almost always the right thing to do. When it&amp;rsquo;s the wrong thing to do, you can disable it. Here are some rules of thumb:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Never disable buffering by default.&lt;/li&gt;
+&lt;li&gt;Disable buffering when and while you have multiple sources writing to the same output and their order matters.&lt;/li&gt;
+&lt;li&gt;Never disable buffering for network outputs by default.&lt;/li&gt;
+&lt;li&gt;Disable buffering for network outputs only when the expected time between full buffers exceeds the expected client timeout length.&lt;/li&gt;
+&lt;li&gt;Don&amp;rsquo;t disable buffering on terminal outputs. For STDERR, it&amp;rsquo;s useless, dead code. For STDOUT, you probably don&amp;rsquo;t need it.&lt;/li&gt;
+&lt;li&gt;Disable buffering if it&amp;rsquo;s more important to print messages regularly than efficiently.&lt;/li&gt;
+&lt;li&gt;Don&amp;rsquo;t disable buffering until you know that the buffer is a problem.&lt;/li&gt;
+&lt;li&gt;Disable buffering in the smallest scope possible.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

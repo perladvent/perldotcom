@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Functional on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/functional/</link>
+    <description>Recent content in Functional on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 17 Jul 2013 03:10:55 +0000</lastBuildDate>
+    <atom:link href="/tags/functional/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Re-use code with Perl&#39;s anonymous functions</title>
+      <link>http://localhost:1313/article/34/2013/7/17/Re-use-code-with-Perl-s-anonymous-functions/</link>
+      <pubDate>Wed, 17 Jul 2013 03:10:55 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/34/2013/7/17/Re-use-code-with-Perl-s-anonymous-functions/</guid>
+      <description>&lt;p&gt;An anonymous function in Perl is an unnamed subroutine. But what are they good for? This article shows how through using anonymous functions it&amp;rsquo;s possible to write more generic, re-usable Perl code.&lt;/p&gt;
+
+&lt;p&gt;Imagine that you&amp;rsquo;ve developed the following script. The script receives a directory path as a parameter and recursively searches the child directories of the path, printing any file name it finds:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;qw/say/&lt;/span&gt;;
+
+die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error: you must supply a directory path argument $!&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; @ARGV;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;listFiles&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    opendir(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $DH, $dir) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error: failed to open $dir $!&amp;#34;&lt;/span&gt;;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (readdir $DH) {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $path &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $dir &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $_;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $path ){
+            &lt;span style=&#34;color:#75715e&#34;&gt;# recurse but ignore Linux symlinks . and ..&lt;/span&gt;
+            listFiles($path &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $_ &lt;span style=&#34;color:#f92672&#34;&gt;!~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^\.{1,2}$/&lt;/span&gt;;
+        }
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f $path){
+            say $path;
+        }
+    }
+}
+
+listFiles($ARGV[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The most re-usable aspect of this script is the recursive directory searching logic. If you wanted to develop a file name searching script (similar to the find program in Linux), you could start by copying and pasting the script above, and then updating the code to provide the required behavior. An alternative way would be to change the core subroutine to accept an anonymous function as an argument, and then execute that function on every file it finds. Such a subroutine would look like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;qw/say/&lt;/span&gt;;
+
+die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error: you must supply a directory path argument $!&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; @ARGV;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;walkDir&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($dir, $function) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# validate args&lt;/span&gt;
+    opendir(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $DH, $dir) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error: failed to open $dir $!&amp;#34;&lt;/span&gt;;
+    ref($function) &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CODE&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; 
+        die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error: second argument to walkDir must be an anonymous function $!&amp;#34;&lt;/span&gt;;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (readdir $DH) {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $path &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $dir &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $_;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $path ){ 
+            &lt;span style=&#34;color:#75715e&#34;&gt;# recurse but ignore Linux symlinks . and ..&lt;/span&gt;
+            walkDir($path &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;, $function) &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $_ &lt;span style=&#34;color:#f92672&#34;&gt;!~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^\.{1,2}$/&lt;/span&gt;;
+        }
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f $path){
+            $function&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;($path);
+        }
+    }
+}
+
+walkDir($ARGV[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;], &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { say shift });&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &amp;ldquo;walkDir&amp;rdquo; subroutine in the code above accepts two arguments: the directory path and a function. It recursively searches the directories as before, however when it encounters a file, it de-references and executes the function, passing the file path to the function as an argument. The final line of code provides the file name printing behaviour by calling &amp;ldquo;walkDir&amp;rdquo; and passing the target directory path, and an anonymous function to print (say) the default argument.&lt;/p&gt;
+
+&lt;p&gt;We can re-use the same walkDir subroutine for our file-searching script and all we have to do is update the anonymous function behavior:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;walkDir($ARGV[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;], 
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { 
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $filename &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+            say $filename &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $filename &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$ARGV[1]/i&lt;/span&gt;;
+        });&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To create a grep-like tool, we would replace the previous code with this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Slurp;
+walkDir($ARGV[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;],
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $filename &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+            say $filename &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; read_file($filename) &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qr/$ARGV[1]/&lt;/span&gt;i;
+        });&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In fact we could quickly create a whole library of useful sysadmin scripts with this approach. We could even put the &amp;ldquo;walkDir&amp;rdquo; subroutine code into a module to augment further re-use. Hopefully these examples show how by using anonymous functions, Perl let&amp;rsquo;s you re-use useful code.&lt;/p&gt;
+
+&lt;p&gt;This article was inspired by &lt;a href=&#34;http://hop.perl.plover.com/&#34;&gt;Higher Order Perl&lt;/a&gt; by Mark Jason Dominus. Higher Order Perl explores anonymous functions and other functional programming techniques like recursion, currying and laziness. It&amp;rsquo;s free to read online and in ebook format.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

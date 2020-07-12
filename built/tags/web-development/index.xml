@@ -1,0 +1,1061 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Web Development on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/web-development/</link>
+    <description>Recent content in Web Development on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 10 Jan 2020 13:37:00 +0000</lastBuildDate>
+    <atom:link href="/tags/web-development/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Porting a Dancer plugin to Dancer2</title>
+      <link>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</link>
+      <pubDate>Fri, 10 Jan 2020 13:37:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</guid>
+      <description>
+
+&lt;p&gt;In my &lt;a href=&#34;https://metacpan.org/pod/Dancer2&#34;&gt;Dancer2&lt;/a&gt; web application, I want to know which requests come from smartphones.  There’s a plugin for that — but only in the older &lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer (v1)&lt;/a&gt; framework.  I’m no expert, but even I was easily able to port the Dancer plugin, &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::MobileDevice&#34;&gt;Dancer::Plugin::MobileDevice&lt;/a&gt;, to Dancer2!  In this article, we’ll explore Dancer2 and the way it handles plugins.  We’ll get our hands dirty working with the framework, and examine the main changes I made to port the plugin from Dancer to Dancer2.  By the end of this article, you’ll be ready to rock &lt;em&gt;and&lt;/em&gt; you’ll have a handy reference to use when porting plugins yourself.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-dancer2-web-framework&#34;&gt;The Dancer2 web framework&lt;/h2&gt;
+
+&lt;p&gt;Dancer2 applications run on a Web server and process requests from a browser.  The application’s Perl code uses keywords in Dancer2’s domain-specific language (DSL) to access information about a request.&lt;/p&gt;
+
+&lt;p&gt;Try it out: Install &lt;a href=&#34;https://metacpan.org/pod/Task::Dancer2&#34;&gt;Task::Dancer2&lt;/a&gt;.  Then, save this as &lt;code&gt;app.psgi&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hello, &amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; (query_parameters&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;world&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;!&amp;#39;&lt;/span&gt;;
+};
+to_app;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and run &lt;code&gt;plackup&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Enter the URL &lt;code&gt;http://localhost:5000&lt;/code&gt; in a browser and you will see “Hello, world!”, or visit &lt;code&gt;http://localhost:5000/?name=genius&lt;/code&gt; to see “Hello, genius!”.  The “genius” comes from &lt;code&gt;query_parameters&lt;/code&gt;, a DSL keyword that returns the values after the &lt;code&gt;?&lt;/code&gt; in the URL.  You can use those values when building a response to a request.&lt;/p&gt;
+
+&lt;h2 id=&#34;dancer-and-dancer2-plugins&#34;&gt;Dancer and Dancer2 plugins&lt;/h2&gt;
+
+&lt;p&gt;Dancer and Dancer2 plugins define new DSL keywords for the plugin’s users.  They also install “hooks,” subroutines that run while Dancer processes a request.  The hooks collect information for the DSL keywords to access.&lt;/p&gt;
+
+&lt;p&gt;For example, a hook in Dancer::Plugin::MobileDevice detects whether a request is coming from a mobile device.  The plugin defines the &lt;code&gt;is_mobile_device&lt;/code&gt; DSL keyword so your code can react appropriately. To port the plugin, I changed code for the keyword, the hooks, and the test suite.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-keywords&#34;&gt;Porting keywords&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins use the Dancer DSL and a &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin&#34;&gt;plugin-specific DSL&lt;/a&gt; to define DSL keywords. In Dancer (v1), the &lt;code&gt;is_mobile_device&lt;/code&gt; keyword is created with the &lt;code&gt;register&lt;/code&gt; plugin-DSL function (code examples simplified to focus on the porting):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;register &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+};
+register_plugin;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 plugins are &lt;a href=&#34;https://metacpan.org/pod/Moo&#34;&gt;Moo&lt;/a&gt; objects, and new DSL keywords are member functions on those objects.  Therefore, I changed &lt;code&gt;is_mobile_device()&lt;/code&gt; to a member function:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;is_mobile_device&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;       &lt;span style=&#34;color:#75715e&#34;&gt;# get the plugin’s object instance&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ($self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; ;
+}
+plugin_keywords &lt;span style=&#34;color:#e6db74&#34;&gt;qw(is_mobile_device)&lt;/span&gt;;   &lt;span style=&#34;color:#75715e&#34;&gt;# replaces register_plugin()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the body of the function, the Dancer plugin directly accessed the DSL keyword &lt;code&gt;request&lt;/code&gt;.  The Dancer2 plugin instead accesses the request via &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;request&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-hooks&#34;&gt;Porting hooks&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins add hooks using the DSL &lt;code&gt;hook&lt;/code&gt; keyword.  For example, this &lt;code&gt;before_template&lt;/code&gt; hook makes &lt;code&gt;is_mobile_device&lt;/code&gt; available in templates:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;hook before_template &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; is_mobile_device();
+};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 handles hooks very differently.  The plugin’s Moo constructor, &lt;code&gt;BUILD&lt;/code&gt;, is called when a plugin instance is created.  In &lt;code&gt;BUILD&lt;/code&gt;, the plugin registers the hook.  I added &lt;code&gt;BUILD&lt;/code&gt; and called
+&lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; to add the hook:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;BUILD&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;hook( before_template_render &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+        $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{is_mobile_device} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $plugin&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;is_mobile_device;
+    });
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If your hook functions are too long to move into &lt;code&gt;BUILD&lt;/code&gt;, you can leave them where they are and say &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook( hook_name =&amp;gt; \&amp;amp;sub_name );&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-the-tests&#34;&gt;Porting the tests&lt;/h2&gt;
+
+&lt;p&gt;Dancer::Plugin::MobileDevice has a full test suite.  These tests are extremely useful to developers, as they allow you to to see if a Dancer2 port behaves the same as the Dancer original. That said, you have to port the tests themselves before you can use them to test your ported plugin! We’ll look at the Dancer way, then I’ll show you the Dancer2 changes.&lt;/p&gt;
+
+&lt;p&gt;The Dancer tests define a simple Web application using the plugin.  They exercise that application using helpers in &lt;a href=&#34;https://metacpan.org/pod/Dancer::Test&#34;&gt;Dancer::Test&lt;/a&gt;.  For example (simplified from &lt;code&gt;t/01-is-mobile-device.t&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;{   &lt;span style=&#34;color:#75715e&#34;&gt;# The simple application&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Plugin::MobileDevice;
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Test;
+
+$ENV{HTTP_USER_AGENT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dancer_response GET &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;# dancer_response() is from Dancer::Test&lt;/span&gt;
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{content}, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2, on the other hand, uses the &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt; ecosystem for testing instead of its own helpers.  To work in that ecosystem, I changed the
+above test as described in the
+&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Manual#TESTING&#34;&gt;Dancer2 manual’s “testing” section&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Plack::Test;                        &lt;span style=&#34;color:#75715e&#34;&gt;# Additional testing modules&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; HTTP::Request::Common;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; TestApp;     &lt;span style=&#34;color:#75715e&#34;&gt;# Still a simple application, but now with a name&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2::Plugin::MobileDevice;
+
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dut &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Plack::Test&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;create(TestApp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_app);     &lt;span style=&#34;color:#75715e&#34;&gt;# a fake Web server&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $dut&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request(GET &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;User-Agent&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;);
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;content, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 tests use more boilerplate than Dancer tests, but Dancer2 tests are more modular and flexible than Dancer tests.  With Plack, you don’t have to use the global state (&lt;code&gt;%ENV&lt;/code&gt;) any more, and you can test more than one application or use case per &lt;code&gt;.t&lt;/code&gt; file.  Seeing the tests pass is good indication that your porting job is done.&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;I am a newbie at Dancer2, and have never used Dancer.  But I was able to port Dancer::Plugin::MobileDevice to Dancer2 in less than a day — including time to read the documentation and figure out how!  When you need a Dancer function in Dancer2, grab the quick reference below and you’ll be off and running!&lt;/p&gt;
+
+&lt;h2 id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/h2&gt;
+
+&lt;p&gt;My thanks to Kelly Deltoro-White for her insights, and to the authors of Dancer::Plugin::MobileDevice and Dancer2 for a strong foundation to build on.&lt;/p&gt;
+
+&lt;h2 id=&#34;more-information-on-dancer2-plugins&#34;&gt;More information on Dancer2 plugins&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;“&lt;a href=&#34;http://advent.perldancer.org/2016/22&#34;&gt;The new Dancer2 plugin system&lt;/a&gt;” by Sawyer X, for an overview&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Plugin&#34;&gt;Dancer2::Plugin&lt;/a&gt;, for details&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;quick-reference-porting-plugins-from-dancer-to-dancer2&#34;&gt;Quick reference: porting plugins from Dancer to Dancer2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Port keywords:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Make keywords freestanding &lt;code&gt;sub&lt;/code&gt;s, not arguments of &lt;code&gt;register&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Access data through &lt;code&gt;$self&lt;/code&gt; rather than DSL keywords&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;register_plugin&lt;/code&gt; to &lt;code&gt;plugin_keywords&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port hooks:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Add a &lt;code&gt;BUILD&lt;/code&gt; function&lt;/li&gt;
+&lt;li&gt;Move the hook functions into &lt;code&gt;BUILD&lt;/code&gt;, or refer to them from &lt;code&gt;BUILD&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Wrap each hook function in a &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; call&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port tests:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Import &lt;a href=&#34;https://metacpan.org/pod/Plack::Test&#34;&gt;Plack::Test&lt;/a&gt; and
+&lt;a href=&#34;https://metacpan.org/pod/HTTP::Request::Common&#34;&gt;HTTP::Request::Common&lt;/a&gt;
+instead of Dancer::Test&lt;/li&gt;
+&lt;li&gt;Give the application under test a &lt;code&gt;package&lt;/code&gt; statement&lt;/li&gt;
+&lt;li&gt;Create a Plack::Test instance representing the application&lt;/li&gt;
+&lt;li&gt;Create requests using HTTP::Request::Common methods&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;$response-&amp;gt;{content}&lt;/code&gt; to &lt;code&gt;$response-&amp;gt;content&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl in Plat_Forms 2012 Web Development Contest</title>
+      <link>http://localhost:1313/pub/2012/02/perl-in-plat-forms-2012-web-development-contest.html/</link>
+      <pubDate>Thu, 02 Feb 2012 17:33:35 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2012/02/perl-in-plat-forms-2012-web-development-contest.html/</guid>
+      <description>&lt;p&gt;Thanks to &lt;a href=&#34;https://metacpan.org/author/DAXIM&#34;&gt;Lars Dɪᴇᴄᴋᴏᴡ&lt;/a&gt; for coordinating entries into the &lt;a href=&#34;https://www.plat-forms.org/platforms-2012-announcement#overview&#34;&gt;Plat_Forms 2012&lt;/a&gt; web development contest. This annual contest pits some of the best developers of frameworks and languages against each other to solve real problems. Perl developers have participated for several years. Teams using Catalyst, Dancer, and Mojolicious have all demonstrated their platform strengths and weaknesses.&lt;/p&gt;
+
+&lt;p&gt;No Perl team has won the contest—yet. With the rise of modern Perl 5, the extra energy from competition between all of the great platforms, and (of course) the power of the CPAN, we all expect great things. Consider entering and showing what we can do.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Writing on Walls with Facebook::Graph</title>
+      <link>http://localhost:1313/pub/2011/04/writing-on-walls-with-facebookgraph.html/</link>
+      <pubDate>Mon, 04 Apr 2011 18:03:13 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/04/writing-on-walls-with-facebookgraph.html/</guid>
+      <description>&lt;p&gt;In my first article about &lt;a href=&#34;https://metacpan.org/pod/Facebook::Graph&#34;&gt;Facebook::Graph&lt;/a&gt;, I showed you how to &lt;a href=&#34;http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html&#34;&gt;use Facebook as an authentication mechanism for your site&lt;/a&gt;. This time let me show you how to build on that authentication to post something to a user&amp;rsquo;s Facebook wall.&lt;/p&gt;
+
+&lt;p&gt;First things first. The application needs additional permissions from the user. The previous app requested only basic rights to view the most basic of information about the user. Any app that wants to post to auser&amp;rsquo;s wall needs to ask the user for permission to post to their wall. Replace the existing login method with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb
+        -&amp;gt;authorize
+        -&amp;gt;extend_permissions( qw(publish_stream) )
+        -&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only difference between this version and the original is the &lt;code&gt;extend_permissions&lt;/code&gt; line which asks for &lt;code&gt;publish_stream&lt;/code&gt; access. Facebook maintains &lt;a href=&#34;http://developers.facebook.com/docs/authentication/permissions/&#34;&gt;a table of Facebook application permissions&lt;/a&gt; and their implications.&lt;/p&gt;
+
+&lt;p&gt;When a user grants this additional permission, the application can post almost anything to the user&amp;rsquo;s wall. For example, if you have a shop of some kind, you could post something to a user&amp;rsquo;s wall after a purchase:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+$fb-&amp;gt;add_post
+  -&amp;gt;set_message(&#39;I just bought Widget X from The Cool Shop for only $4.99.&#39;)
+  -&amp;gt;publish;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or more descriptive:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$fb-&amp;gt;add_post
+  -&amp;gt;set_message(&#39;I just bought Widget X from The Cool Shop for only $4.99.&#39;)
+  -&amp;gt;set_picture_uri(&#39;http://images.coolshop.com/widgetx.jpg&#39;),
+  -&amp;gt;link_uri(&#39;http://www.coolshop.com/products/widget-x&#39;),
+  -&amp;gt;link_caption(&#39;Widget X&#39;)
+  -&amp;gt;publish;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you publish links, do yourself a favor by making sure the page you are linking uses &lt;a href=&#34;http://ogp.me/&#34;&gt;Open Graph Protocol&lt;/a&gt; meta tags. Facebook can refer to these tags, and will therefore link that metadata into your post, which means if anybody posts your link &lt;em&gt;&lt;a href=&#34;http://www.coolshop.com/products/widget-x&#34;&gt;http://www.coolshop.com/products/widget-x&lt;/a&gt;&lt;/em&gt; into a Facebook post, it will automatically pull in images, description, and other things.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Make sure whatever you post abides by &lt;a href=&#34;http://developers.facebook.com/policy/&#34;&gt;Facebook&amp;rsquo;s Platform Polices&lt;/a&gt;. If you don&amp;rsquo;t, Facebook can and will ban your application.&lt;/p&gt;
+
+&lt;p&gt;This works well for posting something to Facebook when a logged-in user performs an action in your application, but but what if you want to post something &lt;em&gt;not&lt;/em&gt; as the result of a direct user action? Maybe your site isn&amp;rsquo;t a shop. Maybe it&amp;rsquo;s a reminders site that posts stuff like &amp;ldquo;Happy Birthday Maggie!&amp;rdquo; or a random quote of the day. To post on behalf of the user even when they aren&amp;rsquo;t logged in to your site, you must request offline access. This requires another update to the login page:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb
+        -&amp;gt;authorize
+        -&amp;gt;extend_permissions( qw(offline_access publish_stream) )
+        -&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see the &lt;code&gt;offline_access&lt;/code&gt; permission in addition to &lt;code&gt;publish_stream&lt;/code&gt; this time. Another necessary change is to store the resulting access token in something more robust than a Dancer session this time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/postback/&#39; =&amp;gt; sub {
+    my $params = request-&amp;gt;params;
+    my $fb     = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;request_access_token($params-&amp;gt;{code});
+    session access_token =&amp;gt; $fb-&amp;gt;access_token;
+
+    my $user = $fb-&amp;gt;fetch(&#39;me&#39;);
+
+    database-&amp;gt;quick_insert( &#39;facebook&#39;, {
+        uid          =&amp;gt; $user-&amp;gt;{uid},=20
+        name         =&amp;gt; $user-&amp;gt;{name},=20
+        access_token =&amp;gt; $fb-&amp;gt;access_token,
+       }
+    );
+    redirect &#39;/&#39;;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In addition to storing the &lt;code&gt;access_token&lt;/code&gt; in a Dancer session, the code also stores it in a database table for future reference (using &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::Database&#34;&gt;Dancer::Plugin::Database&lt;/a&gt;, which is a wrapper around &lt;a href=&#34;https://metacpan.org/pod/DBI&#34;&gt;DBI&lt;/a&gt;). This sort of thing can be good for other reasons too. For example, Facebook recommends caching data that you fetch from it for faster response times. If you want to display the user&amp;rsquo;s name on every page, it&amp;rsquo;s much faster to pull it out of the local database based upon the access token you have in your Dancer session than it is to request it from Facebook again.&lt;/p&gt;
+
+&lt;p&gt;As you can see, &lt;code&gt;Facebook::Graph&lt;/code&gt; makes it quite easy to post to Facebook on behalf of your users. Stay tuned for Part III, where I&amp;rsquo;ll show you how to publish calendar events and RSVP to them.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Facebook Authentication with Perl and Facebook::Graph</title>
+      <link>http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html/</link>
+      <pubDate>Tue, 15 Mar 2011 10:17:51 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html/</guid>
+      <description>&lt;p&gt;Basic integration of software and web sites with Facebook, Twitter, and other social networking systems has become a litmus test for business these days. Depending on the software or site you might need to fetch some data, make a post, create events, upload photos, or use one or more of the social networking sites as a single sign-on system. This series will show you how to do exactly those things on Facebook using &lt;a href=&#34;https://metacpan.org/pod/Facebook::Graph&#34;&gt;Facebook::Graph&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This first article starts small by using Facebook as an authentication mechanism. There are certainly simpler things to do, but this is one of the more popular things people want to be able to do. Before you can do anything, you need to have a Facebook account. Then &lt;a href=&#34;http://apps.facebook.com/developer&#34;&gt;register your new application&lt;/a&gt; (Figure 1).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_03_facebook-authentication-with-perl-and-facebookgraph/register_app.png&#34; alt=&#34;registering a Facebook application&#34; width=&#34;696&#34; height=&#34;209&#34; /&gt;
+&lt;em&gt;Figure 1. Registering a Facebook application.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Then fill out the &amp;ldquo;Web Site&amp;rdquo; section of your new app (Figure 2).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_03_facebook-authentication-with-perl-and-facebookgraph/register_website.png&#34; alt=&#34;registering your application&amp;#39;s web site&#34; width=&#34;740&#34; height=&#34;224&#34; /&gt;
+&lt;em&gt;Figure 2. Registering your application&amp;rsquo;s web site.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Registering an application with Facebook gives you a unique identifier for your application as well as a secret key. This allows your app to communicate with Facebook and use its API. Without it, you can&amp;rsquo;t do much (besides screen scraping and hoping).&lt;/p&gt;
+
+&lt;p&gt;Now you&amp;rsquo;re ready to start creating your app. I&amp;rsquo;ve used the &lt;a href=&#34;http://perldancer.org/&#34;&gt;Dancer web app framework&lt;/a&gt;, but feel free to use your favorite. Start with a basic Dancer module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package MyFacebook;
+
+use strict;
+use Dancer &#39;:syntax&#39;;
+use Facebook::Graph;
+
+get &#39;/&#39; =&amp;gt; sub {
+  template &#39;home.tt&#39;
+};
+
+true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s sufficient to give the app a home page. The next step is to force people to log in if they haven&amp;rsquo;t already:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;before sub {
+    if (request-&amp;gt;path_info !~ m{^/facebook}) {
+        if (session-&amp;gt;{access_token} eq &#39;&#39;) {
+            request-&amp;gt;path_info(&#39;/facebook/login&#39;)
+        }
+    }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This little bit of Dancer magic says that if the path is not &lt;code&gt;/facebook&lt;/code&gt; and the user has no access_token attached to their session, then redirect them to our login page. Speaking of our login page, create that now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb-&amp;gt;authorize-&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates a page that will redirect the user to Facebook, and ask them if it&amp;rsquo;s ok for the app to use their basic Facebook information. That code passes &lt;code&gt;Facebook::Graph&lt;/code&gt; some configuration information, so remember to add a section to Dancer&amp;rsquo;s &lt;em&gt;config.yml&lt;/em&gt; to keep track of that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;facebook:
+    postback: &amp;quot;http://www.madmongers.org/facebook/postback/&amp;quot;
+    app_id: &amp;quot;XXXXXXXXXXXXXXXX&amp;quot;
+    secret: &amp;quot;XXXXXXXXXXXXXXXXXXXXXXXXXXX&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember, you get the app_id and the secret from Facebook&amp;rsquo;s developer application after you create the app. The postback tells Facebook where to post back to after the user has granted the app authorization. Note that Facebook requires a slash (/) on the end of the URL for the postback. With Facebook ready to post to a URL, it&amp;rsquo;s time to create it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/postback/&#39; =&amp;gt; sub {
+    my $authorization_code = params-&amp;gt;{code};
+    my $fb                 = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;request_access_token($authorization_code);
+    session access_token =&amp;gt; $fb-&amp;gt;access_token;
+    redirect &#39;/&#39;;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;NOTE: I know it&amp;rsquo;s called a postback, but for whatever reason Facebook does the &lt;code&gt;POST&lt;/code&gt; as a &lt;code&gt;GET&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Facebook&amp;rsquo;s postback passes an authorization code—a sort of temporary password. Use that code to ask Facebook for an access token (like a session id). An access token allows you to request information from Facebook &lt;em&gt;on behalf of the user&lt;/em&gt;, so all of those steps are, essentially, your app logging in to Facebook. However, unless you store that access token to use again in the future, the next request to Facebook will log you out. Therefore, the example shoves the access token into a Dancer session to store it for future use before redirecting the user back to the front page of the site.&lt;/p&gt;
+
+&lt;p&gt;NOTE: The access token we have will only last for two hours. After that, you have to request it again.&lt;/p&gt;
+
+&lt;p&gt;Now you can update the front page to include a little bit of information from Facebook. Replace the existing front page with this one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;access_token(session-&amp;gt;{access_token});
+
+    my $response = $fb-&amp;gt;query-&amp;gt;find(&#39;me&#39;)-&amp;gt;request;
+    my $user     = $response-&amp;gt;as_hashref;
+    template &#39;home.tt&#39;, { name =&amp;gt; $user-&amp;gt;{name} }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code fetches the access token back out of the session and uses it to find out some information about the current user. It passes the name of that user into the home template as a template parameter so that the home page can display the user&amp;rsquo;s name. (How do you know what to request and what responses you get? See the &lt;a href=&#34;http://developers.facebook.com/docs/reference/api/&#34;&gt;Facebook Graph API documentation&lt;/a&gt;.)&lt;/p&gt;
+
+&lt;p&gt;While there is a bit of a trick to using Facebook as an authentication system, it&amp;rsquo;s not terribly difficult. Stay tuned for Part II where I&amp;rsquo;ll show you how to post something to a user&amp;rsquo;s wall.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Colonizing the Lacuna Expanse with Perl</title>
+      <link>http://localhost:1313/pub/2010/10/colonizing-the-lacuna-expanse-with-perl.html/</link>
+      <pubDate>Fri, 22 Oct 2010 10:42:40 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/10/colonizing-the-lacuna-expanse-with-perl.html/</guid>
+      <description>&lt;p&gt;&lt;em&gt;Perl productivity has suffered this month with JT Smith&amp;rsquo;s announcement of &lt;a href=&#34;http://lacunaexpanse.com/&#34;&gt;The Lacuna Expanse&lt;/a&gt;, a web-based space empire strategy game. As with most of Smith&amp;rsquo;s projects, TLE uses Perl extensively. Perl.com recently conducted an email interview to explore the world behind the game world.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;You&amp;rsquo;re a successful serial entrepreneur. How&amp;rsquo;d you get into Perl?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;I started my professional career as an Engineer at a TV station. As the web started to get popular in the early 90&amp;rsquo;s I started picking up web development for the TV station, and then eventually went to work at an ISP as a web developer and system administrator. That&amp;rsquo;s when I first picked up Perl, as it was already installed on the DEC Unix boxes they were running. I realized how easy it was to use it to automate a lot of my job (deploying sites, running backups, collecting statistics, munging logs), and a little web stuff here and there too (processing forms, writing message boards and polls). Since then I&amp;rsquo;ve used several other languages (PHP, Java, and Ruby mostly), but I always come back to Perl because it solves the most problems for me with the littlest amount of fuss.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;What&amp;rsquo;s your business background?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;I have no formal business training, but I&amp;rsquo;ve worked at lots of companies big and small, and either started or helped start about a dozen companies now, four of which I still own. So I&amp;rsquo;ve really picked up a lot of my business expertise through trial and error, and through watching the successes and failures of other businesses.&lt;/p&gt;
+
+&lt;p&gt;Some people follow sports and can quote you the scores and statistics of their favorite teams. For me, I prefer to watch businesses and business leaders. And when I read for entertainment, it&amp;rsquo;s almost never fiction. Instead I like to read about things that can give me ideas to apply. For instance, I just finished &amp;ldquo;The Viral Loop,&amp;rdquo; which covers viral marketing history from Tupperware through Facebook. I know all this sounds pretty nerdy/geeky/dorky, but so be it.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;How did you decide to do a browser-based game?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Actually long before I built &lt;a href=&#34;http://webgui.org/&#34;&gt;WebGUI&lt;/a&gt;, in the CGI era, I built one of the very first web-based RPG systems. It was called Survival of the Fittest. And back about that time I had the idea for The Lacuna Expanse (it was called Star Games back then), but the technology wasn&amp;rsquo;t there to pull off what I really wanted to do.&lt;/p&gt;
+
+&lt;p&gt;Then last year (released July 14, 2009) I built a new business called &lt;a href=&#34;http://thegamecrafter.com/&#34;&gt;The Game Crafter&lt;/a&gt;. It is a web to print company, where people design board games and card games using their web browser (plus some offline image editing) and when they&amp;rsquo;re done, they can order a copy for themselves, or put it up in our online store to sell to potential customers. It&amp;rsquo;s sort of like &lt;a href=&#34;http://lulu.com/&#34;&gt;Lulu&lt;/a&gt; or &lt;a href=&#34;http://cafepress.com&#34;&gt;CafePress&lt;/a&gt;, but for traditional board and card games. Here we are just over a year later and that business has really taken off, with over 1,500 people making custom games, and 70% of customers returning for more than one order. I should mention that TGC is built with 100% pure Perl as well.&lt;/p&gt;
+
+&lt;p&gt;About the time that The Game Crafter launched, another business that I had created four years earlier started actually making some good money. That business is &lt;a href=&#34;http://cmsmatrix.org/&#34;&gt;CMS Matrix&lt;/a&gt;, and yes it&amp;rsquo;s 100% pure Perl as well.&lt;/p&gt;
+
+&lt;p&gt;After about 6 months of seeing how well The Game Crafter and CMS Matrix were doing, and knowing that I had a solid team in place to keep WebGUI marching forward, my business partners and I decided we should take a chance with yet another business. But this time we decided we wanted to tackle something much more ambitious and risky.&lt;/p&gt;
+
+&lt;p&gt;One of my business partners reminded me of the Star Games idea. And there&amp;rsquo;s hardly anything more risky than making a video game. It has a large up front cost of both time and money, and video games pretty much either make a lot of money, or none at all. There&amp;rsquo;s not much of a middle of the road. With Star Games as our foundation, we started designing game mechanics. We didn&amp;rsquo;t want to build yet another war game (too many of those) so we settled on espionage as our conflict mechanism. And until WoW and The Sims came around, there was one game that dominated the landscape as far as revenue goes, SimCity. So we knew the game had to have a city building element. And everything else was stuff we either made up, or ideas we borrowed from our favorite games.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;What did you have to invent and what did you reuse?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Luckily CPAN came to the rescue as it has on basically every Perl project I&amp;rsquo;ve ever tackled. So I was able to not have to reinvent the wheel on basically any foundational level. Here&amp;rsquo;s the list of Perl modules I used:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Data::Validate::Email&#34;&gt;Data::Validate::Email&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Text::CSV_XS&#34;&gt;Text::CSV_XS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Log::Log4perl&#34;&gt;Log::Log4perl&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/UUID::Tiny&#34;&gt;UUID::Tiny&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/DateTime::Format::MySQL&#34;&gt;DateTime::Format::MySQL&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/DBIx::Class::TimeStamp&#34;&gt;DBIx::Class::TimeStamp&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/JSON::XS&#34;&gt;JSON::XS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/JSON&#34;&gt;JSON&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Config::JSON&#34;&gt;Config::JSON&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Starman&#34;&gt;Starman&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/JSON::RPC::Dispatcher&#34;&gt;JSON::RPC::Dispatcher&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Log::Any::Adapter&#34;&gt;Log::Any::Adapter&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Log::Any::Adapter::Log4perl&#34;&gt;Log::Any::Adapter::Log4perl&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/String::Random&#34;&gt;String::Random&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/List::Util::WeightedChoice&#34;&gt;List::Util::WeightedChoice&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/List::Util&#34;&gt;List::Util&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/List::MoreUtils&#34;&gt;List::MoreUtils&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/DateTime&#34;&gt;DateTime&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Regexp::Common&#34;&gt;Regexp::Common&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Pod::Simple::HTML&#34;&gt;Pod::Simple::HTML&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/File::Copy&#34;&gt;File::Copy&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/DateTime::Format::Duration&#34;&gt;DateTime::Format::Duration&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/XML::FeedPP&#34;&gt;XML::FeedPP&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/SOAP::Amazon::S3&#34;&gt;SOAP::Amazon::S3&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/DBD::mysql&#34;&gt;DBD::mysql&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/DBIx::Class&#34;&gt;DBIx::Class&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/JSON::Any&#34;&gt;JSON::Any&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/DBIx::Class::InflateColumn::Serializer&#34;&gt;DBIx::Class::InflateColumn::Serializer&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/DBIx::Class::DynamicSubclass&#34;&gt;DBIx::Class::DynamicSubclass&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Memcached::libmemcached&#34;&gt;Memcached::libmemcached&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Server::Starter&#34;&gt;Server::Starter&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/IO::Socket::SSL&#34;&gt;IO::Socket::SSL&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::Server::SS::PreFork&#34;&gt;Net::Server::SS::PreFork&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Email::Stuff&#34;&gt;Email::Stuff&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Facebook::Graph&#34;&gt;Facebook::Graph&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/File::Path&#34;&gt;File::Path&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/namespace::autoclean&#34;&gt;namespace::autoclean&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Clone&#34;&gt;Clone&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Plack::Middleware::CrossOrigin&#34;&gt;Plack::Middleware::CrossOrigin&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::Amazon::S3&#34;&gt;Net::Amazon::S3&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;When I first started development I was convinced that to be massively parallel I was going to have to go with an async server like Coro or POE, and a NoSQL database.&lt;/p&gt;
+
+&lt;p&gt;I quickly realized that writing this system to be completely async was going to be a nightmare that would take more than double the time. Part of the problem was that while I was familiar with developing async applications, I had only done it on a small scale in the past. The other problem was that I kept running into modules I wanted to use that weren&amp;rsquo;t async compatible. Ultimately I ditched the idea of going async within the first month.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately I wasn&amp;rsquo;t so quick to ditch the idea of NoSQL. I started with MongoDB and CouchDB, but had trouble compiling them with the Perl bindings. I planned on hosting on &lt;a href=&#34;http://aws.amazon.com./&#34;&gt;Amazon&lt;/a&gt; at that point, so I decided to give SimpleDB a go. The downside there was that there were no decent Perl bindings for SimpleDB, that weren&amp;rsquo;t entirely bare bones. So with that I created &lt;a href=&#34;https://metacpan.org/pod/SimpleDB::Class&#34;&gt;SimpleDB::Class&lt;/a&gt; (based loosely on &lt;a href=&#34;https://metacpan.org/pod/DBIx::Class&#34;&gt;DBIx::Class&lt;/a&gt;). The module works great. Unfortunately SimpleDB doesn&amp;rsquo;t. It&amp;rsquo;s super slow. So four months into development, with a whimper, I had to ditch my beloved &lt;a href=&#34;https://metacpan.org/pod/SimpleDB::Class&#34;&gt;SimpleDB::Class&lt;/a&gt; module. I&amp;rsquo;m glad I did. Development has been much faster and easier since then, and a good amount of thanks goes to &lt;a href=&#34;https://metacpan.org/pod/DBIx::Class&#34;&gt;DBIx::Class&lt;/a&gt; for that.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/WWW::Facebook::API&#34;&gt;WWW::Facebook::API&lt;/a&gt; has been largely abandoned by its author. He told me he doesn&amp;rsquo;t have time to maintain it anymore. And I was having a hard time getting it to work anyway. As luck would have it Facebook just announced their Graph API, so I decided to take on that project, and build a Perl wrapper around it. And &lt;a href=&#34;https://metacpan.org/pod/Facebook::Graph&#34;&gt;Facebook::Graph&lt;/a&gt; was born. This enabled me to allow Facebook users to Single Sign On into the web site, the game, and also interact with their accounts.&lt;/p&gt;
+
+&lt;p&gt;About the only other non-game piece that I had to invent of any consequence was &lt;a href=&#34;https://metacpan.org/pod/JSON::RPC::Dispatcher&#34;&gt;JSON::RPC::Dispatcher&lt;/a&gt;, which is a Plack enabled web service generator. There are some other JSON-RPC modules on CPAN, but for one reason or another I found them all completely insufficient. Mostly because of one or more of four reasons:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;It didn&amp;rsquo;t support JSON-RPC 2.0.&lt;/li&gt;
+&lt;li&gt;Its documentation was so poor that I couldn&amp;rsquo;t make it work.&lt;/li&gt;
+&lt;li&gt;It made me write a ton of code to simply expose a web service.&lt;/li&gt;
+&lt;li&gt;It wasn&amp;rsquo;t PSGI/Plack compatible.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;With &lt;a href=&#34;https://metacpan.org/pod/JSON::RPC::Dispatcher&#34;&gt;JSON::RPC::Dispatcher&lt;/a&gt;, I can expose object-oriented code as web services with a single line of code.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m not very happy with the Perl modules that are out there for S3 right now. Right now we&amp;rsquo;re using a combination of &lt;a href=&#34;https://metacpan.org/pod/SOAP::Amazon::S3&#34;&gt;SOAP::Amazon::S3&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Net::Amazon::S3&#34;&gt;Net::Amazon::S3&lt;/a&gt;, and neither are particularly good, at least for our purposes. They both work, but only for fairly basic purposes. Sometime in the near future I&amp;rsquo;ll either take on a massive overhaul of one of those modules, or write my own from scratch. Which remains to be seen depending on how open the authors of those modules are to patches.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;What did you need from SimpleDB besides more speed?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;What I was hoping I&amp;rsquo;d get out of SimpleDB was three things: massive parallelism, hierarchical data structure storage, and schema-less storage to make my upgrade path easier. It provided all of those things.&lt;/p&gt;
+
+&lt;p&gt;What I hadn&amp;rsquo;t anticipated was all the limitations it would place on me. Speed was just the nail in the coffin. It also puts pretty harsh limits on the amount of data per record, the amount of data returned per result set, and the complexity of queries. In addition, like most NoSQL databases it&amp;rsquo;s eventually consistent, which provides its own host of problems. I had worked my way around pretty much all that, and then finally hit the performance bottleneck.&lt;/p&gt;
+
+&lt;p&gt;At that point I knew I had to make a change, because I wouldn&amp;rsquo;t be able to make up the difference in parallelism. For example, in order to process functions on a building, I would need planet data, and empire data in addition to the building data. But I wouldn&amp;rsquo;t know what empire or planet to fetch until I fetched the building, which meant I&amp;rsquo;d have to do serial processing. And I couldn&amp;rsquo;t cache all the data for the empire and the planet in the building (or vice versa) because of the limits on the amount of data allowed to be stored per record. My two options were: 1) Bring everything forward into memcached, which has its own problems because I&amp;rsquo;d have to create an indexing system; 2) Move to a relational database.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;When did you start using &lt;a href=&#34;http://plackperl.org/&#34;&gt;Plack&lt;/a&gt;?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;I first heard about Plack late last year when one of the contributors to WebGUI did an initial test implementation (&lt;a href=&#34;http://blog.patspam.com/2009/plebgui-webgui-meets-plack&#34;&gt;PlebGUI&lt;/a&gt;) to see if we could use it in WebGUI. After seeing how cool it was I knew that WebGUI 8 had to have it, and all my future projects would also use it.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;What&amp;rsquo;s been the biggest benefit for you?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The benefits are so huge that they are hard to enumerate, so I&amp;rsquo;ll pick the top 3 or 4. For the Lacuna Expanse, the main benefit was ease of development. There were no longer any hoops to jump through (the mod_perl landscape can be tricky to navigate). Sometime later Starman came out and that gave me an instant boost to performance, which was also nice. For WebGUI the middleware components were instrumental. They allowed us to eliminate a lot of code we previously had to write ourselves rather than using shared libraries. In addition, just switching from mod_perl 2 to Starman (no other changes), gave us a 300% performance boost.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;You seem to be comfortable using a lot of new technologies with a reasonable amount of traffic. How do you see the risks and the rewards?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;First and foremost Miyagawa, who wrote Starman and much of Plack, is my personal Perl hero. It seems like everything he writes is absolute gold. So the fact that he wrote it adds some confidence.&lt;/p&gt;
+
+&lt;p&gt;But you&amp;rsquo;re right, in general I&amp;rsquo;m not averse to using new technologies. The problem with &amp;ldquo;tried and true&amp;rdquo; is that it&amp;rsquo;s often &amp;ldquo;old and stale&amp;rdquo;. So from my perspective, there are just as many risks choosing proven technologies as there are new ones. That doesn&amp;rsquo;t mean you can blindly adopt new technologies, but you should be on the lookout for them. The rest of the risk/reward decision comes from my business experience: Change is inevitable. If you try something and it doesn&amp;rsquo;t work out, so what? Sure it&amp;rsquo;s going to cost you some time/money, but maintaining antiquated systems costs a lot of money too. These days the pace of technology moves too quickly to rest on tried and true alone.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Are you comfortable with the risk that you&amp;rsquo;ll run into maturity problems and can patch them or work around them, or do you think that despite their relative youth, they&amp;rsquo;re very capable for your purposes?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the thing. When you&amp;rsquo;re running a technology based business, the only thing you can plan for is that things will change.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s use scalability as an example. If you try to build a system that will infinitely scale before you have any users then you&amp;rsquo;ll spend a lot of time and money on something that may never get any users. At the same time, if you put no time into planning for some amount of scaling, then you won&amp;rsquo;t have enough breathing room to keep your users happy while you refactor.&lt;/p&gt;
+
+&lt;p&gt;Likewise you can&amp;rsquo;t anticipate all the features you&amp;rsquo;ll ever need, because user&amp;rsquo;s desires are hard to predict. And because of this, at some point you&amp;rsquo;ll likely make a fundamental flaw in your architecture that will require at least a partial rewrite of your software. This is very much a business decision. Most developers I know cry when I say that, because most believe that it&amp;rsquo;s both possible and desirable to reach design/implementation nirvana. The fact is that users don&amp;rsquo;t care if your APIs are perfect. They care if your software does what they need it to do. From a business perspective it&amp;rsquo;s often more profitable to build something quickly and then continually refactor or even rewrite it to match demand.&lt;/p&gt;
+
+&lt;p&gt;I say all of this to make the point that if a particular new technology doesn&amp;rsquo;t work out like we expected it to, then we&amp;rsquo;ll simply replace it in the next iteration. If you go into the project with that mentality you&amp;rsquo;ll likely be more successful.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;What&amp;rsquo;s the basic architecture of The Lacuna Expanse?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The basic software architecture looks like:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2010_10_colonizing-the-lacuna-expanse-with-perl/arch.png&#34;&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2010_10_colonizing-the-lacuna-expanse-with-perl/arch_small.png&#34; alt=&#34;basic architecture of The Lacuna Expanse&#34; /&gt;&lt;/a&gt;
+Basically per server configurable game rules go into various &lt;a href=&#34;https://metacpan.org/pod/Config::JSON&#34;&gt;Config::JSON&lt;/a&gt; config files. &lt;a href=&#34;https://metacpan.org/pod/DBIx::Class&#34;&gt;DBIx::Class&lt;/a&gt; and MySQL handle all of the game data storage and querying. Memcached sits off to the side and handles lock contentions, limit contentions, session management, and other server coordination communication. Unfortunately, not much can actually be cached due to the dynamic nature of the game, unless I was willing to cache basically everything, which I&amp;rsquo;m not. And all the static stuff, like images, JavaScript, and CSS files get served up from CloudFront. We also push our RSS feeds and other semi-static game content out to S3.&lt;/p&gt;
+
+&lt;p&gt;The game engine itself is basically an MVC setup built with Moose. &lt;a href=&#34;https://metacpan.org/pod/DBIx::Class&#34;&gt;DBIx::Class&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Config::JSON&#34;&gt;Config::JSON&lt;/a&gt; act as the model. Some custom Moose objects tied to &lt;a href=&#34;https://metacpan.org/pod/Memcached::libmemcached&#34;&gt;Memcached::libmemcached&lt;/a&gt; act as the controller handling session management, privileges, etc. And &lt;a href=&#34;https://metacpan.org/pod/JSON::RPC::Dispatcher&#34;&gt;JSON::RPC::Dispatcher&lt;/a&gt; acts as the view.&lt;/p&gt;
+
+&lt;p&gt;The basic server architecture looks like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2010_10_colonizing-the-lacuna-expanse-with-perl/server.png&#34;&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2010_10_colonizing-the-lacuna-expanse-with-perl/server_small.png&#34; alt=&#34;server architecture of The Lacuna Expanse&#34; /&gt;&lt;/a&gt;
+Any of the server nodes can be set up in either a clustered or load balanced formation to handle traffic growth.&lt;/p&gt;
+
+&lt;p&gt;And finally we use &lt;a href=&#34;http://github.com/&#34;&gt;Github&lt;/a&gt; as our deployment system. We use its service hooks feature to trigger pushing new content to S3/Cloudfront and code to the game servers.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;How many people are working on this?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Six, plus a bunch of play testers. One artist named &lt;a href=&#34;http://ryanknope.com/&#34;&gt;Ryan Knope&lt;/a&gt;; plus a part time helper, Keegan Runde, who is the son of one of the other developers. One on iPhone development, named Kevin Runde. Two on Web Client development John Rozeske and Graham Knop. Myself on server development. And myself and my business partner Jamie Vrbsky on game mechanics development.&lt;/p&gt;
+
+&lt;p&gt;We started development in January 2010, and officially launched the game on October 4, 2010. Now that we&amp;rsquo;ve launched, I&amp;rsquo;ve brought in one of my other business partners, Tavis Parker, to help out with marketing the game. And we&amp;rsquo;re still pushing forward on new releases. We hope to have our first expansion for the game, called &amp;ldquo;Enemy Within&amp;rdquo;, out sometime in Q1 2011.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;How do you manage your development process?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;re very loose on management.&lt;/p&gt;
+
+&lt;p&gt;We basically have a strategy meeting every 2 weeks at a local pub, where we discuss whatever needs to be discussed in person. Beyond that we have a play testers mailing list, a developers mailing list, and a defect tracking system that we use internally. And other than that communicate through Skype and email.&lt;/p&gt;
+
+&lt;p&gt;We manage all of our code and content through various public and private github repositories. We share documents and art mockups using &lt;a href=&#34;http://dropbox.com/&#34;&gt;Dropbox&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I publish all the JSON-RPC APIs out using POD (nicely formatted using &lt;a href=&#34;https://metacpan.org/pod/Pod::Simple::HTML&#34;&gt;Pod::Simple::HTML&lt;/a&gt;) to our play testers server, which is what the client guys develop against. And then ultimately once vetted and implemented by our client guys, the APIs are pushed out to the public server here at &lt;a href=&#34;http://us1.lacunaexpanse.com/api/&#34;&gt;http://us1.lacunaexpanse.com/api/&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;What little project management and coordination we need is handled by me emailing back and forth.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;How often are your releases? What&amp;rsquo;s the breakdown between bugfixes and new development?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;For the Lacuna Expanse we&amp;rsquo;re doing releases about 4 or 5 times a week. 1 or 2 of them contain some new features, and the rest are bug fixes. However, TLE is very new. In the beginning it&amp;rsquo;s very important to react quickly to your users needs because they often find bugs you didn&amp;rsquo;t, or have feature ideas that are almost fundamental after you hear them, but you never thought of them during the development process. By the end of the year our development cycle will slow down quite a bit, probably to once per week.&lt;/p&gt;
+
+&lt;p&gt;For WebGUI we release approximately once per week, and those releases are primarily bug fixes. We generally do about 2 major releases per year that are primarily new features.&lt;/p&gt;
+
+&lt;p&gt;For The Game Crafter we&amp;rsquo;ve stopped doing releases, except for the occasional bug fix because we&amp;rsquo;re coming into the holiday season. Starting in January we&amp;rsquo;re going to get going on a complete rewrite (about a six month process), which will quadruple our feature set, give us about a 700% performance gain, and allow us to scale with the growing demands our customers are placing on us.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Recruit existing Perl developers in your area, work with people you&amp;rsquo;ve worked with before, or hire good people and train them?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;All of the above. When you&amp;rsquo;re looking to hire someone you should hire the best person you can afford to hire. In our case this means we&amp;rsquo;ve decided to design our businesses around telecommuting. We still maintain a small office, and still hire locally when we can, and we even provide incentives for our employees to move to Madison if they so desire, but we never throw out a resume based upon location, what schools they attended, or whether or not they&amp;rsquo;ve happened to work with the particular modules and technologies we&amp;rsquo;re working with.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;I keep an eye on one of the alliances in the game populated by a lot of well- known Perl developers, and they seem to be pushing the limits of the public API. I know you made this API public for a reason (and increased the call limit)&amp;ndash;but do you foresee an endgame where the best client automation wins, or do you expect that the game strategy will be malleable such that clever players have an edge over automation?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Automation has its advantages certainly. It&amp;rsquo;s great for getting the mundane crap out of the way.&lt;/p&gt;
+
+&lt;p&gt;Most games spend a lot of time and effort doing everything they can to prevent people from automating their game. The trouble is that you end up wasting a lot of effort trying to stop smart people from being smart. If they really want to automate something they will find a way around your restrictions. It&amp;rsquo;s a never ending arms race.&lt;/p&gt;
+
+&lt;p&gt;In our case we decided to embrace these people. Better and better tools will come along and ultimately that means these people are adding features to our game that we didn&amp;rsquo;t have to write. Because eventually the tools will get simple enough that your average Joe can run them.&lt;/p&gt;
+
+&lt;p&gt;As far as the game is concerned it doesn&amp;rsquo;t make a bit of difference that you can use a tool to push a button in the game, rather than pushing the button yourself. You still have to follow the same rules. It takes a certain amount of time to happen, you have to spend a certain amount of resources, etc. When it comes right down to it, someone still has to make all of the important decisions, and that&amp;rsquo;s not likely going to be a tool anytime soon. You have to decide what buildings to upgrade in what order, what ships to build, who to attack, how to defend, etc. And once the next expansion comes out, you&amp;rsquo;ll have to work with your team mates to build a space station, enact laws, and defend your federation of planets. It will be very much a social endeavor.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>A Website in a Minute Using Dancer, the Effortless Web Framework</title>
+      <link>http://localhost:1313/pub/2010/04/a-website-in-a-minute-using-dancer-the-effortless-web-framework.html/</link>
+      <pubDate>Tue, 06 Apr 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/04/a-website-in-a-minute-using-dancer-the-effortless-web-framework.html/</guid>
+      <description>
+
+&lt;p&gt;While Perl has a few heavy hitters in the web framework world (&lt;a href=&#34;https://metacpan.org/pod/Catalyst&#34;&gt;Catalyst&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Jifty&#34;&gt;Jifty&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/CGI::Application&#34;&gt;CGI::App&lt;/a&gt;), sometimes they can seem like overkill. When writing a light web service or a high-end but not-as-complex website, you might want something smaller and simpler. This is where &lt;a href=&#34;http://www.perldancer.org/&#34;&gt;Dancer&lt;/a&gt; comes in.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt; is a web framework whose purpose is to let you get a website up and running within a minute, if not sooner. It started as a port of Ruby&amp;rsquo;s &lt;a href=&#34;http://www.sinatrarb.com/&#34;&gt;Sinatra&lt;/a&gt; but has since took its own path.&lt;/p&gt;
+
+&lt;p&gt;Dancer supports &lt;a href=&#34;http://plackperl.org/&#34;&gt;Plack&lt;/a&gt;/&lt;a href=&#34;http://plackperl.org/&#34;&gt;PSGI&lt;/a&gt; from an early version and has a built-in scaffolding script to help you get up and running within seconds. It creates deployment scripts for you, includes a guide for deployment situations to help you configure your webserver (whether &lt;a href=&#34;http://www.danga.com/perlbal&#34;&gt;Perlbal&lt;/a&gt;, &lt;a href=&#34;http://httpd.apache.org/&#34;&gt;Apache&lt;/a&gt;, &lt;a href=&#34;http://www.lighttpd.net/&#34;&gt;Lighttpd&lt;/a&gt; or anything else you might care to use) and has a default clean design to help you prototype your website faster.&lt;/p&gt;
+
+&lt;h2 id=&#34;dancing&#34;&gt;&lt;strong&gt;Dancing&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The best way to learn, understand, and fall in love with Dancer is to get on the dance floor:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ cpan Dancer # or cpanp, or cpanm
+    $ dancer -a MyApp
+    + ./MyApp
+    + MyApp/views
+    + MyApp/views/index.tt
+    + MyApp/views/layouts
+    + MyApp/views/layouts/main.tt
+    + MyApp/environments
+    + MyApp/environments/development.yml
+    + MyApp/environments/production.yml
+    + MyApp/config.yml
+    + MyApp/app.psgi
+    + MyApp/MyApp.pm
+    + MyApp/MyApp.pl
+    + MyApp/public
+    + MyApp/public/css
+    + MyApp/public/css/style.css
+    + MyApp/public/css/error.css
+    + MyApp/public/images
+    + MyApp/public/404.html
+    + MyApp/public/dispatch.fcgi
+    + MyApp/public/dispatch.cgi
+    + MyApp/public/500.html
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;dancer&lt;/code&gt; application creates a &lt;em&gt;views&lt;/em&gt; folder, which contains layout and templates. It contains sane defaults you can use to start. It also creates a &lt;em&gt;config.yaml&lt;/em&gt; file and an &lt;em&gt;environments&lt;/em&gt; folder for environment-specific configurations. &lt;em&gt;MyApp.pm&lt;/em&gt; and &lt;em&gt;MyApp.pl&lt;/em&gt; are the main application files. &lt;em&gt;MyApp.pl&lt;/em&gt; includes a built-in webserver for the development (or even deployment!) of your application. The &lt;em&gt;public&lt;/em&gt; folder contains default CSS and images.&lt;/p&gt;
+
+&lt;p&gt;This directory tree includes a few other interesting files; these are dispatchers for various backends. The PSGI dispatcher is &lt;em&gt;app.psgi&lt;/em&gt;. The CGI and FCGI dispatchers are &lt;em&gt;public/dispatch.cgi&lt;/em&gt; and &lt;em&gt;public/dispatch.fcgi&lt;/em&gt;, respectively.&lt;/p&gt;
+
+&lt;p&gt;Look in &lt;em&gt;MyApp/MyApp.pm&lt;/em&gt;. Dancing really is this simple!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package MyApp;
+    use Dancer;
+
+    get &#39;/&#39; =&amp;gt; sub {
+        template &#39;index&#39;;
+    };
+
+    true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What does this all mean?&lt;/p&gt;
+
+&lt;h2 id=&#34;routes&#34;&gt;&lt;strong&gt;Routes&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer uses the notion of &lt;em&gt;routes&lt;/em&gt; to specify the paths your users might take in your website. All you need in order to write a Dancer application is to define routes. Routes are not only simple, but concise and versatile. They support variables (named matching, wildcard matching), regular expressions and even conditional matching.&lt;/p&gt;
+
+&lt;p&gt;Here are a few examples:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/&#39; =&amp;gt; sub {
+        return &#39;hello world!&#39;;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This route defines the root path of the application. If someone reaches &lt;a href=&#34;http://example.com/&#34;&gt;http://example.com/&lt;/a&gt;, it will match this route.&lt;/p&gt;
+
+&lt;p&gt;The word &lt;code&gt;get&lt;/code&gt; signifies the HTTP method (GET) for which the path exists. If you use a web form, you need a route for a POST method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    post &#39;/user/add/&#39; =&amp;gt; sub {
+        # create a user using the data from the form
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are a few more methods (&lt;strong&gt;del&lt;/strong&gt; for &lt;em&gt;DELETE&lt;/em&gt;, &lt;strong&gt;put&lt;/strong&gt; for &lt;em&gt;PUT&lt;/em&gt;). You can also use &lt;code&gt;any&lt;/code&gt; to provide a single route for all HTTP methods or for several specific methods:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    any [&#39;get&#39;, &#39;post&#39;] =&amp;gt; sub {
+        # both post and get will reach here!
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Variables are clean and simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/user/view/:username/&#39; =&amp;gt; sub {
+        my $username = params-&amp;gt;{username};
+        template &#39;users&#39; =&amp;gt; { username =&amp;gt; $username };
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This route matches &lt;a href=&#34;http://example.com/user/view/variable/&#34;&gt;http://example.com/user/view/variable/&lt;/a&gt;, while &lt;em&gt;variable&lt;/em&gt; can be of any type.&lt;/p&gt;
+
+&lt;p&gt;Of course, you can write a more complex wildcard matching:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/download/*.*&#39; =&amp;gt; sub {
+        # we extract the wild card matching using splat
+        my ( $file, $ext ) = splat;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you feel rambunctious, you can define a regular expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get r( &#39;/hello/([\w]+)&#39; ) =&amp;gt; sub {
+        my ($name) = splat;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that in these examples, the &lt;code&gt;splat&lt;/code&gt; keyword returns the values that the wildcards (the &lt;code&gt;*&lt;/code&gt; used in routes) or regular expressions (declared with &lt;code&gt;r()&lt;/code&gt;) match. As a convenience, note also that you do &lt;em&gt;not&lt;/em&gt; have to escape the forward slash regex delimiters used in &lt;code&gt;r()&lt;/code&gt;; Dancer escapes them for you.&lt;/p&gt;
+
+&lt;h2 id=&#34;multiple-routes&#34;&gt;&lt;strong&gt;Multiple Routes&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;When writing many routes, you might find it easier to separate them to different files according to their prefixes. Dancer provides &lt;code&gt;prefix&lt;/code&gt; and &lt;code&gt;load&lt;/code&gt; to help you with that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # in main Dancer application:
+    load &#39;UserRoutes.pm&#39;;
+
+    # in UserRoutes.pm:
+    use Dancer &#39;:syntax&#39;; # importing just the syntax to create routes
+    prefix &#39;/user&#39;;
+
+    get &#39;/view/&#39;   =&amp;gt; sub { ... };
+    get &#39;/edit/&#39;   =&amp;gt; sub { ... };
+    get &#39;/delete/&#39; =&amp;gt; sub { ... };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These will match &lt;a href=&#34;http://example.com/user/view/&#34;&gt;http://example.com/user/view/&lt;/a&gt;, &lt;a href=&#34;http://example.com/user/edit/&#34;&gt;http://example.com/user/edit/&lt;/a&gt; and &lt;a href=&#34;http://example.com/user/delete/&#34;&gt;http://example.com/user/delete/&lt;/a&gt;, respectively.&lt;/p&gt;
+
+&lt;h2 id=&#34;built-for-scalability&#34;&gt;&lt;strong&gt;Built for scalability&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer has a built-in route caching mechanism, making sure that even when you have a lot of routes, it will be able to serve them at almost the same speed as though you had only a few routes. This means that even if you have 600 routes, you do not have to worry about your application being slow!&lt;/p&gt;
+
+&lt;h2 id=&#34;variables&#34;&gt;&lt;strong&gt;Variables&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer supports internal variables. Declare them with &lt;code&gt;var&lt;/code&gt;, and you can later fetch them inside your routes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    var waiter =&amp;gt; &#39;sawyer&#39;;
+
+    get &#39;/welcome/&#39; =&amp;gt; sub {
+        my $name = vars-&amp;gt;{waiter};
+        return &amp;quot;Hi, I&#39;m $name and I&#39;ll be your waiter this evening.&amp;quot;;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;filters&#34;&gt;&lt;strong&gt;Filters&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Sometimes you want to be able to specify code to run before any route. &lt;a href=&#34;https://metacpan.org/pod/KiokuDB&#34;&gt;KiokuDB&lt;/a&gt;, for example, requires you to make a scope whenever you want to work with the database. This is easy to automate with the &lt;code&gt;before&lt;/code&gt; filter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    before sub {
+        var scope =&amp;gt; $dir-&amp;gt;new_scope;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another common technique is to verify a session:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    before sub {
+        if ( !session(&#39;user&#39;) &amp;amp;&amp;amp; request-&amp;gt;path_info !~ m{^/login} ) {
+            # Pass the original path requested along to the handler:
+            var requested_path =&amp;gt; request-&amp;gt;path_info;
+            request-&amp;gt;path_info(&#39;/login&#39;);
+        }
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;templates&#34;&gt;&lt;strong&gt;Templates&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer will return to the user agent whatever you return from a route, just like PSGI does. &amp;ldquo;Hello, world!&amp;rdquo; in Dancer is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/&#39; =&amp;gt; sub { &#39;Hello, world!&#39; };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Plain text isn&amp;rsquo;t always what you want, so Dancer has powerful support for templates. There are various template engines available (&lt;a href=&#34;https://metacpan.org/pod/Template&#34;&gt;Template::Toolkit&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Template::Tiny&#34;&gt;Template::Tiny&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Tenjin&#34;&gt;Tenjin&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Text::Haml&#34;&gt;Text::Haml&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Mason&#34;&gt;Mason&lt;/a&gt;, to name a few). Dancer also provides a default simple template engine called &lt;a href=&#34;https://metacpan.org/pod/Dancer::Template::Simple&#34;&gt;Dancer::Template::Simple&lt;/a&gt;. This gives you a simple self-contained template engine at no additional cost!&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;template&lt;/code&gt; keyword allows you to specify which template to process and which variables to pass to the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/user/view/:name&#39; =&amp;gt; sub {
+        my $name = params-&amp;gt;{name};
+
+        # Dancer adds .tt automatically, but this is configurable
+        template &#39;show_user&#39; =&amp;gt; {
+            name =&amp;gt; $name,
+            user =&amp;gt; get_user($name),
+        };
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Dancer automatically supplies you an encompassing layout for your templates, much like &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;Template&lt;/a&gt;&amp;rsquo;s &lt;code&gt;WRAPPER&lt;/code&gt; option. This built-in template means you can use the layout with other template engines, such as &lt;a href=&#34;https://metacpan.org/pod/Template::Tiny&#34;&gt;Template::Tiny&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Dancer accomplishes this by rendering two templates: the one you provided and a (configurable) layout template. The layout template gets the output of rendering your template as a &lt;code&gt;content&lt;/code&gt; variable, then embeds that content in the general page layout.&lt;/p&gt;
+
+&lt;p&gt;The default templates that come with Dancer demonstrate this point very well. Here&amp;rsquo;s &lt;em&gt;main.tt&lt;/em&gt;, the default layout:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;!-- some default css --&amp;gt;&amp;lt;/head&amp;gt;
+    &amp;lt;body&amp;gt;
+    &amp;lt;% content %&amp;gt;
+    &amp;lt;/body&amp;gt;
+    &amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;serializers-make-resting-easier&#34;&gt;&lt;strong&gt;Serializers make RESTing easier&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Serializers are a new feature in Dancer (available since version 1.170). They allow automatic serialization for your output in various forms (&lt;a href=&#34;https://metacpan.org/pod/Data::Dumper&#34;&gt;Data::Dumper&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/YAML&#34;&gt;YAML&lt;/a&gt;, or &lt;a href=&#34;https://metacpan.org/pod/JSON&#34;&gt;JSON&lt;/a&gt;) to shorten the amount of code you have to write in your application.&lt;/p&gt;
+
+&lt;p&gt;When programming a RESTful service, the JSON serializer cuts down much of your code by automatically serializing your output. This makes your server-side AJAX code much more efficient and less boilerplate code for you to write.&lt;/p&gt;
+
+&lt;h2 id=&#34;file-uploads-are-fun&#34;&gt;&lt;strong&gt;File uploads are fun&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;File uploads exist since version 1.170. Within a route, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # several files
+    my @files = request-&amp;gt;upload();
+
+    # single file
+    my $file  = request-&amp;gt;upload();
+
+    # then you can do several things with that file
+    $file-&amp;gt;copy_to(&#39;/my/upload/folder&#39;);
+    my $fh       = $file-&amp;gt;file_handle;
+    my $content  = $file-&amp;gt;content;
+    my $filename = $file-&amp;gt;filename;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;easy-configuration&#34;&gt;&lt;strong&gt;Easy configuration&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;You can configure everything (logging, session handling, template layout, file locations) in Dancer using the main configuration file (&lt;em&gt;appdir/config.yml&lt;/em&gt;). There are configuration files for your specific environment (&lt;em&gt;production&lt;/em&gt; and &lt;em&gt;development&lt;/em&gt;) and you can provide environment-specific configurations in the corresponding file (&lt;em&gt;appdir/environments/development.yml&lt;/em&gt;, for example).&lt;/p&gt;
+
+&lt;h2 id=&#34;summary&#34;&gt;&lt;strong&gt;Summary&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;While Dancer is still evolving, it is already a production-ready simple-yet-powerful web framework lets you get from zero to web in record time. Put on your dancing shoes, define your steps, and bust a move!&lt;/p&gt;
+
+&lt;p&gt;Dancer is available on the CPAN (&lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt;), and &lt;a href=&#34;http://github.com/sukria/Dancer&#34;&gt;Dancer development takes place on Github&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Rapid Website Development with CGI::Application</title>
+      <link>http://localhost:1313/pub/2006/10/19/cgi_application.html/</link>
+      <pubDate>Thu, 19 Oct 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/10/19/cgi_application.html/</guid>
+      <description>
+
+&lt;p&gt;This article provides an update on the popular and mature &lt;a href=&#34;http://www.cgi-app.org/&#34;&gt;CGI::Application&lt;/a&gt; framework for web applications. It assumes a basic understanding of the system, so reviewing the &lt;a href=&#34;http://localhost:1313/pub/2001/06/05/cgi.html&#34;&gt;previous Perl.com article about CGI::Application&lt;/a&gt; may be helpful background reading.&lt;/p&gt;
+
+&lt;h3 id=&#34;cgi-application-and-catalyst-compared&#34;&gt;CGI::Application and Catalyst Compared&lt;/h3&gt;
+
+&lt;p&gt;You may recall the &lt;a href=&#34;http://localhost:1313/pub/2005/06/02/catalyst.html&#34;&gt;Perl.com article on another MVC web framework, Catalyst&lt;/a&gt;. First, I want to clear up possible confusion by explaining how the CGI::Application and Catalyst relate.&lt;/p&gt;
+
+&lt;p&gt;With the many &lt;a href=&#34;http://www.cgi-app.org/?Plugins&#34;&gt;plugins available for CGI::Application&lt;/a&gt; and Catalyst, both &lt;a href=&#34;http://cgiapp.erlbaum.net/cgi-bin/cgi-app/index.cgi?CatalystCompared&#34;&gt;frameworks offer many of the same features&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Both provide convenient methods to access many of the same underlying modules including &lt;a href=&#34;http://www.summersault.com/community/weblog/2005/10/25/validating-web-forms-with-perl.html&#34;&gt;Data::FormValidator&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/HTML::FillInForm&#34;&gt;HTML::FillInForm&lt;/a&gt; and templating systems such as &lt;a href=&#34;http://www.template-toolkit.org/&#34;&gt;Template Toolkit&lt;/a&gt; and &lt;a href=&#34;http://html-template.sourceforge.net/&#34;&gt;HTML::Template&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Both frameworks work in CGI and mod_perl environments, although CGI::Application loads faster in CGI. Each one provides unique features to help with development and debugging. Catalyst includes a built-in web server for easy offline testing and development. CGI::Application provides a &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::DevPopup&#34;&gt;persistent development pop-up window&lt;/a&gt; that provides convenient reports on HTML validation, application performance, and more.&lt;/p&gt;
+
+&lt;p&gt;While CGI::Application and Catalyst share many of the same strengths, they also face the same challenge of attracting users and developers.&lt;/p&gt;
+
+&lt;p&gt;As the expectations for web site features and quality increase, the toolkit that a web developer depends on must increase and expand as well. The more plugins that are compatible with our framework, the easier our job is. We each have a selfish incentive to attract others to use the same framework. Users become contributors, and contributors write plugins to make our lives easier.&lt;/p&gt;
+
+&lt;p&gt;CGI::Application and Catalyst already share users and developers of many of the Perl modules they depend on. With PHP and Ruby on Rails both on the rise as web development solutions, those who prefer Perl have an incentive to promote the best the language has to offer.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-a-difference-half-a-decade-makes&#34;&gt;What A Difference Half A Decade Makes&lt;/h3&gt;
+
+&lt;p&gt;CGI::Application development took off around the 4.0 release for two reasons. To start with, it formalized a plugin system, which led to the release of some initial plugins. Next, the 4.0 release added a callback system, allowing the plugin authors to automatically add actions that take place at particular points in the request cycle.&lt;/p&gt;
+
+&lt;p&gt;For example, the AutoRunmode plugin registers itself at the &amp;ldquo;prerun&amp;rdquo; phase, allowing it to adjust which run mode is selected. Another plugin might register to add a cleanup action in the &amp;ldquo;teardown&amp;rdquo; phase.&lt;/p&gt;
+
+&lt;p&gt;The combined result was a boom in plugin development. While the core of CGI::Application has remained small and stable, there are over three dozen plugins now on the CPAN.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a tour of some of the enhancements that have come about as a result of the new plugin and callback system.&lt;/p&gt;
+
+&lt;h3 id=&#34;simplified-runmode-syntax&#34;&gt;Simplified Runmode Syntax&lt;/h3&gt;
+
+&lt;p&gt;The built-in way to register a run mode typically involves calling &lt;code&gt;run_modes()&lt;/code&gt; within &lt;code&gt;setup()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub setup {
+   my $self = shift;
+   $self-&amp;gt;run_modes([qw/
+        my_run_mode
+   /]);
+}
+
+# later...
+sub my_run_mode {
+ ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With the &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::AutoRunmode&#34;&gt;AutoRunmode plugin&lt;/a&gt;, it&amp;rsquo;s now very easy to declare that a method is a &amp;ldquo;run mode&amp;rdquo; handling a CGI request rather than an internal function. The syntax is simply:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub my_run_mode : Runmode {
+        my $self = shift;
+        # ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can still use &lt;code&gt;setup()&lt;/code&gt;, but it&amp;rsquo;s no longer necessary.&lt;/p&gt;
+
+&lt;h3 id=&#34;new-dispatcher-provides-clean-urls&#34;&gt;New Dispatcher Provides Clean URLS&lt;/h3&gt;
+
+&lt;p&gt;A large project built with CGI::Application typically has many small &amp;ldquo;instance scripts&amp;rdquo; that drive modules full of run modes. All of these instance scripts look basically the same:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Project::Widget::View;
+my $app = Project::Widget::View-&amp;gt;new();
+$app-&amp;gt;run();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A corresponding URL might look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;/cgi-bin/project/widget/view.cgi?widget_id=23
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Dispatch&#34;&gt;CGI::Application::Dispatch 2.0&lt;/a&gt; allows you to replace all of these instance scripts with a single dispatch script to produce much cleaner URLs. Such a dispatch script might look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+use CGI::Application::Dispatch;
+CGI::Application::Dispatch-&amp;gt;dispatch(
+        prefix              =&amp;gt; &#39;&#39;,
+        table               =&amp;gt; [
+            &#39;:app/:rm/:id&#39;  =&amp;gt; {},
+        ],
+
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now add a dash of mod_rewrite magic provided in the documentation, and the URL will transform from:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;/cgi-bin/project/widget/view.cgi/detailed_view?widget_id=23
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;/widget/detailed_view/23
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Clean and simple.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;widget_id&lt;/code&gt; is easily accessible from within the run mode:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $widget_id = $self-&amp;gt;param(&#39;id&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The dispatcher takes care of that detail for you, saving some manual munging of &lt;code&gt;PATH_INFO&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;first-class-templating-support&#34;&gt;First-Class Templating Support&lt;/h3&gt;
+
+&lt;p&gt;While CGI::Application integrates by default with &lt;a href=&#34;http://html-template.sourceforge.net/&#34;&gt;HTML::Template&lt;/a&gt;, it seems an equal number of the users prefer the &lt;a href=&#34;http://www.template-toolkit.org/&#34;&gt;Template Toolkit&lt;/a&gt; templating system. Both camps now have access to several new templating-related features.&lt;/p&gt;
+
+&lt;h4 id=&#34;default-template-names&#34;&gt;Default template names&lt;/h4&gt;
+
+&lt;p&gt;To keep the code cleaner and consistent, it&amp;rsquo;s now possible to generate template names automatically. Typically, you want to load one template to correspond with each run mode. Simply loading a template might look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub my_run_mode: Runmode {
+        my $self = shift;
+
+        # XXX The old way, with redundant file name
+        # my $t = $self-&amp;gt;load_tmpl(&#39;my_run_mode.html&#39;);
+
+        # Look Ma! No explicit file name needed!
+        my $t = $self-&amp;gt;load_tmpl;
+        return $t-&amp;gt;output;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;easy-access-to-the-application-object-from-the-template&#34;&gt;Easy access to the application object from the template&lt;/h4&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::TT&#34;&gt;TT plugin&lt;/a&gt; introduced easy access to the CGI::Application object from the template, allowing easy constructions by using the &lt;code&gt;c&lt;/code&gt; parameter to access the application object.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Hello [% c.session.param(&#39;username&#39;) || &#39;Anonymous User&#39; %]
+&amp;lt;a href=&amp;quot;[% c.query.self_url %]&amp;quot;&amp;gt;Reload this page&amp;lt;/a&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Authors of open source web applications will surely appreciate the &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::AnyTemplate&#34;&gt;AnyTemplate plugin&lt;/a&gt;, which allows you to use a single templating syntax in your code, and lets users choose the templating system that best integrates with their existing project. There was no ready-made way to do this in the past.&lt;/p&gt;
+
+&lt;p&gt;Conveniently, HTML::Template and TT users can use a familiar syntax to drive AnyTemplate.&lt;/p&gt;
+
+&lt;p&gt;TT style:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$self-&amp;gt;template-&amp;gt;process(&#39;file_name&#39;, \%params);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;HTML::Template style:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Yes, it really can be identical to the standard load_tmpl() syntax!
+my $template = $self-&amp;gt;load_tmpl(&#39;file_name&#39;);
+$template-&amp;gt;param(&#39;foo&#39; =&amp;gt; &#39;bar&#39;);
+$template-&amp;gt;output;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A great example of this template abstraction is &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Search&#34;&gt;CGI::Application::Search&lt;/a&gt;, a reusable application that integrates with the &lt;a href=&#34;http://swish-e.org.&#34;&gt;Swish-E&lt;/a&gt; search engine. Whether you prefer HTML::Template or Template Toolkit, it&amp;rsquo;s easy to add this as a search solution for a larger project&amp;ndash;even if the rest of your website does not use CGI::Application.&lt;/p&gt;
+
+&lt;p&gt;CGI::Application also offers improved support for other output formats. The &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::Stream&#34;&gt;Stream plugin&lt;/a&gt; makes it a snap to stream a document to the user, such as a PDF or Excel file that is built on the fly. This saves the busy work of remembering the related details for unbuffered output, &lt;code&gt;binmode&lt;/code&gt;, file chunking, and MIME types. That now takes basically one line of syntax:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$self-&amp;gt;stream_file( $file );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::Output::XSV&#34;&gt;XSV plugin&lt;/a&gt; simplifies building CSV files. This tedium is now a single function call for simple cases:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  return $self-&amp;gt;xsv_report_web({
+    fields     =&amp;gt; \@headers,
+    # Get values from the database
+    values     =&amp;gt; $sth-&amp;gt;fetchall_arrayref( {} );
+    csv_opts   =&amp;gt; { sep_char =&amp;gt; &amp;quot;\t&amp;quot; },
+    filename   =&amp;gt; &#39;members.csv&#39;,
+  });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;lazier-than-ever&#34;&gt;Lazier Than Ever&lt;/h3&gt;
+
+&lt;p&gt;One frequent feature you&amp;rsquo;ll find in CGI::Application plugins is lazy loading. This means that loading and configuring the plugin often has little resource penalty. Take the &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::DBH&#34;&gt;DBH plugin&lt;/a&gt;. It&amp;rsquo;s convenient to configure the database handle once for a whole website project and then use the handle whenever you want.&lt;/p&gt;
+
+&lt;p&gt;Before this plugin arrived, it would be tempting to stuff the database handle into the &lt;code&gt;param&lt;/code&gt; method to achieve a similar effect:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cgiapp_init {
+    my $self = shift;
+
+    my $dbh = DBI-&amp;gt;connect($data_source, $username, $auth, \%attr);
+
+    # save for later!
+    $self-&amp;gt;param(&#39;dbh&#39;,$dbh);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That works OK, but it misses a valuable feature: lazy loading.&lt;/p&gt;
+
+&lt;p&gt;Lazy loading creates the database connection only if any code needs to use it. This avoids needlessly creating a database connection for scripts that don&amp;rsquo;t need it, while still being very convenient. Here&amp;rsquo;s an example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# define the database connection parameters once in a super class, for a whole
+# suite of child applications:
+
+sub cgiapp_init  {
+   my $self = shift;
+
+   # use the same args as DBI-&amp;gt;connect();
+   $self-&amp;gt;dbh_config($data_source, $username, $auth, \%attr);
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, whenever you need a database handle:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub my_run_mode : Runmode {
+    my $self = shift;
+    my $result = $self-&amp;gt;dbh-&amp;gt;selectrow(&amp;quot;...&amp;quot;);
+    # ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Easy. &lt;code&gt;dbh_config()&lt;/code&gt; will get called on every request, but it simply stores the configuration details. The database handle gets created only during calls to the &lt;code&gt;dbh()&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;Another notable lazy-loading plugin is the &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::Session&#34;&gt;Session plugin&lt;/a&gt;, which provides easy access to a CGI::Session object. It further takes advantage of the CGI::Application framework by automatically setting the session cookie for you, so you don&amp;rsquo;t have to deal with cookies unless you want to.&lt;/p&gt;
+
+&lt;h3 id=&#34;ready-for-high-performance-environments&#34;&gt;Ready for High-Performance Environments&lt;/h3&gt;
+
+&lt;p&gt;I mostly use CGI::Application with plain CGI, because it performs well enough and works well in a shared hosting environment since no resources persist between requests.&lt;/p&gt;
+
+&lt;p&gt;However, &lt;a href=&#34;http://cgiapp.erlbaum.net/cgi-bin/cgi-app/index.cgi?SitePerformance&#34;&gt;CGI::Application is ready for high-performance applications&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Often, code written for CGI::Application will run without changes under mod_perl&amp;rsquo;s &lt;code&gt;Apache::Registry&lt;/code&gt; mode, as &lt;a href=&#34;http://www.1-800-save-a-pet.com/&#34;&gt;1-800-Save-A-Pet.com&lt;/a&gt; does.&lt;/p&gt;
+
+&lt;p&gt;To squeeze a little more juice out of mod_perl, there is an &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::Apache&#34;&gt;Apache plugin&lt;/a&gt;, which uses &lt;code&gt;Apache::Request&lt;/code&gt; instead of &lt;code&gt;CGI.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;A current popular alternative for increasing performance is &lt;a href=&#34;http://www.fastcgi.com/&#34;&gt;FastCGI&lt;/a&gt;. Use &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::FastCGI&#34;&gt;CGI::Application::FastCGI&lt;/a&gt;, and add, usually, just one line of code to make your application work in this environment.&lt;/p&gt;
+
+&lt;h3 id=&#34;easy-form-handling&#34;&gt;Easy Form Handling&lt;/h3&gt;
+
+&lt;p&gt;A lot of tedium can be involved in processing web forms. The first plugin, &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::ValidateRM&#34;&gt;ValidateRM&lt;/a&gt;, helped with that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $results =  $self-&amp;gt;check_rm(&#39;display_form&#39;, &#39;_form_profile&#39; )
+   || return $self-&amp;gt;dfv_error_page;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This simple syntax calls a &lt;a href=&#34;https://metacpan.org/pod/Data::FormValidator&#34;&gt;Data::FormValidator&lt;/a&gt; profile into action. If validation fails, the page with the original form is redisplayed with the previous values intact, and error messages appear next to each field that is missing or invalid.&lt;/p&gt;
+
+&lt;p&gt;Fans of Data::FormValidator will appreciate an upcoming related module from the CGI::Application community: &lt;a href=&#34;https://metacpan.org/pod/JavaScript::DataFormValidator&#34;&gt;JavaScript::DataFormValidator&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This module makes it easy to use the same Perl data structure to add an additional level of validation in JavaScript. I expect Catalyst and CGI::App users alike will be putting this to use.&lt;/p&gt;
+
+&lt;p&gt;Finally, there&amp;rsquo;s a new plugin to simplify filling in a web form from a database record. This is the &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::FillInForm&#34;&gt;FillInForm plugin&lt;/a&gt;. The syntax is simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   # fill in the HTML form from the query object
+    $self-&amp;gt;fill_form($html);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In part, this plugin solves &lt;a href=&#34;http://rt.cpan.org/Public/Bug/Display.html?id=13913&#34;&gt;bug #13913 in HTML::FillInForm&lt;/a&gt;, which means the interface detects what kind of input you are giving it, rather than requiring you to explicitly declare that you have &lt;code&gt;hashref&lt;/code&gt; or &lt;code&gt;scalarref&lt;/code&gt; and so forth. As you can see from the example, if you are using the query object as input, you don&amp;rsquo;t need to pass it in at all.&lt;/p&gt;
+
+&lt;h3 id=&#34;devpopup-a-unique-developer-tool&#34;&gt;DevPopUp: A Unique Developer Tool&lt;/h3&gt;
+
+&lt;p&gt;CGI::Application offers a unique developer tool in the form of the &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::DevPopup&#34;&gt;DevPopUp plugin&lt;/a&gt;. You can &lt;a href=&#34;http://oss.rhesa.com/scripts/dp.cgi&#34;&gt;see DevPopUp in action&lt;/a&gt; on Rhesa&amp;rsquo;s demo site. (Make sure your pop-up blocker doesn&amp;rsquo;t trap it!).&lt;/p&gt;
+
+&lt;p&gt;The tool creates a persistent pop-up window that gives you feedback about each run mode as soon as it completes. &lt;em&gt;&amp;ldquo;What were the HTTP Headers? How long did it take? Was the resulting HTML valid?&amp;rdquo;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;The real kicker is that DevPopUp is itself pluggable, allowing other developers to add their own reports. I look forward to Sam Tregar releasing his &lt;a href=&#34;http://use.perl.org/~samtregar/journal/25051&#34;&gt;graphical DBI profiling tool&lt;/a&gt;, which would make a nice addition here.&lt;/p&gt;
+
+&lt;h3 id=&#34;easier-error-messages-with-debugscreen&#34;&gt;Easier Error Messages with DebugScreen&lt;/h3&gt;
+
+&lt;p&gt;CGI::Application users in Japan recently brought us the &lt;a href=&#34;https://metacpan.org/pod/CGI::Application::Plugin::DebugScreen&#34;&gt;DebugScreen&lt;/a&gt; plugin. This is a welcome change from referencing the web server log to find the most recent line that needs debugging.&lt;/p&gt;
+
+&lt;h3 id=&#34;hello-web-2-0-ajax-integration&#34;&gt;Hello, Web 2.0: AJAX Integration&lt;/h3&gt;
+
+&lt;p&gt;In another story of cross-pollination with Catalyst, CGI::Application integrates easily with the JavaScript &lt;a href=&#34;http://prototype.conio.net/&#34;&gt;Prototype&lt;/a&gt; library. Prototype provides easy access to plenty of interesting AJAX effects, such as auto-completing based on a lookup to the server. This uses a thin plugin-wrapping &lt;a href=&#34;https://metacpan.org/pod/HTML::Prototype&#34;&gt;HTML::Prototype&lt;/a&gt;, which was written with Catalyst in mind.&lt;/p&gt;
+
+&lt;h3 id=&#34;cgi-application-and-catalyst&#34;&gt;CGI::Application and Catalyst&lt;/h3&gt;
+
+&lt;p&gt;The appearance of Catalyst has been a great benefit to the CGI::Application community. Both projects support the use and development of focused, reusable components. When a new patch arrives for a module both projects use, both projects benefit. As the maintainer of Data::FormValidator, I&amp;rsquo;m well aware that the two camps are collaborating through this project.&lt;/p&gt;
+
+&lt;p&gt;Catalyst releases its code under a license that allows CGI::Application to reuse and integrate their work (and vice-versa). Often a plugin written for Catalyst takes only a little effort to port to work with CGI::Application. For example, Catalyst recently added &lt;a href=&#34;http://par.perl.org/&#34;&gt;PAR&lt;/a&gt; support, which allows the distribution and execution of a complex web application as a single binary. This helps a Perl project with complex module dependencies compete with the installation ease of typical PHP software.&lt;/p&gt;
+
+&lt;p&gt;This will be a great reference as CGI::Application users evaluate &lt;a href=&#34;http://www.perlmonks.org/?node_id=519032&#34;&gt;options for easier web application deployment&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, Catalyst demonstrates an alternate approach as a web framework. This helps the CGI::Application community better evaluate their own options.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;CGI::Application has always been about providing a clean structure for web applications. With the advent of myriad plugins, it is also about simplifying access to the many great tools that Perl offers web developers through the CPAN. With more plugins being developed on a regular basis, the life of the web developer is getting easier by the day.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

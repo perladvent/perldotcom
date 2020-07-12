@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Widgets on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/widgets/</link>
+    <description>Recent content in Widgets on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 01 Feb 2007 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/widgets/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Advanced HTML::Template: Widgets</title>
+      <link>http://localhost:1313/pub/2007/02/02/htmltemplate-widgets.html/</link>
+      <pubDate>Thu, 01 Feb 2007 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2007/02/02/htmltemplate-widgets.html/</guid>
+      <description>
+
+&lt;p&gt;My previous article, looked at &lt;a href=&#34;http://localhost:1313/pub/2006/11/30/html-template-filters.html&#34;&gt;extending &lt;code&gt;HTML::Template&lt;/code&gt; through custom tags and filters&lt;/a&gt;. This article looks at ways to manage large, more complex pages, by bundling &lt;a href=&#34;https://metacpan.org/pod/HTML::Template&#34;&gt;HTML::Template&lt;/a&gt; into something like GUI &amp;ldquo;widgets&amp;rdquo; (or &amp;ldquo;controls&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;Imagine you have a basic page layout following the standard setup, with a header, a lefthand navbar, and the main body in the bottom right. The header and navbar are the same for all pages of the site, but of course the main body differs from page to page:&lt;/p&gt;
+
+&lt;p&gt;Header
+Navbar
+Body&lt;/p&gt;
+
+&lt;p&gt;Naturally, you don&amp;rsquo;t want to repeat the information for the header and the navbar explicitly on each page. Furthermore, if the HTML for the navbar changes, you don&amp;rsquo;t want to have to modify each and every page. The &lt;code&gt;&amp;lt;TMPL_INCLUDE&amp;gt;&lt;/code&gt; tag can help in this situation.&lt;/p&gt;
+
+&lt;p&gt;Create separate files for header and navbar, then include them in the template for each page (by convention, I use the filename extension &lt;em&gt;.tpf&lt;/em&gt; for page *f*ragments, to distinguish them from full-page templates: &lt;em&gt;.tpl&lt;/em&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=navbar.tpf&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;
+        &amp;lt;!-- Body goes here! --&amp;gt;
+        ...
+      &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now &lt;code&gt;HTML::Template&lt;/code&gt; will include the page fragments for the header and navbar in the page when it evaluates the template. Changes to either of the fragments will affect the entire site immediately.&lt;/p&gt;
+
+&lt;p&gt;(For simplicity of presentation, I am going to use the old familiar &lt;code&gt;&amp;lt;table&amp;gt;&lt;/code&gt; method to fix the layout&amp;ndash;this article is about &lt;code&gt;HTML::Template&lt;/code&gt;, not CSS positioning!)&lt;/p&gt;
+
+&lt;p&gt;Note that both the header and the navbar may include other &lt;code&gt;HTML::Template&lt;/code&gt; tags, such as &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt;: file fragment inclusion occurs &lt;em&gt;before&lt;/em&gt; tag substitution. If you need dynamic content in either header or navbar, all you need to do is set the value of the corresponding parameter using the &lt;code&gt;param()&lt;/code&gt; function before evaluating the template.&lt;/p&gt;
+
+&lt;h3 id=&#34;better-encapsulation-through-widgets&#34;&gt;Better Encapsulation through Widgets&lt;/h3&gt;
+
+&lt;p&gt;If there are only a few dynamic parameters in header and navbar, you can simply assign values to them together with the parameters required by the main body of the page. However, if the header and navbar themselves become sufficiently complicated, you probably don&amp;rsquo;t want to repeat their parameter-setting logic with the actual Perl code managing the main business logic for each page of our site. Instead, you can control them through an API.&lt;/p&gt;
+
+&lt;p&gt;To establish a Perl API for a page fragment, hide the entire template handling, including parameter setting and template substitution, in a subroutine. The subroutine takes several parameters and returns a string containing the fully expanded HTML code corresponding to the page fragment. You can then include this string in the current page through a simple &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tag.&lt;/p&gt;
+
+&lt;p&gt;As an example, consider a navbar that contains the username of the currently logged-in user.&lt;/p&gt;
+
+&lt;p&gt;Here is the page-fragment template for the navbar:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Current User: &amp;lt;TMPL_VAR NAME=login&amp;gt;
+&amp;lt;br /&amp;gt;
+&amp;lt;ul&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page1.html&amp;quot;&amp;gt;Page 1&amp;lt;/a&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page2.html&amp;quot;&amp;gt;Page 2&amp;lt;/a&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page3.html&amp;quot;&amp;gt;Page 3&amp;lt;/a&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For this example, the corresponding subroutine is very simple. It&amp;rsquo;s easy to imagine a situation where the navbar requires some complex logic that you are glad to hide behind a function call&amp;ndash;for instance, when the selection of links depends on the permissions (found through a DB call) of the logged-in user.&lt;/p&gt;
+
+&lt;p&gt;Demonstrating the principle is straightforward; find the template fragment, set the required parameter, and render the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub navbar {
+  my ( $login ) = shift;
+
+  my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;navbar.tpf&#39; );
+  $tpl-&amp;gt;param( login =&amp;gt; $login );
+  return $tpl-&amp;gt;output();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The master-page template then includes the navbar string using a &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tag. (Note the header inclusion through a &lt;code&gt;&amp;lt;TMPL_INCLUDE&amp;gt;&lt;/code&gt; tag.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=navbar&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;
+        &amp;lt;!-- Body goes here! --&amp;gt;
+        ...
+      &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach provides pretty good encapsulation: the code calling the &lt;code&gt;navbar()&lt;/code&gt; routine does not need to know anything about its implementation&amp;ndash;in fact, the subroutine can be in a separate module entirely. It is not far-fetched to imagine a shared module for all reusable page fragments used on the site.&lt;/p&gt;
+
+&lt;h3 id=&#34;building-pages-inside-out&#34;&gt;Building Pages Inside Out&lt;/h3&gt;
+
+&lt;p&gt;This development model still uses a separate, top-level template file for each page. All shared parts of the page are then included in this master template.&lt;/p&gt;
+
+&lt;p&gt;The widget approach can go a step further to do away entirely with the notion of having a separate master template for each page, by turning even the &lt;em&gt;main body&lt;/em&gt; of the page into a widget or a collection of widgets. At this point, there may be only a single top-level template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=navbar&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=mainbody&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A central Perl &amp;ldquo;controller&amp;rdquo; component dispatches page requests to the appropriate main-body widget (assuming you specify destination pages through a request parameter called &lt;code&gt;action&lt;/code&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use CGI;
+use HTML::Template;
+
+my $q = CGI-&amp;gt;new;
+my $action = $q-&amp;gt;param( &#39;action&#39; );
+
+# Dispatch to the desired main function
+my $body_string = &#39;&#39;;
+if(    $action eq &#39;act1&#39; ) { $body_string = act1( $q ); }
+elsif( $action eq &#39;act2&#39; ) { $body_string = act2( $q ); }
+elsif( $action eq &#39;act3&#39; ) { $body_string = act3( $q ); }
+
+# Pull the current user from the query object and pass to the navbar
+my $navbar_string = navbar( $q-&amp;gt;param( &#39;login&#39; ) );
+
+# Set the rendered navbar and mainbody in the master template
+my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;tmpl3.tpl&#39; );
+$tpl-&amp;gt;param( mainbody =&amp;gt; $body_string );
+$tpl-&amp;gt;param( navbar   =&amp;gt; $navbar_string );
+
+print $q-&amp;gt;header(), $tpl-&amp;gt;output;
+
+sub navbar { ... }
+
+sub act1{ ... }
+sub act2{ ... }
+sub act3{ ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;a-drop-down-widget&#34;&gt;A Drop-down Widget&lt;/h3&gt;
+
+&lt;p&gt;At this point, you may ask why you still need a template for the page fragment at all. Well, you don&amp;rsquo;t&amp;ndash;unless you find it convenient, of course.&lt;/p&gt;
+
+&lt;p&gt;There are two reasons to use a template: as a more suitable method of generating HTML than having to program a whole bunch of &lt;code&gt;print&lt;/code&gt; statements, and to ensure separation of presentation from behavior. By encapsulating the nitty-gritty of HTML generation behind an API, you achieve the latter. How you go about the former depends entirely on the context. If you need to generate a lot of straight up HTML, with lots of &lt;code&gt;&amp;lt;table&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt;, and &lt;code&gt;&amp;lt;form&amp;gt;&lt;/code&gt; tags, a template fragment makes perfect sense. But if it is actually easier to program the &lt;code&gt;print&lt;/code&gt; statements yourself, there is nothing wrong with that&amp;ndash;by encapsulating the HTML generation in a subroutine, you still achieve separation of presentation and main control flow and business logic.&lt;/p&gt;
+
+&lt;p&gt;As a classic example for something that is hard to express as a template, consider a drop-down menu with a default that has to be set programmatically. Attempting to do this using a template leads to a mess of template loops and conditionals. However, doing it in a widget subroutine is clean and easy, in particular if you use the appropriate functions from the standard &lt;code&gt;CGI&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub color_select {
+  my ( $default_color ) = @_;
+
+  my @colors = qw( red green blue yellow cyan magenta );
+
+  return popup_menu( &#39;color_select&#39;, \@colors, $default_color );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Include the string returned by this subroutine in a page template using &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tags as discussed previously.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;This concludes a brief overview of some useful techniques for using &lt;code&gt;HTML::Template&lt;/code&gt; that go beyond straight up variable replacement. I hope you enjoyed the trip.&lt;/p&gt;
+
+&lt;p&gt;There remains the question of when all of this is useful and suitable. To me, the beauty of &lt;code&gt;HTML::Template&lt;/code&gt; is its utter simplicity. There isn&amp;rsquo;t much in the way of creature comforts or &amp;ldquo;framework&amp;rdquo; features (such as forms processing or automated request dispatch). On the other hand, there is virtually &lt;em&gt;no&lt;/em&gt; overhead: it&amp;rsquo;s possible to understand the basic ideas of &lt;code&gt;HTML::Template&lt;/code&gt; in five minutes or fewer, and it&amp;rsquo;s easy to add to any simple CGI script. You don&amp;rsquo;t need to design the project around the framework (as is often the case with more powerful but inevitably more complex toolsets). In fact, &lt;code&gt;HTML::Template&lt;/code&gt; is so trivial to use that I use it in any CGI script that produces more than, say, 10 to 15 lines of HTML output. It&amp;rsquo;s just convenient.&lt;/p&gt;
+
+&lt;p&gt;Filters and &amp;ldquo;widgets&amp;rdquo; as described in this series are easy ways to add some convenience features that are missing from &lt;code&gt;HTML::Template&lt;/code&gt;. By bundling some repetitive code segments into a custom tag or a widget, you can keep both the code and template cleaner and simpler while at the same time continuing to enjoy the low overhead of &lt;code&gt;HTML::Template&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;However, there is only so much lipstick you can put on a pig. When you find ourselves building extensive libraries of custom tags or specific widgets, maybe you want to look more deeply into one of the existing frameworks for Perl web development, such as &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;the Template Toolkit&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, as long as you are happy with &lt;code&gt;HTML::Template&lt;/code&gt; and it works for you, there is no reason to change. It works for me&amp;ndash;and very well indeed.&lt;/p&gt;
+
+&lt;h4 id=&#34;sidebar-three-hidden-gems&#34;&gt;Sidebar: Three Hidden Gems&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;HTML::Template&lt;/code&gt; has several useful and often overlooked minor features and options, (despite being clearly documented in POD). I want to point out three of the ones that are most commonly useful&amp;ndash;all of which, by default, are (unfortunately, I think) turned &lt;em&gt;off&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h5 id=&#34;permit-unused-parameters&#34;&gt;Permit Unused Parameters&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, die_on_bad_params =&amp;gt; 0 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;HTML::Template will die when it encounters an unused parameter in the template. In other words, if you set a parameter with &lt;code&gt;$tpl-&amp;gt;param()&lt;/code&gt;, but there is no corresponding &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; in the template, template processing will fail by default. Setting the option &lt;code&gt;die_on_bad_params&lt;/code&gt; to &lt;code&gt;0&lt;/code&gt; disables this behavior.&lt;/p&gt;
+
+&lt;h5 id=&#34;make-global-variables-visible-in-loops&#34;&gt;Make Global Variables Visible In Loops&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, global_vars =&amp;gt; 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default, template loops open up a new scope, which makes all template parameters from outside the loop invisible within the loop. In particular, code like this will (by default) not work as expected:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Verbosity level: &amp;lt;TMPL_VAR NAME=isVerbose&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;TMPL_LOOP NAME=rows&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=rowitem&amp;gt;
+    &amp;lt;TMPL_IF NAME=isVerbose&amp;gt;
+      ... &amp;lt;!-- print additional, &#39;verbose&#39; info --&amp;gt;
+    &amp;lt;/TMPL_IF&amp;gt;
+&amp;lt;/TMPL_LOOP&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;verbose&lt;/code&gt; parameter, defined &lt;em&gt;outside&lt;/em&gt; the loop scope will by default &lt;em&gt;not&lt;/em&gt; be visible within the loop. Change this by setting the option &lt;code&gt;global_vars&lt;/code&gt; to &lt;code&gt;1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h5 id=&#34;special-loop-variables&#34;&gt;Special Loop Variables&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, loop_context_vars =&amp;gt; 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, enable a very useful little feature by setting &lt;code&gt;loop_context_vars&lt;/code&gt; to &lt;code&gt;1&lt;/code&gt;. This defines several Boolean variables within each loop; they take on the appropriate value for each row:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;__first__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__inner__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__last__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__odd__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__even__&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There is also an integer variable &lt;code&gt;__counter__&lt;/code&gt;, which is incremented for each row. Note that &lt;code&gt;__counter__&lt;/code&gt; starts at &lt;code&gt;1&lt;/code&gt;, in contrast to Perl arrays!&lt;/p&gt;
+
+&lt;p&gt;These variables are extremely useful in a variety of ways. For example, they make it easy to give every other row in a table a different background color to improve legibility. Together with filters (as described in my previous article), this allows for rather elegant template code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+  &amp;lt;style type=&amp;quot;text/css&amp;quot;&amp;gt;
+    .odd  { background-color: yellow }
+    .even { background-color: cyan }
+  &amp;lt;/style&amp;gt;
+&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+  &amp;lt;table&amp;gt;
+  &amp;lt;TMPL_LOOP NAME=rows&amp;gt;
+    &amp;lt;CSTM_ROW EVEN=even ODD=odd&amp;gt;
+      &amp;lt;td&amp;gt; &amp;lt;TMPL_VAR NAME=__counter__&amp;gt; Cell contents... &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+  &amp;lt;/TMPL_LOOP&amp;gt;
+  &amp;lt;/table&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The appropriate filter for the new custom tag is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cstmrow_filter {
+  my $text_ref = shift;
+  $$text_ref =~ s/&amp;lt;CSTM_ROW\s+EVEN=(.+)\s+ODD=(.*)\s*&amp;gt;
+                 /&amp;lt;TMPL_IF NAME=__odd__&amp;gt;
+                    &amp;lt;tr class=&amp;quot;$1&amp;quot;&amp;gt;
+                  &amp;lt;TMPL_ELSE&amp;gt;
+                    &amp;lt;tr class=&amp;quot;$2&amp;quot;&amp;gt;
+                  &amp;lt;\/TMPL_IF&amp;gt;
+                 /gx;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that, as implemented, the &lt;code&gt;EVEN&lt;/code&gt; attribute must precede the &lt;code&gt;ODD&lt;/code&gt; attribute in the &lt;code&gt;&amp;lt;CSTM_ROW&amp;gt;&lt;/code&gt; tag.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Creating Custom Widgets</title>
+      <link>http://localhost:1313/pub/2002/01/09/perltk.html/</link>
+      <pubDate>Wed, 09 Jan 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/01/09/perltk.html/</guid>
+      <description>&lt;p&gt;In this Perl/Tk article, I&amp;rsquo;ll discuss balloon help, photos and widget subclassing. Help balloons can be attached to widgets, menu items, and, as we&amp;rsquo;ll see here, individual canvas items. Subclassing a Perl/Tk widget is also known as creating a derived (mega) widget. For this article, I&amp;rsquo;ll presume basic knowledge of mega widgets. If the subject is new to you, or if there are points you don&amp;rsquo;t understand, then please read &lt;a href=&#34;http://www.oreilly.com/catalog/mastperltk/&#34;&gt;Mastering Perl/Tk&lt;/a&gt;, Chapter 14, &lt;em&gt;Creating Custom Widgets in Pure Perl/Tk&lt;/em&gt;, for complete details. Photos are described in Chapter 17, &lt;em&gt;Images and Animations&lt;/em&gt;, and balloon help is discussed in Chapter 23, &lt;em&gt;Plethora of pTk Potpourri&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;We are going to develop a color picker, a window that allows us to select a color that we might use to configure an application. This widget differs from most other color pickers you&amp;rsquo;ve seen because our palette is a box of crayons.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Tk::CrayolaCrayonColorPicker&lt;/code&gt; is a &lt;code&gt;Tk::DialogBox&lt;/code&gt;-derived widget that allows a user to select a color from a photo of a box of 64 Crayola crayons. Nominally, one positions the cursor over the desired crayon and clicks &lt;code&gt;button-1&lt;/code&gt;, whereupon the RGB values of the pixel under the cursor are returned. However, in reality, one can click anywhere over the photo.&lt;/p&gt;
+
+&lt;p&gt;Balloon help is provided, so that if the cursor lingers over a crayon, then a ballon pops up, displaying the crayon&amp;rsquo;s actual color - for instance, &amp;ldquo;robin&amp;rsquo;s egg blue.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Because &lt;code&gt;Tk::CrayolaCrayonColorPicker&lt;/code&gt; is a subclass of &lt;code&gt;Tk::DialogBox&lt;/code&gt;, the widget can have one or more buttons, with the default being a single &lt;code&gt;Cancel&lt;/code&gt; button. This functionality is provided automatically by the superclass, &lt;code&gt;Tk::DialogBox&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Our widget also overrides the &lt;code&gt;Tk::DialogBox::Show()&lt;/code&gt; method with one of its own. We do this because, by definition, dialogs are modal, which means they perform a grab. Unfortunately, balloon help does not work with a grab in effect, so &lt;code&gt;Tk::CrayolaCrayonColorPicker::Show()&lt;/code&gt; deiconifies the color picker window itself, waits for a color selection or a click on the &lt;code&gt;Cancel&lt;/code&gt; button, and then hides the window.&lt;/p&gt;
+
+&lt;p&gt;The return value from our &lt;code&gt;Show()&lt;/code&gt; method is either a reference to an array of three integers, the red, green and blue pixel triplet, or a string indicating which dialog button was clicked.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s an example, which creates the window seen in Figure 1:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Tk::CrayolaCrayonColorPicker;
+    my $cccp = $mw-&amp;gt;CrayolaCrayonColorPicker(-title =&amp;gt; &#39;Crayon Picker&#39;);
+    my $color = $cccp-&amp;gt;Show;
+
+    if ( ref($color) =~ /ARRAY/ ) {
+        my ($r, $g, $b) = @$color;
+        print &amp;quot;r/g/b=$r/$g/$b!\n&amp;quot;;
+    } else {
+        print &amp;quot;no color selected, response=$color!\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;33%&#34; /&gt;
+&lt;col width=&#34;33%&#34; /&gt;
+&lt;col width=&#34;33%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;td&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_01_09_perltk/fig1.jpg&#34; alt=&#34;Figure 1. -- Box of Crayons&#34; width=&#34;450&#34; height=&#34;375&#34; /&gt;
+&lt;p&gt;&lt;strong&gt;Figure 1&lt;/strong&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Notice the use of the &lt;code&gt;-title&lt;/code&gt; option. Since &lt;code&gt;Tk::CrayolaCrayonColorPicker&lt;/code&gt; is derived from &lt;code&gt;Tk::DialogBox&lt;/code&gt;, it supports all the option/value pairs defined by its superclass, of which &lt;code&gt;-title&lt;/code&gt; is one.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s look at the definition of class &lt;code&gt;Tk::CrayolaCrayonColorPicker&lt;/code&gt;. I like to place the module&amp;rsquo;s version number as the first line of the file, making it easy for MakeMaker (and humans) to find it. (MakeMaker usage is also explained in Mastering Perl/Tk, Chapter 14, &lt;em&gt;Creating Custom Widgets in Pure Perl/Tk&lt;/em&gt;.)&lt;/p&gt;
+
+&lt;p&gt;Next is the package definition.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Tk::widgets&lt;/code&gt; is a fast way to use a list of widgets. It expands to &amp;ldquo;&lt;code&gt;use Tk::Widget1; use     Tk::Widget2;&lt;/code&gt;&amp;rdquo;, and so on.&lt;/p&gt;
+
+&lt;p&gt;The &amp;ldquo;&lt;code&gt;use base&lt;/code&gt;&amp;rdquo; statement is important. It tells us two things: First, that we are defining a derived widget (i.e. subclassing an existing widget), and, second, the precise widget being subclassed. Including &lt;code&gt;Tk::Derived&lt;/code&gt; in a widget&amp;rsquo;s &lt;code&gt;@ISA&lt;/code&gt; array is the telltale marker of a derived widget. Without &lt;code&gt;Tk::Derived&lt;/code&gt;, the assumption is that we are creating a composite widget.&lt;/p&gt;
+
+&lt;p&gt;We then pre-declare a subroutine and enable a strict programming style.&lt;/p&gt;
+
+&lt;p&gt;The final statement in the module prologue actually defines the widget contructor name by modifying our symbol table, and performs other heavy magic, allowing us to use the new widget in the same manner as any other Perl/Tk widget.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$Tk::CrayolaCrayonColorPicker::VERSION = &#39;1.0&#39;;
+
+package Tk::CrayolaCrayonColorPicker;
+
+use Tk::widgets qw/Balloon/;
+use base        qw/Tk::Derived Tk::DialogBox/;
+use subs        qw/pick_color/;
+
+use strict;
+
+Construct Tk::Widget &#39;CrayolaCrayonColorPicker&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A &lt;code&gt;CrayolaCrayonColorPicker&lt;/code&gt; widget is simply a canvas with a photo of a box of Crayola crayons covering it. Since photos are objects that persist until they are destroyed, all widget instances can share the same photo. So we can create the photo from an image file once, and store its reference in a class global variable. For sizing the canvas, we keep the photo&amp;rsquo;s width and height in class variables, too.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;our (
+     $crayons,                  # Photo of a bunch of crayons
+     $cray_w,                   # Photo width
+     $cray_h,                   # Photo height
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As part of class initialization, Perl/Tk makes a call to the &lt;code&gt;ClassInit()&lt;/code&gt; method. This method serves to perform tasks for the class as a whole. Here we create the photo object and define its dimensions.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub ClassInit {
+
+    my ($class, $mw) = @_;
+
+    $crayons = $mw-&amp;gt;Photo(-file =&amp;gt; &#39;crayons.gif&#39;, -format =&amp;gt; &#39;gif&#39;);
+    ($cray_w, $cray_h) = ($crayons-&amp;gt;width, $crayons-&amp;gt;height);
+
+    $class-&amp;gt;SUPER::ClassInit($mw);
+
+} # end ClassInit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The heart of a widget module is &lt;code&gt;Populate()&lt;/code&gt;, where we create new widget instances. A &lt;code&gt;CrayolaCrayonColorPicker&lt;/code&gt; widget consists of a canvas with a photo of a box of Crayola crayons (taken with my handy digital camera). Clicking anywhere on the photo invokes a callback that fetches the RGB components of the pixel under the click.&lt;/p&gt;
+
+&lt;p&gt;Additionally, transparent, trapezoidal, canvas polygons are superimposed over the tips of each crayon, and each of these items has a ballon help message associated with it. The message indicates the crayon&amp;rsquo;s color.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub Populate {
+
+    my ($self, $args) = @_;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since we are a &lt;code&gt;Tk::DialogBox&lt;/code&gt; widget at heart, set up a default Cancel button to ensure our superclass&amp;rsquo; &lt;code&gt;Populate()&lt;/code&gt; has a chance to process the option list, then withdraw the window until it&amp;rsquo;s shown.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $args-&amp;gt;{&#39;-buttons&#39;} = [&#39;Cancel&#39;] unless defined $args-&amp;gt;{&#39;-buttons&#39;};
+    $self-&amp;gt;SUPER::Populate($args);
+
+    $self-&amp;gt;withdraw;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Create the canvas with its photo, and store the canvas reference and the image id as instance variables. We&amp;rsquo;ll need access to both later.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $self-&amp;gt;{can} = $self-&amp;gt;Canvas(
+        -width  =&amp;gt; $cray_w,
+        -height =&amp;gt; $cray_h,
+    )-&amp;gt;pack;
+    $self-&amp;gt;{iid} = $self-&amp;gt;{can}-&amp;gt;createImage(0, 0,
+        -anchor =&amp;gt; &#39;nw&#39;,
+        -image  =&amp;gt; $crayons,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Define the canvas callback that fetches and returns an RGB triplet. The &lt;code&gt;CanvasBind()&lt;/code&gt; method operates on the entire canvas, unlike the canvas&amp;rsquo; &lt;code&gt;bind()&lt;/code&gt; method that operates on an individual canvas tag or id.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $self-&amp;gt;{can}-&amp;gt;CanvasBind(&#39;&amp;lt;buttonrelease-1&amp;gt;&#39; =&amp;gt; [\&amp;amp;pick_color, $self]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, create the tiny transparent trapezoids that cover the tip of the 64 crayons, and define the balloon help. When specifying balloon help for one or more canvas items, the balloon widget expects its &lt;code&gt;-msg&lt;/code&gt; option to be a reference to a hash, where the hash keys are canvas tags or ids, and the hash values are the balloon help text.&lt;/p&gt;
+
+&lt;p&gt;So, we first create an instance variable that references an empty anonymous hash, then invoke the private method &lt;code&gt;make_balloon_items()&lt;/code&gt; to do the dirty work. The method creates the canvas polygon items and populates the hash pointed to by &lt;code&gt;$self-&amp;gt;{col}&lt;/code&gt;. Then, we create the balloon widget, and attach the canvas and help messages. The ballon text appears next to the cursor.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $self-&amp;gt;{col} = {};         # anonymous hash indexes colors by id
+    $self-&amp;gt;make_balloon_items;
+
+    $self-&amp;gt;{bal} = $self-&amp;gt;Balloon;
+    $self-&amp;gt;{bal}-&amp;gt;attach($self-&amp;gt;{can},
+        -balloonposition =&amp;gt; &#39;mouse&#39;, 
+        -msg             =&amp;gt; $self-&amp;gt;{col},
+    );
+
+} # end Populate
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the class private method &lt;code&gt;make_balloon_items()&lt;/code&gt;, which simply makes 64 calls to &lt;code&gt;make_poly()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The 64-crayon Crayola box in divided into 4 sections of 16 crayons each. Each section contains two rows of eight crayons. These subroutine calls create each section, starting with the section&amp;rsquo;s background row, followed by the section&amp;rsquo;s foreground row.&lt;/p&gt;
+
+&lt;p&gt;We create the polygons items from back to front so that the canvas stacking order is back to front. This ensures that the balloon help of foreground polygons items takes precedence over background items.&lt;/p&gt;
+
+&lt;p&gt;For obvious brevity, most of the &lt;code&gt;make_poly()&lt;/code&gt; calls have been removed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub make_balloon_items {
+
+    my ($self) = @_;
+
+    # 16 northwest crayons.
+
+    $self-&amp;gt;make_poly(132,   8, &#39;red&#39;);
+
+    # 16 northeast crayons.
+
+    $self-&amp;gt;make_poly(306,  61, &#39;gray&#39;);
+
+    # 16 southwest crayons.
+
+    $self-&amp;gt;make_poly(107,  97, &#39;brick red&#39;);
+
+    # 16 southeast crayons.
+
+    $self-&amp;gt;make_poly(270, 157, &#39;tumbleweed&#39;);
+
+} # end make_balloon_items
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Given the coordinates of the point of a crayon, the class private method &lt;code&gt;make_poly()&lt;/code&gt; creates a transparent polygon over the tip so we can attach a balloon message to it. The message is the crayon&amp;rsquo;s color, and is stored in the hash pointed to by &lt;code&gt;$self-&amp;gt;{col}&lt;/code&gt;, indexed by polygon canvas id.&lt;/p&gt;
+
+&lt;p&gt;The transparent stipple is important, as it allows balloon events to be seen. The fill color is irrelevant; we just need something to fill the polygon items so events are registered.&lt;/p&gt;
+
+&lt;p&gt;If we remove the stipple, then the polygon items covering the crayon tips become visible, as shown in Figure 2.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub make_poly {
+
+        my ($self, $x, $y, $color) = @_;
+
+        my $id = $self-&amp;gt;{can}-&amp;gt;createPolygon(
+            $x-3, $y, $x+3, $y, $x+11, $y+38, $x-11, $y+38, $x-3, $y,
+            -fill    =&amp;gt; &#39;yellow&#39;,
+            -stipple =&amp;gt; &#39;transparent&#39;,
+        );
+
+        $self-&amp;gt;{col}-&amp;gt;{$id} = $color;
+
+    } # end make_poly
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;33%&#34; /&gt;
+&lt;col width=&#34;33%&#34; /&gt;
+&lt;col width=&#34;33%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;td&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_01_09_perltk/fig2.jpg&#34; alt=&#34;Figure 2. -- Crayons with Yellow Tips&#34; width=&#34;450&#34; height=&#34;374&#34; /&gt;
+&lt;p&gt;&lt;strong&gt;Figure 2.&lt;/strong&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Subroutine &lt;code&gt;pick_color()&lt;/code&gt; is our last class private method. It demonstrates a rather dubious object oriented programming technique - meddling with the internals of its superclass! But we do this out of necessity, as a workaround for the &amp;ldquo;balloons do not work with a grab&amp;rdquo; bug.&lt;/p&gt;
+
+&lt;p&gt;We want to override &lt;code&gt;Tk::DialogBox::Show&lt;/code&gt;, so we need to know what its &lt;code&gt;waitVariable()&lt;/code&gt; is waiting for. It&amp;rsquo;s this variable that the dialog buttons set when we click on them, and it turns out to be &lt;code&gt;$self-&amp;gt;{&#39;selected_button&#39;}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;We make &lt;code&gt;pick_color()&lt;/code&gt; set the same variable when returning a pixel&amp;rsquo;s RGB values, thus unblocking the &lt;code&gt;waitVariable()&lt;/code&gt; and returning the RGB data to the user.&lt;/p&gt;
+
+&lt;p&gt;In case you&amp;rsquo;re interested, early-on in the coding I determined the coordinates of each crayon&amp;rsquo;s point by printing $x and $y in this callback.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub pick_color {
+
+        my ($canvas, $self) = @_;
+        my ($x, $y) = ($Tk::event-&amp;gt;x, $Tk::event-&amp;gt;y);
+        my $i = $canvas-&amp;gt;itemcget($self-&amp;gt;{iid}, -image);
+        $self-&amp;gt;{&#39;selected_button&#39;} = $i-&amp;gt;get($x, $y);
+
+    } # end pick_color
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is our only class public method, &lt;code&gt;Show()&lt;/code&gt;. We can&amp;rsquo;t use the standard DialogBox &lt;code&gt;Show()&lt;/code&gt; method because the grab interferes with balloon help. So we roll our own, forgoing the modal approach. Control passes from &lt;code&gt;waitVariable()&lt;/code&gt; in one of two ways: 1) a color is selected (see &lt;code&gt;pick_color()&lt;/code&gt; above), or, 2), the &lt;code&gt;Cancel&lt;/code&gt; button is activated.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub Show {
+
+        my ($self) = @_;
+        $self-&amp;gt;Popup;
+        $self-&amp;gt;waitVariable(\$self-&amp;gt;{&#39;selected_button&#39;});
+        $self-&amp;gt;withdraw;
+        return $self-&amp;gt;{&#39;selected_button&#39;};
+
+    } # end Show
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that&amp;rsquo;s it. Until next time &amp;hellip; &lt;code&gt;use Tk;&lt;/code&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;You can download the &lt;a href=&#34;http://localhost:1313/media/_pub_2002_01_09_perltk/CrayolaCrayonColorPicker.pm&#34;&gt;class module&lt;/a&gt;, &lt;a href=&#34;http://localhost:1313/media/_pub_2002_01_09_perltk/crayons.gif&#34;&gt;associated .GIF file&lt;/a&gt; and a &lt;a href=&#34;http://localhost:1313/media/_pub_2002_01_09_perltk/crayons.txt&#34;&gt;test program&lt;/a&gt; that uses the new class.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;O&amp;rsquo;Reilly &amp;amp; Associates recently released (January 2002) &lt;a href=&#34;http://www.oreilly.com/catalog/mastperltk/&#34;&gt;Mastering Perl/Tk&lt;/a&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/mastperltk/chapter/ch15.html&#34;&gt;Sample Chapter 15, Anatomy of the MainLoop&lt;/a&gt;, is available free online.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;You can also look at the &lt;a href=&#34;http://www.oreilly.com/catalog/mastperltk/toc.html&#34;&gt;Table of Contents&lt;/a&gt;, the &lt;a href=&#34;http://www.oreilly.com/catalog/mastperltk/inx.html&#34;&gt;Index&lt;/a&gt;, and the &lt;a href=&#34;http://oreilly.com/catalog/mastperltk/desc.html&#34;&gt;Full Description&lt;/a&gt; of the book.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;For more information, or to order the book, &lt;a href=&#34;http://www.oreilly.com/catalog/mastperltk/&#34;&gt;click here&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

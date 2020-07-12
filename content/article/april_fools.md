@@ -34,11 +34,11 @@ There is plenty of literature out there on different methods, and there are more
 
 The modulus operator was a bit more interesting since it actually has some problems and undefined behavior. I presented the table of operand combinations and noted which ones are defined in Perl. Some of the situations don't have defined behavior.
 
-I didn't think that many people would take this section seriously since the modulus operator isn't that popular. The [integer pragma ](http://perldoc.perl.org/integer.html) may fix the problem:
+I didn't think that many people would take this section seriously since the modulus operator isn't that popular. The [integer pragma ]({{</* perldoc "integer" */>}}) may fix the problem:
 
 > Internally, native integer arithmetic (as provided by your C compiler) is used. This means that Perl's own semantics for arithmetic operations may not be preserved. One common source of trouble is the modulus of negative numbers, which Perl does one way, but your hardware may do another.
 
-The StackOverflow question [Perl: understanding modulo operation on negative numbers](https://stackoverflow.com/questions/20691861/perl-understanding-modulo-operation-on-negative-numbers-e-g-103/32090446#32090446) goes into more detail about Perl's behavior.
+The StackOverflow question [Perl: understanding modulo operation on negative numbers](https://stackoverflow.com/a/32090446/2766176) goes into more detail about Perl's behavior.
 
 If this matters for your application, you can implement your own modulo operation (perhaps in [Inline::C]({{<mcpan "Inline::C" >}})?) to do it exactly how you like to get the results you expect no matter where you run your program.
 
@@ -46,7 +46,7 @@ If this matters for your application, you can implement your own modulo operatio
 
 When we say "random numbers", experienced programmers generally understand that they aren't actually using numbers that are random. They are [pseudo-random](https://www.random.org/randomness/), although that's too much to say over and over again. We shorten it to "random" to keep the sentences short. If you are seeding a random number generator, you're using the fake kind.
 
-For the odd homework assignment or selecting a unique value you haven't used yet, Perl's [rand](http://perldoc.perl.org/functions/rand.html) may be fine. If you are doing something where you want real randomness, you don't want something deterministic. You want "true" random numbers.
+For the odd homework assignment or selecting a unique value you haven't used yet, Perl's [rand]({{</* perlfunc "rand" */>}}) may be fine. If you are doing something where you want real randomness, you don't want something deterministic. You want "true" random numbers.
 
 Several modules provide an interface to better sources:
 
@@ -56,7 +56,7 @@ Several modules provide an interface to better sources:
 
 * An [Entropy Key](http://www.entropykey.co.uk) is a small USB device that helps the _/dev/random_ device fill up its entropy sink. This allows you to read from the device more frequently without dropping into pseudorandomness.
 
-* [Random.org](https://www.random.org/integers/) provides data based on atmospheric noise. In the StackOverflow question [How to generate an array with random values, without using a loop?](http://stackoverflow.com/a/4093822/2766176), I presented a way to override Perl's [rand](http://perldoc.perl.org/functions/rand.html) to use this source. Some other answers are illuminating as well.
+* [Random.org](https://www.random.org/integers/) provides data based on atmospheric noise. In the StackOverflow question [How to generate an array with random values, without using a loop?](http://stackoverflow.com/a/4093822/2766176), I presented a way to override Perl's [rand]({{</* perlfunc "rand" */>}}) to use this source. Some other answers are illuminating as well.
 
 As with most everything else, there's no answer that covers every use. That you discover other sources is a rite of passage for a programmer.
 

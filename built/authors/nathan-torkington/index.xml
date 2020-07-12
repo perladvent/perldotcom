@@ -1,0 +1,629 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Nathan Torkington on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/nathan-torkington/</link>
+    <description>Recent content in Nathan Torkington on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 03 Sep 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/nathan-torkington/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Cooking with Perl, Part 2</title>
+      <link>http://localhost:1313/pub/2003/09/03/perlcookbook.html/</link>
+      <pubDate>Wed, 03 Sep 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/09/03/perlcookbook.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: The new edition of &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/index.html?CMP=IL7015&#34;&gt;Perl Cookbook&lt;/a&gt; has released, so this week we continue to highlight recipes&amp;ndash;new to the second edition&amp;ndash;for your sampling pleasure. This week&amp;rsquo;s excerpts include recipes from Chapter 14 (&amp;ldquo;Database Access&amp;rdquo;) and Chapter 18 (&amp;ldquo;Internet Services&amp;rdquo;). And be sure to check back here next week for more new recipes on extracting table data, making simple changes to elements or text, and templating with HTML::Mason.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;sample-recipe-using-sql-without-a-database-server&#34;&gt;Sample Recipe: Using SQL Without a Database Server&lt;/h3&gt;
+
+&lt;h4 id=&#34;problem&#34;&gt;Problem&lt;/h4&gt;
+
+&lt;p&gt;You want to make complex SQL queries but don&amp;rsquo;t want to maintain a relational database server.&lt;/p&gt;
+
+&lt;h4 id=&#34;solution&#34;&gt;Solution&lt;/h4&gt;
+
+&lt;p&gt;Use the DBD::SQLite module from CPAN:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use DBI;
+ 
+$dbh = DBI-&amp;gt;connect(&amp;quot;dbi:SQLite:dbname=/Users/gnat/salaries.sqlt&amp;quot;, &amp;quot;&amp;quot;, &amp;quot;&amp;quot;,
+                    { RaiseError =&amp;gt; 1, AutoCommit =&amp;gt; 1 });
+ 
+$dbh-&amp;gt;do(&amp;quot;UPDATE salaries SET salary = 2 * salary WHERE name = &#39;Nat&#39;&amp;quot;);
+ 
+$sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT id,deductions FROM salaries WHERE name = &#39;Nat&#39;&amp;quot;);
+# ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;discussion&#34;&gt;Discussion&lt;/h4&gt;
+
+&lt;p&gt;An SQLite database lives in a single file, specified with the &lt;code&gt;dbname&lt;/code&gt; parameter in the DBI constructor. Unlike most relational databases, there&amp;rsquo;s no database server here&amp;ndash;DBD::SQLite interacts directly with the file. Multiple processes can read from the same database file at the same time (with SELECTs), but only one process can make changes (and other processes are prevented from reading while those changes are being made).&lt;/p&gt;
+
+&lt;p&gt;SQLite supports transactions. That is, you can make a number of changes to different tables, but the updates won&amp;rsquo;t be written to the file until you commit them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use DBI;
+$dbh = DBI-&amp;gt;connect(&amp;quot;dbi:SQLite:dbname=/Users/gnat/salaries.sqlt&amp;quot;, &amp;quot;&amp;quot;, &amp;quot;&amp;quot;,
+                    { RaiseError =&amp;gt; 1, AutoCommit =&amp;gt; 0 });
+eval {
+  $dbh-&amp;gt;do(&amp;quot;INSERT INTO people VALUES (29, &#39;Nat&#39;, 1973)&amp;quot;);
+  $dbh-&amp;gt;do(&amp;quot;INSERT INTO people VALUES (30, &#39;William&#39;, 1999)&amp;quot;);
+  $dbh-&amp;gt;do(&amp;quot;INSERT INTO father_of VALUES (29, 30)&amp;quot;);
+  $dbh-&amp;gt;commit(  );
+};
+if ($@) {
+      eval { $dbh-&amp;gt;rollback(  ) };
+      die &amp;quot;Couldn&#39;t roll back transaction&amp;quot; if $@;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;SQLite is a typeless database system. Regardless of the types specified when you created a table, you can put any type (strings, numbers, dates, blobs) into any field. Indeed, you can even create a table without specifying any types:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CREATE TABLE people (id, name, birth_year);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only time that data typing comes into play is when comparisons occur, either through WHERE clauses or when the database has to sort values. The database ignores the type of the column and looks only at the type of the specific value being compared. Like Perl, SQLite recognizes only strings and numbers. Two numbers are compared as floating-point values, two strings are compared as strings, and a number is always less than a string when values of two different types are compared.&lt;/p&gt;
+
+&lt;p&gt;There is only one case when SQLite looks at the type you declare for a column. To get an automatically incrementing column, such as unique identifiers, specify a field of type &amp;ldquo;INTEGER PRIMARY KEY&amp;rdquo;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CREATE TABLE people (id INTEGER PRIMARY KEY, name, birth_year);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;#79318&#34;&gt;Example 14-6&lt;/a&gt; shows how this is done.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;79318&#34;&gt;Example 14-6:&lt;/span&gt;&lt;/strong&gt; &lt;strong&gt;ipk&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -w
+  # ipk - demonstrate integer primary keys
+  use DBI;
+  use strict;
+  my $dbh = DBI-&amp;gt;connect(&amp;quot;dbi:SQLite:ipk.dat&amp;quot;, &amp;quot;&amp;quot;, &amp;quot;&amp;quot;,
+  {RaiseError =&amp;gt; 1, AutoCommit =&amp;gt; 1});
+  # quietly drop the table if it already existed
+  eval {
+    local $dbh-&amp;gt;{PrintError} = 0;
+    $dbh-&amp;gt;do(&amp;quot;DROP TABLE names&amp;quot;);
+  };
+  # (re)create it
+  $dbh-&amp;gt;do(&amp;quot;CREATE TABLE names (id INTEGER PRIMARY KEY, name)&amp;quot;);
+  # insert values
+  foreach my $person (qw(Nat Tom Guido Larry Damian Jon)) {
+    $dbh-&amp;gt;do(&amp;quot;INSERT INTO names VALUES (NULL, &#39;$person&#39;)&amp;quot;);
+  }
+  # remove a middle value
+  $dbh-&amp;gt;do(&amp;quot;DELETE FROM names WHERE name=&#39;Guido&#39;&amp;quot;);
+  # add a new value
+  $dbh-&amp;gt;do(&amp;quot;INSERT INTO names VALUES (NULL, &#39;Dan&#39;)&amp;quot;);
+  # display contents of the table
+  my $all = $dbh-&amp;gt;selectall_arrayref(&amp;quot;SELECT id,name FROM names&amp;quot;);
+  foreach my $row (@$all) {
+    my ($id, $word) = @$row;
+    print &amp;quot;$word has id $id\n&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;SQLite can hold 8-bit text data, but can&amp;rsquo;t hold an ASCII NUL character (&lt;code&gt;\0&lt;/code&gt;). The only workaround is to do your own encoding (for example, URL encoding or Base64) before you store and after you retrieve the data. This is true even of columns declared as BLOBs.&lt;/p&gt;
+
+&lt;h4 id=&#34;see-also&#34;&gt;See Also&lt;/h4&gt;
+
+&lt;p&gt;&amp;ldquo;Executing an SQL Command Using DBI;&amp;rdquo; the documentation for the CPAN module DBD::SQLite; the SQLite home page at &lt;a href=&#34;http://www.hwaci.com/sw/sqlite/&#34;&gt;http://www.hwaci.com/sw/sqlite/&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;sample-recipe-sending-attachments-in-mail&#34;&gt;Sample Recipe: Sending Attachments in Mail&lt;/h3&gt;
+
+&lt;h4 id=&#34;problem-1&#34;&gt;Problem&lt;/h4&gt;
+
+&lt;p&gt;You want to send mail that includes attachments; for example, you want to mail a PDF document.&lt;/p&gt;
+
+&lt;h4 id=&#34;solution-1&#34;&gt;Solution&lt;/h4&gt;
+
+&lt;p&gt;Use the MIME::Lite module from CPAN. First, create a MIME::Lite object representing the multipart message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use MIME::Lite;
+ 
+$msg = MIME::Lite-&amp;gt;new(From    =&amp;gt; &#39;sender@example.com&#39;,
+                       To      =&amp;gt; &#39;recipient@example.com&#39;,
+                       Subject =&amp;gt; &#39;My photo for the brochure&#39;,
+                       Type    =&amp;gt; &#39;multipart/mixed&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, add content through the &lt;code&gt;attach&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$msg-&amp;gt;attach(Type        =&amp;gt; &#39;image/jpeg&#39;,
+             Path        =&amp;gt; &#39;/Users/gnat/Photoshopped/nat.jpg&#39;,
+             Filename    =&amp;gt; &#39;gnat-face.jpg&#39;);
+ 
+$msg-&amp;gt;attach(Type        =&amp;gt; &#39;TEXT&#39;,
+             Data        =&amp;gt; &#39;I hope you can use this!&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, send the message, optionally specifying how to send it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$msg-&amp;gt;send(  );            # default is to use sendmail(1)
+# alternatively
+$msg-&amp;gt;send(&#39;smtp&#39;, &#39;mailserver.example.com&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;discussion-1&#34;&gt;Discussion&lt;/h4&gt;
+
+&lt;p&gt;The MIME::Lite module creates and sends mail with MIME-encoded attachments. MIME stands for Multimedia Internet Mail Extensions, and is the standard way of attaching files and documents. It can&amp;rsquo;t, however, extract attachments from mail messages&amp;ndash;for that you need to read Recipe &amp;ldquo;Extracting Attachments from Mail.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;When creating and adding to a MIME::Lite object, pass parameters as a list of named parameter pairs. The pair conveys both mail headers (e.g., &lt;code&gt;From&lt;/code&gt;, &lt;code&gt;To&lt;/code&gt;, &lt;code&gt;Subject&lt;/code&gt;) and those specific to MIME::Lite. In general, mail headers should be given with a trailing colon:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$msg = MIME::Lite-&amp;gt;new(&#39;X-Song-Playing:&#39; =&amp;gt; &#39;Natchez Trace&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, MIME::Lite accepts the headers in &lt;a href=&#34;#20112&#34;&gt;Table 18-2&lt;/a&gt; without a trailing colon. &lt;code&gt;*&lt;/code&gt; indicates a wildcard, so &lt;code&gt;Content-*&lt;/code&gt; includes &lt;code&gt;Content-Type&lt;/code&gt; and &lt;code&gt;Content-ID&lt;/code&gt; but not &lt;code&gt;Dis-Content&lt;/code&gt;.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Approved&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Encrypted&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Received&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Sender&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Bcc&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;From&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;References&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Subject&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Cc&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Keywords&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Reply-To&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;To&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Comments&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Message-ID&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Resent-*&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;X-*&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Content-*&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;MIME-Version&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Return-Path&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Date&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Organization&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The full list of MIME::Lite options is given in &lt;a href=&#34;#21965&#34;&gt;Table 18-3&lt;/a&gt;.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Data&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;FH&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;ReadNow&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Datestamp&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Filename&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Top&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Disposition&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Id&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Type&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Encoding&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Length&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Filename&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Path&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt; &lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The MIME::Lite options and their values govern what is attached (the data) and how:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Path&lt;/code&gt;
+The file containing the data to attach.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Filename&lt;/code&gt;
+The default filename for the reader of the message to save the file as. By default this is the filename from the &lt;code&gt;Path&lt;/code&gt; option (if &lt;code&gt;Path&lt;/code&gt; was specified).&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Data&lt;/code&gt;
+The data to attach.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Type&lt;/code&gt;
+The &lt;code&gt;Content-Type&lt;/code&gt; of the data to attach.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Disposition&lt;/code&gt;
+Either &lt;code&gt;inline&lt;/code&gt; or &lt;code&gt;attachment&lt;/code&gt;. The former indicates that the reader should display the data as part of the message, not as an attachment. The latter indicates that the reader should display an option to decode and save the data. This is, at best, a hint.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;FH&lt;/code&gt;
+An open filehandle from which to read the attachment data.&lt;/p&gt;
+
+&lt;p&gt;There are several useful content types: &lt;code&gt;TEXT&lt;/code&gt; means &lt;code&gt;text/plain&lt;/code&gt;, which is the default; &lt;code&gt;BINARY&lt;/code&gt; similarly is short for &lt;code&gt;application/octet-stream&lt;/code&gt;; &lt;code&gt;multipart/mixed&lt;/code&gt; is used for a message that has attachments; &lt;code&gt;application/msword&lt;/code&gt; for Microsoft Word files; &lt;code&gt;application/vnd.ms-excel&lt;/code&gt; for Microsoft Excel files; &lt;code&gt;application/pdf&lt;/code&gt; for PDF files; &lt;code&gt;image/gif&lt;/code&gt;, &lt;code&gt;image/jpeg&lt;/code&gt;, and &lt;code&gt;image/png&lt;/code&gt; for GIF, JPEG, and PNG files, respectively; &lt;code&gt;audio/mpeg&lt;/code&gt; for MP3 files; &lt;code&gt;video/mpeg&lt;/code&gt; for MPEG movies; &lt;code&gt;video/quicktime&lt;/code&gt; for Quicktime (&lt;em&gt;.mov&lt;/em&gt;) files.&lt;/p&gt;
+
+&lt;p&gt;The only two ways to send the message are using &lt;em&gt;sendmail&lt;/em&gt;(1) or using Net::SMTP. Indicate Net::SMTP by calling &lt;code&gt;send&lt;/code&gt; with a first argument of &lt;code&gt;&amp;quot;smtp&amp;quot;&lt;/code&gt;. Remaining arguments are parameters to the Net::SMTP constructor:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# timeout of 30 seconds
+$msg-&amp;gt;send(&amp;quot;smtp&amp;quot;, &amp;quot;mail.example.com&amp;quot;, Timeout =&amp;gt; 30);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you plan to make more than one MIME::Lite object, be aware that invoking &lt;code&gt;send&lt;/code&gt; as a class method changes the default way to send messages:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;MIME::Lite-&amp;gt;send(&amp;quot;smtp&amp;quot;, &amp;quot;mail.example.com&amp;quot;);
+$msg = MIME::Lite-&amp;gt;new(%opts);
+# ...
+$msg-&amp;gt;send(  );                   # sends using SMTP
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you&amp;rsquo;re going to process multiple messages, also look into the &lt;code&gt;ReadNow&lt;/code&gt; parameter. This specifies that the data for the attachment should be read from the file or filehandle immediately, rather than when the message is sent, written, or converted to a string.&lt;/p&gt;
+
+&lt;p&gt;Sending the message isn&amp;rsquo;t the only thing you can do with it. You can get the final message as a string:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$text = $msg-&amp;gt;as_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;print&lt;/code&gt; method writes the string form of the message to a filehandle:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$msg-&amp;gt;print($SOME_FILEHANDLE);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;#85143&#34;&gt;Example 18-3&lt;/a&gt; is a program that mails filenames given on the command line as attachments.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;85143&#34;&gt;Example 18-3:&lt;/span&gt;&lt;/strong&gt; &lt;strong&gt;mail-attachment&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl -w
+# mail-attachment - send files as attachments
+ 
+use MIME::Lite;
+use Getopt::Std;
+ 
+my $SMTP_SERVER = &#39;smtp.example.com&#39;;           # CHANGE ME
+my $DEFAULT_SENDER = &#39;sender@example.com&#39;;      # CHANGE ME
+my $DEFAULT_RECIPIENT = &#39;recipient@example.com&#39;;# CHANGE ME
+ 
+MIME::Lite-&amp;gt;send(&#39;smtp&#39;, $SMTP_SERVER, Timeout=&amp;gt;60);
+ 
+my (%o, $msg);
+ 
+# process options
+ 
+getopts(&#39;hf:t:s:&#39;, \%o);
+ 
+$o{f} ||= $DEFAULT_SENDER;
+$o{t} ||= $DEFAULT_RECIPIENT;
+$o{s} ||= &#39;Your binary file, sir&#39;;
+ 
+if ($o{h} or !@ARGV) {
+    die &amp;quot;usage:\n\t$0 [-h] [-f from] [-t to] [-s subject] file ...\n&amp;quot;;
+}
+ 
+# construct and send email
+ 
+$msg = new MIME::Lite(
+    From =&amp;gt; $o{f},
+    To   =&amp;gt; $o{t},
+    Subject =&amp;gt; $o{s},
+    Data =&amp;gt; &amp;quot;Hi&amp;quot;,
+    Type =&amp;gt; &amp;quot;multipart/mixed&amp;quot;,
+);
+ 
+while (@ARGV) {
+  $msg-&amp;gt;attach(&#39;Type&#39; =&amp;gt; &#39;application/octet-stream&#39;,
+               &#39;Encoding&#39; =&amp;gt; &#39;base64&#39;,
+               &#39;Path&#39; =&amp;gt; shift @ARGV);
+}
+ 
+$msg-&amp;gt;send(  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;see-also-1&#34;&gt;See Also&lt;/h4&gt;
+
+&lt;p&gt;The documentation for MIME::Lite&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;O&amp;rsquo;Reilly &amp;amp; Associates recently released (August 2003) &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/index.html?CMP=IL7015&#34;&gt;Perl Cookbook, 2nd Edition.&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/chapter/index.html?CMP=IL7015&#34;&gt;Sample Chapter 1, Strings&lt;/a&gt; is available free online.&lt;/li&gt;
+&lt;li&gt;You can also look at the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/toc.html?CMP=IL7015&#34;&gt;Table of Contents&lt;/a&gt;, the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/inx.html?CMP=IL7015&#34;&gt;Index&lt;/a&gt;, and the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/desc.html?CMP=IL7015&#34;&gt;full description&lt;/a&gt; of the book.&lt;/li&gt;
+&lt;li&gt;For more information, or to order the book, &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/index.html?CMP=IL7015&#34;&gt;click here&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Cooking with Perl</title>
+      <link>http://localhost:1313/pub/2003/08/21/perlcookbook.html/</link>
+      <pubDate>Thu, 21 Aug 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/08/21/perlcookbook.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: The new edition of &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/&#34;&gt;Perl Cookbook&lt;/a&gt; is about to hit store shelves, so to trumpet its release, we offer some recipes&amp;ndash;new to the second edition&amp;ndash;for your sampling pleasure. This week&amp;rsquo;s excerpts include recipes from Chapter 6 (&amp;ldquo;Pattern Matching&amp;rdquo;) and Chapter 8 (&amp;ldquo;File Contents&amp;rdquo;). And be sure to check back here in the coming weeks for more new recipes on topics such as using SQL without a database server, extracting table data, templating with HTML::Mason, and more.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;sample-recipe-matching-nested-patterns&#34;&gt;Sample Recipe: Matching Nested Patterns&lt;/h2&gt;
+
+&lt;h3 id=&#34;problem&#34;&gt;Problem&lt;/h3&gt;
+
+&lt;p&gt;You want to match a nested set of enclosing delimiters, such as the arguments to a function call.&lt;/p&gt;
+
+&lt;h3 id=&#34;solution&#34;&gt;Solution&lt;/h3&gt;
+
+&lt;p&gt;Use match-time pattern interpolation, recursively:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $np;
+$np = qr{
+           \(
+           (?:
+              (?&amp;gt; [^(  )]+ )    # Non-capture group w/o backtracking
+            |
+              (??{ $np })     # Group with matching parens
+           )*
+           \)
+        }x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or use the Text::Balanced module&amp;rsquo;s &lt;code&gt;extract_bracketed&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;h3 id=&#34;discussion&#34;&gt;Discussion&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;$(??{&lt;/code&gt;&lt;em&gt;CODE&lt;/em&gt;&lt;code&gt;})&lt;/code&gt; construct runs the code and interpolates the string that the code returns right back into the pattern. A simple, non-recursive example that matches palindromes demonstrates this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($word =~ /^(\w+)\w?(??{reverse $1})$/ ) {
+    print &amp;quot;$word is a palindrome.\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Consider a word like &amp;ldquo;reviver&amp;rdquo;, which this pattern correctly reports as a palindrome. The &lt;code&gt;$1&lt;/code&gt; variable contains &lt;code&gt;&amp;quot;rev&amp;quot;&lt;/code&gt; partway through the match. The optional word character following catches the &lt;code&gt;&amp;quot;i&amp;quot;&lt;/code&gt;. Then the code &lt;code&gt;reverse $1&lt;/code&gt; runs and produces &lt;code&gt;&amp;quot;ver&amp;quot;&lt;/code&gt;, and that result is interpolated into the pattern.&lt;/p&gt;
+
+&lt;p&gt;For matching something balanced, you need to recurse, which is a bit tricker. A compiled pattern that uses &lt;code&gt;(??{&lt;/code&gt;&lt;em&gt;CODE&lt;/em&gt;&lt;code&gt;})&lt;/code&gt; can refer to itself. The pattern given in the Solution matches a set of nested parentheses, however deep they may go. Given the value of &lt;code&gt;$np&lt;/code&gt; in that pattern, you could use it like this to match a function call:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$text = &amp;quot;myfunfun(1,(2*(3+4)),5)&amp;quot;;
+$funpat = qr/\w+$np/;   # $np as above
+$text =~ /^$funpat$/;   # Matches!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You&amp;rsquo;ll find many CPAN modules that help with matching (parsing) nested strings. The Regexp::Common module supplies canned patterns that match many of the tricker strings. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Regexp::Common;
+$text = &amp;quot;myfunfun(1,(2*(3+4)),5)&amp;quot;;
+if ($text =~ /(\w+\s*$RE{balanced}{-parens=&amp;gt;&#39;(  )&#39;})/o) {
+  print &amp;quot;Got function call: $1\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Other patterns provided by that module match numbers in various notations and quote-delimited strings:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$RE{num}{int}
+$RE{num}{real}
+$RE{num}{real}{&#39;-base=2&#39;}{&#39;-sep=,&#39;}{&#39;-group=3&#39;}
+$RE{quoted}
+$RE{delimited}{-delim=&amp;gt;&#39;/&#39;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The standard (as of v5.8) Text::Balanced module provides a general solution to this problem.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Text::Balanced qw/extract_bracketed/;
+$text = &amp;quot;myfunfun(1,(2*(3+4)),5)&amp;quot;;
+if (($before, $found, $after)  = extract_bracketed($text, &amp;quot;(&amp;quot;)) {
+    print &amp;quot;answer is $found\n&amp;quot;;
+} else {
+    print &amp;quot;FAILED\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;see-also&#34;&gt;See Also&lt;/h3&gt;
+
+&lt;p&gt;The section on &amp;ldquo;Match-Time Pattern Interpolation&amp;rdquo; in Chapter 5, &amp;ldquo;Pattern Matching,&amp;rdquo; of &lt;a href=&#34;http://www.oreilly.com/catalog/pperl3/&#34;&gt;Programming Perl, 3rd Edition&lt;/a&gt;; the documentation for the Regexp::Common CPAN module and the standard Text::Balanced module.&lt;/p&gt;
+
+&lt;h2 id=&#34;sample-recipe-pretending-a-string-is-a-file&#34;&gt;Sample Recipe: Pretending a String Is a File&lt;/h2&gt;
+
+&lt;h2 id=&#34;problem-1&#34;&gt;Problem&lt;/h2&gt;
+
+&lt;p&gt;You have data in string, but would like to treat it as a file. For example, you have a subroutine that expects a filehandle as an argument, but you would like that subroutine to work directly on the data in your string instead. Additionally, you don&amp;rsquo;t want to write the data to a temporary file.&lt;/p&gt;
+
+&lt;h3 id=&#34;solution-1&#34;&gt;Solution&lt;/h3&gt;
+
+&lt;p&gt;Use the scalar I/O in Perl v5.8:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open($fh, &amp;quot;+&amp;lt;&amp;quot;, \$string);   # read and write contents of $string
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;discussion-1&#34;&gt;Discussion&lt;/h3&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s I/O layers include support for input and output from a scalar. When you read a record with &lt;code&gt;&amp;lt;$fh&amp;gt;&lt;/code&gt;, you are reading the next line from &lt;code&gt;$string&lt;/code&gt;. When you write a record with &lt;code&gt;print&lt;/code&gt;, you change &lt;code&gt;$string&lt;/code&gt;. You can pass &lt;code&gt;$fh&lt;/code&gt; to a function that expects a filehandle, and that subroutine need never know that it&amp;rsquo;s really working with data in a string.&lt;/p&gt;
+
+&lt;p&gt;Perl respects the various access modes in &lt;code&gt;open&lt;/code&gt; for strings, so you can specify that the strings be opened as read-only, with truncation, in append mode, and so on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open($fh, &amp;quot;&amp;lt;&amp;quot;,  \$string);   # read only
+open($fh, &amp;quot;&amp;gt;&amp;quot;,  \$string);   # write only, discard original contents
+open($fh, &amp;quot;+&amp;gt;&amp;quot;, \$string);   # read and write, discard original contents
+open($fh, &amp;quot;+&amp;lt;&amp;quot;, \$string);   # read and write, preserve original contents
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These handles behave in all respects like regular filehandles, so all I/O functions work, such as &lt;code&gt;seek&lt;/code&gt;, &lt;code&gt;truncate&lt;/code&gt;, &lt;code&gt;sysread&lt;/code&gt;, and friends.&lt;/p&gt;
+
+&lt;h3 id=&#34;see-also-1&#34;&gt;See Also&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;open&lt;/code&gt; function in &lt;em&gt;perlfunc&lt;/em&gt;(1) and in Chapter 29 (&amp;ldquo;Functions&amp;rdquo;) of &lt;a href=&#34;http://www.oreilly.com/catalog/pperl3/&#34;&gt;Programming Perl, 3rd Edition&lt;/a&gt;; &amp;ldquo;Using Random-Access I/O;&amp;rdquo; and &amp;ldquo;Setting the Default I/O Layers&amp;rdquo;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;O&amp;rsquo;Reilly &amp;amp; Associates will soon release (August 2003) &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/&#34;&gt;Perl Cookbook, 2nd Edition.&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/chapter/index.html&#34;&gt;Sample Chapter 1, Strings&lt;/a&gt; is available free online.&lt;/li&gt;
+&lt;li&gt;You can also look at the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/toc.html&#34;&gt;Table of Contents&lt;/a&gt;, the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/inx.html&#34;&gt;Index&lt;/a&gt;, and the &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/desc.html&#34;&gt;full description&lt;/a&gt; of the book.&lt;/li&gt;
+&lt;li&gt;For more information, or to order the book, &lt;a href=&#34;http://www.oreilly.com/catalog/perlckbk2/&#34;&gt;click here&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What every Perl programmer needs to know about .NET</title>
+      <link>http://localhost:1313/pub/2000/12/net.html/</link>
+      <pubDate>Tue, 19 Dec 2000 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2000/12/net.html/</guid>
+      <description>
+
+&lt;p&gt;.NET is the latest hype blitz from Microsoft (and you thought it was just a domain). If your eyes are glazing over or you&amp;rsquo;re tempted to write it off as marketing speak, read on.&lt;/p&gt;
+
+&lt;p&gt;Although Microsoft is loath to admit it, .NET is really their answer to Sun. The Java language, the Java virtual machine and CORBA have proved to be a threat. .NET is the umbrella name for Microsoft&amp;rsquo;s attempt to better Sun.&lt;/p&gt;
+
+&lt;p&gt;Whereas Java is the programming language for Sun&amp;rsquo;s &amp;ldquo;computer is the network&amp;rdquo; effort, Microsoft has given us C# (&amp;ldquo;C sharp&amp;rdquo;). It&amp;rsquo;s derived from C, and attempts to avoid some of the pitfalls of Java and C++. And much as Java compiles down to Java Virtual Machine (JVM) instructions, C# compiles down to Intermediate Language (IL).&lt;/p&gt;
+
+&lt;p&gt;Where Microsoft betters Sun is that while Java is the only real language that compiles to the JVM (&lt;a href=&#34;#note&#34;&gt;see update below&lt;/a&gt;,) Microsoft intends IL to be cross-language. That is, Perl, Visual Basic and C# can be compiled down to IL. The idea is to make it possible to integrate multiple languages into one system.&lt;/p&gt;
+
+&lt;p&gt;Sun chose CORBA as its distributed application platform, but Microsoft has gone with SOAP (Simple Object Access Protocol). In my opinion, SOAP has one huge benefit over CORBA: mere mortals can implement it! Soap uses HTTP to send XML-encoded instance and method calls on remotely defined objects and receive return values. The umbrella term for SOAP and its cousin XML-RPC is &amp;ldquo;Web Services.&amp;rdquo; There are already SOAP and XML-RPC modules for Perl.&lt;/p&gt;
+
+&lt;p&gt;While it&amp;rsquo;s still early days for .NET, and there&amp;rsquo;s still considerable potential for it all to turn out to be vaporware, Microsoft has begun to release .NET components. And it&amp;rsquo;s not just Microsoft - a number of people are using SOAP to give concrete APIs to their Web-based systems. Think of all the times you&amp;rsquo;ve tried to parse HTML to extract information - the SOAP way of the future is for that information to be directly accessible through SOAP calls. As I said, this is already happening.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve heard .NET described as &amp;ldquo;Microsoft&amp;rsquo;s tacit admission that most shops are not 100 percent Microsoft, so Microsoft products need to work better with other platforms.&amp;rdquo; There are many places for Perl in this new world:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;In the back-end, serving data through SOAP. Be warned that even &lt;code&gt;SOAP::Lite&lt;/code&gt; has a bit of a learning curve, but there are already solid modules for this:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.cpan.org/modules/by-module/SOAP/&#34;&gt;http://www.cpan.org/modules/by-module/SOAP/&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;In the front-end, compiling down to IL. Jan Dubois of Activestate has a research project related to this:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.activestate.com/Products/NET/Perl.html&#34;&gt;http://www.activestate.com/Products/NET/Perl.html&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;more-information&#34;&gt;More Information&lt;/h3&gt;
+
+&lt;p&gt;So where can you learn more? Microsoft has a lot of information about .NET, of course.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.microsoft.com/net/default.asp&#34;&gt;http://www.microsoft.com/net/default.asp&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s an introduction from the Windows point of view (covering the plans for COM and ADO and all the other Windowsy things I didn&amp;rsquo;t mention):&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.vbxml.com/xml/articles/dotnetintro/default.asp&#34;&gt;http://www.vbxml.com/xml/articles/dotnetintro/default.asp&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Your best bet for things you can use now, though, are the SOAP and XML-RPC modules. Be warned: The SOAP modules are hard to get into.&lt;/p&gt;
+
+&lt;p&gt;XML-RPC via the Frontier::RPC module&lt;br /&gt;
+&lt;a href=&#34;http://bitsko.slc.ut.us/~ken/xml-rpc/&#34;&gt;http://bitsko.slc.ut.us/~ken/xml-rpc/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;SOAP Modules:&lt;br /&gt;
+&lt;a href=&#34;http://www.cpan.org/modules/by-module/SOAP/&#34;&gt;http://www.cpan.org/modules/by-module/SOAP/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Here are some references for Web services:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://www.xml-rpc.com&#34;&gt;http://www.xml-rpc.com&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://www.soaprpc.com&#34;&gt;http://www.soaprpc.com&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://www.soaplite.com/&#34;&gt;http://www.soaplite.com/&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;http://www.techmetrix.com/trendmarkers/tmk1200/tmk1200-3.php3&#34;&gt;http://www.techmetrix.com/trendmarkers/tmk1200/tmk1200-3.php3&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;span id=&#34;note&#34;&gt;&lt;/span&gt;
+I meant that while Microsoft is funding and encouraging other languages to compile down to the IL, Sun never seemed to do that with the JVM. As far as I could tell (and I am the first to admit that I am on the fringe of the Java world), their main push was to have Java be The Language. I&amp;rsquo;m interested to hear whether they really did encourage other languages to compile to the JVM.&lt;/p&gt;
+
+&lt;p&gt;Poor choice of words on my part, sorry for the confusion. See &lt;a href=&#34;http://grunge.cs.tu-berlin.de/~tolk/vmlanguages.html&#34;&gt;http://grunge.cs.tu-berlin.de/~tolk/vmlanguages.html for a list of languages that compile to the JVM&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Last Chance to Support Damian Conway</title>
+      <link>http://localhost:1313/pub/2000/10/conway.html/</link>
+      <pubDate>Thu, 26 Oct 2000 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2000/10/conway.html/</guid>
+      <description>&lt;p&gt;$16,500 pledged, another $11,000 needed to liberate Damian Conway.&lt;/p&gt;
+
+&lt;p&gt;As reported earlier, the &lt;a href=&#34;http://www.yetanother.org/&#34;&gt;Yet Another Society&lt;/a&gt; (YAS) is putting together a grant to Monash University, Australia. The grant will fund Damian Conway&amp;rsquo;s full-time work on Perl for a year. YAS founder Kevin Lenzo said, &amp;ldquo;The response from the Perl community has been just overwhelming.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Damian Conway, the author of many award-winning Perl Conference papers as well as the &lt;code&gt;Quantum::Superpositions&lt;/code&gt; and &lt;code&gt;Parse::RecDescent&lt;/code&gt; modules, is a professor in Monash&amp;rsquo;s Computer Science department. His day job involves administrating a degree course, teaching undergraduates, and assisting postgraduate students with research. It doesn&amp;rsquo;t include Perl. The Perl work he has done so far has been in his spare time, wedged around his &amp;gt;60-hour Monash weeks.&lt;/p&gt;
+
+&lt;p&gt;The wider Perl community has pledged over US$16,000 so far. That only US$11,000 to be raised before a matching pledge from &lt;a href=&#34;http://www.blackstar.co.uk/&#34;&gt;BlackStar&lt;/a&gt;, a UK-based video-retail company, takes it up to the US$55,000 needed. Kevin Lenzo said &amp;ldquo;Blackstar stepped up quite early to help out. Their business benefits from Perl in innumerable ways, and they&amp;rsquo;re really being good citizens by contibuting back this way, in a real and substantial way that will help everyone.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Unlike the previous kinds of corporate sponsorship of Perl developers, where O&amp;rsquo;Reilly (which runs this site) employs Larry Wall and ActiveState employed Gurusamy Sarathy (the last pumpking), Damian would merely be funded to work on Perl. Said Damian, &amp;ldquo;I&amp;rsquo;d be working on projects of my own devising: Perl modules, the development of perl6, and making presentations to any Perl Monger groups I pass on my travels, with no other demands on my time.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;However, time is running out. Damian must let Monash know by the end of this week whether he&amp;rsquo;ll be teaching next year. Says Kevin Lenzo, &amp;ldquo;This is a new kind of community patronage &amp;ndash; community-funded open source development. If this works well, we may have more ability to fund people for core work on Perl and other projects.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;To pledge money towards the grant, go to &lt;a href=&#34;http://registration.yapc.org/&#34;&gt;&lt;code&gt;registration.yapc.org&lt;/code&gt;&lt;/a&gt;. Any sized pledge is accepted. YAS has applied for non-profit status with the IRS, so contributions may be tax-deductible.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl as a First Language</title>
+      <link>http://localhost:1313/pub/1999/11/cozens.htm/</link>
+      <pubDate>Tue, 16 Nov 1999 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/1999/11/cozens.htm/</guid>
+      <description>
+
+&lt;h2 id=&#34;teaching-perl-to-first-time-programmers&#34;&gt;Teaching Perl to First-Time Programmers&lt;/h2&gt;
+
+&lt;p&gt;One of the criticisms often leveled against Perl is that it&amp;rsquo;s too big and too complicated for people who haven&amp;rsquo;t programmed before. Simon Cozens disagrees. He teaches Perl to first-time programmers, and says, &amp;ldquo;Perl is an ideal first programming language.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Cozens is a linguist who has taught both formal and informal classes in Perl to people with a range of programming experience. He found that beginning programmers took quickly to Perl because &amp;ldquo;it allows you to express yourself naturally.&amp;rdquo; For instance, the automatic conversion between string and numeric types is what non-programmers expect: the string &lt;code&gt;&amp;quot;3&amp;quot;&lt;/code&gt; doesn&amp;rsquo;t mean 51; it means 3. And if you add &lt;code&gt;&amp;quot;4&amp;quot;&lt;/code&gt; to it, you expect to get &lt;code&gt;&amp;quot;7&amp;quot;&lt;/code&gt; back.&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;Take the implicit things in Perl, like &lt;code&gt;&amp;lt;&amp;gt;&lt;/code&gt; and &lt;code&gt;$_&lt;/code&gt;. They can be more of a bonus than it might appear, and that&amp;rsquo;s because of the way people think. We use implied objects like &amp;lsquo;it&amp;rsquo; to describe what we&amp;rsquo;re doing, rather than spelling out things like &amp;lsquo;the variable&amp;rsquo; explicitly every time.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Even things like regular expressions work well for beginners, says Cozens. &amp;ldquo;They&amp;rsquo;re wonderful because people don&amp;rsquo;t think of text or data in character-by-character terms. They see the whole lot at once, and they look for patterns in the string; that&amp;rsquo;s the way the brain operates. Regular expressions work the way people do; you quite naturally say things like, &amp;lsquo;I want to find these characters, but only at the beginning of the string,&amp;rsquo; or &amp;lsquo;Find three numbers, a space, and three letters,&amp;rsquo; and these translate very easily into regular expressions.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;When asked whether any parts of Perl caused problems for beginners, Cozens replied, &amp;ldquo;There&amp;rsquo;s nothing about Perl that is difficult to understand if presented appropriately; the difficulty is presenting some of the concepts in an appropriate way, and that&amp;rsquo;s a question about how good the teacher is, not the language.&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;For instance, references don&amp;rsquo;t have to be hard. You can make them hard, but not if you talk about putting more than one value into a hash and leading on from there. There&amp;rsquo;s no need to talk about pointers to areas of storage and all that sort of thing &amp;ndash; we&amp;rsquo;re not teaching C, we&amp;rsquo;re teaching Perl.&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;Scoping is also tricky because Perl gives you the choice of whether you want to write good, efficient code, or sloppy, hurried code. I tend to bring in &lt;code&gt;use strict&lt;/code&gt; early on because it encourages people to really think about what they&amp;rsquo;re doing with their variables.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Cozens firmly believes that Perl should be a first programming language. &amp;ldquo;Oh, absolutely! It&amp;rsquo;s ideal because it&amp;rsquo;s a real-world language, unlike one designed specifically for teaching, such as BASIC (Visual or otherwise). It&amp;rsquo;s a high-level language that deals naturally with natural concepts like strings and lines of text, unlike something like C; and it allows easy data and text manipulation without a tortuous syntax, unlike something like Python or Tcl. In fact, I don&amp;rsquo;t know if there&amp;rsquo;s a &lt;em&gt;better&lt;/em&gt; first programming language.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Cozens is so impressed with Perl for first-time programmers that he&amp;rsquo;s writing a book, Beginning Perl, to be published by &lt;a href=&#34;http://www.wrox.com&#34;&gt;Wrox Press&lt;/a&gt;. Says Cozens, &amp;ldquo;It&amp;rsquo;s aimed at both current programmers and first-timers alike; it should be accessible to everyone &amp;ndash; I&amp;rsquo;m taking a lot of time to make sure it&amp;rsquo;s not too fast-paced but also not too patronizing to those who already know what a variable or a subroutine is. Look out for it in January 2000!&amp;rdquo;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

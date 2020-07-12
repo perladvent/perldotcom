@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Web Spiders on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/web-spiders/</link>
+    <description>Recent content in Web Spiders on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 01 Jun 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/web-spiders/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>FEAR-less Site Scraping</title>
+      <link>http://localhost:1313/pub/2006/06/01/fear-api.html/</link>
+      <pubDate>Thu, 01 Jun 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/06/01/fear-api.html/</guid>
+      <description>
+
+&lt;p&gt;Imagine that you have an assignment that you need to fetch all of the web pages of a given website, scrape data from them, and transfer the data to another place, such as a database or plain files. This is a common scenario for data scraping tasks, and CPAN has plenty of modules for this job.&lt;/p&gt;
+
+&lt;p&gt;While I was developing site-scraping scripts, retrieving data from some sites of the same type, I realized that I had repeated many identical or very similar code structures, such as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  fetch_the_homepage();
+
+  while(there_are_some_more_unfetched_links){
+     foreach $link (@{links_in_the_current_page}){
+         follow_link()          if $link =~ /NEXT_PAGE_OR_SOMETHING/;
+         extract_product_spec() if $link =~ /PRODUCT_SPEC_PAGE/;
+     }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;the-usual-tools&#34;&gt;The Usual Tools&lt;/h3&gt;
+
+&lt;p&gt;At the very beginning, I created scripts using &lt;code&gt;LWP::Simple&lt;/code&gt;, &lt;code&gt;LWP::UserAgent&lt;/code&gt;, and vanilla regular expressions to extract links and produce details. As the number of scripts grew, I needed more powerful resources, so I started to use &lt;code&gt;WWW::Mechanize&lt;/code&gt; for web page fetching and &lt;code&gt;Regexp::Bind&lt;/code&gt;, &lt;code&gt;Template::Extract&lt;/code&gt;, &lt;code&gt;HTML::LinkExtractor&lt;/code&gt;, &lt;code&gt;Regexp::Common&lt;/code&gt;, etc. for data scraping. However, then I still found many redundancies.&lt;/p&gt;
+
+&lt;p&gt;A scraping script first needs to use essential modules for the site scraping task. Second, it may need to instantiate objects. Third, site scraping involves many interactions among different modules, mostly by passing data between them. After you fetch a page, you may need to pass the page to &lt;code&gt;HTML::LinkExtractor&lt;/code&gt; to extract links, to &lt;code&gt;Template::Extract&lt;/code&gt; to get detailed information, or save it to a file. You may then store extracted data in a relational database. Considering these properties, creating a site scraping script is very time-consuming, and sometimes it makes a lot of duplication.&lt;/p&gt;
+
+&lt;p&gt;Thus, I tried to fuse some modules together, hoping to save some of my keystrokes and simplify the coding process.&lt;/p&gt;
+
+&lt;h3 id=&#34;an-example-using-www-mechanize-and-template-extract&#34;&gt;An Example using &lt;code&gt;WWW::Mechanize&lt;/code&gt; and &lt;code&gt;Template::Extract&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a typical site scraping script structure:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     use YAML;
+     use Data::Dumper;
+     use WWW::Mechanize;
+     use Template::Extract;
+
+     my $mech = WWW::Mechanize-&amp;gt;new();
+     $mech-&amp;gt;get( &amp;quot;http://metacpan.org&amp;quot; );
+
+     my $ext = Template::Extract-&amp;gt;new;
+
+     my @result = $ext-&amp;gt;extract($template, $mech-&amp;gt;content);
+     print Dumper \@result;
+
+     my @link;
+     foreach ($mech-&amp;gt;links){
+         if( $_-&amp;gt;[0] =~ /foo/ ) {
+            $mech-&amp;gt;get($_-&amp;gt;[0]);
+         }
+         elsif( $_-&amp;gt;[0] =~ /bar/ ) {
+            push @link;
+         }
+         else {
+            sub { &#39;do something here&#39; }-&amp;gt;($_-&amp;gt;[0]);
+         }
+     }
+     print $mech-&amp;gt;content;
+     print Dumper \@link;
+     foreach (@result){
+        print YAML::Dump $_;
+     }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This program does several things:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Fetch CPAN&amp;rsquo;s homepage.&lt;/li&gt;
+&lt;li&gt;Extract data with a template.&lt;/li&gt;
+&lt;li&gt;Process links using a control structure.&lt;/li&gt;
+&lt;li&gt;Print fetched content to &lt;code&gt;STDOUT&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Dump links in the page.&lt;/li&gt;
+&lt;li&gt;Use YAML to print extract results.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you need to create just one or two temporary scripts, it is acceptable to use copy and paste to generate scripts. Things will become messy if the job is to create a hundred scripts and you still use copy and paste.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-do-i-need&#34;&gt;What Do I Need?&lt;/h3&gt;
+
+&lt;p&gt;There are some techniques to gather identical code blocks and put them into some place and create scripts by loading different components for different purposes. Instead, I worked on the interface. I wished to simplify the problem through language. I re-examined the routine and the code structure to identified distinct features in every site scraping script:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Manually load lots of modules.&lt;/li&gt;
+&lt;li&gt;Create a WWW agent.&lt;/li&gt;
+&lt;li&gt;Create an extractor object.&lt;/li&gt;
+&lt;li&gt;Process links using a control structure.&lt;/li&gt;
+&lt;li&gt;Perform extraction.&lt;/li&gt;
+&lt;li&gt;Process extracted results.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I searched CPAN for something related to my ideas. I found plenty of modules for site scraping and data extraction, but no module that could meet my needs.&lt;/p&gt;
+
+&lt;p&gt;Then I created &lt;code&gt;FEAR::API&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;use-fear-api&#34;&gt;Use FEAR::API&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;FEAR::API&lt;/code&gt;&amp;rsquo;s documentation says:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;FEAR::API&lt;/code&gt; is a tool that helps reduce your time creating site scraping scripts and helps you do it in an much more elegant way. &lt;code&gt;FEAR::API&lt;/code&gt; combines many strong and powerful features from various CPAN modules, such as &lt;code&gt;LWP::UserAgent&lt;/code&gt;, &lt;code&gt;WWW::Mechanize&lt;/code&gt;, &lt;code&gt;Template::Extract&lt;/code&gt;, &lt;code&gt;Encode&lt;/code&gt;, &lt;code&gt;HTML::Parser&lt;/code&gt;, etc., and digests them into a deeper Zen.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;It might be best to introduce &lt;code&gt;FEAR::API&lt;/code&gt; by rewriting the previous example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   1    use FEAR::API -base;
+   2    url(&amp;quot;metacpan.org&amp;quot;);
+   3    fetch &amp;gt;&amp;gt; [
+   4      qr(foo) =&amp;gt; _feedback,
+   5      qr(bar) =&amp;gt; \my @link,
+   6      qr()    =&amp;gt; sub { &#39;do something here&#39; }
+   7    ];
+   8    fetch while has_more_links;
+   9    extmethod(&#39;Template::Extract&#39;);
+  10    extract($template);
+  11    print Dumper extresult;
+  12    print document-&amp;gt;as_string;
+  13    print Dumper \@link;
+  14    invoke_handler(&#39;YAML&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Line 1 loads &lt;code&gt;FEAR::API&lt;/code&gt;. The &lt;code&gt;-base&lt;/code&gt; argument means the package is a subclass of &lt;code&gt;FEAR::API&lt;/code&gt;. The module automatically instantiates &lt;code&gt;$_&lt;/code&gt; as a &lt;code&gt;FEAR::API&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;p&gt;Line 2 specifies the URL. The code will later fetch this URL by calling &lt;code&gt;fetch()&lt;/code&gt;, but you can use &lt;code&gt;fetch( $the_url )&lt;/code&gt;, too.&lt;/p&gt;
+
+&lt;p&gt;Line 3 fetches the home page of &lt;em&gt;some.site.com&lt;/em&gt;. &lt;code&gt;&amp;gt;&amp;gt;&lt;/code&gt; is an overloaded operator for dispatching links. The following array reference contains pairs of (&lt;code&gt;regular expression =&amp;gt; action&lt;/code&gt;). An action can be a code ref, an array ref, or a &lt;code&gt;_feedback&lt;/code&gt; or &lt;code&gt;_self&lt;/code&gt; constant.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;FEAR::API&lt;/code&gt; maintains a queue of links. Using &lt;code&gt;_feedback&lt;/code&gt; or &lt;code&gt;_self&lt;/code&gt; means that &lt;code&gt;FEAR::API&lt;/code&gt; should put the link in a queue for fetching later if the link matches a certain regular expression.&lt;/p&gt;
+
+&lt;p&gt;Line 8 calls &lt;code&gt;has_more_links&lt;/code&gt;, so &lt;code&gt;FEAR::API&lt;/code&gt; checks if the internal link queue has, well, more links. The program will continue fetching if there are queued links.&lt;/p&gt;
+
+&lt;p&gt;Line 9 specifies the extraction method. The default method is &lt;code&gt;Template::Extract&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Line 10 extracts data according to &lt;code&gt;$template&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Line 11 dumps the extracted results to &lt;code&gt;STDOUT&lt;/code&gt;. &lt;code&gt;FEAR::API&lt;/code&gt; even exports &lt;code&gt;Dumper()&lt;/code&gt; for you. For &lt;a href=&#34;https://metacpan.org/pod/YAML&#34;&gt;YAML&lt;/a&gt; fans, there is also &lt;code&gt;Dump()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Line 12 accesses the fetched content through the object returned from &lt;code&gt;document&lt;/code&gt;. You need to invoke &lt;code&gt;as_string()&lt;/code&gt; to stringify the data. By the way, each fetched document is converted to UTF-8 automatically for you. It is very useful while processing multilingual texts.&lt;/p&gt;
+
+&lt;p&gt;Line 14 invokes the result handler to do data processing. The argument can be a subref, a module&amp;rsquo;s name, &lt;code&gt;YAML&lt;/code&gt;, or &lt;code&gt;Data::Dumper&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;comparison&#34;&gt;Comparison&lt;/h3&gt;
+
+&lt;p&gt;I hope that now you can see what &lt;code&gt;FEAR::API&lt;/code&gt; has improved, at least in code size. &lt;code&gt;FEAR::API&lt;/code&gt; encapsulates many modules, and you don&amp;rsquo;t need to worry about messing around with them on your own. All you need to do is tell &lt;code&gt;FEAR::API&lt;/code&gt; to fetch a page, to do extraction, and how you want to deal with links contained in the page and the extracted results from the page. You don&amp;rsquo;t need to initialize a WWW agent, convert the encoding of a fetched page, create an extractor object on your own, pass content to the extractor, write control structures for link processing, or anything else. Everything happens inside of &lt;code&gt;FEAR::API&lt;/code&gt; or via this simple syntax.&lt;/p&gt;
+
+&lt;p&gt;At first sight, perhaps you don&amp;rsquo;t even realize that the example script uses OO. If you don&amp;rsquo;t like things to happen so automatically, you may choose to drop the &lt;code&gt;-base&lt;/code&gt; option. Then you have to create FEAR::API objects manually using &lt;code&gt;fear()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   use FEAR::API;
+   my $f = fear();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;One of the goals of &lt;code&gt;FEAR::API&lt;/code&gt; is to weed out redundancies and minimize code size. It is very cumbersome to use syntax such as &lt;code&gt;$_-&amp;gt;blah_blah(&#39;blah&#39;)&lt;/code&gt; throughout a scraping script, given mass script creation requirements. I decided to remove &lt;code&gt;$_-&amp;gt;&lt;/code&gt;, while it still uses OO.&lt;/p&gt;
+
+&lt;h3 id=&#34;more-features&#34;&gt;More Features&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;FEAR::API&lt;/code&gt; incorporates many features from successful modules, and you can use &lt;code&gt;FEAR::API&lt;/code&gt; as an alternative.&lt;/p&gt;
+
+&lt;p&gt;If you use &lt;code&gt;LWP::Simple&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   use LWP::Simple;
+   get(&amp;quot;http://metacpan.org&amp;quot;);
+   getprint(&amp;quot;http://metacpan.org&amp;quot;);
+   getstore(&amp;quot;http://metacpan.org&amp;quot;, &#39;cpan.html&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With &lt;code&gt;FEAR::API&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   use FEAR::API;
+   get(&amp;quot;http://metacpan.org&amp;quot;);
+   getprint(&amp;quot;http://metacpan.org&amp;quot;);
+   getstore(&amp;quot;http://metacpan.org&amp;quot;, &#39;cpan.html&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you are familiar with &lt;code&gt;curl&lt;/code&gt;, you may use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   $ curl  http://site.{one,two,three}.com
+   # and
+   $ curl ftp://ftp.numericals.com/file[1-100].txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In &lt;code&gt;FEAR::API&lt;/code&gt;, use &lt;code&gt;Template-Toolkit&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   url(&amp;quot;[% FOREACH number = [&#39;one&#39;,&#39;two&#39;,&#39;three&#39;] %]
+        http://site.[% number %].com
+        [% END %]&amp;quot;);
+   fetch while has_more_links;
+
+   # and
+
+   url(&amp;quot;[% FOREACH number = [1..100] %]
+        ftp://ftp.numericals.com/file[% number %].txt
+        [% END %]&amp;quot;);
+   fetch while has_more_links;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;FEAR::API&lt;/code&gt; also supports &lt;code&gt;WWW::Mechanize&lt;/code&gt; methods. Use &lt;code&gt;submit_form()&lt;/code&gt;, &lt;code&gt;links()&lt;/code&gt;, and &lt;code&gt;follow_links()&lt;/code&gt; in &lt;code&gt;FEAR::API&lt;/code&gt; like those in &lt;code&gt;WWW::Mechanize&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Submitting a query is easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   fetch(&amp;quot;http://metacpan.org&amp;quot;);
+   submit_form(
+               form_name =&amp;gt; &#39;f&#39;,
+               fields =&amp;gt; {
+                    query =&amp;gt; &#39;perl&#39;
+               });
+   template($template); # specify template
+   extract;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Dumping links is also easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   print Dumper fetch(&amp;quot;http://metacpan.org/&amp;quot;)-&amp;gt;links;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So is following links:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   fetch(&amp;quot;http://metacpan.org/&amp;quot;)-&amp;gt;follow_link(n =&amp;gt; 3);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;cleaning-up-content&#34;&gt;Cleaning Up Content&lt;/h4&gt;
+
+&lt;p&gt;You may use &lt;code&gt;HTML::Strip&lt;/code&gt; or basic regular expressions to strip HTML code in fetched content or in extracted results, but &lt;code&gt;FEAR::API&lt;/code&gt; provides two simple methods: &lt;code&gt;preproc()&lt;/code&gt; and &lt;code&gt;postproc()&lt;/code&gt;. (There are also aliases: &lt;code&gt;doc_filter()&lt;/code&gt; and &lt;code&gt;result_filter()&lt;/code&gt;.)&lt;/p&gt;
+
+&lt;p&gt;You may process documents now with code resembling:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   use LWP::Simple;
+   use HTML::Strip;
+
+   my $content = get(&amp;quot;http://metacpan.org&amp;quot;);
+   my $hs = HTML::Strip-&amp;gt;new();
+   print $hs-&amp;gt;parse( $content );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Things are easier in &lt;code&gt;FEAR::API&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   fetch(&amp;quot;metacpan.org&amp;quot;);
+   preproc(use =&amp;gt; &#39;html_to_null&#39;);
+   print document-&amp;gt;as_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you don&amp;rsquo;t use &lt;code&gt;FEAR::API&lt;/code&gt; for postprocessing, your code might be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   use Data::Dumper;
+   use LWP::Simple;
+   use Template::Extract;
+   my $extor = Template::Extract-&amp;gt;new;
+   my $content = get(&amp;quot;http://metacpan.org&amp;quot;);
+   my $result = $extor-&amp;gt;extract($template, $content);
+   foreach my $r (@$result){
+      foreach (values %$r){
+        s/(?:&amp;lt;[^&amp;gt;]*&amp;gt;)+/ /g;
+      }
+   }
+   print Dumper $result;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;FEAR::API&lt;/code&gt; is simpler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   fetch(&amp;quot;metacpan.org&amp;quot;);
+   extract($template);
+   postproc(&#39;s/(?:&amp;lt;[^&amp;gt;]*&amp;gt;)+/ /g;&#39;);
+   print extresult;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can apply &lt;code&gt;preproc()&lt;/code&gt; and &lt;code&gt;postproc()&lt;/code&gt; on data multiple times until you find satisfactory results.&lt;/p&gt;
+
+&lt;h4 id=&#34;more-overloaded-operators&#34;&gt;More Overloaded Operators.&lt;/h4&gt;
+
+&lt;p&gt;The previous examples have used the &lt;code&gt;dispatch_links&lt;/code&gt; operator (&lt;code&gt;&amp;gt;&amp;gt;&lt;/code&gt;). There are more overloaded operators that you can use to reduce your code size further.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   print document-&amp;gt;as_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is equivalent to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   print $$_;
+
+   print Dumper extresult;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is equivalent to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   print Dumper \@$_;
+
+   url(&amp;quot;metacpan.org&amp;quot;)-&amp;gt;();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is equivalent to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   url(&amp;quot;metacpan.org&amp;quot;);
+   fetch;
+
+   my $cont = fetch(&amp;quot;metacpan.org&amp;quot;)-&amp;gt;document-&amp;gt;as_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is equivalent to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   fetch(&amp;quot;metacpan.org&amp;quot;) &amp;gt; $cont;
+
+   push my @cont, fetch(&amp;quot;metacpan.org&amp;quot;)-&amp;gt;document-&amp;gt;as_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is equivalent to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   fetch(&amp;quot;metacpan.org&amp;quot;) &amp;gt; \my @cont;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;filtering-syntax&#34;&gt;Filtering Syntax&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;FEAR::API&lt;/code&gt; creates something like shell piping. You can continually pass data through a series of filters to get what you need.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   url(&amp;quot;metacpan.org&amp;quot;)-&amp;gt;()
+     | _preproc(use =&amp;gt; &#39;html_to_null&#39;)
+     | _template($template)
+     | _postproc(&#39;tr/a-z/A-Z/&#39;)
+     | _foreach_result({ print Dumper $_ });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is equivalent to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   url(&amp;quot;metacpan.org&amp;quot;)-&amp;gt;();
+   preproc(use =&amp;gt; &#39;html_to_null&#39;);
+   template($template);
+   extract;
+   postproc(&#39;tr/a-z/A-Z&#39;);
+   foreach (@{extresult()}){
+     print Dumper $_;
+   }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;a-full-example&#34;&gt;A Full Example&lt;/h3&gt;
+
+&lt;p&gt;Finally, here is an example that submits a query to CPAN, extracts records of results, and then puts the extracted data into a &lt;code&gt;SQLite&lt;/code&gt; database.&lt;/p&gt;
+
+&lt;p&gt;First, create the database schema:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   % cat &amp;gt; schema.sql
+
+   CREATE TABLE cpan (
+      module      varchar(64),
+      dist        varchar(64),
+      link        varchar(256),
+      description varchar(128),
+      date        varchar(32),
+      author      varchar(64),
+      url         varchar(256),
+      primary key (module)
+   );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then create the database:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   % sqlite3 cpan.db &amp;lt; schema.sql
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now create a class that maps to the database:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   % mkdir lib
+   % mkdir lib/CPAN
+   % cat &amp;gt; lib/CPAN/DBI.pm
+   package CPAN::DBI;
+   use base &#39;Class::DBI::SQLite&#39;;
+   __PACKAGE__-&amp;gt;set_db(&#39;Main&#39;, &#39;dbi:SQLite:dbname=cpan.db&#39;, &#39;&#39;, &#39;&#39;);
+   __PACKAGE__-&amp;gt;set_up_table(&#39;cpan&#39;);
+   1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next part is the CPAN scraper:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % cat &amp;gt; cpan-scraper.pl
+   use lib &#39;lib&#39;;
+   use FEAR::API -base;
+   use CPAN::DBI;
+
+   url(&amp;quot;http://metacpan.org/&amp;quot;)-&amp;gt;();
+   submit_form(form_name =&amp;gt; &#39;f&#39;,
+               fields =&amp;gt; {
+                  query =&amp;gt; &#39;perl&#39;,
+                  mode =&amp;gt; &#39;module&#39;,
+               });
+
+   preproc(&#39;s/\A.+&amp;lt;!--results--&amp;gt;(.+)&amp;lt;!--end results--&amp;gt;.+\Z/$1/s&#39;);
+
+   template(&#39;&amp;lt;!--item--&amp;gt;
+  &amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;[% link %]&amp;quot;&amp;gt;&amp;lt;b&amp;gt;[% module %]&amp;lt;/b&amp;gt;&amp;lt;/a&amp;gt;
+&amp;lt;br /&amp;gt;&amp;lt;small&amp;gt;[% description %]&amp;lt;/small&amp;gt;
+&amp;lt;br /&amp;gt;&amp;lt;small&amp;gt;   &amp;lt;a href=&amp;quot;[% ... %]&amp;quot;&amp;gt;[% dist %]&amp;lt;/a&amp;gt; -
+   &amp;lt;span class=date&amp;gt;[% date %]&amp;lt;/span&amp;gt; -
+   &amp;lt;a href=&amp;quot;/~[% ... %]&amp;quot;&amp;gt;[% author %]&amp;lt;/a&amp;gt;
+&amp;lt;/small&amp;gt;
+&amp;lt;!--end item--&amp;gt;&#39;);
+
+   extract;
+
+   invoke_handler(sub {
+    print &amp;quot;-- Inserting $_-&amp;gt;{module}\n&amp;quot;;
+    CPAN::DBI-&amp;gt;find_or_create($_);
+   });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Run it, and then check the database:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   % sqlite3 cpan.db
+   sqlite&amp;gt; .mode csv
+   sqlite&amp;gt; select module, dist, author from cpan;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If everything goes well, your results will resemble:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   &amp;quot;Perl&amp;quot;,&amp;quot;PerlInterp-0.03&amp;quot;,&amp;quot;Ben Morrow&amp;quot;
+   &amp;quot;Perl::AfterFork&amp;quot;,&amp;quot;Perl-AfterFork-0.01&amp;quot;,&amp;quot;Torsten F&amp;amp;#246;rtsch&amp;quot;
+   &amp;quot;Perl::AtEndOfScope&amp;quot;,&amp;quot;Perl-AtEndOfScope-0.01&amp;quot;,&amp;quot;Torsten F&amp;amp;#246;rtsch&amp;quot;
+   &amp;quot;Perl::BestPractice&amp;quot;,&amp;quot;Perl-BestPractice-0.01&amp;quot;,&amp;quot;Adam Kennedy&amp;quot;
+   &amp;quot;Perl::Compare&amp;quot;,&amp;quot;Perl-Compare-0.10&amp;quot;,&amp;quot;Adam Kennedy&amp;quot;
+   &amp;quot;Perl::Critic&amp;quot;,&amp;quot;Perl-Critic-0.14&amp;quot;,&amp;quot;Jeffrey Ryan Thalhammer&amp;quot;
+   &amp;quot;Perl::Editor&amp;quot;,&amp;quot;Perl-Editor-0.02&amp;quot;,&amp;quot;Adam Kennedy&amp;quot;
+   &amp;quot;Perl::Metrics&amp;quot;,&amp;quot;Perl-Metrics-0.05&amp;quot;,&amp;quot;Adam Kennedy&amp;quot;
+   &amp;quot;Perl::MinimumVersion&amp;quot;,&amp;quot;Perl-MinimumVersion-0.11&amp;quot;,&amp;quot;Adam Kennedy&amp;quot;
+   &amp;quot;Perl::SAX&amp;quot;,&amp;quot;Perl-SAX-0.06&amp;quot;,&amp;quot;Adam Kennedy&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Isn&amp;rsquo;t that easy?&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;FEAR::API&lt;/code&gt; is an innovation for site scraping. It combines strong features and powerful methods from various modules, and it also employs operator overloading to build something a domain-specific language without forbidding the use of Perl&amp;rsquo;s full power. &lt;code&gt;FEAR::API&lt;/code&gt; is very suitable for the fast creation of scraping scripts. A central dogma of &lt;code&gt;FEAR::API&lt;/code&gt; is &amp;ldquo;Code the least and perform the most.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;However, &lt;code&gt;FEAR::API&lt;/code&gt; still needs lots of improvement. Currently, it does not handle errors very well, lacks automatic template generation, performs no logging, and has no direct connection to a database mapper such as &lt;code&gt;DBIx::Class&lt;/code&gt; or &lt;code&gt;Class::DBI&lt;/code&gt;. Even the documentation needs work.&lt;/p&gt;
+
+&lt;p&gt;Patches or suggestions are welcome!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

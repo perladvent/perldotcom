@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Unpack on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/unpack/</link>
+    <description>Recent content in Unpack on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 18 Apr 2016 19:56:47 +0000</lastBuildDate>
+    <atom:link href="/tags/unpack/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How to parse binary data with Perl</title>
+      <link>http://localhost:1313/article/how-to-parse-binary-data-with-perl/</link>
+      <pubDate>Mon, 18 Apr 2016 19:56:47 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/how-to-parse-binary-data-with-perl/</guid>
+      <description>
+
+&lt;p&gt;Parsing binary data is one of those tasks that seems to come up rarely, but is useful to know. Many common file types like images, music, timestamps, network packets and auth logs all come in binary flavors. Unfortunately it&amp;rsquo;s nowhere near as exciting as the fictitious depictions from &lt;a href=&#34;https://en.wikipedia.org/wiki/Hackers_%28film%29&#34;&gt;Hackers&lt;/a&gt;. The good news though is parsing binary data with Perl is easy using the &lt;code&gt;unpack&lt;/code&gt; function. I&amp;rsquo;m going to walk you through the three steps you&amp;rsquo;ll need when working with binary data.&lt;/p&gt;
+
+&lt;h3 id=&#34;1-open-a-binary-filehandle&#34;&gt;1. Open a binary filehandle&lt;/h3&gt;
+
+&lt;p&gt;Start things off &lt;em&gt;right&lt;/em&gt; by opening a filehandle to binary file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; autodie;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:raw&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/share/zoneinfo/America/New_York&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is a suitably Modern Perlish beginning. I start by importing &lt;a href=&#34;https://metacpan.org/pod/autodie&#34;&gt;autodie&lt;/a&gt; which ensures the code will &lt;code&gt;die&lt;/code&gt; if any function call fails. This avoids repetitive &lt;code&gt;... or die &amp;quot;IO failed&amp;quot;&lt;/code&gt; type coding constructs.&lt;/p&gt;
+
+&lt;p&gt;Next I use the &lt;code&gt;:raw&lt;/code&gt; IO layer to open a filehandle to a binary file. This will avoid newline translation issues. No need for &lt;code&gt;binmode&lt;/code&gt; here. The file I&amp;rsquo;m opening is a history of New York timezone changes, from the &lt;a href=&#34;https://en.wikipedia.org/wiki/Tz_database&#34;&gt;tz database&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;2-read-a-few-bytes&#34;&gt;2. Read a few bytes&lt;/h3&gt;
+
+&lt;p&gt;All binary files have a specific format that they follow. In the case of the zoneinfo files, the first 44 bytes/octets are the header, so I&amp;rsquo;ll grab that:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; autodie;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:raw&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/share/zoneinfo/America/New_York&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bytes_read &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; read $fh, &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bytes, &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;;
+die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Got $bytes_read but expected 44&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $bytes_read &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here I use &lt;code&gt;read&lt;/code&gt; to read in 44 bytes of data into the variable &lt;code&gt;$bytes&lt;/code&gt;. The &lt;code&gt;read&lt;/code&gt; function returns the number of bytes read; it&amp;rsquo;s good practice to check this as &lt;code&gt;read&lt;/code&gt; may not return the expected number of bytes if it reaches the end of the file. In this case, if the file ends before the header does, we know we&amp;rsquo;ve got bad data and bail out.&lt;/p&gt;
+
+&lt;h3 id=&#34;3-unpack-bytes-into-variables&#34;&gt;3. Unpack bytes into variables&lt;/h3&gt;
+
+&lt;p&gt;Now comes the fun part. I&amp;rsquo;ve got to split out the data in &lt;code&gt;$bytes&lt;/code&gt; into separate Perl variables. The tzfile &lt;a href=&#34;http://linux.die.net/man/5/tzfile&#34;&gt;man page&lt;/a&gt; defines the header format:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Timezone information files begin with the magic characters &amp;ldquo;TZif&amp;rdquo; to identify them as timezone information files, followed by a character identifying the version of the file&amp;rsquo;s format (as of 2005, either an ASCII NUL (&amp;rsquo;\0&amp;rsquo;) or a &amp;lsquo;2&amp;rsquo;) followed by fifteen bytes containing zeros reserved for future use, followed by six four-byte values of type long&lt;/p&gt;
+
+&lt;p&gt;&lt;cite&gt;Tzfile manual&lt;/cite&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The &lt;code&gt;unpack&lt;/code&gt; function takes a template of the binary data to read (this is defined in the pack &lt;a href=&#34;https://perldoc.perl.org/functions/pack.html&#34;&gt;documentation&lt;/a&gt;) and returns Perl variables. I&amp;rsquo;m going to match up the header description with the template codes to design the template.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;th&gt;Example&lt;/th&gt;
+&lt;th&gt;Type&lt;/th&gt;
+&lt;th&gt;Length&lt;/th&gt;
+&lt;th&gt;Template Code&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Magic chars&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;TZif&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;String&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;a4&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Version&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;2&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;String&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;a&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Reserved&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Ignore&lt;/td&gt;
+&lt;td&gt;15&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;x15&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Numbers&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;244&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Long&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;N N N N N N&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The header begins with the magic chars &amp;ldquo;TZif&amp;rdquo;, this is 4 bytes. The template code &lt;code&gt;a4&lt;/code&gt; matches this. Next is the version, this is a single ASCII character matched by &lt;code&gt;a&lt;/code&gt; (the strings are not space or null terminated, I could have use &lt;code&gt;A&lt;/code&gt; instead). The next 15 bytes are reserved and can be ignored, so I use &lt;code&gt;x15&lt;/code&gt; to skip over them. Finally there are 6 numbers of type long. Each one is separate variable so I must write &lt;code&gt;N&lt;/code&gt; 6 times instead of &lt;code&gt;N6&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; autodie;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:raw&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/share/zoneinfo/America/New_York&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bytes_read &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; read $fh, &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bytes, &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;;
+die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Got $bytes_read but expected 44&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $bytes_read &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($magic, $version, @numbers) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;a4 a x15 N N N N N N&amp;#39;&lt;/span&gt;, $bytes;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code passes my template to &lt;code&gt;unpack&lt;/code&gt; and it returns the variables we asked for. Now they&amp;rsquo;re in Perl variables, the hard part is done. In the case of a tzfile, the header defines the length of the body of the file, so I can use these variables to calculate how much more data to read from the file.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re interested in how to parse the rest of a tzfile, check out the source code of my module &lt;a href=&#34;https://metacpan.org/pod/Time::Tzfile&#34;&gt;Time::Tzfile&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;troubleshooting&#34;&gt;Troubleshooting&lt;/h3&gt;
+
+&lt;p&gt;Sometimes you&amp;rsquo;ll unpack some binary data and get garbage. This happens when the template passed to &lt;code&gt;unpack&lt;/code&gt; doesn&amp;rsquo;t match the binary data. The first thing you can do is print the binary data to the terminal with &lt;code&gt;hexdump&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here are the first 44 bytes of the New York tzfile:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ hexdump -c -n 44 /usr/share/zoneinfo/America/New_York
+0000000   T   Z   i   f   2  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0
+0000010  \0  \0  \0  \0  \0  \0  \0 005  \0  \0  \0 005  \0  \0  \0  \0
+0000020  \0  \0  \0 354  \0  \0  \0 005  \0  \0  \0 024
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This gives you a chance to inspect the data byte by byte and see if it matches your template. To create a template to match binary data, take it one value at a time. Consider the type of value you&amp;rsquo;re trying to match. Get the right bit length and for numbers, be sure to know if it is signed or unsigned.&lt;/p&gt;
+
+&lt;p&gt;The other thing to be aware of is &lt;a href=&#34;https://en.wikipedia.org/wiki/Endianness&#34;&gt;endianness&lt;/a&gt; of the data. Often man pages will say a variable is in &amp;ldquo;standard&amp;rdquo; or &amp;ldquo;network&amp;rdquo; order. This means big endian. Tzfiles have several 32 bit signed integers in big endian order. There is no &lt;code&gt;unpack&lt;/code&gt; template code which matches that type. To match it I need to use &lt;code&gt;l&amp;gt;&lt;/code&gt;. The &lt;code&gt;l&lt;/code&gt; matches signed 32 bit integers and the &lt;code&gt;&amp;gt;&lt;/code&gt; is a modifier which tells Perl the value is big endian.&lt;/p&gt;
+
+&lt;p&gt;Between Perl&amp;rsquo;s built-in template &lt;a href=&#34;https://perldoc.perl.org/functions/pack.html&#34;&gt;types&lt;/a&gt; and the modifiers, you can match any binary data.&lt;/p&gt;
+
+&lt;h3 id=&#34;more-binary-parsing-examples&#34;&gt;More binary parsing examples&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;In section 7.2 of &lt;a href=&#34;http://perlhacks.com/2014/04/data-munging-perl/&#34;&gt;Data Munging with Perl&lt;/a&gt; Dave Cross shows how to parse png and mp3 files.&lt;/li&gt;
+&lt;li&gt;There are some useful replies on the Perl Monks thread &lt;a href=&#34;http://www.perlmonks.org/?node_id=53473&#34;&gt;Confession of a Perl Hacker&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;The Perl Monks &lt;a href=&#34;http://www.perlmonks.org/?node_id=224666&#34;&gt;Pack/Unpack tutorial&lt;/a&gt; has some great information on the template types.&lt;/li&gt;
+&lt;li&gt;Entry 117 &amp;ldquo;Use pack and unpack for data munging&amp;rdquo; from &lt;a href=&#34;http://www.effectiveperlprogramming.com/&#34;&gt;Effective Perl Programming&lt;/a&gt; shows how to use &lt;code&gt;unpack&lt;/code&gt; for fixed width data.&lt;/li&gt;
+&lt;li&gt;The official Perl documentation also has a pack/unpack &lt;a href=&#34;https://perldoc.perl.org/perlpacktut.html&#34;&gt;tutorial&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

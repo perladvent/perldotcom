@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Raspberry on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/raspberry/</link>
+    <description>Recent content in Raspberry on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 16 Mar 2015 10:04:29 +0000</lastBuildDate>
+    <atom:link href="/tags/raspberry/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Accelerating Perl</title>
+      <link>http://localhost:1313/article/159/2015/3/16/Accelerating-Perl/</link>
+      <pubDate>Mon, 16 Mar 2015 10:04:29 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/159/2015/3/16/Accelerating-Perl/</guid>
+      <description>&lt;p&gt;Accelerometers have exploded in popularity since the introduction of the Nintendo Wii&amp;rsquo;s motion controls. They&amp;rsquo;re also common in cars and smartphones. Until recently, Perl has not been in places where interfacing directly with accelerometers made sense. With the Raspberry Pi and other SoC (System on a Chip) devices, it&amp;rsquo;s now time to fix this oversight.&lt;/p&gt;
+
+&lt;p&gt;There are many accelerometers on the market, which are broadly divided into four interface types: analog, SPI, I2C, and serial. Analog is very simple to read with any device that has an Analog-to-digital converter, but is also subject to electrical noise. SPI and I2C are the most common types.&lt;/p&gt;
+
+&lt;p&gt;An accelerometer can be combined with a gyroscope to produce more accurate readings than either one alone. This is what the Wii Motion Plus did for Nintendo. There are algorithms to combine their data, which can be tricky to write by hand. Fortunately, there are devices called an &amp;ldquo;Inertial Measurement Unit&amp;rdquo; (IMU) which combine the data for you and present an interface similar to a straight accelerometer. Unfortunately, these tend to be quite a bit more expensive.&lt;/p&gt;
+
+&lt;p&gt;As you may recall from High School Physics, the Earth is pulling us all down at an acceleration of about 9.81 m/s&lt;sup&gt;2&lt;/sup&gt;. An accelerometer sitting on a flat table will measure this acceleration straight down towards the Earth&amp;rsquo;s center (more accurately, its center of gravity). Keep this in mind when taking readings.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s common for accelerometers to have several configurable ranges of measurement. If you set the device to read +/- 2g (that is, 2 * 9.81 m/s&lt;sup&gt;2&lt;/sup&gt;), and it gives data back in a 16-bit integer, then it will give readings over that entire 16-bit range. If you set it for +/- 10g, then it will still give readings over the entire 16-bit range. This means that higher settings will lose precision.&lt;/p&gt;
+
+&lt;p&gt;Be sure, then, to set the measurement range to just a little more than what you expect. A sportscar on a track would have a hard time doing 2g&amp;rsquo;s in any direction. Most rollercoasters max at around 4g&amp;rsquo;s, maybe 6. Fighter jets can exceed 10g&amp;rsquo;s, which is about the limit of human ability for any sustainable period. Also note that instantaneous acceleration can be extremely high for any of these cases; a sportscar hitting a brick wall will easily exceed 10g&amp;rsquo;s.&lt;/p&gt;
+
+&lt;p&gt;Every chip defines its own interface protocol. This means a new interface driver needs to be written for each chip, and unfortunately, there aren&amp;rsquo;t a lot of CPAN modules out there for individual devices. One that does exist is &lt;a href=&#34;https://metacpan.org/pod/Device::LSM303DLHC&#34;&gt;Device::LSM303DLHC&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The LSM303DLHC chip in question also contains a magnetometer, and is available on a breakout board from Adafruit Industries.&lt;/p&gt;
+
+&lt;p&gt;Device::LSM303DLHC uses the Linux scheme of accessing I2C devices under &lt;code&gt;/dev/i2c-*&lt;/code&gt;. On the Raspberry Pi, the I2C pins on the GPIO header are available at &lt;code&gt;/dev/i2c-1&lt;/code&gt;. Device::LSM303DLHC divides the two functions of this chip into two objects. You start by initializing the main object with the I2C path, fetching the accelerometer object, and enabling it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dev &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Device::LSM303DLHC&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;({
+    I2CBusDevicePath &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/dev/i2c-1&amp;#39;&lt;/span&gt;,
+});
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $accel &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $dev&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;Accelerometer;
+$accel&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;enable;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;$accel&lt;/code&gt; object gives us convenience methods for returning the acceleration vector in different units. With &lt;code&gt;getAccelerationVectorInG()&lt;/code&gt;, we get the g rating, while &lt;code&gt;getAccelerationVecotrInMSS()&lt;/code&gt; gives us m/s&lt;sup&gt;2&lt;/sup&gt;, among a few others. I like to use the g rating:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $acc_angle &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $accel&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;getAccelerationVectorInG;
+    say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Accel: $$acc_angle{x}, $$acc_angle{y}, $$acc_angle{z}&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will repeatedly dump the acceleration vector to STDOUT:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Accel: -0.0234375, -0.0078125, -0.9453125
+Accel: -0.0234375, -0.0078125, -0.9453125
+Accel: -0.015625, -0.01171875, -0.9453125
+Accel: -0.015625, -0.01171875, -0.9453125
+Accel: -0.015625, -0.00390625, -0.9453125
+Accel: -0.015625, -0.00390625, -0.9453125
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With the flat side of an LSM303 chip on the table, you should see the Z output be approximately 1g, or maybe -1g if you turn it upside down. The other outputs should be about zero. Pick it up and turn it around, and you should see the Z output head towards zero, with the X and Y outputs adding up the 1g vector towards the center of the Earth (plus or minus some shakiness from your hand).&lt;/p&gt;
+
+&lt;p&gt;Accelerometers are one of those things that once you start using them, you find a million fun things to do with them. So go forth and have fun!&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

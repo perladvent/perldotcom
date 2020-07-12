@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Preventing Cross-site Scripting Attacks </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" Introduction The cross-site scripting attack is one of the most common, yet overlooked, security problems facing web developers today. A web site is vulnerable if it displays user-submitted content without checking for malicious script tags. Luckily, Perl and mod_perl..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2002/02/20/css.html/" />
+<meta property="og:title" content="Preventing Cross-site Scripting Attacks" />
+<meta property="og:description" content=" Introduction The cross-site scripting attack is one of the most common, yet overlooked, security problems facing web developers today. A web site is vulnerable if it displays user-submitted content without checking for malicious script tags. Luckily, Perl and mod_perl...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2002-02-02T02:02:02Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2002_02_20_css/111-cross-site.gif" />
+<meta property="og:article:tag" content="mod-perl-security-cross-site-scripting" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Preventing Cross-site Scripting Attacks</h1>
+              <p class="blog-post-meta">Feb 20, 2002 by
+              
+              
+                
+                
+                <a href="#author-bio-paul-lindner">Paul Lindner</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<h3 id="introduction">Introduction</h3>
+
+<p>The cross-site scripting attack is one of the most common, yet overlooked, security problems facing web developers today. A web site is vulnerable if it displays user-submitted content without checking for malicious script tags.</p>
+
+<p>Luckily, Perl and mod_perl provide us with easy solutions to this problem. We highlight these built-in solutions and also a introduce a new mod_perl module: <em>Apache::TaintRequest</em>. This module helps you secure mod_perl applications by applying perl&rsquo;s powerful &ldquo;tainting&rdquo; rules to HTML output.</p>
+
+<h3 id="what-is-cross-site-scripting">What is &ldquo;Cross-Site Scripting&rdquo;?</h3>
+
+<p>Lately the news has been full of reports on web site security lapses. Some recent headlines include the following grim items: <a href="http://news.cnet.com/news/0-1003-200-7764433.html">Security problems open Microsoft&rsquo;s Wallet</a>, <a href="http://news.cnet.com/news/0-1007-200-4030388.html">Schwab financial site vulnerable to attack</a>, or <a href="http://techupdate.zdnet.com/techupdate/stories/main/0,14179,2808729,00.html">New hack poses threat to popular Web services</a>. In all these cases the root problem was caused by a <em>Cross-Site Scripting</em> attack. Instead of targeting holes in your server&rsquo;s operating system or web server software, the attack works directly against the users of your site. It does this by tricking a user into submitting web scripting code (JavaScript, Jscript, etc.) to a dynamic form on the targeted web site. If the web site does not check for this scripting code it may pass it verbatim back to the user&rsquo;s browser where it can cause all kinds of damage.</p>
+
+<p>Consider the following URL:</p>
+
+<blockquote>
+<p><code>http://www.example.com/search.pl?text=&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code></p>
+</blockquote>
+
+<p>If an attacker can get us to select a link like this,and the Web application does not validate input, then our browser will pop up an alert showing our current set of cookies.This particular example is harmless; an attacker can do much more damage, including stealing passwords, resetting your home page, or redirecting you to another Web site.</p>
+
+<p>Even worse, you might not even need to select the link for this to happen. If the attacker can make your application display a chunk of html, you&rsquo;re in trouble. Both the <strong>IMG</strong> and <strong>IFRAME</strong> tags allow for a new URL to load when html is displayed. For example the following HTML chunk is sent by the <a href="http://www.cert.org/incident_notes/IN-2001-14.html">BadTrans</a> Worm. This worm uses the load-on-view feature provided by the IFRAME tag to infect systems running Outlook and Outlook Express.</p>
+
+<pre><code>  --====_ABC1234567890DEF_====
+  Content-Type: multipart/alternative;
+           boundary=&quot;====_ABC0987654321DEF_====&quot;
+
+  --====_ABC0987654321DEF_====
+  Content-Type: text/html;
+           charset=&quot;iso-8859-1&quot;
+  Content-Transfer-Encoding: quoted-printable
+
+
+  &lt;HTML&gt;&lt;HEAD&gt;&lt;/HEAD&gt;&lt;BODY bgColor=3D#ffffff&gt;
+  &lt;iframe src=3Dcid:EA4DMGBP9p height=3D0 width=3D0&gt;
+  &lt;/iframe&gt;&lt;/BODY&gt;&lt;/HTML&gt;
+  --====_ABC0987654321DEF_====--
+
+  --====_ABC1234567890DEF_====
+  Content-Type: audio/x-wav;
+           name=&quot;filename.ext.ext&quot;
+  Content-Transfer-Encoding: base64
+  Content-ID: &lt;EA4DMGBP9p&gt;
+</code></pre>
+
+<p>This particular example results in executable code running on the target computer. The attacker could just as easily insert HTML using the URL format described earlier, like this:</p>
+
+<blockquote>
+<p><code>&lt;iframe src=&quot;http://www.example.com/search.pl?text=&lt;script&gt;alert(document.cookie)&lt;/script&gt;&quot;&gt;</code></p>
+</blockquote>
+
+<p>The &ldquo;cross-site&rdquo; part of &ldquo;cross-site scripting&rdquo; comes into play when dealing with the web browser&rsquo;s internal restrictions on cookies. The JavaScript interpreter built into modern web browsers only allows the originating site to access it&rsquo;s own private cookies. By taking advantage of poorly coded scripts the attacker can bypass this restriction.</p>
+
+<p>Any poorly coded script, written in Perl or otherwise, is a potential target. The key to solving cross-site scripting attacks is to never, ever trust data that comes from the web browser. Any input data should be considered guilty unless proven innocent.</p>
+
+<h3 id="solutions">Solutions</h3>
+
+<p>There are a number of ways of solving this problem for Perl and mod_perl systems. All are quite simple, and should be used everywhere there might be the potential for user submitted data to appear on the resulting web page.</p>
+
+<p>Consider the following script <em>search.pl</em>. It is a simple CGI script that takes a given parameter named &lsquo;text&rsquo; and prints it on the screen.</p>
+
+<pre><code>        #!/usr/bin/perl
+        use CGI;
+
+        my $cgi = CGI-&gt;new();
+        my $text = $cgi-&gt;param('text');
+
+        print $cgi-&gt;header();
+        print &quot;You entered $text&quot;;
+</code></pre>
+
+<p>This script is vulnerable to cross-site scripting attacks because it blindly prints out submitted form data. To rid ourselves of this vulnerability we can either perform input validation, or insure that user-submitted data is always HTML escaped before displaying it.</p>
+
+<p>We can add input validation to our script by inserting the following line of code before any output. This code eliminates everything but letters, numbers, and spaces from the submitted input.</p>
+
+<pre><code>        $text =~ s/[^A-Za-z0-9 ]*/ /g;
+</code></pre>
+
+<p>This type of input validation can be quite a chore. Another solution involves escaping any HTML in the submitted data. We can do this by using the HTML::Entities module bundled in the libwww-perl CPAN distribution. The HTML::Entities module provides the function HTML::Entities::encode(). It encodes HTML characters as HTML entity references. For example, the character <strong>&lt;</strong> is converted to <strong>&lt;</strong>, <strong>&ldquo;</strong> is converted to <strong>&quot;</strong>, and so on. Here is a version of <em>search.pl</em> that uses this new feature.</p>
+
+<pre><code>        #!/usr/bin/perl
+        use CGI;
+        use HTML::Entities;
+
+        my $cgi = CGI-&gt;new();
+        my $text = $cgi-&gt;param('text');
+
+        print $cgi-&gt;header();
+        print &quot;You entered &quot;, HTML::Entities::encode($text);
+</code></pre>
+
+<h3 id="solutions-for-mod-perl">Solutions for mod_perl</h3>
+
+<p>All of the previous solutions apply to the mod_perl programmer too. An Apache::Registry script or mod_perl handler can use the same techniques to eliminate cross-site scripting holes. For higher performance you may want to consider switching calls from HTML::Entities::encode() to mod_perl&rsquo;s much faster Apache::Util::escape_html() function. Here&rsquo;s an example of an Apache::Registry script equivilant to the preceding <em>search.pl</em> script.</p>
+
+<pre><code>        use Apache::Util;
+        use Apache::Request;
+
+        my $apr = Apache::Request-&gt;new(Apache-&gt;request);
+
+        my $text = $apr-&gt;param('text');
+
+        $r-&gt;content_type(&quot;text/html&quot;);
+        $r-&gt;send_http_header;
+        $r-&gt;print(&quot;You entered &quot;, Apache::Util::html_encode($text));
+</code></pre>
+
+<p>After a while you may find that typing Apache::Util::html_encode() over and over becomes quite tedious, especially if you use input validation in some places, but not others. To simplify this situation consider using the Apache::TaintRequest module. This module is available from CPAN or from the <a href="http://www.modperlcookbook.org/">mod_perl Developer&rsquo;s Cookbook</a> web site.</p>
+
+<p>Apache::TaintRequest automates the tedious process of HTML escaping data. It overrides the print mechanism in the mod_perl Apache module. The new <em>print</em> method tests each chunk of text for taintedness. If it is tainted the module assumes the worst and html-escapes it before printing.</p>
+
+<p>Perl contains a set of built-in security checks know as <em>taint mode</em>. These checks protect you by insuring that <em>tainted</em> data that comes from somewhere outside your program is not used directly or indirectly to alter files, processes, or directories. Apache::TaintRequest extends this list of <em>dangerous</em> operations to include printing HTML to a web client. To <em>untaint</em> your data just process it with a regular expression. Tainting is the Perl web developer&rsquo;s most powerful defense against security problems. Consult the <strong>perlsec</strong> man page and use it for every web application you write.</p>
+
+<p>To activate Apache::TaintRequest simply add the following directive to your httpd.conf.</p>
+
+<pre><code>       PerlTaintCheck on    
+</code></pre>
+
+<p>This activates taint mode for the entire mod_perl server.</p>
+
+<p>The next thing we need to do modify our script or handler to use Apache::TaintRequest instead of Apache::Request. The preceding script might look like this:</p>
+
+<pre><code>        use Apache::TaintRequest;
+
+        my $apr = Apache::TaintRequest-&gt;new(Apache-&gt;request);
+
+        my $text = $apr-&gt;param('text');
+
+        $r-&gt;content_type(&quot;text/html&quot;);
+        $r-&gt;send_http_header;
+
+        $r-&gt;print(&quot;You entered &quot;, $text);
+
+        $text =~ s/[^A-Za-z0-9 ]//;
+        $r-&gt;print(&quot;You entered &quot;, $text);
+</code></pre>
+
+<p>This script starts by storing the tainted form data &lsquo;text&rsquo; in $text. If we print this data we will find that it is automatically HTML escaped. Next we do some input validation on the data. The following print statement does not result in any HTML escaping of data.</p>
+
+<h3 id="tainting-apache-request-apache-taintrequest">Tainting + Apache::Request&hellip;. Apache::TaintRequest</h3>
+
+<p>The implementation code for Apache::TaintRequest is quite simple. It&rsquo;s a subclass of the Apache::Request module, which provides the form field and output handling. We override the <em>print</em> method, because that is where we HTML escape the data. We also override the <em>new</em> method &ndash; this is where we use Apache&rsquo;s TIEHANDLE interface to insure that output to STDOUT is processed by our print() routine.</p>
+
+<p>Once we have output data we need to determine if it is tainted. This is where the <em>Taint</em> module (also available from CPAN) becomes useful. We use it in the <em>print</em> method to determine if a printable string is tainted and needs to be HTML escaped. If it is tainted we use the mod_perl function Apache::Util::html_escape() to escape the html.</p>
+
+<pre><code>package Apache::TaintRequest;
+
+use strict;
+use warnings;
+
+use Apache;
+use Apache::Util qw(escape_html);
+use Taint qw(tainted);
+
+$Apache::TaintRequest::VERSION = '0.10';
+@Apache::TaintRequest::ISA = qw(Apache);
+
+sub new {
+  my ($class, $r) = @_;
+
+  $r ||= Apache-&gt;request;
+
+  tie *STDOUT, $class, $r;
+
+  return tied *STDOUT;
+}
+
+
+sub print {
+  my ($self, @data) = @_;
+
+  foreach my $value (@data) {
+    # Dereference scalar references.
+    $value = $$value if ref $value eq 'SCALAR';
+
+    # Escape any HTML content if the data is tainted.
+    $value = escape_html($value) if tainted($value);
+  }
+
+  $self-&gt;SUPER::print(@data);
+}
+</code></pre>
+
+<p>To finish off this module we just need the TIEHANDLE interface we specified in our <em>new()</em> method. The following code implements a <em>TIEHANDLE</em> and <em>PRINT</em> method.</p>
+
+<pre><code>sub TIEHANDLE {
+  my ($class, $r) = @_;
+
+  return bless { r =&gt; $r }, $class;
+}
+
+sub PRINT {
+  shift-&gt;print(@_);
+}
+</code></pre>
+
+<p>The end result is that Tainted data is escaped, and untainted data is passed unaltererd to the web client.</p>
+
+<h3 id="conclusions">Conclusions</h3>
+
+<p>Cross-site scripting is a serious problem. The solutions, input validation and HTML escaping are simple but must be applied every single time. An application with a single overlooked form field is just as insecure as one that does no checking whatsoever.</p>
+
+<p>To insure that we always check our data Apache::TaintRequest was developed. It builds upon Perl&rsquo;s powerful data tainting feature by automatically HTML escaping data that is not input validated when it is printed.</p>
+
+<h3 id="resources">Resources</h3>
+
+<ul>
+<li><a href="http://www.cert.org/advisories/CA-2000-02.html">CERT Advisory CA-2000-02 Malicious HTML Tags Embedded in Client Web Requests</a></li>
+<li><a href="http://www.modperlcookbook.org">The mod_perl Developer&rsquo;s Cookbook</a></li>
+<li><a href="http://www.modperlcookbook.org/code.html">Download Apache::TaintRequest</a></li>
+</ul>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/security">security</a></div>
+                
+                  <div class="tag"><a href="/tags/mod-perl-security-cross-site-scripting">mod-perl-security-cross-site-scripting</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-paul-lindner">
+  <div class="col-sm-2">
+    
+    <a href="/authors/paul-lindner/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/paul-lindner/"><h3>Paul Lindner</h3></a>
+    <p></p>
+    <h5><a href="/authors/paul-lindner/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2002_02_20_css.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

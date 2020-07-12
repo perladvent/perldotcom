@@ -1,0 +1,1904 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Optimization on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/optimization/</link>
+    <description>Recent content in Optimization on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 14 Jun 2016 20:54:51 +0000</lastBuildDate>
+    <atom:link href="/tags/optimization/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The road to a 55x speedup with XS</title>
+      <link>http://localhost:1313/article/the-road-to-a-55x-speedup-with-xs/</link>
+      <pubDate>Tue, 14 Jun 2016 20:54:51 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/the-road-to-a-55x-speedup-with-xs/</guid>
+      <description>
+
+&lt;p&gt;Lately my client has been concerned with improving their application speed, so naturally I started to think about XS, Perl&amp;rsquo;s C macro language. With XS you can write C code and call it from Perl.&lt;/p&gt;
+
+&lt;p&gt;To test the waters I wrote a simple URI encoder/decoder in C and with some trial-and-error managed to make &lt;a href=&#34;https://metacpan.org/pod/URI::Encode::XS&#34;&gt;URI::Encode::XS&lt;/a&gt;, a module that used it. &amp;ldquo;This is easy!&amp;rdquo; I thought and excitedly typed out a benchmarking &lt;a href=&#34;https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench&#34;&gt;script&lt;/a&gt;. I benchmarked my module against &lt;a href=&#34;https://metacpan.org/pod/URI::Escape&#34;&gt;URI::Escape&lt;/a&gt; a venerable but rather slow &lt;em&gt;pure-Perl&lt;/em&gt; URI encoder/decoder. You can imagine how crestfallen I was when I read the benchmark results to find that all of my effort only netted a 20% speedup. I wondered if Perl&amp;rsquo;s string routines are so fast they&amp;rsquo;re hard to improve upon.&lt;/p&gt;
+
+&lt;h3 id=&#34;renewed-hope&#34;&gt;Renewed hope&lt;/h3&gt;
+
+&lt;p&gt;Enter &lt;a href=&#34;https://metacpan.org&#34;&gt;URI::XSEscape&lt;/a&gt;, a &amp;ldquo;quick and dirty&amp;rdquo; (the authors&amp;rsquo; words) XS implementation of URI::Escape. It was uploaded to CPAN last month. You can see the authors&amp;rsquo; &lt;a href=&#34;https://metacpan.org/pod/URI::XSEscape#BENCHMARKS&#34;&gt;benchmarks&lt;/a&gt; for yourself, but in my testing it appeared to be about 18.5 times faster than URI::Escape. That&amp;rsquo;s not a misprint - on my laptop it encoded 2.75m strings per second, compared to 138k for URI::Escape. So how did they do it?&lt;/p&gt;
+
+&lt;p&gt;First let&amp;rsquo;s look at my naive C encode implementation:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;void &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;uri_encode (char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;uri, const char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;special_chars, char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;buffer)
+{
+  int i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+  &lt;span style=&#34;color:#e6db74&#34;&gt;/* \0 is null, end of the string */&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (uri[i] &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;)
+  {
+    int encode_char &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+    int j &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (special_chars[j] &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;)
+    {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (uri[i] &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; special_chars[j])
+      {
+        &lt;span style=&#34;color:#e6db74&#34;&gt;/* do not encode char as it is in the special_chars set */&lt;/span&gt;
+        encode_char &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+        break;
+      }
+      j&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (encode_char &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+    {
+      char code[&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;];
+      sprintf(code, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%%%02X&amp;#34;&lt;/span&gt;, uri[i]);
+      strcat(buffer, code);
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+    {
+      char code[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;];
+      code[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; uri[i];
+      code[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;;
+      strcat(buffer, code);
+    }
+    i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Basically what this does is loop through the &lt;code&gt;uri&lt;/code&gt; string, looking characters that are in the &lt;code&gt;special_chars&lt;/code&gt; string, and if it finds a match, it percent encodes the character with &lt;code&gt;sprintf&lt;/code&gt; and appends the result to &lt;code&gt;buffer&lt;/code&gt; which is the encoded string. Compare this with the encode function from &lt;code&gt;URI::XSEscape&lt;/code&gt; (I&amp;rsquo;ve simplified it slightly):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Buffer&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; uri_encode(Buffer&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; src, int length,
+                   Buffer&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; tgt)
+{
+    int s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; src&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;pos;
+    int t &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tgt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;pos;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (s &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; (src&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;pos &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; length)) {
+        unsigned char u &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (unsigned char) src&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;data[s];
+        char&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; v &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; uri_encode_tbl[(int)u];
+
+        &lt;span style=&#34;color:#f92672&#34;&gt;/*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; current source character doesn&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;t need to be encoded,
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;           just copy it to target*/
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        if (!v) {
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            tgt-&amp;gt;data[t++] = src-&amp;gt;data[s++];
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            continue;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        }
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        /* copy encoded character from our table */
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        tgt-&amp;gt;data[t+0] = &amp;#39;&lt;/span&gt;%&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;;&lt;/span&gt;
+        tgt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;data[t&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; v[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];
+        tgt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;data[t&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; v[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;];
+
+        &lt;span style=&#34;color:#f92672&#34;&gt;/*&lt;/span&gt; we used up &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; characters (%XY) in target
+         &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;and&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; character from source &lt;span style=&#34;color:#f92672&#34;&gt;*/&lt;/span&gt;
+        t &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;;
+        &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;s;
+    }
+    &lt;span style=&#34;color:#e6db74&#34;&gt;/* null-terminate target and return src as was left */&lt;/span&gt;
+    src&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;pos &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; s;
+    tgt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;pos &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; t;
+    buffer_terminate(tgt);
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; src;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code loops through the input string but instead of comparing the current character to another string of special characters, it does a table lookup. This is much faster than looping through another string. Note how it doesn&amp;rsquo;t use &lt;code&gt;sprintf&lt;/code&gt; either - all the hex codes are pre-computed in &lt;code&gt;uri_encode_tbl&lt;/code&gt;. Finally, instead of creating a new string and concatenating it to the output string, this code simply copies the output directly to the output string&amp;rsquo;s memory location.&lt;/p&gt;
+
+&lt;p&gt;This code also avoid a subtle bug with my implementation: Perl strings can contain null characters, but in C null is used to terminate strings. Because URI::XSEscape&amp;rsquo;s encode function accepts a length argument, it can encode strings will nulls and my version can&amp;rsquo;t.&lt;/p&gt;
+
+&lt;h3 id=&#34;going-faster&#34;&gt;Going faster&lt;/h3&gt;
+
+&lt;p&gt;At this point I updated the encode/decode functions in URI::Encode::XS to be table based like URI::XSEscape and saw huge gains in performance, making URI::Encode::XS about 25 times faster than URI::Escape (URI::Encode::XS doesn&amp;rsquo;t support user-defined escape values, so it&amp;rsquo;s simpler than URI::XSEscape). I thought a 25x improvement was as good as it got, and was about done with the module, when I was contacted by &lt;a href=&#34;https://metacpan.org/author/CHANSEN&#34;&gt;Christian Hansen&lt;/a&gt; (author of &lt;a href=&#34;https://metacpan.org/release/Time-Moment&#34;&gt;Time::Moment&lt;/a&gt;). Christian overhauled my simple XS code to make it safer and faster. This is what became of the &lt;code&gt;uri_encode&lt;/code&gt; C function:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;size_t uri_encode (const char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;src, const size_t len, char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;dst)
+{
+  size_t i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, j &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; len
+  {
+    const char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; code &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; uri_encode_tbl[ (unsigned char)src[i] ];
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (code)
+    {
+      memcpy(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;dst[j], code, &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;);
+      j &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;;
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+    {
+      dst[j] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; src[i];
+      j&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    }
+    i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+  }
+  dst[j] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; j;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This version looks up the character value in a pre-computed table and then uses &lt;code&gt;memcpy&lt;/code&gt; to append it to the output string (avoiding 3 separate assignments). It also returns the length of encoded string, which is useful. After Christian&amp;rsquo;s optimizations, my benchmarking &lt;a href=&#34;https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench&#34;&gt;script&lt;/a&gt; showed URI::Encode::XS&amp;rsquo;s encoding function to be 55 times faster than URI::Escape (about 8m encoded strings per second). Much of the gains came from optimizing the &lt;a href=&#34;https://github.com/dnmfarrell/URI-Encode-XS/blob/df8009e9d7af4cf243fa29ca8aaa23982feeba58/XS.xs#L143&#34;&gt;xsub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-power-of-c-the-pleasure-of-perl&#34;&gt;The power of C, the pleasure of Perl&lt;/h3&gt;
+
+&lt;p&gt;To me the most magical thing about XS code is you call it from Perl:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; URI::Encode::XS &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;uri_encode&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $encoding &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; uri_encode($some_string); &lt;span style=&#34;color:#75715e&#34;&gt;# super fast&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So the user has the convenience of writing Perl code, but the benefit of the faster implementation. Perl is already pretty fast, but there are certain operations that are expensive. If you work on a Perl application, how much faster would it be if you could make all of the bottlenecks 55 times faster?&lt;/p&gt;
+
+&lt;h3 id=&#34;learning-xs&#34;&gt;Learning XS&lt;/h3&gt;
+
+&lt;p&gt;If you&amp;rsquo;d like to learn more about XS, I&amp;rsquo;d strongly recommend this &lt;a href=&#34;http://world.std.com/~swmcd/steven/perl/pm/xs/intro/index.html&#34;&gt;series&lt;/a&gt; by Steven W McDougall. It&amp;rsquo;s the best introduction I know of.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/xsawyerx/xs-fun&#34;&gt;XS is Fun&lt;/a&gt; is a more modern introduction to XS programming that takes you through the steps of writing an XS module and importing a C library.&lt;/p&gt;
+
+&lt;p&gt;Chapter 18 &amp;ldquo;Extending Perl: A First Course&amp;rdquo; in &lt;a href=&#34;http://shop.oreilly.com/product/9781565922204.do&#34;&gt;Advanced Perl Programming&lt;/a&gt; first edition has a good introduction to XS. It covers the most common macros for scalars, arrays and hashes which is useful (the second edition doesn&amp;rsquo;t cover XS). &lt;a href=&#34;https://www.manning.com/books/extending-and-embedding-perl&#34;&gt;Extending and Embedding Perl&lt;/a&gt; goes further, with several tutorials on the different ways to call and receive data from XS. Both books are a bit dated but I found them valuable and an easier read than the official docs.&lt;/p&gt;
+
+&lt;p&gt;The official Perl documentation has useful reference sources: &lt;a href=&#34;https://perldoc.perl.org/perlxs.html&#34;&gt;perlxs&lt;/a&gt;, &lt;a href=&#34;https://perldoc.perl.org/perlapi.html&#34;&gt;perlapi&lt;/a&gt; and &lt;a href=&#34;https://perldoc.perl.org/perlxs.html&#34;&gt;perlguts&lt;/a&gt;. There is also &lt;a href=&#34;https://perldoc.perl.org/perlxs.html&#34;&gt;perlxstut&lt;/a&gt; but I would skip that in favor of the above resources.&lt;/p&gt;
+
+&lt;p&gt;Several times I&amp;rsquo;ve found XS macros used in Perl code that are not explained in any documentation (e.g. &lt;code&gt;dXSTARG&lt;/code&gt;). In those cases it pays to have a copy of the Perl &lt;a href=&#34;https://www.perl.org/get.html&#34;&gt;source code&lt;/a&gt; - just grep the source and you&amp;rsquo;ll find its definition with a comment (typically in &lt;code&gt;pp.h&lt;/code&gt;).&lt;/p&gt;
+
+&lt;h3 id=&#34;a-note-on-the-benchmarks&#34;&gt;A note on the benchmarks&lt;/h3&gt;
+
+&lt;p&gt;The benchmarks in this article were all run on my laptop, a Dell XPS 13 with 8GB RAM running Fedora 23. Different hardware will yield different results (Christian&amp;rsquo;s benchmark showed URI::Encode::XS to be 90x (!) faster than URI::Escape).&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench&#34;&gt;script&lt;/a&gt; counts how many times each module can encode a string per second. But a string of a different length, or with a different number of reserved characters will yield a different benchmark. For example benchmarking an empty string shows URI::Encode::XS to be just 9x times faster on my laptop.&lt;/p&gt;
+
+&lt;p&gt;The module versions were URI::Encode::XS v0.08 and URI::Escape v3.31. The Perl version was 5.22.&lt;/p&gt;
+
+&lt;h3 id=&#34;thanks&#34;&gt;Thanks&lt;/h3&gt;
+
+&lt;p&gt;A big thank you to Christian Hansen and Jesse DuMond for your help with URI::Encode::XS. The module would not be half of what it is without your contributions.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Benchmarking subroutine signatures</title>
+      <link>http://localhost:1313/article/88/2014/5/12/Benchmarking-subroutine-signatures/</link>
+      <pubDate>Mon, 12 May 2014 13:19:16 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/88/2014/5/12/Benchmarking-subroutine-signatures/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Subroutine signatures will be released to the Perl core in just a few days. But how do they performance compared with traditional methods like direct variable assignment and the &lt;a href=&#34;https://metacpan.org/pod/Method::Signatures&#34;&gt;Method::Signatures&lt;/a&gt; module? I benchmarked all three with interesting results.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;background&#34;&gt;Background&lt;/h3&gt;
+
+&lt;p&gt;I &lt;a href=&#34;http://perltricks.com/article/72/2014/2/24/Perl-levels-up-with-native-subroutine-signatures&#34;&gt;covered&lt;/a&gt; the new subroutine signatures features when they first appeared in the Perl development release 5.19.9. For these benchmarks I used the latest Perl development release (5.19.11).&lt;/p&gt;
+
+&lt;h3 id=&#34;method&#34;&gt;Method&lt;/h3&gt;
+
+&lt;p&gt;All of the benchmarks came from variations of this code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Benchmark::Forking &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;cmpthese&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;signatures&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;experimental::signatures&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Method::Signatures;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;native_assignment&lt;/span&gt; { 
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Too few arguments for subroutine $!&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; @_ &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;; 
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($var) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;native_signature&lt;/span&gt; ($var) {}
+
+func method_signature ($var) {}
+
+cmpthese(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;, {
+    native_assignment&lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { native_assignment(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)},
+    native_signature &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { native_signature(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) },
+    method_signature &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { method_signature(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) },
+});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The code begins by importing the necessary libraries. The line &amp;ldquo;no warnings &amp;lsquo;experimental::signatures&amp;rsquo; stops Perl from warning about the use of subroutine signatures. The code then declares the three subroutines we want to test: one is the normal variable assignment, one native subroutine signature and one for Method::Signatures (&amp;ldquo;func&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;Because the benchmark module executes tests in alphabetical order, every benchmark was run three times with the tests renamed each time to change the test order (every test was run first, second and third across the three benchmarks).&lt;/p&gt;
+
+&lt;h3 id=&#34;results&#34;&gt;Results&lt;/h3&gt;
+
+&lt;p&gt;Running this benchmark returned the following results:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;native_signature&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;method_signature&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;native_assignment&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;native_signature&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;--&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;-10%&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;-27%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;method_signature&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;12%&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;--&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;-19%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;native_assignment&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;38%&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;23%&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;--&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The results showed native subroutine signatures to be about 12% slower than the Method::Signatures function and 38% slower than the native assignment subroutine. So is this the price of the cleaner syntax? Actually it&amp;rsquo;s not the whole story.&lt;/p&gt;
+
+&lt;h3 id=&#34;changing-the-number-of-variables&#34;&gt;Changing the number of variables&lt;/h3&gt;
+
+&lt;p&gt;Would changing the number of variables assigned in the subroutine affect the relative performance of the three subroutine types? I re-ran the benchmarks, only this time incrementing the number of variables being assigned and plotted the results:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/88/signatures%20comparison.png&#34; alt=&#34;Comparison of signatures speed with increasing number of variables&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The results showed that increasing the number of variables improved the relative speed of native subroutine signatures against Method::Signatures. With two variable assignments their speed is about par. With three or more variables, native subroutine signatures outperforms, up to 18% faster. When I discussed these results with Ricardo Signes, he confirmed that the native subroutine signatures code had been optimized for multiple variable assignments, which correlates with the results shown above.&lt;/p&gt;
+
+&lt;h3 id=&#34;faster-subroutine-signatures&#34;&gt;Faster subroutine signatures&lt;/h3&gt;
+
+&lt;p&gt;It could be argued that the native subroutine signatures are plenty fast as they are and offer several benefits over both variable assignments and Method::Signatures. However, Ricardo did share a trick with me to make subroutine signatures run even faster, which I can&amp;rsquo;t resist sharing.&lt;/p&gt;
+
+&lt;p&gt;Adding a nameless slurpy parameter (&amp;ldquo;@&amp;rdquo;) to the subroutine signature removes the upper limit on how many arguments can be passed to the subroutine. Let&amp;rsquo;s add the slurpy parameter to the subroutine signature in our benchmark code. I&amp;rsquo;ve also updated the code to take two parameters - the level where previously Method::Signatures and subroutine signatures exhibited similar performance:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Benchmark::Forking &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;cmpthese&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;signatures&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;experimental::signatures&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Method::Signatures;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;native_assignment&lt;/span&gt; { 
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Too few arguments for subroutine $!&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; @_ &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;; 
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($var1, $var2) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;native_signature&lt;/span&gt; ($var1, $var2, @) {}
+
+func method_signature ($var1, $var2) {}
+
+cmpthese(&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;, {
+    native_assignment&lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { native_assignment(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)},
+    native_signature &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { native_signature(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;) },
+    method_signature &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { method_signature(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;) },
+});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And here are the results:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;col width=&#34;25%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;method_signature&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;native_signature&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;native_assignment&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;method_signature&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;--&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;-23%&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;-37%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;native_signature&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;30%&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;--&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;-18%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;native_assignment&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;60%&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;23%&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;--&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;By adding the slurpy parameter, native subroutine signatures performance improved by 30%! This is because the subroutine no longer has to run a variable count check against the upper limit of variables accepted by the signature. It&amp;rsquo;s up to you if you want to remove this check for the performance gain or not - I can&amp;rsquo;t think of a use case where this would be worth it, but you never know.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Subroutine variable assignment is a relatively inexpensive operation and unlikely to be a bottleneck in your code running time. However the speed benchmarks show that by switching to subroutine signatures is unlikely to regress and in some cases will improve run time speed. So use them with confidence!&lt;/p&gt;
+
+&lt;h3 id=&#34;thanks&#34;&gt;Thanks&lt;/h3&gt;
+
+&lt;p&gt;Thanks to Perl pumpking Ricardo Signes for providing detail on the subroutine signatures implementation and slury parameter optimization.&lt;/p&gt;
+
+&lt;p&gt;Enjoyed this article? Help us out and &lt;a href=&#34;https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F88%2F2014%2F5%2F12%2FBenchmarking-subroutine-signatures&amp;amp;text=Benchmarking+subroutine+signatures&amp;amp;tw_p=tweetbutton&amp;amp;url=http%3A%2F%2Fperltricks.com%2Farticle%2F88%2F2014%2F5%2F12%2FBenchmarking-subroutine-signatures&amp;amp;via=perltricks&#34;&gt;tweet&lt;/a&gt; about it!&lt;/p&gt;
+
+&lt;p&gt;*&lt;strong&gt;Edit:&lt;/strong&gt; article code and benchmarks corrected for single variable assignment on 2014/05/12*&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Make your code run faster with Perl&#39;s secret turbo module</title>
+      <link>http://localhost:1313/article/61/2014/1/21/Make-your-code-run-faster-with-Perl-s-secret-turbo-module/</link>
+      <pubDate>Tue, 21 Jan 2014 03:22:40 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/61/2014/1/21/Make-your-code-run-faster-with-Perl-s-secret-turbo-module/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Most modern processors are multi-core, yet Perl programs will typically run single-threaded on only one core at a time. Enter the &lt;a href=&#34;https://metacpan.org/pod/MCE&#34;&gt;Many Core Engine&lt;/a&gt; module - it makes it easy to run your existing Perl code in parallel across every core on your platform, and get a huge speed boost along the way.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;requirements&#34;&gt;Requirements&lt;/h3&gt;
+
+&lt;p&gt;You&amp;rsquo;ll need to install the MCE module. The current &lt;a href=&#34;http://matrix.cpantesters.org/?dist=MCE+1.509&#34;&gt;CPAN Testers&amp;rsquo; results&lt;/a&gt; show it runs on a wide array of platforms and Perl versions. You can install MCE via CPAN at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan MCE&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You do not need to have compiled Perl with threads enabled in order to get the parallel processing benefits as MCE can implement parallel processing using child processes via fork, &lt;a href=&#34;https://metacpan.org/pod/forks::shared&#34;&gt;forks::shared&lt;/a&gt;, or &lt;a href=&#34;https://metacpan.org/pod/threads::shared&#34;&gt;threads::shared&lt;/a&gt;. By default MCE will check for the presence of a threads module, otherwise, child processes are created via fork.&lt;/p&gt;
+
+&lt;h3 id=&#34;understanding-mce&#34;&gt;Understanding MCE&lt;/h3&gt;
+
+&lt;p&gt;MCE&amp;rsquo;s &lt;a href=&#34;http://code.google.com/p/many-core-engine-perl/&#34;&gt;documentation&lt;/a&gt; describes its implementation as a &amp;ldquo;bank queueing model&amp;rdquo;. Essentially, MCE uses up to one worker per core on the host platform, and distributes work between them in &amp;ldquo;chunks&amp;rdquo;. A chunk is just collection of elements, such as an array slice or a several lines of a file. The workers will process each chunk in parallel. The actual &amp;ldquo;work&amp;rdquo; done by a worker is usually the execution of a Perl subroutine. This will become clearer in the example below.&lt;/p&gt;
+
+&lt;p&gt;Managing the distribution and assignment of chunks creates a small overhead: therefore MCE is most effective when you have a large number of of elements to be processed and the &amp;ldquo;work&amp;rdquo; being done on every element is more than a basic pattern match. In the testing for this article, I was data munging web server logs and found a 50% runtime reduction was common.&lt;/p&gt;
+
+&lt;h3 id=&#34;getting-started&#34;&gt;Getting started&lt;/h3&gt;
+
+&lt;p&gt;The easiest way to get started with MCE is by using one of the 3 basic automation models that come with MCE. The basic models are drop-in replacements for Perl&amp;rsquo;s foreach, map and grep controls. The models automatically tune themselves - by default they use the maximum number of cores available on the host platform and select an optimal chunk size based on the number of input records and source type.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at the grep model. The code below is standard Perl code; it opens an nginx access.log and prints the number of records in the log that were from a robot useragent:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Nginx::Log::Entry;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;detect_robot&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; Nginx::Log::Entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($_[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;])&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;was_robot;
+}
+
+open(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $LOG, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/var/logs/access.log&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; grep { detect_robot($_) } &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$LOG&amp;gt;&lt;/span&gt;;
+say scalar $count;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let&amp;rsquo;s modify the code above to use the MCE::Grep model. The new code is below:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Nginx::Log::Entry;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; MCE::Grep;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;detect_robot&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; Nginx::Log::Entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($_[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;])&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;was_robot;
+}
+
+open(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $LOG, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/var/logs/access.log&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; mce_grep { detect_robot($_) } $LOG;
+say scalar $count;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The main changes here are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The &amp;ldquo;use MCE::Grep&amp;rdquo; line which imports the module&lt;/li&gt;
+&lt;li&gt;Changing grep to &amp;ldquo;mce_grep&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;Removing the diamond operator from the filehandle ($LOG)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The other difference is that this code will run a lot faster than the first example. How much faster depends on the platform and the number of input records. In my testing on a quad core processor, I found that the MCE::Grep was consistently 100-150% faster, but with more cores I would expect this to increase further.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/61/mce_grep_comparison_630.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The other basic automation models &lt;a href=&#34;https://metacpan.org/pod/MCE::Loop&#34;&gt;MCE::Loop&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/MCE::Map&#34;&gt;MCE::Map&lt;/a&gt; work in much the same was as MCE::Grep.&lt;/p&gt;
+
+&lt;h3 id=&#34;working-with-filepaths&#34;&gt;Working with filepaths&lt;/h3&gt;
+
+&lt;p&gt;MCE also provides a special &amp;ldquo;mce_grep_f&amp;rdquo; function for working directly with files (the function is provided for all MCE models, e.g. mce_loop_f, and mce_map_f). The &amp;ldquo;mce_grep_f&amp;rdquo; function requires a filepath argument:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Nginx::Log::Entry;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; MCE::Grep;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;detect_robot&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; Nginx::Log::Entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($_[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;])&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;was_robot;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; mce_grep_f { detect_robot($_) } &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/var/logs/access.log&amp;#39;&lt;/span&gt;;
+say scalar $count;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This feature is broken in version 1.504 of MCE, however it&amp;rsquo;s easy to fix - just insert one line. The module&amp;rsquo;s author Mario Roy contacted me and kindly provided a &lt;a href=&#34;http://code.google.com/p/many-core-engine-perl/source/diff?spec=svn456&amp;amp;r=456&amp;amp;format=side&amp;amp;path=/trunk/lib/MCE/Grep.pm&#34;&gt;diff&lt;/a&gt;. I&amp;rsquo;m told that this feature will be fixed in the next version of MCE. (&lt;em&gt;EDIT: it is now fixed as of 1.509&lt;/em&gt;).&lt;/p&gt;
+
+&lt;p&gt;In testing the mce_grep_f function using the code above on a 55mb log file, I didn&amp;rsquo;t see a marked difference in performance compared to mce_grep, however there are reports of up to 4x speed improvement, so definitely explore this further.&lt;/p&gt;
+
+&lt;h3 id=&#34;changing-the-number-of-workers&#34;&gt;Changing the number of workers&lt;/h3&gt;
+
+&lt;p&gt;By default MCE initializes one worker per core. It detects the number of cores using the following methods:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Linux: reads /proc/stat&lt;/li&gt;
+&lt;li&gt;OSX/BSD: executes &amp;ldquo;sysctl -n hw.ncpu 2&amp;gt;/dev/null&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;Windows: uses the environmental variable: ENV{NUMBER_OF_PROCESSORS}&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;MCE also has platform-specific methods defined for Solaris, HP-UX and other systems. Assuming that MCE will correctly guess the number of processors, the only reason to change the default behavior would be to use less than 100% of the available cores. You can do this using the &amp;ldquo;init()&amp;rdquo; method:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; MCE::Grep;
+MCE::Grep::init({max_workers &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The code above uses MCE::Grep, but the same init() command is provided for all MCE models.&lt;/p&gt;
+
+&lt;h3 id=&#34;changing-the-chunk-size&#34;&gt;Changing the chunk size&lt;/h3&gt;
+
+&lt;p&gt;When the source type is an array, MCE auto-calculates the chunk size based on the number of input records and workers available. You can override this, however in my testing I found that the auto-calculated chunk-size was nearly always optimal. Here is a typical result set, for processing a 55mb log file:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/61/mce_grep_chunk_size_630.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;If the source type is a filehandle, the chunk size defaults to 2 (The module&amp;rsquo;s author Mario Roy has told me this will change in the next version, 1.506). Therefore you may want to override the chunk size to try to get better performance. You can do this using the &amp;ldquo;init()&amp;rdquo; method:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; MCE::Grep;
+MCE::Grep::init({chunk_size &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;500&lt;/span&gt;});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Because the management of assigning work chunks between workers carries a small overhead, the optimal chunk size would be the one that minimizes the number of chunk assignments, whilst keeping the workers equally busy. One factor that MCE does not take into account is the difficulty of the &amp;ldquo;work&amp;rdquo; that is being processed: that is, the length of time it takes one worker to complete one unit of work.It might be cool to develop some kind of dynamic chunk-sizing logic based on runtime performance.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;MCE&amp;rsquo;s author, Mario Roy has done wonderful job of providing a simple API and fantastic &lt;a href=&#34;https://metacpan.org/pod/MCE::Examples&#34;&gt;documentation&lt;/a&gt;. It&amp;rsquo;s really easy to get started with a basic automation model like MCE::Grep, and obtain instant speed improvements. There is however, a lot more to MCE such as initialization and shutdown routines, callbacks and sequencing. Be sure to check it out.&lt;/p&gt;
+
+&lt;h3 id=&#34;thanks&#34;&gt;Thanks&lt;/h3&gt;
+
+&lt;p&gt;Thanks to Jeff Thalhammer (&lt;a href=&#34;https://stratopan.com/&#34;&gt;Stratopan&lt;/a&gt;) for championing this module.&lt;/p&gt;
+
+&lt;p&gt;Do you know a module that you&amp;rsquo;d like us to cover? If so, we&amp;rsquo;d love to hear from you! Email us at: perltricks.com@gmail.com.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Profiling Perl</title>
+      <link>http://localhost:1313/pub/2004/06/25/profiling.html/</link>
+      <pubDate>Thu, 24 Jun 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/06/25/profiling.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; &lt;a href=&#34;http://www.perl.org/about/whitepapers/perl-profiling.html&#34;&gt;Perl Profiling&lt;/a&gt; has evolved since this article was written, please see &lt;a href=&#34;http://www.perl.org/about/whitepapers/perl-profiling.html&#34;&gt;http://www.perl.org/about/whitepapers/perl-profiling.html&lt;/a&gt; for the latest information.&lt;/p&gt;
+
+&lt;p&gt;Everyone wants their Perl code to run faster. Unfortunately, without understanding why the code is taking so long to start with, it&amp;rsquo;s impossible to know where to start optimizing it. This is where &amp;ldquo;profiling&amp;rdquo; comes in; it lets us know what our programs are doing.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll look at why and how to profile programs, and then what to do with the profiling information once we&amp;rsquo;ve got it.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-why-profile-why-profile-span&#34;&gt;&lt;span id=&#34;Why_Profile?&#34;&gt;Why Profile?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There&amp;rsquo;s nothing worse than setting off a long-running Perl program and then not knowing what it&amp;rsquo;s doing. I&amp;rsquo;ve recently been working on a new, mail-archiving program for the &lt;code&gt;perl.org&lt;/code&gt; mailing lists, and so I&amp;rsquo;ve had to import a load of old email into the database. Here&amp;rsquo;s the code I used to do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use File::Slurp;
+    use Email::Store &amp;quot;dbi:SQLite:dbname=mailstore.db&amp;quot;;
+    use File::Find::Rule;
+
+    for (File::Find::Rule-&amp;gt;file-&amp;gt;name(qr/\d+/)-&amp;gt;in(&amp;quot;perl6-language&amp;quot;)) {
+        Email::Store::Mail-&amp;gt;store(scalar read_file($_));
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s an innocent little program &amp;ndash; it looks for all the files in the &lt;em&gt;perl6-language&lt;/em&gt; directory whose names are purely numeric (this is how messages are stored in an ezmlm archive), reads the contents of the files into memory with &lt;code&gt;File::Slurp::read_file&lt;/code&gt;, and then uses &lt;a href=&#34;https://metacpan.org/pod/Email::Store&#34;&gt;&lt;code&gt;Email::Store&lt;/code&gt;&lt;/a&gt; to put them into a database. You start it running, and come back a few hours later and it&amp;rsquo;s done.&lt;/p&gt;
+
+&lt;p&gt;All through, though, you have this nervous suspicion that it&amp;rsquo;s not doing the right thing; or at least, not doing it very quickly. Sure there&amp;rsquo;s a lot of mail, but should it really be taking this long? What&amp;rsquo;s it actually spending its time doing? We can add some &lt;code&gt;print&lt;/code&gt; statements to help us feel more at ease:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use File::Slurp;
+    use Email::Store &amp;quot;dbi:SQLite:dbname=mailstore.db&amp;quot;;
+    use File::Find::Rule;
+
+    print &amp;quot;Starting run...\n&amp;quot;;
+    $|++;
+    for (File::Find::Rule-&amp;gt;file-&amp;gt;name(qr/\d+/)-&amp;gt;in(&amp;quot;perl6-language&amp;quot;)) {
+        print &amp;quot;Indexing $_...&amp;quot;;
+        Email::Store::Mail-&amp;gt;store(scalar read_file($_));
+        print &amp;quot; done\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can at least see more progress, but we still don&amp;rsquo;t know if this program is working to full efficiency, and the reason for this is that there&amp;rsquo;s an awful lot going on in the underlying modules that we can&amp;rsquo;t immediately see. Is it the &lt;code&gt;File::Find::Rule&lt;/code&gt; that&amp;rsquo;s taking up all the time? Is it the storing process? Which part of the storing process? By profiling the code we&amp;rsquo;ll identify, and hopefully smooth over, some of the bottlenecks.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-simple-profiling-simple-profiling-span&#34;&gt;&lt;span id=&#34;Simple_Profiling&#34;&gt;Simple Profiling&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The granddaddy of Perl profiling tools is &lt;a href=&#34;https://metacpan.org/pod/Devel::DProf&#34;&gt;&lt;code&gt;Devel::DProf&lt;/code&gt;&lt;/a&gt;. To profile a code run, add the &lt;code&gt;-d:DProf&lt;/code&gt; argument to your Perl command line and let it go:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % perl -d:DProf store_archive
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The run will now take slightly longer than normal as Perl collects and writes out information on your program&amp;rsquo;s subroutine calls and exits, and at the end of your job, you&amp;rsquo;ll find a file called &lt;em&gt;tmon.out&lt;/em&gt; in the current directory; this contains all the profiling information.&lt;/p&gt;
+
+&lt;p&gt;A couple of notes about this:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;It&amp;rsquo;s important to control the length of the run; in this case, I&amp;rsquo;d probably ensure that the mail archive contained about ten or fifteen mails to store. (I used seven in this example.) If your run goes on too long, you will end up processing a vast amount of profiling data, and not only will it take a lot time to read back in, it&amp;rsquo;ll take far too long for you to wade through all the statistics. On the other hand, if the run&amp;rsquo;s too short, the main body of the processing will be obscured by startup and other &amp;ldquo;fixed costs.&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;The other problem you might face is that &lt;code&gt;Devel::DProf&lt;/code&gt;, being somewhat venerable, occasionally has problems keeping up on certain recent Perls, (particularly the 5.6.x series) and may end up segfaulting all over the place. If this affects you, download the &lt;a href=&#34;https://metacpan.org/pod/Devel::Profiler&#34;&gt;&lt;code&gt;Devel::Profiler&lt;/code&gt;&lt;/a&gt; module from CPAN, which is a pure-Perl replacement for it.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The next step is to run the preprocessor for the profiler output, &lt;code&gt;dprofpp&lt;/code&gt;. This will produce a table of where our time has been spent:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Total Elapsed Time = 13.89525 Seconds
+    User+System Time = 9.765255 Seconds
+  Exclusive Times
+  %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+   24.1   2.355  4.822     38   0.0620 0.1269  File::Find::_find_dir
+   20.5   2.011  2.467  17852   0.0001 0.0001  File::Find::Rule::__ANON__
+   7.82   0.764  0.764    531   0.0014 0.0014  DBI::st::execute
+   4.73   0.462  0.462  18166   0.0000 0.0000  File::Spec::Unix::splitdir
+   2.92   0.285  0.769    109   0.0026 0.0071  base::import
+   2.26   0.221  0.402    531   0.0004 0.0008  Class::DBI::transform_sql
+   2.09   0.204  0.203   8742   0.0000 0.0000  Class::Data::Inheritable::__ANON__
+   1.72   0.168  0.359  18017   0.0000 0.0000  Class::DBI::Column::name_lc
+   1.57   0.153  0.153  18101   0.0000 0.0000  Class::Accessor::get
+   1.42   0.139  0.139     76   0.0018 0.0018  Cwd::abs_path
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first two lines tell us how long the program ran for: around 14 seconds, but it was actually only running for about 10 of those &amp;ndash; the rest of the time other programs on the system were in the foreground.&lt;/p&gt;
+
+&lt;p&gt;Next we have a table of subroutines, in descending order of time spent; perhaps surprisingly, we find that &lt;code&gt;File::Find&lt;/code&gt; and &lt;code&gt;File::Find::Rule&lt;/code&gt; are the culprits for eating up 20% of running time each. We&amp;rsquo;re also told the number of &amp;ldquo;exclusive seconds,&amp;rdquo; which is the amount of time spent in one particular subroutine, and &amp;ldquo;cumulative seconds.&amp;rdquo; This might better be called &amp;ldquo;inclusive seconds,&amp;rdquo; since it&amp;rsquo;s the amount of time the program spent in a particular subroutine and all the other routines called from it.&lt;/p&gt;
+
+&lt;p&gt;From the statistics above, we can guess that &lt;code&gt;File::Find::_find_dir&lt;/code&gt; itself took up 2 seconds of time, but during its execution, it called an anonymous subroutine created by &lt;code&gt;File::Find::Rule&lt;/code&gt;, and this subroutine also took up 2 seconds, making a cumulative time of 4 seconds. We also notice that we&amp;rsquo;re making an awful lot of calls to &lt;code&gt;File::Find::Rule&lt;/code&gt;, &lt;code&gt;splitdir&lt;/code&gt;, and some &lt;code&gt;Class::DBI&lt;/code&gt; and &lt;code&gt;Class::Accessor&lt;/code&gt; routines.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-what-to-do-now-what-to-do-now-span&#34;&gt;&lt;span id=&#34;What_to_do_now&#34;&gt;What to Do Now&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now we have some profiling information, and we see a problem with &lt;code&gt;File::Find::Rule&lt;/code&gt;. &amp;ldquo;Aha,&amp;rdquo; we might think, &amp;ldquo;Let&amp;rsquo;s replace our use of &lt;code&gt;File::Find::Rule&lt;/code&gt; with a simple globbing operation, and we can shave 4 seconds off our runtime!&amp;ldquo;. So, just for an experiment, we try it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use File::Slurp;
+    use Email::Store &amp;quot;dbi:SQLite:dbname=mailstore.db&amp;quot;;
+    $|=1;
+    for (&amp;lt;perl6-language/archive/0/*&amp;gt;) {
+        next unless /\d+/;
+        print &amp;quot;$_ ...&amp;quot;;
+        Email::Store::Mail-&amp;gt;store(scalar read_file($_));
+        print &amp;quot;\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now this looks a bit better:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Total Elapsed Time = 9.559537 Seconds
+   User+System Time = 5.329537 Seconds
+ Exclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  13.1   0.703  0.703    531   0.0013 0.0013  DBI::st::execute
+  5.54   0.295  0.726    109   0.0027 0.0067  base::import
+  5.52   0.294  0.294  18101   0.0000 0.0000  Class::Accessor::get
+  3.45   0.184  1.930  19443   0.0000 0.0001  Class::Accessor::__ANON__
+  3.13   0.167  0.970    531   0.0003 0.0018  DBIx::ContextualFetch::st::_untain
+                                              t_execute
+  3.10   0.165  1.324   1364   0.0001 0.0010  Class::DBI::get
+  2.98   0.159  0.376    531   0.0003 0.0007  Class::DBI::transform_sql
+  2.61   0.139  0.139     74   0.0019 0.0019  Cwd::abs_path
+  2.23   0.119  0.119   8742   0.0000 0.0000  Class::Data::Inheritable::__ANON__
+  2.06   0.110  0.744   2841   0.0000 0.0003  Class::DBI::__ANON__
+  1.95   0.104  0.159   2669   0.0000 0.0001  Class::DBI::ColumnGrouper::group_cols
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now to be honest, I would never have guessed that removing &lt;code&gt;File::Find::Rule&lt;/code&gt; would shave 4 seconds off my code run. This is the first rule of profiling: You actually need to profile before optimizing, because &lt;strong&gt;you never know where the hotspots are going to turn out to be.&lt;/strong&gt; We&amp;rsquo;ve also exercised the second rule of profiling: &lt;strong&gt;Review what you&amp;rsquo;re using.&lt;/strong&gt; By using another technique instead of &lt;code&gt;File::Find::Rule&lt;/code&gt;, we&amp;rsquo;ve reduced our running time by a significant amount.&lt;/p&gt;
+
+&lt;p&gt;This time, it looks as though we&amp;rsquo;re doing reasonably well &amp;ndash; the busiest thing is writing to a database, and that&amp;rsquo;s basically what this application does, so that&amp;rsquo;s fair enough. There&amp;rsquo;s also a lot of busy calls that are to do with &lt;code&gt;Class::DBI&lt;/code&gt;, and we know that we use &lt;code&gt;Class::DBI&lt;/code&gt; as a deliberate tradeoff between convenience and efficiency. If we were being ruthlessly determined to make this program faster, we&amp;rsquo;d start looking at using plain &lt;code&gt;DBI&lt;/code&gt; instead of &lt;code&gt;Class::DBI&lt;/code&gt;, but that&amp;rsquo;s a tradeoff I don&amp;rsquo;t think is worth making at the moment.&lt;/p&gt;
+
+&lt;p&gt;This is the third rule of profiling: &lt;strong&gt;Hotspots happen.&lt;/strong&gt; If you got rid of all the hotspots in your code, it wouldn&amp;rsquo;t do anything. There are a certain reasonable number of things that your program should be doing for it to be useful, and you simply can&amp;rsquo;t get rid of them; additionally there are any number of tradeoffs that we deliberately or subconsciously make in order to make our lives easier at some potential speed cost &amp;ndash; for instance, writing in Perl or C instead of machine code.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-from-exclusive-to-inclusive-from-exclusive-to-inclusive-span&#34;&gt;&lt;span id=&#34;From_exclusive_to_inclusive&#34;&gt;From Exclusive to Inclusive&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The default report produced by &lt;em&gt;dprofpp&lt;/em&gt; is sorted by exclusive subroutine time, and is therefore good at telling us about individual subroutines that are called a lot and take up disproportionate amounts of time. This can be useful, but it doesn&amp;rsquo;t actually give us an overall view of what our code is doing. If we want to do that, we need to move from looking at exclusive to looking at inclusive times, and we do this by adding the &lt;code&gt;-I&lt;/code&gt; option to &lt;em&gt;dprofpp&lt;/em&gt;. This produces something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Total Elapsed Time = 9.559537 Seconds
+   User+System Time = 5.329537 Seconds
+ Inclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  83.8   0.009  4.468      7   0.0013 0.6383  Email::Store::Mail::store
+  80.8   0.061  4.308     35   0.0017 0.1231  Module::Pluggable::Ordered::__ANON
+                                              __
+  46.3       -  2.472      3        - 0.8239  main::BEGIN
+  43.4       -  2.314      7        - 0.3306  Mail::Thread::thread
+  43.4       -  2.314      7        - 0.3305  Email::Store::Thread::on_store
+  36.2   0.184  1.930  19443   0.0000 0.0001  Class::Accessor::__ANON__
+  28.9   0.006  1.543    531   0.0000 0.0029  Email::Store::Thread::Container::_
+                                              _ANON__
+  27.3   0.068  1.455    105   0.0006 0.0139  UNIVERSAL::require
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This tells us a number of useful facts. First, we find that 84% of the program&amp;rsquo;s runtime is spent in the &lt;code&gt;Email::Store::Mail::store&lt;/code&gt; subroutine and its descendants, which is the main, tight loop of the program. This means, quite logically, that 16% is not spent in the main loop, and that&amp;rsquo;s a good sign &amp;ndash; this means that we have a 1-second fixed cost in starting up and loading the appropriate modules, and this will amortize nicely against a longer run than 10 seconds. After all, if processing a massive amount of mail takes 20 minutes, the first 1-second startup becomes insignificant. It means we can pretty much ignore everything outside the main loop.&lt;/p&gt;
+
+&lt;p&gt;We also find that threading the emails is costly; threading involves a lot of manipulation of &lt;code&gt;Email::Store::Thread::Container&lt;/code&gt; objects, which are database backed. This means that a lot of the database stores and executes that we saw in the previous, exclusive report are probably something to do with threading. After all, we now spend 2 seconds out of our 4 seconds of processing time on threading in &lt;code&gt;Mail::Thread::thread&lt;/code&gt;, and even though we only call this seven times, we do 531 things with the container objects. This is bad.&lt;/p&gt;
+
+&lt;p&gt;Now, I happen to know (because I wrote the module) that &lt;code&gt;Email::Store::Thread::Container&lt;/code&gt; uses a feature of &lt;code&gt;Class::DBI&lt;/code&gt; called &lt;code&gt;autoupdate&lt;/code&gt;. This means that while we do a lot of fetches and stores that we could conceivably do in memory and commit to the database once we&amp;rsquo;re done, we instead hit the database every single time.&lt;/p&gt;
+
+&lt;p&gt;So, just as an experiment, we do two things to optimize &lt;code&gt;Email::Store::Thread::Container&lt;/code&gt;. First, we know that we&amp;rsquo;re going to be doing a lot of database fetches, sometimes of the same container multiple times, so we cache the fetch. We turn this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub new { 
+        my ($class, $id) = @_;
+        $class-&amp;gt;find_or_create({ message =&amp;gt; $id });
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Into this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my %container_cache = ();
+    sub new {
+        my ($class, $id) = @_;
+        $container_cache{$id} 
+            ||= $class-&amp;gt;find_or_create({ message =&amp;gt; $id });
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a standard caching technique, and will produce another tradeoff: we trade memory (in filling up &lt;code&gt;%container_cache&lt;/code&gt; with a bunch of objects) for speed (in not having to do as many costly database fetches).&lt;/p&gt;
+
+&lt;p&gt;Then we turn &lt;code&gt;autoupdate&lt;/code&gt; off, and provide a way of updating the database manually. The reason we wanted to turn off &lt;code&gt;autoupdate&lt;/code&gt; is that because all these containers form a tree structure (since they represent mails in a thread which, naturally, form a tree structure), it&amp;rsquo;s a pain to traverse the tree and update all the containers once we&amp;rsquo;re done.&lt;/p&gt;
+
+&lt;p&gt;However, with this cache in place, we know that we already have a way to get at all the containers in one go: we just look at the values of &lt;code&gt;%container_hash&lt;/code&gt;, and there are all the objects we&amp;rsquo;ve used. So we can now add a &lt;code&gt;flush&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub flush {
+        (delete $container_cache{$_})-&amp;gt;update for keys %container_cache;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This both empties the cache and updates the database. The only remaining problem is working out where to call &lt;code&gt;flush&lt;/code&gt;. If we&amp;rsquo;re dealing with absolutely thousands of emails, it might be worth calling &lt;code&gt;flush&lt;/code&gt; after every &lt;code&gt;store&lt;/code&gt;, or else &lt;code&gt;%container_hash&lt;/code&gt; will get huge. However, since we&amp;rsquo;re not, we just call &lt;code&gt;flush&lt;/code&gt; in an &lt;code&gt;END&lt;/code&gt; block to catch the container objects before they get destroyed by the garbage collector:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    END { Email::Store::Thread::Container-&amp;gt;flush; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running &lt;em&gt;dprofpp&lt;/em&gt; again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Total Elapsed Time = 7.741969 Seconds
+   User+System Time = 3.911969 Seconds
+ Inclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  65.4       -  2.559      7        - 0.3656  Email::Store::Mail::store
+  62.9   0.014  2.461     35   0.0004 0.0703  Module::Pluggable::Ordered::__ANON
+                                              __
+  56.2   0.020  2.202      3   0.0065 0.7341  main::BEGIN
+  31.8   0.028  1.247    105   0.0003 0.0119  UNIVERSAL::require
+  29.4   0.004  1.150      7   0.0006 0.1642  Email::Store::Entity::on_store
+  22.7   0.025  0.890    100   0.0003 0.0089  Class::DBI::create
+  21.0   0.031  0.824    100   0.0003 0.0082  Class::DBI::_create
+  18.3   0.235  0.716    109   0.0022 0.0066  base::import
+  15.1       -  0.594    274        - 0.0022  DBIx::ContextualFetch::st::execute
+  15.1       -  0.592      7        - 0.0846  Mail::Thread::thread
+  15.1       -  0.592      7        - 0.0845  Email::Store::Thread::on_store
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We find that we&amp;rsquo;ve managed to shave another second-and-a-half off, and we&amp;rsquo;ve also swapped a per-mail cost (of updating the threading containers every time) to a once-per-run fixed cost (of updating them all at the end of the run). This has taken the business of threading down from two-and-a-half seconds per run to half a second per run, and it means that 35% of our running time is outside the main loop; again, this will amortize nicely on large runs.&lt;/p&gt;
+
+&lt;p&gt;We started with a program that runs for 10 seconds, and now it runs for 4. Through judicious use of the profiler, we&amp;rsquo;ve identified the hotspots and eliminated the most troublesome ones. We&amp;rsquo;ve looked at both exclusive and inclusive views of the profiling data, but there are still a few other things that &lt;em&gt;dprofpp&lt;/em&gt; can tell us. For instance, the &lt;code&gt;-S&lt;/code&gt; option gives us a call tree, showing what gets called from what. These trees can be incredibly long and tedious, but if the two views we&amp;rsquo;ve already looked at haven&amp;rsquo;t identified potential trouble spots, then wading through the tree might be your only option.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-writing-your-own-profiler-writing-your-own-profiler-span&#34;&gt;&lt;span id=&#34;Writing_your_own_profiler&#34;&gt;Writing your Own Profiler&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;At least, that is, if you want to use &lt;em&gt;dprofpp&lt;/em&gt;; until yesterday, that was the only way of reading profiling data. Yesterday, however, I released &lt;a href=&#34;https://metacpan.org/pod/Devel::DProfPP&#34;&gt;&lt;code&gt;Devel::DProfPP&lt;/code&gt;&lt;/a&gt;, which provides an event-driven interface to reading &lt;em&gt;tmon.out&lt;/em&gt; files. I intended to use it to write a new version of &lt;em&gt;dprofpp&lt;/em&gt; because I find the current profiler intolerably slow; ironically, though, I haven&amp;rsquo;t profiled it yet.&lt;/p&gt;
+
+&lt;p&gt;Anyway, &lt;code&gt;Devel::DProfPP&lt;/code&gt; allows you to specify callbacks to be run every time the profiling data shows Perl entering or exiting a subroutine, and provides access to the same timing and call stack information used by &lt;em&gt;dprofpp&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;So, for instance, I like visualization of complicated data. I&amp;rsquo;d prefer to see what&amp;rsquo;s calling what as a graph that I can print out and pore over, rather than as a listing. So, I pull together &lt;code&gt;Devel::DProfPP&lt;/code&gt; and the trusty &lt;a href=&#34;https://metacpan.org/pod/GraphViz&#34;&gt;&lt;code&gt;Graphviz&lt;/code&gt;&lt;/a&gt; module, and create my own profiler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use GraphViz;
+ use Devel::DProfPP;
+
+ my $graph = GraphViz-&amp;gt;new();
+ my %edges = ();
+ Devel::DProfPP-&amp;gt;new(enter =&amp;gt; sub {
+     my $pp = shift;
+     my @stack = $pp-&amp;gt;stack;
+     my $to = $stack[-1]-&amp;gt;sub_name;
+     my $from = @stack &amp;gt; 1 ? $stack[-2]-&amp;gt;sub_name : &amp;quot;MAIN BODY&amp;quot;;
+     $graph-&amp;gt;add_edge($from =&amp;gt; $to) unless $edges{$from.&amp;quot; -&amp;gt; &amp;quot;.$to}++;
+ })-&amp;gt;parse;
+
+ print $graph-&amp;gt;as_png;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Every time we enter a subroutine, we look at the call stack so far. We pick the top frame of the stack, and ask for its subroutine name. If there&amp;rsquo;s another subroutine on the stack, we take that off too; otherwise we&amp;rsquo;re being called from the main body of the code. Then we add an edge on our graph between the two subroutines, unless we&amp;rsquo;ve already got one. Finally, we print out the graph as a PNG file for me to print out and stick on the wall.&lt;/p&gt;
+
+&lt;p&gt;There are any number of other things you can do with &lt;code&gt;Devel::DProfPP&lt;/code&gt; if the ordinary profiler doesn&amp;rsquo;t suit your needs for some reason; but as we&amp;rsquo;ve seen, just judicious application of profiling and highlighting hotspots in your code can cut the running time of a long-running Perl program by 50% or so, and can also help you to understand what your code is spending all its time doing.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>A Refactoring Example</title>
+      <link>http://localhost:1313/pub/2003/10/09/refactoring.html/</link>
+      <pubDate>Thu, 09 Oct 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/10/09/refactoring.html/</guid>
+      <description>
+
+&lt;p&gt;About a year ago, a person asked the &lt;a href=&#34;http://www.technofile.org/technofile/depts/mlists/fwp.html&#34;&gt;Fun With Perl&lt;/a&gt; mailing list about some code they had written to do database queries. It&amp;rsquo;s important to note that this person was posting from an .it address; why will become apparent later. The code was reading records in from a text file and then doing a series of queries based on that information. They wanted to make it faster.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s his code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+$nump++;
+chop($riga);
+$pagina[$nump] = $riga;
+
+$sth= $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+pageid=&#39;$pagina[$nump]&#39; and data&amp;gt;=&#39;$startdate&#39;&amp;quot;);
+$sth-&amp;gt;execute;
+$totalvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+$sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+(pageid=&#39;$pagina[$nump]&#39; and data=&#39;$dataoggi&#39;)&amp;quot;);
+$sth-&amp;gt;execute;
+$totalvisittoday[$nump] = $sth-&amp;gt;fetchrow_array();
+
+ $sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+(pageid=&#39;$pagina[$nump]&#39; and data=&#39;$dataieri&#39;)&amp;quot;);
+$sth-&amp;gt;execute;
+$totalyvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+ $sth= $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+(pageid=&#39;$pagina[$nump]&#39; and data&amp;lt;=&#39;$fine30gg&#39; and data&amp;gt;=&#39;$inizio30gg&#39;)&amp;quot;);
+$sth-&amp;gt;execute;
+$totalmvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I decided that rather than try to read through this code and figure out what it&amp;rsquo;s doing and how to make it faster, I&amp;rsquo;d clean it up first. Clean it up &lt;strong&gt;before&lt;/strong&gt; you figure out how it works? Yes, using a technique called &lt;em&gt;Refactoring&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;refactoring&#34;&gt;Refactoring?&lt;/h3&gt;
+
+&lt;p&gt;In his book, Martin Fowler defines Refactoring as &lt;em&gt;&amp;ldquo;the process of changing a software system in such a way that it does not alter the external behavior of the code yet improves its internal structure.&amp;rdquo;&lt;/em&gt; In other words, you clean up your code but don&amp;rsquo;t change what it does.&lt;/p&gt;
+
+&lt;p&gt;Refactoring can be as simple as changing this code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$exclamation = &#39;I like &#39;.$pastry.&#39;!&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$exclamation = &amp;quot;I like $pastry!&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Still does the same thing, but it&amp;rsquo;s easier to read.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s important to note that I don&amp;rsquo;t need to know anything about the contents of &lt;code&gt;$pastry&lt;/code&gt; or how &lt;code&gt;$exclamation&lt;/code&gt; is used. The change is completely self-contained and does not affect surrounding code or change what it does. This is Refactoring.&lt;/p&gt;
+
+&lt;p&gt;On the principle of &amp;ldquo;show me don&amp;rsquo;t tell me,&amp;rdquo; rather than talk about it, we&amp;rsquo;ll dive right into refactoring our bit of code.&lt;/p&gt;
+
+&lt;h3 id=&#34;fix-the-indentation&#34;&gt;Fix the Indentation&lt;/h3&gt;
+
+&lt;p&gt;Your first impulse when faced with a hunk of code slammed against the left margin is to indent it. This is our first refactoring.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    $sth= $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+                         pageid=&#39;$pagina[$nump]&#39; and data&amp;gt;=&#39;$startdate&#39;&amp;quot;);
+    $sth-&amp;gt;execute;
+    $totalvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+                          (pageid=&#39;$pagina[$nump]&#39; and data=&#39;$dataoggi&#39;)&amp;quot;);
+    $sth-&amp;gt;execute;
+    $totalvisittoday[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth = $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+                          (pageid=&#39;$pagina[$nump]&#39; and data=&#39;$dataieri&#39;)&amp;quot;);
+    $sth-&amp;gt;execute;
+    $totalyvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth= $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+                         (pageid=&#39;$pagina[$nump]&#39; and data&amp;lt;=&#39;$fine30gg&#39; 
+                         and data&amp;gt;=&#39;$inizio30gg&#39;)&amp;quot;);
+    $sth-&amp;gt;execute;
+    $totalmvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Already it looks better. We can see that we&amp;rsquo;re iterating over a file, performing some SELECTs on each line and shoving the results into a bunch of arrays.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-single-simple-change&#34;&gt;A Single, Simple Change&lt;/h3&gt;
+
+&lt;p&gt;One of the most important principles of Refactoring is that you work in small steps. This re-indentation is a single step. And part of this single step includes running the test suite, logging the change, and checking it into CVS.&lt;/p&gt;
+
+&lt;p&gt;Checking into CVS after something this simple? Yes. Many programmers ask the question, &amp;ldquo;When should I check in?&amp;rdquo; When you&amp;rsquo;re refactoring it&amp;rsquo;s simple: check in when you&amp;rsquo;ve done one refactoring and have tested that it works. Our re-indentation is one thing; we test that it works and check it in.&lt;/p&gt;
+
+&lt;p&gt;This may seem excessive, but it prevents us from entangling two unrelated changes together. By doing one change at a time we know that any new bugs were introduced by that one change. Also, you will often decide in the middle of a refactoring that it&amp;rsquo;s not such a good idea. When you&amp;rsquo;ve checked in at every one you can simply rollback to the last version rather than having to undo it by hand. Convenient, and you&amp;rsquo;re sure no stray bits of your aborted change are hanging around.&lt;/p&gt;
+
+&lt;p&gt;So our procedure for doing a proper refactoring is:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Make one logical change to the code.&lt;/li&gt;
+&lt;li&gt;Make sure it passes tests.&lt;/li&gt;
+&lt;li&gt;Log and check in.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;big-refactorings-from-small&#34;&gt;Big Refactorings from Small&lt;/h3&gt;
+
+&lt;p&gt;The goal of this refactoring is to make the code go faster. One of the simplest ways to do achieve that is to pull necessary code out of the loop. Preparing four new statements in every iteration of the loop seems really unnecessary. We&amp;rsquo;d like to pull those &lt;code&gt;prepare()&lt;/code&gt; statements out of the loop. This is a refactoring. To achieve this larger refactoring, a series of smaller refactorings must be done.&lt;/p&gt;
+
+&lt;h3 id=&#34;use-bind-variables&#34;&gt;Use Bind Variables&lt;/h3&gt;
+
+&lt;p&gt;Each time through the loop, a new set of SQL statements is created based on the line read in. But they&amp;rsquo;re all basically the same, just the data is changing. If we could pull that data out of the statement we&amp;rsquo;d be closer to our goal of pulling the &lt;code&gt;prepare()&lt;/code&gt;s out of the loop.&lt;/p&gt;
+
+&lt;p&gt;So my next refactoring pulls variables out of the SQL statements and replaces them with placeholders. Then the data is bound to the statement using bind variables. This means we&amp;rsquo;re now &lt;code&gt;prepare()&lt;/code&gt;ing the same statements every time through the loop.&lt;/p&gt;
+
+&lt;p&gt;Before refactoring:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$sth= $dbh-&amp;gt;prepare(&amp;quot;SELECT count(*) FROM lognew WHERE
+                     pageid=&#39;$pagina[$nump]&#39; and data&amp;gt;=&#39;$startdate&#39;&amp;quot;);
+$sth-&amp;gt;execute;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After refactoring:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$sth= $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE 
+                     pageid=? and data&amp;gt;=?&#39;);
+$sth-&amp;gt;execute($pagina[$nump], $startdate);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Bind variables also protect against a naughty user from trying to slip some extra SQL into your program via the data you read in. As a side-effect of our code cleanup, we&amp;rsquo;ve closed a potential security hole.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    $sth= $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE 
+                         pageid=? and data&amp;gt;=?&#39;);
+    $sth-&amp;gt;execute($pagina[$nump], $startdate);
+    $totalvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                          (pageid=? and data=?)&#39;);
+    $sth-&amp;gt;execute($pagina[$nump], $dataoggi);
+    $totalvisittoday[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                          (pageid=? and data=?)&#39;);
+    $sth-&amp;gt;execute($pagina[$nump], $dataieri);
+    $totalyvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+
+    $sth= $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                         (pageid=? and data&amp;lt;=? and data&amp;gt;=?)&#39;);
+    $sth-&amp;gt;execute($pagina[$nump], $fine30gg, $inizio30gg);
+    $totalmvisit[$nump] = $sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;split-a-poorly-reused-variable&#34;&gt;Split a Poorly Reused Variable&lt;/h3&gt;
+
+&lt;p&gt;The next stumbling block to pulling the &lt;code&gt;prepare()&lt;/code&gt; statements out of the loop is that they all use the same variable, &lt;code&gt;$sth&lt;/code&gt;. We&amp;rsquo;ll have to change it so they all use different variables. While we&amp;rsquo;re at it, we&amp;rsquo;ll name those statement handles something more descriptive of what the statement does. Since at this point we haven&amp;rsquo;t figured out what the statements do, we can base the name on the array it gets assigned to.&lt;/p&gt;
+
+&lt;p&gt;While we&amp;rsquo;re at it, throw in some &lt;code&gt;my()&lt;/code&gt; declarations to limit the scope of these variables to just the loop.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    my $totalvisit_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE 
+                                        pageid=? and data&amp;gt;=?&#39;);
+    $totalvisit_sth-&amp;gt;execute($pagina[$nump], $startdate);
+    $totalvisit[$nump] = $totalvisit_sth-&amp;gt;fetchrow_array();
+
+    my $totalvisittoday_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                             (pageid=? and data=?)&#39;);
+    $totalvisittoday_sth-&amp;gt;execute($pagina[$nump], $dataoggi);
+    $totalvisittoday[$nump] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    my $totalyvisit_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                         (pageid=? and data=?)&#39;);
+    $totalyvisit_sth-&amp;gt;execute($pagina[$nump], $dataieri);
+    $totalyvisit[$nump] = $totalyvisit_sth-&amp;gt;fetchrow_array();
+
+    my $totalmvisit_sth= $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                        (pageid=? and data&amp;lt;=? and data&amp;gt;=?)&#39;);
+    $totalmvisit_sth-&amp;gt;execute($pagina[$nump], $fine30gg, $inizio30gg);
+    $totalmvisit[$nump] = $totalmvisit_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;getting-better-all-the-time&#34;&gt;Getting Better All the Time&lt;/h3&gt;
+
+&lt;p&gt;The new names are better, but they&amp;rsquo;re not great. This is ok. Naming is something people often get hung up on. One can spend hours wracking their brains thinking of the perfect name for a variable or a function. If you can think of a better one than what&amp;rsquo;s there right now, use it. The beauty of Refactoring is you an always improve upon it later.&lt;/p&gt;
+
+&lt;p&gt;This is an important lesson of Refactoring. Voltare said, &amp;ldquo;the best is the enemy of the good&amp;rdquo;. We often get so wound up trying to make code &lt;em&gt;great&lt;/em&gt; that we fail to improve it at all. In refactoring, it&amp;rsquo;s not so important to make your code great in one leap, just a little better all the time (it&amp;rsquo;s a little known fact John Lennon was into Refactoring.) These small improvements will build up into a clean piece of code, with less bugs, more surely than a large-scale code cleanup would.&lt;/p&gt;
+
+&lt;h3 id=&#34;pull-code-out-of-the-loop&#34;&gt;Pull Code Out of the Loop&lt;/h3&gt;
+
+&lt;p&gt;Now it&amp;rsquo;s a simple cut and paste to pull the four &lt;code&gt;prepare()&lt;/code&gt; statements out of the loop.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $totalvisit_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE 
+                                    pageid=? and data&amp;gt;=?&#39;);
+
+my $totalvisittoday_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                         (pageid=? and data=?)&#39;);
+
+my $totalyvisit_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                     (pageid=? and data=?)&#39;);
+
+my $totalmvisit_sth = $dbh-&amp;gt;prepare(&#39;SELECT count(*) FROM lognew WHERE
+                                     (pageid=? and data&amp;lt;=? and data&amp;gt;=?)&#39;);
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    $totalvisit_sth-&amp;gt;execute($pagina[$nump], $startdate);
+    $totalvisit[$nump] = $totalvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pagina[$nump], $dataoggi);
+    $totalvisittoday[$nump] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalyvisit_sth-&amp;gt;execute($pagina[$nump], $dataieri);
+    $totalyvisit[$nump] = $totalyvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalmvisit_sth-&amp;gt;execute($pagina[$nump], $fine30gg, $inizio30gg);
+    $totalmvisit[$nump] = $totalmvisit_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Already the code is looking better. With the SQL separated, the inner workings of the loop are much less daunting.&lt;/p&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-place-to-stop&#34;&gt;A Place to Stop&lt;/h3&gt;
+
+&lt;p&gt;Remember our goal, to make this code run faster. By pulling the &lt;code&gt;prepare()&lt;/code&gt; statements outside the loop we&amp;rsquo;ve likely achieved this goal. Additionally, it still does exactly what it did before even though we still don&amp;rsquo;t fully understand what that is. If this were a real project, you&amp;rsquo;d do some benchmarking to see if the code is fast enough and move on to another task.&lt;/p&gt;
+
+&lt;p&gt;Since this is an example, I&amp;rsquo;ll continue with more refactorings with the goal of clarifying the code further and figuring out what it does.&lt;/p&gt;
+
+&lt;p&gt;Keep in mind that after every refactoring the code still does &lt;em&gt;exactly what it did before&lt;/em&gt;. This means we can stop choose to stop after any refactoring. If a more pressing task suddenly pops up we can pause our refactoring work and attend to that feeling confident we didn&amp;rsquo;t leave any broken code lying around.&lt;/p&gt;
+
+&lt;h3 id=&#34;reformat-sql-for-better-readability&#34;&gt;Reformat SQL for Better Readability&lt;/h3&gt;
+
+&lt;p&gt;In order to make sense of the code, we have to make sense of the SQL. The simplest way to better understand the SQL is to put it into a clearer format.&lt;/p&gt;
+
+&lt;p&gt;The three major parts of an SQL SELECT statement are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The rows (ie. &lt;code&gt;SELECT count(*)&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;The table (ie. &lt;code&gt;FROM lognew&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;The predicate (ie. &lt;code&gt;WHERE pageid = ...&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I&amp;rsquo;ve chosen a new format that highlights these parts.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve also removed some unnecessary parenthesis because they just serve to clutter things up rather than disambiguate an expression.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve also decided to change the quoting style from single quotes to a here-doc. It would have also been okay to use &lt;code&gt;q{}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $totalvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $totalvisittoday_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $totalyvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $totalmvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    $totalvisit_sth-&amp;gt;execute($pagina[$nump], $startdate);
+    $totalvisit[$nump] = $totalvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pagina[$nump], $dataoggi);
+    $totalvisittoday[$nump] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalyvisit_sth-&amp;gt;execute($pagina[$nump], $dataieri);
+    $totalyvisit[$nump] = $totalyvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalmvisit_sth-&amp;gt;execute($pagina[$nump], $fine30gg, $inizio30gg);
+    $totalmvisit[$nump] = $totalmvisit_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;remove-redundancy&#34;&gt;Remove Redundancy&lt;/h3&gt;
+
+&lt;p&gt;With the SQL in a more readable format, some commonalities become clear.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;All the statements are doing a &lt;code&gt;count(*)&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;They&amp;rsquo;re all using the &lt;code&gt;lognew&lt;/code&gt; table&lt;/li&gt;
+&lt;li&gt;They&amp;rsquo;re all looking for a certain &lt;code&gt;pageid&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In fact, &lt;code&gt;$totalvisittoday_sth&lt;/code&gt; and &lt;code&gt;$totalyvisit_sth&lt;/code&gt; are exactly the same! Let&amp;rsquo;s eliminate one of them, doesn&amp;rsquo;t matter which, we&amp;rsquo;re going to rename them in a moment anyway. &lt;code&gt;$totalyvisit_sth&lt;/code&gt; goes away, making sure to change all references to it to &lt;code&gt;$totalvisittoday_sth&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $totalvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $totalvisittoday_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $totalmvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($riga=&amp;lt;INPUT&amp;gt;){
+    $nump++;
+    chop($riga);
+    $pagina[$nump] = $riga;
+
+    $totalvisit_sth-&amp;gt;execute($pagina[$nump], $startdate);
+    $totalvisit[$nump] = $totalvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pagina[$nump], $dataoggi);
+    $totalvisittoday[$nump] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pagina[$nump], $dataieri);
+    $totalyvisit[$nump] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalmvisit_sth-&amp;gt;execute($pagina[$nump], $fine30gg, $inizio30gg);
+    $totalmvisit[$nump] = $totalmvisit_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;fix-conflicting-styles&#34;&gt;Fix Conflicting Styles&lt;/h3&gt;
+
+&lt;p&gt;Now the only difference between the statements is the choice of &lt;code&gt;data&lt;/code&gt; ranges.&lt;/p&gt;
+
+&lt;p&gt;Using the variables are passed into each statement we can make some more deductions. Let&amp;rsquo;s have a look&amp;hellip;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$startdate&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$dataoggi&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$dataieri&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$fine30gg, $inizio30gg&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;em&gt;One of these things is not like the other.&lt;/em&gt; What&amp;rsquo;s &lt;code&gt;$startdate&lt;/code&gt; doing there? Everything else is talking about &amp;lsquo;data&amp;rsquo;. What&amp;rsquo;s &amp;lsquo;ieri&amp;rsquo;? &amp;lsquo;oggi&amp;rsquo;? Remember, the programmer who submitted this code is Italian. Maybe the names are in Italian. Grabbing an &lt;a href=&#34;http://dictionaries.travlang.com/ItalianEnglish/&#34;&gt;Italian-English dictionary&lt;/a&gt; we find out that &amp;lsquo;data&amp;rsquo; is Italian for &amp;lsquo;date&amp;rsquo;! Now it makes sense, this code was probably originally written in English, then worked on by an Italian (or vice-versa).&lt;/p&gt;
+
+&lt;p&gt;This code has committed a cardinal stylistic sin. It uses two different languages for naming variables. Not just different languages, languages which have different meanings for the same words. Taken out of context, we can&amp;rsquo;t know if &lt;code&gt;$data&lt;/code&gt; represents a hunk of facts or &amp;ldquo;Thursday.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Since the styles conflict, one of them has to go. Since I don&amp;rsquo;t speak Italian, I&amp;rsquo;m going to translate it into English.&lt;/p&gt;
+
+&lt;p&gt;Pulling out our Italian-to-English dictionary&amp;hellip;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&amp;ldquo;riga&amp;rdquo; is &amp;ldquo;line&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;pagina&amp;rdquo; is &amp;ldquo;page&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;nump&amp;rdquo; is probably short for &amp;ldquo;numero pagina&amp;rdquo; which is &amp;ldquo;page number&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;data&amp;rdquo; is &amp;ldquo;date&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;oggi&amp;rdquo; is &amp;ldquo;today&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;ieri&amp;rdquo; is &amp;ldquo;yesterday&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;inizio&amp;rdquo; is &amp;ldquo;start&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;fine&amp;rdquo; is &amp;ldquo;end&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;gg&amp;rdquo; is probably short for &amp;ldquo;giorni&amp;rdquo; which is &amp;ldquo;days&amp;rdquo;
+
+&lt;ul&gt;
+&lt;li&gt;&amp;ldquo;fine30gg&amp;rdquo; would then be &amp;ldquo;the end of 30 days&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;inizio30gg&amp;rdquo; would be &amp;ldquo;the beginning of 30 days&amp;rdquo;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;It would be a straightforward matter of a bunch of search-and-replaces in any good editor but for one snag, the SQL column &amp;lsquo;data.&amp;rsquo; We&amp;rsquo;d like to change this to its English &amp;lsquo;date&amp;rsquo;, but databases are very global with possibly lots of other programs using it. So we can&amp;rsquo;t change the column name without breaking other code. While in a well-organized programming shop you might have the ability to find all the code which uses your database, we won&amp;rsquo;t assume we have that luxury here. For the moment then, we&amp;rsquo;ll leave that be and deal with it in a separate refactoring.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $totalvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $totalvisittoday_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $totalmvisit_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($line=&amp;lt;INPUT&amp;gt;){
+    $page_num++;
+    chop($line);
+    $pages[$page_num] = $line;
+
+    $totalvisit_sth-&amp;gt;execute($pages[$page_num], $start_date);
+    $totalvisit[$page_num] = $totalvisit_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pages[$page_num], $today);
+    $totalvisittoday[$page_num] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalvisittoday_sth-&amp;gt;execute($pages[$page_num], $yesterday);
+    $totalyvisit[$page_num] = $totalvisittoday_sth-&amp;gt;fetchrow_array();
+
+    $totalmvisit_sth-&amp;gt;execute($pages[$page_num], $end_of_30_days,
+                                                 $start_of_30_days);
+    $totalmvisit[$page_num] = $totalmvisit_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;better-names&#34;&gt;Better Names&lt;/h3&gt;
+
+&lt;p&gt;With decent variable names in place, the purpose of the program becomes &lt;strong&gt;much&lt;/strong&gt; clearer. This is a program to calculate the number of visits to a page for various date ranges. Based on this new information we can give the statement handles and the arrays they put data into better names.&lt;/p&gt;
+
+&lt;p&gt;Looking at the SQL we see we&amp;rsquo;ve got:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;One to get all the visits up to a single day.&lt;/li&gt;
+&lt;li&gt;One to get the visits for a certain date.&lt;/li&gt;
+&lt;li&gt;One to get the visits for a range of dates.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A good set of new names would be:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;daily&lt;/li&gt;
+&lt;li&gt;up to&lt;/li&gt;
+&lt;li&gt;range&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Also, Total Visits is too long. We could shorten that to just Visits, or even shorter to Hits.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($line=&amp;lt;INPUT&amp;gt;){
+    $page_num++;
+    chop($line);
+    $pages[$page_num] = $line;
+
+    $hits_upto_sth-&amp;gt;execute($pages[$page_num], $start_date);
+    $totalvisit[$page_num] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($pages[$page_num], $today);
+    $totalvisittoday[$page_num] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($pages[$page_num], $yesterday);
+    $totalyvisit[$page_num] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($pages[$page_num], $end_of_30_days,
+                                                $start_of_30_days);
+    $totalmvisit[$page_num] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;changing-global-variable-names&#34;&gt;Changing Global Variable Names&lt;/h3&gt;
+
+&lt;p&gt;The array names need work, too. Currently, they&amp;rsquo;re rather ambiguous. &lt;code&gt;@totalyvisit&lt;/code&gt;, what does the &lt;em&gt;y&lt;/em&gt; mean? Looking at each variable name and the variables that got passed to &lt;code&gt;execute()&lt;/code&gt; to produce it&amp;hellip;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@totalvisit&lt;/code&gt; comes up to a &lt;code&gt;$start_date&lt;/code&gt;. So that can be &lt;code&gt;@hits_upto&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@totalvisittoday&lt;/code&gt; comes from &lt;code&gt;$today&lt;/code&gt; and is pretty obvious. &lt;code&gt;@hits_today&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@totalyvisit&lt;/code&gt; comes from &lt;code&gt;$yesterday&lt;/code&gt; so &amp;lsquo;y&amp;rsquo; must be for &amp;lsquo;yesterday&amp;rsquo;. &lt;code&gt;@hits_yesterday&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@totalmvisit&lt;/code&gt; comes from the range produced by the $start_of_30_days and the $end_of_30_days. So &amp;rsquo;m&amp;rsquo; must be &amp;lsquo;month&amp;rsquo;. &lt;code&gt;@hits_monthly&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- --&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($line=&amp;lt;INPUT&amp;gt;){
+    $page_num++;
+    chop($line);
+    $pages[$page_num] = $line;
+
+    $hits_upto_sth-&amp;gt;execute($pages[$page_num], $start_date);
+    $hits_upto[$page_num] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($pages[$page_num], $today);
+    $hits_today[$page_num] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($pages[$page_num], $yesterday);
+    $hits_yesterday[$page_num] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($pages[$page_num], $end_of_30_days,
+                                                $start_of_30_days);
+    $hits_monthly[$page_num] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test&amp;hellip; uh-oh, test failed!&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s something &lt;strong&gt;very&lt;/strong&gt; different about this change compared to the others. The variables we changed were &lt;em&gt;not&lt;/em&gt; declared in our little code block. Likely they&amp;rsquo;re used in other parts of the code, such as our test which caused it to break.&lt;/p&gt;
+
+&lt;p&gt;In the Real World, we would be sure to &lt;strong&gt;replace all occurrences of the variable&lt;/strong&gt;. The simplest way to do this is to use your editor to perform a search and replace rather than doing it by your all too fallible hands. If it could be used over a set of files, grepping through those files for all occurrences of it and changing those as well would be necessary.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# If you don&#39;t have rgrep, grep -r does the same thing.
+rgrep &#39;[@$]totalvisit&#39; /path/to/your/project
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I do this so often that I&amp;rsquo;ve taken to calling grep -r, &amp;lsquo;Refactoring Grep&amp;rsquo;. Other languages who&amp;rsquo;s syntax is &amp;ndash; ummm &amp;ndash; not as inspired as Perl&amp;rsquo;s, such as Java, C++ and Python, have tools for doing this sort of thing automatically. Because of the complexity of Perl&amp;rsquo;s syntax, we still have to do it mostly by hand, though there are some efforts underway to rectify this.&lt;/p&gt;
+
+&lt;p&gt;Changing the array names in our test as well we get them to pass.&lt;/p&gt;
+
+&lt;p&gt;Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;improve-overly-generic-names&#34;&gt;Improve Overly Generic Names&lt;/h3&gt;
+
+&lt;p&gt;Continuing with our variable name improvements, we&amp;rsquo;re left with the last few unimproved names. Let&amp;rsquo;s start with &lt;code&gt;$line&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Since we can see clearly that &lt;code&gt;$line = &amp;lt;INPUT&amp;gt;&lt;/code&gt;, calling the variable &amp;lsquo;line&amp;rsquo; tells us nothing new. A better name might be what each line contains. Looking at how the line is used we see &lt;code&gt;$pages[$page_num] = $line&lt;/code&gt; and how that is then used in the SQL. It&amp;rsquo;s a page id.&lt;/p&gt;
+
+&lt;p&gt;But it doesn&amp;rsquo;t make much sense to put a page id into an array called &lt;code&gt;@pages&lt;/code&gt;. It doesn&amp;rsquo;t contain pages, it contains &lt;code&gt;@page_ids&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;What about &lt;code&gt;$page_num&lt;/code&gt;? It doesn&amp;rsquo;t contain a page number, it contains the line number of the file we&amp;rsquo;re reading in. Or more conventionally, an &lt;code&gt;$index&lt;/code&gt; or &lt;code&gt;$idx&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;lt;= ? AND 
+       data   &amp;gt;= ?
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chop($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_ids[$idx], $start_date);
+    $hits_upto[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $today);
+    $hits_today[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $yesterday);
+    $hits_yesterday[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_ids[$idx], $end_of_30_days,
+                                                   $start_of_30_days);
+    $hits_monthly[$idx] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;fixing-odd-interfaces&#34;&gt;Fixing Odd Interfaces&lt;/h3&gt;
+
+&lt;p&gt;What&amp;rsquo;s wrong with this picture?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$hits_range_sth-&amp;gt;execute($page_ids[$idx], $end_of_30_days,
+                                               $start_of_30_days);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Isn&amp;rsquo;t it a little odd to specify a date range with the end first? Sure is. It also guarantees someone is going to get it backwards. Reverse it. Don&amp;rsquo;t forget the SQL, too.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chop($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_ids[$idx], $start_date);
+    $hits_upto[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $today);
+    $hits_today[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $yesterday);
+    $hits_yesterday[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_ids[$idx], $start_of_30_days,
+                                                   $end_of_30_days);
+    $hits_monthly[$idx] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;s-chop-chomp&#34;&gt;s/chop/chomp/&lt;/h3&gt;
+
+&lt;p&gt;Now that we&amp;rsquo;ve stared at the code for a while, you might have noticed the use of &lt;code&gt;chop()&lt;/code&gt;. Using &lt;code&gt;chop()&lt;/code&gt; to strip a newline is asking for portability problems, so let&amp;rsquo;s fix it by using &lt;code&gt;chomp()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Technically this &lt;em&gt;isn&amp;rsquo;t&lt;/em&gt; a refactoring since we altered the behavior of the code by fixing the bug. But using &lt;code&gt;chop()&lt;/code&gt; where you meant &lt;code&gt;chomp()&lt;/code&gt; is such a common mistake we&amp;rsquo;ll make it an honorary refactoring.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chomp($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_ids[$idx], $start_date);
+    $hits_upto[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $today);
+    $hits_today[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $yesterday);
+    $hits_yesterday[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_ids[$idx], $start_of_30_days,
+                                                   $end_of_30_days,);
+    $hits_monthly[$idx] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;collect-related-variables-into-hashes&#34;&gt;Collect Related Variables into Hashes&lt;/h3&gt;
+
+&lt;p&gt;The common prefix &lt;code&gt;hits_&lt;/code&gt; is a dead giveaway that much of the data in this code is related. Related variables should be grouped together into a single structure, probably a hash to make the relation obvious and allow them to be passed around to subroutines more easily. Its easier to move around one hash than four arrays.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve decided to collect together all the &lt;code&gt;@hit_&lt;/code&gt; arrays into a single hash &lt;code&gt;%hits&lt;/code&gt; since they&amp;rsquo;ll probably be used together parts of the program. If this code snippet represents a function it means I can return one hash reference rather than four array refs. It also makes future expansion easier, rather than returning an additional array it simply becomes another key in the hash.&lt;/p&gt;
+
+&lt;p&gt;Before.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$hits{upto}[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$hits_upto[$idx]  = $hits_upto_sth-&amp;gt;fetchrow_array();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s interesting to note what a small, natural change this is. Circumstantial evidence that this is a good refactoring.&lt;/p&gt;
+
+&lt;p&gt;As before, since these arrays are global data, we must be sure to change them everywhere. This includes the tests.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chomp($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_ids[$idx], $start_date);
+    $hits{upto}[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $today);
+    $hits{today}[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_ids[$idx], $yesterday);
+    $hits{yesterday}[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_ids[$idx], $start_of_30_days,
+                                                   $end_of_30_days,);
+    $hits{monthly}[$idx] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+
+close (INPUT);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;when-not-to-refactor&#34;&gt;When Not to Refactor&lt;/h3&gt;
+
+&lt;p&gt;The statement handles are also related, but I&amp;rsquo;m not going to collect them together into a hash. The statement handles are short-lived lexicals, they&amp;rsquo;re never likely to be passed around. Their short scope and grouping within the code makes their relationship obvious. The design would not be improved by the refactoring.&lt;/p&gt;
+
+&lt;p&gt;Refactoring is not a set of rules to be slavishly followed, it&amp;rsquo;s a collection of tools. And like any other tool you must carefully consider when and when not to use it. Since collecting the statement handles together doesn&amp;rsquo;t improve the design, I won&amp;rsquo;t do it.&lt;/p&gt;
+
+&lt;h3 id=&#34;eliminate-unnecessary-longhand&#34;&gt;Eliminate Unnecessary Longhand&lt;/h3&gt;
+
+&lt;p&gt;Boy, we sure use &lt;code&gt;$page_ids[$idx]&lt;/code&gt; a lot. It&amp;rsquo;s the current page ID. But don&amp;rsquo;t we have a variable for that?&lt;/p&gt;
+
+&lt;p&gt;Replace all the unnecessary array accesses and just use the more concise and descriptive &lt;code&gt;$page_id&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chomp($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    $hits{upto}[$idx] = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $today);
+    $hits{today}[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $yesterday);
+    $hits{yesterday}[$idx] = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_id, $start_of_30_days,
+                                       $end_of_30_days,);
+    $hits{monthly}[$idx] = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;rearrange-data-structures-to-fit-their-use&#34;&gt;Rearrange Data Structures to Fit Their Use&lt;/h3&gt;
+
+&lt;p&gt;Currently, &lt;code&gt;%hits&lt;/code&gt; is accessed by the order the page ID was read out of the file. Well, that doesn&amp;rsquo;t seem very useful at all. Its purpose seems to be for listing the page counts in exactly the same order as you read them in. Even then you need to iterate through &lt;code&gt;@page_ids&lt;/code&gt; simultaneously because no where in &lt;code&gt;%hits&lt;/code&gt; is the page ID stored.&lt;/p&gt;
+
+&lt;p&gt;Consider a common operation, looking up the hit counts for a given page ID. You have to iterate through the whole list of page IDs to do it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;foreach my $idx (0..$#page_ids) {
+    if( $page_ids[$idx] eq $our_page_id ) {
+        print &amp;quot;Hits for $our_page_id today: $hits{today}[$idx]\n&amp;quot;;
+        last;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Cumbersome. A much better layout would be a hash keyed on the page ID.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$hits{upto}{$page_id} = $hits_upto_sth-&amp;gt;fetchrow_array();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can directly access the data for a given page ID. If necessary, we can still list the hits in the same order they were read in by iterating through &lt;code&gt;@page_ids&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    $idx++;
+    chomp($page_id);
+    $page_ids[$idx] = $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    $hits{upto}{$page_id} = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $today);
+    $hits{today}{$page_id} = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $yesterday);
+    $hits{yesterday}{$page_id} = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_id, $start_of_30_days,
+                                       $end_of_30_days,);
+    $hits{monthly}{$page_id} = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;eliminate-unnecessary-variables&#34;&gt;Eliminate Unnecessary Variables&lt;/h3&gt;
+
+&lt;p&gt;Now that &lt;code&gt;%hits&lt;/code&gt; is no longer ordered by how it was read in, &lt;code&gt;$idx&lt;/code&gt; isn&amp;rsquo;t used much anymore. It&amp;rsquo;s only used to stick &lt;code&gt;$page_id&lt;/code&gt; onto the end of &lt;code&gt;@page_ids&lt;/code&gt;, but we can do that with &lt;code&gt;push&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is minor but little things build up to cause big messes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    chomp($page_id);
+    push @page_ids, $page_id;
+
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    $hits{upto}{$page_id} = $hits_upto_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $today);
+    $hits{today}{$page_id} = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_daily_sth-&amp;gt;execute($page_id, $yesterday);
+    $hits{yesterday}{$page_id} = $hits_daily_sth-&amp;gt;fetchrow_array();
+
+    $hits_range_sth-&amp;gt;execute($page_id, $start_of_30_days,
+                                       $end_of_30_days,);
+    $hits{monthly}{$page_id} = $hits_range_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;pull-logical-chunks-out-into-functions&#34;&gt;Pull Logical Chunks Out into Functions&lt;/h3&gt;
+
+&lt;p&gt;Our final refactoring is one of the most common and most useful.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s assume that we need to generate page counts somewhere else in the code. Rather than repeat the code to do this, we want to put it in a subroutine so it can be reused. One subroutine for each statement.&lt;/p&gt;
+
+&lt;p&gt;In order to do this, start by identifying the code that would go into the routine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+$hits{upto}{$page_id} = $hits_upto_sth-&amp;gt;fetchrow_array();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then wrap a subroutine around it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub hits_upto {
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    $hits{upto}{$page_id} = $hits_upto_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now look at all the variables used.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;$hits_upto_sth&lt;/code&gt; is a global (well, file-scoped lexical) and is defined entirely outside the function. We can keep using it in our subroutine in the same way we are now.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;$hits{upto}{$page_id}&lt;/code&gt; is receiving the result of the calculation. It contains the return value. So it goes outside the function to receive the return value. Where its assignment was, we put a &lt;code&gt;return&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub hits_upto {
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    return $hits_upto_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$page_id&lt;/code&gt; and &lt;code&gt;$start_date&lt;/code&gt; vary from call to call. These are our function arguments.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub hits_upto {
+    my($page_id, $start_date) = @_;
+    $hits_upto_sth-&amp;gt;execute($page_id, $start_date);
+    return $hits_upto_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, rename things in a more generic manner. This is a subroutine for calculating the number of hits up to a certain date. Instead of &lt;code&gt;$start_date&lt;/code&gt; which was specific to one calculation, we&amp;rsquo;d call it &lt;code&gt;$date&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub hits_upto {
+    my($page_id, $date) = @_;
+    $hits_upto_sth-&amp;gt;execute($page_id, $date);
+    return $hits_upto_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that&amp;rsquo;s our new subroutine, does the same thing as the original code. Then it&amp;rsquo;s a simple matter to use it in the code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $hits{upto}{$page_id} = hits_upto($page_id, $start_date);
+
+
+my $hits_upto_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*)
+FROM   lognew 
+WHERE  pageid =  ? AND 
+       data   &amp;gt;= ?
+SQL
+
+my $hits_daily_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid = ? AND 
+       data   = ?
+SQL
+
+my $hits_range_sth = $dbh-&amp;gt;prepare(&amp;lt;&amp;lt;&#39;SQL&#39;);
+SELECT count(*) 
+FROM   lognew 
+WHERE  pageid =  ? AND
+       data   &amp;gt;= ? AND
+       data   &amp;lt;= ? 
+SQL
+
+open (INPUT, &amp;quot;&amp;lt; $filepageid&amp;quot;) || &amp;amp;file_open_error(&amp;quot;$filepageid&amp;quot;);
+
+while ($page_id=&amp;lt;INPUT&amp;gt;){
+    chomp($page_id);
+    push @page_ids, $page_id;
+
+    $hits{upto}{$page_id}      = hits_upto($page_id, $start_date);
+    $hits{today}{$page_id}     = hits_daily($page_id, $today);
+    $hits{yesterday}{$page_id} = hits_daily($page_id, $yesterday);
+    $hits{monthly}{$page_id}   = hits_range($page_id, $start_of_30_days,
+                                                        $end_of_30_days,);
+}
+
+sub hits_upto {
+    my($page_id, $date) = @_;
+    $hits_upto_sth-&amp;gt;execute($page_id, $date);
+    return scalar $hits_upto_sth-&amp;gt;fetchrow_array();
+}
+
+sub hits_daily {
+    my($page_id, $date) = @_;
+    $hits_daily_sth-&amp;gt;execute($page_id, $date);
+    return scalar $hits_daily_sth-&amp;gt;fetchrow_array();
+}
+
+sub hits_range {
+    my($page_id, $start, $end) = @_;
+    $hits_range_sth-&amp;gt;execute($page_id, $start, $end);
+    return scalar $hits_range_sth-&amp;gt;fetchrow_array();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test. Log. Check in.&lt;/p&gt;
+
+&lt;h3 id=&#34;undo&#34;&gt;Undo.&lt;/h3&gt;
+
+&lt;p&gt;Some may balk at putting that small of a snippet of code into a subroutine like that. There are definite performance concerns about adding four subroutine calls to a loop. But I&amp;rsquo;m not worried about that at all.&lt;/p&gt;
+
+&lt;p&gt;One of the beauties of Refactoring is that it&amp;rsquo;s reversible. Refactorings don&amp;rsquo;t change how the program works. We can reverse any of these refactorings and the code will work exactly the same. If a refactoring turns out to be a bad idea, undo it. Logging each refactoring in version control makes the job even easier.&lt;/p&gt;
+
+&lt;p&gt;So if it turns out moving the executes into their own functions causes a performance problem the change can easily be undone.&lt;/p&gt;
+
+&lt;h3 id=&#34;done&#34;&gt;Done?&lt;/h3&gt;
+
+&lt;p&gt;At this point, things are looking pretty nice. The code is well structured, readable, and efficient. The variables are sensibly named. The data is organized in a fairly flexible manner.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s good enough. This is not to say that there&amp;rsquo;s not more that could be done, but we don&amp;rsquo;t need to. And Refactoring is about doing as much redesign as you need instead of what you might need.&lt;/p&gt;
+
+&lt;h3 id=&#34;refactoring-and-the-swiss-army-knife&#34;&gt;Refactoring and the Swiss Army Knife&lt;/h3&gt;
+
+&lt;p&gt;As programmers we have a tendency towards over-design. We like to design our code to deal with any possible situation that might arise, since it was hard to change the design later. This is known as Big Design Up Front (BDUF). It&amp;rsquo;s like one of those &lt;a href=&#34;http://www.victorinox.com/newsite/en/produkte/neu/inhalt2.cfm?pid=1-6795-XLT&#34;&gt;enormous Swiss Army Knives with 50 functions&lt;/a&gt;. Most of the time all you need is &lt;a href=&#34;http://www.victorinox.com/newsite/en/produkte/neu/inhalt2.cfm?pid=2-2363&#34;&gt;a knife with something to open your beer with and then maybe pick your teeth afterwards&lt;/a&gt; but you never know. So you over-engineer because it&amp;rsquo;s hard to improve it later. If it never gets used then a lot of effort has been wasted.&lt;/p&gt;
+
+&lt;p&gt;Refactoring turns design on its ear. Now you can continually evolve your design as needed. There&amp;rsquo;s no longer a need to write for every possible situation up front so you can focus on just what you need right now. If you need more flexibility later, you can add that flexibility through refactoring. It&amp;rsquo;s like having a Swiss Army knife that you can add tools to as you need them.&lt;/p&gt;
+
+&lt;h3 id=&#34;further-reference&#34;&gt;Further Reference&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://groups.google.com/groups?th=11b4e3caaafb9849&amp;amp;seekm=20021005063711.GE15102%40ool-18b93024.dyn.optonline.net#link1&#34;&gt;The original thread on Fun With Perl&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;The &lt;a href=&#34;http://www.c2.com/cgi/wiki?WelcomeVisitors&#34;&gt;Portland Pattern Repository&lt;/a&gt; answers the question &amp;ndash; &lt;a href=&#34;http://www.c2.com/cgi/wiki?WhatIsRefactoring&#34;&gt;WhatIsRefactoring?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.amazon.com/exec/obidos/tg/detail/-/0201485672&#34;&gt;The Refactoring Book&lt;/a&gt; by &lt;a href=&#34;http://www.martinfowler.com&#34;&gt;Martin Fowler&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

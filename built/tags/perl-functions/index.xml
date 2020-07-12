@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Functions on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-functions/</link>
+    <description>Recent content in Perl Functions on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 23 Feb 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-functions/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Advanced Subroutine Techniques</title>
+      <link>http://localhost:1313/pub/2006/02/23/advanced_subroutines.html/</link>
+      <pubDate>Thu, 23 Feb 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/02/23/advanced_subroutines.html/</guid>
+      <description>
+
+&lt;p&gt;In &amp;ldquo;&lt;a href=&#34;http://localhost:1313/pub/2005/11/03/subroutines.html&#34;&gt;Making Sense of Subroutines&lt;/a&gt;,&amp;rdquo; I wrote about what subroutines are and why you want to use them. This article expands on that topic, discussing some of the more common techniques for subroutines to make them even more useful.&lt;/p&gt;
+
+&lt;p&gt;Several of these techniques are advanced, but you can use each one by itself without understanding the others. Furthermore, not every technique is useful in every situation. As with all techniques, consider these as tools in your toolbox, not things you have to do every time you open your editor.&lt;/p&gt;
+
+&lt;h3 id=&#34;named-arguments&#34;&gt;Named Arguments&lt;/h3&gt;
+
+&lt;h4 id=&#34;positional-arguments&#34;&gt;Positional Arguments&lt;/h4&gt;
+
+&lt;p&gt;Subroutines, by default, use &amp;ldquo;positional arguments.&amp;rdquo; This means that the arguments to the subroutine must occur in a specific order. For subroutines with a small argument list (three or fewer items), this isn&amp;rsquo;t a problem.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub pretty_print {
+    my ($filename, $text, $text_width) = @_;
+
+    # Format $text to $text_width somehow.
+
+    open my $fh, &#39;&amp;gt;&#39;, $filename
+        or die &amp;quot;Cannot open &#39;$filename&#39; for writing: $!\n&amp;quot;;
+
+    print $fh $text;
+
+    close $fh;
+
+    return;
+}
+
+pretty_print( &#39;filename&#39;, $long_text, 80 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;the-problem&#34;&gt;The Problem&lt;/h4&gt;
+
+&lt;p&gt;However, once everyone starts using your subroutine, it starts expanding what it can do. Argument lists tend to expand, making it harder and harder to remember the order of arguments.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub pretty_print {
+    my (
+        $filename, $text, $text_width, $justification, $indent,
+        $sentence_lead
+    ) = @_;
+
+    # Format $text to $text_width somehow. If $justification is set, justify
+    # appropriately. If $indent is set, indent the first line by one tab. If
+    # $sentence_lead is set, make sure all sentences start with two spaces.
+
+    open my $fh, &#39;&amp;gt;&#39;, $filename
+        or die &amp;quot;Cannot open &#39;$filename&#39; for writing: $!\n&amp;quot;;
+
+    print $fh $text;
+
+    close $fh;
+
+    return;
+}
+
+pretty_print( &#39;filename&#39;, $long_text, 80, &#39;full&#39;, undef, 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Quick&amp;ndash;what does that &lt;code&gt;1&lt;/code&gt; at the end of the subroutine mean? If it took you more than five seconds to figure it out, then the subroutine call is unmaintainable. Now, imagine that the subroutine isn&amp;rsquo;t right there, isn&amp;rsquo;t documented or commented, and was written by someone who is quitting next week.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-solution&#34;&gt;The Solution&lt;/h4&gt;
+
+&lt;p&gt;The most maintainable solution is to use &amp;ldquo;named arguments.&amp;rdquo; In Perl 5, the best way to implement this is by using a hash reference. Hashes also work, but they require additional work on the part of the subroutine author to verify that the argument list is even. A hashref makes any unmatched keys immediately obvious as a compile error.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub pretty_print {
+    my ($args) = @_;
+
+    # Format $args-&amp;gt;{text} to $args-&amp;gt;{text_width} somehow.
+    # If $args-&amp;gt;{justification} is set, justify appropriately.
+    # If $args-&amp;gt;{indent} is set, indent the first line by one tab.
+    # If $args-&amp;gt;{sentence_lead} is set, make sure all sentences start with
+    # two spaces.
+
+    open my $fh, &#39;&amp;gt;&#39;, $args-&amp;gt;{filename}
+        or die &amp;quot;Cannot open &#39;$args-&amp;gt;{filename}&#39; for writing: $!\n&amp;quot;;
+
+    print $fh $args-&amp;gt;{text};
+
+    close $fh;
+
+    return;
+}
+
+pretty_print({
+    filename      =&amp;gt; &#39;filename&#39;,
+    text          =&amp;gt; $long_text,
+    text_width    =&amp;gt; 80,
+    justification =&amp;gt; &#39;full&#39;,
+    sentence_lead =&amp;gt; 1,
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, the reader can immediately see exactly what the call to &lt;code&gt;pretty_print()&lt;/code&gt; is doing.&lt;/p&gt;
+
+&lt;h4 id=&#34;and-optional-arguments&#34;&gt;And Optional Arguments&lt;/h4&gt;
+
+&lt;p&gt;By using named arguments, you gain the benefit that some or all of your arguments can be optional without forcing our users to put &lt;code&gt;undef&lt;/code&gt; in all of the positions they don&amp;rsquo;t want to specify.&lt;/p&gt;
+
+&lt;h3 id=&#34;validation&#34;&gt;Validation&lt;/h3&gt;
+
+&lt;p&gt;Argument validation is more difficult in Perl than in other languages. In C or Java, for instance, every variable has a type associated with it. This includes subroutine declarations, meaning that trying to pass the wrong type of variable to a subroutine gives a compile-time error. By contrast, because &lt;code&gt;perl&lt;/code&gt; flattens everything to a single list, there is no compile-time checking at all. (Well, there kinda is with prototypes.)&lt;/p&gt;
+
+&lt;p&gt;This has been such a problem that there are dozens of modules on CPAN to address the problem. The most commonly recommended one is &lt;a href=&#34;https://metacpan.org/pod/Params::Validate&#34;&gt;&lt;code&gt;Params::Validate&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;prototypes&#34;&gt;Prototypes&lt;/h3&gt;
+
+&lt;p&gt;Prototypes in Perl are a way of letting Perl know exactly what to expect for a given subroutine, at compile time. If you&amp;rsquo;ve ever tried to pass an array to the &lt;code&gt;vec()&lt;/code&gt; built-in and you saw &lt;code&gt;Not enough arguments for vec&lt;/code&gt;, you&amp;rsquo;ve hit a prototype.&lt;/p&gt;
+
+&lt;p&gt;For the most part, prototypes are more trouble than they&amp;rsquo;re worth. For one thing, Perl doesn&amp;rsquo;t check prototypes for methods because that would require the ability to determine, at compile time, which class will handle the method. Because you can alter &lt;code&gt;@ISA&lt;/code&gt; at runtime&amp;ndash;you see the problem. The main reason, however, is that prototypes aren&amp;rsquo;t very smart. If you specify &lt;code&gt;sub foo ($$$)&lt;/code&gt;, you cannot pass it an array of three scalars (this is the problem with &lt;code&gt;vec()&lt;/code&gt;). Instead, you have to say &lt;code&gt;foo( $x[0], $x[1], $x[2] )&lt;/code&gt;, and that&amp;rsquo;s just a pain.&lt;/p&gt;
+
+&lt;p&gt;Prototypes &lt;em&gt;can&lt;/em&gt; be very useful for one reason&amp;ndash;the ability to pass subroutines in as the first argument. &lt;a href=&#34;https://metacpan.org/pod/Test::Exception&#34;&gt;&lt;code&gt;Test::Exception&lt;/code&gt;&lt;/a&gt; uses this to excellent advantage:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub do_this_to (&amp;amp;;$) {
+    my ($action, $name) = @_;
+
+    $action-&amp;gt;( $name );
+}
+
+do_this_to { print &amp;quot;Hello, $_[0]\n&amp;quot; } &#39;World&#39;;
+do_this_to { print &amp;quot;Goodbye, $_[0]\n&amp;quot; } &#39;cruel world!&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;context-awareness&#34;&gt;Context Awareness&lt;/h3&gt;
+
+&lt;p&gt;Using the &lt;code&gt;wantarray&lt;/code&gt; built-in, a subroutine can determine its calling context. Context for subroutines, in Perl, is one of three things&amp;ndash;list, scalar, or void. List context means that the return value will be used as a list, scalar context means that the return value will be used as a scalar, and void context means that the return value won&amp;rsquo;t be used at all.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub check_context {
+    # True
+    if ( wantarray ) {
+        print &amp;quot;List context\n&amp;quot;;
+    }
+    # False, but defined
+    elsif ( defined wantarray ) {
+        print &amp;quot;Scalar context\n&amp;quot;;
+    }
+    # False and undefined
+    else {
+        print &amp;quot;Void context\n&amp;quot;;
+    }
+}
+
+my @x       = check_context();  # prints &#39;List context&#39;
+my %x       = check_context();  # prints &#39;List context&#39;
+my ($x, $y) = check_context();  # prints &#39;List context&#39;
+
+my $x       = check_context();  # prints &#39;Scalar context&#39;
+
+check_context();                # prints &#39;Void context&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For CPAN modules that implement or augment context awareness, look at &lt;a href=&#34;https://metacpan.org/pod/Contextual::Return&#34;&gt;&lt;code&gt;Contextual::Return&lt;/code&gt;&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Sub::Context&#34;&gt;&lt;code&gt;Sub::Context&lt;/code&gt;&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Return::Value&#34;&gt;&lt;code&gt;Return::Value&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Note: you can misuse context awareness heavily by having the subroutine do something completely different when called in scalar versus list context. Don&amp;rsquo;t do that. A subroutine should be a single, easily identifiable unit of work. Not everyone understands all of the different permutations of context, including your standard Perl expert.&lt;/p&gt;
+
+&lt;p&gt;Instead, I recommend having a standard return value, except in void context. If your return value is expensive to calculate and is calculated only for the purposes of returning it, then knowing if you&amp;rsquo;re in void context may be very helpful. This can be a premature optimization, however, so always measure (benchmarking and profiling) before and after to make sure you&amp;rsquo;re optimizing what needs optimizing.&lt;/p&gt;
+
+&lt;h3 id=&#34;mimicking-perl-s-internal-functions&#34;&gt;Mimicking Perl&amp;rsquo;s Internal Functions&lt;/h3&gt;
+
+&lt;p&gt;A lot of Perl&amp;rsquo;s internal functions modify their arguments and/or use &lt;code&gt;$_&lt;/code&gt; or &lt;code&gt;@_&lt;/code&gt; as a default if no parameters are provided. A perfect example of this is &lt;code&gt;chomp()&lt;/code&gt;. Here&amp;rsquo;s a version of &lt;code&gt;chomp()&lt;/code&gt; that illustrates some of these techniques:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub my_chomp {
+    # This is a special case in the chomp documentation
+    return if ref($/);
+
+    # If a return value is expected ...
+    if ( defined wantarray ) {
+        my $count = 0;
+        $count += (@_ ? (s!$/!!g for @_) : s!$/!!g);
+        return $count;
+    }
+    # Otherwise, don&#39;t bother counting
+    else {
+        @_ ? do{ s!$/!!g for @_ } : s!$/!!g;
+        return;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Use &lt;code&gt;return;&lt;/code&gt; instead of &lt;code&gt;return undef;&lt;/code&gt; if you want to return nothing. If someone assigns the return value to an array, the latter creates an array of one value (&lt;code&gt;undef&lt;/code&gt;), which evaluates to true. The former will correctly handle all contexts.&lt;/li&gt;
+&lt;li&gt;If you want to modify &lt;code&gt;$_&lt;/code&gt; if no parameters are given, you have to check &lt;code&gt;@_&lt;/code&gt; explicitly. You cannot do something like &lt;code&gt;@_ = ($_) unless @_;&lt;/code&gt; because &lt;code&gt;$_&lt;/code&gt; will lose its magic.&lt;/li&gt;
+&lt;li&gt;This doesn&amp;rsquo;t calculate &lt;code&gt;$count&lt;/code&gt; unless &lt;code&gt;$count&lt;/code&gt; is useful (using a check for void context).&lt;/li&gt;
+&lt;li&gt;The key is the aliasing of &lt;code&gt;@_&lt;/code&gt;. If you modify &lt;code&gt;@_&lt;/code&gt; directly (as opposed to assigning the values in &lt;code&gt;@_&lt;/code&gt; to variables), then you modify the actual parameters passed in.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;I hope I have introduced you to a few more tools in your toolbox. The art of writing a good subroutine is very complex. Each of the techniques I have presented is one tool in the programmer&amp;rsquo;s toolbox. Just as a master woodworker wouldn&amp;rsquo;t use a drill for every project, a master programmer doesn&amp;rsquo;t make every subroutine use named arguments or mimic a built-in. You must evaluate each technique every time to see if it will make the code more maintainable. Overusing these techniques will make your code &lt;em&gt;less&lt;/em&gt; maintainable. Using them appropriately will make your life easier.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Embedding Web Servers </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" As with most of my previous articles, this one grew out of a project at my $DAY_JOB. The project du-jour involves large dependency graphs, often containing thousands of nodes and edges. Some of the relationships are automatically generated and..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2002/09/17/ewispp.html/" />
+<meta property="og:title" content="Embedding Web Servers" />
+<meta property="og:description" content=" As with most of my previous articles, this one grew out of a project at my $DAY_JOB. The project du-jour involves large dependency graphs, often containing thousands of nodes and edges. Some of the relationships are automatically generated and...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2002-09-09T09:09:09Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2002_09_17_ewispp/111-webservers.gif" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Embedding Web Servers</h1>
+              <p class="blog-post-meta">Sep 18, 2002 by
+              
+              
+                
+                
+                <a href="#author-bio-robert-spier">Robert Spier</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>As with most of my previous articles, this one grew out of a project at my $DAY_JOB. The project du-jour involves large dependency graphs, often containing thousands of nodes and edges. Some of the relationships are automatically generated and can be quite complicated. When something goes wrong, it&rsquo;s useful to be able to visualize the graph.</p>
+
+<p>Simple Graph:</p>
+
+<p><img src="/images/_pub_2002_09_17_ewispp/graph.gif" alt="A Simple Graph" />
+We use <a href="http://www.graphviz.org">GraphViz</a> for rendering the graph, but it falls down on huge graphs. They turn into an unreadable mess of thick lines &ndash; less than useful. To work around this, we trim down the graph to just a segment, centered around one node, and display only n inputs or outputs.</p>
+
+<p>This works great, except that the startup time to create the graph data can be quite long, because of all the graph processing that is necessary to make sure the information is up to date. (The actually graph rendering is quite fast, for small graphs.)</p>
+
+<p>The solution? Process the data once, and render it multiple times, using, yes, you guessed it, a Web interface!</p>
+
+<h4 id="span-id-mechanics-of-http-mechanics-of-http-span"><span id="mechanics_of_http">Mechanics of HTTP</span></h4>
+
+<p>The <a href="http://www.w3.org/Protocols/rfc2616/rfc2616.html">Hyper Text Transfer Protocol (HTTP)</a>, is the protocol on which most of the Web thrives. It is a simple client/server protocol that runs over TCP/IP sockets.</p>
+
+<p>Extremely oversimplified, it looks like this:</p>
+
+<ul>
+<li>Client sends request to server: &ldquo;Send me document named X&rdquo;</li>
+<li>Server responds to client: &ldquo;Here&rsquo;s the data you asked for&rdquo; (or &ldquo;Sorry! I don&rsquo;t know what you mean.&rdquo;)</li>
+</ul>
+
+<p>In practice, it&rsquo;s not much more complicated:</p>
+
+<p>We will use <a href="http://www.wget.org">wget</a> to examine a sample HTTP request:</p>
+
+<p><code>wget -dq http://www.perl.org/index.shtml</code></p>
+
+<pre><code> ---request begin---
+ GET /index.shtml HTTP/1.0
+ User-Agent: Wget/1.8.1
+ Host: www.perl.org
+ Accept: */*
+ Connection: Keep-Alive
+
+ ---request end---
+ HTTP/1.1 200 OK
+ Date: Tue, 13 Aug 2002 18:12:23 GMT
+ Server: Apache/2.0.40 (Unix)
+ Accept-Ranges: bytes
+ Content-Length: 10494
+ Keep-Alive: timeout=15, max=100
+ Connection: Keep-Alive
+ Content-Type: text/html; charset=ISO-8859-1
+
+ &lt;... data downloaded to a file by wget...&gt;
+</code></pre>
+
+<p>There&rsquo;s a lot of things we don&rsquo;t care about in a simple server - so lets boil it down to the guts.</p>
+
+<p>Request:</p>
+
+<pre><code> GET /index.shtml HTTP/1.0
+</code></pre>
+
+<p><code>GET</code> is the type of HTTP action. There are others, but they&rsquo;re beyond the scope of this article.</p>
+
+<p><code>/index.shtml</code> is the name of the page to retrieve.</p>
+
+<p><code>HTTP/1.0</code> is the protocol version supported by your client.</p>
+
+<p>Response:</p>
+
+<pre><code> HTTP/1.1 200 OK
+ Content-Type: text/html;
+
+ &lt;data&gt;
+</code></pre>
+
+<p>The first line is the status response. It includes the HTTP protocol version supported by the server, followed by the <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10">status code</a> and a short text string defining the status.</p>
+
+<p>For this article, we&rsquo;ll just care about status code 200 (everything is ok, here&rsquo;s the data) and code &lsquo;404&rsquo; (not found).</p>
+
+<p>The next line is the MIME content type. This is required so that the Web browser knows how to display the data.</p>
+
+<p>Common Content-Types:</p>
+
+<pre><code>        text/html       a HTML document
+        text/plain      a plain text document
+        image/jpeg      a JPEG image
+        image/gif       a GIF image
+</code></pre>
+
+<p>After the above &ldquo;header&rdquo; section, there must be a blank line, and then the bytes containing the data. There&rsquo;s a lot more information that can go into the header block, but for the simple applications we will be developing, they are not needed.</p>
+
+<p>You can use a telnet client to retrieve data from any Web server. You need to be careful though - many modern Web servers are virtual hosted, which means they require the Host: header in the request to retrieve the appropriate data.</p>
+
+<h3 id="span-id-writing-a-simple-webserver-writing-a-simple-web-server-span"><span id="writing_a_simple_webserver">Writing A Simple Web Server</span></h3>
+
+<h4 id="span-id-the-basics-the-basics-span"><span id="the_basics">The Basics</span></h4>
+
+<p>With the above information, it isn&rsquo;t hard to write your own simple Web server. There are several ways to do this and a few already written on CPAN. We&rsquo;re going to start from first principles though, and pretend, for the moment, we don&rsquo;t know about CPAN.</p>
+
+<p>A good place to start looking for client/server information is in the <a href="https://perldoc.perl.org/perlipc.html">perlipc</a> document. About <sup>2</sup>&frasl;<sub>3</sub> of the way through is a section on &ldquo;Internet TCP Clients and Servers&rdquo;. This section shows how to use simple socket commands to setup a simple server. A little further down is the section we&rsquo;re interested in - it demonstrates using the IO::Socket module to write a simple TCP server. I&rsquo;ll replicate that here.</p>
+
+<pre><code> #!/usr/bin/perl -w
+ use IO::Socket;
+ use Net::hostent;              # for OO version of gethostbyaddr
+
+ $PORT = 9000;                  # pick something not in use
+
+ $server = IO::Socket::INET-&gt;new( Proto     =&gt; 'tcp',
+                                  LocalPort =&gt; $PORT,
+                                  Listen    =&gt; SOMAXCONN,
+                                  Reuse     =&gt; 1);
+
+ die &quot;can't setup server&quot; unless $server;
+ print &quot;[Server $0 accepting clients at http://localhost:$PORT/]\n&quot;;
+
+ while ($client = $server-&gt;accept()) {
+   $client-&gt;autoflush(1);
+   print $client &quot;Welcome to $0; type help for command list.\n&quot;;
+   $hostinfo = gethostbyaddr($client-&gt;peeraddr);
+   printf &quot;[Connect from %s]\n&quot;, $hostinfo-&gt;name || $client-&gt;peerhost;
+   print $client &quot;Command? &quot;;
+   while ( &lt;$client&gt;) {
+     next unless /\S/;       # blank line
+     if    (/quit|exit/i)    { last; }
+     elsif (/date|time/i)    { printf $client &quot;%s\n&quot;, scalar localtime; }
+     elsif (/who/i )         { print  $client `who 2&gt;&amp;1`; }
+     elsif (/cookie/i )      { print  $client `/usr/games/fortune 2&gt;&amp;1`; }
+     elsif (/motd/i )        { print  $client `cat /etc/motd 2&gt;&amp;1`; }
+     else {
+       print $client &quot;Commands: quit date who cookie motd\n&quot;;
+     }
+   } continue {
+      print $client &quot;Command? &quot;;
+   }
+   close $client;
+ }
+</code></pre>
+
+<h4 id="span-id-httpify-it-httpify-it-span"><span id="httpify_it">HTTPify It</span></h4>
+
+<p>That&rsquo;s not a HTTP server by any stretch of the imagination, but with a different inner loop it could easily become one:</p>
+
+<pre><code> while ($client = $server-&gt;accept()) {
+   $client-&gt;autoflush(1);
+
+   my $request = &lt;$client&gt;;
+   if ($request =~ m|^GET /(.+) HTTP/1.[01]|) {
+      if (-e $1) {
+       print $client &quot;HTTP/1.0 200 OK\nContent-Type: text/html\n\n&quot;;
+       open(my $f,&quot;&lt;$1&quot;);
+       while(&lt;$f&gt;) { print $client $_ };
+      } else {
+       print $client &quot;HTTP/1.0 404 FILE NOT FOUND\n&quot;;
+       print $client &quot;Content-Type: text/plain\n\n&quot;;
+       print $client &quot;file $1 not found\n&quot;;
+      }
+   } else {
+     print $client &quot;HTTP/1.0 400 BAD REQUEST\n&quot;;
+     print $client &quot;Content-Type: text/plain\n\n
+     print $client &quot;BAD REQUEST\n&quot;;
+   }
+   close $client;
+ }
+</code></pre>
+
+<p>Let&rsquo;s look at the changes piece by piece:</p>
+
+<pre><code>   my $request = &lt;$client&gt;;
+</code></pre>
+
+<p>Retrieve one line from the socket connected to the client. For this to be a valid HTTP request, it must match the following:</p>
+
+<pre><code>   if ($request =~ m|^GET /(.+) HTTP/1.[01]|) {
+</code></pre>
+
+<p>That checks that it&rsquo;s a HTTP GET request, and is of a protocol version we know about.</p>
+
+<pre><code>      if (-e $1) {
+       print &quot;HTTP/1.0 200 OK\nContent-Type: text/html\n\n&quot;;
+       open(my $f,&quot;&lt;$1&quot;);
+       while(&lt;$f&gt;) { print $client $_ };
+</code></pre>
+
+<p>If the requested file exists, then send back a HTTP header that says that, along with a content type, and then the data. (We are assuming the content type is HTML here. Most http servers figure out the content type from the extension of the file.)</p>
+
+<pre><code>      } else {
+       print $client &quot;HTTP/1.0 404 FILE NOT FOUND\n&quot;;
+       print $client &quot;Content-Type: text/plain\n\n&quot;
+       print $client &quot;file $1 not found\n&quot;;
+      }
+</code></pre>
+
+<p>If the file doesn&rsquo;t exist, then send back a 404 error. The content of the error is a description of what went wrong.</p>
+
+<pre><code>   } else {
+     print $client &quot;HTTP/1.0 400 BAD REQUEST\n&quot;;
+     print $client &quot;Content-Type: text/plain\n\n
+     print $client &quot;BAD REQUEST\n&quot;;
+   }
+</code></pre>
+
+<p>A similar error handler, in case we can&rsquo;t parse the request.</p>
+
+<p>Almost 50 percent of the code is for error handling, and that doesn&rsquo;t even take into account the error handling we didn&rsquo;t do for I/O issues. But that&rsquo;s the core of a Web server, all in about 15 lines of Perl.</p>
+
+<p>If you use the above code without modification, it will allow <em>every file on your system</em> to be read. Generally, this is a bad thing. An explanation of proper security is outside the scope of this article, but generally you want to limit access to a subset of files, located under some directory prefix. <code>File::Spec::canonpath</code> and <code>Cwd::realpath</code> are useful functions for testing this.</p>
+
+<h3 id="span-id-single-threaded-non-forking-blocking-single-threaded-nonforking-blocking-span"><span id="single_threaded,_non_forking,_blocking">Single Threaded, Nonforking, Blocking</span></h3>
+
+<p>The Web server presented above is very simple. It only deals with one request at a time. If a second request is received while the first is being processed, then it will be <strong>blocked</strong> until the first completes.</p>
+
+<p>There are two schemes used to take advantage of modern computers&rsquo; ability to multiprocess (run more than one thing at once.) The simplest way is to fork off a Web server process for each incoming request. Because of forking overhead, many servers pre-fork. The second method is to create multiple threads. (Threads are lighter weight than processes.)</p>
+
+<p>For a simple embedded server, it isn&rsquo;t much more difficult to build a forking server, but the extra work is unnecessary if it&rsquo;s only going to be used by one person or with a low hit-rate. The only advantage to the forking method is that it can serve multiple pages at once. (Taking advantage of modern operating systems ability to multiprocess.)</p>
+
+<p>More information on forking servers, can be found in the <a href="https://perldoc.perl.org/perlipc.html">perlipc</a> documentation.</p>
+
+<p>With a simple modification to our loop, we can turn our Web server into a forking client:</p>
+
+<pre><code> while ($client = $server-&gt;accept()) {
+   my $pid = fork();
+   die &quot;Cannot fork&quot; unless defined $pid;
+   do { close $client; next; } if $pid; # parent
+   # fall through in child
+   $client-&gt;autoflush(1);
+</code></pre>
+
+<h3 id="span-id-structure-structure-span"><span id="structure">Structure</span></h3>
+
+<p>The example server above is useful for simple reporting of generated data. Because the accept loop is closed, all processing by the main part of the program needs to be complete before the Web server is run. (Of course, actions from the Web server can trigger other pieces of the program to run.)</p>
+
+<p>There are other ways to integrate a simple Web server depending on the structure of your program, but for this article, we&rsquo;ll stick with the design above.</p>
+
+<h3 id="span-id-graph-walker-graph-walker-span"><span id="graph_walker">Graph Walker</span></h3>
+
+<p>Above we mentioned using GraphViz to create an embedded graph viewer. To do that we&rsquo;ll use a Graph class that has some methods that will make our life easier. (There isn&rsquo;t actually a class that does all this, but you can do it with a combination of Graph and GraphViz available on CPAN.)</p>
+
+<p>It is outside the scope of this article to cover graph operations, but I&rsquo;ve named the methods so that they should be easy to figure out. I am also going to gloss over some of the GraphViz details. They can be picked up from a tutorial.</p>
+
+<h4 id="span-id-three-easy-steps-three-easy-steps-span"><span id="three_easy_steps">Three Easy Steps</span></h4>
+
+<ol>
+<li><p><strong><span id="item_define_the_goal">Define the Goal</span></strong></p>
+
+<p>This is the easy part.</p>
+
+<p>To develop a graph browser that allows the user to click on a node to recenter the graph.</p></li>
+
+<li><p><strong><span id="item_define_the_url_scheme">Define the URL scheme</span></strong></p>
+
+<p>How is the Web browser going to communicate back to the Web server? The only way it can is by requesting pages (via URLs.) For a graph browser we need two different kinds.</p>
+
+<p>First, an image representing the graph. Second, a HTML page containing the <strong>IMG</strong> tag for the graph and the <a href="http://www.cris.com/~automata/tutorial.shtml">imagemap</a>.</p>
+
+<p>Since every node has a unique name we can use that to represent which node, and then use an extension to determine whether it is the HTML page or the graphic.</p>
+
+<pre><code>    node1.html - HTML page for graph centered on node1
+    node1.gif  - GIF image for graph centered on node1
+</code></pre></li>
+
+<li><p><strong><span id="item_implement%21">Implement!</span></strong></p>
+
+<p>Now that you know what you&rsquo;re building, you can put it all together and implement it.</p></li>
+</ol>
+
+<!-- -->
+
+<pre><code> my $graph = do_something_and_build_a_graph();
+
+ while ($client = $server-&gt;accept()) {
+   $client-&gt;autoflush(1);
+
+   my $request = &lt;$client&gt;;
+   if ($request =~ m|^GET /(.+)\.(html|gif) HTTP/1.[01]|) {
+      if ($graph-&gt;has_node($1)) {
+       if ($2 eq &quot;gif&quot;) {
+         send_gif( $client, $1 );
+       } else { # $2 must be 'html'
+         send_html( $client, $1 );
+       }
+      } else {
+       print $client &quot;HTTP/1.0 404 NODE NOT FOUND\n&quot;;
+       print $client &quot;Content-Type: text/plain\n\n&quot;;
+       print $client &quot;node $1 not found\n&quot;;
+      }
+   } else {
+     print $client &quot;HTTP/1.0 400 BAD REQUEST\n&quot;;
+     print $client &quot;Content-Type: text/plain\n\n
+     print $client &quot;BAD REQUEST\n&quot;;
+   }
+   close $client;
+ }
+
+ sub send_html {
+    my ($client, $node) = @_;
+
+    my $subgraph = $graph-&gt;subgraph( $node, 2, 2 );
+
+    my $csimap = $subgraph-&gt;as_csimap( &quot;graphmap&quot; );
+    my $time = scalar localtime;
+
+    print $client &quot;HTTP/1.0 200 OK\nContent-Type: text/html\n\n&quot;;
+
+    print $client&lt;&lt;&quot;EOF&quot;;
+
+    &lt;HTML&gt;
+     &lt;HEAD&gt;
+      &lt;TITLE&gt;Graph centered on $node&lt;/TITLE&gt;
+      $csimap
+     &lt;/HEAD&gt;
+     &lt;BODY&gt;
+     &lt;H1&gt;Graph centered on $node&lt;/H1&gt;
+     &lt;IMG SRC=&quot;/$node.gif&quot; USEMAP=&quot;graphmap&quot; BORDER=0&gt;
+     &lt;HR&gt;
+     &lt;SMALL&gt;Page generated at $time&lt;/SMALL&gt;
+     &lt;/BODY&gt;
+    &lt;/HTML&gt;
+
+  EOF
+     ;
+
+  }
+
+ sub send_gif {
+    my ($client, $node) = @_;
+
+    my $subgraph = $graph-&gt;subgraph( $node, 2, 2 );
+
+    my $gif = $subgraph-&gt;as_gif();
+
+    print $client &quot;HTTP/1.0 200 OK\nContent-Type: text/gif\n\n&quot;;
+
+    print $client $gif;
+
+  }
+
+And that's it!  We have created a dynamic graph browser.
+</code></pre>
+
+<p>I will admit that we glossed over some of the HTML and Client Side Imagemap details &ndash; because they&rsquo;re tangential to the issue of embedding a Web server into a tool. An embedded Web server is like merging the Web server, cgi script and source of the data into one program &ndash; sometimes the best way to build one is to start with a standard CGI script and use that.</p>
+
+<h3 id="span-id-more-details-more-details-span"><span id="more_details">More Details</span></h3>
+
+<h4 id="span-id-query-strings-query-strings-span"><span id="query_strings">Query Strings</span></h4>
+
+<p>Because our embedded Web server isn&rsquo;t serving actual files off of your hard drive you have lots of flexibility as to how to parse the requested URL. In normal Web servers the common way to pass extra arguments to requested pages/scripts is by using a <strong>query string</strong>.</p>
+
+<p>A URL with a query string looks like this:</p>
+
+<pre><code>    http://foo.bar/thepage.html?querystring
+</code></pre>
+
+<p>There is a convention for passing key/value data in query strings (from HTML FORM&rsquo;s for example):</p>
+
+<pre><code>    http://foo.bar/page.html?keyone=dataone&amp;keytwo=datatwo&amp;keythree=3&quot;
+</code></pre>
+
+<p>It&rsquo;s easy to modify our embedded webserver template to accept query strings. Just add it to the regular expression that parses the request:</p>
+
+<pre><code>   if ($request =~ m|^GET /(.+)(?:\?(.*))? HTTP/1.[01]|) {
+</code></pre>
+
+<p>$2 will then contain the query string. You can parse it by hand or pass it to CGI.pm or another CGI Module to parse it.</p>
+
+<h4 id="span-id-uri-escaping-uri-escaping-span"><span id="uri_escaping">URI Escaping</span></h4>
+
+<p>Some characters have special meaning in URIs. (We&rsquo;ve already seen ? and &amp;. Others are &ldquo; (space), %, and #. See the RFC for the full list.) In order to allow them to be passed in requests they need to be escaped. Escaping a URI changes the special characters into their hex representation with a prepended %. For example, &ldquo; becomes %20.</p>
+
+<p>The easiest way to perform this encoding is to use the URI::Escape module.</p>
+
+<pre><code> use URI::Escape;
+ $safe = uri_escape(&quot;10% is enough\n&quot;);
+  # $safe is &quot;10%25%20is%20enough%0D&quot;;
+ $str  = uri_unescape($safe);
+  # $str is 10% is enough\n
+</code></pre>
+
+<p>We will want to unescape any data received from the client:</p>
+
+<pre><code>    if ($request =~ m|^GET /(.+)(?:\?(.*))? HTTP/1.[01]|) {
+      my $page = uri_unescape($1);
+      my $querystring = uri_unescape($2);
+</code></pre>
+
+<h3 id="span-id-more-ideas-more-ideas-span"><span id="more_ideas">More Ideas</span></h3>
+
+<p>You might want to embed a Web server into a tool to display the status of a task in a complicated way. Sure, you could just write the file to disk, but that&rsquo;s less fun!</p>
+
+<p>If a task has multiple possible outputs, then you could use the Web server to allow the user to choose between them visually, or pop up a browser at various states of a project to let the user confirm that things are going according to plan.</p>
+
+<p>Speaking of popping up, you don&rsquo;t need to make the user do anything to see the results of the page. You can force the browser to do it for you.</p>
+
+<p>On UNIX systems you can use Mozilla/Netscape&rsquo;s <a href="http://wp.netscape.com/newsref/std/x-remote.html">X-Remote protocol</a>:</p>
+
+<pre><code>    system(q[netscape -remote 'openURL(&quot;http://localhost:9000/&quot;)' &amp;]);
+</code></pre>
+
+<p>Our example code has a port number hardcoded into it. If that port is already being used on your system, then the IO::Socket::INET::new() call will fail. An easy improvement is to loop over a range of ports, or random port numbers, until an available port is found.</p>
+
+<h3 id="span-id-reusable-code-reusable-code-span"><span id="reusable_code">Reusable Code</span></h3>
+
+<p>In some cases, I&rsquo;ve avoided the use of modules in this article. There are many things that could be done with modules including argument handling (CGI.pm), URI/URL parsing (the URI family of modules), and even the HTTP server itself. (HTTP::Daemon)</p>
+
+<p>The code we&rsquo;ve presented here tries to go through the behind the scenes process so you know what&rsquo;s going on.</p>
+
+<p>For quick and dirty servers, HTTP::Daemon is probably easier to use. Here&rsquo;s an example:</p>
+
+<pre><code> use HTTP::Daemon;
+ use HTTP::Status;
+ use Pod::Simple::HTML;
+
+ my $file = shift;
+ die &quot;File $file not found&quot; unless -e $file;
+
+ my $d = HTTP::Daemon-&gt;new || die;
+ print &quot;Please contact me at: &lt;URL:&quot;, $d-&gt;url, &quot;&gt;\n&quot;;
+ while (my $c = $d-&gt;accept) {
+   while (my $r = $c-&gt;get_request) {
+     if ($r-&gt;method eq 'GET') {
+       my $rs = new HTTP::Response(RC_OK);
+       $rs-&gt;content( Pod::Simple::HTML-&gt;filter($file) );
+       $c-&gt;send_response($rs);
+     } else {
+       $c-&gt;send_error(RC_FORBIDDEN)
+     }
+   }
+   $c-&gt;close;
+   undef($c);
+ }
+</code></pre>
+
+<p>The above HTTP::Daemon based server is a simple, single purpose, POD-&gt;HTML converter. I provide it with the name of a pod file to parse, and every time I reload the page, it will pass it through Pod::Simple and display the HTML to the browser.</p>
+
+<p>You&rsquo;ll note it has the same structure as our hand-made examples, but it handles some of the nitty-gritty work for you by encapsulating it in classes.</p>
+
+<p>(If you think that HTTP::Daemon is much simpler than the original, then you should see the first version of this article which used the low-level socket calls.)</p>
+
+<h3 id="span-id-in-conclusion-in-conclusion-span"><span id="in_conclusion">In Conclusion</span></h3>
+
+<p>Embedded hardware is all the rage these days - but embedded software can be quite useful, too. By embedding a Web server into your software you gain lots of possible output options that were difficult to have before. Tables, graphics and color! (Not to mention, output can be viewed by multiple computers.) Embedded Web servers open a world of opportunities to you.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/web">web</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-robert-spier">
+  <div class="col-sm-2">
+    
+    <a href="/authors/robert-spier/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/robert-spier/"><h3>Robert Spier</h3></a>
+    <p></p>
+    <h5><a href="/authors/robert-spier/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2002_09_17_ewispp.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

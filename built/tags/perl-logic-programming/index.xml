@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Logic Programming on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-logic-programming/</link>
+    <description>Recent content in Perl Logic Programming on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 15 Dec 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-logic-programming/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Logic Programming with Perl and Prolog</title>
+      <link>http://localhost:1313/pub/2005/12/15/perl_prolog.html/</link>
+      <pubDate>Thu, 15 Dec 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/12/15/perl_prolog.html/</guid>
+      <description>
+
+&lt;p&gt;Computing languages can be addictive; developers sometimes blame themselves for perceived inadequacies, making apologies for them. That is the case, at least, when one defends his or her language of choice against the criticism of another language&amp;rsquo;s devotee. Regardless, many programmers prefer one language, and typically ground that preference in a respect for that language&amp;rsquo;s strengths.&lt;/p&gt;
+
+&lt;p&gt;Perl has many strengths, but two most often cited are its adaptability and propensity to work as a &amp;ldquo;glue&amp;rdquo; between applications and/or data. However, Perl isn&amp;rsquo;t the only advantageous language: programmers have used C or even assembly to gain speed for years, and intelligent use of SQL allows the keen coder to offload difficult data manipulations onto a database, for example. Prolog is an often overlooked gem that, when combined with the flexibility of Perl, affords the coder powerful ways to address logical relationships and rules. In this article, I hope to provide a glimpse of the benefits that embedded Prolog offers to Perl programmers. Moreover, I hope that my example implementation demonstrates the ease with which one can address complex logical relationships.&lt;/p&gt;
+
+&lt;h4 id=&#34;a-bit-about-prolog&#34;&gt;A Bit About Prolog&lt;/h4&gt;
+
+&lt;p&gt;For the sake of demonstration, I would like to frame a simple problem and solution that illustrate the individual strengths of Perl and Prolog, respectively. However, while I anticipate that the average reader will be familiar with the former, he or she may not be as familiar with the latter. &lt;a href=&#34;http://en.wikipedia.org/wiki/Prolog&#34;&gt;Prolog&lt;/a&gt; is a logic programming language often used in AI work, based upon predicate calculus and first developed in 1972. There are several excellent, free versions of Prolog available today, including &lt;a href=&#34;http://gnu-prolog.inria.fr&#34;&gt;GNU Prolog&lt;/a&gt; and the popular &lt;a href=&#34;http://www.swi-prolog.org&#34;&gt;SWI Prolog&lt;/a&gt;. For the Prolog initiate, I recommend checking out some of the free Prolog tutorials, either those linked from Wikipedia or from &lt;a href=&#34;http://oopweb.com/Prolog/Files/Prolog.html&#34;&gt;OOPWeb&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Prolog and Perl aren&amp;rsquo;t exactly strangers, however. There are several excellent Perl modules available to allow the coder to access the power of Prolog quite easily, including the &lt;a href=&#34;https://metacpan.org/pod/Language::Prolog::SWI&#34;&gt;SWI&lt;/a&gt; module developed by Robert Barta, the &lt;a href=&#34;https://metacpan.org/pod/Language::Prolog::Interpreter&#34;&gt;Interpreter&lt;/a&gt; module by Lee Goddard, the &lt;a href=&#34;https://metacpan.org/pod/Language::Prolog::Yaswi&#34;&gt;Yaswi&lt;/a&gt; modules developed by Salvador Fandino Garcia, and the &lt;a href=&#34;https://metacpan.org/pod/AI::Prolog&#34;&gt;AI::Prolog&lt;/a&gt; module written by Curtis &amp;ldquo;Ovid&amp;rdquo; Poe. Poe has also recently provided a rather nice &lt;a href=&#34;http://users.easystreet.com/ovid/presentations/logic&#34;&gt;introduction to Prolog-in-Perl&lt;/a&gt; in an online-accessible format.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-problem&#34;&gt;The Problem&lt;/h4&gt;
+
+&lt;p&gt;There are many advantages to using Prolog within Perl. In the general sense, each language has its own advantages, and can thus complement the other. Suppose that I am building a testing harness or a logic-based query engine for a web application, where neither language easily provides all of the features I need. In cases such as these, I could use Prolog to provide the logic &amp;ldquo;muscle,&amp;rdquo; and Perl to &amp;ldquo;glue&amp;rdquo; things together with its flexibility and varied, readily available modules on CPAN.&lt;/p&gt;
+
+&lt;p&gt;In my simple demonstration, I am going to posit the requirement that I take genealogical information built by another application and test relationships based upon a set of rules. In this case, the rules are defined in a Prolog file (an interesting intersection here is that both Perl and Prolog typically use the suffix &lt;em&gt;.pl&lt;/em&gt;), while the genealogical information is contained in a &lt;a href=&#34;http://www.graphviz.org/Documentation.php&#34;&gt;Dot&lt;/a&gt; file readable by Graphviz. As such, I am going to make certain assumptions about the format of the data. Next, I am going to assume that I will have a query (web-based, or from yet another application) that will allow users to identify relationships (such as brothers, cousins, etc.).&lt;/p&gt;
+
+&lt;p&gt;Here are my Prolog rules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;is_father(Person)        :- is_parent(Person, _),
+                            is_male(Person).
+is_father(Person, Child) :- is_parent(Person, Child),
+                            is_male(Person).
+
+is_mother(Person)        :- is_parent(Person, _),
+                            is_female(Person).
+is_mother(Person, Child) :- is_parent(Person, Child),
+                            is_female(Person).
+
+ancestor(Ancestor, Person) :- is_parent(Ancestor, Person).
+ancestor(Ancestor, Person) :- is_parent(Ancestor, Child),
+                              ancestor(Child, Person).
+
+is_sibling(Person, Sibling) :- is_parent(X, Person),
+                               is_parent(X, Sibling).
+
+is_cousin(Person, Cousin) :- is_parent(X, Person),
+                             is_parent(Y, Cousin),
+                             is_sibling(X, Y).
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;One advantage to separating my logic is that I can troubleshoot it before I even write the Perl code, loading the rules into a Prolog interpreter or IDE such as &lt;a href=&#34;http://xgp.sourceforge.net&#34;&gt;XGP&lt;/a&gt; (for Macintosh users) and testing them. However, AI::Prolog conveniently provides its own solution: by typing &lt;code&gt;aiprolog&lt;/code&gt; at the command line, I can access a Prolog shell, load in my file, and run some tests.&lt;/p&gt;
+
+&lt;p&gt;At this point, however, I am mostly interested in accessing these rules from Perl. While there are several options for accessing Prolog from within Perl, the &lt;code&gt;AI::Prolog&lt;/code&gt; module is perhaps the easiest with which to start. Moreover, it is quite simple to use, the rules used to build the Prolog database being fed in when creating the &lt;code&gt;AI::Prolog&lt;/code&gt; object. The ability to hand the object constructor a filehandle is not currently supported, but would indeed be a nice improvement. While there are other ways to accomplish the task of reading in the data, such as calling the Prolog command &lt;code&gt;consult&lt;/code&gt;, I will read in the Prolog file (&lt;a href=&#34;http://localhost:1313/media/_pub_2005_12_15_perl_prolog/ancestry.pl&#34;&gt;&lt;em&gt;ancestry.pl&lt;/em&gt;&lt;/a&gt;) and provide a string representation of the contents.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open( PROLOGFILE, &#39;ancestry.pl&#39; ) or die &amp;quot;$! \n&amp;quot;;
+local $/;
+my $prologRules = &amp;lt;PROLOGFILE&amp;gt;;
+close( PROLOGFILE );
+
+my $prologDB = AI::Prolog-&amp;gt;new( $prologRules );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now that I have loaded my Prolog database, I need to feed it some more information. I need to take my data, in Dot format, and translate it into something that my Prolog interpreter will understand. There are some modules out there that may be helpful, such as &lt;a href=&#34;http://localhost:1313/pub/2004/09/23/fsms.html&#34;&gt;DFA::Simple&lt;/a&gt;, but since I can assume that my data will look a certain way&amp;ndash;having written it from my other application&amp;ndash;I will build my own simple parser. First, I am going to take a look at the data.&lt;/p&gt;
+
+&lt;p&gt;The visualization program created the diagram in Figure 1 from the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;digraph family_tree {
+   { jill [ color = pink ]
+     rob  [ color = blue ] } -&amp;gt; { ann [ color = pink ]
+                                  joe [ color = blue ] } ;
+
+   { sue [ color = pink ] 
+     dan [ color = blue ] } -&amp;gt; { sara [ color = pink ]
+                                 mike [ color = blue ] } ;
+
+   { nan [ color = pink ]
+     tom [ color = blue ] } -&amp;gt; sue ;
+
+   { nan
+     jim [ color = blue ] } -&amp;gt; rob ;
+
+   { kate  [ color = pink ]
+     steve [ color = blue ] } -&amp;gt; dan ;
+
+   { lucy  [ color = pink ]
+     chris [ color = blue ] } -&amp;gt; jill ;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_12_15_perl_prolog/family_tree.gif&#34; alt=&#34;a family tree&#34; width=&#34;500&#34; height=&#34;192&#34; /&gt;
+&lt;em&gt;Figure 1. A family tree from the sample data&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;There are a few peculiarities worth mentioning here. First, it may seem that the all-lower-case names are a bit strange, but I am already preparing for the convention that data in Prolog is typically lower-case. Also, I inserted an extra space before the semicolons in an effort to make matching them easier. While both of these conventions are easy to code around, they seems to create extra questions when illustrating a point. Therefore, assume that the above Dot snippet illustrates the range of possible formats in the example. While the &amp;ldquo;real-world examples&amp;rdquo; may provide a richer set of possibilities, the fact that applications with defined behavior generated this data will limit the edge cases.&lt;/p&gt;
+
+&lt;p&gt;Returning to the data, it will be easiest to parse the Dot data using a simple state machine. Previously, I had defined some constants to represent states:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use constant { modInit   =&amp;gt; 0,
+               modTag    =&amp;gt; 1,
+               modValue  =&amp;gt; 2 };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Basically, I assume that anything on the left-hand side of the &lt;code&gt;=&lt;/code&gt; is a parent and anything on the right is a child. Additionally, modifiers (in this case only color) begin with a left square-bracket and males have the &lt;code&gt;blue&lt;/code&gt; modifier, whereas females are &lt;code&gt;pink&lt;/code&gt;. I know that I have completed a parent-child relationship &amp;ldquo;block&amp;rdquo; when I hit the semicolon. Past these stipulations, if it isn&amp;rsquo;t a character I know that I can safely ignore, then it must be a noun.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub parse_dotFile {
+   ##----------------------------------------
+   ##  Examine data a word at a time
+   ##----------------------------------------
+   my @dotData = split( /\s+/, shift() );
+
+   my ( $familyBlock, $personName, @prologQry ) = ();
+   my $personModPosition                        = modInit;
+   my $relationship                             = &#39;parent&#39;;
+
+   for ( my $idx = 3; $idx &amp;lt; @dotData; $idx++ ) {
+      chomp( $dotData[$idx] );
+
+      SWITCH: {
+
+         ## ignore
+         if ( $dotData[ $idx ] =~ /[{}=\]]/ ) {
+            last SWITCH; }
+
+         ## begin adding attributes
+         if ( $dotData[ $idx ] eq &#39;[&#39; ) {
+            $personModPosition = modTag;
+            last SWITCH; }
+
+         ## switch from parents to children
+         if ( $dotData[ $idx ] eq &#39;-&amp;gt;&#39; ) {
+            $relationship = &#39;child&#39;;
+            last SWITCH; }
+
+         ## end of this block
+         if ( $dotData[ $idx ] =~ /\;/ ) {
+           ##-----------------------------------------
+           ##  Generate is_parent rules for Prolog
+           ##-----------------------------------------
+            foreach my $parentInBlock ( @{ $familyBlock-&amp;gt;{ parent } } ) {
+               foreach my $childInBlock ( @{ $familyBlock-&amp;gt;{ child } } ) {
+                  push( @prologQry,
+                      &amp;quot;is_parent(${parentInBlock}, ${childInBlock})&amp;quot; );
+               }
+            }
+            $familyBlock = ();
+            $relationship = &#39;parent&#39;;
+            last SWITCH; }
+
+         ## I have a noun, need to set something
+         else {
+
+            ## I have a modifier tag, next is the value
+            if ( $personModPosition == modTag ) {
+               $personModPosition = modValue;
+               last SWITCH;
+
+            } elsif ( $personModPosition == modValue ) {
+                 ##--------------------------------------
+                 ##  Set modifier value and reset
+                 ##  We currently assume it is color
+                 ##--------------------------------------
+               if ( $dotData[ $idx ] eq &#39;blue&#39; ) {
+
+                  push( @prologQry, &amp;quot;is_male(${personName})&amp;quot; );
+               } else {
+                  push( @prologQry, &amp;quot;is_female(${personName})&amp;quot; );
+               }
+               $personModPosition = modInit;
+               $personName        = ();
+               last SWITCH;
+            } else {
+                 ##--------------------------------------
+                 ##  Grab the name and id as parent or child
+                 ##--------------------------------------
+               $personName = $dotData[ $idx ];
+               push( @{ $familyBlock-&amp;gt;{ $relationship } }, $personName );
+            }
+         }
+      }
+   }
+
+   return( \@prologQry );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Rather than simply pushing my new rules into the Prolog interpreter directly, I return an array that contains the full ruleset. I am doing this so that I can easily dump it to a file for troubleshooting purposes. I can simply write the rules to a file, and consult this file in a Prolog shell.&lt;/p&gt;
+
+&lt;p&gt;With a subroutine to parse my Dot file into Prolog rules, I can now push those rules into the interpreter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   ##-------------------------------------------
+   ##  Read in Dot file containing relations
+   ##  and feed it into the Prolog instance
+   ##-------------------------------------------
+   open( DOTFILE, &#39;family_tree.dot&#39; ) or die &amp;quot;$! \n&amp;quot;;
+   my $parsedDigraph = parse_dotFile( &amp;lt;DOTFILE&amp;gt; );
+   close( DOTFILE );
+
+   foreach ( @$parsedDigraph ) {
+      $prologDB-&amp;gt;do(&amp;quot;assert($_).&amp;quot;);
+   }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I can easily query my Prolog database using the query method in &lt;code&gt;AI::Prolog&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   ##-------------------------------------------
+   ##  Run the query
+   ##-------------------------------------------
+   $prologDB-&amp;gt;query( &amp;quot;is_cousin(joe, sara).&amp;quot; );
+   while (my $results = $prologDB-&amp;gt;results) { print &amp;quot;@$results\n&amp;quot;; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;what-next&#34;&gt;What Next?&lt;/h3&gt;
+
+&lt;p&gt;Even though this is a trivial example, I think that it provides an idea of the powerful ways in which Perl can be supplemented with Prolog. Just within the context of evaluating genealogical data (a mainstay of Prolog tutorials and examples), it seems that a Perl/Prolog application that uses genealogical data from open source genealogical software or websites would be a killer application. The possibilities seem endless: rules based upon Google maps, mining information from online auctions or news services, or even harvesting information for that new test harness are all tremendous opportunities for the marriage of Perl and Prolog.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

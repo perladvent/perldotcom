@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Database Testing on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/database-testing/</link>
+    <description>Recent content in Database Testing on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 21 Jul 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/database-testing/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>An Introduction to Test::MockDBI</title>
+      <link>http://localhost:1313/pub/2005/07/21/test_mockdbi.html/</link>
+      <pubDate>Thu, 21 Jul 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/07/21/test_mockdbi.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;prelude&#34;&gt;Prelude&lt;/h3&gt;
+
+&lt;p&gt;How do you test DBI programs:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Without having to modify your current program code or environment settings?&lt;/li&gt;
+&lt;li&gt;Without having to set up multiple test databases?&lt;/li&gt;
+&lt;li&gt;Without separating your test data from your test code?&lt;/li&gt;
+&lt;li&gt;With tests for every bizarre value your program will ever have to face?&lt;/li&gt;
+&lt;li&gt;With complete control over all database return values, along with all DBI method return values?&lt;/li&gt;
+&lt;li&gt;With an easy, regex-based rules interface?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You test with &lt;a href=&#34;https://metacpan.org/pod/Test::MockDBI&#34;&gt;Test::MockDBI&lt;/a&gt;, that&amp;rsquo;s how. Test::MockDBI provides all of this by using Test::MockObject::Extends to mock up the entire DBI API. Without a solution like Test::MockDBI&amp;ndash;a solution that enables direct manipulation of the DBI&amp;ndash;you&amp;rsquo;ll have to trace DBI methods through a series of test databases.&lt;/p&gt;
+
+&lt;p&gt;You can make test databases work, but:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You&amp;rsquo;ll need multiple (perhaps many) databases when you need multiple sets of mutually inconsistent values for complete test coverage.&lt;/li&gt;
+&lt;li&gt;Some DBI failure modes are impossible to generate through any test database.&lt;/li&gt;
+&lt;li&gt;Depending on the database toolset available, it may be difficult to insert all necessary test values&amp;ndash;for example, Unicode values in ASCII applications, or bizarre file types in a document-manager application.&lt;/li&gt;
+&lt;li&gt;Test databases, by definition, are separate from their corresponding test code. This increases the chance that the test code and the test data will fall out of sync with each other.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Using Test::MockDBI avoids these problems. Read on to learn how Test::MockDBI eases the job of testing DBI applications.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-mock-up-of-the-entire-dbi&#34;&gt;A Mock Up of the Entire DBI&lt;/h3&gt;
+
+&lt;p&gt;Test::MockDBI mocks up the entire DBI API by using &lt;a href=&#34;https://metacpan.org/pod/Test::MockObject::Extends&#34;&gt;Test::MockObject::Extends&lt;/a&gt; to substitute a Test::MockObject::Extends object in place of the &lt;a href=&#34;https://metacpan.org/pod/DBI&#34;&gt;DBI&lt;/a&gt;. A feature of this approach is that if the DBI API changes (and you use that change), you will notice during testing if you haven&amp;rsquo;t upgraded Test::MockDBI, as your program will complain about missing DBI API method(s).&lt;/p&gt;
+
+&lt;p&gt;Mocking up the entire DBI means that you can add the DBI testing code into an existing application without changing the initial application code&amp;ndash;using Test::MockDBI is entirely transparent to the rest of your application, as it neither knows nor cares that it&amp;rsquo;s using Test::MockDBI in place of the DBI. This property of transparency is what drove me to develop Test::MockDBI, as it meant I could add the Test::MockDBI DBI testing code to existing client applications without modifying the existing code (handy, for us consultants).&lt;/p&gt;
+
+&lt;p&gt;Further enhancing Test::MockDBI&amp;rsquo;s transparency is the &lt;code&gt;DBI testing type&lt;/code&gt; class value. Testing is only enabled when the DBI testing type is non-zero, so you can just leave the DBI testing code additions in your production code&amp;ndash;users will not even know about your DBI testing code unless you tell them.&lt;/p&gt;
+
+&lt;p&gt;Mocking up the entire DBI also means that you have complete control of the DBI&amp;rsquo;s behavior during testing. Often, you can simulate a &lt;code&gt;SELECT&lt;/code&gt; DBI transaction with a simple state machine that returns just a few rows from the (mocked up) database. Test::MockDBI lets you use a &lt;code&gt;CODEREF&lt;/code&gt; to supply database return values, so you can easily put a simple state machine into the &lt;code&gt;CODEREF&lt;/code&gt; to supply the necessary database values for testing. You could even put a delay loop into the &lt;code&gt;CODEREF&lt;/code&gt; when you need to perform speed tests on your code.&lt;/p&gt;
+
+&lt;h3 id=&#34;rules-based-dbi-testing&#34;&gt;Rules-Based DBI Testing&lt;/h3&gt;
+
+&lt;p&gt;You control the mocked-up DBI of Test::MockDBI with one or more rules that you insert as Test::MockDBI method calls into your program. The default DBI method values provided by Test::MockDBI make the database appear to have a hole in the bottom of it&amp;ndash;all method calls return OK, but you can&amp;rsquo;t get any data out of the database. Rules for DBI methods that return database values (the &lt;code&gt;fetch*()&lt;/code&gt; and &lt;code&gt;select*()&lt;/code&gt; methods) can use either a value that they return directly for matching method calls, or a &lt;code&gt;CODEREF&lt;/code&gt; called to provide a value each time that rule fires. A rule matches when its DBI testing type is the current testing type and the current SQL matches the rule&amp;rsquo;s regular expression. Rules fire in the order in which you declare them, so usually you want to order your rules from most-specific to least-specific.&lt;/p&gt;
+
+&lt;p&gt;The DBI testing type is an unsigned integer matching &lt;code&gt;/^d+$/&lt;/code&gt;. When the DBI testing type is zero, there will be no DBI testing (or at least, no mocked-up DBI testing) performed, and the program will use the DBI normally. A zero DBI testing type value in a rule means the rule could fire for any non-zero DBI testing type value&amp;ndash;that is, zero is the wildcard DBI testing type value for rules. Set the DBI testing type either by a first command-line argument of the form:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;--dbitest[=DTT]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;where the optional &lt;code&gt;DTT&lt;/code&gt; is the DBI testing type (defaulting to one), or through Test::MockDBI&amp;rsquo;s &lt;code&gt;set_dbi_test_type()&lt;/code&gt; method. Setting the DBI testing type through a first command-line argument has the advantage of requiring no modifications to the code under test, as this command-line processing is done so early (during &lt;code&gt;BEGIN&lt;/code&gt; time for Test::MockDBI) that the code under test should be ignorant of whether this processing ever happened.&lt;/p&gt;
+
+&lt;h3 id=&#34;dbi-return-values&#34;&gt;DBI Return Values&lt;/h3&gt;
+
+&lt;p&gt;Test::MockDBI defaults to returning a success (true) value for all DBI method calls. This fits well with the usual techniques of DBI programming, where the first DBI error causes the program to stop what it is doing. Test::MockDBI&amp;rsquo;s &lt;code&gt;bad_method()&lt;/code&gt; method creates a rule that forces a failure return value on the specified DBI method when the current DBI testing type and SQL match those of the rule. Arbitrary DBI method return value failures like these are difficult (at best) to generate with a test database.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI&amp;rsquo;s &lt;code&gt;set_retval_scalar()&lt;/code&gt; and &lt;code&gt;set_retval_array()&lt;/code&gt; methods create rules for what database values to return. Set rules for scalar return values (&lt;code&gt;arrayrefs&lt;/code&gt; and &lt;code&gt;hashrefs&lt;/code&gt;) with &lt;code&gt;set_retval_scalar()&lt;/code&gt; and for array return value rules with &lt;code&gt;set_retval_array()&lt;/code&gt;. You can supply a value to be returned every time the rule matches, which is good when extracting single rows out of the database, such as configuration parameters. Alternatively, pass a &lt;code&gt;CODEREF&lt;/code&gt; that will be called each time the rule fires to return a new value. Commonly, with &lt;code&gt;SELECT&lt;/code&gt; statements, the DBI returns one or more rows, then returns an empty row to signify the end of the data. A &lt;code&gt;CODEREF&lt;/code&gt; can incorporate a state machine that implements this &amp;ldquo;return 1+ rows, then a terminator&amp;rdquo; behavior quite easily. Having individual state machines for each rule is much easier to develop with than having one master state machine embedded into Test::MockDBI&amp;rsquo;s core. (An early alpha of Test::MockDBI used the master state machine approach, so I have empirical evidence of this result&amp;ndash;I am not emptily theorizing here.)&lt;/p&gt;
+
+&lt;p&gt;Depending on what tools you have for creating your test databases, it may be difficult to populate the test database with all of the values you need to test against. Although it is probably not so much the case today, only a few years ago populating a database with Unicode was difficult, given the national-charset-based tools of the day. Even today, a document management system might be difficult to populate with weird file types. Test::MockDBI makes these kinds of tests much easier to carry out, as you directly specify the data for the mock database to return rather than using a separate test database.&lt;/p&gt;
+
+&lt;p&gt;This ease of database value testing also applies when you need to test against combinations of database values that are unlikely to occur in practice (the old &amp;ldquo;comparing apples to battleships&amp;rdquo; problem). If you need to handle database value corruption&amp;ndash;as in network problems causing the return of partial values from a Chinese database when the program is in the U.S.&amp;ndash;this ability to completely specify the database return values could be invaluable in testing. Test::MockDBI lets you take complete control of your database return values without separating test code and test data.&lt;/p&gt;
+
+&lt;h3 id=&#34;simplicity-test-mockdbi-s-standard-output-based-interface&#34;&gt;Simplicity: Test::MockDBI&amp;rsquo;s Standard-Output-Based Interface&lt;/h3&gt;
+
+&lt;p&gt;This modern incarnation of the age-old stubbed-functions technique also uses the old technique of &amp;ldquo;&lt;code&gt;printf()&lt;/code&gt; and scratch head&amp;rdquo; as its output interface. This being Perl we are working with, and not FORTRAN IV (thank goodness), we have multiple options beyond the use of unvarnished standard output.&lt;/p&gt;
+
+&lt;p&gt;One option that I think integrates well with DBI-using module testing is to redirect standard output into a string using &lt;a href=&#34;https://metacpan.org/pod/IO::String&#34;&gt;IO::String&lt;/a&gt;. You can then match the string against the regex you are looking for. As you have already guessed, use of pure standard output integrates well with command-line program testing.&lt;/p&gt;
+
+&lt;p&gt;What you will look for, irrespective of where your code actually looks, is the output of each DBI method as it executes&amp;ndash;the method name and arguments&amp;ndash;along with anything else your code writes to standard output.&lt;/p&gt;
+
+&lt;h3 id=&#34;bind-test-data-to-test-code&#34;&gt;Bind Test Data to Test Code&lt;/h3&gt;
+
+&lt;p&gt;Because DBI and database return values are bound to your test programs when using Test::MockDBI, there is less risk of test data getting out of sync with the test code. A separate test database introduces another point of failure in your testing process. Multiple test databases add yet another point of failure for each database. Whatever you use to generate the test databases also introduces another point of failure for each database. I can imagine cases where special-purpose programs for generating test databases might create multiple points of failure, especially if the programs have to integrate data from multiple sources to generate the test data (such as a VMS Bill of Materials database and a Solaris PCB CAD file for a test database generation program running on Linux).&lt;/p&gt;
+
+&lt;p&gt;One of the major advances in software engineering is the increasing ability to gather and control related information together&amp;ndash;the 1990s advance of object-oriented programming in common languages is a testimony to this, from which we Perl programmers reap the benefits in our use of CPAN. For many testing purposes, there is no need for separate test databases. Without that need for a separate test database, separating test data from test code only complicates the testing process. Test::MockDBI lets you bind together your test code and test data into one nice, neat package. Binding is even closer than code and comments, as comments can get out of sync with their code, while the test code and test data for Test::MockDBI cannot get out of sync too far without causing their tests to fail unexpectedly.&lt;/p&gt;
+
+&lt;h3 id=&#34;when-to-use-test-mockdbi&#34;&gt;When to Use Test::MockDBI&lt;/h3&gt;
+
+&lt;p&gt;DBI&amp;rsquo;s &lt;code&gt;trace()&lt;/code&gt;, &lt;a href=&#34;https://metacpan.org/pod/DBD::Mock&#34;&gt;DBD::Mock&lt;/a&gt;, and Test::MockDBI are complementary solutions to the problem of testing DBI software. DBI&amp;rsquo;s &lt;code&gt;trace()&lt;/code&gt; is a pure tracing mechanism, as it does not change the data returned from the database or the DBI method return values. DBD::Mock works at level of a database driver, so you have to look at your DBI testing from the driver&amp;rsquo;s point of view, rather than the DBI caller&amp;rsquo;s point of view. DBD::Mock also requires that your code supports configurable DBI DSNs, which may not be the case in all circumstances, especially when you must maintain or enhance legacy DBI software.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI works at the DBI caller&amp;rsquo;s level, which is (IMHO) more natural for testing DBI-using software (possibly a matter of taste: TMTOWTDI). Test::MockDBI&amp;rsquo;s interface with your DBI software is a set of easy-to-program, regex-based rules, which incorporate a lot of power into one or a few lines of code, thereby using Perl&amp;rsquo;s built-in regex support to best advantage. This binds test data and test code tightly together, reducing the chance of synchronization problems between the test data and the test code. Using Test::MockDBI does not require modifying the current code of the DBI software being tested, as you only need additional code to enable Test::MockDBI-driven DBI testing.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI takes additional coding effort when you need to test DBI program performance. It may be that for performance testing, you want to use test databases rather than Test::MockDBI. If you were in any danger of your copy of &lt;em&gt;DBI.pm&lt;/em&gt; becoming corrupted, I don&amp;rsquo;t know whether you could adequately test that condition with Test::MockDBI, depending on the corruption. You would probably have to create a special mock DBI to test corrupted DBI code handling, though you could start building the special mock DBI by inheriting from Test::MockDBI without any problems from Test::MockDBI&amp;rsquo;s design, as it should be inheritance-friendly.&lt;/p&gt;
+
+&lt;h3 id=&#34;some-examples&#34;&gt;Some Examples&lt;/h3&gt;
+
+&lt;p&gt;To make:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh = DBI-&amp;gt;connect(&amp;quot;dbi:AZ:universe&amp;quot;, &amp;quot;mortal&amp;quot;, &amp;quot;(none)&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;fail, add the rule:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;bad_method(&amp;quot;connect&amp;quot;, 1,
+    &amp;quot;CONNECT TO dbi:AZ:universe AS mortal WITH \\(none\\)&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(where &lt;code&gt;$tmd&lt;/code&gt; is the only Test::MockDBI object, which you obtain through Test::MockDBI&amp;rsquo;s &lt;code&gt;get_instance()&lt;/code&gt; method).&lt;/p&gt;
+
+&lt;p&gt;To make a SQL &lt;code&gt;SELECT&lt;/code&gt; failure when using &lt;code&gt;DBI::execute()&lt;/code&gt;, use the rule:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;bad_method(&amp;quot;execute&amp;quot;, 1,
+    &amp;quot;SELECT zip_plus_4 from zipcodes where state=&#39;IN&#39;&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This rule implies that:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;DBI::connect()&lt;/code&gt; &lt;code&gt;succeeded()&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;DBI::prepare()&lt;/code&gt; &lt;code&gt;succeeded()&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;But the &lt;code&gt;DBI::execute()&lt;/code&gt; failed as it should.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A common use of direct scalar return values is returning configuration data, such as a U.S. zip code for an address:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;set_retval_scalar(1,
+ &amp;quot;zip5.*&#39;IN&#39;.*&#39;NOBLESVILLE&#39;.*&#39;170 WESTFIELD RD&#39;&amp;quot;,
+ [ 46062 ]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This demonstrates using a regular expression, as matching SQL could then look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT
+  zip5
+FROM
+  zipcodes
+WHERE
+  state=&#39;IN&#39; AND
+  city=&#39;NOBLESVILLE&#39; AND
+  street_address=&#39;170 WESTFIELD RD&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the rule would match.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;SELECT&lt;/code&gt;s that return one or more rows from the database are the common case:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $counter = 0;                    # name counter
+sub possibly_evil_names {
+    $counter++;
+    if ($counter == 1) {
+        return (&#39;Adolf&#39;, &#39;Germany&#39;);
+    } elsif ($counter == 2) {
+        return (&#39;Josef&#39;, &#39;U.S.S.R.&#39;);
+    } else {
+        return ();
+    }
+}
+$tmd-&amp;gt;set_retval_array(1,
+   &amp;quot;SELECT\\s+name,\\s+country.*possibly_evil_names&amp;quot;,
+   \&amp;amp;possibly_evil_names);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using a &lt;code&gt;CODEREF&lt;/code&gt; (&lt;code&gt;\&amp;amp;possibly_evil_names&lt;/code&gt;) lets you easily add the state machine for implementing a return of two names followed by an empty array (because the code uses &lt;code&gt;fetchrow_array()&lt;/code&gt; to retrieve each row). SQL for this query could look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT
+  name,
+  country
+FROM
+  possibly_evil_names
+WHERE
+  year &amp;lt; 2000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;Albert Einstein once said, &amp;ldquo;Everything should be made as simple as possible, but no simpler.&amp;rdquo; This is what I have striven for while developing Test::MockDBI&amp;ndash;the simplest possible useful module for testing DBI programs by mocking up the entire DBI.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI gives you:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Complete control of DBI return values and database-returned data.&lt;/li&gt;
+&lt;li&gt;Returned database values from either direct value specifications or &lt;code&gt;CODEREF&lt;/code&gt;-generated values.&lt;/li&gt;
+&lt;li&gt;Easy, regex-based rules that govern the DBI&amp;rsquo;s behavior, along with intelligent defaults for the common cases.&lt;/li&gt;
+&lt;li&gt;Complete transparency to other code, so the code under test neither knows nor cares that you are testing it with Test::MockDBI.&lt;/li&gt;
+&lt;li&gt;Test data tightly bound to test code, which promotes cohesiveness in your testing environment, thereby reducing the chance that your tests might silently fail due to loss of synchronization between your test data and your test code.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Test::MockDBI is a valuable addition to the arsenal of DBI testing techniques.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Code Kata: Testing Databases</title>
+      <link>http://localhost:1313/pub/2005/02/10/database_kata.html/</link>
+      <pubDate>Thu, 10 Feb 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/02/10/database_kata.html/</guid>
+      <description>
+
+&lt;p&gt;Testing code that uses a database can be tricky. The most common solution is to set up a test database with test data and run your tests against this. This, of course, requires bookkeeping code to keep your test database in the proper state for all your tests to run without adversely affecting one another. This can range from dropping and recreating the test database for each test, to a more granular adding and deleting at the row level. Either way, you are introducing non-test code into your tests that open up possibilities for contamination. Ultimately, because you have control over the environment in which your tests run, you can manage this despite the occasional headache.&lt;/p&gt;
+
+&lt;p&gt;The real fun only starts when you decide that you should release your masterpiece unto the world at large. As any CPAN author will tell you, it is absolutely impossible to control the environment other people will run your code in once you release it. Testing database code in such a hostile environment can be frustrating for both the module developer and the module installer. A common approach is to allow the user to specify the specific database connection information as either environment variables or command-line arguments, skipping the tests unless those variables are present. Another approach is to use the lightweight and very portable &lt;a href=&#34;http://www.sqlite.org/&#34;&gt;SQLite&lt;/a&gt; as your test database (of course, testing first that the user has installed SQLite). While these solutions do work, they can often be precarious, and in the end will increase the number of possible installation problems you, as module author, could face.&lt;/p&gt;
+
+&lt;p&gt;What is a module author to do?&lt;/p&gt;
+
+&lt;h3 id=&#34;dbd-mock-testing-kata&#34;&gt;DBD::Mock Testing Kata&lt;/h3&gt;
+
+&lt;p&gt;This code kata introduces an alternate approach to testing database code, that of using mock-objects, and specifically of using the &lt;a href=&#34;https://metacpan.org/pod/DBD::Mock&#34;&gt;DBD::Mock&lt;/a&gt; mock DBI driver. Before showing off any code, I want to explain the basic philosophy of Mock Objects as well as where DBD::Mock fits in.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-are-mock-objects&#34;&gt;What are Mock Objects?&lt;/h4&gt;
+
+&lt;p&gt;When writing unit tests, it is best to try to isolate what you are testing as much as possible. You want to be sure that not only are you &lt;em&gt;only&lt;/em&gt; testing the code in question, but that a bug or issue in code outside what you are testing will not introduce false negatives in your tests. Unfortunately, this ideal of a completely decoupled design is just an ideal. In real-world practice, code has dependencies that you cannot remove for testing. This is where Mock Objects come in.&lt;/p&gt;
+
+&lt;p&gt;Mock Objects are exactly what they sound like; they are &amp;ldquo;mocked&amp;rdquo; or &amp;ldquo;fake&amp;rdquo; objects. Good polymorphic thought says that you should be able to swap out one object for another object implementing the same interface. Mock Objects take advantage of this by allowing you to substitute the &lt;em&gt;most minimally mocked implementation of an object possible&lt;/em&gt; for the real one during testing. This allows you to concentrate on the code being tested without worrying about silly things, such as whether your database is still running or if there is a database available to test against.&lt;/p&gt;
+
+&lt;h4 id=&#34;where-does-dbd-mock-fit-in&#34;&gt;Where Does DBD::Mock Fit In?&lt;/h4&gt;
+
+&lt;p&gt;DBD::Mock is a mock DBI Driver that allows you to test code which uses DBI without needing to worry about the who, what, when, and where of a database. DBD::Mock also helps to reduce the amount of database bookkeeping code by doing away with the database entirely, instead keeping a detailed record of all the actions performed by your code through DBI. Of course, database interaction/communication is not only one way, so DBD::Mock also allows you to seed the driver with mock record sets. DBD::Mock makes it possible to fake most (non-vendor specific) database interaction for the purpose of writing tests. For more detailed documentation I suggest reading the DBD::Mock POD documentation itself.&lt;/p&gt;
+
+&lt;h4 id=&#34;sample-dbi-code&#34;&gt;Sample DBI Code&lt;/h4&gt;
+
+&lt;p&gt;In the tradition of past Perl Code katas here is some simplified code to write your tests against. This code should be simple enough to understand, but also complex enough to show the real usefulness of DBD::Mock.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package MyApp::Login;
+
+use DBI;
+
+my $MAX_LOGIN_FAILURES = 3;
+
+sub login {
+  my ($dbh, $u, $p) = @_;
+  # look for the right username and password
+  my ($user_id) = $dbh-&amp;gt;selectrow_array(
+      &amp;quot;SELECT user_id FROM users WHERE username = &#39;$u&#39; AND password = &#39;$p&#39;&amp;quot;
+  );
+  # if we find one, then ...
+  if ($user_id) {
+      # log the event and return success
+      $dbh-&amp;gt;do(
+          &amp;quot;INSERT INTO event_log (event) VALUES(&#39;User $user_id logged in&#39;)&amp;quot;
+      );
+      return &#39;LOGIN SUCCESSFUL&#39;;
+  }
+  # if we don&#39;t find one then ...
+  else {
+      # see if the username exists ...
+      my ($user_id, $login_failures) = $dbh-&amp;gt;selectrow_array(
+          &amp;quot;SELECT user_id, login_failures FROM users WHERE username = &#39;$u&#39;&amp;quot;
+      );
+      # if we do have a username, and the password doesnt match then
+      if ($user_id) {
+          # if we have not reached the max allowable login failures then
+          if ($login_failures &amp;lt; $MAX_LOGIN_FAILURES) {
+              # update the login failures
+              $dbh-&amp;gt;do(qq{
+                  UPDATE users
+                  SET login_failures = (login_failures + 1)
+                  WHERE user_id = $user_id
+              });
+              return &#39;BAD PASSWORD&#39;;
+          }
+          # otherwise ...
+          else {
+              # we must update the login failures, and lock the account
+              $dbh-&amp;gt;do(
+                  &amp;quot;UPDATE users SET login_failures = (login_failures + 1), &amp;quot; .
+                  &amp;quot;locked = 1 WHERE user_id = $user_id&amp;quot;
+              );
+              return &#39;USER ACCOUNT LOCKED&#39;;
+          }
+      }
+      else {
+          return &#39;USERNAME NOT FOUND&#39;;
+      }
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are four distinct paths through this code, each one resulting in one of the four return messages; &lt;code&gt;LOGIN SUCCESSFUL&lt;/code&gt;, &lt;code&gt;BAD PASSWORD&lt;/code&gt;, &lt;code&gt;USER ACCOUNT LOCKED&lt;/code&gt;, and &lt;code&gt;USERNAME NOT FOUND&lt;/code&gt;. See if you can write tests enough to cover all four paths. Feel free to use &lt;a href=&#34;https://metacpan.org/pod/Devel::Cover&#34;&gt;Devel::Cover&lt;/a&gt; to verify this.&lt;/p&gt;
+
+&lt;p&gt;Armed with your knowledge of DBD::Mock, go forth and write tests! The next page describes DBD::Mock in more detail and gives some strategies for writing the appropriate tests. You should spend between 30 and 45 minutes writing the tests before continuing.&lt;/p&gt;
+
+&lt;h3 id=&#34;tips-tricks-and-suggestions&#34;&gt;Tips, Tricks, and Suggestions&lt;/h3&gt;
+
+&lt;p&gt;Because DBD::Mock is an implementation of a DBD driver, its usage is familiar to that of DBI. DBD::Mock is unique in its ability to mock the database interaction. The following is a short introduction to these features of DBD::Mock.&lt;/p&gt;
+
+&lt;p&gt;Fortunately, connecting to the database is the only part of your regular DBI code which needs to be DBD::Mock specific, because DBI chooses the driver based upon the dsn string given it. To do this with DBD::Mock:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because DBI will not actually connecting to a real database here, you need no database name, username, or password. The next thing to do is to seed the database driver with a result set. Do this through the &lt;code&gt;mock_add_resultset&lt;/code&gt; attribute of the &lt;code&gt;$dbh&lt;/code&gt; handle.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_add_resultset} = [
+  [ &#39;user_id&#39;, &#39;username&#39;, &#39;password&#39; ],
+  [ 1, &#39;stvn&#39;, &#39;****&#39; ]
+];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;DBD::Mock will return this particular result set the next time a statement executes on this &lt;code&gt;$dbh&lt;/code&gt;. Note that the first row is the column names, while all subsequent rows are data. Of course, in some cases, this is not specific enough, and so DBD::Mock also allows the binding of a particular SQL statement to a particular result set:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_add_resultset} = {
+  sql     =&amp;gt; &amp;quot;SELECT * FROM user_table WHERE username = &#39;stvn&#39;&amp;quot;,
+  results =&amp;gt; [[ &#39;user_id&#39;, &#39;username&#39;, &#39;password&#39; ],
+              [ 1, &#39;stvn&#39;, &#39;****&#39; ]]
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now whenever the statement &lt;code&gt;SELECT * FROM user_table WHERE username = &#39;stvn&#39;&lt;/code&gt; executes, DBD::Mock will return this result set DBD::Mock can also specify the number of rows affected for &lt;code&gt;UPDATE&lt;/code&gt;, &lt;code&gt;INSERT&lt;/code&gt;, and &lt;code&gt;DELETE&lt;/code&gt; statements using &lt;code&gt;mock_add_resultset&lt;/code&gt; as well. For example, here DBI will see the &lt;code&gt;DELETE&lt;/code&gt; statement as having deleted 3 rows of data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_add_resultset} = {
+  sql     =&amp;gt; &amp;quot;DELETE FROM session_table WHERE active = 0&amp;quot;,
+  results =&amp;gt; [[ &#39;rows&#39; ], [], [], []]
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;DBD::Mock version 0.18 introduced the DBD::Mock::Session object, which allows the scripting of a &lt;code&gt;session&lt;/code&gt; of database interaction &amp;ndash; and DBD::Mock can verify that the session executes properly. Here is an example of DBD::Mock::Session:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_session} = DBD::Mock::Session-&amp;gt;new(&#39;session_reaping&#39; =&amp;gt; (
+  {
+  statement =&amp;gt; &amp;quot;UPDATE session_table SET active = 0 WHERE timeout &amp;lt; NOW()&amp;quot;,
+  results  =&amp;gt; [[ &#39;rows&#39; ], [], [], []]
+  },
+  {
+  statement =&amp;gt; &amp;quot;DELETE FROM session_table WHERE active = 0&amp;quot;,
+  results  =&amp;gt; [[ &#39;rows&#39; ], [], [], []]
+  }
+));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The hash reference given for each statement block in the session should look very similar to the values added with &lt;code&gt;mock_add_resultset&lt;/code&gt;, with the only difference in the substitution of the word &lt;code&gt;statement&lt;/code&gt; for the word &lt;code&gt;sql&lt;/code&gt;. DBD::Mock will assure that the first statement run matches the first statement in the session, raising an error (in the manner specified by &lt;code&gt;PrintError&lt;/code&gt; or &lt;code&gt;RaiseError&lt;/code&gt;) if not. DBD::Mock will then continue through the session until it reaches the last statement, verifying that each statement run matches in the order specified. You can also use regular expression references and code references in the &lt;code&gt;statement&lt;/code&gt; slots of DBD::Mock::Session for even more sophisticated comparisons. See the documentation for more details of how those features work.&lt;/p&gt;
+
+&lt;p&gt;After you seed a &lt;code&gt;$dbh&lt;/code&gt; with result sets, the next step is to run the DBI code which will use those result sets. This is just normal regular everyday DBI code, with nothing unique to DBD::Mock.&lt;/p&gt;
+
+&lt;p&gt;After all the DBI code runs, it is possible to then go through all the statements that have been executed and examine them using the array of DBD::Mock::StatementTrack objects found in the &lt;code&gt;mock_all_history&lt;/code&gt; attribute of your &lt;code&gt;$dbh&lt;/code&gt;. Here is a simple example of printing information about each statement run and the bind parameters used:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $history = $dbh-&amp;gt;{mock_all_history};
+foreach my $s (@{$history}) {
+  print &amp;quot;Statement  : &amp;quot; . $s-&amp;gt;statement() . &amp;quot;\n&amp;quot; .
+        &amp;quot;bind params: &amp;quot; . (join &#39;, &#39;, @{$s-&amp;gt;bound_params()}) . &amp;quot;\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;DBD::Mock::StatementTrack also offers many other bits of statement information. I refer you again to the DBD::Mock POD documentation for more details.&lt;/p&gt;
+
+&lt;p&gt;Now, onto the tests.&lt;/p&gt;
+
+&lt;h3 id=&#34;solutions&#34;&gt;Solutions&lt;/h3&gt;
+
+&lt;p&gt;The saying goes of Perl, &amp;ldquo;there is more than one way to do it&amp;rdquo;, and this is true of DBD::Mock as well. The test code had four distinct paths through the code, and the test solutions will use each one to demonstrate a different technique for writing tests with DBD::Mock.&lt;/p&gt;
+
+&lt;p&gt;The first example is the &lt;code&gt;LOGIN SUCCESSFUL&lt;/code&gt; path. The code uses the array version of &lt;code&gt;mock_add_resultset&lt;/code&gt; to seed the &lt;code&gt;$dbh&lt;/code&gt; and then examines the &lt;code&gt;mock_all_history&lt;/code&gt; to be sure all the statements ran in the correct order.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 4;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;);
+
+$dbh-&amp;gt;{mock_add_resultset} = [[ &#39;user_id&#39; ], [ 1 ]];
+$dbh-&amp;gt;{mock_add_resultset} = [[ &#39;rows&#39; ], []];
+
+is(MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;),
+   &#39;LOGIN SUCCESSFUL&#39;,
+   &#39;... logged in successfully&#39;);
+
+my $history = $dbh-&amp;gt;{mock_all_history};
+
+cmp_ok(@{$history}, &#39;==&#39;, 2, &#39;... we ran 2 statements&#39;);
+
+is($history-&amp;gt;[0]-&amp;gt;statement(),
+   &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39; AND password =
+    &#39;****&#39;&amp;quot;, &#39;... the first statement is correct&#39;);
+
+is($history-&amp;gt;[1]-&amp;gt;statement(),
+   &amp;quot;INSERT INTO event_log (event) VALUES(&#39;User 1 logged in&#39;)&amp;quot;,
+   &#39;... the second statement is correct&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the simplest and most direct use of DBD::Mock. Simply seed the &lt;code&gt;$dbh&lt;/code&gt; with an appropriate number of result sets, run the code, and then test to verify it called the right SQL in the right order. It doesn&amp;rsquo;t come much simpler than that. This approach does have its drawbacks though, the most obvious being that there is no means of associating the SQL directly with the result sets (as would happen in a real database). However, DBD::Mock returns result sets in the order added, so there is an implied sequence of events, verifiable later with &lt;code&gt;mock_all_history&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The next example is the &lt;code&gt;USERNAME NOT FOUND&lt;/code&gt; path. The test code uses the hash version of &lt;code&gt;mock_add_resultset&lt;/code&gt; to seed the &lt;code&gt;$dbh&lt;/code&gt; and the &lt;code&gt;mock_all_history_iterator&lt;/code&gt; to check the statements afterwards.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 4;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;);
+
+$dbh-&amp;gt;{mock_add_resultset} = {
+  sql =&amp;gt; &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39;
+       AND password = &#39;****&#39;&amp;quot;, results =&amp;gt; [[ &#39;user_id&#39; ],
+       [ undef ]]
+};
+$dbh-&amp;gt;{mock_add_resultset} = {
+  sql =&amp;gt; &amp;quot;SELECT user_id, login_failures FROM users WHERE
+       username = &#39;user&#39;&amp;quot;, results =&amp;gt; [[ &#39;user_id&#39;,
+       &#39;login_failures&#39; ], [ undef, undef ]]
+};
+
+is(MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;),
+  &#39;USERNAME NOT FOUND&#39;,
+  &#39;... username is not found&#39;);
+
+my $history_iterator = $dbh-&amp;gt;{mock_all_history_iterator};
+
+is($history_iterator-&amp;gt;next()-&amp;gt;statement(),
+   &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39; AND password = &#39;****&#39;&amp;quot;,
+   &#39;... the first statement is correct&#39;);
+
+is($history_iterator-&amp;gt;next()-&amp;gt;statement(),
+   &amp;quot;SELECT user_id, login_failures FROM users WHERE username = &#39;user&#39;&amp;quot;,
+   &#39;... the second statement is correct&#39;);
+
+ok(!defined($history_iterator-&amp;gt;next()), &#39;... we have no more statements&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach allows the association of a specific SQL statement with a specific result sets. However, it loses the implied ordering of statements, which is one of the benefits of the array version of &lt;code&gt;mock_add_resultset&lt;/code&gt;. You can check this manually using &lt;code&gt;mock_all_history_iterator&lt;/code&gt; (which simply iterates over the array returned by &lt;code&gt;mock_all_history&lt;/code&gt;). One of the nice things about using &lt;code&gt;mock_all_history_iterator&lt;/code&gt; is that if the need arises to add, delete, or reorder your SQL statements, you don&amp;rsquo;t need to change all the &lt;code&gt;$history&lt;/code&gt; array indices in your test. It is also a good idea to check that only the two expected statements ran; do this by exploiting the fact that the iterator returns undefined values when it exhausts its contents.&lt;/p&gt;
+
+&lt;p&gt;The next example is the &lt;code&gt;USER ACCOUNT LOCKED&lt;/code&gt; path. The test code uses the DBD::Mock::Session object to test this path. I recommend to set the &lt;code&gt;$dbh&lt;/code&gt; to &lt;code&gt;RaiseError&lt;/code&gt; so that DBD::Mock::Session will throw an exception if it runs into an issue.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 2;
+use Test::Exception;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;, { RaiseError =&amp;gt; 1, PrintError =&amp;gt; 0 });
+
+my $lock_user_account = DBD::Mock::Session-&amp;gt;new(&#39;lock_user_account&#39; =&amp;gt; (
+  {
+      statement =&amp;gt; &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39; AND
+           password = &#39;****&#39;&amp;quot;, results   =&amp;gt; [[ &#39;user_id&#39; ], [ undef]]
+  },
+  {
+      statement =&amp;gt; &amp;quot;SELECT user_id, login_failures FROM users WHERE
+           username = &#39;user&#39;&amp;quot;, results   =&amp;gt; [[ &#39;user_id&#39;, &#39;login_failures&#39; ],
+           [ 1, 4 ]]
+  },
+  {
+      statement =&amp;gt; &amp;quot;UPDATE users SET login_failures = (login_failures + 1),
+      locked = 1 WHERE user_id = 1&amp;quot;, results   =&amp;gt; [[ &#39;rows&#39; ], []]
+  }
+));
+
+$dbh-&amp;gt;{mock_session} = $lock_user_account;
+my $result;
+lives_ok {
+    $result = MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;)
+} &#39;... our session ran smoothly&#39;;
+is($result,
+  &#39;USER ACCOUNT LOCKED&#39;,
+  &#39;... username is found, but the password is wrong,
+       so we lock the the user account&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The DBD::Mock::Session approach has several benefits. First, the SQL statements are associated with specific result sets (as with the hash version of &lt;code&gt;mock_add_resultset&lt;/code&gt;). Second, there is an explicit ordering of statements (like the array version of &lt;code&gt;mock_add_resultset&lt;/code&gt;). DBD::Mock::Session will verify that the session has been followed properly, and raise an error if it is not. The one drawback of this example is the use of static strings to compare the SQL with. However, DBD::Mock::Session can use other things, as illustrated in the next and final example.&lt;/p&gt;
+
+&lt;p&gt;The next and final example is the &lt;code&gt;BAD PASSWORD&lt;/code&gt; path. The test code demonstrates some of the more complex possibilities of the DBD::Mock::Session object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 2;
+use Test::Exception;
+
+use SQL::Parser;
+use Data::Dumper;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;, { RaiseError =&amp;gt; 1, PrintError =&amp;gt; 0 });
+
+my $bad_password = DBD::Mock::Session-&amp;gt;new(&#39;bad_password&#39; =&amp;gt; (
+{
+  statement =&amp;gt; qr/SELECT user_id FROM users WHERE username = \&#39;.*?\&#39; AND
+       password = \&#39;.*?\&#39;/, results   =&amp;gt; [[ &#39;user_id&#39; ], [ undef]]
+},
+{
+  statement =&amp;gt; qr/SELECT user_id, login_failures FROM users WHERE username =
+  \&#39;.*?\&#39;/, results   =&amp;gt; [[ &#39;user_id&#39;, &#39;login_failures&#39; ], [ 1, 0 ]]
+},
+{
+  statement =&amp;gt; sub {
+      my $parser1 = SQL::Parser-&amp;gt;new(&#39;ANSI&#39;);
+      $parser1-&amp;gt;parse(shift(@_));
+      my $parsed_statement1 = $parser1-&amp;gt;structure();
+      delete $parsed_statement1-&amp;gt;{original_string};
+
+      my $parser2 = SQL::Parser-&amp;gt;new(&#39;ANSI&#39;);
+      $parser2-&amp;gt;parse(&amp;quot;UPDATE users SET login_failures =
+           (login_failures + 1) WHERE user_id = 1&amp;quot;);
+      my $parsed_statement2 = $parser2-&amp;gt;structure();
+      delete $parsed_statement2-&amp;gt;{original_string};
+
+      return Dumper($parsed_statement2) eq Dumper($parsed_statement1);
+  },
+  results   =&amp;gt; [[ &#39;rows&#39; ], []]
+}
+));
+
+$dbh-&amp;gt;{mock_session} = $bad_password;
+
+my $result;
+lives_ok {
+    $result = MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;)
+} &#39;... our session ran smoothly&#39;;
+is($result, &#39;BAD PASSWORD&#39;, &#39;... username is found, but the password is wrong&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach uses DBD::Mock::Session&amp;rsquo;s more flexible means of performing SQL comparisons. The first and second statements are compared using regular expressions, which alleviates the need to hardcode test data into the statement. The third statement uses a subroutine reference to perform the SQL comparison. As you may have noticed in the test code provided, the &lt;code&gt;UPDATE&lt;/code&gt; statement for the &lt;code&gt;BAD PASSWORD&lt;/code&gt; path used Perl&amp;rsquo;s &lt;code&gt;qq()&lt;/code&gt; quoting mechanism to format the SQL in a more freeform manner. This can create complexities when trying to verify the SQL using strings or regular expressions. The test here uses &lt;a href=&#34;https://metacpan.org/pod/SQL::Parser&#34;&gt;SQL::Parser&lt;/a&gt; to determine the &lt;em&gt;functional equivalence&lt;/em&gt; of the test statement and the statement run in the code.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;I hope this kata has illustrated that unit-testing DBI code does not have to be as difficult and dangerous as it might seem. Through the use of Mock Objects in general and specifically the DBD::Mock DBI driver, it is possible to achieve 100% code coverage of your DBI-related code without ever having touched a real database. Here is the Devel::Cover output for the tests above:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; ---------------------------- ------ ------ ------ ------ ------ ------ ------
+ File                           stmt branch   cond    sub    pod   time  total
+ ---------------------------- ------ ------ ------ ------ ------ ------ ------
+ lib/MyApp/Login.pm            100.0  100.0    n/a  100.0    n/a  100.0  100.0
+ Total                         100.0  100.0    n/a  100.0    n/a  100.0  100.0
+ ---------------------------- ------ ------ ------ ------ ------ ------ ------
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;see-also&#34;&gt;See Also &amp;ndash;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.mockobjects.com/&#34;&gt;MockObjects Wiki&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/pub/2002/07/10/tmo.html&#34;&gt;A Test::MockObject Illustrated Example&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

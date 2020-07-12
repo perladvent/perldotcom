@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Compression on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/compression/</link>
+    <description>Recent content in Compression on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 27 Mar 2015 12:48:28 +0000</lastBuildDate>
+    <atom:link href="/tags/compression/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Gzipping data directly from Perl</title>
+      <link>http://localhost:1313/article/162/2015/3/27/Gzipping-data-directly-from-Perl/</link>
+      <pubDate>Fri, 27 Mar 2015 12:48:28 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/162/2015/3/27/Gzipping-data-directly-from-Perl/</guid>
+      <description>
+
+&lt;p&gt;Perl can read and write gzipped streams through its IO layers. &lt;a href=&#34;https://metacpan.org/author/NWCLARK&#34;&gt;Nicholas Clark&lt;/a&gt; recently updated &lt;a href=&#34;https://metacpan.org/pod/PerlIO::gzip&#34;&gt;PerlIO::gzip&lt;/a&gt; (with patches from &lt;a href=&#34;https://metacpan.org/author/ZEFRAM&#34;&gt;Zefram&lt;/a&gt;), after nine years since the last release. Now it works with Perl v5.20 and the upcoming v5.22, although it still has problems on Windows. But as we are used to, there is more then one way to do it.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-pipe-way&#34;&gt;The pipe way&lt;/h3&gt;
+
+&lt;p&gt;Perl is versatile, and being the Unix duct tape that it is, reading or writing from the standard filehandles is easy. You might know about the three-argument &lt;a href=&#34;https://perldoc.perl.org/functions/open.html&#34;&gt;open&lt;/a&gt;, but I can give it as many arguments as I like. For a piped open, I can set the mode as the second argument and the command as a list as I would for &lt;a href=&#34;https://perldoc.perl.org/functions/system.html&#34;&gt;system&lt;/a&gt; (see the &amp;ldquo;Secure Programming Chapter&amp;rdquo; of &lt;a href=&#34;https://www.masteringperl.org&#34;&gt;Mastering Perl&lt;/a&gt;). I remember where to put the &lt;code&gt;-&lt;/code&gt; on the side of the &lt;code&gt;|&lt;/code&gt; where the command would go:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ENV{PATH} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $z, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-|&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/bin/gunzip&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;moby_dick.txt.gz&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$z&amp;gt;&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;;
+    }
+
+close $z
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;There was a problem with the pipe open!&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I could go the other way too by printing through a pipe to a command that will &lt;em&gt;gzip&lt;/em&gt; the data for me. The &lt;code&gt;-&lt;/code&gt; flips to the other side of the &lt;code&gt;|&lt;/code&gt; and I use shell redirection to move the result of &lt;em&gt;gzip&lt;/em&gt; into a file. I don&amp;rsquo;t use the list form since I want the &lt;code&gt;&amp;gt;&lt;/code&gt; in the command to be special (if only &lt;em&gt;gzip&lt;/em&gt; had a switch to set the output filename):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ENV{PATH} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $z, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;|-&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/bin/gzip &amp;gt; data.gz&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(  ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; { $z } $_;
+    }
+
+close $z
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;There was a problem with the pipe open!&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That&amp;rsquo;s the general form that I can use with any sort of command. It has the drawbacks of multiple processes and the reliance of an external command in a particular place. If I can do it directly in the Perl process, I don&amp;rsquo;t have those drawbacks. Fortunately, I can, because Perl is like that.&lt;/p&gt;
+
+&lt;h3 id=&#34;reading-gzipped-data&#34;&gt;Reading gzipped data&lt;/h3&gt;
+
+&lt;p&gt;To read a gzippped file in Perl, I can use the &lt;code&gt;gzip&lt;/code&gt; I/O layer (see &lt;a href=&#34;https://perldoc.perl.org/perlopentut.html&#34;&gt;perlopen&lt;/a&gt;). Once I open the file, I can read its lines (assuming it&amp;rsquo;s text) like I would a &amp;ldquo;normal&amp;rdquo; text file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:gzip&amp;#39;&lt;/span&gt; $filename
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not read from $filename: $!&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$fh&amp;gt;&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Or, I can read octets if the data aren&amp;rsquo;t text:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:gzip&amp;#39;&lt;/span&gt; $filename
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not read from $filename: $!&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( read( $fh, $buffer, &lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt; ) ) {
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# do something with $buffer (... is a v5.12 feature!)&lt;/span&gt;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If I can&amp;rsquo;t use the I/O layers, perhaps because the operating system does not support it or it&amp;rsquo;s broken on my version of Perl, I can use the IO::Compress modules instead. This example uses its object interface to create the write filehandle:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IO::Compress::Gunzip;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $z &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; IO::Compress::Gunzip&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( $filename )
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not read from $filename: $GunzipError&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$z&amp;gt;&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The I/O layer is faster than the module, but the PerlIO documentation notes that we shouldn&amp;rsquo;t trust our data to it. People have been using it without major problems, but you could be that one person who loses all their data. Sinan Ünür writes about the performance in &lt;a href=&#34;http://www.nu42.com/2013/02/large-gzipped-files-long-lines.html&#34;&gt;Large gzipped files, long lines, extracting columns etc&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-gzipped-data&#34;&gt;Writing gzipped data&lt;/h3&gt;
+
+&lt;p&gt;I can also directly write gzipped data to a file. It&amp;rsquo;s similar my previous examples with the filehandles moved around. This one uses the I/O layer:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;gt;:gzip&amp;#39;&lt;/span&gt; $filename
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not write to $filename: $!&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(  ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; { $fh } $_;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And this one uses &lt;a href=&#34;https://metacpan.org/pod/IO::Compress::Gzip&#34;&gt;IO::Compress::Gzip&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IO::Compress::Gzip;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $z &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; IO::Compress::Gzip&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( $filename )
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not write to $filename: $GzipError&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(  ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; { $z } $_;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;an-advanced-tip&#34;&gt;An advanced tip&lt;/h3&gt;
+
+&lt;p&gt;I can read multiple streams of gzipped data with a single filehandle. The &lt;code&gt;MultiStream&lt;/code&gt; option in &lt;a href=&#34;https://metacpan.org/pod/IO::Uncompress::Gunzip&#34;&gt;IO::Uncompress::Gunzip&lt;/a&gt; allows the decompressor to reset itself when it thinks it has detected a new stream and continue to provide output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IO::Uncompress::Gunzip &lt;span style=&#34;color:#e6db74&#34;&gt;qw($GunzipError)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $z &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; IO::Uncompress::Gunzip&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;STDIN, MultiStream &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; )
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not make uncompress object: $GunzipError&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$z&amp;gt;&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt;;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;With this I can read several gzipped files at the same time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cat *.gz |  ./multistream.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This sort of thing is quite handy for rotated logs when I want to read them all and don&amp;rsquo;t care that they were split up.&lt;/p&gt;
+
+&lt;h3 id=&#34;and-a-small-bonus&#34;&gt;And, a small bonus&lt;/h3&gt;
+
+&lt;p&gt;If you want to know more about the gzip compression, &lt;a href=&#34;http://jvns.ca/blog/2013/10/24/day-16-gzip-plus-poetry-equals-awesome/&#34;&gt;Julia Evans created a nice animation of gzip working in real time on &lt;em&gt;The Raven&lt;/em&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;You can see a bit more abstract &lt;a href=&#34;http://www.data-compression.com/lempelziv.html%0A&#34;&gt;animation&lt;/a&gt; at www.data-compression.com. You can see how this single-pass method works and how it can work from a possibly infinite stream like I provide in this article.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

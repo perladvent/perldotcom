@@ -1,0 +1,716 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mod Perl Apache Performance on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/mod-perl-apache-performance/</link>
+    <description>Recent content in Mod Perl Apache Performance on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 04 Mar 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/mod-perl-apache-performance/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Improving mod_perl Sites&#39; Performance: Part 8</title>
+      <link>http://localhost:1313/pub/2003/03/04/mod_perl.html/</link>
+      <pubDate>Tue, 04 Mar 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/03/04/mod_perl.html/</guid>
+      <description>
+
+&lt;p&gt;In this article we continue talking about how to optimize your site for performance without touching code, buying new hardware or telling casts. A few simple &lt;em&gt;httpd.conf&lt;/em&gt; configuration changes can improve the performance tremendously.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-choosing-minspareservers-maxspareservers-and-startservers-choosing-minspareservers-maxspareservers-and-startservers-span&#34;&gt;&lt;span id=&#34;choosing_minspareservers,_maxspareservers_and_startservers&#34;&gt;Choosing MinSpareServers, MaxSpareServers and StartServers&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;With mod_perl enabled, it might take as much as 20 seconds from the time you start the server until it is ready to serve incoming requests. This delay depends on the OS, the number of preloaded modules and the process load of the machine. It&amp;rsquo;s best to set &lt;a href=&#34;#item_startservers&#34;&gt;&lt;code&gt;StartServers&lt;/code&gt;&lt;/a&gt; and &lt;a href=&#34;#item_minspareservers&#34;&gt;&lt;code&gt;MinSpareServers&lt;/code&gt;&lt;/a&gt; to high numbers, so that if you get a high load just after the server has been restarted, the fresh servers will be ready to serve requests immediately. With mod_perl, it&amp;rsquo;s usually a good idea to raise all three variables higher than normal.&lt;/p&gt;
+
+&lt;p&gt;In order to maximize the benefits of mod_perl, you don&amp;rsquo;t want to kill servers when they are idle, rather you want them to stay up and available to handle new requests immediately. I think an ideal configuration is to set &lt;a href=&#34;#item_minspareservers&#34;&gt;&lt;code&gt;MinSpareServers&lt;/code&gt;&lt;/a&gt; and &lt;a href=&#34;#item_maxspareservers&#34;&gt;&lt;code&gt;MaxSpareServers&lt;/code&gt;&lt;/a&gt; to similar values, maybe even the same. Having the &lt;a href=&#34;#item_maxspareservers&#34;&gt;&lt;code&gt;MaxSpareServers&lt;/code&gt;&lt;/a&gt; close to &lt;a href=&#34;#item_maxclients&#34;&gt;&lt;code&gt;MaxClients&lt;/code&gt;&lt;/a&gt; will completely use all of your resources (if &lt;a href=&#34;#item_maxclients&#34;&gt;&lt;code&gt;MaxClients&lt;/code&gt;&lt;/a&gt; has been chosen to take the full advantage of the resources), but it&amp;rsquo;ll make sure that at any given moment your system will be capable of responding to requests with the maximum speed (assuming that number of concurrent requests is not higher than &lt;a href=&#34;#item_maxclients&#34;&gt;&lt;code&gt;MaxClients&lt;/code&gt;&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s try some numbers. For a heavily loaded Web site and a dedicated machine, I would think of (note 400Mb is just for example):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Available to webserver RAM:   400Mb
+  Child&#39;s memory size bounded:  10Mb
+  MaxClients:                   400/10 = 40 (larger with mem sharing)
+  StartServers:                 20
+  MinSpareServers:              20
+  MaxSpareServers:              35
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, if I want to use the server for many other tasks, but make it capable of handling a high load, I&amp;rsquo;d try:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Available to webserver RAM:   400Mb
+  Child&#39;s memory size bounded:  10Mb
+  MaxClients:                   400/10 = 40
+  StartServers:                 5
+  MinSpareServers:              5
+  MaxSpareServers:              10
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These numbers are taken off the top of my head, and shouldn&amp;rsquo;t be used as a rule, but rather as examples to show you some possible scenarios. Use this information with caution.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-summary-of-benchmarking-to-tune-all-5-parameters-summary-of-benchmarking-to-tune-all-5-parameters-span&#34;&gt;&lt;span id=&#34;summary_of_benchmarking_to_tune_all_5_parameters&#34;&gt;Summary of Benchmarking to Tune All 5 Parameters&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;OK, we&amp;rsquo;ve run various benchmarks &amp;ndash; let&amp;rsquo;s summarize the conclusions:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_maxrequestsperchild&#34;&gt;MaxRequestsPerChild&lt;/span&gt;&lt;/strong&gt;
+If your scripts are clean and don&amp;rsquo;t leak memory, then set this variable to a number as large as possible (10000?). If you use &lt;code&gt;Apache::SizeLimit&lt;/code&gt;, then you can set this parameter to 0 (treated as infinity). You will want this parameter to be smaller if your code becomes gradually more unshared over the process&amp;rsquo; life. As well as this, &lt;code&gt;Apache::GTopLimit&lt;/code&gt; can help, with its shared memory limitation feature.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_startservers&#34;&gt;StartServers&lt;/span&gt;&lt;/strong&gt;
+If you keep a small number of servers active most of the time, then keep this number low. Keep it low especially if &lt;a href=&#34;#item_maxspareservers&#34;&gt;&lt;code&gt;MaxSpareServers&lt;/code&gt;&lt;/a&gt; is also low, as if there is no load, Apache will kill its children before they have been utilized at all. If your service is heavily loaded, then make this number close to &lt;a href=&#34;#item_maxclients&#34;&gt;&lt;code&gt;MaxClients&lt;/code&gt;&lt;/a&gt;, and keep &lt;a href=&#34;#item_maxspareservers&#34;&gt;&lt;code&gt;MaxSpareServers&lt;/code&gt;&lt;/a&gt; equal to &lt;a href=&#34;#item_maxclients&#34;&gt;&lt;code&gt;MaxClients&lt;/code&gt;&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_minspareservers&#34;&gt;MinSpareServers&lt;/span&gt;&lt;/strong&gt;
+If your server performs other work besides Web serving, then make this low so the memory of unused children will be freed when the load is light. If your server&amp;rsquo;s load varies (you get loads in bursts) and you want fast response for all clients at any time, then you will want to make it high, so that new children will be respawned in advance and are waiting to handle bursts of requests.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_maxspareservers&#34;&gt;MaxSpareServers&lt;/span&gt;&lt;/strong&gt;
+The logic is the same as for &lt;a href=&#34;#item_minspareservers&#34;&gt;&lt;code&gt;MinSpareServers&lt;/code&gt;&lt;/a&gt; - low if you need the machine for other tasks, high if it&amp;rsquo;s a dedicated Web host and you want a minimal delay between the request and the response.&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_maxclients&#34;&gt;MaxClients&lt;/span&gt;&lt;/strong&gt;
+Not too low, so you don&amp;rsquo;t get into a situation where clients are waiting for the server to start serving them (they might wait, but not for very long). However, do not set it too high. With a high MaxClients, if you get a high load, then the server will try to serve all requests immediately. Your CPU will have a hard time keeping up, and if the child size * number of running children is larger than the total available RAM, then your server will start swapping. This will slow down everything, which in turn will make things even slower, until eventually your machine will die. It&amp;rsquo;s important that you take pains to ensure that swapping does not normally happen. Swap space is an emergency pool, not a resource to be used routinely. If you are low on memory and you badly need it, then buy it. Memory is cheap.&lt;/p&gt;
+
+&lt;p&gt;But based on the test I conducted above, even if you have plenty of memory like I have (1Gb), increasing &lt;a href=&#34;#item_maxclients&#34;&gt;&lt;code&gt;MaxClients&lt;/code&gt;&lt;/a&gt; sometimes will give you no improvement in performance. The more clients are running, the more CPU time will be required, the less CPU time slices each process will receive. The response latency (the time to respond to a request) will grow, so you won&amp;rsquo;t see the expected improvement. The best approach is to find the minimum requirement for your kind of service and the maximum capability of your machine. Then start at the minimum and test as I did, successively raising this parameter until you find the region on the curve of the graph of latency and/or throughput against MaxClients where the improvement starts to diminish. Stop there and use it. When you make the measurements on a production server you will have the ability to tune them more precisely, since you will see the real numbers.&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t forget that if you add more scripts, or even just modify the existing ones, then the processes will grow in size as you compile in more code. When you do this, your parameters probably will need to be recalculated.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;span-id-keepalive-keepalive-span&#34;&gt;&lt;span id=&#34;keepalive&#34;&gt;KeepAlive&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If your mod_perl server&amp;rsquo;s &lt;em&gt;httpd.conf&lt;/em&gt; includes the following directives:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  KeepAlive On
+  MaxKeepAliveRequests 100
+  KeepAliveTimeout 15
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;you have a real performance penalty, since after completing the processing for each request, the process will wait for &lt;code&gt;KeepAliveTimeout&lt;/code&gt; seconds before closing the connection and will therefore not be serving other requests during this time. With this configuration, you will need many more concurrent processes on a server with high traffic.&lt;/p&gt;
+
+&lt;p&gt;If you use some server status reporting tools, then you will see the process in &lt;em&gt;K&lt;/em&gt; status when it&amp;rsquo;s in &lt;code&gt;KeepAlive&lt;/code&gt; status.&lt;/p&gt;
+
+&lt;p&gt;The chances are that you don&amp;rsquo;t want this feature enabled. Set it Off with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  KeepAlive Off
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The other two directives don&amp;rsquo;t matter if &lt;code&gt;KeepAlive&lt;/code&gt; is &lt;code&gt;Off&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;You might want to consider enabling this option if the client&amp;rsquo;s browser needs to request more than one object from your server for a single HTML page. If this is the situation, then by setting &lt;code&gt;KeepAlive&lt;/code&gt; &lt;code&gt;On&lt;/code&gt; you will save the HTTP connection overhead for all requests but the first one for each page.&lt;/p&gt;
+
+&lt;p&gt;For example: If you have a page with 10 ad banners, which is not uncommon today, then your server will work more effectively if a single process serves them all during a single connection. However, your client will see a slightly slower response, since banners will be brought one at a time and not concurrently as is the case if each &lt;code&gt;IMG&lt;/code&gt; tag opens a separate connection.&lt;/p&gt;
+
+&lt;p&gt;Since keepalive connections will not incur the additional three-way TCP handshake, turning it on will be kinder to the network.&lt;/p&gt;
+
+&lt;p&gt;SSL connections benefit the most from &lt;code&gt;KeepAlive&lt;/code&gt; in cases where you haven&amp;rsquo;t configured the server to cache session ids.&lt;/p&gt;
+
+&lt;p&gt;You have probably followed the usual advice to send all the requests for static objects to a plain Apache server. Since most pages include more than one unique static image, you should keep the default &lt;code&gt;KeepAlive&lt;/code&gt; setting of the non-mod_perl server, i.e. keep it &lt;code&gt;On&lt;/code&gt;. It will probably be a good idea also to reduce the timeout a little.&lt;/p&gt;
+
+&lt;p&gt;One option would be for the proxy/accelerator to keep the connection open to the client but make individual connections to the server, read the response, buffer it for sending to the client and close the server connection. Obviously, you would make new connections to the server as required by the client&amp;rsquo;s requests.&lt;/p&gt;
+
+&lt;p&gt;Also, you should know that &lt;code&gt;KeepAlive&lt;/code&gt; requests only work with responses that contain a &lt;code&gt;Content-Length&lt;/code&gt; header. To send this header do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $r-&amp;gt;header_out(&#39;Content-Length&#39;, $length);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-perlsetupenv-off-perlsetupenv-off-span&#34;&gt;&lt;span id=&#34;perlsetupenv_off&#34;&gt;PerlSetupEnv Off&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;PerlSetupEnv Off&lt;/code&gt; is another optimization you might consider. This directive requires mod_perl 1.25 or later.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;mod_perl&lt;/em&gt; fiddles with the environment to make it appear as if the script were being called under the CGI protocol. For example, the &lt;code&gt;$ENV{QUERY_STRING}&lt;/code&gt; environment variable is initialized with the contents of &lt;em&gt;Apache::args()&lt;/em&gt;, and the value returned by &lt;em&gt;Apache::server_hostname()&lt;/em&gt; is put into &lt;code&gt;$ENV{SERVER_NAME}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;But &lt;code&gt;%ENV&lt;/code&gt; population is expensive. Those who have moved to the Perl Apache API no longer need this extra &lt;code&gt;%ENV&lt;/code&gt; population, and can gain by turning it &lt;strong&gt;Off&lt;/strong&gt;. Scripts using the &lt;code&gt;CGI.pm&lt;/code&gt; module require &lt;code&gt;PerlSetupEnv On&lt;/code&gt; because that module relies on a properly populated CGI environment table.&lt;/p&gt;
+
+&lt;p&gt;By default it is &amp;ldquo;On.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Note that you can still set environment variables. For example, when you use the following configuration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlSetupEnv Off
+  PerlModule Apache::RegistryNG
+  &amp;lt;Location /perl&amp;gt;
+    PerlSetupEnv On
+    PerlSetEnv TEST hi
+    SetHandler perl-script
+    PerlHandler Apache::RegistryNG
+    Options +ExecCGI
+  &amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and issue a request (for example &lt;a href=&#34;http://localhost/perl/setupenvoff.pl)&#34;&gt;http://localhost/perl/setupenvoff.pl)&lt;/a&gt; for this script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  setupenvoff.pl
+  --------------
+  use Data::Dumper;
+  my $r = Apache-&amp;gt;request();
+  $r-&amp;gt;send_http_header(&#39;text/plain&#39;);
+  print Dumper(\%ENV);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;you should see something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $VAR1 = {
+            &#39;GATEWAY_INTERFACE&#39; =&amp;gt; &#39;CGI-Perl/1.1&#39;,
+            &#39;MOD_PERL&#39; =&amp;gt; &#39;mod_perl/1.25&#39;,
+            &#39;PATH&#39; =&amp;gt; &#39;/usr/lib/perl5/5.00503:... snipped ...&#39;,
+            &#39;TEST&#39; =&amp;gt; &#39;hi&#39;
+          };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that we have got the value of the environment variable &lt;em&gt;TEST&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-reducing-the-number-of-stat-calls-made-by-apache-reducing-the-number-of-stat-calls-made-by-apache-span&#34;&gt;&lt;span id=&#34;reducing_the_number_of_stat()_calls_made_by_apache&#34;&gt;Reducing the Number of &lt;code&gt;stat()&lt;/code&gt; Calls Made by Apache&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you watch the system calls that your server makes (using &lt;em&gt;truss&lt;/em&gt; or &lt;em&gt;strace&lt;/em&gt;) while processing a request, then you will notice that a few &lt;code&gt;stat()&lt;/code&gt; calls are made. For example, when I fetch &lt;a href=&#34;http://localhost/perl-status&#34;&gt;http://localhost/perl-status&lt;/a&gt; and I have my DocRoot set to &lt;em&gt;/home/httpd/docs&lt;/em&gt; I see:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [snip]
+  stat(&amp;quot;/home/httpd/docs/perl-status&amp;quot;, 0xbffff8cc) = -1
+                      ENOENT (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs&amp;quot;, {st_mode=S_IFDIR|0755,
+                                 st_size=1024, ...}) = 0
+  [snip]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you have some dynamic content and your virtual relative URI is something like &lt;em&gt;/news/perl/mod_perl/summary&lt;/em&gt; (i.e., there is no such directory on the web server, the path components are only used for requesting a specific report), then this will generate &lt;code&gt;five(!)&lt;/code&gt; &lt;code&gt;stat()&lt;/code&gt; calls, before the &lt;code&gt;DocumentRoot&lt;/code&gt; is found. You will see something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  stat(&amp;quot;/home/httpd/docs/news/perl/mod_perl/summary&amp;quot;, 0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs/news/perl/mod_perl&amp;quot;,         0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs/news/perl&amp;quot;,                  0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs/news&amp;quot;,                       0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs&amp;quot;,
+                      {st_mode=S_IFDIR|0755, st_size=1024, ...})  =  0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How expensive are those calls? Let&amp;rsquo;s use the &lt;code&gt;Time::HiRes&lt;/code&gt; module to find out.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  stat_call_sample.pl
+  -------------------
+  use Time::HiRes qw(gettimeofday tv_interval);
+  my $calls = 1_000_000;
+
+  my $start_time = [ gettimeofday ];
+
+  stat &amp;quot;/app&amp;quot; for 1..$calls;
+
+  my $end_time = [ gettimeofday ];
+
+  my $elapsed = tv_interval($start_time,$end_time) / $calls;
+
+  print &amp;quot;The average execution time: $elapsed seconds\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This script takes a time sample at the beginning, then does 1,000,000 &lt;code&gt;stat()&lt;/code&gt; calls to a nonexisting file, samples the time at the end and prints the average time it took to make a single &lt;code&gt;stat()&lt;/code&gt; call. I&amp;rsquo;m sampling a million stats, so I&amp;rsquo;d get a correct average result.&lt;/p&gt;
+
+&lt;p&gt;Before we actually run the script, one should distinguish between two different situations. When the server is idle, the time between the first and the last system call will be much shorter than the same time measured on the loaded system. That is because on the idle system, a process can use CPU very often, and on the loaded system lots of processes compete over it and each process has to wait for a longer time to get the same amount of CPU time.&lt;/p&gt;
+
+&lt;p&gt;So first we run the above code on the unloaded system:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl stat_call_sample.pl
+  The average execution time: 4.209645e-06 seconds
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So it takes about 4 microseconds to execute a &lt;code&gt;stat()&lt;/code&gt; call. Now let&amp;rsquo;s start a CPU intensive process in one console. The following code keeps the CPU busy all the time.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl -e &#39;1**1 while 1&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now run the &lt;em&gt;stat_call_sample.pl&lt;/em&gt; script in the other console.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl stat_call_sample.pl
+  The average execution time: 8.777301e-06 seconds
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see that the average time has more than doubled (about 8 microseconds). And this is obvious, since there were two processes competing for the CPU. Now if we run 4 occurrences of the above code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl -e &#39;1**1 while 1&#39; &amp;amp;
+  % perl -e &#39;1**1 while 1&#39; &amp;amp;
+  % perl -e &#39;1**1 while 1&#39; &amp;amp;
+  % perl -e &#39;1**1 while 1&#39; &amp;amp;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And when running our script in parallel with these processes, we get:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl stat_call_sample.pl
+  2.0853558e-05 seconds
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;about 20 microseconds. So the average &lt;code&gt;stat()&lt;/code&gt; system call is five times longer now. Now, if you have 50 mod_perl processes that keep the CPU busy all the time, the &lt;code&gt;stat()&lt;/code&gt; call will be 50 times slower and it&amp;rsquo;ll take 0.2 milliseconds to complete a series of call. If you have five redundant calls as in the strace example above, then they add up to 1 millisecond. If you have more processes constantly consuming CPU, then this time adds up. Now multiply this time by the number of processes that you have and you get a few seconds lost. As usual, for some services, this loss is insignificant, while for others a very significant one.&lt;/p&gt;
+
+&lt;p&gt;So why does Apache make all these redundant &lt;code&gt;stat()&lt;/code&gt; calls? You can blame the default installed &lt;code&gt;TransHandler&lt;/code&gt; for this inefficiency. Of course, you could supply your own, which will be smart enough not to look for this virtual path and immediately return &lt;code&gt;OK&lt;/code&gt;. But in cases where you have a virtual host that serves only dynamically generated documents, you can override the default &lt;code&gt;PerlTransHandler&lt;/code&gt; with this one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;VirtualHost 10.10.10.10:80&amp;gt;
+    ...
+    PerlTransHandler  Apache::OK
+    ...
+  &amp;lt;/VirtualHost&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you see it affects only this specific virtual host.&lt;/p&gt;
+
+&lt;p&gt;This has the effect of short circuiting the normal &lt;code&gt;TransHandler&lt;/code&gt; processing of trying to find a filesystem component that matches the given URI &amp;ndash; no more &amp;lsquo;stat&amp;rsquo;s!&lt;/p&gt;
+
+&lt;p&gt;Watching your server under strace/truss can often reveal more performance hits than trying to optimize the code itself!&lt;/p&gt;
+
+&lt;p&gt;For example, unless configured correctly, Apache might look for the &lt;em&gt;.htaccess&lt;/em&gt; file in many places, even if you don&amp;rsquo;t have one, and make many unnecessary &lt;code&gt;open()&lt;/code&gt; calls.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s start with this simple configuration. We will try to reduce the number of irrelevant system calls.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DocumentRoot &amp;quot;/home/httpd/docs&amp;quot;
+  &amp;lt;Location /app/test&amp;gt;
+    SetHandler perl-script
+    PerlHandler Apache::MyApp
+  &amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The above configuration allows us to make a request to &lt;em&gt;/app/test&lt;/em&gt; and the Perl &lt;code&gt;handler()&lt;/code&gt; defined in &lt;code&gt;Apache::MyApp&lt;/code&gt; will be executed. Notice that in the test setup there is no file to be executed (like in &lt;code&gt;Apache::Registry&lt;/code&gt;). There is no &lt;em&gt;.htaccess&lt;/em&gt; file as well.&lt;/p&gt;
+
+&lt;p&gt;This is a typical generated trace.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  stat(&amp;quot;/home/httpd/docs/app/test&amp;quot;, 0xbffff8fc) = -1 ENOENT
+        (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs/app&amp;quot;,      0xbffff8fc) = -1 ENOENT
+        (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs&amp;quot;,
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
+  open(&amp;quot;/.htaccess&amp;quot;, O_RDONLY)                 = -1 ENOENT
+        (No such file or directory)
+  open(&amp;quot;/home/.htaccess&amp;quot;, O_RDONLY)            = -1 ENOENT
+        (No such file or directory)
+  open(&amp;quot;/home/httpd/.htaccess&amp;quot;, O_RDONLY)      = -1 ENOENT
+        (No such file or directory)
+  open(&amp;quot;/home/httpd/docs/.htaccess&amp;quot;, O_RDONLY) = -1 ENOENT
+        (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs/test&amp;quot;, 0xbffff774)    = -1 ENOENT
+        (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs&amp;quot;,
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we modify the &lt;code&gt;&amp;lt;Directory&amp;gt;&lt;/code&gt; entry and add AllowOverride None, which among other things disables &lt;em&gt;.htaccess&lt;/em&gt; files and will not try to open them.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;Directory /&amp;gt;
+    AllowOverride None
+  &amp;lt;/Directory&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We see that the four &lt;code&gt;open()&lt;/code&gt; calls for &lt;em&gt;.htaccess&lt;/em&gt; have gone:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  stat(&amp;quot;/home/httpd/docs/app/test&amp;quot;, 0xbffff8fc) = -1 ENOENT
+        (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs/app&amp;quot;,      0xbffff8fc) = -1 ENOENT
+        (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs&amp;quot;,
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
+  stat(&amp;quot;/home/httpd/docs/test&amp;quot;, 0xbffff774)    = -1 ENOENT
+        (No such file or directory)
+  stat(&amp;quot;/home/httpd/docs&amp;quot;,
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s try to shortcut the &lt;em&gt;app&lt;/em&gt; location with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Alias /app /
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which makes Apache to look for the file in the &lt;em&gt;/&lt;/em&gt; directory and not under &lt;em&gt;/home/httpd/docs/app&lt;/em&gt;. Let&amp;rsquo;s run it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  stat(&amp;quot;//test&amp;quot;, 0xbffff8fc) = -1 ENOENT (No such file or directory)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Wow, we&amp;rsquo;ve got only one stat call left!&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s remove the last &lt;code&gt;Alias&lt;/code&gt; setting and use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    PerlTransHandler  Apache::OK
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;as explained above. When we issue the request, we see no &lt;code&gt;stat()&lt;/code&gt; calls. But this is possible only if you serve only dynamically generated documents, i.e. no CGI scripts. Otherwise, you will have to write your own &lt;em&gt;PerlTransHandler&lt;/em&gt; to handle requests as desired.&lt;/p&gt;
+
+&lt;p&gt;For example, this &lt;em&gt;PerlTransHandler&lt;/em&gt; will not lookup the file on the filesystem if the URI starts with &lt;em&gt;/app&lt;/em&gt;, but will use the default &lt;em&gt;PerlTransHandler&lt;/em&gt; otherwise:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlTransHandler &#39;sub { return shift-&amp;gt;uri() =~ m|^/app| \
+                        ? Apache::OK : Apache::DECLINED;}&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s see the same configuration using the &lt;code&gt;&amp;lt;Perl&amp;gt;&lt;/code&gt; section and a dedicated package:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;Perl&amp;gt;
+    package My::Trans;
+    use Apache::Constants qw(:common);
+    sub handler{
+       my $r = shift;
+       return OK if $r-&amp;gt;uri() =~ m|^/app|;
+       return DECLINED;
+    }
+
+    package Apache::ReadConfig;
+    $PerlTransHandler = &amp;quot;My::Trans&amp;quot;;
+  &amp;lt;/Perl&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you see we have defined the &lt;code&gt;My::Trans&lt;/code&gt; package and implemented the &lt;code&gt;handler()&lt;/code&gt; function. Then we have assigned this handler to the &lt;code&gt;PerlTransHandler&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course you can move the code in the module into an external file, (e.g. &lt;em&gt;My/Trans.pm&lt;/em&gt;) and configure the &lt;code&gt;PerlTransHandler&lt;/code&gt; with&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlTransHandler My::Trans
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;in the normal way (no &lt;code&gt;&amp;lt;Perl&amp;gt;&lt;/code&gt; section required).&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The mod_perl site&amp;rsquo;s URL: &lt;a href=&#34;http://perl.apache.org/&#34;&gt;http://perl.apache.org/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Time::HiRes&#34;&gt;Time::HiRes&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Improving mod_perl Sites&#39; Performance: Part 7</title>
+      <link>http://localhost:1313/pub/2003/02/05/mod_perl.html/</link>
+      <pubDate>Wed, 05 Feb 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/02/05/mod_perl.html/</guid>
+      <description>
+
+&lt;p&gt;Correct configuration of the &lt;code&gt;MinSpareServers&lt;/code&gt;, &lt;code&gt;MaxSpareServers&lt;/code&gt;, &lt;code&gt;StartServers&lt;/code&gt;, &lt;code&gt;MaxClients&lt;/code&gt;, and &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; parameters is very important. There are no defaults. If they are too low, then you will underutilize the system&amp;rsquo;s capabilities. If they are too high, then chances are that the server will bring the machine to its knees.&lt;/p&gt;
+
+&lt;p&gt;All the above parameters should be specified on the basis of the resources you have. With a plain Apache server, it&amp;rsquo;s no big deal if you run many servers since the processes are about 1Mb and don&amp;rsquo;t eat a lot of your RAM. Generally, the numbers are even smaller with memory sharing. The situation is different with mod_perl. I have seen mod_perl processes of 20Mb and more. Now, if you have &lt;code&gt;MaxClients&lt;/code&gt; set to 50, then 50x20Mb = 1Gb. Maybe you don&amp;rsquo;t have 1Gb of RAM - so how do you tune the parameters? Generally, by trying different combinations and benchmarking the server. Again, mod_perl processes can be made much smaller when memory is shared.&lt;/p&gt;
+
+&lt;p&gt;Before you start this task, you should be armed with the proper weapon. You need the &lt;strong&gt;crashme&lt;/strong&gt; utility, which will load your server with the mod_perl scripts you possess. You need it to have the ability to emulate a multiuser environment and to emulate the behavior of multiple clients calling the mod_perl scripts on your server simultaneously. While there are commercial solutions, you can get away with free ones that do the same job. You can use the ApacheBench utility that comes with the Apache distribution, the &lt;code&gt;crashme&lt;/code&gt; script which uses &lt;code&gt;LWP::Parallel::UserAgent&lt;/code&gt;, httperf or http_load all discussed in one of the previous articles.&lt;/p&gt;
+
+&lt;p&gt;It is important to make sure that you run the load generator (the client which generates the test requests) on a system that is more powerful than the system being tested. After all, we are trying to simulate Internet users, where many users are trying to reach your service at once. Since the number of concurrent users can be quite large, your testing machine must be very powerful and capable of generating a heavy load. Of course, you should not run the clients and the server on the same machine. If you do, then your test results would be invalid. Clients will eat CPU and memory that should be dedicated to the server, and vice versa.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-configuration-tuning-with-apachebench-configuration-tuning-with-apachebench-span&#34;&gt;&lt;span id=&#34;configuration_tuning_with_apachebench&#34;&gt;Configuration Tuning with ApacheBench&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m going to use the &lt;code&gt;ApacheBench&lt;/code&gt; (&lt;code&gt;ab&lt;/code&gt;) utility to tune our server&amp;rsquo;s configuration. We will simulate 10 users concurrently requesting a very light script at &lt;code&gt;http://www.example.com/perl/access/access.cgi&lt;/code&gt;. Each simulated user makes 10 requests.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./ab -n 100 -c 10 http://www.example.com/perl/access/access.cgi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The results are:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Document Path:          /perl/access/access.cgi
+  Document Length:        16 bytes
+
+  Concurrency Level:      10
+  Time taken for tests:   1.683 seconds
+  Complete requests:      100
+  Failed requests:        0
+  Total transferred:      16100 bytes
+  HTML transferred:       1600 bytes
+  Requests per second:    59.42
+  Transfer rate:          9.57 kb/s received
+
+  Connnection Times (ms)
+                min   avg   max
+  Connect:        0    29   101
+  Processing:    77   124  1259
+  Total:         77   153  1360
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only numbers we really care about are:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Complete requests:      100
+  Failed requests:        0
+  Requests per second:    59.42
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s raise the request load to 100 x 10 (10 users, each making 100 requests):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./ab -n 1000 -c 10  http://www.example.com/perl/access/access.cgi
+  Concurrency Level:      10
+  Complete requests:      1000
+  Failed requests:        0
+  Requests per second:    139.76
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As expected, nothing changes &amp;ndash; we have the same 10 concurrent users. Now let&amp;rsquo;s raise the number of concurrent users to 50:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./ab -n 1000 -c 50  http://www.example.com/perl/access/access.cgi
+  Complete requests:      1000
+  Failed requests:        0
+  Requests per second:    133.01
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We see that the server is capable of serving 50 concurrent users at 133 requests per second! Let&amp;rsquo;s find the upper limit. Using &lt;code&gt;-n 10000 -c 1000&lt;/code&gt; failed to get results (Broken Pipe?). Using &lt;code&gt;-n 10000 -c 500&lt;/code&gt; resulted in 94.82 requests per second. The server&amp;rsquo;s performance went down with the high load.&lt;/p&gt;
+
+&lt;p&gt;The above tests were performed with the following configuration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers 8
+  MaxSpareServers 6
+  StartServers 10
+  MaxClients 50
+  MaxRequestsPerChild 1500
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s kill each child after it serves a single request. We will use the following configuration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers 8
+  MaxSpareServers 6
+  StartServers 10
+  MaxClients 100
+  MaxRequestsPerChild 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Simulate 50 users each generating a total of 20 requests:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./ab -n 1000 -c 50  http://www.example.com/perl/access/access.cgi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The benchmark timed out with the above configuration. I watched the output of &lt;strong&gt;&lt;code&gt;ps&lt;/code&gt;&lt;/strong&gt; as I ran it, the parent process just wasn&amp;rsquo;t capable of respawning the killed children at that rate. When I raised the &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; to 10, I got 8.34 requests per second. Very bad - 18 times slower! You can&amp;rsquo;t benchmark the importance of the &lt;code&gt;MinSpareServers&lt;/code&gt;, &lt;code&gt;MaxSpareServers&lt;/code&gt; and &lt;code&gt;StartServers&lt;/code&gt; with this type of test.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s reset &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; to 1500, but reduce &lt;code&gt;MaxClients&lt;/code&gt; to 10 and run the same test:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers 8
+  MaxSpareServers 6
+  StartServers 10
+  MaxClients 10
+  MaxRequestsPerChild 1500
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I got 27.12 requests per second, which is better but still four to five times slower. (I got 133 with &lt;code&gt;MaxClients&lt;/code&gt; set to 50.)&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Summary:&lt;/strong&gt; I have tested a few combinations of the server configuration variables (&lt;code&gt;MinSpareServers&lt;/code&gt;, &lt;code&gt;MaxSpareServers&lt;/code&gt;, &lt;code&gt;StartServers&lt;/code&gt;, &lt;code&gt;MaxClients&lt;/code&gt; and &lt;code&gt;MaxRequestsPerChild&lt;/code&gt;). The results I got are as follows:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;MinSpareServers&lt;/code&gt;, &lt;code&gt;MaxSpareServers&lt;/code&gt; and &lt;code&gt;StartServers&lt;/code&gt; are only important for user response times. Sometimes users will have to wait a bit.&lt;/p&gt;
+
+&lt;p&gt;The important parameters are &lt;code&gt;MaxClients&lt;/code&gt; and &lt;code&gt;MaxRequestsPerChild&lt;/code&gt;. &lt;code&gt;MaxClients&lt;/code&gt; should be not too big, so it will not abuse your machine&amp;rsquo;s memory resources, and not too small, for if it is, your users will be forced to wait for the children to become free to serve them. &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; should be as large as possible, to get the full benefit of mod_perl, but watch your server at the beginning to make sure your scripts are not leaking memory, thereby causing your server (and your service) to die very fast.&lt;/p&gt;
+
+&lt;p&gt;Also, it is important to understand that we didn&amp;rsquo;t test the response times in the tests above, but the ability of the server to respond under a heavy load of requests. If the test script was heavier, then the numbers would be different but the conclusions similar.&lt;/p&gt;
+
+&lt;p&gt;The benchmarks were run with:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;HW: RS6000, 1Gb RAM&lt;/li&gt;
+&lt;li&gt;SW: AIX 4.1.5 . mod_perl 1.16, apache 1.3.3&lt;/li&gt;
+&lt;li&gt;Machine running only mysql, httpd docs and mod_perl servers.&lt;/li&gt;
+&lt;li&gt;Machine was _completely_ unloaded during the benchmarking.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;After each server restart when I changed the server&amp;rsquo;s configuration, I made sure that the scripts were preloaded by fetching a script at least once for every child.&lt;/p&gt;
+
+&lt;p&gt;It is important to notice that none of the requests timed out, even if it was kept in the server&amp;rsquo;s queue for more than a minute! That is the way &lt;strong&gt;ab&lt;/strong&gt; works, which is OK for testing purposes but will be unacceptable in the real world - users will not wait for more than five to 10 seconds for a request to complete, and the client (i.e. the browser) will time out in a few minutes.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s take a look at some real code whose execution time is more than a few milliseconds. We will do some real testing and collect the data into tables for easier viewing.&lt;/p&gt;
+
+&lt;p&gt;I will use the following abbreviations:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  NR    = Total Number of Request
+  NC    = Concurrency
+  MC    = MaxClients
+  MRPC  = MaxRequestsPerChild
+  RPS   = Requests per second
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running a mod_perl script with lots of mysql queries (the script under test is mysqld limited) (&lt;a href=&#34;http://www.example.com/perl/access/access.cgi?do_sub=query_form&#34;&gt;http://www.example.com/perl/access/access.cgi?do_sub=query_form&lt;/a&gt;), with the configuration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+  MaxRequestsPerChild 5000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;gives us:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     NR   NC    RPS     comment
+  ------------------------------------------------
+     10   10    3.33    # not a reliable figure
+    100   10    3.94
+   1000   10    4.62
+   1000   50    4.09
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Conclusions:&lt;/strong&gt; Here I wanted to show that when the application is slow (not due to perl loading, code compilation and execution, but limited by some external operation) it almost does not matter what load we place on the server. The RPS (Requests per second) is almost the same. Given that all the requests have been served, you have the ability to queue the clients, but be aware that anything that goes into the queue means a waiting client and a client (browser) that might time out!&lt;/p&gt;
+
+&lt;p&gt;Now we will benchmark the same script without using the mysql (code limited by perl only): (&lt;a href=&#34;http://www.example.com/perl/access/access.cgi&#34;&gt;http://www.example.com/perl/access/access.cgi&lt;/a&gt;), it&amp;rsquo;s the same script but it just returns the HTML form, without making SQL queries.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+  MaxRequestsPerChild 5000
+
+     NR   NC      RPS   comment
+  ------------------------------------------------
+     10   10    26.95   # not a reliable figure
+    100   10    30.88
+   1000   10    29.31
+   1000   50    28.01
+   1000  100    29.74
+  10000  200    24.92
+ 100000  400    24.95
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Conclusions:&lt;/strong&gt; This time the script we executed was pure perl (not limited by I/O or mysql), so we see that the server serves the requests much faster. You can see the number of requests per second is almost the same for any load, but goes lower when the number of concurrent clients goes beyond &lt;code&gt;MaxClients&lt;/code&gt;. With 25 RPS, the machine simulating a load of 400 concurrent clients will be served in 16 seconds. To be more realistic, assuming a maximum of 100 concurrent clients and 30 requests per second, the client will be served in 3.5 seconds. Pretty good for a highly loaded server.&lt;/p&gt;
+
+&lt;p&gt;Now we will use the server to its full capacity, by keeping all &lt;code&gt;MaxClients&lt;/code&gt; clients alive all the time and having a big &lt;code&gt;MaxRequestsPerChild&lt;/code&gt;, so that no child will be killed during the benchmarking.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers       50
+  MaxSpareServers       50
+  StartServers          50
+  MaxClients            50
+  MaxRequestsPerChild 5000
+
+     NR   NC      RPS   comment
+  ------------------------------------------------
+    100   10    32.05
+   1000   10    33.14
+   1000   50    33.17
+   1000  100    31.72
+  10000  200    31.60
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Conclusion: In this scenario, there is no overhead involving the parent server loading new children, all the servers are available, and the only bottleneck is contention for the CPU.&lt;/p&gt;
+
+&lt;p&gt;Now we will change &lt;code&gt;MaxClients&lt;/code&gt; and watch the results: Let&amp;rsquo;s reduce &lt;code&gt;MaxClients&lt;/code&gt; to 10.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers        8
+  MaxSpareServers       10
+  StartServers          10
+  MaxClients            10
+  MaxRequestsPerChild 5000
+
+     NR   NC      RPS   comment
+  ------------------------------------------------
+     10   10    23.87   # not a reliable figure
+    100   10    32.64
+   1000   10    32.82
+   1000   50    30.43
+   1000  100    25.68
+   1000  500    26.95
+   2000  500    32.53
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Conclusions:&lt;/strong&gt; Very little difference! Ten servers were able to serve almost with the same throughput as 50. Why? My guess is because of CPU throttling. It seems that 10 servers were serving requests five times faster than when we worked with 50 servers. In that case, each child received its CPU time slice five times less frequently. So having a big value for &lt;code&gt;MaxClients&lt;/code&gt;, doesn&amp;rsquo;t mean that the performance will be better. You have just seen the numbers!&lt;/p&gt;
+
+&lt;p&gt;Now we will start drastically to reduce &lt;code&gt;MaxRequestsPerChild&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+
+     NR   NC    MRPC     RPS    comment
+  ------------------------------------------------
+    100   10      10    5.77
+    100   10       5    3.32
+   1000   50      20    8.92
+   1000   50      10    5.47
+   1000   50       5    2.83
+   1000  100      10    6.51
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Conclusions:&lt;/strong&gt; When we drastically reduce &lt;code&gt;MaxRequestsPerChild&lt;/code&gt;, the performance starts to become closer to plain mod_cgi.&lt;/p&gt;
+
+&lt;p&gt;Here are the numbers of this run with mod_cgi, for comparison:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+
+     NR   NC    RPS     comment
+  ------------------------------------------------
+    100   10    1.12
+   1000   50    1.14
+   1000  100    1.13
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Conclusion&lt;/strong&gt;: mod_cgi is much slower. :) In the first test, when NR/NC was &lt;sup&gt;100&lt;/sup&gt;&amp;frasl;&lt;sub&gt;10&lt;/sub&gt;, mod_cgi was capable of 1.12 requests per second. In the same circumstances, mod_perl was capable of 32 requests per second, nearly 30 times faster! In the first test, each client waited about 100 seconds to be served. In the second and third tests, they waited 1,000 seconds!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-choosing-maxclients-choosing-maxclients-span&#34;&gt;&lt;span id=&#34;choosing_maxclients&#34;&gt;Choosing MaxClients&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;MaxClients&lt;/code&gt; directive sets the limit on the number of simultaneous requests that can be supported. No more than this number of child server processes will be created. To configure more than 256 clients, you must edit the &lt;code&gt;HARD_SERVER_LIMIT&lt;/code&gt; entry in &lt;code&gt;httpd.h&lt;/code&gt; and recompile. In our case, we want this variable to be as small as possible, so we can limit the resources used by the server children. Since we can restrict each child&amp;rsquo;s process size with &lt;code&gt;Apache::SizeLimit&lt;/code&gt; or &lt;code&gt;Apache::GTopLimit&lt;/code&gt;, the calculation of &lt;code&gt;MaxClients&lt;/code&gt; is pretty straightforward:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;               Total RAM Dedicated to the Webserver
+  MaxClients = ------------------------------------
+                     MAX child&#39;s process size
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So if I have 400Mb left for the Web server to run with, then I can set &lt;code&gt;MaxClients&lt;/code&gt; to be of 40 if I know that each child is limited to 10Mb of memory (e.g. with &lt;code&gt;Apache::SizeLimit&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;You will be wondering what will happen to your server if there are more concurrent users than &lt;code&gt;MaxClients&lt;/code&gt; at any time. This situation is signified by the following warning message in the &lt;code&gt;error_log&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [Sun Jan 24 12:05:32 1999] [error] server reached MaxClients setting,
+  consider raising the MaxClients setting
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is no problem &amp;ndash; any connection attempts over the &lt;code&gt;MaxClients&lt;/code&gt; limit will normally be queued, up to a number based on the &lt;code&gt;ListenBacklog&lt;/code&gt; directive. When a child process is freed at the end of a different request, the connection will be served.&lt;/p&gt;
+
+&lt;p&gt;It &lt;strong&gt;is an error&lt;/strong&gt; because clients are being put in the queue rather than getting served immediately, despite the fact that they do not get an error response. The error can be allowed to persist to balance available system resources and response time, but sooner or later you will need to get more RAM so you can start more child processes. The best approach is to try not to have this condition reached at all, and if you reach it often you should start to worry about it.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s important to understand how much real memory a child occupies. Your children can share memory between them when the OS supports that. You must take action to allow the sharing to happen. We have disscussed this in one of the previous article whose main topic was shared memory. If you do this, then chances are that your &lt;code&gt;MaxClients&lt;/code&gt; can be even higher. But it seems that it&amp;rsquo;s not so simple to calculate the absolute number. If you come up with a solution, then please let us know! If the shared memory was of the same size throughout the child&amp;rsquo;s life, then we could derive a much better formula:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;               Total_RAM + Shared_RAM_per_Child * (MaxClients - 1)
+  MaxClients = ---------------------------------------------------
+                              Max_Process_Size
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;                    Total_RAM - Shared_RAM_per_Child
+  MaxClients = ---------------------------------------
+               Max_Process_Size - Shared_RAM_per_Child
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s roll some calculations:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Total_RAM            = 500Mb
+  Max_Process_Size     =  10Mb
+  Shared_RAM_per_Child =   4Mb
+
+              500 - 4
+ MaxClients = --------- = 82
+               10 - 4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With no sharing in place&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;                 500
+ MaxClients = --------- = 50
+                 10
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With sharing in place you can have 64 percent more servers without buying more RAM.&lt;/p&gt;
+
+&lt;p&gt;If you improve sharing and keep the sharing level, let&amp;rsquo;s say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Total_RAM            = 500Mb
+  Max_Process_Size     =  10Mb
+  Shared_RAM_per_Child =   8Mb
+
+              500 - 8
+ MaxClients = --------- = 246
+               10 - 8
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;392 percent more servers! Now you can feel the importance of having as much shared memory as possible.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-choosing-maxrequestsperchild-choosing-maxrequestsperchild-span&#34;&gt;&lt;span id=&#34;choosing_maxrequestsperchild&#34;&gt;Choosing MaxRequestsPerChild&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; directive sets the limit on the number of requests that an individual child server process will handle. After &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; requests, the child process will die. If &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; is 0, then the process will live forever.&lt;/p&gt;
+
+&lt;p&gt;Setting &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; to a non-zero limit solves some memory leakage problems caused by sloppy programming practices, whereas a child process consumes more memory after each request.&lt;/p&gt;
+
+&lt;p&gt;If left unbounded, then after a certain number of requests the children will use up all the available memory and leave the server to die from memory starvation. Note that sometimes standard system libraries leak memory too, especially on OSes with bad memory management (e.g. Solaris 2.5 on x86 arch).&lt;/p&gt;
+
+&lt;p&gt;If this is your case, then you can set &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; to a small number. This will allow the system to reclaim the memory that a greedy child process consumed, when it exits after &lt;code&gt;MaxRequestsPerChild&lt;/code&gt; requests.&lt;/p&gt;
+
+&lt;p&gt;But beware &amp;ndash; if you set this number too low, you will lose some of the speed bonus you get from mod_perl. Consider using &lt;code&gt;Apache::PerlRun&lt;/code&gt; if this is the case.&lt;/p&gt;
+
+&lt;p&gt;Another approach is to use the &lt;code&gt;Apache::SizeLimit&lt;/code&gt; or the &lt;code&gt;Apache::GTopLimit&lt;/code&gt; modules. By using either of these modules you should be able to discontinue using the &lt;code&gt;MaxRequestPerChild&lt;/code&gt;, although for some developers, using both in combination does the job. In addition the latter module allows you to kill any servers whose shared memory size drops below a specified limit.&lt;/p&gt;
+
+&lt;h1 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The mod_perl site&amp;rsquo;s URL: &lt;a href=&#34;http://perl.apache.org/&#34;&gt;http://perl.apache.org/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Apache::GTopLimit&#34;&gt;Apache::GTopLimit&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

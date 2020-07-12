@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Email Wap on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/email-wap/</link>
+    <description>Recent content in Email Wap on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 13 Feb 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/email-wap/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Mail to WAP Gateways</title>
+      <link>http://localhost:1313/pub/2004/02/13/mbox2wap.html/</link>
+      <pubDate>Fri, 13 Feb 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/02/13/mbox2wap.html/</guid>
+      <description>
+
+&lt;p&gt;It&amp;rsquo;s coming up to Valentine&amp;rsquo;s day again, and invariably my thoughts turn back to last year&amp;rsquo;s rather memorable weekend-break to Stockholm, in which I learned two things:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Stockholm makes a great Valentine&amp;rsquo;s destination.&lt;/li&gt;
+&lt;li&gt;My girlfriend of the time was not happy with me cracking out my iBook and checking my email halfway into the break.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The relationship, predictably, didn&amp;rsquo;t last much longer, but it did occur to me that a quick and easy way to check my email when away from my computer would be very useful. One of the items that travels everywhere with me, and has some limited Internet access is my phone &amp;ndash; although admittedly this has only WAP access. WAP access, it seemed, would have to do&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;The tool I ended up building fills &lt;strong&gt;my&lt;/strong&gt; needs very well, but possibly won&amp;rsquo;t be such a great match for others. This article looks at considerations when rendering email for display online, especially when space is very limited.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-overview-of-messages-overview-of-messages-span&#34;&gt;&lt;span id=&#34;Overview_of_messages&#34;&gt;Overview of Messages&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The first challenge is reading the contents of our target mailbox. For this, we turn to the Perl Email Project&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Email::Folder&#34;&gt;&lt;code&gt;Email::Folder&lt;/code&gt;&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Email::Folder;
+
+ my $folder = Email::Folder-&amp;gt;new( &#39;/home/sheriff/mbox&#39; );
+
+ for my $message ( $folder-&amp;gt;messages ) {
+
+        ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Email::Folder&#34;&gt;&lt;code&gt;Email::Folder&lt;/code&gt;&lt;/a&gt;&amp;rsquo;s messages() function returns &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt; objects. For my folder-view, I chose to group messages by date, and use the sender&amp;rsquo;s &amp;ldquo;real name&amp;rdquo; as the subject. Something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 30 Jan 2004
+    Michael Roberts
+  * Paul Makepeace
+    Uri Guttman
+ 29 Jan 2004
+    Kate Pugh
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Extracting header fields from &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt; objects couldn&amp;rsquo;t be simpler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $from = $message-&amp;gt;header(&#39;from&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But people familiar with the various email RFCs will know that since email headers have to use only printable US-ASCII, they&amp;rsquo;re very often encoded: your header field might well look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  =?iso-8859-1?q?Pete=20Sergeant?= &amp;lt;pete@clueball.com&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will not look pretty if you use it literally. Thankfully, &lt;a href=&#34;https://metacpan.org/pod/MIME::WordDecoder&#34;&gt;&lt;code&gt;MIME::WordDecoder&lt;/code&gt;&lt;/a&gt; exports the function &lt;code&gt;unmime&lt;/code&gt; &amp;ndash; rendering the above as &amp;ldquo;Pete Sergeant &amp;lt;pete@clueball.com&amp;gt;.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Getting the date from an email is also somewhat nontrivial &amp;ndash; an example &amp;ldquo;Date&amp;rdquo; header looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Fri, 30 Jan 2004 14:09:51 -0000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that&amp;rsquo;s if you&amp;rsquo;re lucky, and it&amp;rsquo;s well-formed, without starting to think about time zones. If we want to do anything useful with dates, we&amp;rsquo;re going to want the date as an epoch time. Luckily, &lt;a href=&#34;https://metacpan.org/pod/DateTime::Format::Mail&#34;&gt;&lt;code&gt;DateTime::Format::Mail&lt;/code&gt;&lt;/a&gt; steps in, and not only parses our date, but returns a highly useful &lt;a href=&#34;https://metacpan.org/pod/DateTime&#34;&gt;&lt;code&gt;DateTime&lt;/code&gt;&lt;/a&gt; object, allowing us to do all kinds of fun date stuff. To simply reformat the date as Day/Month/Year:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $datetime = DateTime::Format::Mail-&amp;gt;new( loose =&amp;gt; 1 );
+ my $time = $datetime-&amp;gt;parse_datetime( $message-&amp;gt;header(&#39;date&#39;) );
+ my $day_month_year = $time-&amp;gt;dmy;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, we&amp;rsquo;re going to want to know if an email is new or not. Luckily, most MUAs will set/edit an email&amp;rsquo;s status header. Rather than checking if an email is new, we check if it&amp;rsquo;s been read &amp;ndash; denoted by a &lt;code&gt;R&lt;/code&gt; in the status header:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $new_flag++ if $message-&amp;gt;header(&#39;Status&#39;) !~ m/R/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s put this all together to produce a listing of a folder. We&amp;rsquo;ll use the well-known Schwartzian transform to make the sorting efficient, but unlike the usual practice, we keep the array reference around, as we&amp;rsquo;ll be using the date as well.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Email::Folder;
+ use MIME::WordDecoder qw( unmime );
+ use DateTime::Format::Mail;
+
+ my $folder = Email::Folder-&amp;gt;new( &#39;/home/sheriff/mbox&#39; );
+ my @to_sort;
+ my $prev_date = &amp;quot;&amp;quot;;
+ for (sort { $a-&amp;gt;[1] cmp $b-&amp;gt;[1]    }
+      map  { [$_, message2dmy($_) ] } 
+      $folder-&amp;gt;messages) {
+     my ($message, $date) = @$_;
+     if ($date ne $prev_date) { print $date, &amp;quot;\n&amp;quot;; $prev_date = $date; }
+     print $message-&amp;gt;header(&#39;Status&#39;) =~ m/R/ ? &amp;quot;   &amp;quot; : &amp;quot; * &amp;quot;;
+     print unmime($message-&amp;gt;header(&#39;from&#39;)), &amp;quot;\n&amp;quot;;
+ }
+
+ sub message2dmy {
+     my $message = shift;
+     my $datetime = DateTime::Format::Mail-&amp;gt;new( loose =&amp;gt; 1 );
+     my $time = $datetime-&amp;gt;parse_datetime( $message-&amp;gt;header(&#39;date&#39;) );
+     my $day_month_year = $time-&amp;gt;dmy;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-displaying-individual-messages-displaying-individual-messages-span&#34;&gt;&lt;span id=&#34;Displaying_individual_messages&#34;&gt;Displaying Individual Messages&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Those are the main challenges of a folder-view. Viewing an individual message presents a different set of challenges.&lt;/p&gt;
+
+&lt;p&gt;First and foremost is the appalling habit people have of sending each other HTML-&amp;ldquo;enriched&amp;rdquo; emails, with all sorts of attachments. If you&amp;rsquo;re trying to read the email on a cell phone over a slow connection, you don&amp;rsquo;t want to be battling with this &amp;ndash; you want a nice plain-text representation of the email. So, &lt;a href=&#34;https://metacpan.org/pod/Email::StripMIME&#34;&gt;&lt;code&gt;Email::StripMIME&lt;/code&gt;&lt;/a&gt; is your friend. Assuming we have an &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt; object, we can simply:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $string = $email_simple_object-&amp;gt;as_string();
+ $string = Email::StripMIME::strip_mime( $string );
+ $email_simple_object = Email::Simple-&amp;gt;new( $string );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, if we really wanted to cut down on the amount of content we&amp;rsquo;re receiving, and we&amp;rsquo;re only using this tool to get an overview of our messages, we can cut out quoted text, remnants of the email that the sender was replying to, and so on. &lt;a href=&#34;https://metacpan.org/pod/Text::Original&#34;&gt;&lt;code&gt;Text::Original&lt;/code&gt;&lt;/a&gt; does just this for us, as well as stripping out attribution lines:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $body = $email_simple_object-&amp;gt;body();
+ $body = first_lines( $body, 20);
+ $email_simple_object-&amp;gt;body( $body );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The final problem is in creating actual real WML. Sadly, this is nontrivial, and in the past, I&amp;rsquo;ve tended to resort to outputting it by hand. But it doesn&amp;rsquo;t have to be that way &amp;ndash;; &lt;a href=&#34;https://metacpan.org/pod/CGI::WML&#34;&gt;&lt;code&gt;CGI::WML&lt;/code&gt;&lt;/a&gt; just about handles the task for us. &lt;a href=&#34;https://metacpan.org/pod/CGI::WML&#34;&gt;&lt;code&gt;CGI::WML&lt;/code&gt;&lt;/a&gt; is a subclass of &lt;a href=&#34;https://metacpan.org/pod/CGI&#34;&gt;&lt;code&gt;CGI&lt;/code&gt;&lt;/a&gt;, with methods specific to WAP.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;Conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There is no fully working demo at the end of this article. My personal tool works in a way that&amp;rsquo;s probably a little too specific for most people&amp;rsquo;s needs. Hopefully however, it&amp;rsquo;s introduced you to one or more modules you didn&amp;rsquo;t know existed, and given you some inspiration to tinker around with Perl and email-handling.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

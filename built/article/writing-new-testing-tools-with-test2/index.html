@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Writing new testing tools with Test2 </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Extending Perl&#39;s powerful new test framework"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/writing-new-testing-tools-with-test2/" />
+<meta property="og:title" content="Writing new testing tools with Test2" />
+<meta property="og:description" content="Extending Perl&#39;s powerful new test framework">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2018-06-06T06:06:06Z" />
+<meta property="og:image" content="http://localhost:1313/images/writing-new-test-tools-with-test2/thumb_bugs.jpg" />
+<meta property="og:article:tag" content="test2" />
+<meta property="og:article:tag" content="test2-tools-skipuntil" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Writing new testing tools with Test2</h1>
+              <p class="blog-post-meta">Jun 12, 2018 by
+              
+              
+                
+                
+                <a href="#author-bio-david-farrell">David Farrell</a>
+              
+              </p>
+              <img alt="" src="/images/writing-new-test-tools-with-test2/bugs.jpg"/>
+                
+
+<p>Perl has had great testing tools for a long time, but <a href="https://metacpan.org/pod/Test2">Test2</a> is the single biggest improvement to Perl testing in years. One of my favorite Test2 features is how easy it is to extend it with new tools, and today I&rsquo;ll show you how I wrote my first tool.</p>
+
+<h3 id="dealing-with-known-test-failures">Dealing with known test failures</h3>
+
+<p>Ideally when your tests fail, it means that something needs to be fixed, and that thing is fixable. However in the Real World™ things aren&rsquo;t always that simple. For example you might investigate a failure, figure out the root cause, but the person to fix it is on vacation. Or perhaps there&rsquo;s a datetime bug in the code, and it will resolve itself in a few days. The key here is that the failure is understood and not serious but also impractical to fix in the short term.</p>
+
+<p>I found myself in exactly this situation a few months ago. I didn&rsquo;t want to skip the failing test, as I thought it might be forgotten, but I also wanted the build to complete in the meantime. In large distributed development teams, you want successful builds to be &ldquo;the norm&rdquo;, so when a build fails, developers take notice.</p>
+
+<p>I decided what I needed was a <code>skip_until</code> function that would skip the test until a date was reached, at which point it would start failing again. Not finding anything on CPAN, I figured it was time for a new testing tool.</p>
+
+<h3 id="test2-terminology-plugins-vs-tools">Test2 terminology: plugins vs tools</h3>
+
+<p>In Test2, a &ldquo;plugin&rdquo; is a package which overrides the behavior of existing Test2 features, whereas a &ldquo;tool&rdquo; is a package which provides new functions. In this case I was creating a new testing function which didn&rsquo;t already exist, so I needed to write a <a href="https://metacpan.org/pod/Test2::Tools">Test2::Tools</a>.</p>
+
+<h3 id="test2-api-context">Test2::API context</h3>
+
+<p><a href="https://metacpan.org/pod/Test2::API">Test2::API</a> provides the <code>context</code> function to access the test context during runtime. The context object provides common test methods like <code>pass</code>, <code>fail</code> and <code>skip</code> etc, which let&rsquo;s you add custom test behavior. Here&rsquo;s how I use it to skip tests:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">package</span> Test2::Tools::SkipUntil;
+<span style="color:#66d9ef">use</span> Test2::API <span style="color:#e6db74">&#39;context&#39;</span>;
+<span style="color:#66d9ef">use</span> Exporter <span style="color:#e6db74">&#39;import&#39;</span>;
+<span style="color:#66d9ef">our</span> @EXPORT_OK <span style="color:#f92672">=</span> (<span style="color:#e6db74">&#39;skip_until&#39;</span>);
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">skip_until</span> {
+  <span style="color:#66d9ef">my</span> ($reason, $count, $date) <span style="color:#f92672">=</span> @_;
+
+  <span style="color:#f92672">...</span>
+
+  <span style="color:#66d9ef">if</span> ($should_skip) {
+    <span style="color:#66d9ef">my</span> $ctx <span style="color:#f92672">=</span> context();
+    $ctx<span style="color:#f92672">-&gt;</span>skip(<span style="color:#e6db74">&#39;skipped test&#39;</span>, <span style="color:#e6db74">&#34;$reason skip until $date&#34;</span>) <span style="color:#66d9ef">for</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">..</span>$count);
+    $ctx<span style="color:#f92672">-&gt;</span>release;
+    <span style="color:#66d9ef">no</span> warnings <span style="color:#e6db74">&#39;exiting&#39;</span>;
+    <span style="color:#66d9ef">last</span> SKIP;
+  }
+}
+<span style="color:#ae81ff">1</span>;</code></pre></div>
+<p>I declare a new function called <code>skip_until</code> which accepts a text reason to skip, a count of tests to skip and a date. This signature is the same as <a href="Test2::Tools::Basic::skip">skip</a>, with the extra date parameter (I don&rsquo;t love the parameter order but I figure it&rsquo;s better to remain similar to prior art).</p>
+
+<p>For the sake of brevity I&rsquo;ve omitted the argument checking code and the date time logic to decide whether <code>$should_skip</code> is true or not. If it is, the main <code>if</code> block obtains the test context, and calls <code>skip</code> for the count of tests to skip. Next it calls <code>release</code> to free the test context (<a href="https://metacpan.org/pod/Test2::API::Context#CRITICAL-DETAILS">important!</a>). Finally it calls <code>last</code> to exit the SKIP block that <code>skip_until</code> would be called from.</p>
+
+<p>Careful readers might notice that the use of <code>SKIP</code> means <code>$count</code> can be 1, and all tests within the skip block will still be skipped. This is the same as the Test2 behavior, in fact that code is almost identical to the Test2::Tools::Basic <a href="https://metacpan.org/source/EXODIST/Test2-Suite-0.000114/lib/Test2/Tools/Basic.pm#L67">source</a>.</p>
+
+<h3 id="using-the-new-tool">Using the new tool</h3>
+
+<p>Now if I import <code>Test2::Tools::SkipUntil</code> in my tests I  can use it like any other module:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#75715e">#!/usr/bin/perl</span>
+<span style="color:#66d9ef">use</span> Test2::Tools::Basic;
+<span style="color:#66d9ef">use</span> Test2::Tools::SkipUntil <span style="color:#e6db74">&#39;skip_until&#39;</span>;
+
+SKIP:{
+  skip_until <span style="color:#e6db74">&#39;This should be fixed next month, see ticket #529&#39;</span>, <span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#39;2018-06-30&#39;</span>;
+
+  ok foo();
+  <span style="color:#f92672">...</span>
+}
+
+done_testing;</code></pre></div>
+<p>And the tests will be skipped until the date is reached. Test2 makes writing new testing tools easy, if you have a good idea for a new testing function, consider using Test2.</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+<li><a href="https://metacpan.org/pod/Test2::Tools">Test2::Tools</a> is the Test2 documentation for Test2 tools</li>
+<li>For plugins see <a href="https://metacpan.org/pod/Test2::Plugin">Test2::Plugin</a></li>
+<li><a href="https://metacpan.org/pod/Test2::API">Test2::API</a> is used to get the test context object, see the context <a href="https://metacpan.org/pod/Test2::API::Context#CRITICAL-DETAILS">cardinal rules</a></li>
+<li><a href="https://metacpan.org/pod/Test2::Tools::SkipUntil">Test2::Tools::SkipUntil</a></li>
+</ul>
+
+<p><br />
+Cover image via <a href="https://pixabay.com/p-762486/">pixabay</a>.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/testing">testing</a></div>
+                
+                  <div class="tag"><a href="/tags/test2">test2</a></div>
+                
+                  <div class="tag"><a href="/tags/test2-tools-skipuntil">test2-tools-skipuntil</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-david-farrell">
+  <div class="col-sm-2">
+    
+    <a href="/authors/david-farrell/"><div class="circle-avatar" style="background-image:url(/images/author/david-farrell.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/david-farrell/"><h3>David Farrell</h3></a>
+    <p>David is the editor of Perl.com. An organizer of the <a href="http://www.meetup.com/The-New-York-Perl-Meetup-Group/">New York Perl Meetup</a>, he works for ZipRecruiter as a software developer, and sometimes <a href="https://twitter.com/perltricks">tweets</a> about Perl and Open Source.</p>
+    <h5><a href="/authors/david-farrell/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/writing-new-testing-tools-with-test2.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

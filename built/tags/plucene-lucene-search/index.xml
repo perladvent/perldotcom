@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Plucene Lucene Search on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/plucene-lucene-search/</link>
+    <description>Recent content in Plucene Lucene Search on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 19 Feb 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/plucene-lucene-search/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Find What You Want with Plucene</title>
+      <link>http://localhost:1313/pub/2004/02/19/plucene.html/</link>
+      <pubDate>Thu, 19 Feb 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/02/19/plucene.html/</guid>
+      <description>
+
+&lt;p&gt;For the past few months, my &lt;a href=&#34;http://www.kasei.com&#34;&gt;former employers&lt;/a&gt; and I have been working on a port of the Java &lt;a href=&#34;http://jakarta.apache.org/lucene/&#34;&gt;Lucene&lt;/a&gt; search engine toolkit.&lt;/p&gt;
+
+&lt;p&gt;On the February 3rd, &lt;a href=&#34;https://metacpan.org/pod/Plucene&#34;&gt;Plucene&lt;/a&gt; was released to the world, implementing almost all of the functionality of the Java equivalent. Satisfied with a job done, I parted company with Kasei to pursue some projects of my own &amp;ndash; about which I&amp;rsquo;m sure you&amp;rsquo;ll be hearing more later.&lt;/p&gt;
+
+&lt;p&gt;Very soon after, the phone rang, and it turned out that someone actually wanted to use this Plucene thing; they needed to add a search engine to a web-based book that they had produced, and had some pretty complex requirements that meant that the usual tools &amp;ndash; HTDig, Glimpse and friends &amp;ndash; couldn&amp;rsquo;t quite do the job. Could I come around and write a Plucene-based search engine for them?&lt;/p&gt;
+
+&lt;p&gt;Well, this turned out to have its challenges, and these turned out to make an interesting introduction to using Plucene, so I decided to share them with you. I won&amp;rsquo;t tell you how to do all of the complicated things we had to do for this custom engine, but I should give you enough to get your own Plucene indexes up and running.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-making-it-easy-plucene-simple-making-it-easy-plucene-simple-span&#34;&gt;&lt;span id=&#34;Making_it_easy_-_Plucene::Simple&#34;&gt;Making It Easy: Plucene::Simple&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The easiest way to use Plucene is through the &lt;code&gt;Plucene::Simple&lt;/code&gt; module. To write our index, we say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Plucene::Simple;
+
+    my $index = Plucene::Simple-&amp;gt;open( &amp;quot;/var/plucene/site&amp;quot; );
+    for my $id (keys %documents) {
+        $index-&amp;gt;add($id =&amp;gt; $documents{$id});
+    }
+    $index-&amp;gt;optimize;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But what goes in our &lt;code&gt;%documents&lt;/code&gt; hash?&lt;/p&gt;
+
+&lt;p&gt;One difference between Plucene and other search systems like HTDig is that Plucene only provides a toolkit; it doesn&amp;rsquo;t provide a complete indexer to suck up a directory of files, for instance. You have to make your own representation of the content of a document, and then add that to the index. For instance, we want to end up with a hash like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; %documents = (
+    &amp;quot;chapter5.html&amp;quot; =&amp;gt; { chapter =&amp;gt; 5,
+                         title =&amp;gt; &amp;quot;In which Piglet meets a Heffalump&amp;quot;,
+                         content =&amp;gt; &amp;quot;One day, when Christopher Robin...&amp;quot;,
+                       }
+ );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This means that we can&amp;rsquo;t simply index the book by providing a list of files to a command-line program. We have to actually write some code.&lt;/p&gt;
+
+&lt;p&gt;Some people may think this is a problem, but I see it as an opportunity. For instance, most web pages these days (this one included) are surrounded in a template with banners, titles, and navigation bars down the side. These things are static and appear on every page, so can only harm search engine results; we don&amp;rsquo;t want to index them. Our indexing code can look at the structure of the document, extract some metadata from it, and construct a hash reference that represents just the important bits of content.&lt;/p&gt;
+
+&lt;p&gt;The HTML files I had to deal with looked a bit like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;head&amp;gt;
+        &amp;lt;meta name=&amp;quot;chapter&amp;quot; value=&amp;quot;...&amp;quot;&amp;gt;
+        &amp;lt;!-- other useful metadata here --&amp;gt;
+        &amp;lt;title&amp;gt; ... &amp;lt;/title&amp;gt;
+    &amp;lt;/head&amp;gt;
+    &amp;lt;div id=&amp;quot;navigation&amp;quot;&amp;gt;...&amp;lt;/div&amp;gt;
+    &amp;lt;div id=&amp;quot;content&amp;quot;&amp;gt;...&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I wanted to extract what was in the &lt;code&gt;meta&lt;/code&gt; tags, the &lt;code&gt;title&lt;/code&gt;, and everything in the &lt;code&gt;content&lt;/code&gt; div. One of the nicest ways to do this in Perl is with the &lt;a href=&#34;https://metacpan.org/pod/HTML::TreeBuilder&#34;&gt;&lt;code&gt;HTML::TreeBuilder&lt;/code&gt;&lt;/a&gt;, which allows us to &amp;ldquo;dig down&amp;rdquo; for the elements that we want to find:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use HTML::TreeBuilder;
+    my $tree = HTML::TreeBuilder-&amp;gt;new-&amp;gt;parse_file(&amp;quot;chapter1.html&amp;quot;);
+    my $document = { chapter =&amp;gt; 1 };
+
+    my $title_tag = $tree-&amp;gt;look_down( _tag =&amp;gt; &amp;quot;title&amp;quot; );
+    $document-&amp;gt;{title} = $title_tag-&amp;gt;as_text;
+
+    my $content_tag = $tree-&amp;gt;look_down( _tag =&amp;gt; &amp;quot;div&amp;quot;, id =&amp;gt; &amp;quot;content&amp;quot; );
+    $document-&amp;gt;{content} = $content_tag-&amp;gt;as_text;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It also allows us to extract attributes from tags:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for my $tag ($tree-&amp;gt;look_down( _tag =&amp;gt; &amp;quot;meta&amp;quot;)) {
+        $document{$tag-&amp;gt;attr(&amp;quot;name&amp;quot;)} = $tag-&amp;gt;attr(&amp;quot;content&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we have the salient parts of the chapter extracted as a hash reference, and we can add this to our index, keyed by the filename:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $index-&amp;gt;add( &amp;quot;chapter1.html&amp;quot; =&amp;gt; $document );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To do this for a whole directory tree of files, we can use the wonderful &lt;a href=&#34;https://metacpan.org/pod/File::Find::Rule&#34;&gt;&lt;code&gt;File::Find::Rule&lt;/code&gt;&lt;/a&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for my $filename (File::Find::Rule-&amp;gt;file
+                      -&amp;gt;name( qr/^(?!index).*\.html/ )-&amp;gt;in(&amp;quot;.&amp;quot;)) {
+        print &amp;quot;Processing $filename...\n&amp;quot;;
+        $writer-&amp;gt;writer( $filename =&amp;gt; file2hash($filename) );
+    }
+    $index-&amp;gt;optimize;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This finds all files underneath the current directory called &lt;code&gt;*.html&lt;/code&gt; that don&amp;rsquo;t start with the characters &lt;code&gt;index&lt;/code&gt;. (We needed some special treatment on the index of the book itself, since providing search results to pages in the index would not be helpful.)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-running-the-search-running-the-search-span&#34;&gt;&lt;span id=&#34;Running_the_Search&#34;&gt;Running the Search&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The search part of the operation is now pretty easy. We have a CGI script or equivalent that gets the search query string, and then we say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Plucene::Simple;
+
+    my (@ids, $error);
+    if (!$query) {
+        $error = &amp;quot;Your search term was empty&amp;quot;;
+    } else {
+        $index = Plucene::Simple-&amp;gt;open( &amp;quot;/var/plucene/site&amp;quot; );
+        @ids = $index-&amp;gt;search($query);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and this returns the list of filenames that matched the query. Because I tend to use Template Toolkit for pretty much everything these days, it became:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $t = Template-&amp;gt;new();
+    $t-&amp;gt;process(&amp;quot;searchResult.html&amp;quot;, {
+        query   =&amp;gt; $query,
+        results =&amp;gt; \@ids,
+        error   =&amp;gt; $error,
+    });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And the relevant part of the template is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [% IF error %]
+       &amp;lt;H2&amp;gt; Search had errors &amp;lt;/H2&amp;gt;
+       &amp;lt;FONT COLOR=&amp;quot;#ff0000&amp;quot;&amp;gt; [% error %] &amp;lt;/FONT&amp;gt;
+    [% ELSE %]
+       &amp;lt;H2&amp;gt; Search results for [% query %] &amp;lt;/H2&amp;gt;
+        [% IF results.size &amp;gt; 0 %]
+            &amp;lt;OL&amp;gt;
+              [% FOR result = results %]
+              &amp;lt;LI&amp;gt;
+                  &amp;lt;A HREF=&amp;quot;/[% filename %]&amp;quot;&amp;gt; [% filename %] &amp;lt;/A&amp;gt;
+              &amp;lt;/LI&amp;gt;
+              [% END %]
+            &amp;lt;/OL&amp;gt;
+        [% ELSE %]
+            &amp;lt;P&amp;gt;No results found&amp;lt;/P&amp;gt;
+        [% END %]
+    [% END %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, this isn&amp;rsquo;t very pretty, for a couple of reasons. The first reason is that we&amp;rsquo;re linking the result to a filename, rather than displaying something friendly like the name of the chapter. The second is that when you get results from a web search engine, you generally also expect to see some context for the terms that you&amp;rsquo;ve just searched for, so you know how the terms appear on the page.&lt;/p&gt;
+
+&lt;p&gt;We can&amp;rsquo;t easily solve the first problem with &lt;code&gt;Plucene::Simple&lt;/code&gt;, so we&amp;rsquo;ll come back to it. But contextualizing search results is something we can do.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-contextualising-results-contextualizing-results-span&#34;&gt;&lt;span id=&#34;Contextualising_results&#34;&gt;Contextualizing Results&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/Text::Context&#34;&gt;&lt;code&gt;Text::Context&lt;/code&gt;&lt;/a&gt; module was written to solve a similar contextualizing problem; it takes a bunch of keywords and a source document, and produces a paragraph-sized chunk of text highlighting where the keywords occur.&lt;/p&gt;
+
+&lt;p&gt;Since it works by trying to subdivide the text into paragraphs, it&amp;rsquo;s helpful to have a text-only version of the document available. If we don&amp;rsquo;t, we can use &lt;code&gt;HTML::TreeBuilder&lt;/code&gt; again to produce them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub snippet {
+        my $filename = shift;
+        use HTML::Tree;
+        my $tree = HTML::TreeBuilder-&amp;gt;new();
+        $tree-&amp;gt;parse_file(DOCUMENT_ROOT . &amp;quot;/&amp;quot; . $filename)
+            or die &amp;quot;Couldn&#39;t parse file&amp;quot;;
+        my $content;
+        my($div) = $tree-&amp;gt;look_down(&amp;quot;_tag&amp;quot;,&amp;quot;div&amp;quot;, &amp;quot;id&amp;quot;, &amp;quot;content&amp;quot;);
+        for my $p ($div-&amp;gt;look_down(sub { shift-&amp;gt;tag() =~ /^(h\d+|p)/i })) {
+            $content . = $p-&amp;gt;as_text.&amp;quot;\n\n&amp;quot;;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This looks for headings and paragraphs and extracts the text from them. Now we can split the search query into individual terms, and then call our &lt;code&gt;Text::Context&lt;/code&gt; module to get a snippet to pass to the templater:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my @terms = split /\s+/, $query;
+        my $snippet = Text::Context-&amp;gt;new($stuff, @terms)-&amp;gt;as_html();
+        return $snippet;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So far, so good! Then, of course, the specifications changed &amp;hellip;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-plucene-components-plucene-components-span&#34;&gt;&lt;span id=&#34;Plucene_Components&#34;&gt;Plucene Components&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One of the things that makes a good search engine into a great search engine is the ability to automatically search for variations and inflections of the terms. For instance, if you search for &amp;ldquo;looking good,&amp;rdquo; you should also find documents that contain &amp;ldquo;looked good,&amp;rdquo; &amp;ldquo;looks good,&amp;rdquo; and so on.&lt;/p&gt;
+
+&lt;p&gt;There are two ways to deal with this; the way HTDig chooses is to replace the &amp;ldquo;looking&amp;rdquo; with &amp;ldquo;(look OR looked OR looks OR looking),&amp;rdquo; but this isn&amp;rsquo;t particularly efficient or comprehensive.&lt;/p&gt;
+
+&lt;p&gt;A second way is to index the words a little differently; filtering them through a stemmer which takes off the suffixes, so that all of the above collapse to &amp;ldquo;look.&amp;rdquo; &lt;a href=&#34;https://metacpan.org/pod/Lingua::Stem::En::stem&#34;&gt;&lt;code&gt;Lingua::Stem::En::stem&lt;/code&gt;&lt;/a&gt; does this, but we can&amp;rsquo;t plug it into &lt;code&gt;Plucene::Simple&lt;/code&gt; directly. To do this, we need to slip under the covers of &lt;code&gt;Plucene::Simple&lt;/code&gt; and meddle with the Plucene API itself.&lt;/p&gt;
+
+&lt;p&gt;Before we see how to do this, let&amp;rsquo;s look at the various components of Plucene.&lt;/p&gt;
+
+&lt;p&gt;The indexing part of the process is handled by &lt;code&gt;Plucene::Index::Writer&lt;/code&gt;; this takes in &lt;code&gt;Plucene::Document&lt;/code&gt; objects, and uses a &lt;code&gt;Plucene::Analysis::Analyzer&lt;/code&gt; subclass to break up the text of the document into tokens. The default analyzer as used by &lt;code&gt;Plucene::Simple&lt;/code&gt; is &lt;code&gt;Plucene::Analysis::SimpleAnalyzer&lt;/code&gt;, which breaks up words on non-letter boundaries and then forces them to lowercase them. The broken-up tokens are put into &lt;code&gt;Plucene::Index::Term&lt;/code&gt; to have a field associated with them; for instance, in our example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;TITLE&amp;gt;In which Pooh goes visiting and gets into a tight place&amp;lt;/HEAD&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will be turned by our &lt;code&gt;HTML::TreeBuilder&lt;/code&gt; munging into&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    {
+    title =&amp;gt; &amp;quot;In which Pooh goes visiting and gets into a tight place&amp;quot;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and &lt;code&gt;Plucene::Simple&lt;/code&gt; turns this into a &lt;code&gt;Plucene::Document::Field&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    bless {name =&amp;gt; &amp;quot;title&amp;quot;,
+    string =&amp;gt; &amp;quot;In which Pooh goes visiting and gets into a tight place&amp;quot;},
+    &amp;quot;Plucene::Document::Field&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and then into a set of &lt;code&gt;Plucene::Index::Term&lt;/code&gt; objects like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    bless { field =&amp;gt; &amp;quot;title&amp;quot;, text =&amp;gt; &amp;quot;in&amp;quot; }, &amp;quot;Plucene::Document::Term&amp;quot;
+    bless { field =&amp;gt; &amp;quot;title&amp;quot;, text =&amp;gt; &amp;quot;which&amp;quot; }, &amp;quot;Plucene::Document::Term&amp;quot;
+    bless { field =&amp;gt; &amp;quot;title&amp;quot;, text =&amp;gt; &amp;quot;pooh&amp;quot; }, &amp;quot;Plucene::Document::Term&amp;quot;
+    bless { field =&amp;gt; &amp;quot;title&amp;quot;, text =&amp;gt; &amp;quot;goes&amp;quot; }, &amp;quot;Plucene::Document::Term&amp;quot;
+    bless { field =&amp;gt; &amp;quot;title&amp;quot;, text =&amp;gt; &amp;quot;visiting&amp;quot; }, &amp;quot;Plucene::Document::Term&amp;quot;
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then various classes write out the terms and their frequencies into the index.&lt;/p&gt;
+
+&lt;p&gt;When we come to searching, the &lt;code&gt;Plucene::Search::IndexSearcher&lt;/code&gt; acts as the top-level classes. It calls a &lt;code&gt;Plucene::QueryParser&lt;/code&gt; to turn the query into a set of &lt;code&gt;Plucene::Search::Query&lt;/code&gt; objects: this allows Plucene to differentiate between phrase queries such as &lt;code&gt;&amp;quot;looks good&amp;quot;&lt;/code&gt;, negated queries (&lt;code&gt;looks -good&lt;/code&gt;), queries in different fields (&lt;code&gt;looks title:good&lt;/code&gt;), and so on.&lt;/p&gt;
+
+&lt;p&gt;This &lt;code&gt;QueryParser&lt;/code&gt;, in turn, uses the same analyzer as the indexer to break up the search terms into tokens. This is because if our indexer has seen &lt;code&gt;BORN2run&lt;/code&gt; and turned it into two tokens, &lt;code&gt;born&lt;/code&gt; and &lt;code&gt;run&lt;/code&gt;, and then we do a search on &lt;code&gt;BORN2run&lt;/code&gt;, we aren&amp;rsquo;t going to find it unless we transform the search terms to &lt;code&gt;born&lt;/code&gt; and &lt;code&gt;run&lt;/code&gt; in the same way.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-using-the-porter-analyzer-using-the-porter-analyzer-span&#34;&gt;&lt;span id=&#34;Using_the_Porter_Analyzer&#34;&gt;Using the Porter Analyzer&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We need to replace the &lt;code&gt;SimpleAnalyzer&lt;/code&gt; with an analyzer that filters through &lt;code&gt;Lingua::Stem::En&lt;/code&gt;. Thankfully, here&amp;rsquo;s one I prepared earlier: &lt;code&gt;Plucene::Plugin::Analyzer::Porter&lt;/code&gt;. However, since &lt;code&gt;Plucene::Simple&lt;/code&gt; doesn&amp;rsquo;t allow us to change analyzers, we have to do everything manually.&lt;/p&gt;
+
+&lt;p&gt;First, we produce a &lt;code&gt;Plucene::Index::Writer&lt;/code&gt;, with the appropriate analyzer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $writer = Plucene::Index::Writer-&amp;gt;new(
+        &amp;quot;/var/plucene/site&amp;quot;,
+        Plucene::Plugin::Analyzer::PorterAnalyzer-&amp;gt;new(),
+        1 # Create the index from scratch
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next we have to build up the &lt;code&gt;Plucene::Document&lt;/code&gt; ourselves, instead of just feeding a hash of attributes to &lt;code&gt;Plucene::Simple-&amp;gt;add&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $doc = Plucene::Document-&amp;gt;new();
+  $doc-&amp;gt;add(Plucene::Document::Field-&amp;gt;Keyword(filename =&amp;gt; $filename));
+
+  my $title_tag = $tree-&amp;gt;look_down( _tag =&amp;gt; &amp;quot;title&amp;quot; );
+  $doc-&amp;gt;add(Plucene::Document::Field-&amp;gt;Text( title =&amp;gt; $title_tag-&amp;gt;as_text ));
+
+  for my $tag ($tree-&amp;gt;look_down( _tag =&amp;gt; &amp;quot;meta&amp;quot;)) {
+      $document{$tag-&amp;gt;attr(&amp;quot;name&amp;quot;)} = $tag-&amp;gt;attr(&amp;quot;content&amp;quot;);
+  }
+
+  my $content_tag = $tree-&amp;gt;look_down( _tag =&amp;gt; &amp;quot;div&amp;quot;, id =&amp;gt; &amp;quot;content&amp;quot; );
+  $doc-&amp;gt;add(Plucene::Document::Field-&amp;gt;UnStored( title =&amp;gt; $content_tag-&amp;gt;as_text ));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You&amp;rsquo;ll notice that there are three different constructors for &lt;code&gt;Plucene::Document::Field&lt;/code&gt; objects &amp;ndash; the &lt;code&gt;Keyword&lt;/code&gt; is stored and can be retrieved, but isn&amp;rsquo;t broken up into tokens; this is used for things like filenames, where you want to get them back from the index verbatim. Fields constructed using &lt;code&gt;Text&lt;/code&gt; can be retrieved, but are also broken up into tokens for searching in the index. &lt;code&gt;UnStored&lt;/code&gt; text can&amp;rsquo;t be retrieved, but is indexed, so we use this for the content, the main bulk of the book.&lt;/p&gt;
+
+&lt;p&gt;This will also solve our problem with the English description of the link, since it will allow us to retrieve the title field for a search hit.&lt;/p&gt;
+
+&lt;p&gt;Once we have our document object, we can add it into the index:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $writer-&amp;gt;add($doc);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now that we have the text filtered through the Porter stemmer, the tokens indexed will look like &amp;ldquo;&lt;code&gt;in which pooh goe visit&lt;/code&gt;.&amp;rdquo; Now we need to make sure that the same filter is used in searching, which means we also have to rewrite the search code to use this analyzer. First, we open the index for searching:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $searcher = Plucene::Search::IndexSearcher-&amp;gt;new( &amp;quot;/var/plucene/site&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we parse the query, specifying that any unqualified terms should be sought in the &lt;code&gt;content&lt;/code&gt; field:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $parser = Plucene::QueryParser-&amp;gt;new({
+            analyzer =&amp;gt; Plucene::Plugin::PorterAnalyzer-&amp;gt;new(),
+            default  =&amp;gt; &amp;quot;content&amp;quot;
+        });
+    my $parsed = $parser-&amp;gt;parse($query);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, we declare a &lt;code&gt;Plucene::Search::HitCollector&lt;/code&gt;; this is a callback which is called every time a search hit is found. We use it to populate an array of information about hits:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @docs;
+    my $hc       = Plucene::Search::HitCollector-&amp;gt;new(
+        collect =&amp;gt; sub {
+            my ($self, $doc, $score) = @_;
+            my $res = eval { $searcher-&amp;gt;doc($doc) };
+            push @docs, $res if $res;
+        });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And we do the search:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $searcher-&amp;gt;search_hc($parsed, $hc);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This fills &lt;code&gt;@docs&lt;/code&gt; with &lt;code&gt;Plucene::Document&lt;/code&gt; objects; from these, we want to extract the filename and the title fields, to pass to the templates:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @results = map {{ 
+        filename =&amp;gt; $_-&amp;gt;get(&amp;quot;filename&amp;quot;)-&amp;gt;string,
+        title =&amp;gt; $_-&amp;gt;get(&amp;quot;title&amp;quot;)-&amp;gt;string,
+    }} @docs;
+
+    for (@results) {
+        $_-&amp;gt;{snippet} = snippet($_-&amp;gt;{filename})
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can put together a more impressive display for each result:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;LI&amp;gt;
+    &amp;lt;BLOCKQUOTE&amp;gt;
+    [% result.snippet %]
+    &amp;lt;/BLOCKQUOTE&amp;gt;
+    &amp;lt;P&amp;gt;In &amp;lt;A HREF=&amp;quot;/[% result.filename %]&amp;quot;&amp;gt; [% result.title %]&amp;lt;/A&amp;gt;&amp;lt;/P&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This ends up looking like the following:&lt;/p&gt;
+
+&lt;h3 id=&#34;search-results-for-bears-build&#34;&gt;Search results for &amp;ldquo;bears build&amp;rdquo;&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;It&amp;rsquo;s a very funny thought that, if &lt;strong&gt;Bears&lt;/strong&gt; were Bees, they&amp;rsquo;d &lt;strong&gt;build&lt;/strong&gt; their nests are the bottom of trees.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;In &lt;em&gt;We are introduced&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Which looks quite nice and professional. Except for one slight matter.&lt;/p&gt;
+
+&lt;p&gt;Suppose we had looked for &lt;code&gt;bear builds&lt;/code&gt;. We&amp;rsquo;d still match the same bit of text, thanks to stemming. However, the exact words that we&amp;rsquo;re looking for aren&amp;rsquo;t in that bit of text, so the contextualizer won&amp;rsquo;t do the right thing. What we need, then, is a version of &lt;code&gt;Text::Context&lt;/code&gt; that knows about Porter stemming. Thankfully, &lt;a href=&#34;https://metacpan.org/pod/Text::Context::Stemmer&#34;&gt;&lt;code&gt;Text::Context::Stemmer&lt;/code&gt;&lt;/a&gt; steps into the breach.&lt;/p&gt;
+
+&lt;p&gt;We have a web search engine that understands Porter stemming. The first part of my job is done.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-and-everything-else-and-everything-else-span&#34;&gt;&lt;span id=&#34;And_everything_else&#34;&gt;And Everything Else&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There are plenty of other things we can do with Plucene: use the metadata to restrict the search to particular chapters, for instance; filter out stop words with the &lt;code&gt;Plucene::Analysis::StopFilter&lt;/code&gt;; restrict the search to a series of dates, using the &lt;code&gt;Plucene::Document::DateSerializer&lt;/code&gt; module, and so on.&lt;/p&gt;
+
+&lt;p&gt;Plucene is a general-purpose search engine; while the &lt;code&gt;Plucene::Simple&lt;/code&gt; interface to it allows you to get a good search tool up and running very quickly, that&amp;rsquo;s very much only the tip of the iceberg. By getting into the Plucene API itself, we can build a complex, customized search engine for any application.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

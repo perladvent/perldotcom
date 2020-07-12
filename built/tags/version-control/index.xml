@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Version Control on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/version-control/</link>
+    <description>Recent content in Version Control on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 04 Mar 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/version-control/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Distributed Version Control with svk</title>
+      <link>http://localhost:1313/pub/2004/03/03/svk.html/</link>
+      <pubDate>Thu, 04 Mar 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/03/03/svk.html/</guid>
+      <description>
+
+&lt;p&gt;I started to use &lt;a href=&#34;http://subversion.tigris.org/&#34;&gt;Subversion&lt;/a&gt; one year ago and liked the elegant file-system design a lot. Soon it became impossible for me to go back to CVS. This means that I felt uncomfortable whenever I was working on projects using CVS, and I wanted to see a tool to keep my Subversion repository in sync with a CVS repository. This would not only save me time importing snapshots into vendor branches, but it would also give me the whole history when I&amp;rsquo;m not online.&lt;/p&gt;
+
+&lt;p&gt;I found Barrie&amp;rsquo;s &lt;a href=&#34;http://public.perforce.com/public/revml/index.html&#34;&gt;VCP&lt;/a&gt; and wrote a Subversion driver. Then I understood why people said Subversion was slow. My driver invoked the &lt;code&gt;svn&lt;/code&gt; command, and it took something like 30 hours to convert from a CVS repository that resulted in 3000 revisions in the Subversion repository.&lt;/p&gt;
+
+&lt;p&gt;Fortunately the Subversion developers made the code easy and ready for wrapping into different languages using SWIG. At that time, only Python bindings were implemented, so I had to do the Perl bindings myself. With the Perl bindings implemented rapidly, VCP gets much faster, and I also started writing &lt;a href=&#34;https://metacpan.org/pod/SVN::Mirror&#34;&gt;&lt;code&gt;SVN::Mirror&lt;/code&gt;&lt;/a&gt;, a module that enables mirroring between Subversion repositories. When I felt bored, I would add Subversion back-end support to tools like Bloxsom and Kwiki.&lt;/p&gt;
+
+&lt;p&gt;Then the season for traveling came. As I&amp;rsquo;m far more productive and creative while disconnected from the Internet, I realized I need a distributed version control system, and decided to give myself a year break to develop such a tool to enable me to be even more productive in the future. &lt;a href=&#34;http://svk.elixus.org/&#34;&gt;svk&lt;/a&gt; was born soon after my birthday in September 2003.&lt;/p&gt;
+
+&lt;h3 id=&#34;why&#34;&gt;Why?&lt;/h3&gt;
+
+&lt;p&gt;There are other distributed version control systems available: Arch, &lt;code&gt;monotone&lt;/code&gt;, &lt;code&gt;darcs&lt;/code&gt;. The functionalities they offer are more or less equivalent.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;svk&lt;/code&gt;, however, is written in Perl, and so might be more hackable by a large community. &lt;code&gt;svk&lt;/code&gt; also has a set of commands similar to those of &lt;code&gt;cvs&lt;/code&gt;. On top of this, &lt;code&gt;svk&lt;/code&gt; plans to implement transparent interpolation between different version-control systems.&lt;/p&gt;
+
+&lt;p&gt;As I don&amp;rsquo;t see any strong argument suggesting one system over another, it&amp;rsquo;s really up to you to try and decide.&lt;/p&gt;
+
+&lt;h3 id=&#34;design-decisions&#34;&gt;Design Decisions&lt;/h3&gt;
+
+&lt;p&gt;Subversion has a layered design:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;fs&lt;/code&gt;: Underlying versioned tree library using &lt;code&gt;bdb&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;repos&lt;/code&gt;: Higher-level support for the &lt;code&gt;fs&lt;/code&gt;, like log messages.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ra&lt;/code&gt;: Repository access. Abstracted protocol handlers.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;wc&lt;/code&gt;: Working copy handling.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;client&lt;/code&gt;: Implements the commands for clients.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The first design decision was to drop the &lt;code&gt;wc&lt;/code&gt; and &lt;code&gt;ra&lt;/code&gt; layers. Elaborating the Subversion design mentality: &amp;ldquo;Bandwidth is expensive, disks are cheap,&amp;rdquo; we should really keep a local copy for every revision &amp;ndash; and &lt;code&gt;SVN::Mirror&lt;/code&gt; is already available for such purposes.&lt;/p&gt;
+
+&lt;p&gt;Having everything in a local repository, we don&amp;rsquo;t need anything like the bloated &lt;code&gt;wc&lt;/code&gt; implementation at all. The &lt;code&gt;wc&lt;/code&gt; library not only has the &lt;code&gt;.svn&lt;/code&gt; metadata directory to confuse your favorite utilities like &lt;code&gt;diff&lt;/code&gt; and &lt;code&gt;grep&lt;/code&gt;, but also stores a text-base that makes your checkout twice the size of the actual content. XD (which is the character-wise increment of &lt;code&gt;wc&lt;/code&gt;) was written to maintain checkout copies in a lightweight manner.&lt;/p&gt;
+
+&lt;p&gt;Next, I found the most important component of Subversion is not on the above list. It&amp;rsquo;s the delta library that defines the API for describing tree deltas; this is definitely the core thing in tree-based version control systems. It&amp;rsquo;s called &amp;ldquo;Delta Editor.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;For example, running a delta between revision 1 and revision 3 will generate a series of method calls (&lt;code&gt;add_directory&lt;/code&gt;, &lt;code&gt;open_file&lt;/code&gt;, &lt;code&gt;apply_textdelta&lt;/code&gt;, &lt;code&gt;close_file&lt;/code&gt;, &lt;code&gt;close_directory&lt;/code&gt;, etc.), to the targeted editor object. These method calls describe the changes made from revision 1 to revision 3.&lt;/p&gt;
+
+&lt;p&gt;While &lt;code&gt;svk&lt;/code&gt; was self-hosting within two months of development, I started to refactor the existing code to center around this interface. With Perl, I could easily stack the editors together, making each editor do its own job, adding arbitrary callbacks as extension to the API, and all of the fun things you know you can do with Perl. Much of the functionality is abstracted and it resulted in the following core components of &lt;code&gt;svk&lt;/code&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;An editor that receives delta calls to modify the checkout copy.&lt;/li&gt;
+&lt;li&gt;A function to generate delta calls for describing the modification done to the checkout copy.&lt;/li&gt;
+&lt;li&gt;An editor that takes delta calls and merges them with a tree to generate non-conflicting calls.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Together with these, the logic behind most of the commands became just a question of gluing together a delta generator and the appropriate editors.&lt;/p&gt;
+
+&lt;p&gt;Additionally, with Perl&amp;rsquo;s flexible PerlIO layers system, keyword expansion (like &lt;code&gt;$Id$&lt;/code&gt; in &lt;code&gt;cvs&lt;/code&gt;) was done within one hour. The reusable part of this was abstracted out to the &lt;a href=&#34;https://metacpan.org/pod/PerlIO::via::dynamic&#34;&gt;&lt;code&gt;PerlIO::via::dynamic&lt;/code&gt;&lt;/a&gt; module on CPAN.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s see &lt;code&gt;svk&lt;/code&gt; in action.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-first-look&#34;&gt;A First Look&lt;/h3&gt;
+
+&lt;p&gt;I hate typing those long URLs when using Subversion. So mapping repositories to shorter names is a must:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ svk depotmap
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will help you create a default repository at &lt;code&gt;~/.svk/local&lt;/code&gt;, and you could refer to it by &lt;code&gt;//&lt;/code&gt; in the future. If you have a Subversion repository on the disk, you could add another line: &lt;code&gt;test: &#39;/path/to/repos&#39;&lt;/code&gt;. Then you have immediate access to the existing repository &amp;ndash; only with the shorter name &lt;code&gt;/test/&lt;/code&gt; instead of &lt;code&gt;file:///long-path-plus-auto-complete-wont-work&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s put something in it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk import //project/vendor /path/to/project-0.01
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will do what you think: import things into &lt;code&gt;//project/vendor&lt;/code&gt;. Repeat the command with a newer version of this project, say 0.02, you&amp;rsquo;ll have a vendor branch tracked on the path.&lt;/p&gt;
+
+&lt;p&gt;Like Subversion, branches and tags are implemented as cheap file system copies:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk cp -m &#39;development trunk for project&#39; //project/vendor //project/trunk
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s check it out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk checkout //project/trunk ~/work/project
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you have experience with &lt;code&gt;cvs&lt;/code&gt; or Subversion, you&amp;rsquo;ll find it familiar when trying to add, modify, remove, or commit files. &lt;code&gt;svk log&lt;/code&gt; will give a change history of files or directories.&lt;/p&gt;
+
+&lt;p&gt;Suppose you import project-0.02 after branching trunk, and want to merge the changes from the vendor branch. You just need to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk smerge //project/vendor //project/trunk
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;svk&lt;/code&gt; remembers branch and merge history, so it does things automatically for you. If there are conflicts, just replace &lt;code&gt;//project/trunk&lt;/code&gt; with a checkout path such as &lt;code&gt;~/project/trunk&lt;/code&gt;. You will be able to see the conflicts. Resolve them and commit once done. Merging is no more painful.&lt;/p&gt;
+
+&lt;p&gt;Once merged, you could bring the checkout copy of your trunk to the latest revision with &lt;code&gt;svk update&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;working-with-remote-repositories&#34;&gt;Working with Remote Repositories&lt;/h3&gt;
+
+&lt;p&gt;As mentioned earlier, &lt;code&gt;svk&lt;/code&gt; uses &lt;code&gt;SVN::Mirror&lt;/code&gt; to handle remote repository access. You need to mirror them before you can use them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk mirror //project/trunk https://svn.somewhere.org/repos/trunk
+$ svk sync //project/trunk
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Currently you need to set up a Subversion server (either using Apache2 or &lt;code&gt;svnserve&lt;/code&gt;). See relevant articles or tutorials about it.&lt;/p&gt;
+
+&lt;p&gt;Now create a local branch, and prepare for traveling:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk cp -m &#39;create a local branch&#39; //project/trunk //project/local
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You could now check out &lt;code&gt;//project/local&lt;/code&gt; and work on it just as above. Of course you could still create your own branch with &lt;code&gt;cp //project/local //project/new-feature&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Use &lt;code&gt;svk sync&lt;/code&gt; to sync the latest trunk when connected. Merging the new changes from trunk to your local branch works just like the previous example of merging from a vendor branch. How about merging your local changes back to the remote repository?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk smerge //project/local //project/trunk
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Transparent, isn&amp;rsquo;t it?&lt;/p&gt;
+
+&lt;p&gt;You should use &lt;code&gt;smerge -C&lt;/code&gt; in advance to check if there are conflicts. Even if your local branch is not merged from the latest trunk, &lt;code&gt;svk&lt;/code&gt; will merge the changes for you and commit to the remote repository directly, provided there&amp;rsquo;s no conflicts. But be sure to sync the latest trunk first.&lt;/p&gt;
+
+&lt;p&gt;In fact, if you are online and about to commit a minor change, you could forget about the process &amp;ldquo;modify on local branch, then merge back.&amp;rdquo; Just do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk switch //project/trunk
+$ svk commit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This first line means we now switch from the local branch to trunk, which is the path containing the mirrored archive. The switch command will keep your local change and apply it to trunk as if those modifications are done to a checkout of trunk. Then the &lt;code&gt;svk commit&lt;/code&gt; on the mirrored path will just commit the changes directly to the remote server and then sync the path for you. If the server is temporarily unavailable, just switch back to local and merge back later.&lt;/p&gt;
+
+&lt;p&gt;You could also merge individual changes. Find the change number you want with &lt;code&gt;svk log&lt;/code&gt;, and use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk cmerge -c 113,125-128,130 //project/trunk //project/stable
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now if you are working on projects where you don&amp;rsquo;t have the permission to commit, you could easily generate a &lt;code&gt;diff&lt;/code&gt; and submit it to the author:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk diff //project/trunk //project/local
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;working-with-multiple-repositories&#34;&gt;Working with Multiple Repositories&lt;/h3&gt;
+
+&lt;p&gt;Many people track development of several projects. Once you use &lt;code&gt;svk&lt;/code&gt; to mirror the projects, you can run &lt;code&gt;svk sync -a&lt;/code&gt; to sync all of them.&lt;/p&gt;
+
+&lt;p&gt;Now suppose another hacker uses &lt;code&gt;svk&lt;/code&gt; and adds a feature to the project and publishes his own branch, and you wish to experiment with or utilize his feature:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk mirror //project/new-feature http://svn.somewhere.else/repos/trunk
+$ svk sync //project/new-feature
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then you could merge the changes from him:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk smerge //project/new-feature ~/work/project
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or you might decide to merge that branch to trunk directly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ svk smerge //project/new-feature //project/trunk
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You could also use the &lt;code&gt;cmerge&lt;/code&gt; command described above to merge specific changes only from that new-feature branch.&lt;/p&gt;
+
+&lt;p&gt;This is the minimum case of the distributed development model. The idea is that everyone could create his private branch of the product and then to be merged back by the maintainer. There have been &lt;a href=&#34;http://web.mit.edu/ghudson/thoughts/bitkeeper.whynot&#34;&gt;arguments against&lt;/a&gt; such model, but I am not going into them here. Although tools somehow promote certain models to solve problems, we change the model or just use another tool when we have to.&lt;/p&gt;
+
+&lt;p&gt;There are several features planned in the near future:&lt;/p&gt;
+
+&lt;p&gt;Changeset signing and verification
+Signing the modified file in a commit with &lt;code&gt;gpg&lt;/code&gt;. This is already done; it&amp;rsquo;s just that the &lt;code&gt;SVN::Mirror&lt;/code&gt; side hasn&amp;rsquo;t been able to propagate and verify the signatures.&lt;/p&gt;
+
+&lt;p&gt;VCP integration
+This would enable mirroring (and thus branching) from alien version control systems, like &lt;code&gt;cvs&lt;/code&gt; or &lt;code&gt;perforce&lt;/code&gt;. Imagine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $ svk mirror //foo/fromcvs cvs://cvs.server/foo@trunk
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will make me (and perhaps other people) more comfortable when working with projects which use other version control systems, and also less confused when switching between different command sets for working with different projects.&lt;/p&gt;
+
+&lt;p&gt;Patch manager
+Non-committers can already easily generate the &lt;code&gt;diff&lt;/code&gt; as shown above. While it would be good to register a merge history with the patch manager, large projects that need to merge many developer-submitted patches would find it handy to have a feature which allowed a review, then test, then click-to-apply for a particular change.&lt;/p&gt;
+
+&lt;p&gt;The development of &lt;code&gt;svk&lt;/code&gt; is rather rapid, so expect them coming soon!&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Five months after the birth of &lt;code&gt;svk&lt;/code&gt;, it had become a fast, full-featured distributed version control system. This is possible mainly because the flexibility of Perl and the spirit of Perl &amp;ndash; use something that exists to create new things. Besides, the commands are designed to DWIM!&lt;/p&gt;
+
+&lt;p&gt;If you find it interesting, get a copy from the home page and install it just like any other Perl module. Hopefully I&amp;rsquo;ll then receive your complaints, make &lt;code&gt;svk&lt;/code&gt; better, and make the open source world more productive.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

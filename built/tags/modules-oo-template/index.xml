@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Modules Oo Template on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/modules-oo-template/</link>
+    <description>Recent content in Modules Oo Template on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 22 Apr 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/modules-oo-template/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>POOL</title>
+      <link>http://localhost:1313/pub/2003/04/22/pool.html/</link>
+      <pubDate>Tue, 22 Apr 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/04/22/pool.html/</guid>
+      <description>
+
+&lt;p&gt;In this article, we&amp;rsquo;re going to look at POOL, a handy &amp;ldquo;little language&amp;rdquo; I recently created for templating object-oriented modules. Now you may not write many object-oriented modules, so this may not sound too interesting to you. Don&amp;rsquo;t worry; I also plan to discuss, among other things, Ruby, how to use the Template Toolkit, profiling, computational linguistic trie structures, Ruby again, and the oil paintings of the Great Masters. Hopefully, something in here will be enough to keep your interest.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-splashing-around-splashing-around-span&#34;&gt;&lt;span id=&#34;splashing_around&#34;&gt;Splashing Around&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One of the reasons that I always feel I never get anything substantial done in Perl is that I&amp;rsquo;m always distracted unduly by subtasks, particularly metaprogramming. I write so many &amp;ldquo;labor-saving&amp;rdquo; modules that I never get around to doing the original labor in the first place.&lt;/p&gt;
+
+&lt;p&gt;For instance, I wanted to write something to handle my accounts; I needed something to handle command-line options but I couldn&amp;rsquo;t be bothered with the &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; rigmarole, so I wrote &lt;a href=&#34;https://metacpan.org/pod/Getopt::Auto&#34;&gt;&lt;code&gt;Getopt::Auto&lt;/code&gt;&lt;/a&gt;. Next, I needed to parse a simple configuration file and I couldn&amp;rsquo;t face writing yet another colon-separated file parser, so I wrote &lt;a href=&#34;https://metacpan.org/pod/Config::Auto&#34;&gt;&lt;code&gt;Config::Auto&lt;/code&gt;&lt;/a&gt;. Finally, I wrote something that examined a database schema and wrote &lt;code&gt;Class::DBI&lt;/code&gt; packages for each table &amp;ndash; all helpful tasks, and they meant I would never have to worry about configuration files or command-line options again. But, of course, I forgot about my accounts-handling application.&lt;/p&gt;
+
+&lt;p&gt;Something like this happened again recently. I started writing a module I&amp;rsquo;m calling &lt;code&gt;Devel::DProfPP&lt;/code&gt;, which parses the data output by &lt;code&gt;Devel::DProf&lt;/code&gt; in a neat object-oriented way. I was about five minutes into it when found myself writing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    =head1 CONSTRUCTOR
+
+        $object = Devel::DProfPP-&amp;gt;new( %options )
+
+    Creates a new C&amp;lt;Devel::DProfPP&amp;gt; instance.
+
+    =
+
+    sub new {
+        my ($class, %opts) = @_;
+        bless { %opts }, $class;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then I wrote my test: (I&amp;rsquo;m a bad boy, I write my tests after I write the code)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Test::More;
+    use_ok(&amp;quot;Devel::DProfPP&amp;quot;);
+    my $x = Devel::DProfPP-&amp;gt;new();
+    isa_ok($x, &amp;quot;Devel::DProfPP&amp;quot;);
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Nothing strange about that, you might think. It&amp;rsquo;s something I&amp;rsquo;ve written a dozen of times before, and something I will probably write a dozen times again. And that&amp;rsquo;s when it hit me. I don&amp;rsquo;t &lt;strong&gt;want&lt;/strong&gt; to spend my time pounding out constructors and accessors, documentation that&amp;rsquo;s practically identical from class to class, tests that are eminently predictable, and I never, ever wanted to have to write &lt;code&gt;my $self = shift;&lt;/code&gt; again.&lt;/p&gt;
+
+&lt;p&gt;There are two ways to solve this. Now I&amp;rsquo;m not going to last long as editor of &lt;code&gt;perl.com&lt;/code&gt; if I suggest everyone should do the first, and switching to Ruby wouldn&amp;rsquo;t help with the documentation and tests part of the problem anyway.&lt;/p&gt;
+
+&lt;p&gt;The second is, of course, to make the computer do the hard work. I sketched out a short description of what I wanted in my &lt;code&gt;Devel::DProfPP&lt;/code&gt; module, and wrote a little parser to read in that description, and then had some code generate the module. Then, I made a critical decision. I had just been doing some work with Template Toolkit, and wanted some more opportunity to play with it. So instead of hard-coding what the output module ought to look like, I simply passed the parsed data structure to a bunch of templates and let them do the work. This gave me an amazing amount of flexibility in terms of styling the output, and that&amp;rsquo;s where I think the power of this system, the Perl Object Oriented Language, (POOL) lies.&lt;/p&gt;
+
+&lt;p&gt;In order to investigate that, let&amp;rsquo;s look at some POOL files and the output they generate, and then we&amp;rsquo;ll examine how the templates work and fit together.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-diving-in-diving-in-span&#34;&gt;&lt;span id=&#34;diving_in&#34;&gt;Diving In&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The POOL language is very, very ad hoc. It&amp;rsquo;s bizarre and inconsistent, but that&amp;rsquo;s because it was created by rationalizing a module description I scribbled down late one night. But it does the job. It&amp;rsquo;s essentially a brain dump, and if your brain happens not to work like mine, then you might not like it; if yours does work like mine, my commiserations.&lt;/p&gt;
+
+&lt;p&gt;The POOL distribution, available from CPAN, ships with a handy reference manual, and that very description; these are the original notes I made when I was mocking up &lt;code&gt;Devel::DProfPP&lt;/code&gt;, and they look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Devel::DProfPP - Parse C&amp;lt;Devel::DProf&amp;gt; output
+        DESCRIPTION
+
+    This module takes the output file from L&amp;lt;Devel::DProf&amp;gt; (typically
+    F&amp;lt;tmon.out&amp;gt;) and parses it into a Perl data structure. Additionally, it
+    can be used in an event-driven style to produce reports more
+    immediately.
+
+        EOD
+        @fh
+        -&amp;gt;@enter    || sub {}
+        -&amp;gt;@leave    || sub {}
+        ro-&amp;gt;@stack  []
+        @syms       []
+        parse
+        top_frame   -&amp;gt;stack-&amp;gt;[0]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first line should be familiar to anyone who writes or uses Perl modules: it&amp;rsquo;s the description line that goes at the top of the documentation. It&amp;rsquo;s enough to identify the class name and provide some documentation about it.&lt;/p&gt;
+
+&lt;p&gt;The next thing is the module description, again for the documentation, which begins with &lt;code&gt;DESCRIPTION&lt;/code&gt; and ends with &lt;code&gt;EOD&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;When you look at the things starting with &lt;code&gt;@&lt;/code&gt;, don&amp;rsquo;t think Perl, think Ruby - they&amp;rsquo;re not arrays, they&amp;rsquo;re instance variables. Our &lt;code&gt;Devel::DProfPP&lt;/code&gt; object will contain a filehandle to read the profiling data from, a subroutine reference for what to do when we enter a subroutine and when we leave one, the current Perl stack, and an array of symbols to hold the subroutine names.&lt;/p&gt;
+
+&lt;p&gt;These instance variables come in three types. The first are variables that the user doesn&amp;rsquo;t set, but come with every new instance. I call these &amp;ldquo;set&amp;rdquo; variables, because they&amp;rsquo;re come set to a particular value. Then there are &amp;ldquo;defaulting&amp;rdquo; instance variables, which the user may specify but otherwise default to a particular value. And then there are just ordinary ones, which are not initialized at all. Thankfully for me, the &lt;code&gt;Devel::DProfPP&lt;/code&gt; brain dump contained all three types.&lt;/p&gt;
+
+&lt;p&gt;The symbol table and the stack are &amp;ldquo;set&amp;rdquo; variables. They come set to the an empty array reference; we signify this by simply putting an empty array reference on the same line.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        @syms       []
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The enter subroutine, on the other hand, is a defaulting variable. (Don&amp;rsquo;t worry about the arrow for now.) If the user doesn&amp;rsquo;t specify an action to be performed when the profiler says that a subroutine has been entered, then we want to default to a coderef that does nothing.&lt;/p&gt;
+
+&lt;p&gt;In Perl, when we want to default to a value, we say something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $object-&amp;gt;{enter} = $args{enter} || sub {};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So the POOL encoding of that is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        @enter      || sub {}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, there&amp;rsquo;s the filehandle, which the user supplies. Nothing special has to occur for this instance variable, so we just name it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        @fh
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;From this, we know enough to create a constructor like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub new {
+        my $class = shift;
+        my %args = @_;
+        my $self = bless {
+            fh =&amp;gt; $args{fh},
+            enter =&amp;gt; $args{enter} || sub {},
+            leave =&amp;gt; $args{leave} || sub {},
+            syms =&amp;gt; [],
+            stack =&amp;gt; [],
+        }, $class;
+        return $self;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that&amp;rsquo;s precisely what POOL does. After the constructor, comes the accessors; we want to be able to say &lt;code&gt;$obj-&amp;gt;enter&lt;/code&gt; to retrieve the on-enter action, for instance. This thought led naturally to the syntax&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    -&amp;gt;@enter || sub {}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When POOL sees an arrow attached to an instance variable, it creates an accessor for it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub enter {
+        my $self = shift;
+        if (defined @_) { $self-&amp;gt;{enter} = @_ };
+
+        return $self-&amp;gt;{enter};
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The stack accessor is an interesting one. First, we only want this to be an accessor and not a mutator &amp;ndash; we really don&amp;rsquo;t want people modifying the profiler&amp;rsquo;s idea of the stack behind its back. This is signified by the letters &lt;code&gt;ro&lt;/code&gt; (read-only) before the accessor arrow.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ro-&amp;gt;@stack []
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A further twist comes from the fact that POOL is still trying to DWIM around my brain and my brain expects POOL to be very clever indeed. Because we have declared &lt;code&gt;stack&lt;/code&gt; to be set to an array reference, we know that the &lt;code&gt;stack&lt;/code&gt; accessor deals with arrays. Hence, when &lt;code&gt;$obj-&amp;gt;stack&lt;/code&gt; is called, it should know to dereference the reference and return a list. This means the code ends up looking like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub stack {
+        my $self = shift;
+        return @{$self-&amp;gt;{stack}};
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Aside from constructors and accessors, POOL knows about two other styles of method. (For now; there are more coming.) There are ordinary methods, which are simply named:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    parse
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sadly we can&amp;rsquo;t DWIM the entire code for this method, so we generate the best we can:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub parse {
+        my $self = shift;
+        #...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And the final style is the delegate. The sad thing about the delegate given in the &lt;code&gt;DProfPP&lt;/code&gt; example is that it doesn&amp;rsquo;t actually work, but we&amp;rsquo;ll pretend that it does. Delegates are useful when you have an object that contains another object; you can provide a method in your class that simply diverts off to the contained object. For instance, if we have a class representing a mail message, then we may wish to store the head and body as separate objects inside our main object. (&lt;code&gt;Mail::Internet&lt;/code&gt; does something like this, containing a &lt;code&gt;Mail::Header&lt;/code&gt; object.) Now we can provide a method called &lt;code&gt;get_header&lt;/code&gt;, which simply locates the header object and passes on its arguments to that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub get_header {
+        my $self = shift;
+        $self-&amp;gt;header-&amp;gt;get(@_);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In POOL lingo, this is a delegate &lt;strong&gt;via&lt;/strong&gt; the &lt;code&gt;header&lt;/code&gt; method, and &lt;code&gt;get&lt;/code&gt; tells us &lt;strong&gt;how&lt;/strong&gt; to do the delegation. It would be specified like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get_header  -&amp;gt;header-&amp;gt;get
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that this is precisely what appears in the middle of the Perl code for this method. An additional feature is that the &amp;ldquo;how&amp;rdquo; part of the delegation is optional. If we were happy for our top-level method to be called &lt;code&gt;get&lt;/code&gt; instead of &lt;code&gt;get_header&lt;/code&gt;, then we could say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get         -&amp;gt;header-&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To me, this symbolizes going &amp;ldquo;through&amp;rdquo; the &lt;code&gt;header&lt;/code&gt; method in order to call the &lt;code&gt;get&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;These are the basics of the POOL language, and we&amp;rsquo;ve seen a little of the code it generates. It also generates a full set of documentation and tests, as well as a &lt;code&gt;MANIFEST&lt;/code&gt; file and &lt;code&gt;Makefile.PL&lt;/code&gt; or &lt;code&gt;Build.PL&lt;/code&gt; file, but we&amp;rsquo;ll look at those a little later.&lt;/p&gt;
+
+&lt;p&gt;In case you&amp;rsquo;re interested, the reason why the delegation in the example doesn&amp;rsquo;t work is because I was being too clever. I thought I could say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    top_frame   -&amp;gt;stack-&amp;gt;[0]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and have a &lt;code&gt;top_frame&lt;/code&gt; method which &amp;ldquo;calls&amp;rdquo; &lt;code&gt;[0]&lt;/code&gt; on the stack array reference, returning its first entry. This doesn&amp;rsquo;t work for two reasons. First, I was too clever about &lt;code&gt;-&amp;gt;stack&lt;/code&gt; and now it returns a list instead of an array reference. Second, delegates need to pass arguments, so POOL ends up generating code that looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    return $self-&amp;gt;stack-&amp;gt;[0](@_);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(The third reason, of course, is that the top of the stack when represented as an array is element &lt;code&gt;-1&lt;/code&gt;, not element &lt;code&gt;0&lt;/code&gt;. Oops.)&lt;/p&gt;
+
+&lt;p&gt;I thought about fixing this to do what I really, really mean, but decided that would be too nasty.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-another-example-another-example-span&#34;&gt;&lt;span id=&#34;another_example&#34;&gt;Another Example&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now that I had this neat tool for generating modules, I set it to work on the next module I wrote; this was a variant of &lt;a href=&#34;https://metacpan.org/pod/Tree::Trie&#34;&gt;&lt;code&gt;Tree::Trie&lt;/code&gt;&lt;/a&gt;, a class to represent the trie data structure. Tries are a handy way of representing prefix and suffix relationships between words. They&amp;rsquo;re conceptually simple; each letter in a word is inserted into a tree as the child of the previous letter. If we wanted a trie to count the prefices in the phrase &lt;code&gt;THERE IS A TAVERN IN THE TOWN&lt;/code&gt;, then we would first insert the chain &lt;code&gt;T-H-E-R-E-#&lt;/code&gt;, then &lt;code&gt;I-S-#&lt;/code&gt;, then &lt;code&gt;A-#&lt;/code&gt;, and so on, where &lt;code&gt;#&lt;/code&gt; represents &amp;ldquo;end-of-word&amp;rdquo;. We&amp;rsquo;d end up with a trie looking like this:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2003_04_22_pool/tavern-trie.png&#34; alt=&#34;An example of a trie&#34; width=&#34;315&#34; height=&#34;378&#34; /&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Figure 1: An Example of a Trie&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;code&gt;Tree::Trie&lt;/code&gt; is good at this sort of thing, but it didn&amp;rsquo;t do a few extra things I needed, so I wrote an internal-use module called &lt;code&gt;Kasei::Trie&lt;/code&gt;; this was the POOL file I used to generate it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Kasei::Trie - Implement the trie data structure
+        DESCRIPTION
+
+    &amp;quot;Trie&amp;quot;s are compact tree-like representations of multiple words, where
+    each successive letter is introduced as the child of the previous.
+
+        EOD
+        @children {}
+        insert
+
+    Kasei::Trie::Node
+        @children
+        -&amp;gt;@data
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The main class, &lt;code&gt;Kasei::Trie&lt;/code&gt;, has a constructor with one instance variable that is initialized to be an empty hash reference, and one method, &lt;code&gt;insert&lt;/code&gt;. There&amp;rsquo;s also a secondary class representing each node in the trie, which has its own children, and has a &lt;code&gt;data&lt;/code&gt; variable with its own accessor.&lt;/p&gt;
+
+&lt;p&gt;After generating this with POOL, all I needed to do was to fill in the code for the &lt;code&gt;insert&lt;/code&gt; method, and modify some tests. A manifest, &lt;code&gt;Makefile.PL&lt;/code&gt;, test suite with nine tests, and 161 lines of code and documentation were automatically created for me. I suspect that POOL saved me one to two hours.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-high-dive-the-high-dive-span&#34;&gt;&lt;span id=&#34;the_high_dive&#34;&gt;The High Dive&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s now take a look at the templates that make this all happen. The main template is called &lt;code&gt;module&lt;/code&gt;, and it looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package [% module.package %];
+    [% INCLUDE module_header %]
+    =head1 SYNOPSIS
+
+    [% INCLUDE synopsis %]
+    =head1 DESCRIPTION
+
+    [% module.description  %]
+
+    =head1 METHODS
+    [%
+        FOREACH method = module.methods;
+        INCLUDE do_method;
+        END
+    %]
+
+    [% INCLUDE module_footer %]
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can probably guess, in the Template Toolkit language, interesting things happen between &lt;code&gt;[%&lt;/code&gt; and &lt;code&gt;%]&lt;/code&gt;. Everything else is just output wholesale, but all kinds of things can happen inside the brackets. The first thing that happens is that we look at the module&amp;rsquo;s package name. All the data we&amp;rsquo;ve collated from the parsing phase is stuffed into a hash reference, which we have passed into the template as &lt;code&gt;module&lt;/code&gt;. The dot operator in Template Toolkit is a general do-the-right-thing operator that can be a method call, a hash reference look-up or an array reference look-up. In this case, it&amp;rsquo;s a hash reference look-up, and we perform the equivalent of &lt;code&gt;$module-&amp;gt;{package}&lt;/code&gt; to extract the name.&lt;/p&gt;
+
+&lt;p&gt;Template Toolkit&amp;rsquo;s &lt;code&gt;[% INCLUDE template %]&lt;/code&gt; directive looks for the file &lt;em&gt;template&lt;/em&gt; in its template path, processes it passing in all the relevant variables, and includes its output. So after the initial &lt;code&gt;package ...;&lt;/code&gt; line, we include another template that contains everything that goes at the top of the module. As we&amp;rsquo;ll see later, part of the beauty of templating things this way is that you can override templates by placing your own idea of what should go at the top of a module into your private version of &lt;code&gt;module_header&lt;/code&gt; earlier in the template path, in a sense &amp;ldquo;inheriting&amp;rdquo; from the base set of templates.&lt;/p&gt;
+
+&lt;p&gt;Similarly, we include a file that will output the synopsis, and output the description that we collected between the &lt;code&gt;DESCRIPTION&lt;/code&gt; and &lt;code&gt;EOD&lt;/code&gt; lines of our POOL definition file.&lt;/p&gt;
+
+&lt;p&gt;Next, we want to document the various methods and output the code for them. POOL will have placed all the metadata for the methods we&amp;rsquo;ve defined, plus a constructor, in the appropriate order in the &lt;code&gt;methods&lt;/code&gt; hash entry of &lt;code&gt;module&lt;/code&gt;. As this is an array reference, we want to use a &lt;code&gt;foreach&lt;/code&gt;-style loop to look at each method in turn. Not surprisingly, Template Toolkit&amp;rsquo;s &lt;code&gt;foreach&lt;/code&gt;-style loop is called &lt;code&gt;FOREACH&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;So this code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [%
+        FOREACH method = module.methods;
+        INCLUDE do_method;
+        END
+    %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will set a variable called &lt;code&gt;method&lt;/code&gt; to each method in the array, and then call the &lt;code&gt;do_method&lt;/code&gt; template. This simply dispatches to appropriate templates for each type of method. For instance, there&amp;rsquo;s the set of templates for the &amp;ldquo;delegate&amp;rdquo; style; &lt;em&gt;delegate_code&lt;/em&gt; looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub [% method.name %] {
+        my $self = shift;
+        return $self-&amp;gt;[% method.via %]-&amp;gt;[% method.how %](@_);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whereas the documentation template contains some generic commentary:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    =head2 [% method.name %]
+
+    [% INCLUDE delegate_synopsis -%]
+    Delegates to the [%method.how%] method of this object&#39;s [%method.via%].
+
+    =cut
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The synopsis that appears in the documentation here and in the synopsis at the top of the file simply explains how the delegation is done:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $self-&amp;gt;[% method.name %](...); # $self-&amp;gt;[% method.via %]-&amp;gt;[%method.how%]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, there are some templates that are a little more complex, particularly those that generate the tests, but the main thing is that you can override any or none of those. If you don&amp;rsquo;t like the standard same-terms-as-Perl-itself licensing block that appears at the end of the module, then create a file called &lt;em&gt;~/.pool/license&lt;/em&gt; containing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    =head1 LICENSE
+
+    This module is licensed under the Crowley Public License: do what thou
+    wilt shall be the whole of the license.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;POOL will pick up this template and use it instead of the standard one.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-there-s-no-p-in-our-pool-there-s-no-p-in-our-pool-span&#34;&gt;&lt;span id=&#34;there&#39;s_no_p_in_our_pool&#34;&gt;There&amp;rsquo;s No P in Our POOL&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;When I started planning this article in the bath this morning, I realized that POOL is actually fantastically badly named; there&amp;rsquo;s nothing actually Perl-specific about the language itself, and it&amp;rsquo;s a handy definition language for any object-oriented system. Hence, I hereby retroactively name the project &amp;ldquo;the POOL Object Oriented Language&amp;rdquo;, which also satisfies the recursive acronym freaks. But can we, using the same parser and templating system, turn POOL files into other languages? Of course we can; this is all part of the flexibility of the Template Toolkit system. What&amp;rsquo;s more, we don&amp;rsquo;t even have to override &lt;strong&gt;all&lt;/strong&gt; of the templates in order to do so, just some of them. For instance, here&amp;rsquo;s a Ruby equivalent of &lt;em&gt;accessor_code&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [% IF method.ro == &amp;quot;ro&amp;quot;; %]
+        attr_reader :[% method.name %]
+    [% ELSE; %]
+        attr_accessor :[% method.name %]
+    [% END; %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;do_method&lt;/em&gt; and &lt;em&gt;module_footer&lt;/em&gt;, however, never need to change, since all they do is include other methods. With a complete set of toolkits, the same POOL description can be used to output a Perl, Ruby, Python, Java and C++ implementation of a given class.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-going-deeper-going-deeper-span&#34;&gt;&lt;span id=&#34;going_deeper&#34;&gt;Going Deeper&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;When Frans Hals&amp;rsquo; famous painting &amp;ldquo;The Laughing Cavalier&amp;rdquo; was being examined in a museum&amp;rsquo;s labs, someone had the bright idea of putting it through an X-ray machine. When they did this, they were amazed to find underneath the famous painting a completely different work &amp;ndash; a painting of a young girl. They then adjusted the settings on the X-ray machine and tried again, and underneath the young girl, they found another painting. Since then, it&amp;rsquo;s been common practice to X-ray pictures, and art historians have found many layers of paint underneath some of the most-famous pictures.&lt;/p&gt;
+
+&lt;p&gt;What&amp;rsquo;s this got to do with POOL? Well, very little, but I wanted to throw that in. Since I realised that POOL&amp;rsquo;s templates can be inherited so easily, I&amp;rsquo;ve had the idea of POOL &amp;ldquo;flavors&amp;rdquo;; coherent sets of templates that can be layered like oil paintings to impart certain properties to the output.&lt;/p&gt;
+
+&lt;p&gt;For instance, at the moment, POOL outputs unit tests in separate files in the &lt;em&gt;t/&lt;/em&gt; directory, one for each class. Some people, however, prefer to have their tests in the module right alongside the documentation and implementation, using the method described in &lt;a href=&#34;https://metacpan.org/pod/Test::Inline&#34;&gt;&lt;code&gt;Test::Inline&lt;/code&gt;&lt;/a&gt;. Well, there&amp;rsquo;s no reason why POOL shouldn&amp;rsquo;t be able to support this. All you&amp;rsquo;d need to do is create a new directory, let&amp;rsquo;s say &lt;em&gt;testinline/&lt;/em&gt;, and put a modified version of &lt;em&gt;do_method&lt;/em&gt; in there which says something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [% INCLUDE method_pod %]
+    =head2 begin testing
+    [% INCLUDE method_test %]
+    =cut
+    [% INCLUDE method_code %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, arrange for &lt;em&gt;testinline/&lt;/em&gt; to appear in the Template Toolkit template path, and magically your tests will appear in the right place.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s not inconcievable that multiple &amp;ldquo;flavours&amp;rdquo; could combine in order to theme a module; for instance, you might want a module which uses &lt;a href=&#34;https://metacpan.org/pod/Test::Class&#34;&gt;&lt;code&gt;Test::Class&lt;/code&gt;&lt;/a&gt; for its tests, and &lt;a href=&#34;https://metacpan.org/pod/Module::Build&#34;&gt;&lt;code&gt;Module::Build&lt;/code&gt;&lt;/a&gt; for its build file, with a BSD license flavor and &lt;a href=&#34;https://metacpan.org/pod/Class::Accessor&#34;&gt;&lt;code&gt;Class::Accessor&lt;/code&gt;&lt;/a&gt; for its accessors instead of having them explicitly coded. Conceptually, you&amp;rsquo;d then say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    pool --flavours=testclass,modulebuild,bsdlicense,classaccessor mymodule.pool
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the module would come out just as you want. This hasn&amp;rsquo;t happened yet for two reasons: First, although it&amp;rsquo;s only a two- or three-line change to the &lt;em&gt;pool&lt;/em&gt; parser to support pushing these directories onto the template path, I haven&amp;rsquo;t needed it yet so I haven&amp;rsquo;t done it, and second, because I haven&amp;rsquo;t written any flavors yet. But it&amp;rsquo;s easy enough to do.&lt;/p&gt;
+
+&lt;p&gt;Other future directions for POOL include a syntax for class methods and class variables, support for other languages as mentioned about, (which basically means ripping out the hard-coding of &lt;em&gt;MANIFEST&lt;/em&gt;, &lt;em&gt;Makefile.PL&lt;/em&gt; and so on and replacing that with a more flexible method) and other minor modifications. For instance, I&amp;rsquo;d like some syntax to specify dependencies; other Perl modules which will then be &lt;code&gt;use&lt;/code&gt;&amp;rsquo;d in the main modules and which would be named at the appropriate place in the &lt;em&gt;Makefile.PL&lt;/em&gt;. And, of course, there&amp;rsquo;s building up a library of flavors, including &amp;ldquo;total conversion&amp;rdquo; flavors like Ruby and Python.&lt;/p&gt;
+
+&lt;p&gt;The one thing that&amp;rsquo;s becoming really, really important is the need for nondestructive editing &amp;ndash; the ability to fill in some additional code for a method, then regenerate the class from a slight change to the POOL file without losing the new method&amp;rsquo;s code. I&amp;rsquo;m going to need to add that soon to allow for iterative redesigning of modules.&lt;/p&gt;
+
+&lt;p&gt;But the main thing about POOL is what it does now &amp;ndash; it saves me time, and it takes away the drudgery of writing OO classes in Perl.&lt;/p&gt;
+
+&lt;p&gt;And I will finish &lt;code&gt;Devel::DProfPP&lt;/code&gt; soon. I promise.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

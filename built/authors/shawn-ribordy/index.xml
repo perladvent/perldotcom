@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Shawn Ribordy on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/shawn-ribordy/</link>
+    <description>Recent content in Shawn Ribordy on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 17 Apr 2001 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/shawn-ribordy/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>MSXML, It&#39;s Not Just for VB Programmers Anymore</title>
+      <link>http://localhost:1313/pub/2001/04/17/msxml.html/</link>
+      <pubDate>Tue, 17 Apr 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/04/17/msxml.html/</guid>
+      <description>
+
+&lt;p&gt;My co-workers cringe when I tell them the truth. &lt;em&gt;What XML parser are you using? MSXML? With Perl?&lt;/em&gt; You&amp;rsquo;ve gotta be crazy.&lt;/p&gt;
+
+&lt;p&gt;Yes, it&amp;rsquo;s true, but I couldn&amp;rsquo;t help myself. After test driving MSXML in a Visual Basic application, it begged the question: &amp;ldquo;I wonder if Perl can use MSXML?&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;I have been using MSXML to do my XML parsing in Perl and the truth is that Perl is excellent for working with the Microsoft&amp;rsquo;s MSXML Parser on the Win32 platform. If you use Perl on Win32, give MSXML a try from the comfort of your favorite text editor.&lt;/p&gt;
+
+&lt;h3 id=&#34;grab-the-msxml-parser&#34;&gt;Grab the MSXML Parser&lt;/h3&gt;
+
+&lt;h4 id=&#34;you-grab-it&#34;&gt;You Grab It&lt;/h4&gt;
+
+&lt;p&gt;Go to Microsoft&amp;rsquo;s &lt;a href=&#34;http://www.msdn.microsoft.com/xml/default.asp&#34;&gt;MSDN site&lt;/a&gt; to download the latest version of MSXML, which is the 3.0 Release. Run the installation program and restart your machine. You have installed the latest version in side-by-side mode. None of your other Microsoft applications that use previous versions of MSXML will be affected.&lt;/p&gt;
+
+&lt;h4 id=&#34;now-let-perl-at-it&#34;&gt;Now Let Perl at It&lt;/h4&gt;
+
+&lt;p&gt;Perl can control the MSXML parser using OLE. As with almost everything Perl, the difficult part has been done for us. The &amp;ldquo;kind people at Hip and ActiveWare(ActiveState)&amp;rdquo; have already provided us with the &lt;code&gt;Win32::OLE&lt;/code&gt; module. The only thing that we need to know is the progID for the MSXML parser. A progID is a string used to uniquely identify an OLE automation class in the Windows registry. MSXML offers version dependent and version independent progIDs depending on the method of the installation. Since we have installed MSXML in side-by-side mode, we will need to use the version dependent progID.&lt;/p&gt;
+
+&lt;h3 id=&#34;creating-an-ole-instance-of-msxml-domdocument&#34;&gt;Creating an OLE Instance of MSXML.DOMDocument&lt;/h3&gt;
+
+&lt;p&gt;I begin by using the &lt;code&gt;Win32::OLE&lt;/code&gt; module.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Win32::OLE qw(in with);  # make sure you include(in &amp;amp; with)!!
+                             # we will need them later.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I am ready to use OLE to create an instance of the MSXML parser or, more correctly, an OLE instance of &lt;code&gt;MSXML2.DOMDocument.3.0&lt;/code&gt;, which I will simply call a DOMDocument.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Version dependent method - this is what we want -
+  my $DOM_document = Win32::OLE-&amp;gt;new(&#39;MSXML2.DOMDocument.3.0&#39;) 
+    or die &amp;quot;couldn&#39;t create&amp;quot;;
+
+# Version independent method - Assumes MSXML was installed in Replace Mode
+# if you get errors with the above example - try using this example.
+  my $DOM_document = Win32::OLE-&amp;gt;new(&#39;MSXML2.DOMDocument&#39;) 
+    or die &amp;quot;couldn&#39;t create&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;parsing-the-xml&#34;&gt;Parsing the XML&lt;/h3&gt;
+
+&lt;p&gt;Since I am a swim coach, I keep all kind of records, times and scores on hand. One of my favorite things to track is records, so I maintain an XML document that contains the school&amp;rsquo;s top 10 times for each event. Below is what &lt;strong&gt;toptimes.xml&lt;/strong&gt; looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;TOP_TEN_TIMES&amp;gt;
+   &amp;lt;EVENT NAME=&amp;quot;200 Freestyle&amp;quot;&amp;gt;
+      &amp;lt;SWIMMER NUMBER=&amp;quot;1&amp;quot; TIME=&amp;quot;1:51.49&amp;quot; DATE=&amp;quot;2/21/98&amp;quot; NAME=&amp;quot;Chris Miller&amp;quot;/&amp;gt;
+      &amp;lt;SWIMMER NUMBER=&amp;quot;2&amp;quot; TIME=&amp;quot;1:54.19&amp;quot; DATE=&amp;quot;2/17/01&amp;quot; NAME=&amp;quot;Peter Myers&amp;quot;/&amp;gt;
+ ...
+      &amp;lt;SWIMMER NUMBER=&amp;quot;10&amp;quot; TIME=&amp;quot;2:19.31&amp;quot; DATE=&amp;quot;12/8/00&amp;quot; NAME=&amp;quot;Andrew Johnson&amp;quot;/&amp;gt;
+   &amp;lt;/EVENT&amp;gt;
+   &amp;lt;EVENT NAME=&amp;quot;200 IM&amp;quot;&amp;gt;
+ ... 
+   &amp;lt;/EVENT&amp;gt;
+   ...
+&amp;lt;/TOP_TEN_TIMES&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My backstrokers and butterfliers don&amp;rsquo;t like XML very much, so I want to parse the XML document and print out the top 10 times for the 100 backstroke and 100 butterfly. I begin by loading &lt;strong&gt;toptimes.xml&lt;/strong&gt; using the DOMDocument object that I have already created. The load method is where the XML document is actually parsed into its respective pieces such as Nodes and NodeLists. Validation also occurs at this point. The Load method returns a boolean that I can use to test whether my document loaded properly. I am going to validate my document, so I will set the &lt;code&gt;validateOnParse&lt;/code&gt; property to &amp;lsquo;True&amp;rsquo;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $DOM_document-&amp;gt;{async} = &amp;quot;False&amp;quot;;           # disable asynchrous
+ $DOM_document-&amp;gt;{validateOnParse} = &amp;quot;True&amp;quot;;  # validate
+ my $boolean_Load = $DOM_document-&amp;gt;Load(&amp;quot;topten.xml&amp;quot;);
+ if (!$boolean_Load) 
+ {
+   die &amp;quot;topten.xml did not load&amp;quot;;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;iterating-through-the-xml-document&#34;&gt;Iterating Through the XML Document&lt;/h3&gt;
+
+&lt;p&gt;Now that I have successfully loaded the document, I need a method of iterating through all of the document Nodes. In order to iterate through the document, I first need to find the root Node. In this example, the root Node is &lt;code&gt;&amp;lt;TOP_TEN_TIMES&amp;gt;&lt;/code&gt;, so I will define &lt;code&gt;$Top_Ten_Times&lt;/code&gt; to be the root Node of the xml document as such:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $Top_Ten_Times = $DOM_document-&amp;gt;DocumentElement();  # assign the root node
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, I want to find all of the child Nodes of &lt;code&gt;&amp;lt;TOP_TEN_TIMES&amp;gt;&lt;/code&gt;. &lt;code&gt;$Events&lt;/code&gt; will be all of the root&amp;rsquo;s child Nodes. In this example, &lt;code&gt;$Events&lt;/code&gt; refers to every &lt;code&gt;&amp;lt;EVENT&amp;gt;&lt;/code&gt; Node.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $Events = $Top_Ten_Times-&amp;gt;childNodes();      # all of the root&#39;s child nodes
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$Events&lt;/code&gt; is now an NodeList (which is an OLE collection object) that I can use to iterate through each &lt;code&gt;&amp;lt;EVENT&amp;gt;&lt;/code&gt; node in the XML document. Veteran Perl programmers will recognize the iteration code as being very similar to iterating through the elements of an array. The only difference is the little keyword &lt;code&gt;&#39;in&#39;&lt;/code&gt; that I mentioned earlier when we used &lt;code&gt;Win32::OLE&lt;/code&gt;. The keyword &lt;code&gt;&#39;in&#39;&lt;/code&gt; is used to distinguish an OLE collection object from a standard Perl array.&lt;/p&gt;
+
+&lt;p&gt;I now iterate over each &lt;code&gt;&amp;lt;EVENT&amp;gt;&lt;/code&gt; Node in the document checking each time to see whether I have one of the events that I need. When I arrive at one of the desired events, I will print the &lt;code&gt;NAME&lt;/code&gt; Attribute of the current &lt;code&gt;&amp;lt;EVENT&amp;gt;&lt;/code&gt; Node and create a new NodeList called &lt;code&gt;$Swimmers&lt;/code&gt;. I will then iterate over each &lt;code&gt;&amp;lt;SWIMMER&amp;gt;&lt;/code&gt; Node and print the &lt;code&gt;TIME&lt;/code&gt; Attribute.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;foreach my $Event (in $Events) # make sure you include the &#39;in&#39;
+{
+   if ( ($Event-&amp;gt;Attributes-&amp;gt;getNamedItem(&amp;quot;NAME&amp;quot;)-&amp;gt;{Text} eq &amp;quot;100 Backstroke&amp;quot;) ||
+        ($Event-&amp;gt;Attributes-&amp;gt;getNamedItem(&amp;quot;NAME&amp;quot;)-&amp;gt;{Text} eq &amp;quot;100 Butterfly&amp;quot;) )
+   {
+       # print the event name stored in the NAME attribute
+        print $Event-&amp;gt;Attributes-&amp;gt;getNamedItem(&amp;quot;NAME&amp;quot;)-&amp;gt;{Text}, &amp;quot;\n&amp;quot;; 
+        my $Swimmers = $Event-&amp;gt;childNodes();       # $Swimmers is now a NodeList collection
+        foreach my $Swimmer (in $Swimmers )        # iterate through all swimmers
+        {
+           print $Swimmer-&amp;gt;Attributes-&amp;gt;getNamedItem(&amp;quot;TIME&amp;quot;)-&amp;gt;{Text}, &amp;quot;\n&amp;quot;;  # print the time
+        }
+   }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;transforming-the-xml&#34;&gt;Transforming the XML&lt;/h3&gt;
+
+&lt;p&gt;Now that I have satisfied the butterfliers and backstrokers on my team, I am beginning to realize that the design of my XML syntax is less than desirable. Most of my actual data is stored as attribute data, and I would really like it to be element data. I am going to perform a transformation that will place all of my actual data into element data. My goal is to make the XML document look like the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;TOP_TEN_TIMES&amp;gt;
+   &amp;lt;EVENT&amp;gt;
+      &amp;lt;EVENT_NAME&amp;gt;200 Freestyle&amp;lt;/EVENT_NAME&amp;gt;
+      &amp;lt;SWIM&amp;gt;
+         &amp;lt;SWIMMER&amp;gt;Chris Miller&amp;lt;/SWIMMER&amp;gt;
+         &amp;lt;TIME&amp;gt;1:51.49&amp;lt;/TIME&amp;gt;
+         &amp;lt;DATE&amp;gt;2/21/98&amp;lt;/DATE&amp;gt;
+      &amp;lt;/SWIM&amp;gt;
+      &amp;lt;SWIM&amp;gt;
+         &amp;lt;SWIMMER&amp;gt;Peter Myers&amp;lt;/SWIMMER&amp;gt;
+         &amp;lt;TIME&amp;gt;1:54.19&amp;lt;/TIME&amp;gt;
+         &amp;lt;DATE&amp;gt;2/17/01&amp;lt;/DATE&amp;gt;
+      &amp;lt;/SWIM&amp;gt;
+      ...
+   &amp;lt;/EVENT&amp;gt; 
+   &amp;lt;EVENT&amp;gt;
+      ...
+   &amp;lt;/EVENT&amp;gt;
+   ...
+&amp;lt;/TOP_TEN_TIMES&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After a little work, I come up with the following stylesheet to do the transformation.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;ISO-8859-1&amp;quot;?&amp;gt; 
+&amp;lt;xsl:stylesheet xmlns:xsl=&amp;quot;http://www.w3.org/1999/XSL/Transform&amp;quot; version=&amp;quot;1.0&amp;quot;&amp;gt;
+&amp;lt;xsl:output method=&amp;quot;xml&amp;quot; indent=&amp;quot;yes&amp;quot; encoding=&amp;quot;ISO-8859-1&amp;quot;/&amp;gt;
+&amp;lt;xsl:template match=&amp;quot;/&amp;quot;&amp;gt;
+&amp;lt;TOP_TEN_TIMES&amp;gt;
+&amp;lt;xsl:for-each select=&amp;quot;TOP_TEN_TIMES&amp;quot;&amp;gt;
+  &amp;lt;xsl:for-each select=&amp;quot;EVENT&amp;quot;&amp;gt;
+  &amp;lt;EVENT&amp;gt;
+     &amp;lt;EVENT_NAME&amp;gt;&amp;lt;xsl:value-of select=&amp;quot;@NAME&amp;quot;/&amp;gt;&amp;lt;/EVENT_NAME&amp;gt;
+     &amp;lt;xsl:for-each select=&amp;quot;SWIMMER&amp;quot;&amp;gt;
+     &amp;lt;SWIM&amp;gt;
+        &amp;lt;SWIMMER&amp;gt;&amp;lt;xsl:value-of select=&amp;quot;@NAME&amp;quot;/&amp;gt;&amp;lt;/SWIMMER&amp;gt;
+        &amp;lt;TIME&amp;gt;&amp;lt;xsl:value-of select=&amp;quot;@TIME&amp;quot;/&amp;gt;&amp;lt;/TIME&amp;gt;
+        &amp;lt;DATE&amp;gt;&amp;lt;xsl:value-of select=&amp;quot;@DATE&amp;quot;/&amp;gt;&amp;lt;/DATE&amp;gt;
+     &amp;lt;/SWIM&amp;gt;
+     &amp;lt;/xsl:for-each&amp;gt;
+  &amp;lt;/EVENT&amp;gt;
+  &amp;lt;/xsl:for-each&amp;gt;
+&amp;lt;/xsl:for-each&amp;gt;
+&amp;lt;/TOP_TEN_TIMES&amp;gt;
+&amp;lt;/xsl:template&amp;gt;
+&amp;lt;/xsl:stylesheet&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To perform the transformation, I will need to create three OLE instances of DOMDocument. The first instance loads the top-times document and the second instance loads the stylesheet from above. The third instance will be used as the result of the transformation. I have created a subroutine that uses what we have already covered to create the three DOMDocument instances, and to load the top-times and stylesheet documents.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub Transform {
+ # Assign the File Names
+  my $xml_doc_file     = shift;
+  my $stylesheet_file  = shift;
+  my $new_xml_doc_file = shift;
+  my $boolean_Load;
+
+ # Create the three OLE DOM instances
+  my $doc_to_transform = Win32::OLE-&amp;gt;new(&#39;MSXML2.DOMDocument.3.0&#39;);  
+  my $style_sheet_doc  = Win32::OLE-&amp;gt;new(&#39;MSXML2.DOMDocument.3.0&#39;);
+  my $transformed_doc  = Win32::OLE-&amp;gt;new(&#39;MSXML2.DOMDocument.3.0&#39;);
+
+ # Load the Top Times document - just like above
+  $doc_to_transform-&amp;gt;{async} = &amp;quot;False&amp;quot;;
+  $doc_to_transform-&amp;gt;{validateOnParse} = &amp;quot;True&amp;quot;;
+  $boolean_Load = $doc_to_transform-&amp;gt;Load(&amp;quot;$xml_doc_file&amp;quot;);
+  if(!$boolean_Load)
+  {
+      die &amp;quot;The Top Times did not load\n&amp;quot;;
+  }
+
+ # Load the Stylesheet - just like above
+  $style_sheet_doc-&amp;gt;{async} = &amp;quot;False&amp;quot;;
+  $style_sheet_doc-&amp;gt;{validateOnParse} = &amp;quot;True&amp;quot;;
+  $boolean_Load = $style_sheet_doc-&amp;gt;Load($stylesheet_file);
+  if(!$boolean_Load)
+  {
+      die &amp;quot;The Stylesheet did not load\n&amp;quot;;
+  }
+
+ #Perform the transformation and save the resulting DOM object
+  $doc_to_transform-&amp;gt;transformNodeToObject($style_sheet_doc, $transformed_doc);
+  $transformed_doc-&amp;gt;save(&amp;quot;$new_xml_doc_file&amp;quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;transformNodeToObject&lt;/code&gt; method is where the magic happens. I use the top-times DOMDocument instance to invoke the &lt;code&gt;transformNodeToObject&lt;/code&gt; method and I pass the stylesheet and transformation-result instances as arguments. After the method returns, the result of the transformation is stored in &lt;code&gt;$transformed_doc&lt;/code&gt;, which is strictly in memory. We simply call the save method and write the XML document to disk.&lt;/p&gt;
+
+&lt;p&gt;Now we can perform transformations using any stylesheet or XML document that we want (as long as the stylesheet relates to the XML document). We just need to pass the subroutine three file names: the name of the document to transform, the name of the stylesheet and the name of the new document. For our example, I will call the subroutine like the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Transform(&amp;quot;toptimes.xml&amp;quot;, &amp;quot;toptimes.xsl&amp;quot;, &amp;quot;newtoptimes.xml&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After this code has executed, I have a brand new XML document &lt;strong&gt;newtoptimes.xml&lt;/strong&gt; that conforms to my new XML syntax.&lt;/p&gt;
+
+&lt;h3 id=&#34;updating-the-xml-document&#34;&gt;Updating the XML Document&lt;/h3&gt;
+
+&lt;p&gt;After all this great work, one of my butterfliers informs me that I have been spelling his name wrong all season. I guess that there is two &amp;lsquo;e&amp;rsquo;s in Myers, not one. No problem. I can do this easily enough.&lt;/p&gt;
+
+&lt;p&gt;I can&amp;rsquo;t use the exact code from above because the document structure has changed. Since the swimmers&amp;rsquo; names are pretty deep in the new structure, it will be too painful to find the root node and create a slew of nested loops (not to mention expensive to the processor). This is exactly what XPath is for. I will create a query to find all occurrences of &amp;ldquo;Peter Myers&amp;rdquo; and change them to &amp;ldquo;Peter Meyers&amp;rdquo;. Once again, I create an instance of DOMDocument and load the XML document. However, this time I will call a new method, the &lt;code&gt;selectNodes&lt;/code&gt; method, directly against the DOMDocument. As an argument, I supply an XPath query. The method returns a NodeList of all the Nodes that matched the XPath query. I can then iterate through the NodeList just like above and update the element data as I go.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $Peter_Nodes = 
+     $new_DOM_document-&amp;gt;selectNodes(&amp;quot;TOP_TEN_TIMES/EVENT/SWIM/SWIMMER[. = \&amp;quot;Peter Myers\&amp;quot;]&amp;quot;);
+foreach my $Peter (in $Peter_Nodes)
+{
+   $Peter-&amp;gt;{nodeTypedValue} = &amp;quot;Peter Meyers&amp;quot;  # update the Value
+}
+$new_DOM_document-&amp;gt;save(&amp;quot;newertoptimes.xml&amp;quot;); # save the changes
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;MSXML isn&amp;rsquo;t just for Visual Basic and Visual C++ programmers. The &lt;code&gt;Win32::OLE&lt;/code&gt; module allows Perl programmers to take advantage of Microsoft&amp;rsquo;s XML parser from the comfort of their favorite text editor, and now that everyone on the team is happy with the top ten times, I can put away my XML Parser until next season &amp;hellip; .&lt;/p&gt;
+
+&lt;h3 id=&#34;resources&#34;&gt;Resources&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2001_04_17_msxml/msxml_sample_code.zip&#34;&gt;Download Sample Code&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.msdn.microsoft.com/xml/default.asp&#34;&gt;Microsoft MSDN XML Developer Center&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.activestate.com/ASPN/Mail/browse/perl-win32-users&#34;&gt;ActiveState&amp;rsquo;s Win32 Users Mailing List&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

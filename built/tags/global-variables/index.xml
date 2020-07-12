@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Global Variables on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/global-variables/</link>
+    <description>Recent content in Global Variables on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 17 Mar 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/global-variables/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Symbol Table Manipulation</title>
+      <link>http://localhost:1313/pub/2005/03/17/symtables.html/</link>
+      <pubDate>Thu, 17 Mar 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/03/17/symtables.html/</guid>
+      <description>
+
+&lt;p&gt;Having almost achieved the state of perfect laziness, one of my favorite modules is &lt;a href=&#34;https://metacpan.org/pod/Class::DBI::mysql&#34;&gt;Class::DBI::mysql&lt;/a&gt;. It makes MySQL database tables seem like classes, and their rows like objects. This completely relieves me from using SQL in most cases. This article explains how &lt;code&gt;Class::DBI::mysql&lt;/code&gt; carries out its magic. Instead of delving into the complexities of &lt;code&gt;Class::DBI::mysql&lt;/code&gt;, I will use a simpler case study: &lt;a href=&#34;https://metacpan.org/pod/Class::Colon&#34;&gt;Class::Colon&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;One of my favorite modules from CPAN is &lt;code&gt;Class::DBI::mysql&lt;/code&gt;. With it, I can almost forget I&amp;rsquo;m working with a database. Here&amp;rsquo;s an example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+use strict; use warnings;
+
+package Users;
+
+use base &#39;Class::DBI::mysql&#39;;
+
+Users-&amp;gt;set_db(&#39;Main&#39;, &#39;dbi:mysql:rt3&#39;, &#39;rt_user&#39;, &#39;rt_pass&#39;);
+Users-&amp;gt;set_up_table(&#39;Users&#39;);
+
+package main;
+
+my @column_names = qw( Name RealName );
+print &amp;quot;@column_names\n&amp;quot;;
+print &amp;quot;-&amp;quot; x 30 . &amp;quot;\n&amp;quot;;
+
+my $user_iter = Users-&amp;gt;retrieve_all();
+
+while (my $row = $user_iter-&amp;gt;next) {
+    print $row-&amp;gt;Name, &amp;quot; &amp;quot;, $row-&amp;gt;RealName, &amp;quot;\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Except for the MySQL connection information, no trace of SQL or databases remains.&lt;/p&gt;
+
+&lt;p&gt;My purpose here is not really to introduce you to this beautiful module. Instead, I&amp;rsquo;ll explain how to build façades like this. To do so, I&amp;rsquo;ll work through another, simpler CPAN module called &lt;code&gt;Class::Colon&lt;/code&gt;. It turns colon-delimited files into classes and their lines into objects. Here&amp;rsquo;s an example from a checkbook application. This program computes the balance of an account on a user-supplied date or the end of time if the user doesn&amp;rsquo;t supply one.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+use strict; use warnings;
+
+use Getopt::Std;
+use Date;
+use Class::Colon Trans =&amp;gt; [ qw(
+    status type date=Date amount desc category memo
+) ];
+
+our $opt_d;
+getopt(&#39;d&#39;);
+my $date       = Date-&amp;gt;new($opt_d) if $opt_d;
+
+my $account    = shift or die &amp;quot;usage: $0 [-d date] account_file\n&amp;quot;;
+my $trans_list = Trans-&amp;gt;READ_FILE($account);
+my $balance    = 0;
+
+foreach my $trans (@$trans_list) {
+    if (not defined $date or $date &amp;gt;= $trans-&amp;gt;date) {
+        $balance += $trans-&amp;gt;amount;
+    }
+}
+
+print &amp;quot;balance = $balance\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the use statement for &lt;code&gt;Class::Colon&lt;/code&gt;, I told it the name of the class to build (&lt;code&gt;Trans&lt;/code&gt;), followed by a list of fields in the order they appear in the file. The date field is really an object itself, so I used &lt;code&gt;=Date&lt;/code&gt; after the field name. This told &lt;code&gt;Class::Colon&lt;/code&gt; that a class named &lt;code&gt;Date&lt;/code&gt; will handle the date field. If the &lt;code&gt;Date&lt;/code&gt; class constructor were not named &lt;code&gt;new&lt;/code&gt;, I would have written &lt;code&gt;date=Date=constructor_name&lt;/code&gt;. My &lt;code&gt;Date&lt;/code&gt; class is primitive at best, it only provides comparisons like greater than. It only does that for dates in one format. I won&amp;rsquo;t embarrass myself further by showing it.&lt;/p&gt;
+
+&lt;p&gt;After shifting in the name of the account file, the code calls &lt;code&gt;READ_FILE&lt;/code&gt; through &lt;code&gt;Trans&lt;/code&gt;, which &lt;code&gt;Class::Colon&lt;/code&gt; defined. This returns a list of &lt;code&gt;Trans&lt;/code&gt; objects. The fields in these objects are the ones given in the &lt;code&gt;Class::Colon&lt;/code&gt; use statement. They are easy to access through their named subroutines.&lt;/p&gt;
+
+&lt;p&gt;The rest of the program loops through the transactions list checking dates. If the user didn&amp;rsquo;t give a date, or the current transaction happened before the user&amp;rsquo;s date, the program adds that amount to the total. Finally, it reports the balance.&lt;/p&gt;
+
+&lt;p&gt;Though the example shows only the lookup access, you can easily change values. All of the accessors retrieve and store. Calling &lt;code&gt;WRITE_FILE&lt;/code&gt; puts the updated records back onto the disk.&lt;/p&gt;
+
+&lt;p&gt;Other methods help with colon-delimited records. Some let you work with handles instead of file names. Others help you parse and produce strings so that you can drive your own input and output. See the &lt;code&gt;Class::Colon&lt;/code&gt; perldoc for details. (No, colon is not the only delimiter.)&lt;/p&gt;
+
+&lt;h3 id=&#34;let-the-games-begin&#34;&gt;Let the Games Begin&lt;/h3&gt;
+
+&lt;p&gt;Both &lt;code&gt;Class::DBI::mysql&lt;/code&gt; and &lt;code&gt;Class::Colon&lt;/code&gt; build classes at run time which look like any other classes. How do they do this? They manipulate symbol tables directly. To see what this means, I want to start small. Suppose I have a variable name like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $extremely_long_variable_indicator_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s not something I want to type often. I could make an alias in two steps like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;our $elvis;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, I declare an identifier with a better name. I must make it global. If strict is on, I should use &lt;code&gt;our&lt;/code&gt; to do this (though there are other older ways that also work). Lexical variables (the ones declared with my) don&amp;rsquo;t live in symbol tables, so the tricks below won&amp;rsquo;t work with them.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;*elvis = \$extremely_long_variable_indicator_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I can point &lt;code&gt;$elvis&lt;/code&gt; to the longer version. The key is the &lt;code&gt;*&lt;/code&gt; sigil. It refers to the symbol table entry for &lt;code&gt;elvis&lt;/code&gt; (the name without any sigils). This line stores a reference to &lt;code&gt;$extremely_long_variable_indicator_string&lt;/code&gt; in the symbol table under &lt;code&gt;$elvis&lt;/code&gt;, but it doesn&amp;rsquo;t affect other entries like &lt;code&gt;@elvis&lt;/code&gt; or &lt;code&gt;%elvis&lt;/code&gt;. Now, both scalars point to the same data, so &lt;code&gt;$elvis&lt;/code&gt; is a genuine alias for the longer name. It is not just a copy.&lt;/p&gt;
+
+&lt;p&gt;Unless you work with mean-spirited colleagues, or are into self-destructive behavior, you probably don&amp;rsquo;t need an alias just to gain a shorter name. However, the technique works in other situations you might actually encounter. In particular, it is the basis for the API simplification provided by &lt;code&gt;Class::Colon&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;To understand what &lt;code&gt;Class::Colon&lt;/code&gt; does, remember that the subroutine is a primitive type in Perl. You can store subs just as you do variables. For instance, I could store a subroutine reference like this (the sigil for subs is &lt;code&gt;&amp;amp;&lt;/code&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $abbr;
+$abbr = \&amp;amp;some_long_sub_name;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and use it to call the subroutine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @answer = $abbr-&amp;gt;();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here, I have made a new scalar variable, &lt;code&gt;$abbr&lt;/code&gt;, which holds a reference to the subroutine. This is not quite the same as directly manipulating the symbol table, but you can do that too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;*alias     = \&amp;amp;some_long_sub_name;
+my @retval = alias();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instead of storing a reference to the subroutine in a variable, this code stores the subroutine in the symbol table itself. This means that subsequent code can access the subroutine as if it had declared the subroutine with its new name itself. Adjusting the symbol table is not really easier to read or write than storing a reference, but, in modules like &lt;code&gt;Class::Colon&lt;/code&gt;, symbol table changes are the essential step to simplifying the caller&amp;rsquo;s API.&lt;/p&gt;
+
+&lt;h3 id=&#34;classes-from-sheer-magic&#34;&gt;Classes from Sheer Magic&lt;/h3&gt;
+
+&lt;p&gt;The previous example demonstrated how to make symbol table entries whenever you want. These can save typing and/or make things more readable. The standard module &lt;a href=&#34;https://metacpan.org/pod/English&#34;&gt;English&lt;/a&gt; uses this technique to give meaningful English names to the standard punctuation variables (like &lt;code&gt;$_&lt;/code&gt;). You want more, though. You want to build classes out of thin air during run time.&lt;/p&gt;
+
+&lt;p&gt;The key to fabricating classes is to realize that a class is just a package and a package is really just a symbol table (more or less). That, and the fact that symbol tables autovivify, is all you need to carry off hugely helpful deceptions like &lt;code&gt;Class::DBI::mysql&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-use-really-does&#34;&gt;What &lt;code&gt;use&lt;/code&gt; really does&lt;/h4&gt;
+
+&lt;p&gt;This subsection explains how to pass data during a &lt;code&gt;use&lt;/code&gt; statement. If you already understand the &lt;code&gt;import&lt;/code&gt; subroutine, feel free to skip to the next section.&lt;/p&gt;
+
+&lt;p&gt;When you use a module in Perl, you can provide information for that module to use during loading. While &lt;code&gt;Class::DBI::mysql&lt;/code&gt; waits for you to call routines before setting up classes, &lt;code&gt;Class::Colon&lt;/code&gt; does it during loading by implementing an import method.&lt;/p&gt;
+
+&lt;p&gt;Whenever someone &lt;code&gt;use&lt;/code&gt;s your module, Perl calls its &lt;code&gt;import&lt;/code&gt; method (if it has one). &lt;code&gt;import&lt;/code&gt; receives the name of the class the caller used, plus all of the arguments provided by the caller.&lt;/p&gt;
+
+&lt;p&gt;In the checkbook example above, the caller used &lt;code&gt;Class::Colon&lt;/code&gt; with this statement:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Class::Colon Trans =&amp;gt; [ qw(
+    status type date=Date amount desc category memo
+) ];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;import&lt;/code&gt; method of the &lt;code&gt;Class::Colon&lt;/code&gt; package receives the following as a result:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;The string &lt;code&gt;Class::Colon&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;A list with two elements. First, the string &lt;code&gt;Trans&lt;/code&gt;. Second, a reference to the array which lists the fields.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The top of the &lt;code&gt;import&lt;/code&gt; routine stores these as shown below.&lt;/p&gt;
+
+&lt;h4 id=&#34;inserting-into-non-existent-symbol-tables&#34;&gt;Inserting into non-existent symbol tables&lt;/h4&gt;
+
+&lt;p&gt;The main magic of &lt;code&gt;Class::Colon&lt;/code&gt; happens in the &lt;code&gt;import&lt;/code&gt; routine. Here&amp;rsquo;s how that looks:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub import {
+    my $class = shift;
+    my %fakes = @_;
+
+    foreach my $fake (keys %fakes) {
+        no strict;
+        *{&amp;quot;$fake\::NEW&amp;quot;}     = sub { return bless {}, shift; };
+
+        foreach my $proxy_method qw(
+                read_file  read_handle  objectify delim
+                write_file write_handle stringify
+        ) {
+            my $proxy_name   = $fake  . &amp;quot;::&amp;quot; . uc $proxy_method;
+            my $real_name    = $class . &amp;quot;::&amp;quot; .    $proxy_method;
+            *{&amp;quot;$proxy_name&amp;quot;} = \&amp;amp;{&amp;quot;$real_name&amp;quot;};
+        }
+
+        my @attributes;
+        foreach my $col (@{$fakes{$fake}}) {
+            my ($name, $type, $constructor)  = split /=/, $col;
+            *{&amp;quot;$fake\::$name&amp;quot;} = _make_accessor($name, $type, $constructor);
+            push @attributes, $name;
+        }
+        $simulated_classes{$fake} = {ATTRS =&amp;gt; \@attributes, DELIM =&amp;gt; &#39;:&#39;};
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After shifting the arguments into meaningful variable names, the main loop walks through each requested class (the list of fakes). Inside the loop it disables &lt;code&gt;strict&lt;/code&gt;, because the necessary uses of so many symbolic references would upset it.&lt;/p&gt;
+
+&lt;p&gt;There are four steps in the fabrication of each class:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Make the constructor&lt;/li&gt;
+&lt;li&gt;Make the class methods&lt;/li&gt;
+&lt;li&gt;Make the accessor methods&lt;/li&gt;
+&lt;li&gt;Store the attribute names in order&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The constructor is about as simple as possible and the same for every fabricated class. It returns a hash reference blessed into the requested class. The cool thing is that you can insert code into a symbol table that doesn&amp;rsquo;t exist in advance. This constructor will be &lt;code&gt;NEW&lt;/code&gt;. (By convention, &lt;code&gt;Class::Colon&lt;/code&gt; uses uppercase names for its methods to avoid name collisions with the user&amp;rsquo;s fields).&lt;/p&gt;
+
+&lt;p&gt;This code requires a little bit of careful quoting. Saying &lt;code&gt;*{&amp;quot;$fake\::NEW&amp;quot;}&lt;/code&gt; tells Perl to make an entry in the new package&amp;rsquo;s symbol table under &lt;code&gt;NEW&lt;/code&gt;. The backslash suppresses variable interpolation. While &lt;code&gt;$fake&lt;/code&gt; needs interpolation, interpolating &lt;code&gt;$fake::NEW&lt;/code&gt; would just yield &lt;code&gt;undef&lt;/code&gt;, because this is its first definition here.&lt;/p&gt;
+
+&lt;p&gt;Perl has already done the hard part by the time it stores the constructor. It has brought the package into existence. Now it&amp;rsquo;s just a matter of making some aliases.&lt;/p&gt;
+
+&lt;p&gt;For each provided method, the code makes an entry in the symbol table of the fabricated class. Those entries point to the methods of the &lt;code&gt;Class::Colon&lt;/code&gt; package, which serve as permanent shared delegates for all fabricated classes.&lt;/p&gt;
+
+&lt;p&gt;Similarly, it builds an accessor for each attribute supplied by the caller in the &lt;code&gt;use&lt;/code&gt; statement. These routines require a bit of customization to look up the proper attribute name and to deal with object construction. Hence, there is a small routine called &lt;code&gt;_make_accessor&lt;/code&gt; which returns the proper closure for each accessor.&lt;/p&gt;
+
+&lt;p&gt;Finally, it makes an entry for the new class in the master list of simulated classes. This allows easy lookup by name when calling class methods through the fabricated names. Note that there is nothing in the &lt;code&gt;import&lt;/code&gt; routine that limits the caller to one invocation. Further &lt;code&gt;use&lt;/code&gt; statements can bring additional classes to life. Alternatively, the caller can request several new classes with a single &lt;code&gt;use&lt;/code&gt; statement by including multiple hash keys.&lt;/p&gt;
+
+&lt;p&gt;In the standard case, &lt;code&gt;_make_accessor&lt;/code&gt; works like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub _make_accessor {
+    my $attribute   = shift;
+    return sub {
+        my $self            = shift;
+        my $new_val         = shift;
+        $self-&amp;gt;{$attribute} = $new_val if defined $new_val;
+        return $self-&amp;gt;{$attribute};
+    };
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The actual routine is a bit more complex, so it can handle construction of attributes which are objects. Note that the value of &lt;code&gt;$attribute&lt;/code&gt;, which is in scope when the closure is created, will be kept with the sub and used whenever it is called. The actual code is a fairly standard Perl dual-use accessor. It assigns a new value to the attribute if the caller has passed it in. It always returns the value of the attribute.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-class-colon-provides&#34;&gt;What &lt;code&gt;Class::Colon&lt;/code&gt; provides&lt;/h4&gt;
+
+&lt;p&gt;Just for sake of completeness, here is how &lt;code&gt;Class::Colon&lt;/code&gt; turns a string into a set of objects. Note the heavy use of methods through their previously-entered symbol table names.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub objectify {
+    my $class    = shift;
+    my $string   = shift;
+    my $config   = $simulated_classes{$class};
+    my $col_list = $config-&amp;gt;{ATTRS};
+
+    my $new_object = $class-&amp;gt;NEW();
+    my @cols       = split /$config-&amp;gt;{DELIM}/, $string;
+    foreach my $i (0 .. @cols - 1) {
+        my $method = $col_list-&amp;gt;[$i];
+        $new_object-&amp;gt;$method($cols[$i]);
+    }
+    return $new_object;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;All fabricated classes share this method (and the other class methods of &lt;code&gt;Class::Colon&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Recall that &lt;code&gt;NEW&lt;/code&gt; returns a blessed hash reference with nothing in it. In &lt;code&gt;objectify&lt;/code&gt;, the loop fills in the attributes by calling their accessors. This ensures the proper construction of any object attributes. Callers access &lt;code&gt;objectify&lt;/code&gt; indirectly when they call &lt;code&gt;READ_FILE&lt;/code&gt; and its cousins. They can also use it directly through its &lt;code&gt;OBJECTIFY&lt;/code&gt; alias.&lt;/p&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;By making entries into symbol tables, you can create aliases for data that is hard to name. Further, you can create new symbol tables simply by referring to them. This allows you to build classes on the fly. Modules like &lt;code&gt;Class::DBI::mysql&lt;/code&gt; and &lt;code&gt;Class::Colon&lt;/code&gt; do this to provide classes representing tabular data.&lt;/p&gt;
+
+&lt;p&gt;There are other uses of these techniques. For example, &lt;a href=&#34;https://metacpan.org/pod/Memoize&#34;&gt;Memoize&lt;/a&gt; wraps an original function with a cache scheme, storing the wrapped version in place of the original in the caller&amp;rsquo;s own symbol table. For functions which return the same result whenever the arguments are the same, this can save time. &lt;a href=&#34;https://metacpan.org/pod/Exporter&#34;&gt;Exporter&lt;/a&gt; does even more sophisticated work to pollute the caller&amp;rsquo;s symbol table with symbols from a used package. At heart, these schemes are similar to the one shown above. By carefully performing symbol table manipulations in modules, you can often greatly simplify an API, making client code easier to read, write, and maintain.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

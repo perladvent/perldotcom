@@ -1,0 +1,1277 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Brian Ingerson on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/brian-ingerson/</link>
+    <description>Recent content in Brian Ingerson on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 11 Mar 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/brian-ingerson/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Simple IO Handling with IO::All</title>
+      <link>http://localhost:1313/pub/2004/03/12/ioall.html/</link>
+      <pubDate>Thu, 11 Mar 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/03/12/ioall.html/</guid>
+      <description>
+
+&lt;p&gt;One of my favorite things about Perl is how flexible it is. When I don&amp;rsquo;t like something about the language, I don&amp;rsquo;t let it get me down. I just change the language!&lt;/p&gt;
+
+&lt;p&gt;The secret to doing this lies in Perl modules. Modules make this easy. Let&amp;rsquo;s say you have a Perl idiom that you use everyday in your programming, but it just seems clumsier than it needs to be. Usually, with a little cleverness, you can simply hide a few hundred lines of code inside a module, thereby turning your 3-line idiom into a 2-line one!&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m joking here, but at the same time I&amp;rsquo;m not joking. While it may seem like a recipe for scratching your itch with a backhoe, if you share your module on CPAN, you end up potentially scratching a million itches simultaneously. So perhaps the backhoe is the appropriate solution. Let me give you an example.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-slurp-me-up-scotty-slurp-me-up-scotty-span&#34;&gt;&lt;span id=&#34;Slurp_Me_Up_Scotty&#34;&gt;Slurp Me Up, Scotty&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One of the most common idioms in my day-to-day programming is to read the contents of a file into a single scalar. This is often referred to by Perl geeks as a &lt;strong&gt;slurp&lt;/strong&gt; operation. Usually it looks something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    open my $file_handle, &#39;./Scotty&#39;
+      or die &amp;quot;Scotty can&#39;t be slurped:\n$!&amp;quot;;
+    local $/;   # Set input to &amp;quot;slurp&amp;quot; mode.
+    my $big_string = &amp;lt;$file_handle&amp;gt;;
+    close $file_handle;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So it would seem that slurping is a big deal. I mean, it took me 5 lines of code to do. Five lines is a &lt;strong&gt;lot&lt;/strong&gt; in Perl. Surely, there could be an easier way. If I had my druthers, I would be able to just do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $big_string &amp;lt;&amp;lt; &#39;./Scotty&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And be done with it. Unfortunately, this doesn&amp;rsquo;t work the way I want it to, even though it is valid (albeit useless) Perl. How do I know it&amp;rsquo;s useless? Perl told me so when I turned on warnings: &amp;ldquo;Useless use of left bitshift (&lt;code&gt;&amp;lt;&amp;lt;&lt;/code&gt;) in void context.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Now even though I could write a source filter to make the above code do what I wanted, it wouldn&amp;rsquo;t be the right approach. Surely there is something just as simple, that uses valid Perl constructs. After thinking about it for a couple hours, I came up with this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $big_string = io(&#39;./Scotty&#39;)-&amp;gt;slurp;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Being quite satisfied with my new idiom, I sat down for a few more weeks, and wrote a few hundred lines of code, and hid it in a module called &lt;code&gt;IO::All&lt;/code&gt; and uploaded it to CPAN. Now I can do my 5-line slurp in 1 line. Phew!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-extreme-simplicity-extreme-simplicity-span&#34;&gt;&lt;span id=&#34;Extreme_Simplicity&#34;&gt;Extreme Simplicity&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;How on earth could a module to perform the slurp idiom be several hundred lines long? Well, &lt;code&gt;IO::All&lt;/code&gt; does slurping and a whole lot more. The motivating idea behind this module is to simplify all of the Perl IO idioms as much as possible, and also to create new idioms for common-use cases that weren&amp;rsquo;t really idiomatic to begin with.&lt;/p&gt;
+
+&lt;p&gt;In recent years, I&amp;rsquo;ve become a fan and student of Extreme Programming (XP). One of the principles of XP is to constantly refactor your code to make it simpler, easier to read, and ultimately more maintainable. In striving to do so I found that as my code became as clean as I could make it, the parts that still looked &lt;em&gt;dirty&lt;/em&gt; were constructs imposed on me by the Perl language itself; especially the IO stuff. I didn&amp;rsquo;t let it get me down. I changed the language!&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-what-s-going-on-here-what-s-going-on-here-span&#34;&gt;&lt;span id=&#34;What&#39;s_Going_On_Here?&#34;&gt;What&amp;rsquo;s Going on Here?&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The basic idea of &lt;code&gt;IO::All&lt;/code&gt; is that it exports a function called &lt;code&gt;io&lt;/code&gt;, which returns a new &lt;code&gt;IO::All&lt;/code&gt; object. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use IO::All;
+
+    my $io = io(&#39;file1&#39;);
+    # Is the same thing as:
+    my $io = IO::All-&amp;gt;new(&#39;file1&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another principle of IO::All is that it takes as many cues as possible from its context. Consider the following example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @lines = io(&#39;stuff&#39;)-&amp;gt;slurp;
+    my @good_lines = grep {not /bad/} @lines;
+    io(&#39;good-stuff&#39;)-&amp;gt;print(@good_lines);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we are basically censoring a file, removing all the &lt;em&gt;bad&lt;/em&gt; lines. The first statement slurps up the file, but since it is called in list context, it returns all the lines instead of one long string. The second statement weeds out any filth, and the third statement writes the good lines to a new file.&lt;/p&gt;
+
+&lt;p&gt;But the question arises, &amp;ldquo;How did &lt;code&gt;IO::All&lt;/code&gt; know to open the output file for output?&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;The answer is that &lt;code&gt;IO::All&lt;/code&gt; delays the open until the first IO operation and uses the operation to determine the context. The opening and closing of files happens automatically and you almost never need to indicate the file mode, although you can do all of this manually if you really want to.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-directory-assistance-directory-assistance-span&#34;&gt;&lt;span id=&#34;Directory_Assistance&#34;&gt;Directory Assistance&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I never really liked the directory commands in Perl. You know, &lt;code&gt;opendir&lt;/code&gt;, &lt;code&gt;readdir&lt;/code&gt;, and &lt;code&gt;closedir&lt;/code&gt;. I thought, well why not let an IO::All object act as a directory in addition to a file? How would IO::All know the difference? Context, of course!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $dir = io(&#39;mydir&#39;);
+    while (my $io = $dir-&amp;gt;read) {
+        print $io-&amp;gt;name, &amp;quot;\n&amp;quot;
+          if $io-&amp;gt;is_file;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example, IO::All opens a directory for reading and returns one entry at a time, much like &lt;code&gt;readdir&lt;/code&gt;. The difference is that instead of a file or subdirectory name, you get back another IO::All object. This is really cool, because you can immediately perform actions on the new objects. In the above code, we print the filename (returned by an IO::All method) if the object represents a file rather than a subdirectory (which is also returned by an IO::All Method).&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-file-find-file-find-span&#34;&gt;&lt;span id=&#34;File::Find&#34;&gt;File::Find&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Ask any experienced Perl programmer which core module has the most abysmal interface, and they&amp;rsquo;d probably say &lt;code&gt;File::Find&lt;/code&gt;. Rather than explain how &lt;code&gt;File::Find&lt;/code&gt; works (which would take me an hour of research to figure out again), here&amp;rsquo;s an easy way to roll your own search.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @wanted_file_names = map {
+        $_-&amp;gt;name
+    } grep {
+        $_-&amp;gt;name =~ /\.\w{3}/ &amp;amp;&amp;amp;
+        $_-&amp;gt;slurp =~ /ingy/
+    } io(&#39;my/directory&#39;)-&amp;gt;all_files;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This search finds all the file names in a directory that have a three-character extension and contain the string &amp;lsquo;ingy&amp;rsquo;. The &lt;code&gt;all_files&lt;/code&gt; method is a shortcut that returns only the files. There are also &lt;code&gt;all_dirs&lt;/code&gt;, &lt;code&gt;all_links&lt;/code&gt;, and simply &lt;code&gt;all&lt;/code&gt; methods.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-a-poor-man-s-tar-a-poor-man-s-tar-span&#34;&gt;&lt;span id=&#34;A_Poor_Man&#39;s_tar&#34;&gt;A Poor Man&amp;rsquo;s tar&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;This example reads all the files under a directory, and dumps them into one big file, separated by a line containing the file&amp;rsquo;s name and size. This is analogous to what the Unix &lt;code&gt;tar&lt;/code&gt; command does.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use IO::All;
+    for my $file (io(&#39;mydir&#39;)-&amp;gt;all_files(&#39;-r&#39;)) {
+        my $output = sprintf(&amp;quot;--- %s (%s)\n&amp;quot;, $file-&amp;gt;name, -s $file-&amp;gt;name)
+                     . $file-&amp;gt;slurp;
+        io(&#39;tar_like&#39;)-&amp;gt;append($output);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this usage, we pass a special flag, &lt;code&gt;-r&lt;/code&gt;, that tells &lt;code&gt;all_files&lt;/code&gt; to be recursive. That is, to find all files in all subdirectories. Also notice the &lt;code&gt;append&lt;/code&gt; method. This is the same as &lt;code&gt;print&lt;/code&gt;, but the file is opened for concatenation.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-double-standards-string-cheese-and-temporary-insanity-double-standards-string-cheese-and-temporary-insanity-span&#34;&gt;&lt;span id=&#34;Double_STanDards,_String_Cheese_and_Temporary_Insanity&#34;&gt;Double STanDards, String Cheese, and Temporary Insanity&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;IO::All has some handy shortcut names. In the Unix tradition, it uses a dash to mean STDIN, but it also uses it to mean STDOUT. Check out this one liner:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    io(&#39;-&#39;)-&amp;gt;print(io(&#39;-&#39;)-&amp;gt;slurp);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This just prints everything on STDIN to STDOUT. Once again context is used to determine which file handle the dash is actually referring to. A potentially more efficient way to write this is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $stdin = io(&#39;-&#39;);
+    my $stdout = io(&#39;-&#39;);
+    $stdout-&amp;gt;buffer($stdin-&amp;gt;buffer);
+    $stdout-&amp;gt;write while $stdin-&amp;gt;read;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;read&lt;/code&gt; and &lt;code&gt;write&lt;/code&gt; methods work from an internal buffer, which defaults to 1k in size. What we&amp;rsquo;ve done in this example is to set the two objects to use the same buffer. Since the write method clears the buffer after writing it, the above idiom works nicely.&lt;/p&gt;
+
+&lt;p&gt;Another special character is the dollar sign. This means that the IO::All object will read/write to a Perl scalar rather than a file. This can be useful when you have a code base that writes to a file, but you want to fake it out and capture all the output in a string without changing the code base.&lt;/p&gt;
+
+&lt;p&gt;Finally, if you pass no arguments at all to the &lt;code&gt;io&lt;/code&gt; function it will work as a temporary or nameless file. This is somewhat similar in effect to writing to a string, except that the data is actually going to your disk. The temporary file is opened for both read and write modes.&lt;/p&gt;
+
+&lt;p&gt;Here is a somewhat contrived example using all of these special cases.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $temp = io;
+    $temp-&amp;gt;print(io(&#39;-&#39;)-&amp;gt;slurp);
+    $temp-&amp;gt;seek(0, 0);
+    my $str = io(&#39;$&#39;);
+    $str-&amp;gt;print($_) for $temp-&amp;gt;getline;
+    my $data = ${$str-&amp;gt;string_ref};
+    $data =~ s/hate/love/;
+    io(&#39;-&#39;)-&amp;gt;print($data);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;OK, listen up and repeat after me:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;We slurp up all of STDIN, and slam it in a temp. We seek back to the start of it, and shove it a string. We suck the soul right out of string and save it from its sin. Then ship the lot to STDOUT, and sing it once again.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&#34;span-id-socket-to-me-socket-to-me-span&#34;&gt;&lt;span id=&#34;Socket_To_Me&#34;&gt;Socket to Me&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If IO::All objects can represent files, directories, streams, and strings then they can surely do the same for sockets. This example prints the header lines from an HTTP GET call:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $io = io(&#39;www.google.com:80&#39;);
+    $io-&amp;gt;print(&amp;quot;GET / HTTP/1.1\n\n&amp;quot;);
+    print while ($_ = $io-&amp;gt;getline) ne &amp;quot;\r\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Again, the context comes into play. Since &lt;code&gt;www.google.com:80&lt;/code&gt; looks like a socket address, the IO::All object does the right thing. It is worth noting that if you really wanted to open a &lt;strong&gt;file&lt;/strong&gt; called &lt;code&gt;&#39;www.google.com:80&#39;&lt;/code&gt; or &lt;code&gt;&#39;-&#39;&lt;/code&gt; or &lt;code&gt;&#39;$&#39;&lt;/code&gt;, you can explicitly override the IO::All heuristics like such:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $io1 = io(-filename =&amp;gt; &#39;www.google.com:80&#39;);
+    my $io2 = io(-filename =&amp;gt; &#39;-&#39;);
+    my $io3 = io(-filename =&amp;gt; &#39;$&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-for-fork-s-sake-for-fork-s-sake-span&#34;&gt;&lt;span id=&#34;For_Fork&#39;s_Sake&#34;&gt;For Fork&amp;rsquo;s Sake&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The one thing I always use O&amp;rsquo;Reilly&amp;rsquo;s &lt;em&gt;Perl Cookbook&lt;/em&gt; for is creating a forking socket server. Not because it&amp;rsquo;s that hard, but it&amp;rsquo;s just something I don&amp;rsquo;t keep in my head. With IO::All I have no problem remembering how to do it because it&amp;rsquo;s been made dead simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use IO::All;
+    my $server = io(&#39;:12345&#39;)-&amp;gt;accept(&#39;-fork&#39;);
+    $server-&amp;gt;print($_) while &amp;lt;DATA&amp;gt;;
+    $server-&amp;gt;close;
+    __DATA__
+    One File, Two File
+    Red File, Blue File
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This server sits and listens for connections on port 12345. When it gets a connection, it forks off a sub-process and sends two lines to the receiver.&lt;/p&gt;
+
+&lt;p&gt;The client code to call this server might look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use IO::All;
+    my $io = io(&#39;localhost:12345&#39;);
+    print while $_ = $io-&amp;gt;getline;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-io-all-of-it-to-graham-io-all-of-it-to-graham-span&#34;&gt;&lt;span id=&#34;IO::All_Of_It_To_Graham&#34;&gt;IO::All of It to Graham&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;It may strike you as silly, vain, or even foolish for someone to rewrite all of the Perl IO functions as a new module when older, more mature modules exist. But therein lies the beauty of IO::All: it &lt;strong&gt;doesn&amp;rsquo;t&lt;/strong&gt; rewrite anything. It simply provides a keen new interface to &lt;code&gt;IO::File&lt;/code&gt;, &lt;code&gt;IO::Directory&lt;/code&gt;, &lt;code&gt;IO::Socket&lt;/code&gt;, &lt;code&gt;IO::String&lt;/code&gt;, &lt;code&gt;IO::Handle&lt;/code&gt;, and others. It ties all of these robust modules together into one cohesive unit. So even though &lt;code&gt;IO::All&lt;/code&gt; is relatively new, it hopefully inherits well from this legacy of stability.&lt;/p&gt;
+
+&lt;p&gt;As far as I know, almost all of these modules we&amp;rsquo;re written by Perl superhero Graham Barr. I&amp;rsquo;ve met Graham personally and I don&amp;rsquo;t think it would be too forward of me to suggest that you send him a beer to thank him for making Perl so great. Unfortunately I don&amp;rsquo;t know his address.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-tie-me-up-and-lock-me-tie-me-up-and-lock-me-span&#34;&gt;&lt;span id=&#34;Tie_Me_Up_and_Lock_Me&#34;&gt;Tie Me Up and Lock Me&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I learned a neat trick from Gisle Aas by reading the code of his &lt;code&gt;IO::String&lt;/code&gt; module. The trick is that you can tie an object to itself. This is especially handy when the object is IO handle. It means that you can use the object as a regular file handle with all Perl built-in IO functions. And you can &lt;em&gt;also&lt;/em&gt; use it as a regular object by calling methods on it. It&amp;rsquo;s TMTOWTDI at its finest.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use IO::All &#39;-tie&#39;;
+    my $file = io(&#39;myfile&#39;);
+    my $line1 = $file-&amp;gt;getline;
+    my $line2 = &amp;lt;$file&amp;gt;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Pretty nifty, eh? Note that you need to request that IO::All perform the tie with the &lt;code&gt;-tie&lt;/code&gt; option. That&amp;rsquo;s because a bug in Perl 5.8.0 caused things tied to themselves to not go out of scope.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s another nifty feature: &lt;em&gt;automatic file locking&lt;/em&gt;. If you specify the &lt;code&gt;-lock&lt;/code&gt; option, IO::All will call flock after every file open. You still have to worry about things like deadlock, but at least the mechanism is simple. Here is a sample where all messages written to a log file then lock the file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use IO::All &#39;-lock&#39;;
+    io(&#39;log&#39;)-&amp;gt;appendln(localtime() . &amp;quot; - I&#39;m still here&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;appendln&lt;/code&gt; method is a cousin of the &lt;code&gt;println&lt;/code&gt; method. Both print a new line after your output. Note that the above code is the same as the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use IO::All;
+    io(-lock =&amp;gt; &#39;log&#39;)-&amp;gt;appendln(localtime() . &amp;quot; - I&#39;m still here&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s because any parameters that are passed to IO::All are simply passed along to all invocations of the &lt;code&gt;io&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-methods-in-my-madness-the-methods-in-my-madness-span&#34;&gt;&lt;span id=&#34;The_Methods_in_My_Madness&#34;&gt;The Methods in My Madness&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;IO::All has over 60 methods that you can call to perform various IO-related actions. Not all methods make sense in all contexts for all flavors of IO. Most of the methods are simply direct proxies for methods found in the core modules that IO::All is built upon.&lt;/p&gt;
+
+&lt;p&gt;Some of the methods have been enhanced to be more flexible than their ancestors. Take the &lt;code&gt;getline&lt;/code&gt; function, for example. The IO::Handle version simply gets the next line. The IO::All version takes an optional argument that is used as the record separator. To read a paragraph of text you could do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $paragraph = io(&#39;myfile&#39;)-&amp;gt;getline(&#39;&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Lots of the methods have been presented in this article. For complete information on all the available IO::All methods, see the IO::All documentation.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-it-s-not-just-keen-it-s-spiffy-it-s-not-just-keen-it-s-spiffy-span&#34;&gt;&lt;span id=&#34;It&#39;s_Not_Just_Keen,_It&#39;s_Spiffy&#34;&gt;It&amp;rsquo;s Not Just Keen, It&amp;rsquo;s Spiffy&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;IO::All is a little bit different from most Perl modules in that it &lt;em&gt;exports&lt;/em&gt; the &lt;code&gt;io&lt;/code&gt; function. As I said before, the &lt;code&gt;io&lt;/code&gt; function acts as an object constructor, returning a new IO::All object for each invocation. This property is gained from IO::All&amp;rsquo;s base class, &lt;code&gt;Spiffy.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Spiffy&lt;/code&gt; is a new kind of generic base class. Its primary magic trick is that it supports a unique feature that I call &lt;strong&gt;inheritable exporting&lt;/strong&gt;. Normally if you use a module as a base class, it is strictly an object-oriented thing. You don&amp;rsquo;t also export functions. Furthermore, if you were to export some functions, your subclasses would need to manually export those functions to its subclasses.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Spiffy&lt;/code&gt; is set up so that all of the &lt;code&gt;@EXPORT&lt;/code&gt; arrays in all the modules in the &lt;code&gt;@ISA&lt;/code&gt; tree of a class, are combined together to act as one big export list. The magic is then taken one step further. Functions like &lt;code&gt;io&lt;/code&gt; that act as an object constructor are &lt;em&gt;smart&lt;/em&gt; enough to return an object of a subclass; not just an IO::All object.&lt;/p&gt;
+
+&lt;p&gt;This is demonstrated in the next section. See the Spiffy documentation for details on this and other exciting features.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-eie-io-eie-io-span&#34;&gt;&lt;span id=&#34;EIE::IO&#34;&gt;EIE::IO&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s write an extension of IO::All that adds a new method called &lt;code&gt;pruls&lt;/code&gt;, which is &lt;code&gt;slurp&lt;/code&gt; backwards. Its purpose will be to return the whole file with its lines in reverse order. Here is the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package EIE::IO;
+    use IO::All &#39;-base&#39;;
+    sub pruls {
+        my $self = shift;
+        my @lines = reverse $self-&amp;gt;slurp;
+        wantarray ? @lines : join &#39;&#39;, @lines;
+    }
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s all there is to it. This module will act just like &lt;code&gt;IO::All&lt;/code&gt;, except with one more method. You would use it just like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use EIE::IO;
+    print io(&#39;mystuff&#39;)-&amp;gt;pruls;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that the &lt;code&gt;io&lt;/code&gt; function is still exported, but it returns a new &lt;strong&gt;EIE::IO&lt;/strong&gt; object. That&amp;rsquo;s Spiffy!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;Conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;IO::All&lt;/code&gt; is still quite a young module. There is room for many, many more idioms. There is also the possibility of including even more types of IO, like shared memory, IPC, and Unix sockets. If you have a use case that you think would make a nice addition to this Swiss Army Light Sabre of Perl IO, please Let&amp;rsquo;s change the Perl language for the better.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>CGI::Kwiki</title>
+      <link>http://localhost:1313/pub/2003/05/14/kwiki.html/</link>
+      <pubDate>Tue, 13 May 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/05/14/kwiki.html/</guid>
+      <description>
+
+&lt;p&gt;This article is about a new Perl module called CGI::Kwiki. With this module you can create a &lt;strong&gt;Wiki Web site&lt;/strong&gt; in less than a minute. Now that&amp;rsquo;s quick. Or more appropriately, ``That&amp;rsquo;s Kwik!&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve not heard of a Wiki, it&amp;rsquo;s a Web site that allows you to add and edit pages directly from your browser. Generally, every page on the site has a link or button that will let you edit the page that you are reading. When you edit a page, the raw contents of that page come up in a text edit area in your browser. You can make any changes you want. When you hit the &lt;em&gt;SAVE&lt;/em&gt; button, the changes become live.&lt;/p&gt;
+
+&lt;p&gt;To create a new page, you just create a link on the current page to a page that didn&amp;rsquo;t exist before. Then when you follow the new link, you are allowed to edit the new page.&lt;/p&gt;
+
+&lt;p&gt;Knowledge of HTML is not a prerequisite for using a Wiki. It&amp;rsquo;s not even a requisite, because the raw Wiki contents that you edit are not presented as HTML. Wikis use a much more natural markup, that resembles the messages posted in Usenet news groups. An example can speak for itself:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    == A Page Header for a Sample Wiki Page ==
+
+    Here&#39;s list of some WikiFormattingCodes:
+    * Lines that begin &#39;* &#39; form a bulleted list
+    * Asterisks might be used to mean *bold* text
+    * Links like http://www.perl.com work automatically
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only markup that should require further explanation is the text &lt;code&gt;WikiFormattingCodes&lt;/code&gt;. Capitalized words that are mushed together form a link to another page on the Wiki site.&lt;/p&gt;
+
+&lt;p&gt;A Wiki is simply a Web site that is easy for ordinary people to edit. So where did the Wiki idea come from and why is it important?&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-ward-s-wiki-wisdom-ward-s-wiki-wisdom-span&#34;&gt;&lt;span id=&#34;ward&#39;s wiki wisdom&#34;&gt;Ward&amp;rsquo;s Wiki Wisdom&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve only been dabbling in the world of Wiki for less than a year. Rather than answer that question myself, I decided to ask the inventor of the Wiki. Now by pure coincidence, Ward Cunningham lives but a few miles from my house and well with in my telephone area code. I decided to drop him a line, and find out his innermost feelings on his creation:&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Brian&lt;/em&gt;: Yes, hello. May I speak to Mr. Ward Cunningham?&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Ward&lt;/em&gt;: Who is this?&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Brian&lt;/em&gt;: This is Brian Ingerson from Perl.com. I have a few questions.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Ward&lt;/em&gt;: Perl?! That&amp;rsquo;s not me! &lt;strong&gt;Wall&lt;/strong&gt; is to blame. Call him.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Brian&lt;/em&gt;: No. Wait. It&amp;rsquo;s about the Wiki.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Ward&lt;/em&gt;: Ah, yes. The Wiki. Well let&amp;rsquo;s get to business.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Brian&lt;/em&gt;: Why did you invent the Wiki?&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Ward&lt;/em&gt;: Wiki had a predecessor that was a hyper-card stack. I wrote it to explore hypertext. I wanted to try recording something that was ragged, something that wouldn&amp;rsquo;t fit into columns. I had this pet theory that programming ideas were spread by people working together. I set out to chart the flow of ideas through my company (then Tektronix). This turned out to be more fun than I ever would have imagined.&lt;/p&gt;
+
+&lt;p&gt;When we were really trying to capture a programmer&amp;rsquo;s experience in software patterns, I remembered that stack and set out to do it over with the technology of the moment, the World Wide Web. This was 1994. I wrote Wiki to support and enlarge the community writing software patterns.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Brian&lt;/em&gt;: What do you see as Wiki&amp;rsquo;s most-positive contribution to the world?&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Ward&lt;/em&gt;: Back in 1994, the Web was a pretty wonderful place, with lots of people putting up stuff just because they thought someone else would find it interesting or useful. Wiki preserves that feeling in a place that has become too much of a shopping mall. It reminds people that sometimes to work together you have to trust each other more than you have any reason to.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Brian&lt;/em&gt;: Are you concerned that there are so many different Wiki implementations?&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Ward&lt;/em&gt;: I was concerned once. I wish everyone used my markup instead of inventing their own. But that didn&amp;rsquo;t happen. Now I realize that the implementations have done more to spread the idea than I ever could with my one version. That is the way it is with really simple things.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Brian&lt;/em&gt;: What programming language is your Wiki written in?&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Ward&lt;/em&gt;: Um, &amp;hellip; Perl.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Brian&lt;/em&gt;: Tell me about that.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;click&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-wikis-wikis-everywhere-wikis-wikis-everywhere-span&#34;&gt;&lt;span id=&#34;wikis wikis everywhere&#34;&gt;Wikis Wikis Everywhere&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Just in case you didn&amp;rsquo;t visualize the tongue entering and exiting my cheek, Ward does not have anything against Perl. To the contrary, he does almost all his open-source development with it, including his Wiki software. Try visiting his Wiki site, &lt;a href=&#34;http://c2.com/cgi/wiki&#34;&gt;http://c2.com/cgi/wiki&lt;/a&gt;, for an excellent introduction to Wiki.&lt;/p&gt;
+
+&lt;p&gt;As was pointed out, there are many many implementations that have sprung forth since the Wiki was invented, and many of those were written in Perl. That&amp;rsquo;s because a Wiki is fairly easy to implement and everyone seems to want to do it slightly differently.&lt;/p&gt;
+
+&lt;p&gt;Most of these implementations are just simple CGI scripts at heart. Even though they may have gathered dozens of special features over the years, they are really just ad hoc programs that are not particularly modularized or designed for extensibility.&lt;/p&gt;
+
+&lt;p&gt;One notable exception is the CGI::Wiki module by Kate ``Kake&amp;rdquo; Pugh. This relatively new CPAN distribution is designed to be a &lt;strong&gt;Wiki framework&lt;/strong&gt;. The various bits of functionality are encapsulated into class modules that can be extended by end users. As far as I know, this project is the first attempt in Perl to modularize the Wiki concept. It&amp;rsquo;s about time!&lt;/p&gt;
+
+&lt;p&gt;The &lt;em&gt;second attempt&lt;/em&gt; is a completely different module called CGI::Kwiki; the subject of this article. When I evaluated CGI::Wiki, I found it a little too &lt;em&gt;heavy&lt;/em&gt; for my needs. It had about a dozen prerequisite modules and required an SQL database. CGI::Kwiki by comparison requires no extra modules besides those that come with Perl, and stores its Web pages as plain text files.&lt;/p&gt;
+
+&lt;p&gt;I find this preferable, because I can install a new Kwiki in seconds (literally) and I have the full arsenal of Unix commands at my disposal for manipulating the content. In fact, the default search facility for CGI::Kwiki is just a method call that invokes the Unix command &lt;code&gt;grep&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Another compelling aspect of CGI::Kwiki is that every last bit of it is extensible, and extending it is trivial. About the only thing you can&amp;rsquo;t easily change is the fact that it is written in Perl.&lt;/p&gt;
+
+&lt;p&gt;Because of this, I have probably set up more than a dozen Kwiki sites in the past month, and customized each one according to my needs. In this article, I&amp;rsquo;ll show you how to do the same thing.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-kwikest-way-to-start-the-kwikest-way-to-start-span&#34;&gt;&lt;span id=&#34;the kwikest way to start&#34;&gt;The Kwikest Way to Start&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So just how easy is it to install a Kwiki? Well, that depends on how many of the basics you already have in place. You need a Web server and Perl, of course. You also need to have the CGI::Kwiki module installed from CPAN. That&amp;rsquo;s about it.&lt;/p&gt;
+
+&lt;p&gt;For the sake of a specific example, let&amp;rsquo;s say that you are running the Apache Web server (version 1.3.x) and that &lt;code&gt;/home/johnny/public_html/cgi-bin/&lt;/code&gt; is a CGI-enabled directory. With that setup in place, you can issue the following commands to create a new Kwiki:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    cd /home/johnny/public_html/cgi-bin/
+    mkdir my-kwiki
+    cd my-kwiki
+    kwiki-install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Done! Your Kwiki is installed and ready for action. You should be able to point your Web browser at:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    http://your-domain/~johnny/cgi-bin/my-kwiki/index.cgi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and begin your wiki adventure.&lt;/p&gt;
+
+&lt;p&gt;At this point, if you do an &lt;code&gt;ls&lt;/code&gt; command inside the &lt;code&gt;my-kwiki&lt;/code&gt; directory, then you should see two files (&lt;code&gt;index.cgi&lt;/code&gt; and &lt;code&gt;config.yaml&lt;/code&gt;). &lt;code&gt;index.cgi&lt;/code&gt; is just a point of execution for the CGI::Kwiki class modules, and config.yaml is little more than a list of which class modules are being used. You should also see a directory called &lt;code&gt;database&lt;/code&gt;, where all your Kwiki pages are stored as individual plain text files.&lt;/p&gt;
+
+&lt;p&gt;These files will become important later as we explore how to customize Kwiki to your personal needs or whims.&lt;/p&gt;
+
+&lt;p&gt;If you are having trouble configuring Apache for CGI, then here is the basic &lt;code&gt;httpd.conf&lt;/code&gt; section that I use for my personal Kwikis:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Alias /kwiki/ /home/ingy/kwiki/
+    &amp;lt;Directory /home/ingy/kwiki/&amp;gt;
+        Order allow,deny
+        Allow from all
+        Options ExecCGI FollowSymLinks Indexes
+        AddHandler cgi-script .cgi
+        DirectoryIndex index.cgi
+    &amp;lt;/Directory&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This allows me to connect with this URL:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    http://localhost/kwiki/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-using-your-kwiki-using-your-kwiki-span&#34;&gt;&lt;span id=&#34;using your kwiki&#34;&gt;Using Your Kwiki&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;When you first visit your newly installed Kwiki, you&amp;rsquo;ll notice that there are a number of default pages already installed. Most notably is the one called HomePage, because that&amp;rsquo;s the one you&amp;rsquo;ll see first. This page requests that you change it as soon as possible. Go ahead and give it a try. Click the &lt;code&gt;EDIT&lt;/code&gt; button.&lt;/p&gt;
+
+&lt;p&gt;You should see the text of HomePage laid out in Kwiki format inside an editable text area. Make some changes and click the &lt;code&gt;SAVE&lt;/code&gt; button. The first thing you&amp;rsquo;ll probably want to know is exactly how all the little Kwiki markup characters work.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-kwikiformattingrules-kwikiformattingrules-span&#34;&gt;&lt;span id=&#34;kwikiformattingrules&#34;&gt;KwikiFormattingRules&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;CGI::Kwiki has a set of default formatting rules that reflect my favorites from other Wikis. Some are from WardsWiki, some from MoinMoin, some from UseMod. All of them are customizable. More on that shortly. For now, let&amp;rsquo;s go over the basics.&lt;/p&gt;
+
+&lt;p&gt;The first thing to learn is how to create a link. A link to another page on the site is made by squishing two or more words together in CamelCase. If the page doesn&amp;rsquo;t exist yet, then that&amp;rsquo;s OK. Clicking on it will allow you to create the new page from scratch. This is how Wikis grow.&lt;/p&gt;
+
+&lt;p&gt;You can also create an external link by simply starting some text with &lt;code&gt;http:&lt;/code&gt;. Like &lt;a href=&#34;http://c2.com/cgi/wiki&#34;&gt;http://c2.com/cgi/wiki&lt;/a&gt;, the original Wiki Web site. Sometimes you want an internal link that isn&amp;rsquo;t CamelCase. Just put the link text inside square brackets. If you want the link to be external, then add the &lt;code&gt;http:&lt;/code&gt; component inside the brackets:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [check_this_out]
+    [check this out http://checked.out]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The second most-common formatting rule I use is preformatted text. This is used for things like Perl code examples. Text that is preformatted is automatically immune to futher Wiki processing. To mark text as preformatted you just indent it. This is similar to the approach that POD takes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        sub backwards_string {
+            return join &#39;&#39;, reverse split &#39;&#39;, shift;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;One of the FormattingRules that I personally like is the ability to create HTML tables. You do it like this (if you&amp;rsquo;re a bowler):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    | Player | 1   | 2   | 3   |
+    | Marv   | 8-1 | X   | 9-/ |
+    | Sally  | X   | X   | 8-1 |
+    | Ingy   | 5-2 | 6-0 | 7-0 |
+    | Big Al | 0-1 | 5-\ | X   |
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(The people I bowl with usually get tired after three frames)&lt;/p&gt;
+
+&lt;p&gt;Tables are made by separating cells with vertical bar (or pipe) characters. Many times I need to put multiline text inside the cells. Kwiki accomplishes this by allowing a Here-Document style syntax:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    | yaml | perl | python |
+    | &amp;lt;&amp;lt;end_yaml | &amp;lt;&amp;lt;end_perl | {&#39;foo&#39;:&#39;bar&#39;,&#39;bar&#39;:[42]} |
+    ---
+    foo: bar
+    bar:
+      - 42
+    end_yaml
+    {
+      foo =&amp;gt; &#39;bar&#39;,
+      bar =&amp;gt;
+        [ 42 ]
+    }
+    end_perl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Kwiki has a fairly rich set of default formatting rules. You&amp;rsquo;ll find an exhaustive list of all the rules right inside your new Kwiki. The page is called KwikiFormattingRules. To find this page (and every other page on your Kwiki) click the RecentChanges link at the top of the current page.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-kustomizingkwiki-kustomizingkwiki-span&#34;&gt;&lt;span id=&#34;kustomizingkwiki&#34;&gt;KustomizingKwiki&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;To those of you familiar with the Wiki world, this has all been fairly pedestrian stuff so far. Here&amp;rsquo;s where I think that things get interesting. As I stated before, every last part of the Kwiki software is changable, customizable and extensible. Best of all, it&amp;rsquo;s easy to do.&lt;/p&gt;
+
+&lt;p&gt;CGI::Kwiki is made up of more than a dozen class modules. Each class is responsible for a specific piece of the overall Kwiki behavior. To change something about a particular class, you just subclass it with a module of your own.&lt;/p&gt;
+
+&lt;p&gt;Some of the more important CGI::Kwiki classes are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_CGI%3A%3AKwiki%3A%3AFormatter&#34;&gt;CGI::Kwiki::Formatter&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the most-common class to extend. It&amp;rsquo;s where all the formatting rules are codified.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_CGI%3A%3AKwiki%3A%3ADatabase&#34;&gt;CGI::Kwiki::Database&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This class loads and stores the Kwiki pages.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_CGI%3A%3AKwiki%3A%3ATemplate&#34;&gt;CGI::Kwiki::Template&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Defines the HTML that gives the look and feel to your Kwiki.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_CGI%3A%3AKwiki%3A%3ADriver&#34;&gt;CGI::Kwiki::Driver&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Controls the entire CGI process.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_CGI%3A%3AKwiki%3A%3AConfig&#34;&gt;CGI::Kwiki::Config&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;An abstraction for reading the config file parameters.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Kwiki knows what classes to use by looking in it&amp;rsquo;s config file. So if you want to subclass something, then the first thing you would do is change the &lt;code&gt;config.yaml&lt;/code&gt; entry to point to your new class. Let&amp;rsquo;s start with a easy one.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-a-kwik-and-dirty-tweak-a-kwik-and-dirty-tweak-span&#34;&gt;&lt;span id=&#34;a kwik and dirty tweak&#34;&gt;A Kwik and Dirty Tweak&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Kwiki will turn a word or phrase inside &lt;code&gt;*&lt;/code&gt;asterisks&lt;code&gt;*&lt;/code&gt; to bold text. This is similar to the way you might do it in text e-mail. But WardsWiki uses &lt;code&gt;&#39;&#39;&#39;&lt;/code&gt;triple quotes&lt;code&gt;&#39;&#39;&#39;&lt;/code&gt; for bolding. Let&amp;rsquo;s change your Kwiki to do it like Ward does.&lt;/p&gt;
+
+&lt;p&gt;First, create a file called &lt;code&gt;MyFormatter.pm&lt;/code&gt;. You can put it right inside your Kwiki installation directory, and Kwiki will find it. The contents of the file should look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package MyFormatter;
+    use base &#39;CGI::Kwiki::Formatter&#39;;
+
+    sub bold {
+        my ($self, $text) = @_;
+        $text =~ s#&#39;&#39;&#39;(.*?)&#39;&#39;&#39;#&amp;lt;b&amp;gt;$1&amp;lt;/b&amp;gt;#g;
+        return $text;
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, change the &lt;code&gt;config.yaml&lt;/code&gt; file to use this line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    formatter_class: MyFormatter
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Kwiki formatting engine will now call your subroutine with pieces of text that are eligible to contain bold formatting. Sections of text that are already preformatted code will not be passed to your &lt;code&gt;bold()&lt;/code&gt; method. And as you can see, &lt;code&gt;MyFormatter&lt;/code&gt; is a subclass of &lt;a href=&#34;#item_CGI%3A%3AKwiki%3A%3AFormatter&#34;&gt;&lt;code&gt;CGI::Kwiki::Formatter&lt;/code&gt;&lt;/a&gt; so all the other formatting behaviors remain intact.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-kwiki-s-formatting-engine-kwiki-s-formatting-engine-span&#34;&gt;&lt;span id=&#34;kwiki&#39;s formatting engine&#34;&gt;Kwiki&amp;rsquo;s Formatting Engine&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look under the hood at CGI::Kwiki&amp;rsquo;s hotrod formatting engine. You&amp;rsquo;ll need to be familiar with it to do any serious formatting changes. Conceptually, it&amp;rsquo;s rather simple. It works like this.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The text starts out as one big string.&lt;/li&gt;
+&lt;li&gt;There is a list of formatting routines that are applied in a certain order.&lt;/li&gt;
+&lt;li&gt;The string is passed to the first formatting routine. This routine may change the original text. It may also break the text into a number of substrings. It then return the strings it has created and manipulated.&lt;/li&gt;
+&lt;li&gt;Each of the substrings is run through the next formatting routine in line.&lt;/li&gt;
+&lt;li&gt;Sometimes, a formatting routine will want to make sure that no further routines touch a particular substring. It can do this by returning a hard reference to that string.&lt;/li&gt;
+&lt;li&gt;After all the substrings have been passed through every routine, they are joined back together to form one long string.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The specific routines and their order of execution is determined by another method called &lt;code&gt;process_order()&lt;/code&gt;. The &lt;code&gt;process_order&lt;/code&gt; method just returns a list of method names in the order they should be called. The default &lt;code&gt;process_order&lt;/code&gt; method is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub process_order {
+        return qw(
+            function
+            table code header_1 header_2 header_3 
+            escape_html
+            lists comment horizontal_line
+            paragraph 
+            named_http_link no_http_link http_link
+            no_wiki_link wiki_link force_wiki_link
+            bold italic underscore
+        );
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The best way to get a good feel for how to do things is to look over the CGI::Kwiki::Formatter module itself.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-kontentkontrol-kontentkontrol-span&#34;&gt;&lt;span id=&#34;kontentkontrol&#34;&gt;KontentKontrol&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The biggest fear that many people have of setting up a Wiki site is that someone will come along and destroy all their pages. This happens from time to time, but in general people just don&amp;rsquo;t do it. It&amp;rsquo;s really not that cool of a trick to pull off. Someone could even write a program to destroy a Wiki, but if they were that smart, hopefully they&amp;rsquo;d be mature enough not to do it.&lt;/p&gt;
+
+&lt;p&gt;As of this writing, CGI::Kwiki doesn&amp;rsquo;t do anything to protect your data. But remember, it&amp;rsquo;s just code. Let&amp;rsquo;s now extend your code to do a simple backup, everytime a page is written.&lt;/p&gt;
+
+&lt;p&gt;Possibly the simplest way to back up files on Unix is to use RCS. Let&amp;rsquo;s make the Kwiki perform an RCS checkin every time it saves a page.&lt;/p&gt;
+
+&lt;p&gt;This time we need to extend the database class. Change the config file like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    database_class: MyDatabase
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then write a file called MyDatabase.pm that looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package MyDatabase;
+    use base &#39;CGI::Kwiki::Database&#39;;
+
+    sub store {
+        my $self = shift;
+        my ($file) = @_;
+        $self-&amp;gt;SUPER::store(@_);
+        system(qq{ci -q -l -m&amp;quot;saved&amp;quot; database/$file backup/$file,v});
+    }
+
+
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Note&lt;/em&gt;: Be sure to add a backup directory that the CGI program can write to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    mkdir backup
+    chmod 777 backup
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this case the &lt;code&gt;store&lt;/code&gt; method calls its parent method to handle this actual database store. But then it invokes an extra rcs command to backup the changes to the file.&lt;/p&gt;
+
+&lt;p&gt;Hopefully these examples will give you an idea of how to go about making other types of modifications to CGI::Kwiki. If you make a whole set of cohesive and generally useful extensions, then please consider putting them on CPAN as module distribution.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-kwiki-in-every-pot-a-kwiki-in-every-pot-span&#34;&gt;&lt;span id=&#34;a kwiki in every pot&#34;&gt;A Kwiki in Every Pot&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The classic use for a Wiki site is to provide a multi-user forum for some topic of interest. In this context, Wiki is a great collaboration tool. People can add new ideas, and revise old ones. The Wiki serves as both an archive and a news site. Most Wikis provide a search mechanism and a RecentChanges facility.&lt;/p&gt;
+
+&lt;p&gt;But I think this only scratches the surface of Wiki usage possibilities. Since a Kwiki is so easy to create, I now find myself doing it all the time. It&amp;rsquo;s almost like I&amp;rsquo;m creating a new wiki for every little thing I set out to do. Here&amp;rsquo;s a few examples:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Personal_Planning&#34;&gt;Personal Planning&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;I have a personal wiki for keeping track of my projects. I keep it on my laptop.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Module_Development&#34;&gt;Module Development&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Every Perl module I write these days has its own Kwiki in the directory. I use them mainly for creating Test::FIT testing tables. (See Test::FIT on CPAN). But I can also use it for project notes and documentation. Since I can extend the Kwiki, I can make it export the pages to POD if I want.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Autobiowiki&#34;&gt;Autobiowiki&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;I am seriously considering writing the stories of my life in a Wiki. If I can get others to to the same, then the Wikis could be linked using Ward&amp;rsquo;s SisterSite mechanism. This would create one big story. (See &lt;a href=&#34;http://c2.com/cgi/wiki?AboutSisterSites&#34;&gt;http://c2.com/cgi/wiki&lt;/a&gt;)&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Project_Collaboration&#34;&gt;Project Collaboration&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;For my bigger projects I like to create a user community based around a Wiki. Using Test::FIT I can actually get my users to write failing tests for my projects. And they can help write documentation, report bugs, share recipes, etc. (See &lt;a href=&#34;http://fit.freepan.org&#34;&gt;http://fit.freepan.org&lt;/a&gt; and &lt;a href=&#34;http://yaml.freepan.org&#34;&gt;http://yaml.freepan.org&lt;/a&gt;)&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One final point of interest; this entire article was written in a Wiki format. I needed to submit it to my editor in POD format, which he in turn formatted into the HTML you are reading now. I accomplished this by simply using an extension of CGI::Kwiki::Formatter that produces POD instead of HTML!&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;NOTE&lt;/em&gt;: The raw content of this article along with the formatter program can be found at &lt;a href=&#34;http://www.freepan.org/ingy/articles/kwiki/&#34;&gt;http://www.freepan.org/ingy/articles/kwiki/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: &lt;a href=&#34;http://www.kwiki.org/&#34;&gt;http://www.kwiki.org&lt;/a&gt; has been created as the official kwiki home page.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-about-the-author-about-the-author-span&#34;&gt;&lt;span id=&#34;about the author&#34;&gt;About the Author&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Brian Ingerson has been programming for more than 20 years, and hacking Perl for five of those. He is dedicated to improving the overall quality of scripting languages including Perl, Python and Ruby. He currently hails from Portland, Ore.; the very location of this year&amp;rsquo;s O&amp;rsquo;Reilly Open Source Convention. How convenient!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>For Perl Programmers : only</title>
+      <link>http://localhost:1313/pub/2003/03/18/only.html/</link>
+      <pubDate>Tue, 18 Mar 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/03/18/only.html/</guid>
+      <description>
+
+&lt;p&gt;Have you ever wished that you could have more than one version of a Perl module installed on your system, and that you could easily tell Perl exactly which one you wanted to load? Perhaps you have some legacy programs that only run with older versions of certain modules, while the rest of your system is coded to the more-modern versions of the same module. Or maybe you administer a multiuser system, where your various users request different module versions.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s built-in mechanism for module version control is very rudimentary. Basically, you can say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use XML::Parser 2.27;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;use&lt;/code&gt; command will load XML::Parser and then proceed to &lt;code&gt;die&lt;/code&gt; unless &lt;code&gt;$XML::Parser::VERSION&lt;/code&gt; is greater than or equal to 2.27. There is no way to ask for one specific version or a range of versions. Most of the time this is OK. It&amp;rsquo;s OK if you assume that successive versions of modules always improve, never drop functionality and are fully backward compatible. Unfortunately, in real life, this isn&amp;rsquo;t always true.&lt;/p&gt;
+
+&lt;p&gt;Take Lincoln Stein&amp;rsquo;s excellent &lt;code&gt;GD&lt;/code&gt; module for example. &lt;code&gt;GD.pm&lt;/code&gt; is a toolset for creating graphic images from Perl programs. Up to version 1.19, &lt;code&gt;GD&lt;/code&gt; supported the GIF format. Due to GIF&amp;rsquo;s licensing restrictions, the author was forced to retract support. GIF support was replaced by the PNG format, and later JPEG support was added. If you are required to use &lt;code&gt;GD&lt;/code&gt; for both GIF and PNG format types, then you need to do some monkeying around with library paths to get it to work.&lt;/p&gt;
+
+&lt;p&gt;With big projects in restrictive environments, dealing with module versioning issues can quickly become a tangled briar patch. When your needs for using specific modules become too thorny, you need a sharper chainsaw. This article describes such a saw.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-only-way-the-only-way-span&#34;&gt;&lt;span id=&#34;the_only_way&#34;&gt;The Only Way&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Introducing &lt;code&gt;only.pm&lt;/code&gt;! &lt;code&gt;only&lt;/code&gt; is a full featured system for installing and loading multiple versions of Perl modules.&lt;/p&gt;
+
+&lt;p&gt;To make sure that your program loads version &lt;code&gt;1.19&lt;/code&gt; of &lt;code&gt;GD&lt;/code&gt;, simply say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only GD =&amp;gt; 1.19;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you know that any of the &lt;code&gt;GD&lt;/code&gt; versions from 2.01 up to 2.06 are OK, then say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only GD =&amp;gt; &#39;2.01-2.06&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you also want to import &lt;code&gt;GD::foo&lt;/code&gt; and &lt;code&gt;GD::bar&lt;/code&gt;, then:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only GD =&amp;gt; &#39;2.01-2.06&#39;, qw(foo bar);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;only&lt;/code&gt; acts as an extension to Perl&amp;rsquo;s &lt;code&gt;use&lt;/code&gt; command. It intercepts the parameters that you would normally pass to &lt;code&gt;use&lt;/code&gt; along with an acceptable version range. It takes all of that information and does a &amp;ldquo;heap of bit-wrangling&amp;rdquo; to make sure that you get the version of the module you wanted. In every other respect, it tries to act like a regular &lt;code&gt;use&lt;/code&gt; statement.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-easy-installations-easy-installations-span&#34;&gt;&lt;span id=&#34;easy_installations&#34;&gt;Easy Installations&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;How do you go about installing several versions of Perl modules? Perl is really only designed to support the installation of a single module version. Whenever you install a new version of a module, it simply overwrites the older version. This is known as upgrading. Usually that&amp;rsquo;s what you want, but in the context of &lt;code&gt;only&lt;/code&gt;, you actually want to have multiple versions installed simultaneously.&lt;/p&gt;
+
+&lt;p&gt;Advanced Perl programmers know that is possible to install modules into different directories. You can supply a &lt;code&gt;PREFIX=&lt;/code&gt; parameter to the &lt;code&gt;make install&lt;/code&gt; process. But then you have to remember where you installed the module, and manually adjust &lt;code&gt;@INC&lt;/code&gt; to have the right sequence of paths. That&amp;rsquo;s just no fun.&lt;/p&gt;
+
+&lt;p&gt;Fortunately, &lt;code&gt;only&lt;/code&gt; makes it extremely simple to install multiple versions. To start with, just go about building your module in the usual way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    tar xvzf Cat-Fancy-0.09.tar.gz
+    cd Cat-Fancy-0.09
+    perl Makefile.PL
+    make test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Normally, the next step is &lt;code&gt;make install&lt;/code&gt;. But if you want to store version &lt;code&gt;0.09&lt;/code&gt; separate from any other version of &lt;code&gt;Cat::Fancy&lt;/code&gt;, do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    perl -Monly=install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This actually does the same procedure as &lt;code&gt;make install&lt;/code&gt; would except that it automatically determines a safe place to stick your module; one that &lt;code&gt;only.pm&lt;/code&gt; can find when you say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only Cat::Fancy =&amp;gt; 0.09;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt;: If you need authorized access to install modules on your system, then you can do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sudo perl -Monly=install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But &lt;em&gt;be careful&lt;/em&gt;. The &lt;code&gt;perl&lt;/code&gt; used by &lt;code&gt;sudo&lt;/code&gt; may not be the same &lt;code&gt;perl&lt;/code&gt; as the one used by &lt;code&gt;make&lt;/code&gt;. If this is the case, then you&amp;rsquo;ll need to specify the full path to &lt;code&gt;perl&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-where-is-my-only-module-where-is-my-only-module-span&#34;&gt;&lt;span id=&#34;where_is_my_only_module&#34;&gt;Where Is My Only Module?&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;You may wonder, &amp;ldquo;Where exactly do these modules get installed and will they conflict with my existing modules?&amp;rdquo;. The short answer is, &amp;ldquo;They get installed exactly where you told them to!&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;When you install the &lt;code&gt;only&lt;/code&gt; module, you are asked to select a base directory where &lt;code&gt;only::install&lt;/code&gt; can install modules. The default value is a modification of your Perl&amp;rsquo;s &lt;code&gt;sitelib&lt;/code&gt; directory. For instance, if your &lt;code&gt;sitelib&lt;/code&gt; was:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    /usr/local/perl580/lib/sitelib/5.8.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then &lt;code&gt;only.pm&lt;/code&gt; would default to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    /usr/local/perl580/lib/version/5.8.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even though this is the default, you are prompted to select any directory you want. Your choice is saved permanently in &lt;code&gt;only::config&lt;/code&gt;. The constant &lt;code&gt;only::config::versionlib&lt;/code&gt;, becomes the base directory where &lt;code&gt;only&lt;/code&gt; will install and search for versioned modules.&lt;/p&gt;
+
+&lt;p&gt;If you really need to, then you can override this directory as well. For installation, you would say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    perl -Monly=install - versionlib=/home/ingy/modules
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;versionlib&lt;/code&gt; is just the base directory. &lt;code&gt;only&lt;/code&gt; separates various module versions by sticking them into a subdirectory named after the version. So &lt;code&gt;Cat::Fancy&lt;/code&gt; would be installed as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    /usr/local/perl580/lib/version/5.8.0/0.09/Cat/Fancy.pm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-module-build-module-build-span&#34;&gt;&lt;span id=&#34;module::build&#34;&gt;Module::Build&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Many new Perl modules are using &lt;code&gt;Module::Build&lt;/code&gt; for their build process, instead of the age-old &lt;code&gt;Makefile.PL&lt;/code&gt; and &lt;code&gt;ExtUtils::MakeMaker&lt;/code&gt;. &lt;code&gt;Module::Build&lt;/code&gt; is a wonderfully organized and extensible replacement for its stalwart yet terribly crufty predecessor.&lt;/p&gt;
+
+&lt;p&gt;One of the side benefits of modules distributions that have &lt;code&gt;Module::Build&lt;/code&gt; is that you can do version-specific installations natively by saying:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    perl Build.PL
+    ./Build versioninstall
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Although this is just a pass-through call to &lt;code&gt;only::install&lt;/code&gt;, it does not suffer from the aforementioned &amp;ldquo;sudo&amp;rdquo; problem.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-only-the-facts-only-the-facts-span&#34;&gt;&lt;span id=&#34;only_the::facts&#34;&gt;only The::Facts&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Back to &lt;code&gt;only.pm&lt;/code&gt;. In this section, I&amp;rsquo;ll discuss all the gory details of the &lt;code&gt;use only&lt;/code&gt; syntax. It really isn&amp;rsquo;t that bad. The basic form is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only MODULE =&amp;gt; CONDITION;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;where MODULE is a module name, and CONDITION is either a simple version number or a more complex version specification. More on version conditions in a moment. If you have arguments to pass to the module, then simply tack them on to the end:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only MODULE =&amp;gt; CONDITION, ARGUMENTS;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;only&lt;/code&gt; even accounts for situations where different versions need different arguments. You match up the conditions and arguments as a set of anonymous arrays:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only MODULE =&amp;gt;
+        [ CONDITION1, ARGUMENTS1 ],
+        ...,
+        [ CONDITION7, ARGUMENTS7 ];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, there are some special options that you can pass to &lt;code&gt;only&lt;/code&gt; to tell it how to behave. This is accomplished syntactically by passing an anonymous hash of option/value pairs. Put the options hash directly after &lt;code&gt;use only&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only { OPTION =&amp;gt; VALUE},
+        MODULE =&amp;gt; CONDITION;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you want to set the options globally (for all subsequent &lt;code&gt;only&lt;/code&gt; interaction), then just specify the options without any other arguments. For example, to override the &lt;code&gt;versionlib&lt;/code&gt; option for all &lt;code&gt;use only ...&lt;/code&gt; statements, say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only { versionlib =&amp;gt; &#39;/home/ingy/modules&#39; };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-hazardous-conditions-hazardous-conditions-span&#34;&gt;&lt;span id=&#34;hazardous_conditions&#34;&gt;Hazardous Conditions&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Even though a &amp;ldquo;version condition&amp;rdquo; can be as simple as a single version number like &amp;lsquo;0.42&amp;rsquo;, &lt;code&gt;only&lt;/code&gt; offers flexible syntax for expressing exactly which versions you are (and aren&amp;rsquo;t) interested in.&lt;/p&gt;
+
+&lt;p&gt;If you want to specify a list of versions, then just use a space-separated enumeration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only Bird::Talk =&amp;gt; &#39;0.42 0.44 0.47 0.50&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If your version requirements fall into a range, then you can specify those, too. Just use two versions, separated by a dash:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only Bird::Talk =&amp;gt; &#39;0.42-0.50&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, you can list multiple ranges as well. And if you leave one of the versions off the range, then that means the range is open-ended.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only Bird::Talk =&amp;gt; &#39;0.42-0.50 0.55-0.62 0.67-&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sometimes it&amp;rsquo;s easier to just specify the versions you don&amp;rsquo;t want. Using a &amp;lsquo;!&amp;rsquo; in front of either a range or a single version, negates that meaning. To avoid all versions of &lt;code&gt;Bird::Talk&lt;/code&gt; below 0.42, and also the extremely buggy version .53, say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only Bird::Talk =&amp;gt; &#39;!-0.41 !0.53&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When more than one eligible version of &lt;code&gt;Bird::Talk&lt;/code&gt; is installed on your system, &lt;code&gt;only&lt;/code&gt; always chooses the highest version. If you don&amp;rsquo;t specify any version, then that is an indication to choose the highest-numbered version. This is different than saying:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Bird::Talk;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;because &lt;code&gt;only&lt;/code&gt; will search your &lt;code&gt;versionlib&lt;/code&gt; first.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-for-arguments-sake-for-argument-s-sake-span&#34;&gt;&lt;span id=&#34;for_arguments&#39;_sake&#34;&gt;For Argument&amp;rsquo;s Sake&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;There&amp;rsquo;s not much to say about passing arguments. Just pass them in the same way you would on a normal &lt;code&gt;use&lt;/code&gt; statement. This should even work for modules like &lt;code&gt;Inline.pm&lt;/code&gt; where the arguments are not import lists:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only Inline =&amp;gt; 0.44, &#39;Java&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is one exception. In Perl, when you say something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Dog::Walk ();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s a cue to not call the module&amp;rsquo;s &lt;code&gt;import&lt;/code&gt; method at all. In other words, it ensures that no functions will be exported into your namespace. But if you say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only Dog::Walk =&amp;gt; 1.00, ();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then you will not get the same effect. Unfortunately, there is no way for &lt;code&gt;only.pm&lt;/code&gt; to detect that you called it that way. As a workaround, &lt;code&gt;only&lt;/code&gt; lets you say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only Dog::Walk =&amp;gt; 1.00, [];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This has a similar visual appearance and is meant as a mnemonic. (Hopefully, there aren&amp;rsquo;t a whole lot of modules in the world where it is important to pass in a single empty array ref :)&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-the-only-options-the-only-options-span&#34;&gt;&lt;span id=&#34;the_only_options&#34;&gt;The Only Options&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The only (no pun intended) option currently implemented for &lt;code&gt;only&lt;/code&gt; is &lt;code&gt;versionlib&lt;/code&gt;. This option allows you to override the system &lt;code&gt;versionlib&lt;/code&gt; stored in &lt;code&gt;only::config&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only { versionlib =&amp;gt; &#39;/home/ingy/modules&#39; },
+        Corn::Stalk =&amp;gt; 0.99, [];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-friends-and-family-friends-and-family-span&#34;&gt;&lt;span id=&#34;friends_and_family&#34;&gt;Friends and Family&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One important duty of &lt;code&gt;only&lt;/code&gt; is to ensure that when you load a specific version of some module, all of that module&amp;rsquo;s related modules are also loaded from the same version level. This is tricky, because in Perl, you never know when a module is going to be loaded. It could be loaded by your original module or not. It might happen at compile time ( &lt;code&gt;use&lt;/code&gt; ) or run time ( &lt;code&gt;require&lt;/code&gt; ). It could be loaded hours later in a long-running process (or a very, very, very slow computer :) There might also be autoloaded functions involved.&lt;/p&gt;
+
+&lt;p&gt;Most importantly, some of the sub-modules might be loaded using &lt;code&gt;use only&lt;/code&gt;, while others are loaded with standard &lt;code&gt;use&lt;/code&gt; and &lt;code&gt;require&lt;/code&gt; statements. To make all this happen the way you&amp;rsquo;d expect it to, &lt;code&gt;only&lt;/code&gt; plays some tricks with &lt;code&gt;@INC&lt;/code&gt;. More on that shortly, my preciouses.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;only&lt;/code&gt; knows which modules are related because it saves the information as metadata for every module it installs. For example, if I install a module like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ cd YAML-0.35
+    $ perl Makefile.PL
+    ... lines deleted
+    $ make test
+    ... lines deleted
+    $ perl -Monly=install
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML.pm
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML.pod
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML/Error.pm
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML/Family.pm
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML/Node.pm
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML/Transfer.pm
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML/Error.yaml
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML/Family.yaml
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML/Node.yaml
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML/Transfer.yaml
+    Installing /usr/local/perl580/lib/version/5.8.0/0.35/YAML.yaml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then I get a YAML metadata file for each module. The metadata file &lt;code&gt;YAML.yaml&lt;/code&gt; looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # This meta file created by/for only.pm
+    meta_version: 0.25
+    install_version: 0.35
+    distribution_name: YAML
+    distribution_version: 0.35
+    distribution_modules:
+      - YAML.pm
+      - YAML/Error.pm
+      - YAML/Family.pm
+      - YAML/Node.pm
+      - YAML/Transfer.pm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This way, no matter which module is loaded first, &lt;code&gt;only&lt;/code&gt; knows about every other module that was installed with that module.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-only-on-the-inside-only-on-the-inside-span&#34;&gt;&lt;span id=&#34;only_on_the_inside&#34;&gt;Only on the Inside&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The internals of &lt;code&gt;only.pm&lt;/code&gt; are not incredibly complicated, but there is a little black magic going on. Most of it boils down to a relatively new and under-publicized feature of Perl5: putting &lt;strong&gt;objects&lt;/strong&gt; onto the &lt;code&gt;@INC&lt;/code&gt; array.&lt;/p&gt;
+
+&lt;p&gt;As you probably know, &lt;code&gt;@INC&lt;/code&gt; is a special global array of file-system paths. When a program tries to load a Perl module with the &lt;code&gt;use&lt;/code&gt; or &lt;code&gt;require&lt;/code&gt; commands, it searches each of these paths in order until the module is found. The default paths in &lt;code&gt;@INC&lt;/code&gt; are compiled into Perl. You can alter the array with the &lt;code&gt;PERL5LIB&lt;/code&gt; environment variable, the &lt;code&gt;lib.pm&lt;/code&gt; module, or even by simply changing it with regular Perl array commands. It&amp;rsquo;s just an array, after all.&lt;/p&gt;
+
+&lt;p&gt;As of Perl 5.6.1, you can actually put Perl objects onto &lt;code&gt;@INC&lt;/code&gt; and have &lt;code&gt;use&lt;/code&gt; and &lt;code&gt;require&lt;/code&gt; interact with them. When &lt;code&gt;require&lt;/code&gt; encounters an object in &lt;code&gt;@INC&lt;/code&gt; it attempts to call that object&amp;rsquo;s &lt;code&gt;INC&lt;/code&gt; method. The &lt;code&gt;INC&lt;/code&gt; method can do anything it wants to load the module. It could actually go out on the internet and locate the module, download it, install it and load it!&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;INC&lt;/code&gt; method should either return a filehandle or nothing. If a filehandle is returned, then &lt;code&gt;require&lt;/code&gt; considers the operation a success. It reads the contents of that filehandle and &lt;code&gt;eval&lt;/code&gt;-s the module into existence. If nothing is returned, then the operation is considered unsuccessful, and &lt;code&gt;require&lt;/code&gt; continues its merry way down &lt;code&gt;@INC&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The heart of the &lt;code&gt;only&lt;/code&gt; module&amp;rsquo;s magic lies in the fact that it puts an object onto &lt;code&gt;@INC&lt;/code&gt; that is responsible for loading an appropriate version of your module. Not only that,it is also responsible for loading the matching version of any related modules that were installed at the same time as your module.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-ooo-object-oriented-only-o-o-o-object-oriented-only-span&#34;&gt;&lt;span id=&#34;ooo__object_oriented_only&#34;&gt;O-O-o - Object-Oriented Only&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Since &lt;code&gt;only&lt;/code&gt; is an object-oriented module on the inside, it is no surprise that it offers an OO API to the those of you on the outside. (I assume that you don&amp;rsquo;t live inside a Perl module :)&lt;/p&gt;
+
+&lt;p&gt;Using the OO interface can give you more understanding and control of the version specific loading process, at the cost of a slightly more verbose syntax specification. As an example, if you would normally do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only Good::Stuff =&amp;gt; &#39;1.20-1.55&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then you can say the same thing by doing this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only;
+    my $only;
+    BEGIN {
+        $only = only-&amp;gt;new;
+        $only-&amp;gt;module(&#39;Good::Stuff&#39;);
+        $only-&amp;gt;condition(&#39;1.20-1.55&#39;);
+        $only-&amp;gt;include;
+    }
+    use Good::Stuff;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that the &lt;code&gt;use&lt;/code&gt; statement is absolutely normal. No &lt;code&gt;only&lt;/code&gt; involved. But it still does what we want! That&amp;rsquo;s because the preceding code sticks one of those magic &lt;code&gt;only&lt;/code&gt; objects onto &lt;code&gt;@INC&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The methods should be fairly self-explanatory. The key method call is &lt;code&gt;only-&lt;/code&gt;include&amp;gt;. It tells the object to attach itself to the front of @INC.&lt;/p&gt;
+
+&lt;p&gt;One nice thing is that you can actually do stuff with the object later on in the program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use only;
+    my $only;
+    BEGIN {    # methods can be stacked
+        $only = only-&amp;gt;new-&amp;gt;module(&#39;Good::Stuff&#39;)-&amp;gt;condition(&#39;1.20-1.55&#39;)-&amp;gt;include;
+    }
+    use Good::Stuff;
+    ...
+    print &amp;quot;Using Good::Stuff version: &amp;quot; . $only-&amp;gt;distribution_version . &amp;quot;\n&amp;quot;;
+    ...
+    $only-&amp;gt;remove;    # Remove object from @INC;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I always believed that if my old Triumph motorcycle ever broke down out on the open road, I could somehow figure out a way to repair it by walking down the road for a half mile in either direction, and finding some odds and ends lying around that I could use for tools. That&amp;rsquo;s because the roads are usually littered with all sorts of weird things, and I see everything as a tool to somehow suit my needs.&lt;/p&gt;
+
+&lt;p&gt;Perl is much like that roadside. There are all kinds of weird things lying around that can help it solve its own problems. Even when Perl is playing the part of a busted Triumph bike, its roadside qualities always seem to be able to kickstart it right back into action.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;only.pm&lt;/code&gt; is a great example of this. Even though Perl was inadequate in regards to module versioning yesterday, today, it&amp;rsquo;s packing a brand new chainsaw. Rev it up!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-about-the-author-about-the-author-span&#34;&gt;&lt;span id=&#34;about_the_author&#34;&gt;About the Author&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Brian Ingerson has been programming for more than 20 years, and hacking Perl for five of those. He is dedicated to improving the overall quality of scripting languages including Perl, Python, PHP and Ruby. He currently hails from Portland, Ore. &amp;ndash; the location of this year&amp;rsquo;s O&amp;rsquo;Reilly Open Source Convention. How convenient!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Pathologically Polluting Perl</title>
+      <link>http://localhost:1313/pub/2001/02/inline.html/</link>
+      <pubDate>Tue, 06 Feb 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/02/inline.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;pathologically-polluting-perl&#34;&gt;Pathologically Polluting Perl&lt;/h3&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Table of Contents&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;•&lt;a href=&#34;#inline%20in%20action%20%20simple%20examples%20in%20c&#34;&gt;Inline in Action - Simple examples in C&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#hello,%20world&#34;&gt;Hello, world&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#just%20another%20____%20hacker&#34;&gt;Just Another ____ Hacker&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#what%20about%20xs%20and%20swig&#34;&gt;What about XS and SWIG?&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#oneliners&#34;&gt;One-Liners&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#supported%20platforms%20for%20c&#34;&gt;Supported Platforms for C&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#the%20inline%20syntax&#34;&gt;The Inline Syntax&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#fine%20dining%20%20a%20glimpse%20at%20the%20c%20cookbook&#34;&gt;Fine Dining - A Glimpse at the C Cookbook&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#external%20libraries&#34;&gt;External Libraries&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#it%20takes%20all%20types&#34;&gt;It Takes All Types&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#some%20ware%20beyond%20the%20c&#34;&gt;Some Ware Beyond the C&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#see%20perl%20run.%20run%20perl,%20run!&#34;&gt;See Perl Run. Run, Perl, Run!&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#the%20future%20of%20inline&#34;&gt;The Future of Inline&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#conclusion&#34;&gt;Conclusion&lt;/a&gt;&lt;br /&gt;
+&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;No programming language is Perfect. Perl comes very close. &lt;strong&gt;P&lt;/strong&gt;! &lt;strong&gt;e&lt;/strong&gt;! &lt;strong&gt;r&lt;/strong&gt;! &lt;em&gt;l&lt;/em&gt;? :-( Not quite ``Perfect&amp;rdquo;. Sometimes it just makes sense to use another language for part of your work. You might have a stable, pre-existing code base to take advantage of. Perhaps maximum performance is the issue. Maybe you just ``know how to do it&amp;rdquo; that way. Or very likely, it&amp;rsquo;s a project requirement forced upon you by management. Whatever the reason, wouldn&amp;rsquo;t it be great to use Perl most of the time, but be able to invoke something else when you had to?&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Inline.pm&lt;/code&gt; is a new module that glues other programming languages to Perl. It allows you to write C, C++, and Python code directly inside your Perl scripts and modules. This is conceptually similar to the way you can write inline assembly language in C programs. Thus the name: &lt;code&gt;Inline.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The basic philosophy behind Inline is this: ``make it as easy as possible to use Perl with other programming languages, while ensuring that the user&amp;rsquo;s experience retains the DWIMity of Perl&amp;rdquo;. To accomplish this, Inline must do away with nuisances such as interface definition languages, makefiles, build directories and compiling. You simply write your code and run it. Just like Perl.&lt;/p&gt;
+
+&lt;p&gt;Inline will silently take care of all the messy implementation details and ``do the right thing&amp;rdquo;. It analyzes your code, compiles it if necessary, creates the correct Perl bindings, loads everything up, and runs the whole schmear. The net effect of this is you can now write functions, subroutines, classes, and methods in another language and call them as if they were Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-inline-in-action-simple-examples-in-c-inline-in-action-simple-examples-in-c-span&#34;&gt;&lt;span id=&#34;inline in action  simple examples in c&#34;&gt;Inline in Action - Simple examples in C&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Inline addresses an old problem in a completely revolutionary way. Just describing Inline doesn&amp;rsquo;t really do it justice. It should be &lt;em&gt;seen&lt;/em&gt; to be fully appreciated. Here are a couple examples to give you a feel for the module.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-hello-world-hello-world-span&#34;&gt;&lt;span id=&#34;hello, world&#34;&gt;Hello, world&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;It seems that the first thing any programmer wants to do when he learns a new programming technique is to use it to greet the Earth. In keeping with that tradition, here is the ``Hello, world&amp;rdquo; program using Inline.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C =&amp;gt; &amp;lt;&amp;lt;&#39;END_C&#39;;
+    void greet() {
+        printf(&amp;quot;Hello, world\n&amp;quot;);
+    }
+    END_C
+
+    greet;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Simply run this script from the command line and it will print (you guessed it):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Hello, world
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example, &lt;code&gt;Inline.pm&lt;/code&gt; is instantiated with the name of a programming language, ``C&amp;rdquo;, and a string containing a piece of that language&amp;rsquo;s source code. This C code defines a function called &lt;code&gt;greet()&lt;/code&gt; which gets bound to the Perl subroutine &lt;code&gt;&amp;amp;main::greet&lt;/code&gt;. Therefore, when we call the &lt;code&gt;greet()&lt;/code&gt; subroutine, the program prints our message on the screen.&lt;/p&gt;
+
+&lt;p&gt;You may be wondering why there are no &lt;code&gt;#include&lt;/code&gt; statements for things like &lt;code&gt;stdio.h&lt;/code&gt;? That&amp;rsquo;s because Inline::C automatically prepends the following lines to the top of your code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #include &amp;quot;EXTERN.h&amp;quot;
+    #include &amp;quot;perl.h&amp;quot;
+    #include &amp;quot;XSUB.h&amp;quot;
+    #include &amp;quot;INLINE.h&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These header files include all of the standard system header files, so you almost never need to use &lt;code&gt;#include&lt;/code&gt; unless you are dealing with a non-standard library. This is in keeping with Inline&amp;rsquo;s philosophy of making easy things easy. (Where have I heard that before?)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-just-another-hacker-just-another-hacker-span&#34;&gt;&lt;span id=&#34;just another ____ hacker&#34;&gt;Just Another ____ Hacker&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The next logical question is, ``How do I pass data back and forth between Perl and C?&amp;rdquo; In this example we&amp;rsquo;ll pass a string to a C function and have it pass back a brand new Perl scalar.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C;
+    print JAxH(&#39;Perl&#39;);
+
+
+    __END__
+    __C__
+    SV* JAxH(char* x) {
+        return newSVpvf(&amp;quot;Just Another %s Hacker\n&amp;quot;, x);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you run this program, it prints:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Just Another Perl Hacker
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You&amp;rsquo;ve probably noticed that this example is coded differently then the last one. The &lt;code&gt;use Inline&lt;/code&gt; statement specifies the language being used, but not the source code. This is an indicator for Inline to look for the source at the end of the program, after the special marker &amp;lsquo;&lt;code&gt;__C__&lt;/code&gt;&amp;rsquo;.&lt;/p&gt;
+
+&lt;p&gt;The concept being demonstrated is that we can pass Perl data in and out of a C function. Using the default Perl type conversions, Inline can easily convert all of the basic Perl data types to C and vice-versa.&lt;/p&gt;
+
+&lt;p&gt;This example uses a couple of the more advanced concepts of Inlining. Its return value is of the type &lt;code&gt;SV*&lt;/code&gt; (or Scalar Value). The Scalar Value is the most common Perl internal type. Also, the Perl internal function &lt;code&gt;newSVpfv()&lt;/code&gt; is called to create a new Scalar Value from a string, using the familiar &lt;code&gt;sprintf()&lt;/code&gt; syntax. You can learn more about simple Perl internals by reading the &lt;code&gt;perlguts&lt;/code&gt; and &lt;code&gt;perlapi&lt;/code&gt; documentation distributed with Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-what-about-xs-and-swig-what-about-xs-and-swig-span&#34;&gt;&lt;span id=&#34;what about xs and swig&#34;&gt;What about XS and SWIG?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s detour momentarily to ponder ``Why Inline?&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;There are already two major facilities for extending Perl with C. They are XS and SWIG. Both are similar in their capabilities, at least as far as Perl is concerned. And both of them are quite difficult to learn compared to Inline. Since SWIG isn&amp;rsquo;t used in practice to nearly the degree that XS is, I&amp;rsquo;ll only address XS.&lt;/p&gt;
+
+&lt;p&gt;There is a big fat learning curve involved with setting up and using the XS environment. You need to get quite intimate with the following docs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; * perlxs
+ * perlxstut
+ * perlapi
+ * perlguts
+ * perlcall
+ * perlmod
+ * h2xs
+ * xsubpp
+ * ExtUtils::MakeMaker
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With Inline you can be up and running in minutes. There is a C Cookbook with lots of short but complete programs that you can extend to your real-life problems. No need to learn about the complicated build process going on in the background. You don&amp;rsquo;t even need to compile the code yourself. Perl programmers cannot be bothered with silly things like compiling. ``Tweak, Run, Tweak, Run&amp;rdquo; is our way of life. Inline takes care of every last detail except writing the C code.&lt;/p&gt;
+
+&lt;p&gt;Another advantage of Inline is that you can use it directly in a script. As we&amp;rsquo;ll soon see, you can even use it in a Perl one-liner. With XS and SWIG, you always set up an entirely separate module, even if you only have one or two functions. Inline makes easy things easy, and hard things possible. Just like Perl.&lt;/p&gt;
+
+&lt;p&gt;Finally, Inline supports several programming languages (not just C and C++). As of this writing, Inline has support for C, C++, Python, and CPR. There are plans to add many more.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-oneliners-one-liners-span&#34;&gt;&lt;span id=&#34;oneliners&#34;&gt;One-Liners&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Perl is famous for its one-liners. A Perl one-liner is short piece of Perl code that can accomplish a task that would take much longer in another language. It is one of the popular techniques that Perl hackers use to flex their programming muscles.&lt;/p&gt;
+
+&lt;p&gt;So you may wonder: ``Is Inline powerful enough to produce a one-liner that is also bonifide C extension?&amp;rdquo; Of course it is! Here you go:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    perl -e &#39;use Inline C=&amp;gt;
+    q{void J(){printf(&amp;quot;Just Another Perl Hacker\n&amp;quot;);}};J&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Try doing that with XS! We can even write the more complex Inline &lt;code&gt;JAxH()&lt;/code&gt; discussed earlier as a one-liner:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    perl -le &#39;use Inline C=&amp;gt;
+    q{SV*JAxH(char*x){return newSVpvf(&amp;quot;Just Another %s Hacker&amp;quot;,x);}};print JAxH+Perl&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I have been using this one-liner as my email signature for the past couple months. I thought it was pretty cool until Bernhard Muenzer posted this gem to &lt;code&gt;comp.lang.perl.modules&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl -- -* Nie wieder Nachtschicht! *- -- lrep\nib\rsu\!#
+    use Inline C=&amp;gt;&#39;void C(){int m,u,e=0;float l,_,I;for(;1840-e;putchar((++e&amp;gt;907
+     &amp;amp;&amp;amp;942&amp;gt;e?61-m:u)[&amp;quot;\n)moc.isc@rezneumb(rezneuM drahnreB&amp;quot;]))for(u=_=l=0;79-(m
+      =e%80)&amp;amp;&amp;amp;I*l+_*_&amp;lt;6&amp;amp;&amp;amp;26-++u;_=2*l*_+e/80*.09-1,l=I)I=l*l-_*_-2+m/27.;}&#39;;&amp;amp;C
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-supported-platforms-for-c-supported-platforms-for-c-span&#34;&gt;&lt;span id=&#34;supported platforms for c&#34;&gt;Supported Platforms for C&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Inline C works on all of the Perl platforms that I have tested it with so far. This includes all common Unixes and recent versions of Microsoft Windows. The only catch is that you must have the same compiler and &lt;code&gt;make&lt;/code&gt; utility that was used to build your &lt;code&gt;perl&lt;/code&gt; binary.&lt;/p&gt;
+
+&lt;p&gt;Inline has been successfully used on Linux, Solaris, AIX, HPUX, and all the recent BSD&amp;rsquo;s.&lt;/p&gt;
+
+&lt;p&gt;There are two common ways to use Inline on MS Windows. The first one is with ActiveState&amp;rsquo;s ActivePerl for MSWin32. In order to use Inline in that environment, you&amp;rsquo;ll need a copy of MS Visual C++ 6.0. This comes with the &lt;code&gt;cl.exe&lt;/code&gt; compiler and the &lt;code&gt;nmake&lt;/code&gt; make utility. Actually these are the only parts you need. The visual components aren&amp;rsquo;t necessary for Inline.&lt;/p&gt;
+
+&lt;p&gt;The other alternative is to use the Cygwin utilities. This is an actual Unix porting layer for Windows. It includes all of the most common Unix utilities, such as &lt;code&gt;bash&lt;/code&gt;, &lt;code&gt;less&lt;/code&gt;, &lt;code&gt;make&lt;/code&gt;, &lt;code&gt;gcc&lt;/code&gt; and of course &lt;code&gt;perl&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-inline-syntax-the-inline-syntax-span&#34;&gt;&lt;span id=&#34;the inline syntax&#34;&gt;The Inline Syntax&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Inline is a little bit different than most of the Perl modules that you are used to. It doesn&amp;rsquo;t import any functions into your namespace and it doesn&amp;rsquo;t have any object oriented methods. Its entire interface is specified through &lt;code&gt;&#39;use Inline ...&#39;&lt;/code&gt; commands. The general Inline usage is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C =&amp;gt; source-code,
+               config_option =&amp;gt; value,
+               config_option =&amp;gt; value;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Where &lt;code&gt;C&lt;/code&gt; is the programming language, and &lt;code&gt;source-code&lt;/code&gt; is a string, filename, or the keyword &amp;lsquo;&lt;code&gt;DATA&lt;/code&gt;&amp;rsquo;. You can follow that with any number of optional &amp;lsquo;&lt;code&gt;keyword =&amp;gt; value&lt;/code&gt;&amp;rsquo; configuration pairs. If you are using the &amp;lsquo;DATA&amp;rsquo; option, with no configuration parameters, you can just say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-fine-dining-a-glimpse-at-the-c-cookbook-fine-dining-a-glimpse-at-the-c-cookbook-span&#34;&gt;&lt;span id=&#34;fine dining  a glimpse at the c cookbook&#34;&gt;Fine Dining - A Glimpse at the C Cookbook&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In the spirit of the O&amp;rsquo;Reilly book ``Perl Cookbook&amp;rdquo;, Inline provides a manpage called C-Cookbook. In it you will find the recipes you need to help satisfy your Inline cravings. Here are a couple of tasty morsels that you can whip up in no time. Bon Appetit!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-external-libraries-external-libraries-span&#34;&gt;&lt;span id=&#34;external libraries&#34;&gt;External Libraries&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The most common real world need for Inline is probably using it to access existing compiled C code from Perl. This is easy to do. The secret is to write a wrapper function for each function you want to expose in Perl space. The wrapper calls the real function. It also handles how the arguments get passed in and out. Here is a short Windows example that displays a text box with a message, a caption and an ``OK&amp;rdquo; button:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C =&amp;gt; DATA =&amp;gt;
+               LIBS =&amp;gt; &#39;-luser32&#39;,
+               PREFIX =&amp;gt; &#39;my_&#39;;
+
+    MessageBoxA(&#39;Inline Message Box&#39;, &#39;Just Another Perl Hacker&#39;);
+
+
+    __END__
+    __C__
+    #include &amp;lt;windows.h&amp;gt;
+    int my_MessageBoxA(char* Caption, char* Text) {
+      return MessageBoxA(0, Text, Caption, 0);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This program calls a function from the MSWin32 &lt;code&gt;user32.dll&lt;/code&gt; library. The wrapper determines the type and order of arguments to be passed from Perl. Even though the real &lt;code&gt;MessageBoxA()&lt;/code&gt; needs four arguments, we can expose it to Perl with only two, and we can change the order. In order to avoid namespace conflicts in C, the wrapper must have a different name. But by using the &lt;code&gt;PREFIX&lt;/code&gt; option (same as the XS &lt;code&gt;PREFIX&lt;/code&gt; option) we can bind it to the original name in Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-it-takes-all-types-it-takes-all-types-span&#34;&gt;&lt;span id=&#34;it takes all types&#34;&gt;It Takes All Types&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Older versions of Inline only supported five C data types. These were: &lt;code&gt;int&lt;/code&gt;, &lt;code&gt;long&lt;/code&gt;, &lt;code&gt;double&lt;/code&gt;, &lt;code&gt;char*&lt;/code&gt; and &lt;code&gt;SV*&lt;/code&gt;. This was all you needed. All the basic Perl scalar types are represented by these. Fancier things like references could be handled by using the generic &lt;code&gt;SV*&lt;/code&gt; (scalar value) type, and then doing the mapping code yourself, inside the C function.&lt;/p&gt;
+
+&lt;p&gt;The process of converting between Perl&amp;rsquo;s &lt;code&gt;SV*&lt;/code&gt; and C types is called &lt;strong&gt;typemapping&lt;/strong&gt;. In XS, you normally do this by using &lt;code&gt;typemap&lt;/code&gt; files. A default &lt;code&gt;typemap&lt;/code&gt; file exists in every Perl installation in a file called &lt;code&gt;/usr/lib/perl5/5.6.0/ExtUtils/typemap&lt;/code&gt; or something similar. This file contains conversion code for over 20 different C types, including all of the Inline defaults.&lt;/p&gt;
+
+&lt;p&gt;As of version 0.30, Inline no longer has &lt;em&gt;any&lt;/em&gt; built in types. It gets all of its types exclusively from &lt;code&gt;typemap&lt;/code&gt; files. Since it uses Perl&amp;rsquo;s default &lt;code&gt;typemap&lt;/code&gt; file for its own defaults, it actually has many more types available automatically.&lt;/p&gt;
+
+&lt;p&gt;This setup provides a lot of flexibility. You can specify your own &lt;code&gt;typemap&lt;/code&gt; files through the use of the &lt;code&gt;TYPEMAPS&lt;/code&gt; configuration option. This not only allows you to override the defaults with your own conversion code, but it also means that you can add new types to Inline as well. The major advantage to extending the Inline syntax this way is that there are already many typemaps available for various APIs. And if you&amp;rsquo;ve done your own XS coding in the past, you can use your existing &lt;code&gt;typemap&lt;/code&gt; files as is. No changes are required.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at a small example of writing your own typemaps. For some reason, the C type &lt;code&gt;float&lt;/code&gt; is not represented in the default Perl &lt;code&gt;typemap&lt;/code&gt; file. I suppose it&amp;rsquo;s because Perl&amp;rsquo;s floating point numbers are always stored as type &lt;code&gt;double&lt;/code&gt;, which is higher precision than &lt;code&gt;float&lt;/code&gt;. But if we wanted it anyway, writing a &lt;code&gt;typemap&lt;/code&gt; file to support &lt;code&gt;float&lt;/code&gt; is trivial.&lt;/p&gt;
+
+&lt;p&gt;Here is what the file would look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    float                   T_FLOAT
+
+
+    INPUT
+    T_FLOAT
+            $var = (float)SvNV($arg)
+
+
+    OUTPUT
+    T_FLOAT
+            sv_setnv($arg, (double)$var);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Without going into details, this file provides two snippets of code. One for converting a &lt;code&gt;SV*&lt;/code&gt; to a float, and one for the opposite. Now we can write the following script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C =&amp;gt; DATA =&amp;gt;
+               TYPEMAPS =&amp;gt; &#39;./typemap&#39;;
+
+
+    print &#39;1.2 + 3.4 = &#39;, fadd(1.2, 3.4), &amp;quot;\n&amp;quot;;
+
+
+    __END__
+    __C__
+    float fadd(float x, float y) {
+        return x + y;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-some-ware-beyond-the-c-some-ware-beyond-the-c-span&#34;&gt;&lt;span id=&#34;some ware beyond the c&#34;&gt;Some Ware Beyond the C&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The primary goal of Inline is to make it easy to use other programming languages with Perl. This is not limited to C. The initial implementations of Inline only supported C, and the language support was built directly into &lt;code&gt;Inline.pm&lt;/code&gt;. Since then things have changed considerably. Inline now supports multiple languages of both compiled and interpreted nature. And it keeps the implementations in an object oriented type structure, whereby each language has its own separate module, but they can inherit behavior from the base Inline module.&lt;/p&gt;
+
+&lt;p&gt;On my second day working at ActiveState, a young man approached me. ``Hi, my name is Neil Watkiss. I just hacked your Inline module to work with C++.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Neil, I soon found out, was a computer science student at a local university. He was working part-time for ActiveState then, and had somehow stumbled across Inline. I was thrilled! I had wanted to pursue new languages, but didn&amp;rsquo;t know how I&amp;rsquo;d find the time. Now I was sitting 15 feet away from my answer!&lt;/p&gt;
+
+&lt;p&gt;Over the next couple months, Neil and I spent our spare time turning Inline into a generic environment for gluing new languages to Perl. I ripped all the C specific code out of Inline and put it into Inline::C. Neil started putting together Inline::CPP and Inline::Python. Together we came up with a new syntax that allowed multiple languages and easier configuration.&lt;/p&gt;
+
+&lt;p&gt;Here is a sample program that makes uses of Inline Python:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline Python;
+    my $language = shift;
+    print $language, 
+          (match($language, &#39;Perl&#39;) ? &#39; rules&#39; : &#39; sucks&#39;),
+          &amp;quot;!\n&amp;quot;;
+    __END__
+    __Python__
+    import sys
+    import re
+    def match(str, regex):
+        f = re.compile(regex);
+        if f.match(str): return 1
+        return 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This program uses a Python regex to show that ``Perl rules!&amp;ldquo;.&lt;/p&gt;
+
+&lt;p&gt;Since Python supports its own versions of Perl scalars, arrays, and hashes, Inline::Python can flip-flop between them easily and logically. If you pass a hash reference to python, it will turn it into a dictionary, and vice-versa. Neil even has mechanisms for calling back to Perl from Python code. See the Inline::Python docs for more info.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-see-perl-run-run-perl-run-see-perl-run-run-perl-run-span&#34;&gt;&lt;span id=&#34;see perl run. run perl, run!&#34;&gt;See Perl Run. Run Perl, Run!&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Inline is a great way to write C extensions for Perl. But is there an equally simple way to embed a Perl interpreter in a C program? I pondered this question myself one day. Writing Inline functionality for C would not be my cup of tea.&lt;/p&gt;
+
+&lt;p&gt;The normal way to embed Perl into C involves jumping through a lot of hoops to bootstrap a perl interpreter. Too messy for one-liners. And you need to compile the C. Not very Inlinish. But what if you could pass your C program to a perl program that could pass it to Inline? Then you could write this program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/cpr
+    int main(void) {
+        printf(&amp;quot;Hello, world\n&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and just run it from the command line. Interpreted C!&lt;/p&gt;
+
+&lt;p&gt;And thus, a new programming language was born. &lt;strong&gt;CPR&lt;/strong&gt;. ``C Perl Run&amp;rdquo;. The Perl module that gives it life is called &lt;code&gt;Inline::CPR&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, CPR is not really its own language, in the strict sense. But you can think of it that way. CPR is just like C except that you can call out to the Perl5 API at any time, without any extra code. In fact, CPR redefines this API with its own CPR wrapper API.&lt;/p&gt;
+
+&lt;p&gt;There are several ways to think of CPR: ``a new language&amp;rdquo;, ``an easy way to embed Perl in C&amp;rdquo;, or just ``a cute hack&amp;rdquo;. I lean towards the latter. CPR is probably a far stretch from meeting most peoples embedding needs. But at the same time its a very easy way to play around with, and perhaps redefine, the Perl5 internal API. The best compliment I&amp;rsquo;ve gotten for CPR is when my ActiveState coworker Adam Turoff said, ``I feel like my head has just been wrapped around a brick&amp;rdquo;. I hope this next example makes you feel that way too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/cpr
+    int main(void) {
+        CPR_eval(&amp;quot;use Inline (C =&amp;gt; q{
+            char* greet() {
+                return \&amp;quot;Hello world\&amp;quot;;
+            }
+        })&amp;quot;);
+
+        printf(&amp;quot;%s, I&#39;m running under Perl version %s\n&amp;quot;,
+               CPR_eval(&amp;quot;&amp;amp;greet&amp;quot;),
+               CPR_eval(&amp;quot;use Config; $Config{version}&amp;quot;));
+        return 0;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running this program prints:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Hello world, I&#39;m running under Perl version 5.6.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using the &lt;code&gt;eval()&lt;/code&gt; call this CPR program calls Perl and tells it to use Inline C to add a new function, which the CPR program subsequently calls. I think I have a headache myself.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-future-of-inline-the-future-of-inline-span&#34;&gt;&lt;span id=&#34;the future of inline&#34;&gt;The Future of Inline&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Inline version 0.30 was written specifically so that it would be easy for other people in the Perl community to contribute new language bindings for Perl. On the day of that release, I announced the birth of the Inline mailing list, &lt;a href=&#34;mailto:inline@perl.org.&#34;&gt;inline@perl.org.&lt;/a&gt; This is intended to be the primary forum for discussion on all Inline issues, including the proposal of new features, and the authoring of new ILSMs.&lt;/p&gt;
+
+&lt;p&gt;In the year 2001, I would like to see bindings for Java, Ruby, Fortran and Bash. I don&amp;rsquo;t plan on authoring all of these myself. But I may kickstart some of them, and see if anyone&amp;rsquo;s interested in taking over. If &lt;em&gt;you&lt;/em&gt; have a desire to get involved with Inline development, please join the mailing list (&lt;a href=&#34;mailto:inline-subscribe@perl.org&#34;&gt;inline-subscribe@perl.org&lt;/a&gt;) and speak up.&lt;/p&gt;
+
+&lt;p&gt;My primary focus at the present time, is to make the base Inline module as simple, flexible, and stable as possible. Also I want to see Inline::C become an acceptable replacement for XS; at least for most situations.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Using XS is just too hard. At least when you compare it to the rest of the Perl we know and love. Inline takes advantage of the existing frameworks for combining Perl and C, and packages it all up into one easy to swallow pill. As an added bonus, it provides a great framework for binding other programming languages to Perl. You might say, ``It&amp;rsquo;s a &amp;lsquo;Perl-fect&amp;rsquo; solution!&amp;rdquo;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

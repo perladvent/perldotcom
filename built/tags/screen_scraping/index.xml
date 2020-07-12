@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Screen_scraping on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/screen_scraping/</link>
+    <description>Recent content in Screen_scraping on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 02 Dec 2013 04:38:11 +0000</lastBuildDate>
+    <atom:link href="/tags/screen_scraping/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Wear the cloak of invisibility with OpenVPN and Perl</title>
+      <link>http://localhost:1313/article/50/2013/12/2/Wear-the-cloak-of-invisibility-with-OpenVPN-and-Perl/</link>
+      <pubDate>Mon, 02 Dec 2013 04:38:11 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/50/2013/12/2/Wear-the-cloak-of-invisibility-with-OpenVPN-and-Perl/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Screen-scraping useragents can be identified by several characteristics including their IP address and useragent string. This article shows how with the VPN service of &lt;a href=&#34;http://hidemyass.com/vpn/r14824/&#34;&gt;HideMyAss.com&lt;/a&gt; and the Perl module &lt;a href=&#34;https://metacpan.org/pod/Net::OpenVPN::Agent&#34;&gt;Net::OpenVPN::Agent&lt;/a&gt; you can obfuscate these data points and make your useragent harder to detect and monitor.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;pre-requisites&#34;&gt;Pre-requisites&lt;/h3&gt;
+
+&lt;p&gt;The following solution has been tested on Linux and may work on other UNIX-based platforms but is unlikely to work on Windows. Before getting started you&amp;rsquo;ll need to install &lt;a href=&#34;http://openvpn.net/index.php/open-source.html&#34;&gt;OpenVPN&lt;/a&gt; (open source networking software) - this is used to connect to the VPN networks of &lt;a href=&#34;http://hidemyass.com/vpn/r14824/&#34;&gt;HideMyAss.com&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;You will also need to install Net::OpenVPN::Agent via CPAN:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;cpan Net::OpenVPN::Agent&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Finally you will need a &amp;ldquo;VPN Pro&amp;rdquo; account with &lt;a href=&#34;http://hidemyass.com/vpn/r14824/&#34;&gt;HideMyAss.com&lt;/a&gt;. They provide 49,000 IP addresses Worldwide. I can recommend their service and have been using them successfully for months. If you have an account with a different VPN provider that uses OpenVPN, you should be able to hack Net::OpenVPN::Agent to use that service instead (contact me if you&amp;rsquo;d like help with this - I&amp;rsquo;m the module author).&lt;/p&gt;
+
+&lt;h3 id=&#34;overview&#34;&gt;Overview&lt;/h3&gt;
+
+&lt;p&gt;The Net::OpenVPN::Agent provides a configurable useragent that will automatically connect to a random &lt;a href=&#34;http://hidemyass.com/vpn/r14824/&#34;&gt;HideMyAss.com&lt;/a&gt; server before fetching the target URL. After a configurable number of requests, the useragent will automatically disconnect and re-connect to another random server. When connecting to a new server, the useragent will also select a new useragent string from a configurable list of useragent strings. This way both the IP address and the useragent string will change at the same time to adopt a new identity. The useragent is designed to be resilient: server connections and failed page requests will be attempted multiple times (configurable), new IP addresses are confirmed using a remote service and full logging capability is provided via &lt;a href=&#34;https://metacpan.org/pod/Log::Log4perl&#34;&gt;Log::log4perl&lt;/a&gt; (also configurable).&lt;/p&gt;
+
+&lt;h3 id=&#34;configuration&#34;&gt;Configuration&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::OpenVPN::Agent&#34;&gt;Net::OpenVPN::Agent&lt;/a&gt; requires a YAML file called agent.conf to be present in the root application directory. This is explained in the &lt;a href=&#34;https://metacpan.org/pod/Net::OpenVPN::Agent#new&#34;&gt;module documentation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-a-covert-scraper&#34;&gt;Writing a covert scraper&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s pull together a simple scraper to demonstrate the concept. The code below initializes uses &lt;a href=&#34;https://metacpan.org/pod/Net::OpenVPN::Agent&#34;&gt;Net::OpenVPN::Agent&lt;/a&gt; to get the main page of the New York times website. It then extracts and requests every URL it finds, with the aim of doing something with that content.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Net::OpenVPN::Agent;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.10.3&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; utf8;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ua &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Net::OpenVPN::Agent&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $base_url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;http://www.nytimes.com&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $html &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $ua&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_page($base_url) &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/\n//g&lt;/span&gt;r;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; ($html &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/href=&amp;#34;($base_url.*?)&amp;#34;/g&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $story &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $ua&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_page($_)
+    &lt;span style=&#34;color:#75715e&#34;&gt;# do something&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Running this code at the terminal with full logging gives the following output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;sudo $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;which perl) times&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; setting ip address
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//g&lt;/span&gt;eoip&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;hidemyass&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/ip/&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request limit is zero, resetting the request limit&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//s&lt;/span&gt;ecurenetconnection&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/vpnconfig/s&lt;/span&gt;ervers&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;cli&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;php
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//s&lt;/span&gt;ecurenetconnection&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/vpnconfig/o&lt;/span&gt;penvpn&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;template&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ovpn
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Connecting to &lt;span style=&#34;color:#ae81ff&#34;&gt;72.11.140.130&lt;/span&gt;, USA, California, Los Angeles (LOC1 S4), us
+WARN &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Ip address &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; changed, re&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;requesting ip
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//g&lt;/span&gt;eoip&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;hidemyass&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/ip/&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Ip address changed to &lt;span style=&#34;color:#ae81ff&#34;&gt;72.11.140.138&lt;/span&gt; from &lt;span style=&#34;color:#ae81ff&#34;&gt;172.254.124.113&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;weather
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/s&lt;/span&gt;ports&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/sci&lt;/span&gt;ence&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/&lt;/span&gt;health&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/&lt;/span&gt;arts&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request limit is zero, resetting the request limit&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Disconnecting from server&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Connecting to &lt;span style=&#34;color:#ae81ff&#34;&gt;173.234.233.226&lt;/span&gt;, USA, New York, Manhattan (LOC1 S3), us
+WARN &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Ip address &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; changed, re&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;requesting ip
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//g&lt;/span&gt;eoip&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;hidemyass&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/ip/&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Ip address changed to &lt;span style=&#34;color:#ae81ff&#34;&gt;108.62.48.75&lt;/span&gt; from &lt;span style=&#34;color:#ae81ff&#34;&gt;72.11.140.138&lt;/span&gt;
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/s&lt;/span&gt;tyle&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; GET: http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;nytimes&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/pages/o&lt;/span&gt;pinion&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html
+DEBUG &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Request successful
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The output demonstrates how the useragent first establishes a secure, encrypted connection to a Los Angeles-based VPN before proceeding to request pages from the New York Times website. Once the configured page request limit is reached the useragent automatically disconnects and connects to a new VPN in New York, establishing a new IP and adopting a new useragent string. From the New York Times web server perspective, it received a series of requests from two different users with different IP addresses, one in Los Angeles and the other in New York. And neither of these is the user&amp;rsquo;s actual IP address.&lt;/p&gt;
+
+&lt;h3 id=&#34;warning&#34;&gt;Warning&lt;/h3&gt;
+
+&lt;p&gt;The ability to anonymously scrape websites is a powerful but potentially harmful activity - you should never screen-scrape for unethical or illegal purposes. Adhere to robots.txt. This approach does not guarantee anonymity: the VPN provider may disclose all connections logs if required to by a law enforcement agency.&lt;/p&gt;
+
+&lt;h3 id=&#34;disclosure&#34;&gt;Disclosure&lt;/h3&gt;
+
+&lt;p&gt;As a customer of &lt;a href=&#34;http://hidemyass.com/vpn/r14824/&#34;&gt;HideMyAss.com&lt;/a&gt; I receive an affiliate payment for the successful referrals from the links on this page.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

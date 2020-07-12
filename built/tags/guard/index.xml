@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Guard on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/guard/</link>
+    <description>Recent content in Guard on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 19 May 2015 12:55:00 +0000</lastBuildDate>
+    <atom:link href="/tags/guard/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Defend your code with Guard</title>
+      <link>http://localhost:1313/article/173/2015/5/19/Defend-your-code-with-Guard/</link>
+      <pubDate>Tue, 19 May 2015 12:55:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/173/2015/5/19/Defend-your-code-with-Guard/</guid>
+      <description>&lt;p&gt;I can&amp;rsquo;t always trust my subroutines to leave the world in the same way that they found it. Perl has some features to help with this, but the &lt;a href=&#34;https://metacpan.org/pod/Guard&#34;&gt;Guard&lt;/a&gt; module goes much further.&lt;/p&gt;
+
+&lt;p&gt;Consider the case where I want to change the current working directory temporarily in my subroutine. If I&amp;rsquo;m not careful, the rest of the ends up in an unexpected directory since &lt;code&gt;chdir&lt;/code&gt; has process-level effect:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;do_some_work&lt;/span&gt; {
+  state $dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/local/etc&amp;#39;&lt;/span&gt;;
+  chdir $dir &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not change to $dir! $!&amp;#34;&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# do some work&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Since I don&amp;rsquo;t change back to the starting directory, after I call &lt;code&gt;do_some_work&lt;/code&gt;, the rest of the program uses &lt;code&gt;/usr/local/etc&lt;/code&gt; as the base to resolve relative paths.&lt;/p&gt;
+
+&lt;p&gt;If I were careful, I would have done the work to save the current working directory before I changed it, and I would have changed back to that directory. The &lt;code&gt;getcw&lt;/code&gt; from the &lt;a href=&#34;https://metacpan.org/pod/Cwd&#34;&gt;Cwd&lt;/a&gt; module from the Standard Library:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Cwd &lt;span style=&#34;color:#e6db74&#34;&gt;qw(getcwd)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;do_some_work&lt;/span&gt; {
+  state $dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/local/etc&amp;#39;&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $old_directory &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; getcwd();
+  chdir $dir &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not change to $dir! $!&amp;#34;&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# do some work&lt;/span&gt;
+
+  chdir $old_directory
+    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not change back to $old_directory! $!&amp;#34;&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $value;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That&amp;rsquo;s too much work. I have long wished that the &lt;code&gt;chdir&lt;/code&gt; would return the old directory like &lt;code&gt;select&lt;/code&gt; returns the current default filehandle. Instead, I use a module with an imported subroutine.&lt;/p&gt;
+
+&lt;p&gt;I also have to call another &lt;code&gt;chdir&lt;/code&gt; when I&amp;rsquo;m done, and I probably have to add some extra code to return the right value since I can&amp;rsquo;t easily organize the code to use Perl&amp;rsquo;s nifty last-evaluated-expression idiom (although Perl 5.20 optimizes &lt;a href=&#34;http://www.effectiveperlprogramming.com/2014/06/perl-5-20-optimizes-return-at-the-end-of-a-subroutine/&#34;&gt;return at the end of a subroutine&lt;/a&gt;). It offends my sense of code style that the two &lt;code&gt;chdir&lt;/code&gt;s are apart from each other when I want to keep the logical parts close to each other. I&amp;rsquo;d like all of the code to handle the current working directory next to each other.&lt;/p&gt;
+
+&lt;p&gt;Enter the &lt;a href=&#34;https://metacpan.org/pod/Guard&#34;&gt;Guard&lt;/a&gt; module that lets me define blocks of code that run at the end of the subroutine. Somewhere in the scope I create a guard with &lt;code&gt;scope_guard&lt;/code&gt; and that guard runs at scope exit:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Cwd &lt;span style=&#34;color:#e6db74&#34;&gt;qw(getcwd)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Guard;
+
+chdir &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/etc&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not start at /etc: $!&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $starting_dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; getcwd();
+
+do_some_work();
+
+say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Finally, the directory is &amp;#34;&lt;/span&gt;, getcwd();
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;do_some_work&lt;/span&gt; {
+  state $dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/local/etc&amp;#39;&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $old_directory &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; getcwd();
+  scope_guard {
+    say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Guard thinks old directory is $old_directory&amp;#34;&lt;/span&gt;;
+    chdir $old_directory;
+  };
+  chdir $dir &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not change to $dir! $!&amp;#34;&lt;/span&gt;;
+
+  say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;At the end of do_some_work(), the directory is &amp;#34;&lt;/span&gt;, getcwd();
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The output shows which each part thinks the current working directory should be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;At the end of do_some_work(), the directory is /usr/local/etc
+Guard thinks old directory is /etc
+Finally, the directory is /etc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is still a little bit ugly. The &lt;code&gt;scope_guard&lt;/code&gt; only takes a block or &lt;code&gt;sub {}&lt;/code&gt; argument, so I can&amp;rsquo;t refactor its argument into a subroutine. This doesn&amp;rsquo;t work:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;scope_guard make_sub_ref();  &lt;span style=&#34;color:#75715e&#34;&gt;# wrong sort of argument&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I can make a guard in a variable, though, to get around this. Instead of doing its work at scope exit, the variable guard does its work when it&amp;rsquo;s cleaned up (which we might do on our own before the end of its scope). In this example, I use &lt;a href=&#34;http://perltricks.com/article/72/2014/2/24/Perl-levels-up-with-native-subroutine-signatures&#34;&gt;Perl v5.20 subroutine signatures&lt;/a&gt; just because I can (they are really nice even if they are experimental):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.20&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;qw(signatures)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;qw(experimental::signatures)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Cwd &lt;span style=&#34;color:#e6db74&#34;&gt;qw(getcwd)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Guard;
+
+chdir &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/etc&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not start at /etc: $!&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $starting_dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; getcwd();
+
+do_some_work();
+
+say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Finally, the directory is &amp;#34;&lt;/span&gt;, getcwd();
+
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;do_some_work&lt;/span&gt; {
+  state $dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/usr/local/etc&amp;#39;&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $guard &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; make_guard( getcwd() );
+  chdir $dir &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Could not change to $dir! $!&amp;#34;&lt;/span&gt;;
+
+  say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;At the end of do_some_work(), the directory is &amp;#34;&lt;/span&gt;, getcwd();
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;make_guard&lt;/span&gt; ( $old_directory ) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; guard {
+    say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Guard thinks old directory is $old_directory&amp;#34;&lt;/span&gt;;
+    chdir $old_directory;
+  };
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now the code in &lt;code&gt;do_some_work&lt;/code&gt; is a bit nicer and I can reuse this guard in other subroutines.&lt;/p&gt;
+
+&lt;dl&gt;
+&lt;dt&gt;Here&amp;rsquo;s a bonus trick and one of the reasons I wanted to show the subroutine signatures. I can declare a default value for a subroutine argument. If I don&amp;rsquo;t specify an argument to &lt;code&gt;make_guard&lt;/code&gt;, Perl fills it in with the value of &lt;code&gt;getcwd&lt;/code&gt;&lt;/dt&gt;
+&lt;/dl&gt;
+
+&lt;p&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;make_guard&lt;/span&gt; ( $old_directory = getcwd() ) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; guard {
+    say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Guard thinks old directory is $old_directory&amp;#34;&lt;/span&gt;;
+    chdir $old_directory;
+    };
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;With the default value, I can simplify my call to &lt;code&gt;make_guard&lt;/code&gt; while still having the flexibility to supply an argument:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $guard &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; make_guard();&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;There are other tricks I can employ with M. I can define multiple &lt;code&gt;scope_guard&lt;/code&gt;s. In that case, they execute in reverse order of their definition (like &lt;code&gt;END&lt;/code&gt; blocks). With a guard object, I can cancel the guard if I decide I don&amp;rsquo;t want it any longer.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Cover image &lt;a href=&#34;https://creativecommons.org/licenses/by/4.0/&#34;&gt;©&lt;/a&gt; &lt;a href=&#34;https://www.flickr.com/photos/kwl/4229954645/in/photolist-7rMC9v-pWeFtB-dyGDSJ-4MTKCZ-9KGfvt-2Vmh2z-isiLE-a8wfzo-a8wdRy-nP4HU4-pMmELA-ebn2Yf-fR1AiY-6pwAvQ-oZC6iQ-eiAHKH-KaYMr-7ur9cv-eex2Ee-aJRH8P-nAD84h-nB5gYR-fFiErQ-6Y7HDp-dzKZh2-7xKM96-63dow9-6YbKFs-6nwuvh-6jFGwT-gDJYEc-bvwwma-7dKehm-8s7yHZ-8s7yjr-hNorq7-66hCWL-cLiZjq-7dKeYQ-9f4UgQ-nB5fP6-c6w6dU-7VSAhE-nAkYD2-gDKEpJ-iegmK-fFiE61-dd5mRC-64joJH-64CuGq&#34;&gt;Kenny Loule&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

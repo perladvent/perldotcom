@@ -1,0 +1,542 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mastering Perl on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/mastering-perl/</link>
+    <description>Recent content in Mastering Perl on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 30 Nov 2016 08:47:58 +0000</lastBuildDate>
+    <atom:link href="/tags/mastering-perl/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How to build a base module</title>
+      <link>http://localhost:1313/article/how-to-build-a-base-module/</link>
+      <pubDate>Wed, 30 Nov 2016 08:47:58 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/how-to-build-a-base-module/</guid>
+      <description>
+
+&lt;p&gt;When working on large Perl projects, a base module is a nice way to setup a standard set of imported routines for the other modules in the project. With a base module you can configure a logger, turn on pragmas and import any other useful routines. Instead of typing:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Dumper&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Log::Log4perl &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;get_logger&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and so on, you can type:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; MyBase;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This saves typing all those boilerplate &lt;code&gt;use&lt;/code&gt; statements at the top of every module in the project, and it establishes a consistent base so that all modules all start by operating under the same pragmas and so on. And it also provides a central location to configure application paths and other global compile-time essentials.&lt;/p&gt;
+
+&lt;h3 id=&#34;building-your-own-base-module&#34;&gt;Building your own base module&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ll write an example base module called &lt;code&gt;MyBase.pm&lt;/code&gt; to show you how I do it. There are three basic cases I need to be able to export: pragmas, symbols defined in the MyBase namespace and symbols from other namespaces. In Perl a symbol is usually a reference to a variable or a subroutine. This is my starting code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt; {}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In Perl the &lt;code&gt;import&lt;/code&gt; subroutine is important: it&amp;rsquo;s called every time the module is imported via &lt;code&gt;use&lt;/code&gt;, so that will be my trigger for importing the pragmas and code I want from the base module.&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-pragmas&#34;&gt;Handling pragmas&lt;/h3&gt;
+
+&lt;p&gt;Take a look at the &lt;a href=&#34;https://metacpan.org/pod/Modern::Perl&#34;&gt;Modern::Perl&lt;/a&gt; &lt;a href=&#34;https://metacpan.org/source/CHROMATIC/Modern-Perl-1.20150127/lib/Modern/Perl.pm#L30&#34;&gt;source&lt;/a&gt;. The &lt;code&gt;import&lt;/code&gt; subroutine just calls &lt;code&gt;import&lt;/code&gt; on the pragmas &lt;em&gt;it&lt;/em&gt; wants to import. Clever and easy!&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt; {
+  warnings&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  strict&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  feature&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:5.10&amp;#39;&lt;/span&gt;);
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now any module that includes &lt;code&gt;use MyBase;&lt;/code&gt; will get warnings, strict and all of the Perl 5.10 features imported (e.g. &lt;code&gt;say&lt;/code&gt;, &lt;code&gt;state&lt;/code&gt; and so on).&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-foreign-symbols&#34;&gt;Handling foreign symbols&lt;/h3&gt;
+
+&lt;p&gt;By foreign symbols I mean subroutines and variables declared in other modules, like &lt;code&gt;Data::Dumper::Dumper&lt;/code&gt;. That&amp;rsquo;s a subroutine that&amp;rsquo;s always handy to have available:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt; {
+  warnings&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  strict&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  feature&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:5.10&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# get the importing package name&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $caller &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; strict &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;refs&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:Dumper&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Data\:\:Dumper\:\:Dumper&amp;#34;&lt;/span&gt;};
+  };
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here I&amp;rsquo;ve added &lt;code&gt;use Data::Dumper;&lt;/code&gt; to import the module. Later within &lt;code&gt;import()&lt;/code&gt; I save the calling package name in &lt;code&gt;$caller&lt;/code&gt;, and then within a &lt;code&gt;do&lt;/code&gt; block I copy the &lt;code&gt;Dumper&lt;/code&gt; subroutine from Data::Dumper into the caller&amp;rsquo;s namespace. I escape the semicolons in the package reference because some versions of Perl might need that, but I can&amp;rsquo;t remember which ones - modern Perls don&amp;rsquo;t. If you find the symbol table copying syntax confusing, chapters 7 &amp;amp; 8 of &lt;a href=&#34;https://www.amazon.com/Mastering-Perl-Creating-Professional-Programs/dp/144939311X&#34;&gt;Mastering Perl&lt;/a&gt; has an in-depth explanation of how it works.&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-local-symbols&#34;&gt;Handling local symbols&lt;/h3&gt;
+
+&lt;p&gt;There are many types of local symbols that might be useful to export: global config hashrefs (maybe one for dev and another for production), accessors for singletons like loggers and queues and so on. My application uses &lt;a href=&#34;https://metacpan.org/pod/Log::Log4perl&#34;&gt;Log::Log4perl&lt;/a&gt;, so I&amp;rsquo;ll export a subroutine to get the logger:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Log::Log4perl;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $default_conf &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;q(
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.logger.Root           = DEBUG, Root
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root         = Log::Log4perl::Appender::Screen
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.stderr  = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.utf8    = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout  = PatternLayout
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout.ConversionPattern = %C %m%n
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  )&lt;/span&gt;;
+  Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;init(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$default_conf);
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;logger&lt;/span&gt; { Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_logger(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Root&amp;#39;&lt;/span&gt;) }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt; {
+  warnings&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  strict&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  feature&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:5.10&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# get the importing package name&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $caller &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; strict &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;refs&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:Dumper&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Data\:\:Dumper\:\:Dumper&amp;#34;&lt;/span&gt;};
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:logger&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;MyBase\:\:logger&amp;#34;&lt;/span&gt;};
+  };
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve imported the Log::Log4perl module, and initialized it within a &lt;code&gt;BEGIN&lt;/code&gt; block (so it happens at compile time). I&amp;rsquo;ve added a new subroutine, &lt;code&gt;logger&lt;/code&gt; which is later copied into the symbol table of caller within the &lt;code&gt;import&lt;/code&gt; sub. Now any module which uses &lt;code&gt;MyBase&lt;/code&gt; can simply call &lt;code&gt;logger&lt;/code&gt; to get the Log4perl object.&lt;/p&gt;
+
+&lt;p&gt;One thing to consider when adding functionality like this is to do the initialization outside of &lt;code&gt;import&lt;/code&gt; if possible. That&amp;rsquo;s because the module code is loaded once, but &lt;code&gt;import&lt;/code&gt; is called every time &lt;code&gt;MyBase&lt;/code&gt; is used. So keep the code inside &lt;code&gt;import&lt;/code&gt; to the minimum required - you don&amp;rsquo;t want to initialize Log4perl over and over!&lt;/p&gt;
+
+&lt;p&gt;Scalars are easy too, here&amp;rsquo;s how I might export the project version:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;${&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:VERSION&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;MyBase\:\:VERSION&amp;#34;&lt;/span&gt;};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Notice that the first character of that line has changed from an asterisk (for typeglob) to a dollar sign (for scalar).&lt;/p&gt;
+
+&lt;h3 id=&#34;enable-stack-traces&#34;&gt;Enable stack traces&lt;/h3&gt;
+
+&lt;p&gt;Perl has pretty helpful error messages, but I like to see stack traces to figure out what caused an exception. This is easy to add to a base module using the &lt;code&gt;confess&lt;/code&gt; subroutine from the &lt;a href=&#34;https://metacpan.org/pod/Carp&#34;&gt;Carp&lt;/a&gt; module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Log::Log4perl;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;confess&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; {
+  $SIG{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;__DIE__&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { confess(@_) };
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $default_conf &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;q(
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.logger.Root           = DEBUG, Root
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root         = Log::Log4perl::Appender::Screen
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.stderr  = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.utf8    = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout  = PatternLayout
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout.ConversionPattern = %C %m%n
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  )&lt;/span&gt;;
+  Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;init(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$default_conf);
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;logger&lt;/span&gt; { Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_logger(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Root&amp;#39;&lt;/span&gt;) }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;import&lt;/span&gt; {
+  warnings&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  strict&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import;
+  feature&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;import(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:5.10&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# get the importing package name&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $caller &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; strict &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;refs&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:Dumper&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Data\:\:Dumper\:\:Dumper&amp;#34;&lt;/span&gt;};
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$caller\:\:logger&amp;#34;&lt;/span&gt;}  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;MyBase\:\:logger&amp;#34;&lt;/span&gt;};
+  };
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve added a line to import the Carp module, and within the &lt;code&gt;BEGIN&lt;/code&gt; block I install a signal handler for the pseudo-signal &lt;code&gt;__DIE__&lt;/code&gt;. This will be called any time the application throws an exception. The handler is an anonymous subroutine which calls &lt;code&gt;confess&lt;/code&gt; on the exception. This prints a stack trace and exits.&lt;/p&gt;
+
+&lt;h3 id=&#34;consider-using-import-base&#34;&gt;Consider using Import::Base&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m not sure my code handles all edge cases. It works for my needs, but if you&amp;rsquo;re sharing the project code, consider using &lt;a href=&#34;https://metacpan.org/pod/Import::Base&#34;&gt;Import::Base&lt;/a&gt; which can do all of this for you. Here&amp;rsquo;s what my base module looks like, re-written to use Import::Base:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; MyBase;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; base &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Import::Base&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10.0&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Log::Log4perl;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;confess&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; {
+  $SIG{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;__DIE__&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { confess(@_) };
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $default_conf &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;q(
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.logger.Root           = DEBUG, Root
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root         = Log::Log4perl::Appender::Screen
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.stderr  = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.utf8    = 1
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout  = PatternLayout
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    log4perl.appender.Root.layout.ConversionPattern = %C %m%n
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  )&lt;/span&gt;;
+  Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;init(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$default_conf);
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;logger&lt;/span&gt; { Log::Log4perl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_logger(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Root&amp;#39;&lt;/span&gt;) }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;our&lt;/span&gt; @IMPORT_MODULES &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;warnings&amp;#39;&lt;/span&gt;,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;strict&amp;#39;&lt;/span&gt;,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;feature&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:5.10&amp;#39;&lt;/span&gt;],
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Data::Dumper&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Dumper&amp;#39;&lt;/span&gt;],
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;MyBase&amp;#39;&lt;/span&gt;,
+);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;our&lt;/span&gt; @EXPORT &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;logger&amp;#39;&lt;/span&gt; );
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Magical tied scalars</title>
+      <link>http://localhost:1313/article/magical-tied-scalars/</link>
+      <pubDate>Tue, 16 Feb 2016 09:50:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/magical-tied-scalars/</guid>
+      <description>&lt;p&gt;Perl&amp;rsquo;s &lt;code&gt;tie&lt;/code&gt; mechanism allows me to create something that looks like a scalar but does anything I want it to do. I can change how the familiar scalar interface of simple access and assignment actually work. I&amp;rsquo;ve found this so useful at times that I devoted an entire chapter of &lt;a href=&#34;http://www.masteringperl.org/&#34;&gt;Mastering Perl&lt;/a&gt; to it.&lt;/p&gt;
+
+&lt;p&gt;I think I fell in love with this technique when it allowed me to solve a seemly intractable problem creating some HTML by hand (so you know this must have been a long time ago). Someone had created a library to create an HTML table that allowed me to set the color of the table rows by passing in a scalar value for &lt;code&gt;tr&lt;/code&gt;&amp;rsquo;s &lt;code&gt;bgcolor&lt;/code&gt; attribute. Fortunately I&amp;rsquo;ve forgotten who that was or what the code looked like, but it was something like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;print_table_and_stuff&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $color, @lots_of_other_arguments ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; lots of code &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;table&amp;gt;&amp;#34;&lt;/span&gt;;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $item ( @items ) {
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qq(&amp;lt;tr bgcolor=&amp;#34;$color&amp;#34;&amp;gt;)&lt;/span&gt;;
+            &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; fill in the cells &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;/tr&amp;gt;&amp;#34;&lt;/span&gt;;
+            }
+
+    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; lots of code &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Besides all the goofy things going on with the code, such as printing directly and not using templates, whoever wrote it wasn&amp;rsquo;t thinking that anyone would want to have tables with alternating (or even rotating) row colors. There was a time before that was a thing and the code pre-dated even that. My task was to get alternating row colors with as little disturbance as possible.&lt;/p&gt;
+
+&lt;p&gt;I could have replaced the subroutine using one of the techniques I showed in &lt;a href=&#34;http://www.masteringperl.org/&#34;&gt;Mastering Perl&lt;/a&gt;, but there was something simpler. If I could get &lt;code&gt;$color&lt;/code&gt; to change on its own, I wouldn&amp;rsquo;t have to mess with the code.&lt;/p&gt;
+
+&lt;p&gt;Thus, I invented &lt;a href=&#34;https://metacpan.org/pod/Tie::Cycle&#34;&gt;Tie::Cycle&lt;/a&gt;. The &lt;code&gt;tie&lt;/code&gt; interface allows me to decide what a scalar should do when I access it or store it. I supply code behind both of those operations by defining special subroutines. Here&amp;rsquo;s an extract of the code that shows those special methods:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Tie::Cycle;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TIESCALAR&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $class, $list_ref ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; bless &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;, $class;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt;( $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;STORE( $list_ref ) ) {
+                carp &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Argument must be an array reference&amp;#34;&lt;/span&gt;;
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+                }
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self;
+        }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;FETCH&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $self ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $index &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[CURSOR_COL]&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+        $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[CURSOR_COL] %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt;self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;_count;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;_item( $index );
+        }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;STORE&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $self, $list_ref ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; ref $list_ref &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; ref &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @shallow_copy &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; map { $_ } @$list_ref;
+
+        $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[CURSOR_COL] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+        $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[COUNT_COL]  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; scalar @shallow_copy;
+        $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[ITEM_COL]   &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;@shallow_copy;
+        }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;tie&lt;/code&gt; interface includes the &lt;code&gt;TIESCALAR&lt;/code&gt; method that creates the &lt;code&gt;tied&lt;/code&gt; object, the &lt;code&gt;FETCH&lt;/code&gt; method that decides how to return a value, and the &lt;code&gt;STORE&lt;/code&gt; method that decides how to store a value. In this case, I want to store an array of values and cycle through them. Each time I access the scalar, Perl calls &lt;code&gt;FETCH&lt;/code&gt;. Each time it calls &lt;code&gt;FETCH&lt;/code&gt; I increment a counter so I&amp;rsquo;ll get the next value. When I get to the end, I wrap around to the beginning of the array.&lt;/p&gt;
+
+&lt;p&gt;In this short bit of code, I create the tied scalar by calling &lt;code&gt;tie&lt;/code&gt; with the target scalar, the module name that defines the interface, and the arguments to pass to &lt;code&gt;TIESCALAR&lt;/code&gt;. After that, I use &lt;code&gt;$scalar&lt;/code&gt; as a normal scalar:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Tie::Cycle;
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Cycle&amp;#39;&lt;/span&gt;, [ &lt;span style=&#34;color:#e6db74&#34;&gt;qw(red green blue)&lt;/span&gt; ];
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        say $scalar;
+        }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Each time through the &lt;code&gt;while&lt;/code&gt;, I output the value of &lt;code&gt;$scalar&lt;/code&gt;. It doesn&amp;rsquo;t look like I&amp;rsquo;m doing anything fancy, but I&amp;rsquo;m implicitly calling &lt;code&gt;Tie::Cycle::FETCH&lt;/code&gt; each time. Now the colors rotate.&lt;/p&gt;
+
+&lt;p&gt;This is a bit more fun when I cycle through colored boxes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; open &lt;span style=&#34;color:#e6db74&#34;&gt;qw(:std :utf8)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Tie::Cycle;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Term::ANSIColor;
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Cycle&amp;#39;&lt;/span&gt;, [
+        map { colored( [ $_ ], &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\x{25AE}&amp;#34;&lt;/span&gt; ) }
+                &lt;span style=&#34;color:#e6db74&#34;&gt;qw(red green blue)&lt;/span&gt;
+        ];
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $scalar;
+        }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;With an appropriate terminal, I see a series of Christmas lights.&lt;/p&gt;
+
+&lt;p&gt;Recently, David Farrell had a similar problem. He could pass a value to a method that gave it a delay time to retry if it failed. That&amp;rsquo;s a nice feature, but he could only pass in a scalar. He didn&amp;rsquo;t want to pass in a value for two seconds and have it retry every two seconds. Instead, he wanted to back off. Wait two seconds the first time, then 4 seconds the next time, and eight seconds the next time. If something is falling over because you&amp;rsquo;re hitting it too frequently, you want to back off the pressure.&lt;/p&gt;
+
+&lt;p&gt;However, using the same trick I used for HTML row colors, he was able to create what looks like a simple scalar variable but was really a method call that increased the value each time:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Tie::Scalar::Ratio;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; parent &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TIESCALAR&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($class, $ratio, $value) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Must provide ratio argument, a number to multiply the scalar value by&amp;#39;&lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $ratio &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $ratio &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^[\d.]+$/&lt;/span&gt;;
+
+  bless {
+        ratio &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ratio,
+        value &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $value,
+  }, $class;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;STORE&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $value) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{value} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $value;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;FETCH&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $old_value &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{value};
+  $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{value} &lt;span style=&#34;color:#f92672&#34;&gt;*=&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ratio} &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{value};
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $old_value;
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;My program to demonstrate this is almost the same as my prior one. The part where I use &lt;code&gt;$scalar&lt;/code&gt; is the same.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Tie::Scalar::Ratio;
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Ratio&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;37&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        say $scalar;
+        }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Each time I access the scalar, I get back the previous value multiplied by the ratio. In this case, I multiply the previous value by &lt;code&gt;2&lt;/code&gt; each time.&lt;/p&gt;
+
+&lt;p&gt;This is a tidy solution because it fits into the code that&amp;rsquo;s already there. The existing code that expected a single value gets a scalar that changes its value each time.&lt;/p&gt;
+
+&lt;p&gt;Instead of giving Tie::Scalar::Ratio, I&amp;rsquo;d like to give it a callback. David also created &lt;a href=&#34;https://metacpan.org/pod/Tie::Scalar::Callback&#34;&gt;Tie::Scalar::Callback&lt;/a&gt;. Each time I access the scalar, this module calls the subroutine I passed to it and give me back the result. The code looks similar to the others:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Tie::Scalar::Callback;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; parent &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;qw(carp)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TIESCALAR&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($class, $sub ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Must provide subroutine reference argument&amp;#39;&lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $sub &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; ref $sub &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; ref &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {};
+
+  bless $sub, $class;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;STORE&lt;/span&gt; {
+  carp &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;You can&amp;#39;t assign to this tied scalar&amp;#34;&lt;/span&gt;;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;FETCH&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;();
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here&amp;rsquo;s a subroutine that does the same thing as the previous example by stores the state in the subroutine rather than in the tied object:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        state $value  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;
+        state $factor &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;
+        $value &lt;span style=&#34;color:#f92672&#34;&gt;*=&lt;/span&gt; $factor;
+        }
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Callback&amp;#39;&lt;/span&gt;, $sub;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        say $scalar;
+        }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That&amp;rsquo;s a simple callback, but I can make something a little more exotic. How about a sine-based function?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Tie::Scalar::Callback;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        state $pi     &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3.14152926&lt;/span&gt;;
+        state $eighth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $pi &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;;
+        state $value  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+        sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%.3f&amp;#39;&lt;/span&gt;, abs sin( $value &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; $eighth );
+        };
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Callback&amp;#39;&lt;/span&gt;, $coderef;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        say $scalar;
+        }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now the output backs off and speeds up. There&amp;rsquo;s something that might be more useful. Perhaps I want to use the load average to decide the number:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Sys::LoadAvg &lt;span style=&#34;color:#e6db74&#34;&gt;qw(loadavg)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Tie::Scalar::Callback;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $coderef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        state $factor  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @loads &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; loadavg();
+
+        $factor &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; $loads[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;];
+        };
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Callback&amp;#39;&lt;/span&gt;, $coderef;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Finally, just for fun, here&amp;rsquo;s a tied scalar that creates the Fibonacci series using the inline &lt;code&gt;package NAMESPACE BLOCK&lt;/code&gt; syntax introduced in v5.14:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.14&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Tie::Scalar::Fibonacci {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; parent &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar&amp;#39;&lt;/span&gt;;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;qw(croak)&lt;/span&gt;;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; List::Util &lt;span style=&#34;color:#e6db74&#34;&gt;qw(sum)&lt;/span&gt;;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TIESCALAR&lt;/span&gt; {
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $class, $count ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+                $count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; defined $count;
+                die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;count must be a counting number&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $count &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/[^0-9]/&lt;/span&gt;;
+                die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;count must be greater than 1&amp;#34;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $count &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [ ( &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ) x ( $count ) ];
+                bless $array, $class
+                }
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;STORE&lt;/span&gt;     { croak &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;You can&amp;#39;t assign to this scalar!&amp;#34;&lt;/span&gt; }
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;FETCH&lt;/span&gt; {
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+                push @$self, sum( @$self );
+                shift @$self;
+                }
+        }
+
+tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Fibonacci&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;;
+        }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Every time I access it I get the next number in the Fibonacci series. Curiously, doing it this way, I&amp;rsquo;m computing a number that I&amp;rsquo;ll use in the future by pushing it onto the end and returning the oldest value by shifting it off the front. There&amp;rsquo;s no recursion here like in almost every example on the interwebs.&lt;/p&gt;
+
+&lt;p&gt;But, it can generate other series too. Instead of looking at the previous two values, I can give &lt;code&gt;TIESCALAR&lt;/code&gt; a different number to specify how many previous numbers to sum:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;tie &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Tie::Scalar::Fibonacci&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( $count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; ) {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $scalar, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;;
+        }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The idea is the same, but the sums are different. If you&amp;rsquo;ve used a tied variable in an interesting way, let us know about it!
+&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Implementing Did You Mean in Perl</title>
+      <link>http://localhost:1313/article/122/2014/10/31/Implementing-Did-You-Mean-in-Perl/</link>
+      <pubDate>Fri, 31 Oct 2014 15:31:18 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/122/2014/10/31/Implementing-Did-You-Mean-in-Perl/</guid>
+      <description>
+
+&lt;p&gt;A couple of weeks ago Yuki Nishijima released a clever Ruby &lt;a href=&#34;http://www.yukinishijima.net/2014/10/21/did-you-mean-experience-in-ruby.html&#34;&gt;gem&lt;/a&gt; called &amp;ldquo;Did You Mean&amp;rdquo;, that intercepts failed method calls and suggests the closest matching (correct) method in the exception message. I wanted to create an equivalent module in Perl, and so armed with a limited appreciation of &lt;code&gt;AUTOLOAD&lt;/code&gt; I set about creating &lt;a href=&#34;https://metacpan.org/pod/Devel::DidYouMean&#34;&gt;Devel::DidYouMean&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-the-module&#34;&gt;Using the module&lt;/h3&gt;
+
+&lt;p&gt;Devel::DidYouMean is available on CPAN now, you can install it at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan Devel::DidYouMean&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To use the module, just import it with &lt;code&gt;use&lt;/code&gt; like any other module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# script.pl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Devel::DidYouMean;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; substring(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;have a nice day&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code calls a builtin function &amp;ldquo;substring&amp;rdquo;, which does not exist. Running the above code we get a more &lt;em&gt;helpful&lt;/em&gt; error message:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Undefined subroutine &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;substring&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; found in main&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; Did you mean substr? at script&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl line &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;how-it-works&#34;&gt;How it works&lt;/h3&gt;
+
+&lt;p&gt;As I alluded to in the introduction, DidYouMean.pm defines a subroutine using the &lt;code&gt;AUTOLOAD&lt;/code&gt; function which catches missed subroutine calls. But by default this subroutine only exists within the Devel::DidYouMean namespace so it would only fire when there was a missed method call like &lt;code&gt;Devel::DidYouMean-&amp;gt;some_method;&lt;/code&gt;. This is not very useful! So I used some symbol-table black magic to load the module into every namespace at runtime:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CHECK&lt;/span&gt; {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# add autoload to main&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{ main::AUTOLOAD } &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Devel::DidYouMean::AUTOLOAD;
+
+    &lt;span style=&#34;color:#75715e&#34;&gt;# add to every other module in memory&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (keys %INC)
+    {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $module &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $_;
+        $module &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/\//::/g&lt;/span&gt;;
+        $module &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; substr($module, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;);
+        $module &lt;span style=&#34;color:#f92672&#34;&gt;.=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;::AUTOLOAD&amp;#39;&lt;/span&gt;;
+
+        &lt;span style=&#34;color:#75715e&#34;&gt;# skip if the package already has an autoload&lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; defined &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{ $module };
+
+        &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;{ $module } &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Devel::DidYouMean::AUTOLOAD;
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Walking through this code, you might be wondering what that strange &lt;code&gt;CHECK&lt;/code&gt; block is for. This ensures that the code within the block is loaded after the program compilation phase has finished, reducing the risk of the program loading another module after DidYouMean.pm has already exported it&amp;rsquo;s &lt;code&gt;AUTOLOAD&lt;/code&gt; subroutine. Perl defines several named code &lt;a href=&#34;https://perldoc.perl.org/perlmod.html#BEGIN%2c-UNITCHECK%2c-CHECK%2c-INIT-and-END&#34;&gt;blocks&lt;/a&gt; (you are probably familiar with &lt;code&gt;BEGIN&lt;/code&gt;). The downside of using a check block is if the module is loaded using &lt;code&gt;require&lt;/code&gt; instead of &lt;code&gt;use&lt;/code&gt;, this block will not be executed at all.&lt;/p&gt;
+
+&lt;p&gt;The code then adds the &lt;code&gt;AUTOLOAD&lt;/code&gt;subroutine to main (the namespace of the executing program) and every other namespace in the symbol table. I got the syntax for this from the &amp;ldquo;Dynamic Subroutines&amp;rdquo; chapter of &lt;a href=&#34;http://shop.oreilly.com/product/0636920012702.do&#34;&gt;Mastering Perl&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The code for the autoloaded &lt;a href=&#34;https://github.com/sillymoose/Devel-DidYouMean/blob/master/lib/Devel/DidYouMean.pm#L97&#34;&gt;subroutine&lt;/a&gt;is long, so I won&amp;rsquo;t reproduce it here. High level, it extracts the name of the failed subroutine called from &lt;code&gt;$AUTOLOAD&lt;/code&gt; and using the &lt;a href=&#34;https://metacpan.org/pod/Text::Levenshtein&#34;&gt;Text::Levenshtein&lt;/a&gt; module, calculates the Levenshtein distance between the name of the failed subroutine call and every available subroutine in the calling namespace. It then croaks displaying the usual undefined subroutine error message with a list of matching subroutines.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Although the module &amp;ldquo;works&amp;rdquo;, it feels heavy-handed to export a subroutine to every namespace in memory. An alternative approach that I considered but couldn&amp;rsquo;t get to work would be to define the code in an &lt;code&gt;END&lt;/code&gt; block, and then check if the program is ending with an &amp;ldquo;unknown subroutine&amp;rdquo; error. This challenge with this is that in the end phase, Perl has already nullified the error variable &lt;code&gt;$!&lt;/code&gt; so it&amp;rsquo;s hard to know why the program is ending (tieing &lt;code&gt;$!&lt;/code&gt; might get around this). If you&amp;rsquo;re interested in tackling this challenge, the repo is hosted on &lt;a href=&#34;https://github.com/sillymoose/Devel-DidYouMean&#34;&gt;GitHub&lt;/a&gt;, pull requests are welcome :) The module &lt;a href=&#34;https://metacpan.org/pod/Devel::DidYouMean&#34;&gt;documentation&lt;/a&gt; has more examples of Devel::DidYouMean in action.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt;&lt;em&gt;Devel::DidYouMean now uses a signal handling approach and avoids AUTOLOAD altogether 2014-11-09&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> JSON, Unicode, and Perl … Oh My! </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A look at this popular serialization’s relationship with Perl"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/json-unicode-and-perl-oh-my-/" />
+<meta property="og:title" content="JSON, Unicode, and Perl … Oh My!" />
+<meta property="og:description" content="A look at this popular serialization’s relationship with Perl">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2020-01-01T01:01:01Z" />
+<meta property="og:image" content="http://localhost:1313/images/author/felipe-gasper.jpg" />
+<meta property="og:article:tag" content="unicode" />
+<meta property="og:article:tag" content="json" />
+<meta property="og:article:tag" content="cbor" />
+<meta property="og:article:tag" content="utf8" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">JSON, Unicode, and Perl … Oh My!</h1>
+              <p class="blog-post-meta">Jan 29, 2020 by
+              
+              
+                
+                
+                <a href="#author-bio-felipe-gasper">Felipe Gasper</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>Consider the following code:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Mojo::JSON;
+<span style="color:#66d9ef">use</span> Cpanel::JSON::XS;
+<span style="color:#66d9ef">use</span> Data::Dumper;
+$Data::Dumper::Useqq <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+
+<span style="color:#66d9ef">my</span> $e_acute <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;\xc3\xa9&#34;</span>;
+
+<span style="color:#66d9ef">my</span> $json <span style="color:#f92672">=</span> Mojo::JSON::encode_json([$e_acute]);
+<span style="color:#66d9ef">my</span> $decoded <span style="color:#f92672">=</span> Cpanel::JSON::XS<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>()<span style="color:#f92672">-&gt;</span>decode($json)<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>];
+<span style="color:#66d9ef">print</span> Dumper( $json, $decoded );</code></pre></div>
+<p>You might think this a reasonable enough round-trip, just using two
+different JSON libraries, <a href="https://metacpan.org/pod/Mojo::JSON">Mojo::JSON</a>
+and <a href="https://metacpan.org/pod/Cpanel::JSON::XS">Cpanel::JSON::XS</a>.
+In fact, though, when you run
+this you’ll see that $decode in the above is <code>&quot;\x{c3}\x{83}\x{c2}\x{a9}&quot;</code>,
+not just the <code>&quot;\xc3\xa9&quot;</code> that we started with.</p>
+
+<p>Now invert the encoder/decoder modules:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Mojo::JSON;
+<span style="color:#66d9ef">use</span> Cpanel::JSON::XS;
+<span style="color:#66d9ef">use</span> Data::Dumper;
+$Data::Dumper::Useqq <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+
+<span style="color:#66d9ef">my</span> $e_acute <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;\xc3\xa9&#34;</span>;
+
+<span style="color:#66d9ef">my</span> $json <span style="color:#f92672">=</span> Cpanel::JSON::XS<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>()<span style="color:#f92672">-&gt;</span>encode([$e_acute]);
+<span style="color:#66d9ef">my</span> $decoded <span style="color:#f92672">=</span> Mojo::JSON::decode_json($json)<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>];
+<span style="color:#66d9ef">print</span> Dumper( $json, $decoded );</code></pre></div>
+<p>Now $decode is just <code>&quot;\x{e9}&quot;</code>. What’s going on here?</p>
+
+<h2 id="what-s-in-a-string">What’s in a string?</h2>
+
+<p>To appreciate the above, we first have to grapple with what Perl strings
+<em>are</em>, fundamentally. Unlike C strings, Perl strings aren’t mere arrays
+of bytes … but unlike, say, Python 3 strings, Perl strings aren’t arrays of
+Unicode characters, either. Perl strings, rather, are arrays of “code
+points” in an undefined character set.</p>
+
+<p>In particular, unlike Python, JavaScript, and many other popular high-level
+programming languages, Perl strings do not differentiate between “binary”
+and “text”. For example, if Perl reads
+bytes 0xff, 0xfe, 0xfd, and 0xfc off of a binary filehandle, the string
+that Perl creates from those 4 bytes is understood to contain not 4 <em>bytes</em>,
+but 4 <em>code points</em>, without reference to any particular character set,
+stored in an abstract, internal-use encoding.
+(The Perl interpreter may, in fact, use 4 bytes to store the string, but that
+would be an implementation detail, of no concern to interpreted Perl code.)</p>
+
+<p>This point must be stressed: Perl _does not care_—and does not <em>want</em> to
+care—whether a given string’s code points represent bytes or characters.
+(More will be said on this later.)</p>
+
+<h2 id="back-to-json">Back to JSON</h2>
+
+<p>In our examples above we compared round-tripping using different libraries
+for the encode and decode. Let’s dig further by comparing just the
+encoded JSON:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Mojo::JSON;
+<span style="color:#66d9ef">use</span> Cpanel::JSON::XS;
+<span style="color:#66d9ef">use</span> Data::Dumper;
+$Data::Dumper::Useqq <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+
+<span style="color:#66d9ef">my</span> $e_acute <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;\xc3\xa9&#34;</span>;
+
+<span style="color:#66d9ef">my</span> $mojo_json <span style="color:#f92672">=</span> Mojo::JSON::encode_json([$e_acute]);
+<span style="color:#66d9ef">my</span> $cp_json <span style="color:#f92672">=</span> Cpanel::JSON::XS<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>()<span style="color:#f92672">-&gt;</span>encode([$e_acute]);
+<span style="color:#66d9ef">print</span> Dumper( $mojo_json, $cp_json );</code></pre></div>
+<p>This will print:</p>
+
+<pre><code>$VAR1 = &quot;[\&quot;\303\203\302\251\&quot;]&quot;;
+$VAR2 = &quot;[\&quot;\x{c3}\x{a9}\&quot;]&quot;;
+</code></pre>
+
+<p>(Note that <a href="https://metacpan.org/pod/Data::Dumper">Data::Dumper</a>
+outputs one string using octal escapes
+and the other using hex. This reflects another Perl interpreter
+implementation detail which, for now, is of no concern.)</p>
+
+<p>Our input string contains two code points, 0xc3 and 0xa9. Recall that
+there is no specific character set associated with those code points; they’re
+just numbers. JSON, though, is purely Unicode—and the
+latest standard mandates UTF-8 encoding specifically. So we need to translate
+our “no-character-set” code points to UTF-8 in order to encode to JSON. But
+how to do this?</p>
+
+<p>We can’t, strictly speaking. It would be like trying
+to convert 5 “currency units” to U.S. dollars: we need to know the actual
+source currency (Bitcoin? Euros?) to get an answer. Likewise, in Perl, to
+express our stored “code points” in UTF-8 we need to know what <em>characters</em>
+those code points represent. For example, your Perl string might store code
+point 142 … but which character is that? Perl doesn’t know, and Perl doesn’t
+care. Without a defined character set, a code point is just a number.</p>
+
+<p>To work around this problem, our JSON libraries make reasonable—though
+not necessarily correct—assumptions about what the string’s code points
+represent.</p>
+
+<p>Mojo::JSON assumes that our 2 original code points are Unicode. That means
+Mojo::JSON thinks we gave it the characters U+00C3 (Ã) and
+U+00A9 (©). The reason for the “expansion” from 2 code points to 4 in the
+encoded JSON is that
+Mojo::JSON encodes our code points as UTF-8: U+00C3 becomes Perl
+code points 0303 (0xc3) and 0203 (0x83), and U+00A9 becomes 0302 (0xc2) and
+0251 (0xa9).</p>
+
+<p>Cpanel::JSON::XS makes a different assumption that suits a different
+interpretation: This encoder assumes that our 2 original code points
+represent whatever bytes of the characters that should go into the eventual
+JSON. Unlike with Mojo::JSON, there is no assumption about a desired encoding,
+which allows the caller full control over the encoding.</p>
+
+<p>(This flexibility allows the encoder’s caller to choose, e.g., UTF-16 rather
+than UTF-8 for the encoded JSON. That made more sense prior to the latest
+JSON specification, which mandates UTF-8 outside closed systems.)</p>
+
+<p>The same difference in behavior applies to our two decoder functions. They,
+too, face an “unsolvable” problem, the reverse of that for encoding. And
+their solutions mirror the encoders’.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Mojo::JSON;
+<span style="color:#66d9ef">use</span> Data::Dumper;
+$Data::Dumper::Useqq <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+
+<span style="color:#66d9ef">my</span> $from_mojo <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;[\&#34;\303\203\302\251\&#34;]&#34;</span>;
+<span style="color:#66d9ef">my</span> $from_cp <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;[\&#34;\x{c3}\x{a9}\&#34;]&#34;</span>;
+
+$from_mojo <span style="color:#f92672">=</span> Mojo::JSON::decode_json($from_mojo)<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>];
+$from_cp <span style="color:#f92672">=</span> Mojo::JSON::decode_json($from_cp)<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>];
+<span style="color:#66d9ef">print</span> Dumper( $from_mojo, $from_cp );</code></pre></div>
+<p>This will print:</p>
+
+<pre><code>$VAR1 = &quot;\x{c3}\x{a9}&quot;;
+$VAR2 = &quot;\x{e9}&quot;;
+</code></pre>
+
+<p>Recall that Mojo::JSON’s encoder interprets its input as Unicode and that
+its output code points represent bytes of UTF-8.
+Above you’ll see that its decoder does the inverse: it interprets its
+input as bytes of UTF-8 and outputs code points understood to be Unicode.
+This means the number of code points output will be smaller than the number
+input if the input contains any code points above 127 (0x7f), which UTF-8
+represents as multiple bytes.</p>
+
+<p>As for Cpanel::JSON::XS:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Mojo::JSON;
+<span style="color:#66d9ef">use</span> Data::Dumper;
+$Data::Dumper::Useqq <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+
+<span style="color:#66d9ef">my</span> $from_mojo <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;[\&#34;\303\203\302\251\&#34;]&#34;</span>;
+<span style="color:#66d9ef">my</span> $from_cp <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;[\&#34;\x{c3}\x{a9}\&#34;]&#34;</span>;
+
+$from_mojo <span style="color:#f92672">=</span> Cpanel::JSON::XS<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>()<span style="color:#f92672">-&gt;</span>decode($from_mojo)<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>];
+$from_cp <span style="color:#f92672">=</span> Cpanel::JSON::XS<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>()<span style="color:#f92672">-&gt;</span>decode($from_cp)<span style="color:#f92672">-&gt;</span>[<span style="color:#ae81ff">0</span>];
+<span style="color:#66d9ef">print</span> Dumper( $from_mojo, $from_cp );</code></pre></div>
+<p>This gives:</p>
+
+<pre><code>$VAR1 = &quot;\x{c3}\x{83}\x{c2}\x{a9}&quot;;
+$VAR2 = &quot;\x{c3}\x{a9}&quot;;
+</code></pre>
+
+<p>The <code>decode()</code> method, like <code>encode()</code>, assumes that the caller will
+handle encoding manually and so simply copies code points.</p>
+
+<h2 id="aside-assumptions-of-utf-8">Aside: Assumptions of UTF-8</h2>
+
+<p>Mojo::JSON’s behavior of encoding to UTF-8 has precedent: Perl itself!</p>
+
+<p>You may have run into something like this:</p>
+
+<pre><code>&gt; perl -e'print &quot;\x{100}&quot;'
+Wide character in print at -e line 1.
+Ā
+</code></pre>
+
+<p>For code points 0-255 Perl just outputs the code point as an octet, but
+when asked to output a code point that exceeds 255, obviously that doesn’t
+work. In this case, Perl assumes you want UTF-8 but throws the “wide
+character” warning to tip you off to the fact that you missed something—in
+this case, you neglected to encode code point 256 to bytes.</p>
+
+<h2 id="abusing-the-system">Abusing the System</h2>
+
+<p>Cpanel::JSON::XS’s <code>encode()</code> allows for a nonstandard use of JSON:
+literal binary data. Consider the following:</p>
+
+<pre><code>perl -MCpanel::JSON::XS -e'print Cpanel::JSON::XS-&gt;new()-&gt;encode([&quot;\xff&quot;])'
+</code></pre>
+
+<p>… will output 5 bytes: <code>[</code>, <code>&quot;</code>, 0xff, <code>&quot;</code>, and <code>]</code>. This is invalid JSON
+because no Unicode encoding (let alone UTF-8) ever encodes a character to
+a single 0xff byte. Only special decoders that understand this “literal
+binary” JSON variant will parse this as intended. That reliance on a custom
+mode of operation undercuts JSON’s usefulness as a widely-supported
+standard—which may seem fine at first but
+can easily bite if your application grows in scope.</p>
+
+<p>Applications that need to serialize strings with arbitrary octets (i.e.,
+binary) should apply a secondary encoding (e.g., Base64) to strings prior
+to JSON encoding. Or, better yet, prefer a binary-friendly encoding like
+<a href="https://cbor.io">CBOR</a>.</p>
+
+<h2 id="about-that-flag-behind-the-curtain">About That Flag Behind the Curtain …</h2>
+
+<p>If you run the output from our two encoder methods through
+<a href="https://metacpan.org/pod/Devel::Peek">Devel::Peek</a>, you’ll
+see something like this for Mojo::JSON’s output:</p>
+
+<pre><code>SV = PV(0x7fdc27802f30) at 0x7fdc27e59c58
+  REFCNT = 1
+  FLAGS = (POK,pPOK)
+  PV = 0x7fdc28826350 &quot;[\&quot;\303\203\302\251\&quot;]&quot;\0
+  CUR = 8
+  LEN = 34
+</code></pre>
+
+<p>… and this for Cpanel::JSON::XS:</p>
+
+<pre><code>SV = PV(0x7fc0cd004d30) at 0x7fc0cd016228
+  REFCNT = 1
+  FLAGS = (POK,pPOK,UTF8)
+  PV = 0x7fc0cce2ef60 &quot;[\&quot;\303\203\302\251\&quot;]&quot;\0 [UTF8 &quot;[&quot;\x{c3}\x{a9}&quot;]&quot;]
+  CUR = 8
+  LEN = 34
+</code></pre>
+
+<p>Note the <code>UTF8</code> flag in the latter. This tells us that Perl’s
+internal storage of the string’s code points uses UTF-8 encoding. This
+difference is why, as we saw earlier, Data::Dumper encodes Mojo::JSON’s output
+using
+octal escapes but Cpanel::JSON::XS’s using hex: Data::Dumper recognizes the
+UTF8 flag and renders its output based on it.</p>
+
+<p>As <a href="https://perldoc.perl.org/perlunifaq.html#What-is-%22the-UTF8-flag%22%3f">perldoc perlunifaq</a> makes clear, though, the UTF8 flag is <strong>not</strong> meant for
+consumption by Perl code. Perl applications should regard strings as
+simple sequences of code points, without regard for how the
+Perl interpreter may store those strings in memory.</p>
+
+<p>That being said,
+in limited contexts it <em>may</em> work to imitate the distinction between string
+types in languages like Python and JavaScript by regarding
+UTF8-flagged strings as “character strings” and non-UTF8-flagged strings as
+“byte strings”—indeed, <a href="https://metacpan.org/pod/Sereal::Encoder">multiple</a>
+<a href="https://metacpan.org/pod/CBOR::XS">serializers</a>
+<a href="https://metacpan.org/pod/CBOR::Free">on</a>
+<a href="https://metacpan.org/pod/CBOR::PP">CPAN</a>, including two of my own,
+do exactly this. This isn’t
+a supported model, though, for using Perl strings, and any code that
+depends on it may behave differently in different Perl versions. Caveat
+emptor!</p>
+
+<h2 id="making-peace">Making Peace</h2>
+
+<p>JSON and Perl are odd bedfellows. Perl’s lack of distinct number and string
+types, for example, can yield JSON that uses the wrong type for one
+value or the other. Perl’s lack of native booleans produces a similar effect.</p>
+
+<p>The encoding problems discussed above, though, are especially nefarious
+because accommodating them requires a good understanding of all of the above.
+Most developers can accommodate something like <code>{&quot;age&quot;: &quot;9&quot;}</code> easily enough
+because typecasting from <code>&quot;9&quot;</code> (string) to <code>9</code> (number) is commonplace. But
+how many would see <code>&quot;Ã©&quot;</code> and think, “ah! I simply have to treat those
+characters’ code points as bytes then decode those bytes as UTF-8!” Some
+would, to be sure—perhaps even many—but likely fewer than can easily coerce
+<code>&quot;9&quot;</code> to <code>9</code>.</p>
+
+<p>Binary-friendly encodings like <a href="http://cbor.io">CBOR</a>
+mitigate against this problem because whatever decodes the Perl-sourced
+data can more easily recognize the need to decode from binary. Anyone
+who doesn’t know about bytes and encodings will quickly learn! Fundamentally,
+though, even CBOR doesn’t really fit Perl’s “pure code points” string model
+very well because CBOR distinguishes strongly between binary and text strings,
+which Perl does not.</p>
+
+<p>At the end of the day, Perl’s data model, for all of the conveniences that it
+affords us, makes communication with many other languages a challenge. The
+best we can do is to anticipate these problems and deal with them as they arise.</p>
+
+<h2 id="epilogue-json-alternatives">Epilogue: JSON Alternatives</h2>
+
+<p>JSON’s inability to store arbitrary octet strings is, in my experience,
+its biggest liability,
+but there are other reasons why I often prefer to avoid JSON:</p>
+
+<ul>
+<li><p>Its inability to store comments and proscription against trailing commas
+make it an awkward choice for human-maintained data structures.</p></li>
+
+<li><p>Its <code>\uXXXX</code> escapes support only characters within Unicode’s
+<abbr title="Basic Multilingual Plane">BMP</abbr>; to store emoji or other
+non-BMP characters you either have to encode to UTF-8 directly or indicate
+a UTF-16 surrogate pair (<a href="https://en.wikipedia.org/wiki/UTF-16#U+010000_to_U+10FFFF">What does that mean?</a>) in <code>\uXXXX</code> escapes.</p></li>
+
+<li><p>It’s inefficient compared with binary formats.</p></li>
+</ul>
+
+<p><a href="https://github.com/toml-lang/toml">TOML</a> is a nice serialization format
+for human-maintained data structures. It’s line-delimited and—of course!—allows
+comments, and any Unicode code point can be expressed in simple hexadecimal.
+TOML is fairly new, and its specification is still in flux; nevertheless,
+it already undergirds a number of high-profile
+software projects like Rust’s <a href="https://doc.rust-lang.org/cargo/">Cargo</a>
+package manager and <a href="https://gohugo.io/">Hugo</a>—which powers this site! CPAN
+<a href="https://metacpan.org/pod/TOML::Tiny">hosts</a>
+<a href="https://metacpan.org/pod/TOML::Parser">several</a>
+<a href="https://metacpan.org/pod/TOML">implementations</a> of this serialization.</p>
+
+<p>The aforementioned <a href="https://cbor.io">CBOR</a> improves upon JSON’s efficiency and
+also allows for storage of binary strings. Whereas JSON encoders must
+stringify numbers and escape all strings, CBOR stores numbers “literally”
+and prefixes strings with their length, which obviates the need to escape those
+strings. These dramatically simplify both encoding and decoding. As with
+TOML and YAML, CPAN hosts <a href="https://metacpan.org/pod/CBOR::XS">multiple</a>
+<a href="https://metacpan.org/pod/CBOR::Free">CBOR</a>
+<a href="https://metacpan.org/pod/CBOR::PP">implementations</a>.
+(Full disclosure: Two of these are of my own authorship.)</p>
+
+<p><a href="https://github.com/Sereal/Sereal">Sereal</a> is another great JSON substitute
+that confers most of CBOR’s benefits and can even serialize more
+“Perl-specific” items like regular expressions. This makes it ideal
+for Perl-to-Perl IPC. The reference implementation is CPAN’s
+<a href="https://metacpan.org/pod/Sereal">Sereal</a> distribution.
+Sereal isn’t as well-supported as CBOR outside Perl,
+though, so if you need to communicate with non-Perl code, Sereal may
+not work as well for you.</p>
+
+<p><a href="https://yaml.org/">YAML</a> is another format that humans can maintain easily.
+Unlike TOML, YAML supports binary strings; in fact, it’s flexible enough
+to replace Data::Dumper in many cases. CPAN includes
+a <a href="https://metacpan.org/pod/YAML::XS">number</a>
+<a href="https://metacpan.org/pod/YAML::PP">of</a>
+<a href="https://metacpan.org/pod/YAML::Old">libraries</a> that implement YAML.</p>
+
+<p>Thank you for reading!</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/unicode">unicode</a></div>
+                
+                  <div class="tag"><a href="/tags/json">json</a></div>
+                
+                  <div class="tag"><a href="/tags/cbor">cbor</a></div>
+                
+                  <div class="tag"><a href="/tags/utf8">utf8</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-felipe-gasper">
+  <div class="col-sm-2">
+    
+    <a href="/authors/felipe-gasper/"><div class="circle-avatar" style="background-image:url(/images/author/felipe-gasper.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/felipe-gasper/"><h3>Felipe Gasper</h3></a>
+    <p>Felipe Gasper has been writing Perl since the early 2000s and currently consults regularly for <a href="http://cpanel.com">cPanel, L.L.C.</a> He is also an experienced choral conductor, singer, and organist. In his spare time he enjoys movies, theater, “armchair linguistics”, and gaming.</p>
+    <h5><a href="/authors/felipe-gasper/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/json-unicode-and-perl-oh-my-.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

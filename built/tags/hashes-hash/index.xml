@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Hashes Hash on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/hashes-hash/</link>
+    <description>Recent content in Hashes Hash on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 01 Oct 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/hashes-hash/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How Hashes Really Work</title>
+      <link>http://localhost:1313/pub/2002/10/01/hashes.html/</link>
+      <pubDate>Tue, 01 Oct 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/10/01/hashes.html/</guid>
+      <description>
+
+&lt;p&gt;It&amp;rsquo;s easy to take hashes for granted in Perl. They are simple, fast, and they usually &amp;ldquo;just work,&amp;rdquo; so people never need to know or care about how they are implemented. Sometimes, though, it&amp;rsquo;s interesting and rewarding to look at familiar tools in a different light. This article follows the development of a simple hash class in Perl in an attempt to find out how hashes really work.&lt;/p&gt;
+
+&lt;p&gt;A hash is an unordered collection of values, each of which is identified by a unique key. A value can be retrieved by its key, and one can add to or delete from the collection. A data structure with these properties is called a dictionary, and some of the many ways to implement them are outlined below.&lt;/p&gt;
+
+&lt;p&gt;Many objects are naturally identified by unique keys (like login names), and it is convenient to use a dictionary to address them in this manner. Programs use their dictionaries in different ways. A compiler&amp;rsquo;s symbol table (which records the names of functions and variables encountered during compilation) might hold a few hundred names that are looked up repeatedly (since names usually occur many times in a section of code). Another program might need to store 64-bit integers as keys, or search through several thousands of filenames.&lt;/p&gt;
+
+&lt;p&gt;How can we build a generally useful dictionary?&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-implementing-dictionaries-implementing-dictionaries-span&#34;&gt;&lt;span id=&#34;implementing_dictionaries&#34;&gt;Implementing Dictionaries&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One simple way to implement a dictionary is to use a linked list of keys and values (that is, a list where each element contains a key and the corresponding value). To find a particular value, one would need to scan the list sequentially, comparing the desired key with each key in turn until a match is found, or we reach the end of the list.&lt;/p&gt;
+
+&lt;p&gt;This approach becomes progressively slower as more values are added to the dictionary, because the average number of elements we need to scan to find a match keeps increasing. We would discover that a key was not in the dictionary only after scanning every element in it. We could make things faster by performing binary searches on a sorted array of keys instead of using a linked list, but performance would still degrade as the dictionary grew larger.&lt;/p&gt;
+
+&lt;p&gt;If we could transform every possible key into a unique array index (for example, by turning the string &amp;ldquo;red&amp;rdquo; into the index 14328.), then we could store each value in a corresponding array entry. All searches, insertions and deletions could then be performed with a single array lookup, irrespective of the number of keys. But although this strategy is simple and fast, it has many disadvantages and is not always useful.&lt;/p&gt;
+
+&lt;p&gt;For one thing, calculating an index must be fast, and independent of the size of the dictionary (or we would lose all that we gained by not using a linked list). Unless the keys are already unique integers, however, it isn&amp;rsquo;t always easy to quickly convert them into array indexes (especially when the set of possible keys is not known in advance, which is common). Furthermore, the number of keys actually stored in the dictionary is usually minute in comparison to the total number of possible keys, so allocating an array that could hold everything is wasteful.&lt;/p&gt;
+
+&lt;p&gt;For example, although a typical symbol table could contain a few hundred entries, there are about 50 billion alphanumeric names with six or fewer characters. Memory may be cheap enough for an occasional million-element array, but 50 billion elements (of which most remain unused) is still definitely overkill.&lt;/p&gt;
+
+&lt;p&gt;(Of course, there are many different ways to implement dictionaries. For example, red-black trees provide different guarantees about expected and worst-case running times, that are most appropriate for certain kinds of applications. This article does not discuss these possibilities further, but future articles may explore them in more detail.)&lt;/p&gt;
+
+&lt;p&gt;What we need is a practical compromise between speed and memory usage; a dictionary whose memory usage is proportional to the number of values it contains, but whose performance doesn&amp;rsquo;t become progressively worse as it grows larger.&lt;/p&gt;
+
+&lt;p&gt;Hashes represent just such a compromise.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-hashes-hashes-span&#34;&gt;&lt;span id=&#34;hashes&#34;&gt;Hashes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Hashes are arrays (entries in it are called slots or buckets), but they do not require that every possible key correspond directly to a unique entry. Instead, a function (called a hashing function) is used to calculate the index corresponding to a particular key. This index doesn&amp;rsquo;t have to be unique, i.e., the function may return the same hash value for two or more keys. (We disregard this possibility for a while, but return to it later, since it is of great importance.)&lt;/p&gt;
+
+&lt;p&gt;We can now look up a value by computing the hash of its key, and looking at the corresponding bucket in the array. As long as the running time of our hashing function is independent of the number of keys, we can always perform dictionary operations in constant time. Since hashing functions make no uniqueness guarantees, however, we need some way to to resolve collisions (i.e., the hashed value of a key pointing to an occupied bucket).&lt;/p&gt;
+
+&lt;p&gt;The simple way to resolve collisions is to avoid storing keys and values directly in buckets, and to use per-bucket linked lists instead. To find a particular value, its key is hashed to find the index of a bucket, and the linked list is scanned to find the exact key. The lists are known as chains, and this technique is called chaining.&lt;/p&gt;
+
+&lt;p&gt;(There are other ways to handle collisions, e.g. via open addressing, in which colliding keys are stored in the first unoccupied slot whose index can be recursively derived from that of an occupied one. One consequence is that the hash can contain only as many values as it has buckets. This technique is not discussed here, but references to relevant material are included below.)&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-hashing-functions-hashing-functions-span&#34;&gt;&lt;span id=&#34;hashing_functions&#34;&gt;Hashing Functions&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Since chaining repeatedly performs linear searches through linked lists, it is important that the chains always remain short (that is, the number of collisions remains low). A good hashing function would ensure that it distributed keys uniformly into the available buckets, thus reducing the probability of collisions.&lt;/p&gt;
+
+&lt;p&gt;In principle, a hashing function returns an array index directly; in practice, it is common to use its (arbitrary) return value modulo the number of buckets as the actual index. (Using a prime number of buckets that is not too close to a power of two tends to produce a sufficiently uniform key distribution.)&lt;/p&gt;
+
+&lt;p&gt;Another way to keep chains remain short is to use a technique known as dynamic hashing: adding more buckets when the existing buckets are all used (i.e., when collisions become inevitable), and using a new hashing function that distributes keys uniformly into all of the buckets (it is usually possible to use the same hashing function, but compute indexes modulo the new number of buckets). We also need to re-distribute keys, since the corresponding indices will be different with the new hashing function.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the hashing function used in Perl 5.005:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Return the hashed value of a string: $hash = perlhash(&amp;quot;key&amp;quot;)
+  # (Defined by the PERL_HASH macro in hv.h)
+  sub perlhash
+  {
+      $hash = 0;
+      foreach (split //, shift) {
+          $hash = $hash*33 + ord($_);
+      }
+      return $hash;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;More recent versions use a function designed by Bob Jenkins, and his Web page (listed below) does an excellent job of explaining how it and other hashing functions work.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-representing-hashes-in-perl-representing-hashes-in-perl-span&#34;&gt;&lt;span id=&#34;representing_hashes_in_perl&#34;&gt;Representing Hashes in Perl&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;We can represent a hash as an array of buckets, where each bucket is an array of &lt;code&gt;[$key, $value]&lt;/code&gt; pairs (there&amp;rsquo;s no particular need for chains to be linked lists; arrays are more convenient). As an exercise, let us add each of the keys in &lt;code&gt;%example&lt;/code&gt; below into three empty buckets.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  %example = (
+      ab =&amp;gt; &amp;quot;foo&amp;quot;, cd =&amp;gt; &amp;quot;bar&amp;quot;,
+      ef =&amp;gt; &amp;quot;baz&amp;quot;, gh =&amp;gt; &amp;quot;quux&amp;quot;
+  );
+
+  @buckets = ( [],[],[] );
+
+  while (($k, $v) = each(%example)) {
+      $hash  = perlhash($k);
+      $chain = $buckets[ $hash % @buckets ];
+
+      $entry = [ $k, $v ];
+      push @$chain, $entry;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We end up with the following structure (you may want to verify that the keys are correctly hashed and distributed), in which we can identify any key-value pair in the hash with one index into the array of buckets and a second index into the entries therein. Another index serves to access either the key or the value.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  @buckets = (
+      [ [ &amp;quot;ef&amp;quot;, &amp;quot;baz&amp;quot; ]                   ],    # Bucket 0: 1 entry
+      [ [ &amp;quot;cd&amp;quot;, &amp;quot;bar&amp;quot; ]                   ],    # Bucket 1: 1 entry
+      [ [ &amp;quot;ab&amp;quot;, &amp;quot;foo&amp;quot; ], [ &amp;quot;gh&amp;quot;, &amp;quot;quux&amp;quot; ] ],    # Bucket 2: 2 entries
+  );
+  $key = $buckets[2][1][0];   # $key = &amp;quot;gh&amp;quot;
+  $val = $buckets[2][1][1];   # $val = $hash{$key}
+  $buckets[0][0][1] = &amp;quot;zab&amp;quot;;  # $hash{ef} = &amp;quot;zab&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-building-toy-hashes-building-toy-hashes-span&#34;&gt;&lt;span id=&#34;building_toy_hashes&#34;&gt;Building Toy Hashes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In this section, we&amp;rsquo;ll use the representation discussed above to write a tied hash class that emulates the behavior of real Perl hashes. For the sake of brevity, the code doesn&amp;rsquo;t check for erroneous input. My comments also gloss over details that aren&amp;rsquo;t directly relevant to hashing, so you may want to have a copy of &lt;em&gt;perltie&lt;/em&gt; handy to fill in blanks.&lt;/p&gt;
+
+&lt;p&gt;(All of the code in the class is available at the URL mentioned below.)&lt;/p&gt;
+
+&lt;p&gt;We begin by writing a tied hash constructor that creates an empty hash, and another function to empty an existing hash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Hash;
+
+  # We&#39;ll reuse the perlhash() function presented previously.
+
+  # Create a tied hash. (Analogous to newHV in hv.c)
+  sub TIEHASH
+  {
+      $h = {
+          keys    =&amp;gt; 0,                         # Number of keys
+          buckets =&amp;gt; [ [],[],[],[],[],[],[] ],  # Seven empty buckets
+          current =&amp;gt; [ undef, undef ]           # Current iterator entry
+      };                                        # (Explained below)
+      return bless $h, shift;
+  }
+
+  # Empty an existing hash. (See hv.c:hv_clear)
+  sub CLEAR
+  {
+      ($h) = @_;
+
+         $h-&amp;gt;{keys}      = 0;
+      @{ $h-&amp;gt;{buckets} } = ([],[],[],[],[],[],[]);
+      @{ $h-&amp;gt;{current} } = (undef, undef);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For convenience, we also write a function that looks up a given key in a hash and returns the indices of its bucket and the correct entry within. Both indexes are undefined if the key is not found in the hash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Look up a specified key in a hash.
+  sub lookup
+  {
+      ($h, $key) = @_;
+
+      $buckets = $h-&amp;gt;{buckets};
+      $bucket  = perlhash($key) % @$buckets;
+
+      $entries = @{ $buckets-&amp;gt;[$bucket] };
+      if ($entries &amp;gt; 0) {
+          # Look for the correct entry inside the bucket.
+          $entry = 0;
+          while ($buckets-&amp;gt;[$bucket][$entry][0] ne $key) {
+              if (++$entry == $entries) {
+                  # None of the entries in the bucket matched.
+                  $bucket = $entry = undef;
+                  last;
+              }
+          }
+      }
+      else {
+          # The relevant bucket was empty, so the key doesn&#39;t exist.
+          $bucket = $entry = undef;
+      }
+
+      return ($bucket, $entry);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;lookup&lt;/code&gt; function makes it easy to write &lt;code&gt;EXISTS&lt;/code&gt;, &lt;code&gt;FETCH&lt;/code&gt;, and &lt;code&gt;DELETE&lt;/code&gt; methods for our class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Check whether a key exists in a hash. (See hv.c:hv_exists)
+  sub EXISTS
+  {
+      ($h, $key) = @_;
+      ($bucket, $entry) = lookup($h, $key);
+
+      # If $bucket is undefined, the key doesn&#39;t exist.
+      return defined $bucket;
+  }
+
+  # Retrieve the value associated with a key. (See hv.c:hv_fetch)
+  sub FETCH
+  {
+      ($h, $key) = @_;
+
+      $buckets = $h-&amp;gt;{buckets};
+      ($bucket, $entry) = lookup($h, $key);
+
+      if (defined $bucket) {
+          return $buckets-&amp;gt;[$bucket][$entry][1];
+      }
+      else {
+          return undef;
+      }
+  }
+
+  # Delete a key-value pair from a hash. (See hv.c:hv_delete)
+  sub DELETE
+  {
+      ($h, $key) = @_;
+
+      $buckets = $h-&amp;gt;{buckets};
+      ($bucket, $entry) = lookup($h, $key);
+
+      if (defined $bucket) {
+          # Remove the entry from the bucket, and return its value.
+          $entry = splice(@{ $buckets-&amp;gt;[$bucket] }, $entry, 1);
+          return $entry-&amp;gt;[1];
+      }
+      else {
+          return undef;
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;STORE&lt;/code&gt; is a little more complex. It must either update the value of an existing key (which is just an assignment), or add an entirely new entry (by pushing an arrayref into a suitable bucket). In the latter case, if the number of keys exceeds the number of buckets, then we create more buckets and redistribute existing keys (under the assumption that the hash will grow further; this is how we implement dynamic hashing).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Store a key-value pair in a hash. (See hv.c:hv_store)
+  sub STORE
+  {
+      ($h, $key, $val) = @_;
+
+      $buckets = $h-&amp;gt;{buckets};
+      ($bucket, $entry) = lookup($h, $key);
+
+      if (defined $bucket) {
+          $buckets-&amp;gt;[$bucket][$entry][1] = $val;
+      }
+      else {
+          $h-&amp;gt;{keys}++;
+          $bucket = perlhash($key) % @$buckets;
+          push @{ $buckets-&amp;gt;[$bucket] }, [ $key, $val ];
+
+          # Expand the hash if all the buckets are full. (See hv.c:S_hsplit)
+          if ($h-&amp;gt;{keys} &amp;gt; @$buckets) {
+              # We just double the number of buckets, as Perl itself does
+              # (and disregard the number becoming non-prime).
+              $newbuckets = [];
+              push(@$newbuckets, []) for 1..2*@$buckets;
+
+              # Redistribute keys
+              foreach $entry (map {@$_} @$buckets) {
+                  $bucket = perlhash($entry-&amp;gt;[0]) % @$newbuckets;
+                  push @{$newbuckets-&amp;gt;[$bucket]}, $entry;
+              }
+              $h-&amp;gt;{buckets} = $newbuckets;
+          }
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For completeness, we implement an iteration mechanism for our class. The &lt;code&gt;current&lt;/code&gt; element in each hash identifies a single entry (by its bucket and entry indices). &lt;code&gt;FIRSTKEY&lt;/code&gt; sets it to an initial (undefined) state, and leaves all the hard work to &lt;code&gt;NEXTKEY&lt;/code&gt;, which steps through each key in turn.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Return the first key in a hash. (See hv.c:hv_iterinit)
+  sub FIRSTKEY
+  {
+      $h = shift;
+      @{ $h-&amp;gt;{current} } = (undef, undef);
+      return $h-&amp;gt;NEXTKEY(@_);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If &lt;code&gt;NEXTKEY&lt;/code&gt; is called with the hash iterator in its initial state (by &lt;code&gt;FIRSTKEY&lt;/code&gt;), it returns the first key in the first occupied bucket. On subsequent calls, it returns either the next key in the current chain, or the first key in the next occupied bucket.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Return the next key in a hash. (See hv.c:hv_iterkeysv et al.)
+  sub NEXTKEY
+  {
+      $h = shift;
+      $buckets = $h-&amp;gt;{buckets};
+      $current = $h-&amp;gt;{current};
+
+      ($bucket, $entry) = @{ $current };
+
+      if (!defined $bucket || $entry+1 == @{ $buckets-&amp;gt;[$bucket] }) {
+      FIND_NEXT_BUCKET:
+          do {
+              if (++$current-&amp;gt;[0] == @$buckets) {
+                  @{ $current } = (undef, undef);
+                  return undef;
+              }
+          } while (@{ $buckets-&amp;gt;[$current-&amp;gt;[0]] } == 0);
+          $current-&amp;gt;[1] = 0;
+      }
+      else {
+          $current-&amp;gt;[1]++;
+      }
+
+      return $buckets-&amp;gt;[$current-&amp;gt;[0]][$current-&amp;gt;[1]][0];
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;do&lt;/code&gt; loop at &lt;code&gt;FIND_NEXT_BUCKET&lt;/code&gt; finds the next occupied bucket if the iterator is in its initial undefined state, or if the current entry is at the end of a chain. When there are no more keys in the hash, it resets the iterator and returns &lt;code&gt;undef&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;We now have all the pieces required to use our Hash class exactly as we would a real Perl hash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  tie %h, &amp;quot;Hash&amp;quot;;
+
+  %h = ( foo =&amp;gt; &amp;quot;bar&amp;quot;, bar =&amp;gt; &amp;quot;foo&amp;quot; );
+  while (($key, $val) = each(%h)) {
+      print &amp;quot;$key =&amp;gt; $val\n&amp;quot;;
+  }
+  delete $h{foo};
+
+  # ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-the-perl-internals-perl-internals-span&#34;&gt;&lt;span id=&#34;the_perl_internals&#34;&gt;Perl Internals&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you want to learn more about the hashes inside Perl, then the &lt;code&gt;FakeHash&lt;/code&gt; module by Mark-Jason Dominus and a copy of &lt;em&gt;hash.c&lt;/em&gt; from Perl 1.0 are good places to start. The PerlGuts Illustrated Web site by Gisle Aas is also an invaluable resource in exploring the Perl internals. (References to all three are included below.)&lt;/p&gt;
+
+&lt;p&gt;Although our &lt;code&gt;Hash&lt;/code&gt; class is based on Perl&amp;rsquo;s hash implementation, it is not a faithful reproduction; and while a detailed discussion of the Perl source is beyond the scope of this article, parenthetical notes in the code above may serve as a starting point for further exploration.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-history-history-span&#34;&gt;&lt;span id=&#34;history&#34;&gt;History&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Donald Knuth credits H. P. Luhn at IBM for the idea of hash tables and chaining in 1953. About the same time, the idea also occurred to another group at IBM, including Gene Amdahl, who suggested open addressing and linear probing to handle collisions. Although the term &amp;ldquo;hashing&amp;rdquo; was standard terminology in the 1960s, the term did not actually appear in print until 1967 or so.&lt;/p&gt;
+
+&lt;p&gt;Perl 1 and 2 had &amp;ldquo;two and a half data types&amp;rdquo;, of which one half was an &amp;ldquo;associative array.&amp;rdquo; With some squinting, associative arrays look very much like hashes. The major differences were the lack of the &lt;code&gt;%&lt;/code&gt; symbol on hash names, and that one could only assign to them one key at a time. Thus, one would say &lt;code&gt;$foo{&#39;key&#39;} = 1;&lt;/code&gt;, but only &lt;code&gt;@keys = keys(foo);&lt;/code&gt;. Familiar functions like &lt;code&gt;each&lt;/code&gt;, &lt;code&gt;keys&lt;/code&gt;, and &lt;code&gt;values&lt;/code&gt; worked as they do now (and &lt;code&gt;delete&lt;/code&gt; was added in Perl 2).&lt;/p&gt;
+
+&lt;p&gt;Perl 3 had three whole data types: it had the &lt;code&gt;%&lt;/code&gt; symbol on hash names, allowed an entire hash to be assigned to at once, and added &lt;code&gt;dbmopen&lt;/code&gt; (now deprecated in favour of &lt;code&gt;tie&lt;/code&gt;). Perl 4 used comma-separated hash keys to emulate multidimensional arrays (which are now better handled with array references).&lt;/p&gt;
+
+&lt;p&gt;Perl 5 took the giant leap of referring to associative arrays as hashes. (As far as I know, it is the first language to have referred to the data structure thus, rather than &amp;ldquo;hash table&amp;rdquo; or something similar.) Somewhat ironically, it also moved the relevant code from &lt;em&gt;hash.c&lt;/em&gt; into &lt;em&gt;hv.c&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-nomenclature-nomenclature-span&#34;&gt;&lt;span id=&#34;nomenclature&#34;&gt;Nomenclature&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Dictionaries, as explained earlier, are unordered collections of values indexed by unique keys. They are sometimes called associative arrays or maps. They can be implemented in several ways, one of which is by using a data structure known as a hash table (and this is what Perl refers to as a hash).&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s use of the term &amp;ldquo;hash&amp;rdquo; is the source of some potential confusion, because the output of a hashing function is also sometimes called a hash (especially in cryptographic contexts), and because hash tables aren&amp;rsquo;t usually called hashes anywhere else.&lt;/p&gt;
+
+&lt;p&gt;To be on the safe side, refer to the data structure as a hash table, and use the term &amp;ldquo;hash&amp;rdquo; only in obvious, Perl-specific contexts.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-further-resources-further-resources-span&#34;&gt;&lt;span id=&#34;further_resources&#34;&gt;Further Resources&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_algorithms&#34;&gt;Introduction to Algorithms (Cormen, Leiserson and Rivest)&lt;/span&gt;&lt;/strong&gt;&lt;br /&gt;
+Chapter 12 of this excellent book discusses hash tables in detail.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_programming&#34;&gt;The Art of Computer Programming (Donald E. Knuth)&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Volume 3 (&amp;ldquo;Sorting and Searching&amp;rdquo;) devotes a section (�6.4) to an exhaustive description, analysis, and a historical perspective on various hashing techniques.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fperl%2eplover%2ecom%2fbadhash%2epl&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://perl.plover.com/badhash.pl&#34;&gt;http://perl.plover.com/badhash.pl&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;When Hashes Go Wrong&amp;rdquo; by Mark-Jason Dominus demonstrates a pathological case of collisions, by creating a large number of keys that hash to the same value, and effectively turn the hash into a very long linked list.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fburtleburtle%2enet%2fbob%2fhash%2fdoo&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://burtleburtle.net/bob/hash/doobs.html&#34;&gt;http://burtleburtle.net/bob/hash/doobs.html&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Current versions of Perl use a hashing function designed by Bob Jenkins. His web page explains how the function was constructed, and provides an excellent overview of how various hashing functions perform in practice.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fperl%2eplover%2ecom%2ffakehash%2f&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://perl.plover.com/FakeHash/&#34;&gt;http://perl.plover.com/FakeHash/&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This module, by Mark-Jason Dominus, is a more faithful re-implementation of Perl&amp;rsquo;s hashes in Perl, and is particularly useful because it can draw pictures of the data structures involved.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fwww%2eetla%2eorg%2fretroperl%2fperl1%&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://www.etla.org/retroperl/perl1/perl-1.0.tar.gz&#34;&gt;http://www.etla.org/retroperl/perl1/perl-1.0.tar.gz&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;It might be instructive to read &lt;em&gt;hash.c&lt;/em&gt; from the much less cluttered (and much less capable) Perl 1.0 source code, before going through the newer &lt;em&gt;hv.c&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fgisle%2eaas%2eno%2fperl%2fillguts%2fh&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://gisle.aas.no/perl/illguts/hv.png&#34;&gt;http://gisle.aas.no/perl/illguts/hv.png&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This image, from Gisle Aas&amp;rsquo;s &amp;ldquo;PerlGuts Illustrated&amp;rdquo;, depicts the layout of the various structures that comprise hashes in the core. The entire web site is a treasure trove for people exploring the internals.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fams%2ewiw%2eorg%2fsrc%2fhash%2epm&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://ams.wiw.org/src/Hash.pm&#34;&gt;http://ams.wiw.org/src/Hash.pm&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The source code for the tied Hash class developed in this article.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,813 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rob Kinyon on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/rob-kinyon/</link>
+    <description>Recent content in Rob Kinyon on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 23 Feb 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/rob-kinyon/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Advanced Subroutine Techniques</title>
+      <link>http://localhost:1313/pub/2006/02/23/advanced_subroutines.html/</link>
+      <pubDate>Thu, 23 Feb 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/02/23/advanced_subroutines.html/</guid>
+      <description>
+
+&lt;p&gt;In &amp;ldquo;&lt;a href=&#34;http://localhost:1313/pub/2005/11/03/subroutines.html&#34;&gt;Making Sense of Subroutines&lt;/a&gt;,&amp;rdquo; I wrote about what subroutines are and why you want to use them. This article expands on that topic, discussing some of the more common techniques for subroutines to make them even more useful.&lt;/p&gt;
+
+&lt;p&gt;Several of these techniques are advanced, but you can use each one by itself without understanding the others. Furthermore, not every technique is useful in every situation. As with all techniques, consider these as tools in your toolbox, not things you have to do every time you open your editor.&lt;/p&gt;
+
+&lt;h3 id=&#34;named-arguments&#34;&gt;Named Arguments&lt;/h3&gt;
+
+&lt;h4 id=&#34;positional-arguments&#34;&gt;Positional Arguments&lt;/h4&gt;
+
+&lt;p&gt;Subroutines, by default, use &amp;ldquo;positional arguments.&amp;rdquo; This means that the arguments to the subroutine must occur in a specific order. For subroutines with a small argument list (three or fewer items), this isn&amp;rsquo;t a problem.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub pretty_print {
+    my ($filename, $text, $text_width) = @_;
+
+    # Format $text to $text_width somehow.
+
+    open my $fh, &#39;&amp;gt;&#39;, $filename
+        or die &amp;quot;Cannot open &#39;$filename&#39; for writing: $!\n&amp;quot;;
+
+    print $fh $text;
+
+    close $fh;
+
+    return;
+}
+
+pretty_print( &#39;filename&#39;, $long_text, 80 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;the-problem&#34;&gt;The Problem&lt;/h4&gt;
+
+&lt;p&gt;However, once everyone starts using your subroutine, it starts expanding what it can do. Argument lists tend to expand, making it harder and harder to remember the order of arguments.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub pretty_print {
+    my (
+        $filename, $text, $text_width, $justification, $indent,
+        $sentence_lead
+    ) = @_;
+
+    # Format $text to $text_width somehow. If $justification is set, justify
+    # appropriately. If $indent is set, indent the first line by one tab. If
+    # $sentence_lead is set, make sure all sentences start with two spaces.
+
+    open my $fh, &#39;&amp;gt;&#39;, $filename
+        or die &amp;quot;Cannot open &#39;$filename&#39; for writing: $!\n&amp;quot;;
+
+    print $fh $text;
+
+    close $fh;
+
+    return;
+}
+
+pretty_print( &#39;filename&#39;, $long_text, 80, &#39;full&#39;, undef, 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Quick&amp;ndash;what does that &lt;code&gt;1&lt;/code&gt; at the end of the subroutine mean? If it took you more than five seconds to figure it out, then the subroutine call is unmaintainable. Now, imagine that the subroutine isn&amp;rsquo;t right there, isn&amp;rsquo;t documented or commented, and was written by someone who is quitting next week.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-solution&#34;&gt;The Solution&lt;/h4&gt;
+
+&lt;p&gt;The most maintainable solution is to use &amp;ldquo;named arguments.&amp;rdquo; In Perl 5, the best way to implement this is by using a hash reference. Hashes also work, but they require additional work on the part of the subroutine author to verify that the argument list is even. A hashref makes any unmatched keys immediately obvious as a compile error.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub pretty_print {
+    my ($args) = @_;
+
+    # Format $args-&amp;gt;{text} to $args-&amp;gt;{text_width} somehow.
+    # If $args-&amp;gt;{justification} is set, justify appropriately.
+    # If $args-&amp;gt;{indent} is set, indent the first line by one tab.
+    # If $args-&amp;gt;{sentence_lead} is set, make sure all sentences start with
+    # two spaces.
+
+    open my $fh, &#39;&amp;gt;&#39;, $args-&amp;gt;{filename}
+        or die &amp;quot;Cannot open &#39;$args-&amp;gt;{filename}&#39; for writing: $!\n&amp;quot;;
+
+    print $fh $args-&amp;gt;{text};
+
+    close $fh;
+
+    return;
+}
+
+pretty_print({
+    filename      =&amp;gt; &#39;filename&#39;,
+    text          =&amp;gt; $long_text,
+    text_width    =&amp;gt; 80,
+    justification =&amp;gt; &#39;full&#39;,
+    sentence_lead =&amp;gt; 1,
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, the reader can immediately see exactly what the call to &lt;code&gt;pretty_print()&lt;/code&gt; is doing.&lt;/p&gt;
+
+&lt;h4 id=&#34;and-optional-arguments&#34;&gt;And Optional Arguments&lt;/h4&gt;
+
+&lt;p&gt;By using named arguments, you gain the benefit that some or all of your arguments can be optional without forcing our users to put &lt;code&gt;undef&lt;/code&gt; in all of the positions they don&amp;rsquo;t want to specify.&lt;/p&gt;
+
+&lt;h3 id=&#34;validation&#34;&gt;Validation&lt;/h3&gt;
+
+&lt;p&gt;Argument validation is more difficult in Perl than in other languages. In C or Java, for instance, every variable has a type associated with it. This includes subroutine declarations, meaning that trying to pass the wrong type of variable to a subroutine gives a compile-time error. By contrast, because &lt;code&gt;perl&lt;/code&gt; flattens everything to a single list, there is no compile-time checking at all. (Well, there kinda is with prototypes.)&lt;/p&gt;
+
+&lt;p&gt;This has been such a problem that there are dozens of modules on CPAN to address the problem. The most commonly recommended one is &lt;a href=&#34;https://metacpan.org/pod/Params::Validate&#34;&gt;&lt;code&gt;Params::Validate&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;prototypes&#34;&gt;Prototypes&lt;/h3&gt;
+
+&lt;p&gt;Prototypes in Perl are a way of letting Perl know exactly what to expect for a given subroutine, at compile time. If you&amp;rsquo;ve ever tried to pass an array to the &lt;code&gt;vec()&lt;/code&gt; built-in and you saw &lt;code&gt;Not enough arguments for vec&lt;/code&gt;, you&amp;rsquo;ve hit a prototype.&lt;/p&gt;
+
+&lt;p&gt;For the most part, prototypes are more trouble than they&amp;rsquo;re worth. For one thing, Perl doesn&amp;rsquo;t check prototypes for methods because that would require the ability to determine, at compile time, which class will handle the method. Because you can alter &lt;code&gt;@ISA&lt;/code&gt; at runtime&amp;ndash;you see the problem. The main reason, however, is that prototypes aren&amp;rsquo;t very smart. If you specify &lt;code&gt;sub foo ($$$)&lt;/code&gt;, you cannot pass it an array of three scalars (this is the problem with &lt;code&gt;vec()&lt;/code&gt;). Instead, you have to say &lt;code&gt;foo( $x[0], $x[1], $x[2] )&lt;/code&gt;, and that&amp;rsquo;s just a pain.&lt;/p&gt;
+
+&lt;p&gt;Prototypes &lt;em&gt;can&lt;/em&gt; be very useful for one reason&amp;ndash;the ability to pass subroutines in as the first argument. &lt;a href=&#34;https://metacpan.org/pod/Test::Exception&#34;&gt;&lt;code&gt;Test::Exception&lt;/code&gt;&lt;/a&gt; uses this to excellent advantage:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub do_this_to (&amp;amp;;$) {
+    my ($action, $name) = @_;
+
+    $action-&amp;gt;( $name );
+}
+
+do_this_to { print &amp;quot;Hello, $_[0]\n&amp;quot; } &#39;World&#39;;
+do_this_to { print &amp;quot;Goodbye, $_[0]\n&amp;quot; } &#39;cruel world!&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;context-awareness&#34;&gt;Context Awareness&lt;/h3&gt;
+
+&lt;p&gt;Using the &lt;code&gt;wantarray&lt;/code&gt; built-in, a subroutine can determine its calling context. Context for subroutines, in Perl, is one of three things&amp;ndash;list, scalar, or void. List context means that the return value will be used as a list, scalar context means that the return value will be used as a scalar, and void context means that the return value won&amp;rsquo;t be used at all.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub check_context {
+    # True
+    if ( wantarray ) {
+        print &amp;quot;List context\n&amp;quot;;
+    }
+    # False, but defined
+    elsif ( defined wantarray ) {
+        print &amp;quot;Scalar context\n&amp;quot;;
+    }
+    # False and undefined
+    else {
+        print &amp;quot;Void context\n&amp;quot;;
+    }
+}
+
+my @x       = check_context();  # prints &#39;List context&#39;
+my %x       = check_context();  # prints &#39;List context&#39;
+my ($x, $y) = check_context();  # prints &#39;List context&#39;
+
+my $x       = check_context();  # prints &#39;Scalar context&#39;
+
+check_context();                # prints &#39;Void context&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For CPAN modules that implement or augment context awareness, look at &lt;a href=&#34;https://metacpan.org/pod/Contextual::Return&#34;&gt;&lt;code&gt;Contextual::Return&lt;/code&gt;&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Sub::Context&#34;&gt;&lt;code&gt;Sub::Context&lt;/code&gt;&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Return::Value&#34;&gt;&lt;code&gt;Return::Value&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Note: you can misuse context awareness heavily by having the subroutine do something completely different when called in scalar versus list context. Don&amp;rsquo;t do that. A subroutine should be a single, easily identifiable unit of work. Not everyone understands all of the different permutations of context, including your standard Perl expert.&lt;/p&gt;
+
+&lt;p&gt;Instead, I recommend having a standard return value, except in void context. If your return value is expensive to calculate and is calculated only for the purposes of returning it, then knowing if you&amp;rsquo;re in void context may be very helpful. This can be a premature optimization, however, so always measure (benchmarking and profiling) before and after to make sure you&amp;rsquo;re optimizing what needs optimizing.&lt;/p&gt;
+
+&lt;h3 id=&#34;mimicking-perl-s-internal-functions&#34;&gt;Mimicking Perl&amp;rsquo;s Internal Functions&lt;/h3&gt;
+
+&lt;p&gt;A lot of Perl&amp;rsquo;s internal functions modify their arguments and/or use &lt;code&gt;$_&lt;/code&gt; or &lt;code&gt;@_&lt;/code&gt; as a default if no parameters are provided. A perfect example of this is &lt;code&gt;chomp()&lt;/code&gt;. Here&amp;rsquo;s a version of &lt;code&gt;chomp()&lt;/code&gt; that illustrates some of these techniques:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub my_chomp {
+    # This is a special case in the chomp documentation
+    return if ref($/);
+
+    # If a return value is expected ...
+    if ( defined wantarray ) {
+        my $count = 0;
+        $count += (@_ ? (s!$/!!g for @_) : s!$/!!g);
+        return $count;
+    }
+    # Otherwise, don&#39;t bother counting
+    else {
+        @_ ? do{ s!$/!!g for @_ } : s!$/!!g;
+        return;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Use &lt;code&gt;return;&lt;/code&gt; instead of &lt;code&gt;return undef;&lt;/code&gt; if you want to return nothing. If someone assigns the return value to an array, the latter creates an array of one value (&lt;code&gt;undef&lt;/code&gt;), which evaluates to true. The former will correctly handle all contexts.&lt;/li&gt;
+&lt;li&gt;If you want to modify &lt;code&gt;$_&lt;/code&gt; if no parameters are given, you have to check &lt;code&gt;@_&lt;/code&gt; explicitly. You cannot do something like &lt;code&gt;@_ = ($_) unless @_;&lt;/code&gt; because &lt;code&gt;$_&lt;/code&gt; will lose its magic.&lt;/li&gt;
+&lt;li&gt;This doesn&amp;rsquo;t calculate &lt;code&gt;$count&lt;/code&gt; unless &lt;code&gt;$count&lt;/code&gt; is useful (using a check for void context).&lt;/li&gt;
+&lt;li&gt;The key is the aliasing of &lt;code&gt;@_&lt;/code&gt;. If you modify &lt;code&gt;@_&lt;/code&gt; directly (as opposed to assigning the values in &lt;code&gt;@_&lt;/code&gt; to variables), then you modify the actual parameters passed in.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;I hope I have introduced you to a few more tools in your toolbox. The art of writing a good subroutine is very complex. Each of the techniques I have presented is one tool in the programmer&amp;rsquo;s toolbox. Just as a master woodworker wouldn&amp;rsquo;t use a drill for every project, a master programmer doesn&amp;rsquo;t make every subroutine use named arguments or mimic a built-in. You must evaluate each technique every time to see if it will make the code more maintainable. Overusing these techniques will make your code &lt;em&gt;less&lt;/em&gt; maintainable. Using them appropriately will make your life easier.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Making Sense of Subroutines</title>
+      <link>http://localhost:1313/pub/2005/11/03/subroutines.html/</link>
+      <pubDate>Thu, 03 Nov 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/11/03/subroutines.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s Note: This article has a followup in &lt;a href=&#34;http://localhost:1313/pub/2006/02/23/advanced_subroutines.html&#34;&gt;Advanced Subroutine Techniques&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;A subroutine (or routine, function, procedure, macro, etc.) is, at its heart, a named chunk of work. It&amp;rsquo;s shorthand that allows you to think about your problem in bigger chunks. Bigger chunks means two things:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You can break the problem up into smaller problems that you can solve independently.&lt;/li&gt;
+&lt;li&gt;You can use these solutions to solve your overall problem with greater confidence.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Well-written subroutines will make your programs smaller (in lines and memory), faster (both in writing and executing), less buggy, and easier to modify.&lt;/p&gt;
+
+&lt;h3 id=&#34;you-re-kidding-right&#34;&gt;You&amp;rsquo;re Kidding, Right?&lt;/h3&gt;
+
+&lt;p&gt;Consider this: when you lift your sandwich to take a bite, you don&amp;rsquo;t think about all the work that goes into contracting your muscles and coordinating your movements so that the mayo doesn&amp;rsquo;t end up in your hair. You, in essence, execute a series of subroutines that say &amp;ldquo;Lift the sandwich up to my mouth and take a bite of it, then put it back down on the plate.&amp;rdquo; If you had to think about all of your muscle contractions and coordinating them every time you wanted to take a bite, you&amp;rsquo;d starve to death.&lt;/p&gt;
+
+&lt;p&gt;The same is true for your code. We write programs for a human&amp;rsquo;s benefit. The computer doesn&amp;rsquo;t care how complicated or simple your code is to read&amp;ndash;it converts everything to the same 1s and 0s whether it has perfect indentation or is all on one line. Programming guidelines, and nearly every single programming language feature, exist for human benefit.&lt;/p&gt;
+
+&lt;h3 id=&#34;tell-me-more&#34;&gt;Tell Me More&lt;/h3&gt;
+
+&lt;p&gt;Subroutines truly are the magical cure for all that ails your programs. When done right, you will find that you write your programs in half the time, you have more confidence in what you&amp;rsquo;ve written, and you can explain it to others more easily.&lt;/p&gt;
+
+&lt;h4 id=&#34;naming&#34;&gt;Naming&lt;/h4&gt;
+
+&lt;p&gt;A subroutine provides a name for a series of steps. This is especially important when dealing with complicated processes (or algorithms). While this includes ivory-tower solutions such as the Guttler-Rossman transformation (for sorting), this also includes the overly complicated way your company does accounts receivables. By putting a name on it, you&amp;rsquo;re making it easier to work with.&lt;/p&gt;
+
+&lt;h4 id=&#34;code-reuse&#34;&gt;Code Reuse&lt;/h4&gt;
+
+&lt;p&gt;Face it&amp;ndash;you&amp;rsquo;re going to need to do the same thing over and over in different parts of your code. If you have the same 30 lines of code in 40 places, it&amp;rsquo;s much harder to apply a bugfix or a requirements change. Even better, if your code uses subroutines, it&amp;rsquo;s much easier to optimize just that one little bit that&amp;rsquo;s slowing the whole application down. Studies have shown that 80 percent of the application&amp;rsquo;s runtime generally occurs within one percent of an application&amp;rsquo;s code. If that one percent is in a few subroutines, you can optimize it and hide the nasty details from the rest of your code.&lt;/p&gt;
+
+&lt;h4 id=&#34;testability&#34;&gt;Testability&lt;/h4&gt;
+
+&lt;p&gt;To many people, &amp;ldquo;test&amp;rdquo; is a four-letter word. I firmly believe this is because they don&amp;rsquo;t have enough interfaces to test against. A subroutine provides a way of grabbing a section of your code and testing it independently of all the rest of your code. This independence is key to having confidence in your tests, both now and in the future.&lt;/p&gt;
+
+&lt;p&gt;In addition, when someone finds a bug, the bug will usually occur in a single subroutine. When this happens, you can alter that one subroutine, leaving the rest of the system unchanged. The fewer changes made to an application, the more confidence there is in the fix not introducing new bugs along with the bugfix.&lt;/p&gt;
+
+&lt;h4 id=&#34;ease-of-development&#34;&gt;Ease of Development&lt;/h4&gt;
+
+&lt;p&gt;No one argues that subroutines are bad when there are ten developers working on a project. They allow different developers to work on different parts of the application in parallel. (If there are dependencies, one developer can &lt;em&gt;stub&lt;/em&gt; the missing subroutines.) However, they provide an equal amount of benefit for the solo developer: they allow you to focus on one specific part of the application without having to build all of the pieces up together. You will be happy for the good names you chose when you have to read code you wrote six months ago.&lt;/p&gt;
+
+&lt;p&gt;Consider the following example of a convoluted conditional:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ((($x &amp;gt; 3 &amp;amp;&amp;amp; $x&amp;lt;12) || ($x&amp;gt;15 &amp;amp;&amp;amp; $x&amp;lt;23)) &amp;amp;&amp;amp;
+    (($y&amp;lt;2260 &amp;amp;&amp;amp; $y&amp;gt;2240) || ($z&amp;gt;foo_bar() &amp;amp;&amp;amp; $z&amp;lt;bar_foo()))) {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s very hard to exactly what&amp;rsquo;s going on. Some judicious white space can help, as can improved layout. That leaves:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if (
+     (
+       ( $x &amp;gt; 3 &amp;amp;&amp;amp; $x &amp;lt; 12) || ($x &amp;gt; 15 &amp;amp;&amp;amp; $x &amp;lt; 23)
+     )
+     &amp;amp;&amp;amp;
+     (
+       ($y &amp;lt; 2260 &amp;amp;&amp;amp; $y &amp;gt; 2240) || ($z &amp;gt; foo_bar() &amp;amp;&amp;amp; $z &amp;lt; bar_foo())
+     )
+   )
+{
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Gah, that&amp;rsquo;s almost worse. Enter a subroutine to the rescue:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub is_between {
+    my ($value, $left, $right) = @_;
+
+    return ( $left &amp;lt; $value &amp;amp;&amp;amp; $value &amp;lt; $right );
+}
+
+if (
+    ( is_between( $x, 3, 12 ) ||
+      is_between( $x, 15, 23 )
+    ) &amp;amp;&amp;amp; (
+      is_between( $y, 2240, 2260 ) ||
+      is_between( $z, foo_bar(), bar_foo() )
+    ) {
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s so much easier to read. One thing to notice is that, in this case, the rewrite doesn&amp;rsquo;t actually save any characters. In fact, this is slightly longer than the original version. Yet, it&amp;rsquo;s easier to read, which makes it easier to both validate for correctness as well as to modify safely. (When writing this subroutine for the article, I actually found an error I had made&amp;ndash;I had flipped the values for comparing &lt;code&gt;$y&lt;/code&gt; so that the &lt;code&gt;$y&lt;/code&gt; conditional could never be true.)&lt;/p&gt;
+
+&lt;h3 id=&#34;how-do-i-know-if-i-m-doing-it-right&#34;&gt;How Do I Know if I&amp;rsquo;m Doing It Right?&lt;/h3&gt;
+
+&lt;p&gt;Just as there are good sandwiches (turkey club on dark rye) and bad sandwiches (peanut butter and banana on Wonder bread), there are also good and bad subroutines. While writing good subroutines is very much an art form, there are several characteristics you can look for when writing good subroutines. A good subroutine is readable and has a well-defined interface, strong internal cohesion, and loose external coupling.&lt;/p&gt;
+
+&lt;h4 id=&#34;readability&#34;&gt;Readability&lt;/h4&gt;
+
+&lt;p&gt;The best subroutines are concise&amp;ndash;usually 25-50 lines long, which is one or two average screens in height. (While &lt;em&gt;your&lt;/em&gt; screen might be 110 lines high, you will one day have to debug your code on a VT100 terminal at 3 a.m. on a Sunday.)&lt;/p&gt;
+
+&lt;p&gt;Part of being readable also means that the code isn&amp;rsquo;t overly indented. The guidelines for the Linux kernel code include a statement that all code should be less 80 characters wide and that indentations should be eight characters wide. This is to discourage more than three levels of indentation. It&amp;rsquo;s too hard to follow the logic flows with any more than that.&lt;/p&gt;
+
+&lt;h4 id=&#34;well-defined-interfaces&#34;&gt;Well-Defined Interfaces&lt;/h4&gt;
+
+&lt;p&gt;This means that you know all of the inputs and all of the outputs. Doing this allows you to muck with either side of this wall and, so long as you keep to the contract, you have a &lt;em&gt;guarantee&lt;/em&gt; that the code on the other side of the interface will be safe from harm. This is also critical to good testing. By having a solid interface, you can write test suites to validate both the subroutine and to mock the subroutine to test the code that uses it.&lt;/p&gt;
+
+&lt;h4 id=&#34;strong-internal-cohesion&#34;&gt;Strong Internal Cohesion&lt;/h4&gt;
+
+&lt;p&gt;Internal cohesion is about how strongly the lines of code within the subroutine relate to one another. Ideally, a subroutine does one thing and only one thing. This means that someone calling the subroutine can be confident that it will do only what they want to have done.&lt;/p&gt;
+
+&lt;h4 id=&#34;loose-external-coupling&#34;&gt;Loose External Coupling&lt;/h4&gt;
+
+&lt;p&gt;This means that changes to code outside of the subroutine will not affect how the subroutine performs, and vice versa. This allows you to make changes within the subroutine safely. This is also known as having no side effects.&lt;/p&gt;
+
+&lt;p&gt;As an example, a loosely coupled subroutine should not access global variables unnecessarily. Proper scoping is critical for any variables you create in your subroutine, using the &lt;code&gt;my&lt;/code&gt; keyword.&lt;/p&gt;
+
+&lt;p&gt;This also means that a subroutine should be able to run without depending upon other subroutines to be run before or after it. In functional programming, this means that the function is &lt;em&gt;stateless&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Perl has global special variables (such as &lt;code&gt;$_&lt;/code&gt;, &lt;code&gt;@_&lt;/code&gt;, &lt;code&gt;$?&lt;/code&gt;, &lt;code&gt;$@&lt;/code&gt;, and &lt;code&gt;$!&lt;/code&gt;). If you modify them, be sure to localize them with the &lt;code&gt;local&lt;/code&gt; keyword.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-should-i-call-it&#34;&gt;What Should I Call It?&lt;/h3&gt;
+
+&lt;p&gt;Naming things well is important for all parts of your code. With subroutines, it&amp;rsquo;s even more important. A subroutine is a chunk of work described to the reader only by its name. If the name is too short, no one knows what it means. If the name is too long, then it&amp;rsquo;s too hard to understand and potentially difficult to type. If the name is too specific, you will confuse the reader when you call it for more general circumstances.&lt;/p&gt;
+
+&lt;p&gt;Subroutine names should flow when read out loud: &lt;code&gt;doThis()&lt;/code&gt; for actions and &lt;code&gt;is_that()&lt;/code&gt; for Boolean checks. Ideally, a subroutine name should be &lt;code&gt;verbNoun()&lt;/code&gt; (or &lt;code&gt;verb_noun()&lt;/code&gt;). To test this, take a section of your code and read it out loud to your closest non-geek friend. When you&amp;rsquo;re done, ask them what that piece of code should do. If they have no idea, your subroutines (and variables) may have poor names. (I&amp;rsquo;ve provided examples in two forms, &amp;ldquo;camelCase&amp;rdquo; and &amp;ldquo;under_score.&amp;rdquo; Some people prefer one way and some prefer the other. As long as you&amp;rsquo;re consistent, it doesn&amp;rsquo;t matter which you choose.)&lt;/p&gt;
+
+&lt;h3 id=&#34;what-else-can-i-do&#34;&gt;What Else Can I Do?&lt;/h3&gt;
+
+&lt;p&gt;(This section assumes a strong grasp of Perl fundamentals, especially hashes and references.)&lt;/p&gt;
+
+&lt;p&gt;Perl is one of a class of languages that allows you to treat subroutines as first-class objects. This means you can use subroutines in nearly every place you can use a variable. This concept comes from functional programming (FP), and is a very powerful technique.&lt;/p&gt;
+
+&lt;p&gt;The basic building block of FP in Perl is the reference to a subroutine, or &lt;code&gt;subref&lt;/code&gt;. For a named subroutine, you can say &lt;code&gt;my $subref = \&amp;amp;foobar;&lt;/code&gt;. You can then say &lt;code&gt;$subref-&amp;gt;(1, 2)&lt;/code&gt; and it will be as if you said &lt;code&gt;foobar(1, 2)&lt;/code&gt;. A subref is a regular scalar, so you can pass it around as you can any other reference (say, to an array or hash) and you can put them into arrays and hashes. You can also construct them anonymously by saying &lt;code&gt;my $subref = sub { ... };&lt;/code&gt; (where the &lt;code&gt;...&lt;/code&gt; is the body of the subroutine).&lt;/p&gt;
+
+&lt;p&gt;This provides several very neat options.&lt;/p&gt;
+
+&lt;h4 id=&#34;closures&#34;&gt;Closures&lt;/h4&gt;
+
+&lt;p&gt;Closures are the main building blocks for using subroutines in functional programming. A closure is a subroutine that remembers its lexical scratchpad. In English, this means that if you take a reference to a subroutine that uses a &lt;code&gt;my&lt;/code&gt; variable defined outside of it, it will remember the value of that variable when it was defined and be able to access it, even if you use the subroutine outside of the scope of that variable.&lt;/p&gt;
+
+&lt;p&gt;There are two main variations of closures you see in normal code. The first is a named closure.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+    my $counter = 0;
+    sub inc_counter { return $counter++ }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you call &lt;code&gt;inc_counter()&lt;/code&gt;, you&amp;rsquo;re obviously out of scope for the &lt;code&gt;$counter&lt;/code&gt; variable. Yet, it will increment the counter and return the value as if it were in scope.&lt;/p&gt;
+
+&lt;p&gt;This is a very good way to handle global state, if you&amp;rsquo;re uncomfortable with object-oriented programming. Just extend the idea to multiple variables and have a getter and setter for each one.&lt;/p&gt;
+
+&lt;p&gt;The second is an anonymous closure.&lt;/p&gt;
+
+&lt;h4 id=&#34;recursion&#34;&gt;Recursion&lt;/h4&gt;
+
+&lt;p&gt;Many recursive functions are simple enough that they do not need to keep any state. Those that do are more complicated, especially if you want to be able to call the function more than once at a time. Enter anonymous subroutines.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub recursionSetup {
+    my ($x, $y) = @_;
+
+    my @stack;
+
+    my $_recurse = sub {
+        my ($foo, $bar) = @_;
+
+        # Do stuff here with $x, $y, and @stack;
+    };
+    my $val = $_recurse-&amp;gt;( $x, $y );
+
+    return $val;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;inner-subroutines&#34;&gt;Inner Subroutines&lt;/h4&gt;
+
+&lt;p&gt;Subroutine definitions are global in Perl. This means that Perl doesn&amp;rsquo;t have inner subroutines.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub foo {
+    sub bar {
+    }
+
+    # This bar() should only be accessible from within foo(),
+    # but it is accessible from everywhere
+    bar():
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Enter anonymous subroutines again.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub foo {
+    my $bar = sub {
+    };
+
+    # This $bar is only accessible from within foo()
+    $bar-&amp;gt;();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;dispatch-tables&#34;&gt;Dispatch Tables&lt;/h4&gt;
+
+&lt;p&gt;Often, you need to call a specific subroutine based some user input. The first attempts to do this usually look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ( $input eq &#39;foo&#39; ) {
+    foo( @params );
+}
+elsif ( $input eq &#39;bar&#39; ) {
+    bar( @params );
+}
+else {
+    die &amp;quot;Cannot find the subroutine &#39;$input&#39;\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then, some enterprising soul learns about soft references and tries something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;amp;{ $input }( @params );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s unsafe, because you don&amp;rsquo;t know what &lt;code&gt;$input&lt;/code&gt; will to contain. You cannot guarantee &lt;em&gt;anything&lt;/em&gt; about it, even with taint and all that jazz on. It&amp;rsquo;s much safer just to use dispatch tables:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %dispatch = (
+    foo =&amp;gt; sub { ... },
+    bar =&amp;gt; \&amp;amp;bar,
+);
+
+if ( exists $dispatch{ $input } ) {
+    $dispatch{ $input }-&amp;gt;( @params );
+}
+else {
+    die &amp;quot;Cannot find the subroutine &#39;$input&#39;\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Adding and removing available subroutines is simpler than the &lt;code&gt;if&lt;/code&gt;-&lt;code&gt;elsif&lt;/code&gt;-&lt;code&gt;else&lt;/code&gt; scenario, and this is much safer than the soft references scenario. It&amp;rsquo;s the best of both worlds.&lt;/p&gt;
+
+&lt;h4 id=&#34;subroutine-factories&#34;&gt;Subroutine Factories&lt;/h4&gt;
+
+&lt;p&gt;Often, you will have many subroutines that look very similar. You might have accessors for an object that differ only in which attribute they access. Alternately, you might have a group of mathematical functions that differ only in the constants they use.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub make_multiplier { 
+    my ($multiplier) = @_;
+
+    return sub {
+        my ($value) = @_;
+        return $value * $multiplier;
+    };
+}
+
+my $times_two  = make_multiplier( 2 );
+my $times_four = make_multiplier( 4 );
+
+print $times_two-&amp;gt;( 6 ), &amp;quot;\n&amp;quot;;
+print $times_four-&amp;gt;( 3 ), &amp;quot;\n&amp;quot;;
+
+----
+
+12
+12
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Try that code and see what it does. You should see the values below the dotted line.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Subroutines are arguably the most powerful tool in a programmer&amp;rsquo;s toolbox. They provide the ability to reuse sections of code, validate those sections, and create new algorithms that solve problems in novel ways. They will reduce the amount of time you spend programming, yet allow you to do more in that time. They will reduce the number of bugs in your code ten-fold, and allow other people to work with you while feeling safe about it. They truly are programming&amp;rsquo;s super-tool.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Building Good CPAN Modules</title>
+      <link>http://localhost:1313/pub/2005/04/14/cpan_guidelines.html/</link>
+      <pubDate>Thu, 14 Apr 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/04/14/cpan_guidelines.html/</guid>
+      <description>
+
+&lt;p&gt;When you are planning to release a module to CPAN, one of your first tasks is figure out what OS, Perl version(s), and other environments you will and will not support. Often, the answers will come from what you can and cannot support, based on the features you want to provide and the modules and libraries you have used.&lt;/p&gt;
+
+&lt;p&gt;Many CPAN modules, however, unintentionally limit the places where they can work. There are several steps you can take to remove those limitations. Often, these steps are very simple changes that can actually enhance your module&amp;rsquo;s functionality and maintainability.&lt;/p&gt;
+
+&lt;h3 id=&#34;it-runs-on-my-machine&#34;&gt;It Runs On My Machine&lt;/h3&gt;
+
+&lt;p&gt;You have the latest PowerBook, update from CPAN every day, and run the latest Perl version. The people using your module are not. Remember, just because an application or OS is older than your grandmother doesn&amp;rsquo;t mean that it isn&amp;rsquo;t useful anymore. Code doesn&amp;rsquo;t spontaneously develop bugs over time, nor does it collect cruft that makes it run slower. Some vitally important applications have run untouched for 30+ years in languages that were deprecated when you were in diapers. These applications keep the lights on and keep track of all the money in the world, for example, and they typically run on very old computers.&lt;/p&gt;
+
+&lt;p&gt;Companies want to keep using their older systems because these systems work and they want to use Perl because Perl works everywhere. If you can leverage CPAN, you already have 90 percent of every Perl application written.&lt;/p&gt;
+
+&lt;h4 id=&#34;when-in-rome&#34;&gt;When in Rome&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.cpan.org/ports/index.html&#34;&gt;Perl runs on at least 93 different operating systems&lt;/a&gt;. In addition, there are &lt;a href=&#34;http://ftp.funet.fi/pub/CPAN/src/&#34;&gt;18 different productionized Perl 5 versions&lt;/a&gt; floating around out there (not counting the development branches and build options). &lt;code&gt;93 x 18 = 1674&lt;/code&gt;. That means your module could run on one of well over 1500 different OS/Perl version environments. Add in threading, Unicode, and other options, and there is simply no way you can test your poor module in all of the places it will end up!&lt;/p&gt;
+
+&lt;p&gt;Luckily, Perl also provides (many of) the answers.&lt;/p&gt;
+
+&lt;h5 id=&#34;defining-your-needs&#34;&gt;Defining Your Needs&lt;/h5&gt;
+
+&lt;p&gt;If you know that your module simply will not run in a certain environment, you should set up prerequisites. These allow you to provide a level of safety for your users. Prerequisites include:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;OSes that your module will not run under&lt;/p&gt;
+
+&lt;p&gt;Check &lt;code&gt;$^O&lt;/code&gt; and &lt;code&gt;%Config&lt;/code&gt; for this. &lt;code&gt;$^O&lt;/code&gt; will tell you the name of the operating system. Sometimes, this isn&amp;rsquo;t specific enough, so you can check &lt;code&gt;%Config&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Config;
+
+if ( $Config{ osname } ne &#39;solaris&#39; || $Config{ osver } &amp;lt; 2.9 )
+{
+    die &amp;quot;This module needs Solaris 2.9 or higher to run.\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s usually better to limit yourself to a specific set of OSes that you know to be good. As your module&amp;rsquo;s popularity grows, users will let you know if it works elsewhere.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Perl versions/features&lt;/p&gt;
+
+&lt;p&gt;Check &lt;code&gt;$]&lt;/code&gt; and &lt;code&gt;%INC&lt;/code&gt; for this. &lt;code&gt;$]&lt;/code&gt; holds the Perl version and &lt;code&gt;%INC&lt;/code&gt; contains a list of loaded Perl modules so far. (See the &lt;a href=&#34;http://localhost:1313/pub/2005/04/14/cpan_guidelines.html?page=2#threading&#34;&gt;Threading section&lt;/a&gt; for an example.) If your module simply cannot be run in Perl before a certain version, make sure you have a &lt;code&gt;use 5.00#&lt;/code&gt; (where &lt;code&gt;#&lt;/code&gt; is the version you need) within your module. Additionally, &lt;a href=&#34;https://metacpan.org/pod/Module::Build&#34;&gt;Module::Build&lt;/a&gt; allows you to specify a minimum Perl version in the &lt;code&gt;requires&lt;/code&gt; option for the constructor.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Modules/libraries&lt;/p&gt;
+
+&lt;p&gt;In &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker&#34;&gt;ExtUtils::MakeMaker&lt;/a&gt;, you can specify a &lt;code&gt;PREREQ_PM&lt;/code&gt; in your call to &lt;code&gt;WriteMakefile()&lt;/code&gt; to indicate that your module needs other modules to run. That can include version numbers, both the minimum and maximum acceptable. &lt;code&gt;Module::Build&lt;/code&gt; has a similar feature with the &lt;code&gt;requires&lt;/code&gt; option to the constructor.&lt;/p&gt;
+
+&lt;p&gt;If you depend on external, non-Perl libraries, you should see if they exist before continuing onwards. Like everything else, CPAN has a solution: &lt;a href=&#34;https://metacpan.org/pod/App::Info&#34;&gt;App::Info&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use App::Info::HTTPD::Apache;
+
+my $app = App::Info::HTTPD::Apache-&amp;gt;new;
+
+unless ( $app-&amp;gt;installed ) {
+    die &amp;quot;Apache isn&#39;t installed!\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&#34;operating-system&#34;&gt;Operating System&lt;/h5&gt;
+
+&lt;p&gt;What OS your module happens to land on is both less and more of an issue than most people realize. Most of us have had to work in both Unix-land and Windows-land, so we know of pitfalls with directory separators and hard-coding outside executables. However, there are other problems that only arise when your module lands in a place like VMS.&lt;/p&gt;
+
+&lt;p&gt;The VMS filesystem, for example, has the idea of a volume in a fully qualified filename. VMS also handles file permissions and file versioning very differently than the standard Unix/Win32/Mac model. An excellent example of how to handle these differences is the core module &lt;a href=&#34;https://metacpan.org/pod/File::Spec&#34;&gt;File::Spec&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Because this is an issue most authors have had to face at some point, there is a standard &lt;code&gt;perlpod&lt;/code&gt; called, fittingly, &lt;a href=&#34;https://perldoc.perl.org/perlport.html&#34;&gt;&lt;code&gt;perlport&lt;/code&gt;&lt;/a&gt;. If you follow what&amp;rsquo;s in there, you will be just fine.&lt;/p&gt;
+
+&lt;h5 id=&#34;perl-version&#34;&gt;Perl Version&lt;/h5&gt;
+
+&lt;p&gt;It&amp;rsquo;s been over ten years since the release of Perl 5.0.0, and Perl has changed a lot in that time. Most installations, however, are not the latest and greatest version. The main reason is &amp;ldquo;&lt;em&gt;If it ain&amp;rsquo;t broke, don&amp;rsquo;t fix it&lt;/em&gt;.&amp;rdquo; There is no such thing as a &lt;em&gt;safe upgrade&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Most applications have no need for the latest features and will never trip most of the bugs or security holes. They just aren&amp;rsquo;t that complex. If you restrict your module to features only found in 5.8, or even 5.6, you will ignore a large number of potential users.&lt;/p&gt;
+
+&lt;h5 id=&#34;security-improvements&#34;&gt;Security Improvements&lt;/h5&gt;
+
+&lt;p&gt;Most security fixes are transparent to the programmer. If the algorithms behind Perl hashes improve, you won&amp;rsquo;t see it. If a new release fixes a hole in &lt;code&gt;suidperl&lt;/code&gt;, your module won&amp;rsquo;t care.&lt;/p&gt;
+
+&lt;p&gt;Sometimes, however, a security fix is a new feature whose usage will (and should) become the accepted norm: for example, the three-arg form of &lt;code&gt;open()&lt;/code&gt; of 5.6. In these cases, I use &lt;code&gt;string-eval&lt;/code&gt; to try to use the new feature and default to the old feature if it doesn&amp;rsquo;t work. (Checking &lt;code&gt;$]&lt;/code&gt; here isn&amp;rsquo;t helpful because if your Perl version is pre-5.6, it will still try to compile the three-arg form and complain.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;eval q{
+    open( INFILE, &amp;quot;&amp;gt;&amp;quot;, $filename )
+          or die &amp;quot;Cannot open &#39;$filename&#39; for writing: $!\n&amp;quot;;
+}; if ( $@ ) {
+    # Check to see if it&#39;s a compile error
+    if ( $@ =~ /Too many arguments for open/ ) {
+        open( INFILE, &amp;quot;&amp;gt; $filename&amp;quot; )
+            or die &amp;quot;Cannot open &#39;$filename&#39; for writing: $!\n&amp;quot;;
+    }
+    else {
+        # Otherwise, rethrow the error
+        die $@;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5 id=&#34;bug-fixes&#34;&gt;Bug Fixes&lt;/h5&gt;
+
+&lt;p&gt;Like security fixes, most bug fixes are transparent to the programmer. Most of us didn&amp;rsquo;t notice that the hashing algorithm was less than optimal in 5.8.0 and had several improvements in 5.8.1. I know I didn&amp;rsquo;t. In general, these will not affect you at all.&lt;/p&gt;
+
+&lt;p&gt;Unlike security fixes, if your module breaks on a bug in a prior version of Perl, there&amp;rsquo;s probably not much you can do other than require the version where the bug fix occurred.&lt;/p&gt;
+
+&lt;h5 id=&#34;new-features&#34;&gt;New Features&lt;/h5&gt;
+
+&lt;p&gt;Everyone knows about &lt;code&gt;use warnings;&lt;/code&gt; and &lt;code&gt;our&lt;/code&gt; appearing in 5.6.0. You may, however, not know about the smaller changes. A good example is sorting.&lt;/p&gt;
+
+&lt;p&gt;5.8.0 changed sorting to be stable. This means that if the two items compare equally, the resulting list will preserve their original order. Prior versions of Perl made no such guarantee. This means that code like this may not do what you expect:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @input = qw( abcd abce efgh );
+my @output = sort {
+    substr( $a, 0, 3 ) cmp substr( $b, 0, 3 )
+} @input;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you depend on the fact that &lt;code&gt;@output&lt;/code&gt; will contain &lt;code&gt;qw( abcd abce efgh )&lt;/code&gt;, your module may be run into problems on versions prior to 5.8.0. &lt;code&gt;@output&lt;/code&gt; could contain &lt;code&gt;qw( abce abcd efgh)&lt;/code&gt; because the sorting function considers &lt;code&gt;abcd&lt;/code&gt; and &lt;code&gt;abce&lt;/code&gt; identical.&lt;/p&gt;
+
+&lt;h5 id=&#34;gotchas-with-os-and-perl-versions&#34;&gt;Gotchas With OS and Perl Versions&lt;/h5&gt;
+
+&lt;p&gt;Your module may be pristine when it comes to OS or Perl versions. Is the rest of your distribution? Your tests may betray a dependency that you weren&amp;rsquo;t aware of.&lt;/p&gt;
+
+&lt;p&gt;For example, 5.6.0 added lexically scoped warnings. Instead of using the &lt;code&gt;-w&lt;/code&gt; flag to the Perl executable, you can now say &lt;code&gt;use warnings&lt;/code&gt;. Because enabling warnings is generally a good thing, this is a very common header for test files written by conscientious programmers using Perl 5.6.0+:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use strict;
+use warnings;
+
+use Test::More tests =&amp;gt; 42;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, even if your module runs with Perls older than 5.6.0, your tests won&amp;rsquo;t! This means your distribution will not install through CPAN or CPANPLUS. For administrators who install modules this way and who have better things to do that debug a module&amp;rsquo;s tests, they won&amp;rsquo;t install it.&lt;/p&gt;
+
+&lt;h4 id=&#34;major-new-features&#34;&gt;Major New Features&lt;/h4&gt;
+
+&lt;p&gt;Some new features are so large that they change the name of the game. These include Unicode and threading. Unicode has had support, in one form or another, in every version of Perl 5. That support has slowly moved from modules (such as &lt;a href=&#34;https://metacpan.org/pod/Unicode::String&#34;&gt;Unicode::String&lt;/a&gt;) to the Perl core itself.&lt;/p&gt;
+
+&lt;h5 id=&#34;threading&#34;&gt;Threading&lt;/h5&gt;
+
+&lt;p&gt;In 5.8.0, Perl&amp;rsquo;s threading model changed from the 5.005 model (which never worked very well) to ithreads (which do). Additionally, multi-core processors are coming to the smaller servers. More and more, developers using 5.8+ choose to write threaded applications.&lt;/p&gt;
+
+&lt;p&gt;This means that your module might have to play in a threaded playground, which is a weird place indeed to process-oriented folks. Now, Perl&amp;rsquo;s threading model is unshared by default, which means that global variables are safe from clobbering each other. This is different from the standard threading model, like Java&amp;rsquo;s, which shares all variables by default. Because of this decision, most modules will run under threads with little to no changes.&lt;/p&gt;
+
+&lt;p&gt;The main issue you will need to resolve is what happens with your stateful variables. These are the variables that persist and keep a value in between invocations of a subroutine, yet need coordination across threads. A good example is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+    my $counter;
+    sub next_value ( return ++$counter; }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you depend on this counter being coordinated across every invocation of the &lt;code&gt;next_value()&lt;/code&gt; subroutine, you need to take three steps.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Sharing&lt;/p&gt;
+
+&lt;p&gt;Because Perl doesn&amp;rsquo;t share your variables for you, you must explicitly share &lt;code&gt;$counter&lt;/code&gt; to make sure that it is correctly updated across threads.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Locking&lt;/p&gt;
+
+&lt;p&gt;Because a context-switch between threads can happen at any time, you need to lock &lt;code&gt;$counter&lt;/code&gt; within the &lt;code&gt;next_value()&lt;/code&gt; subroutine.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Version safety&lt;/p&gt;
+
+&lt;p&gt;Also, because ithreads is an optional 5.8.0+ feature and the &lt;code&gt;lock()&lt;/code&gt; subroutine is undefined before 5.6.0+, you may want to do some version checks.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+    my $counter = 0;
+    if ( $] &amp;gt;= 5.008 &amp;amp;&amp;amp; exists $INC{&#39;threads.pm&#39;} ) {
+        require threads::shared;
+        import threads::shared qw(share);
+        share( $counter );
+    }
+    else {
+        *lock = sub (*) {}
+    }
+
+    sub next_value {
+        lock( $counter );
+        $counter++;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The best description that I&amp;rsquo;ve seen of what you need to do to port your application to a threaded works successfully is &amp;ldquo;&lt;a href=&#34;http://localhost:1313/pub/2002/06/11/threads.html&#34;&gt;Where Wizards Fear to Tread&lt;/a&gt;&amp;rdquo; on Perl 5.8 threads.&lt;/p&gt;
+
+&lt;h5 id=&#34;unicode&#34;&gt;Unicode&lt;/h5&gt;
+
+&lt;p&gt;Although Unicode had some support prior to 5.8.0, a major feature in 5.8.0 was the near-seamless handling of Unicode within Perl itself. Prior that that, developers had to use Unicode::String and other modules. This means that you should look to handling strings as gingerly as possible if you consider support for Unicode on Perls prior to 5.8.0 as important. Luckily, most major modules already do this for you without you having to worry about it.&lt;/p&gt;
+
+&lt;p&gt;Discussing how to handle Unicode cleanly is an article in itself. Please see &lt;a href=&#34;https://perldoc.perl.org/perlunicode.html&#34;&gt;&lt;code&gt;perlunicode&lt;/code&gt;&lt;/a&gt; and &lt;a href=&#34;https://perldoc.perl.org/perluniintro.html&#34;&gt;&lt;code&gt;perluniintro&lt;/code&gt;&lt;/a&gt; for more information.&lt;/p&gt;
+
+&lt;h4 id=&#34;playing-nicely-with-others&#34;&gt;Playing Nicely with Others&lt;/h4&gt;
+
+&lt;p&gt;If you&amp;rsquo;re like me, you heard &amp;ldquo;Doesn&amp;rsquo;t play well with others&amp;rdquo; a lot in kindergarten. While that&amp;rsquo;s an admirable trait for a hacker, it&amp;rsquo;s not something to praise in any modules that production systems depend upon. There are several common items to look out for when trying to play nicely with others.&lt;/p&gt;
+
+&lt;h5 id=&#34;persistent-environments&#34;&gt;Persistent Environments&lt;/h5&gt;
+
+&lt;p&gt;Persistent environments, like &lt;code&gt;mod_perl&lt;/code&gt; and FastCGI, are a fact of life. They make the WWW work. They are also a very different beast than a basic script that runs, does its thing, and ends. Basically, a persistent environment, such as &lt;code&gt;mod_perl&lt;/code&gt;, does a few things.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Persistent interpreter&lt;/p&gt;
+
+&lt;p&gt;Launching the Perl executable is expensive, relatively speaking. In an environment such as a web application, every request is a separate invocation of a Perl script. Persistence keeps a Perl interpreter around in memory between invocations, reducing the startup overhead dramatically.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Forked children&lt;/p&gt;
+
+&lt;p&gt;In order to handle multiple requests at once, persistent environments tend to provide the capability for forked child processes, each with its own interpreter. Normally, this requires a copy of each module in every child&amp;rsquo;s memory area.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Shared memory&lt;/p&gt;
+
+&lt;p&gt;Nearly every request will use the same modules (CGI, DBI, etc). Instead of loading them every time, persistent environments load them into shared memory that each of the child processes can access. This can save a lot of memory that would otherwise be required to load DBI once for every child. This allows the same machine to create many more children to handle many more requests simultaneously on the same machine.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Caching needs a special mention. Because most persistent environments load most of the code into shared memory before forking off children, it makes sense to load as much code that won&amp;rsquo;t change as possible before forking. (If the code does change, the child process receives a fresh copy of the modified memory space, reducing the benefit of shared memory.) This means that modules need to be able to pre-load what they need on demand. This is why CGI, which normally defers loading anything as much as possible, provides the &lt;code&gt;:all&lt;/code&gt; option to load everything at once.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;mod_perl&lt;/code&gt; folks have an excellent set of documentation as to what&amp;rsquo;s different about persistent environments, why you should care, and what you need to do for your module to work right.&lt;/p&gt;
+
+&lt;h5 id=&#34;overloading&#34;&gt;Overloading&lt;/h5&gt;
+
+&lt;p&gt;It&amp;rsquo;s very easy to create an overloaded class that cannot work with other overloaded classes. For example, if I&amp;rsquo;m using Overload::Num1 and Overload::Num2, I would expect &lt;code&gt;$num1 + $num2&lt;/code&gt; to DWIM. Unfortunately, with most overloaded classes written as below, they won&amp;rsquo;t. (For more information as to how this code works, please read &lt;a href=&#34;https://perldoc.perl.org/overload.html&#34;&gt;&lt;code&gt;overload&lt;/code&gt;&lt;/a&gt;, or the excellent article &amp;ldquo;&lt;a href=&#34;http://localhost:1313/pub/2003/07/22/overloading.html&#34;&gt;Overloading&lt;/a&gt;.&amp;ldquo;)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub add {
+    my ($l, $r, $inv) = @_;
+    ($l, $r) = ($r, $l) if $inv;
+
+    $l = ref $l ? $l-&amp;gt;numify : $l;
+    $r = ref $r ? $r-&amp;gt;numify : $r;
+
+    return $l + $r;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Overload::Num1 uses the &lt;code&gt;numify()&lt;/code&gt; method to retrieve the number associated with the class. Overload::Num2 uses the &lt;code&gt;get_number()&lt;/code&gt; method. If I tried to use the two classes together, I would receive an error that looks something like &lt;em&gt;Can&amp;rsquo;t locate object method &amp;ldquo;numify&amp;rdquo; via package &amp;ldquo;Overload::Num2&amp;rdquo;&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The solution is very simple&amp;ndash;don&amp;rsquo;t define an &lt;code&gt;add()&lt;/code&gt; method. Define a &lt;code&gt;numify&lt;/code&gt; (&lt;code&gt;0+&lt;/code&gt;) method, set fallback to true, and walk away. You don&amp;rsquo;t need to define a method for each option. You only need to do so if you have to do something special as part of doing that operation. For example, complex numbers have to add the rational and complex parts separately.&lt;/p&gt;
+
+&lt;p&gt;If you absolutely have to define &lt;code&gt;add()&lt;/code&gt;, though, use something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub add {
+    my ($l, $r, $inv) = @_;
+    ($l, $r) = ($r, $l) if $inv;
+
+    my $pkg = ref($l) || ref($r);
+
+    # This is to explicitly call the appropriate numify() method
+    $l = do {
+        my $s = overload::Method( $l, &#39;0+&#39; );
+        $s ? $s-&amp;gt;($l) : $l
+    };
+
+    $r = do {
+        my $s = overload::Method( $r, &#39;0+&#39; );
+        $s ? $s-&amp;gt;($r) : $r
+    };
+
+    return $pkg-&amp;gt;new( $l + $r );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This way, each overloaded class can handle things its way. The assumption, you&amp;rsquo;ll notice, is to bless the return value into the class whose &lt;code&gt;add()&lt;/code&gt; the caller called. This is acceptable; someone called its method, so &lt;em&gt;someone&lt;/em&gt; thought it was top dog! (If you have an &lt;code&gt;add&lt;/code&gt; method, no &lt;code&gt;numify&lt;/code&gt; method, and fallback activated, you will enter an infinite loop because &lt;code&gt;numify&lt;/code&gt; falls back to &lt;code&gt;$x + 0&lt;/code&gt;.)&lt;/p&gt;
+
+&lt;h5 id=&#34;finding-out-what-something-is&#34;&gt;Finding Out What Something Is&lt;/h5&gt;
+
+&lt;p&gt;At some point, your module needs to accept some data from somewhere. If you&amp;rsquo;re like me, you want your module to DWIM based on what data it has received. Eventually, you want to know &amp;ldquo;Is it a scalar, arrayref, or hashref?&amp;rdquo; (Yes, I know there are seven different types in Perl.) There are many, many ways to do this. Some even work.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;ref()&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;ref()&lt;/code&gt; is the time-honored way to dispatch based on datatype, resulting in code that looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $is_hash = ref( $data ) eq &#39;HASH&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The problem is that &lt;code&gt;ref( $data )&lt;/code&gt; will return the class name of &lt;code&gt;$data&lt;/code&gt; if it&amp;rsquo;s an object. If someone has defined a class named &lt;code&gt;HASH&lt;/code&gt; (don&amp;rsquo;t do that!) that uses blessed array references, this will also break spectacularly.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;isa()&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;isa()&lt;/code&gt; will tell you whether a reference inherits from a class. The various datatypes are actually class-like. Some people suggest writing code like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $is_hash = UNIVERSAL::isa( $data, &#39;HASH&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will work whether or not &lt;code&gt;$data&lt;/code&gt; is blessed. Again, though, if someone is mean enough to call a class &lt;code&gt;HASH&lt;/code&gt; and bless an arrayref into it, you&amp;rsquo;ll have trouble. Worse, this technique may break polymorphism spectacularly if &lt;code&gt;$data&lt;/code&gt; is an object with an overloaded &lt;code&gt;isa()&lt;/code&gt; method.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;eval&lt;/code&gt; blocks&lt;/p&gt;
+
+&lt;p&gt;Just try the data as a hashref and see if it succeeds.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $is_hash = eval { %{$data}; 1 };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This avoids the primary issue of the two options listed above, but this may unexpectedly succeed in the case of overloaded objects. If &lt;code&gt;$data&lt;/code&gt; is a Number::Fraction, you will mistakenly use &lt;code&gt;$data&lt;/code&gt; as a hash because Number::Fraction uses blessed hashes for objects, even though the intent is to use them as scalars.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Assume that objects are special&lt;/p&gt;
+
+&lt;p&gt;By using &lt;a href=&#34;https://metacpan.org/pod/Scalar::Util&#34;&gt;Scalar::Util&lt;/a&gt;&amp;rsquo;s &lt;code&gt;blessed()&lt;/code&gt; and &lt;code&gt;reftype()&lt;/code&gt; functions, you can determine if a given scalar is a blessed reference or what type of reference it really is. If you want to find out if something is a hash reference, but you want to avoid the pitfalls listed above, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $is_hash = ( !blessed( $data ) &amp;amp;&amp;amp; ref $data eq &#39;HASH&#39; );
+# or
+my $is_hash = reftype( $data ) eq &#39;HASH&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Nearly every use of overloading is to make an object behave as a scalar, as in Number::Fraction and similar classes. Using this technique allows you to respect the client&amp;rsquo;s wishes more easily. You will still miss a few possibilities, such as (the somewhat eccentric) &lt;a href=&#34;https://metacpan.org/pod/Object::MultiType&#34;&gt;Object::MultiType&lt;/a&gt; (an excellent example of what you &lt;em&gt;can&lt;/em&gt; do in Perl, if you put your mind to it).&lt;/p&gt;
+
+&lt;p&gt;My personal preference is to let &lt;code&gt;$data&lt;/code&gt; tell &lt;em&gt;you&lt;/em&gt; what it can do.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Object representations&lt;/p&gt;
+
+&lt;p&gt;Not all objects are blessed hashrefs. I like to represent my objects as arrayrefs, and other people use Inside-Out objects which are references to undef that work with hidden data. This means that my overloaded numbers are arrays, but I want you to treat them as scalars. Unless you ask &lt;code&gt;$data&lt;/code&gt; how it wants you to treat it, how will you handle it correctly?&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Overloading accessors&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://perldoc.perl.org/overload.html&#34;&gt;&lt;code&gt;overload&lt;/code&gt;&lt;/a&gt; allows you to overload the accessor operators, such as &lt;code&gt;@{}&lt;/code&gt; and &lt;code&gt;%{}&lt;/code&gt;. This means that one can theoretically bless an array reference and provide the ability to access it as a hash reference. Object::MultiType is an example of this. It is a hashref that provides array-like access.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, the CPAN module that would do this doesn&amp;rsquo;t exist, yet.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&#34;letting-others-do-your-dirty-work&#34;&gt;Letting Others Do Your Dirty Work&lt;/h4&gt;
+
+&lt;p&gt;The modules that you and I use on a daily basis are, in general, as OS-portable, version-independent, and polite as possible. This means that the more your module depends upon other modules to do the dirty work, the less you have to worry about it. Modules like File::Spec and Scalar::Util exist to help you out. Other modules like &lt;a href=&#34;https://metacpan.org/pod/XML::Parser&#34;&gt;XML::Parser&lt;/a&gt; will do their jobs, but also handle things like any Unicode you encounter so that you don&amp;rsquo;t have to.&lt;/p&gt;
+
+&lt;p&gt;That said, you still have to be careful with whom your young module fraternizes with. Every module you add as a dependency is another module that can restrict where your module can live. If one of your module&amp;rsquo;s dependencies is Windows-only, such as anything from the Win32 namespace, then your module is now Windows-only. If one of your dependencies has a bug, then you also have that bug. Fortunately, there are a few ways to bypass these problems.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Buggy dependencies&lt;/p&gt;
+
+&lt;p&gt;Generally, module authors fix bugs relatively quickly, especially if you&amp;rsquo;ve provided a test file that demonstrates the bug and a patch that makes those tests pass. Once your module&amp;rsquo;s dependency has a new version released, you can release a new version that requires the version with the bug fix.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;OS-specific dependencies&lt;/p&gt;
+
+&lt;p&gt;The first option is to accept it. If no one on Atari MiNT cares, then why should you? Alternatively, you can encapsulate the OS-dependent module and find another module that provides the same features on the OS you&amp;rsquo;re trying to support. File::Spec is an excellent example of how to encapsulate OS-specific behavior behind a common API.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There&amp;rsquo;s a lot to keep in mind when writing a module for CPAN: OS and Perl versions, Unicode, threading, persistence&amp;ndash;it can be very overwhelming at times. With a few simple steps and a willingness to let your users tell you what they need, you&amp;rsquo;ll be the toast of the town.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

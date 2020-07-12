@@ -58,7 +58,7 @@ I'm sure you can guess what `say` does. What about the `use feature ':5.10';` li
 
 ### Functions and Statements
 
-Perl has a rich library of built-in *functions*. They're the verbs of Perl, the commands that the interpreter runs. You can see a list of all the built-in functions in the [perlfunc](http://perldoc.perl.org/index-functions.html) man page (`perldoc perlfunc`, from the command line). Almost all functions can take a list of commma-separated *parameters*.
+Perl has a rich library of built-in *functions*. They're the verbs of Perl, the commands that the interpreter runs. You can see a list of all the built-in functions in the [perlfunc]({{</* perldoc "index-functions" */>}}) man page (`perldoc perlfunc`, from the command line). Almost all functions can take a list of commma-separated *parameters*.
 
 The `print` function is one of the most frequently used parts of Perl. You use it to display things on the screen or to send information to a file. It takes a list of things to output as its parameters.
 

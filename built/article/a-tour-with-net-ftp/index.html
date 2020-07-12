@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> A tour with Net::FTP </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How to write an FTP client in Perl"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/a-tour-with-net-ftp/" />
+<meta property="og:title" content="A tour with Net::FTP" />
+<meta property="og:description" content="How to write an FTP client in Perl">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2020-07-07T07:07:07Z" />
+<meta property="og:image" content="http://localhost:1313/images/a-tour-with-net-ftp/thumb_kidyes.jpg" />
+<meta property="og:article:tag" content="ftp" />
+<meta property="og:article:tag" content="net-ftp" />
+<meta property="og:article:tag" content="pure-ftpd" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">A tour with Net::FTP</h1>
+              <p class="blog-post-meta">Jul 13, 2020 by
+              
+              
+                
+                
+                <a href="#author-bio-thibault-duponchelle">Thibault Duponchelle</a>
+              
+              </p>
+              <img alt="" src="/images/a-tour-with-net-ftp/kidyes.jpg"/>
+                
+
+<p>When we want to have a way to exchange files between machines, we often think about rsync, scp, git or even something slow and complex (looking at you Artifactory and S3), but the answer is often right in front of your eyes: FTP!</p>
+
+<p>The &ldquo;File Transfer Protocol&rdquo; provides a very simple and convenient way to share files. It&rsquo;s battle-tested, requires almost no maintenance, and has a simple anonymous access mechanism. It can be integrated with several standard auth methods and even some virtual ones, none of which I show here.</p>
+
+<p><img src="/images/a-tour-with-net-ftp/battlereadymeow.jpeg" alt="" /></p>
+
+<p>In this article, I&rsquo;ll install a local FTP server and create a simple FTP client in Perl.</p>
+
+<h2 id="a-bit-of-context">A bit of context</h2>
+
+<p>At <code>$work</code> I have to carry on an army of developers that create customized build pipelines from handcrafted local configuration files.</p>
+
+<p>This file is not hosted &ldquo;by design&rdquo; like you would have with Travis CI or a GitHub Action, but it is used to feed a &ldquo;heavy client&rdquo; that parses, resolves templates, and creates a workspace in some centralized automations servers through HTTP API calls.</p>
+
+<p>It was a lot of support to help developers to create this file according to the spec (yet another file format), and we were blind when we wanted to help them with failing workspace creation/build (no way to retrieve configuration from workspace).</p>
+
+<p>I got the idea to backup and centralize automatically the configuration file during the creation of the build pipeline workspace. It was intended to help both developers (configuration &ldquo;samples&rdquo;) and support team (see history, versioned then we can check diffs, file to replay). The constraints were to be able to exchange file from various places with variable users. The FTP protocol is a perfect fit for that.</p>
+
+<p>I added also a cronjob to autocommit and push to a git repository and we had magically a website listing versioned configurations files.</p>
+
+<p>In addition, FTP proved later to also require zero support. I mean really zero maintenance!</p>
+
+<p><img src="/images/a-tour-with-net-ftp/toolowmaintenance.jpg" alt="" /></p>
+
+<h2 id="download-and-install-ftpd">Download and install ftpd</h2>
+
+<p>I decided to use <a href="https://www.pureftpd.org/project/pure-ftpd/">pure-ftpd</a> but there are some other good alternatives if you want.</p>
+
+<p>First I download the tarball, untar it, and change into its directory:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ wget https://download.pureftpd.org/pub/pure-ftpd/releases/pure-ftpd-1.0.49.tar.gz
+$ tar xvzf pure-ftpd-1.0.49.tar.gz
+$ cd pure-ftpd-1.0.49/</code></pre></div>
+<p>I configure <code>ftpd</code> so I can execute it as casual (non-root) user using a non-restricted port, and I&rsquo;ll set the destination directory to my <code>$HOME/ftpd</code> :</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ ./configure --prefix<span style="color:#f92672">=</span>$HOME/ftpd --with-nonroot <span style="color:#f92672">&amp;&amp;</span> make <span style="color:#f92672">&amp;&amp;</span> make install</code></pre></div>
+<p>I create two directories. The <em>ftp</em> is what I&rsquo;ll publish and <em>run</em> is where I&rsquo;ll put the pidfile.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ cd $HOME/ftpd
+$ mkdir ftp
+$ mkdir run</code></pre></div>
+<p>Now we can start the ftp server. I need to give some custom configurations:</p>
+
+<ul>
+<li><code>FTP_ANON_DIR</code> is the directory I want to publish</li>
+<li><code>-e</code> allows anonymous access</li>
+<li><code>-M</code> allows anonymous users to create directories</li>
+<li><code>-g</code> specifies the directory for the pidfile:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ FTP_ANON_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>pwd<span style="color:#e6db74">`</span>/ftp ; ./sbin/pure-ftpd -e -M -g run &amp;</code></pre></div>
+<p>At this point I should have a running ftp server. Let&rsquo;s check!</p>
+
+<h2 id="test-with-ftp">Test with ftp</h2>
+
+<p>First, I test with the preinstalled <code>ftp</code> client. If everything is fine I see the typical FTP exchange:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ ftp localhost <span style="color:#ae81ff">2121</span>
+Connected to localhost.
+<span style="color:#ae81ff">220</span>---------- Welcome to Pure-FTPd ----------
+<span style="color:#ae81ff">220</span>-You are user number <span style="color:#ae81ff">1</span> of <span style="color:#ae81ff">50</span> allowed.
+<span style="color:#ae81ff">220</span>-Local time is now <span style="color:#ae81ff">11</span>:56. Server port: <span style="color:#ae81ff">2121</span>.
+<span style="color:#ae81ff">220</span>-Only anonymous FTP is allowed here
+<span style="color:#ae81ff">220</span> You will be disconnected after <span style="color:#ae81ff">15</span> minutes of inactivity.
+Name <span style="color:#f92672">(</span>localhost:tib<span style="color:#f92672">)</span>:
+<span style="color:#ae81ff">230</span> Anonymous user logged in
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp&gt;</code></pre></div>
+<p>If I get <code>ftp: connect: Connection refused</code> it&rsquo;s probably one of:</p>
+
+<ul>
+<li><code>ftpd</code> is not running (check with <code>ps aux | grep &quot;ftp[d]&quot;</code>)</li>
+<li>I&rsquo;m using the wrong port</li>
+</ul>
+
+<p>If I get <code>421 Can't change directory to /home/tib/ftpd/ftp/ [/]</code> it&rsquo;s probably because I haven&rsquo;t created the directory I specified in <code>FTP_ANON_DIR</code>.</p>
+
+<h2 id="simple-client-in-perl">Simple client in Perl</h2>
+
+<p>Ok that&rsquo;s cool, but I only played with ftp server and preinstalled <code>ftp</code> client until now. What about writing some Perl now?</p>
+
+<p><img src="/images/a-tour-with-net-ftp/whatif.jpg" alt="" /></p>
+
+<p><a href="https://metacpan.org/pod/Net::FTP">Net::FTP</a> is a superb <a href="https://metacpan.org/">CPAN</a> module dedicated to FTP protocol and I&rsquo;ll use that.</p>
+
+<h3 id="simple-listing">Simple listing</h3>
+
+<p>First, a very simple listing script <code>ls.pl</code>. This program connects to the server, asks for a list of files, and outputs each one. It&rsquo;s clear that&rsquo;s super easy and straightforward to play with FTP in Perl!</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#75715e">#!/usr/bin/env perl</span>
+
+<span style="color:#66d9ef">use</span> warnings;
+<span style="color:#66d9ef">use</span> strict;
+
+<span style="color:#66d9ef">use</span> Net::FTP;
+<span style="color:#66d9ef">my</span> $HOST <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;localhost&#34;</span>;
+<span style="color:#66d9ef">my</span> $PORT <span style="color:#f92672">=</span> <span style="color:#ae81ff">2121</span>;
+
+
+<span style="color:#66d9ef">my</span> $ftp <span style="color:#f92672">=</span> Net::FTP<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>($HOST, Port <span style="color:#f92672">=&gt;</span> $PORT, Debug <span style="color:#f92672">=&gt;</span> <span style="color:#ae81ff">0</span>)
+	<span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Cannot connect to $HOST: $@&#34;</span>;
+$ftp<span style="color:#f92672">-&gt;</span>login() <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Cannot login &#34;</span>, $ftp<span style="color:#f92672">-&gt;</span>message;
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $f ($ftp<span style="color:#f92672">-&gt;</span>ls()) { <span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;$f\n&#34;</span>; }
+$ftp<span style="color:#f92672">-&gt;</span>quit;</code></pre></div>
+<h3 id="upload">Upload</h3>
+
+<p>What next?  Maybe upload something? Again, it&rsquo;s super simple. Instead of listing files, I&rsquo;m <code>put</code>ting them:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#75715e">#!/usr/bin/env perl</span>
+
+<span style="color:#66d9ef">use</span> warnings;
+<span style="color:#66d9ef">use</span> strict;
+
+<span style="color:#66d9ef">use</span> Net::FTP;
+<span style="color:#66d9ef">my</span> $HOST <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;localhost&#34;</span>;
+<span style="color:#66d9ef">my</span> $PORT <span style="color:#f92672">=</span> <span style="color:#ae81ff">2121</span>;
+
+<span style="color:#66d9ef">my</span> $ftp <span style="color:#f92672">=</span> Net::FTP<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>($HOST, Port <span style="color:#f92672">=&gt;</span> $PORT, Debug <span style="color:#f92672">=&gt;</span> <span style="color:#ae81ff">0</span>)
+	<span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Cannot connect to $HOST: $@&#34;</span>;
+$ftp<span style="color:#f92672">-&gt;</span>login() <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Cannot login &#34;</span>, $ftp<span style="color:#f92672">-&gt;</span>message;
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file(@ARGV) {
+    $ftp<span style="color:#f92672">-&gt;</span>put(<span style="color:#e6db74">&#34;$file&#34;</span>, <span style="color:#e6db74">&#34;$file&#34;</span>)
+    	<span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Cannot put $file&#34;</span>, $ftp<span style="color:#f92672">-&gt;</span>message;
+}
+$ftp<span style="color:#f92672">-&gt;</span>quit;</code></pre></div>
+<p>I run this and supply the files I want to upload:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ perl upload.pl file1.txt file2.txt<span style="color:#e6db74">`</span>.</code></pre></div>
+<h2 id="put-things-together">Put things together</h2>
+
+<p>I propose a more complete client with some command-line parsing and more actions. In addition to the previous code for listing and uploading, here I added a way to view a file. <a href="https://metacpan.org/pod/Getopt::Long">Getopt::Long</a> to handle command line parameters.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#75715e">#!/usr/bin/env perl</span>
+
+<span style="color:#66d9ef">use</span> warnings;
+<span style="color:#66d9ef">use</span> strict;
+
+<span style="color:#66d9ef">use</span> Getopt::Long;
+<span style="color:#66d9ef">use</span> File::Slurp;
+
+<span style="color:#66d9ef">use</span> Net::FTP;
+<span style="color:#66d9ef">my</span> $HOST <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;localhost&#34;</span>;
+<span style="color:#66d9ef">my</span> $PORT <span style="color:#f92672">=</span> <span style="color:#ae81ff">2121</span>;
+
+<span style="color:#66d9ef">my</span> %options <span style="color:#f92672">=</span> ();
+
+GetOptions(
+	<span style="color:#e6db74">&#34;action|c=s&#34;</span> <span style="color:#f92672">=&gt;</span> <span style="color:#f92672">\</span>$options{<span style="color:#e6db74">&#39;action&#39;</span>},
+	<span style="color:#e6db74">&#34;file|f=s&#34;</span>   <span style="color:#f92672">=&gt;</span> <span style="color:#f92672">\</span>$options{<span style="color:#e6db74">&#39;file&#39;</span>},
+	<span style="color:#e6db74">&#34;help|h&#34;</span>     <span style="color:#f92672">=&gt;</span> <span style="color:#f92672">\</span>$options{<span style="color:#e6db74">&#39;help&#39;</span>}
+	);
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">print_usage</span>() {
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;List all files :\n\t$0 -c list\n&#34;</span>;
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;Upload file :\n\t$0 -c upload -f file.txt\n&#34;</span>;
+	<span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;Print file :\n\t$0 -c view -f file.txt\n\n&#34;</span>;
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">get_ftp</span>() {
+	<span style="color:#66d9ef">my</span> $ftp <span style="color:#f92672">=</span> Net::FTP<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>($HOST, Port <span style="color:#f92672">=&gt;</span> $PORT, Debug <span style="color:#f92672">=&gt;</span> <span style="color:#ae81ff">0</span>)
+		<span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Cannot connect to $HOST: $@&#34;</span>;
+	$ftp<span style="color:#f92672">-&gt;</span>login() <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Cannot login &#34;</span>, $ftp<span style="color:#f92672">-&gt;</span>message;
+}
+
+<span style="color:#75715e"># ls / on remote ftp</span>
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">list</span>() {
+	<span style="color:#66d9ef">my</span> $ftp <span style="color:#f92672">=</span> get_ftp();
+	<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $f ($ftp<span style="color:#f92672">-&gt;</span>ls()) { <span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;$f\n&#34;</span>; }
+	$ftp<span style="color:#f92672">-&gt;</span>quit;
+}
+
+<span style="color:#75715e"># Upload a file</span>
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">upload</span>($) {
+	<span style="color:#66d9ef">my</span> $file <span style="color:#f92672">=</span> shift;
+	(<span style="color:#f92672">-</span>e $file) <span style="color:#f92672">or</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+
+	<span style="color:#66d9ef">my</span> $ftp <span style="color:#f92672">=</span> get_ftp();
+	$ftp<span style="color:#f92672">-&gt;</span>login() <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Cannot login &#34;</span>, $ftp<span style="color:#f92672">-&gt;</span>message;
+	$ftp<span style="color:#f92672">-&gt;</span>put(<span style="color:#e6db74">&#34;$file&#34;</span>) <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Cannot put $file &#34;</span>, $ftp<span style="color:#f92672">-&gt;</span>message;
+	$ftp<span style="color:#f92672">-&gt;</span>quit;
+}
+
+<span style="color:#75715e"># Read a file</span>
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">view</span>($) {
+	<span style="color:#66d9ef">my</span> $file <span style="color:#f92672">=</span> shift;
+
+	<span style="color:#66d9ef">my</span> $ftp <span style="color:#f92672">=</span> get_ftp();
+	$ftp<span style="color:#f92672">-&gt;</span>get(<span style="color:#e6db74">&#34;$file&#34;</span>) <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Cannot read $file &#34;</span>, $ftp<span style="color:#f92672">-&gt;</span>message;
+        <span style="color:#66d9ef">if</span>(<span style="color:#f92672">-</span>e $file) { <span style="color:#66d9ef">print</span> read_file($file); }
+	$ftp<span style="color:#f92672">-&gt;</span>quit;
+}
+
+<span style="color:#66d9ef">if</span>($options{<span style="color:#e6db74">&#39;action&#39;</span>} <span style="color:#f92672">eq</span> <span style="color:#e6db74">&#39;list&#39;</span>) {
+	list();
+} <span style="color:#66d9ef">elsif</span>($options{<span style="color:#e6db74">&#39;action&#39;</span>} <span style="color:#f92672">eq</span> <span style="color:#e6db74">&#39;upload&#39;</span>) {
+	upload($options{<span style="color:#e6db74">&#39;file&#39;</span>});
+} <span style="color:#66d9ef">elsif</span>($options{<span style="color:#e6db74">&#39;action&#39;</span>} <span style="color:#f92672">eq</span> <span style="color:#e6db74">&#39;view&#39;</span>) {
+	view($options{<span style="color:#e6db74">&#39;file&#39;</span>});
+} <span style="color:#66d9ef">else</span> {
+	print_usage();
+}</code></pre></div>
+<h2 id="more-about-design-and-security">More about design and security</h2>
+
+<p>This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and <a href="https://metacpan.org/pod/Net::FTP">Net::FTP</a>!</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/ftp">ftp</a></div>
+                
+                  <div class="tag"><a href="/tags/net-ftp">net-ftp</a></div>
+                
+                  <div class="tag"><a href="/tags/pure-ftpd">pure-ftpd</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-thibault-duponchelle">
+  <div class="col-sm-2">
+    
+    <a href="/authors/thibault-duponchelle/"><div class="circle-avatar" style="background-image:url(/images/author/thibault-duponchelle.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/thibault-duponchelle/"><h3>Thibault Duponchelle</h3></a>
+    <p><a href="https://github.com/thibaultduponchelle">Thibault Duponchelle</a> is a software developer. Mainly interested in GNU/Linux, Open Source, Perl, C and Assembly.</p>
+    <h5><a href="/authors/thibault-duponchelle/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/a-tour-with-net-ftp.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

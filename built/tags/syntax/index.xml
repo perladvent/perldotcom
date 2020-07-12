@@ -1,0 +1,1179 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Syntax on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/syntax/</link>
+    <description>Recent content in Syntax on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 27 Oct 2019 12:07:00 +0000</lastBuildDate>
+    <atom:link href="/tags/syntax/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>My Perl Wishlist: Invariant Sigils (Part 1)</title>
+      <link>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</link>
+      <pubDate>Sun, 27 Oct 2019 12:07:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</guid>
+      <description>
+
+&lt;p&gt;Pop quiz!  Q: What was my mistake in this line?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is %HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;A: I had the answer right, but I messed up the sigil on &lt;code&gt;HASH&lt;/code&gt;.  It
+should be:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is $HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;#  ^ $, not %&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Unfortunately, on Perl v5.20+, both statements work the same way!  I
+didn&amp;rsquo;t catch the problem until I shipped this code and
+&lt;a href=&#34;http://matrix.cpantesters.org/?dist=vars-i+1.08-TRIAL&#34;&gt;cpantesters&lt;/a&gt;
+showed me my mistake.  It was an easy fix, but it reminded me that Perl&amp;rsquo;s
+&lt;a href=&#34;http://modernperlbooks.com/books/modern_perl/chapter_03.html#variablenamesandsigils&#34;&gt;variant sigils&lt;/a&gt;
+can trip up programmers at any level.  If I could change one thing about
+Perl 5, I would change to invariant sigils.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-current-situation&#34;&gt;The current situation&lt;/h2&gt;
+
+&lt;p&gt;In Perl, the sigil tells you
+&lt;a href=&#34;https://perldoc.perl.org/perlintro.html#Perl-variable-types&#34;&gt;how many things to expect&lt;/a&gt;.
+Scalars such as &lt;code&gt;$foo&lt;/code&gt; are single values.  Any single value in an array
+&lt;code&gt;@foo&lt;/code&gt; or hash &lt;code&gt;%foo&lt;/code&gt;, since it is only one thing,
+&lt;a href=&#34;https://perldoc.perl.org/perldata.html#Variable-names&#34;&gt;also uses &lt;code&gt;$&lt;/code&gt;&lt;/a&gt;,
+so &lt;code&gt;$foo&lt;/code&gt;, &lt;code&gt;@foo&lt;/code&gt;, and &lt;code&gt;%foo&lt;/code&gt; could all refer to different pieces of the
+same variable &amp;mdash; or to different variables.
+This technique of &amp;ldquo;variant sigils&amp;rdquo; works, but confuses
+new Perl users and tripped up yours truly.  To know what you
+are accessing in an array or hash, you have to look at both the sigil
+and the brackets.  As a reminder:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: the first element of array &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0, 1]&lt;/code&gt;: the list &lt;code&gt;($z[0], $z[1])&lt;/code&gt; of two elements from &lt;code&gt;@z&lt;/code&gt; (an &amp;ldquo;array slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt; of two elements from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0, 1]&lt;/code&gt;: the list &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt; of keys and two values from array &lt;code&gt;@z&lt;/code&gt; (a &amp;ldquo;hash slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt; of keys and values from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;make-the-sigils-part-of-the-name&#34;&gt;Make the sigils part of the name&lt;/h2&gt;
+
+&lt;p&gt;To save myself from repeating my errors, I&amp;rsquo;d like the sigil to be part of a
+variable&amp;rsquo;s name.  This is not a new idea; scalars work this way in Perl, bash,
+and &lt;a href=&#34;https://docs.perl6.org/language/101-basics#sigil_and_identifier&#34;&gt;Raku&lt;/a&gt;
+(&lt;a href=&#34;https://github.com/perl6/problem-solving/blob/master/solutions/language/Path-to-Raku.md&#34;&gt;formerly Perl 6&lt;/a&gt;).
+That would make the above table look like:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: the first element of &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Simpler!  Any reference to &lt;code&gt;@z&lt;/code&gt; would always be doing &lt;em&gt;something&lt;/em&gt; with
+the array named &lt;code&gt;@z&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;but-what-about-slices&#34;&gt;But what about slices?&lt;/h2&gt;
+
+&lt;p&gt;Slices such as &lt;code&gt;@z[0,1]&lt;/code&gt; and &lt;code&gt;%z{qw(hello there)}&lt;/code&gt; return multiple
+values from an array or hash.  If sigils &lt;code&gt;@&lt;/code&gt; and &lt;code&gt;%&lt;/code&gt; are no longer
+available for slicing, we need an alternative.
+The Perl family currently provides two models: postfix dereferencing
+(&amp;ldquo;postderef&amp;rdquo;) syntax and postfix adverbs.&lt;/p&gt;
+
+&lt;p&gt;Perl v5.20+ support
+&lt;a href=&#34;https://www.effectiveperlprogramming.com/2014/09/use-postfix-dereferencing/&#34;&gt;postderef&lt;/a&gt;,
+which gives us one option.  Postderef separates the name from the slice:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Valid Perl v5.20+&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{a};      &lt;span style=&#34;color:#75715e&#34;&gt;# Scalar, element at index &amp;#34;a&amp;#34; of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;%{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the key &amp;#34;a&amp;#34; and the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The type of slice comes after the reference, instead of as a sigil
+before the reference.  With non-references, that idea would give us slice
+syntax such as &lt;code&gt;@array@[1,2,3]&lt;/code&gt; or &lt;code&gt;%hash%{a}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Raku gives us another option: &amp;ldquo;adverbs&amp;rdquo; such as
+&lt;a href=&#34;https://docs.perl6.org/language/subscripts#:kv&#34;&gt;&lt;code&gt;:kv&lt;/code&gt;&lt;/a&gt;.  For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl6&#34; data-lang=&#34;perl6&#34;&gt;# Valid Raku
+%hash{&amp;#34;a&amp;#34;}          # Single value, element at index &amp;#34;a&amp;#34; of %hash
+%hash{&amp;#34;a&amp;#34;}:v;       # The same --- just the value
+%hash{&amp;#34;a&amp;#34;}:kv;      # The list including key &amp;#34;a&amp;#34; and the value of the &amp;#34;a&amp;#34; element of %hash&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The adverb (e.g., &lt;code&gt;:kv&lt;/code&gt;) goes in postfix position, immediately
+after the brackets or braces.  Following this model,
+slices would look like &lt;code&gt;@array[1,2,3]:l&lt;/code&gt; or &lt;code&gt;%hash{a}:kv&lt;/code&gt;.  (For clarity,
+I propose &lt;code&gt;:l&lt;/code&gt;, as in &lt;strong&gt;l&lt;/strong&gt;ist, instead of Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt;.  Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt; can return
+a scalar or a list.)&lt;/p&gt;
+
+&lt;p&gt;So, the choices I see are (postderef-inspired / Raku-inspired):&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;What you want&lt;/th&gt;
+&lt;th&gt;No subscript&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; access&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; access&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Scalar&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: a single value from an array&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of values&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: an array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z@[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:l&lt;/code&gt;: the list currently written &lt;code&gt;($z[0], $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z@{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:l&lt;/code&gt;: the list currently written &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of key/value pairs&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: a hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z%[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:kv&lt;/code&gt;: the list currently written &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z%{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:kv&lt;/code&gt;: the list currently written &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;you-can-t-always-get-what-you-want&#34;&gt;You can&amp;rsquo;t always get what you want&lt;/h2&gt;
+
+&lt;p&gt;I prefer the adverb syntax.  It is easy to read, and it draws on
+all the expertise that has gone into the design of Raku.
+However, my preference has to be implementable.
+I&amp;rsquo;m not convinced that it is without major surgery.&lt;/p&gt;
+
+&lt;p&gt;The Perl parser decides how to interpret what is inside the brackets
+depending on the context provided by the slice.
+The parser interprets the &lt;code&gt;...&lt;/code&gt; in &lt;code&gt;@foo[...]&lt;/code&gt; as
+a list (&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L1143-L1148&#34;&gt;ref&lt;/a&gt;).
+In &lt;code&gt;$foo[...]&lt;/code&gt;, the parser sees the &lt;code&gt;...&lt;/code&gt; as a scalar expression
+(&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L958-L960&#34;&gt;ref&lt;/a&gt;).
+For any slice syntax, the Perl parser needs to know the desired
+type of result while parsing the subscript expression.  The adverb form,
+unfortunately, leaves the parser guessing until after the subscript
+is parsed.&lt;/p&gt;
+
+&lt;p&gt;You can, in fact, hack the Perl parser to save the subscript
+until it sees a postfix adverb.  The parser can then apply the correct
+context.  I wrote a
+&lt;a href=&#34;https://github.com/Perl/perl5/compare/9786385e68f7f14df6f4dd0f04d2c72c0d9a2511...cxw42:3cd904788536b445c9c3abe9b469e1b569942051&#34;&gt;proof-of-concept&lt;/a&gt;
+for &lt;code&gt;@arr[expr]:v&lt;/code&gt;.  It doesn&amp;rsquo;t execute any code, but it does parse
+a postfix-adverb slice without crashing!  However, while writing that code,
+I ran across a surprise: new syntax isn&amp;rsquo;t tied to a &lt;code&gt;use v5.xx&lt;/code&gt;
+directive.&lt;/p&gt;
+
+&lt;p&gt;It turns out the Perl parser lets code written against any Perl version
+use the latest syntax.  Both of the following command lines work on Perl v5.30:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ perl -Mstrict -Mwarnings -E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#                           ^ -E: use all the latest features
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;$ perl -Mstrict -Mwarnings -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#75715e&#34;&gt;# (!!!)
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;#                           ^ -e: not the latest features&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The second command line does not &lt;code&gt;use v5.30&lt;/code&gt;, so you can&amp;rsquo;t use &lt;code&gt;say&lt;/code&gt;
+(introduced in v5.10).  However, you can use postderef (from v5.20)!&lt;/p&gt;
+
+&lt;p&gt;Because the parser lets old programs use new syntax, any proposed addition
+to Perl&amp;rsquo;s syntax has to be meaningless in all previous Perl versions.
+A postfix adverb fails this test.  For example, the following is a valid
+Perl program:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;kv&lt;/span&gt; { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kv&amp;#34;&lt;/span&gt; }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @arr &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ? @arr[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]:kv;
+        &lt;span style=&#34;color:#75715e&#34;&gt;# ^^^^^^^^^^^^ valid Perl 5 syntax, but not a slice :(&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;My preferred slice syntax could change the meaning of existing programs,
+so it looks like I can&amp;rsquo;t get my first choice.&lt;/p&gt;
+
+&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+
+&lt;p&gt;This is not the end of the story!  In Part 2, I will dig deeper into
+Perl&amp;rsquo;s parser and tokenizer.  I will share some surprises I discovered
+while investigating postderef.  I will then describe a possible path
+to invariant sigils and the simplicity they can provide.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Check your DuckDuckGo cheatsheets with Perl</title>
+      <link>http://localhost:1313/article/190/2015/8/28/Check-your-DuckDuckGo-cheatsheets-with-Perl/</link>
+      <pubDate>Fri, 28 Aug 2015 02:10:48 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/190/2015/8/28/Check-your-DuckDuckGo-cheatsheets-with-Perl/</guid>
+      <description>
+
+&lt;p&gt;With DuckDuckGo&amp;rsquo;s global &lt;a href=&#34;https://duck.co/blog&#34;&gt;Quack &amp;amp; Hack&lt;/a&gt; just around the corner, I&amp;rsquo;ve pulled together a &lt;a href=&#34;https://github.com/dnmfarrell/DDG-cheatsheet-check&#34;&gt;script&lt;/a&gt; for checking &lt;a href=&#34;http://perltricks.com/article/189/2015/8/22/Writing-DuckDuckGo-plugins-just-got-easier&#34;&gt;cheatsheets&lt;/a&gt;. The script checks the cheatsheet is valid JSON and has the required entries and values.&lt;/p&gt;
+
+&lt;h3 id=&#34;setup&#34;&gt;Setup&lt;/h3&gt;
+
+&lt;p&gt;To run the script, download it from &lt;a href=&#34;https://github.com/dnmfarrell/DDG-cheatsheet-check/blob/master/cheatsheet_check&#34;&gt;Github&lt;/a&gt;. It requires the &lt;a href=&#34;https://metacpan.org/pod/JSON&#34;&gt;JSON&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/HTTP::Tiny&#34;&gt;HTTP::Tiny&lt;/a&gt; Perl modules which you can install with &lt;code&gt;cpan&lt;/code&gt; at the terminal:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan JSON HTTP::Tiny&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Be sure to give execute permissions to the script too:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ chmod &lt;span style=&#34;color:#ae81ff&#34;&gt;744&lt;/span&gt; cheatsheet_check&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;usage&#34;&gt;Usage&lt;/h3&gt;
+
+&lt;p&gt;Once you have a cheatsheet in JSON that you want to check, just pass the filepath to &lt;code&gt;cheatsheet_check&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;cheatsheet_check &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;cheatsheet&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;json&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Example output for the &lt;code&gt;perldoc&lt;/code&gt; cheatsheet:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Subtest: file
+    ok 1 - file exists
+    ok 2 - filename is appropriate
+    ok 3 - file content can be read
+    ok 4 - content is valid JSON
+    1..4
+ok 1 - file
+    # Subtest: headers
+    ok 1 - has id
+    ok 2 - has name
+    ok 3 - has description
+    1..3
+ok 2 - headers
+    # Subtest: metadata
+    ok 1 - has metadata
+    ok 2 - has metadata sourceName
+    ok 3 - has metadata sourceUrl
+    ok 4 - sourceUrl is not undef
+    ok 5 - fetch sourceUrl
+    1..5
+ok 3 - metadata
+    # Subtest: sections
+    ok 1 - has section_order
+    ok 2 - section_order is an array of section names
+    ok 3 - has sections
+    ok 4 - sections is a hash of section key/pairs
+    ok 5 - &#39;Usage&#39; exists in sections
+    ok 6 - &#39;Module Options&#39; exists in sections
+    ok 7 - &#39;Search Options&#39; exists in sections
+    ok 8 - &#39;Common Options&#39; exists in sections
+    ok 9 - &#39;Search Options&#39; exists in section_order
+    ok 10 - &#39;Search Options&#39; is an array
+    ok 11 - &#39;Search Options&#39; entry: 0 has a key
+    ok 12 - &#39;Search Options&#39; entry: 0 has a val
+    ok 13 - &#39;Search Options&#39; entry: 1 has a key
+    ok 14 - &#39;Search Options&#39; entry: 1 has a val
+    ok 15 - &#39;Search Options&#39; entry: 2 has a key
+    ok 16 - &#39;Search Options&#39; entry: 2 has a val
+    ok 17 - &#39;Common Options&#39; exists in section_order
+    ok 18 - &#39;Common Options&#39; is an array
+    ok 19 - &#39;Common Options&#39; entry: 0 has a key
+    ok 20 - &#39;Common Options&#39; entry: 0 has a val
+    ok 21 - &#39;Common Options&#39; entry: 1 has a key
+    ok 22 - &#39;Common Options&#39; entry: 1 has a val
+    ok 23 - &#39;Common Options&#39; entry: 2 has a key
+    ok 24 - &#39;Common Options&#39; entry: 2 has a val
+    ok 25 - &#39;Common Options&#39; entry: 3 has a key
+    ok 26 - &#39;Common Options&#39; entry: 3 has a val
+    ok 27 - &#39;Common Options&#39; entry: 4 has a key
+    ok 28 - &#39;Common Options&#39; entry: 4 has a val
+    ok 29 - &#39;Module Options&#39; exists in section_order
+    ok 30 - &#39;Module Options&#39; is an array
+    ok 31 - &#39;Module Options&#39; entry: 0 has a key
+    ok 32 - &#39;Module Options&#39; entry: 0 has a val
+    ok 33 - &#39;Module Options&#39; entry: 1 has a key
+    ok 34 - &#39;Module Options&#39; entry: 1 has a val
+    ok 35 - &#39;Module Options&#39; entry: 2 has a key
+    ok 36 - &#39;Module Options&#39; entry: 2 has a val
+    ok 37 - &#39;Module Options&#39; entry: 3 has a key
+    ok 38 - &#39;Module Options&#39; entry: 3 has a val
+    ok 39 - &#39;Usage&#39; exists in section_order
+    ok 40 - &#39;Usage&#39; is an array
+    ok 41 - &#39;Usage&#39; entry: 0 has a key
+    ok 42 - &#39;Usage&#39; entry: 0 has a val
+    ok 43 - &#39;Usage&#39; entry: 1 has a key
+    ok 44 - &#39;Usage&#39; entry: 1 has a val
+    1..44
+ok 4 - sections
+1..4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will run over 20 different tests against the cheatsheet. The script checks that the JSON is valid, that the required headers are present (e.g. id, name and description). It checks that the metadata is valid and points to a live URL. Finally it checks that the sections are valid and correctly mapped.&lt;/p&gt;
+
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap up&lt;/h3&gt;
+
+&lt;p&gt;Remember, even if the cheatsheet passes all the tests, you still need to check it looks right in the browser. &lt;a href=&#34;https://metacpan.org/pod/App::DuckPAN&#34;&gt;App::DuckPAN&lt;/a&gt; can help with that. This Saturday I&amp;rsquo;ll be hanging out at the NYC Quack &amp;amp; Hack at &lt;a href=&#34;http://www.meetup.com/Quack-Hack-New-York-City/events/224567174/&#34;&gt;Orbital&lt;/a&gt;. I look forward to seeing everyone there!&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; added HTTP::Tiny dependency. 2015-08-28&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Display beautiful Perl code in HTML without JavaScript</title>
+      <link>http://localhost:1313/article/60/2014/1/13/Display-beautiful-Perl-code-in-HTML-without-JavaScript/</link>
+      <pubDate>Mon, 13 Jan 2014 01:34:32 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/60/2014/1/13/Display-beautiful-Perl-code-in-HTML-without-JavaScript/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Would you like to display beautiful syntax-highlighted Perl code on the web without using JavaScript? Maybe you&amp;rsquo;d like to use an existing &lt;a href=&#34;http://google-code-prettify.googlecode.com/svn/trunk/styles/index.html&#34;&gt;CSS markup theme&lt;/a&gt; without having to write in-line CSS in your Perl code? If yes, take a look at &lt;a href=&#34;https://metacpan.org/pod/PPI::Prettify&#34;&gt;PPI::Prettify&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;background&#34;&gt;Background&lt;/h3&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://code.google.com/p/google-code-prettify/&#34;&gt;prettify.js&lt;/a&gt; library does a wonderful job of robustly syntax coloring a large number of different languages for displaying code on the web. It&amp;rsquo;s used on blogs.perl.org; we use it on PerlTricks.com. But because Perl is an ambiguous language, prettify.js often doesn&amp;rsquo;t tokenize all of the code correctly. What&amp;rsquo;s worse is if a user has JavaScript disabled, the code will not be highlighted at all. That&amp;rsquo;s why I wrote &lt;a href=&#34;https://metacpan.org/pod/PPI::Prettify&#34;&gt;PPI::Prettify&lt;/a&gt;. It runs in the backend using PPI::Document so it&amp;rsquo;s faster more accurate than prettify.js, but outputs the same HTML codes as prettify.js does, enabling you to re-use any of the existing CSS themes available (&lt;a href=&#34;http://google-code-prettify.googlecode.com/svn/trunk/styles/index.html&#34;&gt;here&lt;/a&gt;, &lt;a href=&#34;%0Ahttp://jmblog.github.io/color-themes-for-google-code-prettify/&#34;&gt;here&lt;/a&gt; and &lt;a href=&#34;%0Ahttp://stanleyhlng.com/prettify-js/#theme-bootstrap-light&#34;&gt;here&lt;/a&gt; for example).&lt;/p&gt;
+
+&lt;h3 id=&#34;requirements&#34;&gt;Requirements&lt;/h3&gt;
+
+&lt;p&gt;You&amp;rsquo;ll need PPI::Prettify and can install it via CPAN at the terminal:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan PPI::Prettify&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In terms of OS compatibility, PPI::Prettify is pure-Perl so you should be able to run it on any platform that has Perl installed.&lt;/p&gt;
+
+&lt;h3 id=&#34;tokenizing-inline-perl-code&#34;&gt;Tokenizing inline Perl code&lt;/h3&gt;
+
+&lt;p&gt;PPI::Prettify exports a prettify() method that takes a string of Perl code, and returns it tokenized with &amp;lt;span&amp;gt; tags. To be safe, PPI::Prettify employs HTML encoding on all token content. Let&amp;rsquo;s whip up a quick script to demo prettify():&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; PPI::Prettify;
+
+read(main::DATA, &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $code, &lt;span style=&#34;color:#ae81ff&#34;&gt;500&lt;/span&gt;);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; prettify({ code &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $code });
+
+__DATA__
+&lt;span style=&#34;color:#75715e&#34;&gt;# a simple OO class&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Shape;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;new&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($class, $args) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+        color  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{color} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;black&amp;#39;&lt;/span&gt;,
+        length &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{length} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+        width  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{width} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+    };
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; bless $self, $class;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_area&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{length} &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{width};
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_color&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{color};
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;set_color&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $color) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{color} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $color;
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The script uses the &lt;a href=&#34;http://perltricks.com/article/24/2013/5/11/Perl-tokens-you-should-know&#34;&gt;__DATA__&lt;/a&gt; token to create a filehandle to some inline Perl code (The code is a simple OO example taken from our article &lt;a href=&#34;http://perltricks.com/article/25/2013/5/20/Old-School-Object-Oriented-Perl&#34;&gt;Old School Object Oriented Perl&lt;/a&gt;). The read function slurps the filehandle contents into $code. We then use the prettify() function to tokenize and markup the Perl code.&lt;/p&gt;
+
+&lt;p&gt;Running that script returns the Perl code surrounded by &amp;lt;span&amp;gt; tags. This is a summary of the markup produced by prettify():&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;pre class&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;prettyprint&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;span class&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;com&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# a simple OO class&lt;/span&gt;
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;span class&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;pln&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;span class&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kwd&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;span class&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;pln&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;span class&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;atn&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;Shape&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;span class&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;pln&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/pre&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The example below shows how the markup looks in HTML (using the &lt;a href=&#34;http://code.google.com/p/google-code-prettify/source/browse/trunk/styles/desert.css?r=198&#34;&gt;desert&lt;/a&gt; CSS theme).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# a simple OO class&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Shape;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;new&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($class, $args) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+        color  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{color} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;black&amp;#39;&lt;/span&gt;,
+        length &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{length} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+        width  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{width} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+    };
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; bless $self, $class;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_area&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{length} &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{width};
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_color&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{color};
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;set_color&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $color) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{color} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $color;
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Two things to note here: disabling JavaScript will have no effect on the syntax highlighting above, as it&amp;rsquo;s generated in backend using PPI::Prettify. Second, the code displays multiline comments correctly, (everything after &lt;a href=&#34;http://perltricks.com/article/24/2013/5/11/Perl-tokens-you-should-know&#34;&gt;__DATA__&lt;/a&gt;) unlike prettify.js.&lt;/p&gt;
+
+&lt;h3 id=&#34;tokenizing-perl-code-stored-in-a-file&#34;&gt;Tokenizing Perl code stored in a file&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s easy to prettify existing Perl code from a file. You can do this in one line of Perl at the terminal:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MPPI::Prettify &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MFile::Slurp &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$code=read_file(&amp;#34;output&amp;#34;);print prettify({code=&amp;gt;$code})&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;advanced-feature-1-debug-mode&#34;&gt;Advanced feature 1: debug mode&lt;/h3&gt;
+
+&lt;p&gt;The prettify() method also takes an optional debug parameter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $html &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; prettify({ code &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $code, debug &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; });&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Debug mode will provide the same output, however every tag will be given a &amp;ldquo;title&amp;rdquo; attribute with the original PPI::Token class as the value. This can help you to understand how the original PPI::Token class maps to the markup by hovering the cursor over the text. The code from earlier has been printed with debug mode turned on. Try hovering!&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# a simple OO class&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Shape;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;new&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($class, $args) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+        color  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{color} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;black&amp;#39;&lt;/span&gt;,
+        length &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{length} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+        width  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $args&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{width} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+    };
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; bless $self, $class;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_area&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{length} &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{width};
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_color&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{color};
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;set_color&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $color) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{color} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $color;
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;advanced-feature-2-override-the-mapping&#34;&gt;Advanced feature 2: override the mapping&lt;/h3&gt;
+
+&lt;p&gt;You may want to change how certain tokens of Perl code are marked up. PPI::Prettify exports the mapping in a hashref, called $MARKUP_RULES. Every PPI::Token class is a key, with the value being the CSS class name that prettify.js uses (and the prettify CSS themes expect). For example PPI::Token::Comment is mapped to &amp;ldquo;com&amp;rdquo;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;PPI::Token::Comment&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;com&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Combined with debug mode, it should be straightforward to change the mapping of a particular PPI::Token class to the prettify class you require.&lt;/p&gt;
+
+&lt;h3 id=&#34;alternatives&#34;&gt;Alternatives&lt;/h3&gt;
+
+&lt;p&gt;Consider using Adam Kennedy&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/PPI::HTML&#34;&gt;PPI::HTML&lt;/a&gt; if you are happy writing inline-CSS in your Perl code, or need more detailed markup than the 10 or so classes provided by PPI::Prettify. It&amp;rsquo;s a more mature module and can do line numbering too.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Banish unsightly variable assignments with Method::Signatures</title>
+      <link>http://localhost:1313/article/39/2013/9/8/Banish-unsightly-variable-assignments-with-Method--Signatures/</link>
+      <pubDate>Sun, 08 Sep 2013 22:59:38 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/39/2013/9/8/Banish-unsightly-variable-assignments-with-Method--Signatures/</guid>
+      <description>
+
+&lt;p&gt;One drawback of Perl is that its subroutines and methods do not have signatures (ignoring &lt;a href=&#34;https://perldoc.perl.org/perlsub.html#Prototypes&#34;&gt;prototypes&lt;/a&gt;). This means that Perl developers have to write their own code for variable assignment and type checking which leads to repetitive and verbose code. This article shows how by using the &lt;a href=&#34;https://metacpan.org/pod/Method::Signatures&#34;&gt;Method::Signatures&lt;/a&gt; module developers can banish this boilerplate forever.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-func-subroutine&#34;&gt;The func subroutine&lt;/h3&gt;
+
+&lt;p&gt;Method::Signatures exports a subroutine called &amp;ldquo;func&amp;rdquo; which can replace the &amp;ldquo;sub&amp;rdquo; built-in function. Let&amp;rsquo;s look at a typical Perl subroutine:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Carp &lt;span style=&#34;color:#e6db74&#34;&gt;qw/croak/&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;extract_domain&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    croak &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error missing argument URL $!&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $url;
+    &lt;span style=&#34;color:#75715e&#34;&gt;# code continues ...&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We can refactor this subroutines using &amp;ldquo;func&amp;rdquo; which accepts a signature (list of variables):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Method::Signatures;
+func extract_domain ($url) {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# code continues ...&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Replacing &amp;ldquo;sub&amp;rdquo; with &amp;ldquo;func&amp;rdquo; means that it will declare $url, croak if $_[0] doesn&amp;rsquo;t exist, else assign it to $url. This removes the need to include the boilerplate assignment and check code which in the example reduce the code length by 33% (2 lines of code).&lt;/p&gt;
+
+&lt;h3 id=&#34;the-method-subroutine&#34;&gt;The method subroutine&lt;/h3&gt;
+
+&lt;p&gt;Method::Signatures also exports a subroutine called &amp;ldquo;method&amp;rdquo; that can replace &amp;ldquo;sub&amp;rdquo; in object-oriented code. In addition to accepting a signature argument like &amp;ldquo;func&amp;rdquo;, &amp;ldquo;method&amp;rdquo; automatically declares and assigns $self. Consider the difference between this code extract (taken from &lt;a href=&#34;https://metacpan.org/pod/Nginx::Log::Entry&#34;&gt;Nginx::Log::Entry&lt;/a&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Entry;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Time::Piece;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Nginx::ParseLog;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; HTTP::BrowserDetect;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;new&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ( $class, $log_line ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error: no log string was passed to new&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $log_line;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Nginx::ParseLog::parse($log_line);
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{detector} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; HTTP::BrowserDetect&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{user_agent} );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; bless $self, $class;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_ip&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ip};
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_timezone&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; substr( $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{time}, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; );
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;was_robot&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{detector}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;robot;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_status&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{status};
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_request&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{request};
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and a refactored version using &amp;ldquo;method&amp;rdquo;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Entry_New;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Time::Piece;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Nginx::ParseLog;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; HTTP::BrowserDetect;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Method::Signatures;
+
+func &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ($class, $log_line) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Nginx::ParseLog::parse($log_line);
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{detector} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; HTTP::BrowserDetect&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{user_agent} );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; bless $self, $class;
+}
+
+method get_ip {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ip};
+}
+
+method get_timezone {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; substr( $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{time}, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; );
+}
+
+method was_robot {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{detector}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;robot;
+}
+
+method get_status {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{status};
+}
+
+method get_request {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{request};
+}
+
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;By using &amp;ldquo;method&amp;rdquo; we were able to remove all the boilerplate declarations and checks from the code, reducing the code length by almost 20% and improving its readability.&lt;/p&gt;
+
+&lt;h3 id=&#34;benchmarking-method-signatures&#34;&gt;Benchmarking Method::Signatures&lt;/h3&gt;
+
+&lt;p&gt;Does using Method::Signatures come with a significant performance hit? We can test the performance impact by comparing the vanilla and refactored Entry classes from earlier in this article. We&amp;rsquo;ll use the &lt;a href=&#34;https://metacpan.org/pod/Benchmark::Forking&#34;&gt;Benchmark::Forking&lt;/a&gt; module to improve the benchmark accuracy. This is the benchmark script:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Benchmark::Forking &lt;span style=&#34;color:#e6db74&#34;&gt;qw/cmpthese/&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Entry;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Entry_New;
+
+open (&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $LOG, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;access.log&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @log &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$LOG&amp;gt;&lt;/span&gt;;
+
+cmpthese (&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;, {
+        Entry       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; (@log) {
+                                &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $entry &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($_);
+                                $entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_ip;
+                                $entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_timezone;
+                                $entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;was_robot;
+                                $entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_status;
+                                $entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_request;
+                              }
+                       },
+        Entry_New   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; (@log) {
+                                &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $entry &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Entry_New&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($_);
+                                $entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_ip;
+                                $entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_timezone;
+                                $entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;was_robot;
+                                $entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_status;
+                                $entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_request;
+                             }
+                       },
+});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This script reads an Nginx access log of 10000 entries into @log. For both Entry and Entry_New, it will test 100 times the performance of initializing an Entry object and calling the accessor methods of the object. It does this for every entry in @log. Running the benchmark script returned the following result:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;            s&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;iter   Entry_New   Entry
+Entry_New   &lt;span style=&#34;color:#ae81ff&#34;&gt;1.65&lt;/span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;%
+Entry       &lt;span style=&#34;color:#ae81ff&#34;&gt;1.63&lt;/span&gt;        &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;%        &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;--&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;These results suggest that using Method::Signatures comes with only a 1% performance hit, which seems like excellent value given the functionality it provides.&lt;/p&gt;
+
+&lt;h3 id=&#34;additional-features&#34;&gt;Additional features&lt;/h3&gt;
+
+&lt;p&gt;There is a lot more to Method::Signatures such as named and optional parameters, type checking, default values and aliases. Check out the excellent module &lt;a href=&#34;https://metacpan.org/pod/Method::Signatures&#34;&gt;documentation&lt;/a&gt; for more details.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Use do to execute Perl code stored in files</title>
+      <link>http://localhost:1313/article/28/2013/6/5/Use-do-to-execute-Perl-code-stored-in-files/</link>
+      <pubDate>Wed, 05 Jun 2013 13:22:52 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/28/2013/6/5/Use-do-to-execute-Perl-code-stored-in-files/</guid>
+      <description>&lt;p&gt;Following our &lt;a href=&#34;http://perltricks.com/article/26/2013/5/28/Execute-Perl-code-stored-in-a-text-file-with-eval&#34;&gt;recent article&lt;/a&gt; on how to execute Perl code stored in a file using eval, Perl programmer mithaldu pointed out that the Perl built-in function do provides similar functionality.&lt;/p&gt;
+
+&lt;p&gt;This is a the text file &amp;lsquo;print.txt&amp;rsquo;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;it works! \n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here is the original solution using eval:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Slurp;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $command &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; read_file(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print.txt&amp;#39;&lt;/span&gt;);
+eval $command;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and here is the same code re-written using do:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print.txt&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using do requires fewer lines of code then the eval solution and there is no need to open a filehandle or use a module to slurp the file (such as &lt;a href=&#34;https://metacpan.org/pod/File::Slurp&#34;&gt;File::Slurp&lt;/a&gt;). The do function also updates @INC and %INC, so it can be used to load modules which are then used later in the program (eval does not do this).&lt;/p&gt;
+
+&lt;p&gt;One scenario where the eval approach would be needed instead of do would be if the text file contained non-Perl code that required parsing before the file is ready to be executed.&lt;/p&gt;
+
+&lt;p&gt;Using do does not replace the inherent risks associated with executing code stored in a separate file - this is a cool trick, not a recommended solution.&lt;/p&gt;
+
+&lt;p&gt;The official Perl documentation, Perldoc has more information on both &lt;a href=&#34;https://perldoc.perl.org/functions/do.html&#34;&gt;do&lt;/a&gt; and &lt;a href=&#34;https://perldoc.perl.org/functions/eval.html&#34;&gt;eval&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Execute Perl code stored in a text file with eval</title>
+      <link>http://localhost:1313/article/26/2013/5/28/Execute-Perl-code-stored-in-a-text-file-with-eval/</link>
+      <pubDate>Tue, 28 May 2013 12:25:15 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/26/2013/5/28/Execute-Perl-code-stored-in-a-text-file-with-eval/</guid>
+      <description>
+
+&lt;p&gt;The Perl &lt;a href=&#34;https://perldoc.perl.org/functions/eval.html&#34;&gt;eval function&lt;/a&gt; will execute any Perl code contained in a string that is passed to it. This article shows how eval can be used to execute Perl code stored in text files.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s imagine that we want to execute this Perl statement stored in &amp;lsquo;print.txt&amp;rsquo;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;it works! \n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We can write a simple Perl script called &amp;lsquo;eval.pl&amp;rsquo; that will slurp &amp;lsquo;print.txt&amp;rsquo; into a string, and then call eval on the string:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Slurp;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $command &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; read_file(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print.txt&amp;#39;&lt;/span&gt;);
+eval $command;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now we can run &amp;lsquo;eval.pl&amp;rsquo; to prove it works:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl eval&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+it works&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;injecting-code&#34;&gt;Injecting code&lt;/h3&gt;
+
+&lt;p&gt;When eval is called on a string containing Perl code, the code is executed within a sub lexical scope in main - similar to as if it was written within a block. This makes it possible to declare variables in the main program, and execute them in code contained in text files with eval. Let&amp;rsquo;s update &amp;lsquo;print.txt&amp;rsquo; to print a variable:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $message;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And &amp;lsquo;eval.pl&amp;rsquo; to declare $message and set the text to be printed:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Slurp;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $command &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; read_file(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print.txt&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $message &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;We injected this message\n&amp;#34;&lt;/span&gt;;
+
+eval $command;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now running the code we can see the injected message is printed:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl eval&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+We injected this message&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Although it is a cool feature, any technique which allows the execution of arbitrary code stored in text files is rife with risk. So exercise the proper caution and checks before employing this method!&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Dynamic variable names with a dereferencing block</title>
+      <link>http://localhost:1313/article/23/2013/5/2/Dynamic-variable-names-with-a-dereferencing-block/</link>
+      <pubDate>Thu, 02 May 2013 20:16:55 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/23/2013/5/2/Dynamic-variable-names-with-a-dereferencing-block/</guid>
+      <description>&lt;p&gt;Perl is remarkably flexible and allows you to achieve all kinds of wizardry with the language. One example of this is using a dereferencing block to use a scalar value as a variable name. This allows you to use variables with dynamic names.&lt;/p&gt;
+
+&lt;p&gt;An interesting example of this can be seen in &lt;a href=&#34;https://metacpan.org/source/NRG/Nginx-ParseLog-1.01/lib/Nginx/ParseLog.pm&#34;&gt;Nginx::ParseLog&lt;/a&gt;, I&amp;rsquo;ve reproduced the relevant code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ( $log_string &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;m/^($ip)\s-\s (.*?)\s         \[(.*?)\]\s  &amp;#34;(.*?)&amp;#34;\s  (\d+)\s  (\d+)\s     &amp;#34;(.*?)&amp;#34;\s  &amp;#34;(.*?)&amp;#34;$/x&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $deparsed &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; { };
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+         
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @field_list &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw/
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            ip     
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        remote_user
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            time    
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            request
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            status 
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            bytes_send
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            referer 
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            user_agent
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    /&lt;/span&gt;;
+ 
+    {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; strict &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;refs&amp;#39;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# some Perl magic&lt;/span&gt;
+ 
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (@field_list) {
+            $deparsed&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ $_  } &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ${ &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;$c };
+            }
+    }
+     
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $deparsed;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;What this code does is match $log_string against a regex - if the match is successful, it iterates through the regex capture global variables ($1-$8), using the values of @field_list as the key values for the captures. The dynamic variable name is stored in $c.&lt;/p&gt;
+
+&lt;p&gt;Using dynamic variable names can provide useful shortcuts when used in the right context. Dynamic variables can also increase the risk of error (note that strict &amp;lsquo;refs&amp;rsquo; had to be disabled for this code to work). What&amp;rsquo;s nice about this example is using the regex match in the if statement provides the assurance that every capture was successful, hence in this context it should be ok to turn strict refs off briefly.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>The conditional (ternary) operator</title>
+      <link>http://localhost:1313/article/20/2013/4/16/The-conditional--ternary--operator/</link>
+      <pubDate>Tue, 16 Apr 2013 23:12:40 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/20/2013/4/16/The-conditional--ternary--operator/</guid>
+      <description>&lt;p&gt;One way to reduce the verbosity of Perl code is to replace if-else statements with a conditional operator expression. The conditional operator (aka ternary operator) takes the form: &lt;strong&gt;logical test&lt;/strong&gt; ? &lt;strong&gt;value if true&lt;/strong&gt; : &lt;strong&gt;value if false&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s convert a standard Perl if-else into its conditional operator equivalent, using a fictitious subroutine. First here is the if-else:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;calculate_salary&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $hours &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $salary;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($hours &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;40&lt;/span&gt;) {
+        $salary &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; get_overtime_wage($hours);
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+        $salary &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; get_normal_wage($hours);
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $salary;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And here is the same statement using the conditional operator:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;calculate_salary&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $hours &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $hours &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;40&lt;/span&gt; ? get_overtime_wage($hours) : get_normal_wage($hours);
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Hopefully this example shows how using the conditional operator can shorten and simplify Perl code. For further detail, check out the &lt;a href=&#34;https://perldoc.perl.org/perlop.html#Conditional-Operator&#34;&gt;official documentation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>List shortcuts: qw the quote whitespace operator</title>
+      <link>http://localhost:1313/article/15/2013/4/9/List-shortcuts--qw-the-quote-whitespace-operator/</link>
+      <pubDate>Tue, 09 Apr 2013 00:02:11 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/15/2013/4/9/List-shortcuts--qw-the-quote-whitespace-operator/</guid>
+      <description>&lt;p&gt;A popular way to build a list of literal quotes in Perl is to use the quote whitespace operator (qw). It&amp;rsquo;s terse, versatile and elegant. To see why, let&amp;rsquo;s look at a typical statement using a list of strings:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# import the Encode module and three subroutines&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Encode (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;decode&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;encode&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;find_encoding&amp;#39;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To define the list of strings in Perl we had to encase every string with apostrophes, separated by commas and surrounded by parentheses. That&amp;rsquo;s a lot of fluff, and opens the door to easy mistakes such as using speechmarks (&amp;ldquo;) when you needed an apostrophe. Instead of doing that, we could have used the quote whitespace operator:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Encode &lt;span style=&#34;color:#e6db74&#34;&gt;qw/decode encode find_encoding/&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The quote whitespace operator takes a list delimiter followed by a list of plain strings separated by whitespace and returns list of literal quoted strings. The delimiter can be an ASCII symbol (slash / is a popular choice), brackets or parentheses. Let&amp;rsquo;s review some more examples:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# assign a list of an array&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @ny_boroughs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw{Bronx Brooklyn Manhattan Queens Staten_Island}&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Quote some tricky symbols using tilde as the list delimiter&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @ascii_symbols &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw~! @ $ % ^ &amp;amp; * ( ) - _ = + { } [ ] \ | / ? ~&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Use qw an input to a loop&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $firm (&lt;span style=&#34;color:#e6db74&#34;&gt;qw/Deloitte ErnstAndYoung KPMG PWC/&lt;/span&gt;){
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $firm; 
+}
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# It will ignore spaces, even double or triple spaces&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @colours &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw(red  blue   yellow    pink   green   )&lt;/span&gt;; 
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; (@colours) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $_;
+}
+&lt;span style=&#34;color:#75715e&#34;&gt;# red&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# blue&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# yellow&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# pink&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# green&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using the quote whitespace operator often results in a cleaner, simpler syntax that reduces the risk of error when working with lists.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl arrays 101 - create, loop and manipulate</title>
+      <link>http://localhost:1313/article/11/2013/4/4/Perl-arrays-101---create--loop-and-manipulate/</link>
+      <pubDate>Thu, 04 Apr 2013 20:22:51 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/11/2013/4/4/Perl-arrays-101---create--loop-and-manipulate/</guid>
+      <description>
+
+&lt;p&gt;Arrays in Perl contain an ordered list of values that can be accessed using built-in functions. They are one of the most useful data structures and frequently used in Perl programming.&lt;/p&gt;
+
+&lt;h3 id=&#34;creating-an-array&#34;&gt;Creating an array&lt;/h3&gt;
+
+&lt;p&gt;In Perl variables are identified using sigils. Arrays use @ (as in &amp;lsquo;a&amp;rsquo; for array), so the format is: @any_name_you_choose_here. Arrays are initialised by assigning a list of values (comma separated values between parentheses). Unlike more formal languages, Perl arrays can contain a mix of numbers, strings, objects and references.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @empty_array;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @another_empty_array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ();
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @numbers &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @names_start_with_j &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;John&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Judy&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Julia&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;James&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Jennifer&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @random_collection &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;2013&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;keyboard&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;perltricks.com&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;finding-the-array-length-size&#34;&gt;Finding the array length / size&lt;/h3&gt;
+
+&lt;p&gt;The length of an array (aka the &amp;lsquo;size&amp;rsquo;) is the count of the number of elements in the array. To find the array length, use the array in a scalar context:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @numbers &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $array_length &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @numbers;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $array_length;
+&lt;span style=&#34;color:#75715e&#34;&gt;# 5&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;accessing-array-elements-directly&#34;&gt;Accessing array elements directly&lt;/h3&gt;
+
+&lt;p&gt;Arrays can be accessed in a variety of ways: by directly accessing an element, slicing a group of elements or looping through the entire array, accessing one element at a time.&lt;/p&gt;
+
+&lt;p&gt;When directly accessing an array element, use the array name prefaced with the scalar sigil ($) instead of (@) and the index number of the element enclosed in square brackets. Arrays are zero-based, which means that the first element&amp;rsquo;s index number is 0 (not 1!).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @names_start_with_j &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;John&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Judy&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Julia&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;James&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Jennifer&amp;#39;&lt;/span&gt;);
+$names_start_with_j[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]; &lt;span style=&#34;color:#75715e&#34;&gt;# John&lt;/span&gt;
+$names_start_with_j[&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;]; &lt;span style=&#34;color:#75715e&#34;&gt;# Jennifer&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The implication of zero-based indexing is that the index number of the last element in an array is equal to the length of the array minus one.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @numbers &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;29&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;22&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $numbers_array_length &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @numbers;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $last_element_index &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; numbers_array_length &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;# therefore ...&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $numbers[$last_element_index];
+&lt;span style=&#34;color:#75715e&#34;&gt;# 100&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For simpler ways to access the last element of an array - see our &lt;a href=&#34;http://perltricks.com/article/6/2013/3/28/Find-the-index-of-the-last-element-in-an-array&#34;&gt;recent article&lt;/a&gt; for examples.&lt;/p&gt;
+
+&lt;h3 id=&#34;loop-through-an-array-with-foreach&#34;&gt;Loop through an array with foreach&lt;/h3&gt;
+
+&lt;p&gt;Arrays elements can be accessed sequentially using a foreach loop to iterate through the array one element at a time.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @names_start_with_j &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;John&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Judy&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Julia&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;James&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Jennifer&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $element (@names_start_with_j) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$element\n&amp;#34;&lt;/span&gt;;
+}
+&lt;span style=&#34;color:#75715e&#34;&gt;# John&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Judy&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Julia&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# James&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Jennifer&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Other common functions for looping through arrays are &lt;a href=&#34;https://perldoc.perl.org/functions/grep.html&#34;&gt;grep&lt;/a&gt; and &lt;a href=&#34;https://perldoc.perl.org/functions/map.html&#34;&gt;map&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;shift-unshift-push-and-pop&#34;&gt;shift, unshift, push and pop&lt;/h3&gt;
+
+&lt;p&gt;Perl arrays are dynamic in length, which means that elements can be added to and removed from the array as required. Perl provides four functions for this: shift, unshift, push and pop.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;shift&lt;/strong&gt; removes and returns the first element from the array, reducing the array length by 1.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @compass_points &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;north&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;east&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;south&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;west&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $direction &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift @compass_points;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $direction;
+&lt;span style=&#34;color:#75715e&#34;&gt;# north&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If no array is passed to shift, it will operate on @_. This makes it useful in subroutines and methods where by default @_ contains the arguments from the subroutine / method call. E.G.:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;print_caller(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;perltricks&amp;#34;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;print_caller&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $caller_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $caller_name;
+}
+&lt;span style=&#34;color:#75715e&#34;&gt;# perltricks&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The other three array functions work similarly to shift. &lt;strong&gt;unshift&lt;/strong&gt; receives and inserts a new element into the front of the array increasing the array length by 1.&lt;strong&gt;push&lt;/strong&gt; receives and inserts a new element to the end of the array, increasing the array length by 1. &lt;strong&gt;pop&lt;/strong&gt; removes and returns the last element in the array, reducing the array length by 1.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @compass_points &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;north&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;east&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;south&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;west&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $direction &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;north-east&amp;#39;&lt;/span&gt;;
+unshift @compass_points, $direction;
+&lt;span style=&#34;color:#75715e&#34;&gt;# @compass_points contains: north-east, north, east, south and west&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $west &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pop @compass_points;
+push @compass_points, $new_direction; &lt;span style=&#34;color:#75715e&#34;&gt;# put $west back&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;check-an-array-is-null-or-undefined&#34;&gt;Check an array is null or undefined&lt;/h3&gt;
+
+&lt;p&gt;A simple way to check if an array is null or defined is to examine it in a scalar context to obtain the number of elements in the array. If the array is empty, it will return 0, which Perl will also evaluate as boolean false. Bear in mind that this is not quite the same thing as undefined, as it is possible to have an empty array.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @empty_array;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (@empty_array) {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# do something - will not be reached if the array has 0 elements&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Upgrade your list printing using field separator variables</title>
+      <link>http://localhost:1313/article/12/2013/4/3/Upgrade-your-list-printing-using-field-separator-variables/</link>
+      <pubDate>Wed, 03 Apr 2013 22:24:28 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/12/2013/4/3/Upgrade-your-list-printing-using-field-separator-variables/</guid>
+      <description>&lt;p&gt;A typical way to print every element of an array in Perl is using a foreach loop:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @sportscar_brands &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw/Ferrari Aston_Martin Lambourgini/&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $brand (@sportscar_brands){
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$brand\n&amp;#34;&lt;/span&gt;;
+}
+&lt;span style=&#34;color:#75715e&#34;&gt;# Ferrari&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Aston_Martin&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Lambourgini&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;An alternative method is to set value of the the output field separator variable ($,). When printing a list or array Perl injects this variable between elements. Hence, if you set the output field separator to a newline (\n) you will achieve the same affect as the previous example, without the foreach loop.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$, &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# set the output field separator to newline&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @sportscar_brands &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw/Ferrari Aston_Martin Lambourgini/&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; @sportscar_brands;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Ferrari&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Aston_Martin&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Lambourgini&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The output field separator also works on lists:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$, &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw/Ferrari Aston_Martin Lambourgini/&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Ferrari&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Aston_Martin&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Lambourgini&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;There is another variable called the list separator ($&amp;ldquo;). Perl injects the value of $&amp;rdquo; between the elements of an array in an interpolated string. The subtle difference here is that the output field separator will apply when using print, however the list separator applies to all arrays in an interpolated string context. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$&amp;#34; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# set the list separator to newline&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @normalcar_brands &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw/Ford Honda Toyota Fiat/&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; @normalcar_brands; &lt;span style=&#34;color:#75715e&#34;&gt;# not inside an interpolated string&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# FordHondaToyotaFiat&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;@normalcar_brands&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# works in interpolated string&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Ford&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Honda&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Toyota&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Fiat&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $separated_list_string &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;@normalcar_brands&amp;#34;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# injects the separator&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $separated_list_string;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Ford&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Honda&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Toyota&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Fiat&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;One additional difference: despite its name, the list separator variable ($&amp;ldquo;) does not work on lists whilst the output field separator ($,) does (in Perl 5.16.3).&lt;/p&gt;
+
+&lt;p&gt;Finally if you have set both $, and $&amp;rdquo; and print an interpolated array, $&amp;rdquo; will be injected and $, will be ignored.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl string functions - concatenate substring and split</title>
+      <link>http://localhost:1313/article/8/2013/3/31/Perl-string-functions---concatenate-substring-and-split/</link>
+      <pubDate>Sun, 31 Mar 2013 23:04:34 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/8/2013/3/31/Perl-string-functions---concatenate-substring-and-split/</guid>
+      <description>
+
+&lt;p&gt;Perl has many string functions, let&amp;rsquo;s take a look at a some of the most common ones: concatenate, substring and split.&lt;/p&gt;
+
+&lt;h3 id=&#34;concatenate&#34;&gt;Concatenate&lt;/h3&gt;
+
+&lt;p&gt;Concatenate strings by inserting a fullstop (.) operator between them. Perl will automatically &amp;lsquo;stringify&amp;rsquo; scalar variables that were initialised as a number.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# declare and concatenate two strings&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $joke &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A horse walks &amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;into a bar.&amp;#39;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# A horse walks into a bar.&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Concatenate two scalars&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $meat  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ham&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bread &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;sandwich&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $lunch &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $meat &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $bread; &lt;span style=&#34;color:#75715e&#34;&gt;# hamsandwich&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Concatenate scalars initialised as numbers&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $hour        &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $minutes     &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $time_string &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $hour &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; $minutes; &lt;span style=&#34;color:#75715e&#34;&gt;# 6:30&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;substring&#34;&gt;Substring&lt;/h3&gt;
+
+&lt;p&gt;Substring extracts and returns a sub-set of an existing string. It takes up to four arguments: the expression to substring, the offset from where to start the substring, the length of the substring and a replacement string. If the length is omitted the substring will run to the end of input expression.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# substr(expression, offset, [length], [replacement])&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $joke            &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A horse walks into a bar.&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $animal          &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; substr($joke, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;# horse&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $favourite_place &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; substr($joke, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;# bar.&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Extract a substring and replace the substring in the original string&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $verb        &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; substr($joke, &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;runs&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;# walks&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $joke; &lt;span style=&#34;color:#75715e&#34;&gt;# A horse runs into a bar.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;a href=&#34;https://perldoc.perl.org/functions/substr.html&#34;&gt;perldoc&lt;/a&gt; page for substr has many more useful examples.&lt;/p&gt;
+
+&lt;h3 id=&#34;split&#34;&gt;Split&lt;/h3&gt;
+
+&lt;p&gt;The split function divides an input string into a list of substrings using a split pattern, and an (optional) limit on the number of split fields. If the input expression is omitted, Perl will use $_.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# split(pattern, [expression], [number_of_fields])&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sentence       &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A horse walks into a bar.&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @words          &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, $sentence); &lt;span style=&#34;color:#75715e&#34;&gt;# A,horse,walks,into,a,bar&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fullname       &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Mr Stephen Doyle&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# Limit the split to two fields&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @title_and_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, $fullname, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;# Mr,Stephen Doyle&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Find the index of the last element in an array</title>
+      <link>http://localhost:1313/article/6/2013/3/28/Find-the-index-of-the-last-element-in-an-array/</link>
+      <pubDate>Thu, 28 Mar 2013 23:30:33 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/6/2013/3/28/Find-the-index-of-the-last-element-in-an-array/</guid>
+      <description>
+
+&lt;p&gt;Most Perl programmers know that to find the size of an array, the array must called in a scalar context like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Declare the array&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @numbers_array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;41&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;67&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;62&lt;/span&gt;); 
+&lt;span style=&#34;color:#75715e&#34;&gt;# Get the array size&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $size_of_array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @numbers_array;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This understanding can lead to programmers applying a scalar context to an array to access its last element (subtracting 1 because arrays are zero-based).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $numbers_array[@numbers_array &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;];
+&lt;span style=&#34;color:#75715e&#34;&gt;# 62&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;the-last-index-variable&#34;&gt;The last-index variable&lt;/h3&gt;
+
+&lt;p&gt;Perl has a &amp;lsquo;last-index&amp;rsquo; variable for arrays ($#array_name).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $#numbers_array; 
+&lt;span style=&#34;color:#75715e&#34;&gt;# 4&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $numbers_array[$#numbers_array]; 
+&lt;span style=&#34;color:#75715e&#34;&gt;# 62&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The last index operator ($#array_name) also works on arrayrefs if you insert an extra dollar sigil:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $arrayref &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span style=&#34;color:#ae81ff&#34;&gt;41&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;67&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;62&lt;/span&gt;];
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $#$arrayref;
+&lt;span style=&#34;color:#75715e&#34;&gt;# 4&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $$arrayref[$#$arrayref]; 
+&lt;span style=&#34;color:#75715e&#34;&gt;# 62&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;negative-indexing&#34;&gt;Negative indexing&lt;/h3&gt;
+
+&lt;p&gt;Perl provides a shorter syntax for accessing the last element of an array: negative indexing. Negative indices track the array from the end, so -1 refers to the last element, -2 the second to last element and so on.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Declare the array&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @cakes &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw(victoria_sponge chocolate_gateau carrot)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cakes[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]; &lt;span style=&#34;color:#75715e&#34;&gt;# carrot&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cakes[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]; &lt;span style=&#34;color:#75715e&#34;&gt;# chocolate_gateau&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cakes[&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;]; &lt;span style=&#34;color:#75715e&#34;&gt;# victoria_sponge&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cakes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];  &lt;span style=&#34;color:#75715e&#34;&gt;# victoria_sponge&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cakes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;];  &lt;span style=&#34;color:#75715e&#34;&gt;# chocolate_gateau&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $cakes[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;];  &lt;span style=&#34;color:#75715e&#34;&gt;# carrot&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>You don&#39;t need a shebang line</title>
+      <link>http://localhost:1313/article/5/2013/3/25/You-don-t-need-a-shebang-line/</link>
+      <pubDate>Mon, 25 Mar 2013 23:39:55 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/5/2013/3/25/You-don-t-need-a-shebang-line/</guid>
+      <description>&lt;p&gt;The shebang line is the first line of code in a Perl script and usually looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The shebang line is the path to the Perl binary, and allows programmers to invoke Perl scripts directly instead of passing the script filename as an argument to Perl itself.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;myperltrick&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl &lt;span style=&#34;color:#75715e&#34;&gt;#execute directly, no need to type &amp;#39;perl&amp;#39; first&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;However, the shebang line is &lt;strong&gt;not mandatory&lt;/strong&gt;, and reduces the portability of Perl scripts (by requiring execute permissions and maintaining the shebang). It also obfuscates which version of Perl is being called when a script is executed, which can make debugging more difficult.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;myperltrick&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+Cant locate Catalyst&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pm in @INC (@INC contains: &lt;span style=&#34;color:#e6db74&#34;&gt;/etc/&lt;/span&gt;perl &lt;span style=&#34;color:#e6db74&#34;&gt;/usr/&lt;/span&gt;local&lt;span style=&#34;color:#e6db74&#34;&gt;/lib/&lt;/span&gt;perl&lt;span style=&#34;color:#e6db74&#34;&gt;/5.14.2 /&lt;/span&gt;usr&lt;span style=&#34;color:#e6db74&#34;&gt;/local/s&lt;/span&gt;hare&lt;span style=&#34;color:#e6db74&#34;&gt;/perl/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.14.2&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/usr/&lt;/span&gt;lib&lt;span style=&#34;color:#e6db74&#34;&gt;/perl5 /&lt;/span&gt;usr&lt;span style=&#34;color:#e6db74&#34;&gt;/share/&lt;/span&gt;perl5 &lt;span style=&#34;color:#e6db74&#34;&gt;/usr/&lt;/span&gt;lib&lt;span style=&#34;color:#e6db74&#34;&gt;/perl/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.14&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/usr/s&lt;/span&gt;hare&lt;span style=&#34;color:#e6db74&#34;&gt;/perl/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.14&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/usr/&lt;/span&gt;local&lt;span style=&#34;color:#e6db74&#34;&gt;/lib/si&lt;/span&gt;te_perl &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;) at &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;perltricks&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl line &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; failed&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;compilation aborted at &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;perltricks&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl line &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; failed&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;compilation aborted&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;# Hmm which version of Perl did I run ?&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;By not including the shebang line, programmers can write one-less line of code and retain modularity by separating the behaviour of the script from the executing programme.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;perl myperltricks&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl &lt;span style=&#34;color:#75715e&#34;&gt;#this works fine&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Perl being Perl, it will try to &amp;lsquo;Do What You Mean&amp;rsquo; if a script that contains a shebang line is passed to the Perl program as an argument, the shebang line will be ignored. So write or don&amp;rsquo;t write the shebang, but you don&amp;rsquo;t need it.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>New Features of Perl 5.14: Non-destructive Substitution</title>
+      <link>http://localhost:1313/pub/2011/05/new-features-of-perl-514-non-destructive-substitution.html/</link>
+      <pubDate>Wed, 18 May 2011 15:08:19 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/05/new-features-of-perl-514-non-destructive-substitution.html/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;http://news.perlfoundation.org/2011/05/perl-514.html&#34;&gt;Perl 5.14 is now available&lt;/a&gt;. While this latest major release of Perl 5 brings with it many bugfixes, updates to the core libraries, and the usual performance improvements, it also includes a few nice new features.&lt;/p&gt;
+
+&lt;p&gt;One such feature is non-destructive substitution:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use 5.014;
+
+    my $greeting  = &#39;Hello, world!&#39;;
+
+    # be more elite
+    say $greeting =~ tr/aeiou/4310V/r;
+
+    # then run away
+    say $greeting =~ s/Hello/Goodbye/r;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The new &lt;code&gt;/r&lt;/code&gt; modifier to the substitution and transliteration operators causes Perl to return the modified string, rather than modifying the original string in place. This replaces the idiomatic but unwieldy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my  $greeting  = &#39;Hello, world!&#39;;
+    my ($leetgreet = $greeting) =~ tr/aeiou/4310V/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This feature is even more useful for avoiding two common problems with substitutions in &lt;code&gt;map&lt;/code&gt; expressions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @modified = map { s/foo/BAR/ } @original;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Not only does the substitution modify the values of &lt;code&gt;@original&lt;/code&gt; in place, but the substitution returns a true value if the substitution succeeded and a false value otherwise. While that code &lt;em&gt;looks&lt;/em&gt; correct, it&amp;rsquo;s very subtly wrong. The corrected version of this code in Perl 5.12 or earlier is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @modified = map { my $copy = $_; $copy =~ s/foo/BAR/; $copy } @original;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;5.14 requires the addition of a single character to produce the intended behavior:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @modified = map { s/foo/BAR/r } @original;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;See &lt;code&gt;perldoc perlop&lt;/code&gt; for documentation of the &lt;code&gt;/r&lt;/code&gt; modifier.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

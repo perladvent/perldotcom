@@ -48,7 +48,7 @@ The code is simple enough; it adds the local `lib` directory to the list of dire
 
 ```perl
 $ ./t/00-compile.t
-perl t/00-compile.t 
+perl t/00-compile.t
 ok 1 - use Perly::Bot;
 ok 2 - use Perly::Bot::Feed;
 ok 3 - use Perly::Bot::Feed::Post;
@@ -74,7 +74,7 @@ my $dir = path('lib/');
 my $iter = $dir->iterator({
             recurse         => 1,
             follow_symlinks => 0,
-           }); 
+           });
 while (my $path = $iter->())
 {
   next if $path->is_dir || $path !~ /\.pm$/;
@@ -87,7 +87,7 @@ Here I use [Path::Tiny]({{<mcpan "Path::Tiny" >}}) to iterate through the files 
 
 ### Require warnings
 
-One problem with using [require](http://perldoc.perl.org/functions/require.html) to load filepaths instead of module names is that it can generate "subroutine redefined" warnings if the same module is loaded twice by different files. Imagine this code:
+One problem with using [require]({{</* perlfunc "require" */>}}) to load filepaths instead of module names is that it can generate "subroutine redefined" warnings if the same module is loaded twice by different files. Imagine this code:
 
 ```perl
 require 'lib/Game.pm';
@@ -132,7 +132,7 @@ Another way to write compile tests is using [Class::Load]({{<mcpan "Class::Load"
 
 Compile tests are an interesting class of test. They're an implementation of the axiom: "the codebase should always compile". Depending on the application, there are other axioms you can test for. For example with a web application, every admin URL should only be accessible to authenticated and authorized users. So you could write a dynamic test that enumerates every admin URL and attempts to fetch it unauthorized (the test fails if any request is successful). For testing Catalyst web applications, you might find my module [Catalyst::Plugin::ActionPaths]({{<mcpan "Catalyst::Plugin::ActionPaths" >}}) useful. Testing axioms usually has a high reward for little or no maintenance cost. Seek them out!
 
-If you ever need to suppress a particular warning, in newer versions of Perl the warnings pragma [documentation](http://perldoc.perl.org/warnings.html) lists all of the types of warnings it recognizes. This is especially useful when using experimental features like [subroutine signatures](http://perltricks.com/article/72/2014/2/24/Perl-levels-up-with-native-subroutine-signatures). You can read it for your version of Perl at the command line with:
+If you ever need to suppress a particular warning, in newer versions of Perl the warnings pragma [documentation]({{</* perldoc "warnings" */>}}) lists all of the types of warnings it recognizes. This is especially useful when using experimental features like [subroutine signatures](http://perltricks.com/article/72/2014/2/24/Perl-levels-up-with-native-subroutine-signatures). You can read it for your version of Perl at the command line with:
 
 ```perl
 $ perldoc warnings

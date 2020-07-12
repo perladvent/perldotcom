@@ -1,0 +1,604 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Test Kata on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-test-kata/</link>
+    <description>Recent content in Perl Test Kata on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 07 Apr 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-test-kata/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Perl Code Kata: Mocking Objects</title>
+      <link>http://localhost:1313/pub/2005/04/07/mockobject_kata.html/</link>
+      <pubDate>Thu, 07 Apr 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/04/07/mockobject_kata.html/</guid>
+      <description>
+
+&lt;p&gt;The last Perl Code Kata was on &lt;a href=&#34;https://metacpan.org/pod/DBD::Mock&#34;&gt;DBD::Mock&lt;/a&gt;, a mock DBI driver which is useful for &lt;a href=&#34;http://localhost:1313/pub/2005/02/10/database_kata.html&#34;&gt;testing Perl DBI applications&lt;/a&gt;. This Kata delves once again into the world of mock objects, this time using the more general &lt;a href=&#34;https://metacpan.org/pod/Test::MockObject&#34;&gt;Test::MockObject&lt;/a&gt; module.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-are-mock-objects&#34;&gt;What are Mock Objects?&lt;/h3&gt;
+
+&lt;p&gt;Mock objects are exactly what they sound like: &amp;ldquo;mocked&amp;rdquo; or &amp;ldquo;fake&amp;rdquo; objects. Through the power of polymorphism, it&amp;rsquo;s easy to swap one object for another object which implements the same interface. Mock objects take advantage of this fact, allowing you to substitute the &lt;em&gt;most minimally mocked implementation of an object possible&lt;/em&gt; for the real one during testing. This allows a greater degree of isolation within your tests, which is just an all around good thing.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-are-mock-objects-good-for&#34;&gt;What are Mock Objects Good For?&lt;/h3&gt;
+
+&lt;p&gt;Mock objects are primarily useful when writing unit tests. They share a certain similarity with the Null Object pattern in that they are purposefully &lt;em&gt;not&lt;/em&gt; meant to work. Mock objects take things one step further and allow you to mock certain actions or reactions that your mock object should have, so they are especially useful in scenarios usually considered &lt;em&gt;hard to test&lt;/em&gt;. Here is a short list of some scenarios in which mock objects make hard things easy.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests which depend on outside resources such as networks, databases, etc.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;If your code properly encapsulates any outside resources, then it should be possible to substitute a mocked object in its place during testing. This is especially useful when you have little control over the execution environment of your module. The previous Test Code Kata illustrated this by mocking the database itself. You need not stop with databases; you can mock any sufficiently encapsulated resource such as network connections, files, or miscellaneous external devices.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests for which dependencies require a lot of setup.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Sometimes your object will have a dependency which requires a large amount of set-up code. The more non-test code in your tests, the higher the possibility that it will contain a bug which can then corrupt your test results. Many times your code uses only a small portion of this hard-to-setup dependency as well. Mock objects can help simplify things by allowing you to create the most minimally mocked implementation of an object and its dependencies possible, thus removing the burden of the set-up code and reducing the possibility of bugs in your non-test code.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests for failures; in particular, failure edge cases.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Testing for failures can sometimes be very difficult to do, especially when the failure is not immediate, but triggered by a more subtle set of interactions. Using mock objects, it is possible to achieve exacting control over when, where, and why your object will fail. Mock objects often make this kind of testing trivial.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Tests with optional dependencies.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Good code should be flexible code. Many times this means that your code needs to adapt to many different situations and many different environments based on the resources available at runtime. Requiring the presence of these situations and/or environments in order to test your code can be very difficult to set up or to tear down. Just as with testing failures, it is possible to use mock objects to achieve a high degree of control over your environment and mock the situations you need to test.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;the-problem&#34;&gt;The Problem&lt;/h3&gt;
+
+&lt;p&gt;The example code for this kata illustrates as many points as possible about which mock objects are good at testing. Here is the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Site::Member;
+
+use strict;
+our $VERSION = &#39;0.01&#39;;
+
+sub new { bless { ip_address =&amp;gt; &#39;&#39; }, shift }
+
+sub ip_address { 
+    my ($self, $ip_address) = @_;
+    $self-&amp;gt;{ip_address} = $ip_address if $ip_address;
+    return $self-&amp;gt;{ip_address};
+}
+
+# ...
+
+sub city {
+    my ($self) = @_;
+    eval &amp;quot;use Geo::IP&amp;quot;;
+    if ($@) {
+        warn &amp;quot;You must have Geo::IP installed for this feature&amp;quot;;
+        return;
+    }
+    my $geo = Geo::IP-&amp;gt;open(
+                &amp;quot;/usr/local/share/GeoIP/GeoIPCity.dat&amp;quot;, 
+                Geo::IP-&amp;gt;GEOIP_STANDARD
+            ) || die &amp;quot;Could not create a Geo::IP object with City data&amp;quot;;
+    my $record = $geo-&amp;gt;record_by_addr($self-&amp;gt;ip_address());
+    return $record-&amp;gt;city();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example code comes from a fictional online community software package. Many such sites offer user homepages which can display all sorts of user information. As an optional feature, the software can use the member&amp;rsquo;s IP address along with the &lt;a href=&#34;https://metacpan.org/pod/Geo::IP&#34;&gt;Geo::IP&lt;/a&gt; module to determine the user&amp;rsquo;s city. The reason this feature is optional is that while &lt;code&gt;Geo::IP&lt;/code&gt; and the C library it uses are both free, the city data is not.&lt;/p&gt;
+
+&lt;p&gt;The use cases suggest testing for the following scenarios:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;User does not have &lt;code&gt;Geo::IP&lt;/code&gt; installed.&lt;/li&gt;
+&lt;li&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; installed but does not have the city data.&lt;/li&gt;
+&lt;li&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; and city data installed correctly.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Using &lt;code&gt;Test::MockObject&lt;/code&gt;, take thirty to forty minutes and see if you can write tests which cover all these use cases.&lt;/p&gt;
+
+&lt;h3 id=&#34;tips-tricks-and-suggestions&#34;&gt;Tips, Tricks, and Suggestions&lt;/h3&gt;
+
+&lt;p&gt;Some of the real strengths of &lt;code&gt;Test::MockObject&lt;/code&gt; lie in its adaptability and how simply it adapts. All &lt;code&gt;Test::MockObject&lt;/code&gt; sessions begin with creating an instance.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $mock = Test::MockObject-&amp;gt;new();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even just this much can be useful because a &lt;code&gt;Test::MockObject&lt;/code&gt; instance warns about all un-mocked methods called on it. I have used this &amp;ldquo;feature&amp;rdquo; to help trace calls while writing complex tests.&lt;/p&gt;
+
+&lt;p&gt;The next step is to mock some methods. The simplest approach is to use the &lt;code&gt;mock&lt;/code&gt; method. It takes a method name and a subroutine reference. Every time something calls that method on the object, your &lt;code&gt;$mock&lt;/code&gt; instance will run that sub.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$mock-&amp;gt;mock(&#39;greetings&#39; =&amp;gt; sub {
+    my ($mock, $name) = @_;
+    return &amp;quot;Hello $name&amp;quot;;
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How much simpler could it be?&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Test::MockObject&lt;/code&gt; also offers several pre-built mock method builders, such as &lt;code&gt;set_true&lt;/code&gt;, &lt;code&gt;set_false&lt;/code&gt;, and &lt;code&gt;set_always&lt;/code&gt;. These methods pretty much DWIM.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$mock-&amp;gt;set_true(&#39;foo&#39;); # the foo() method will return true
+$mock-&amp;gt;set_false(&#39;bar&#39;); # the bar() method will return false
+$mock-&amp;gt;set_always(&#39;baz&#39; =&amp;gt; 100); # the bar() method will always return 100
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s even possible for the object to mock not only the methods, but its class as well. The simplest approach is to use the &lt;code&gt;set_isa&lt;/code&gt; method to tell the &lt;code&gt;$mock&lt;/code&gt; object to pretend that it belongs to another class.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$mock-&amp;gt;set_isa(&#39;Foo::Bar&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, any code that calls this mock object&amp;rsquo;s &lt;code&gt;isa()&lt;/code&gt; method will believe that the &lt;code&gt;$mock&lt;/code&gt; is a &lt;code&gt;Foo::Bar&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;p&gt;In many cases, it is enough to substitute a &lt;code&gt;$mock&lt;/code&gt; instance for a real one and let polymorphism do the rest. Other times it is necessary to inject control into the code much earlier than this. This is where the &lt;code&gt;fake_module&lt;/code&gt; method comes in.&lt;/p&gt;
+
+&lt;p&gt;With the &lt;code&gt;fake_module&lt;/code&gt; method, &lt;code&gt;Test::MockObject&lt;/code&gt; can subvert control of an entire package such that it will intercept any calls to that package. The following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Foo::Bar&#39; =&amp;gt; (
+    &#39;import&#39; =&amp;gt; sub { die &amp;quot;Foo::Bar could not be loaded&amp;quot; }
+));
+use_ok(&#39;Foo::Bar&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;actually gives the illusion that the &lt;code&gt;Foo::Bar&lt;/code&gt; module failed to load regardless of whether the user has it installed. These kinds of edge cases can be very difficult to test, but &lt;code&gt;Test::MockObject&lt;/code&gt; simplifies them greatly.&lt;/p&gt;
+
+&lt;p&gt;But wait, that&amp;rsquo;s not all.&lt;/p&gt;
+
+&lt;p&gt;After your tests have run using your mock objects, it is possible to inspect the methods called on them and query the order of their calls. You can even inspect the arguments passed into these methods. There several methods for this, so I refer you to the POD documentation of &lt;code&gt;Test::MockObject&lt;/code&gt; for details.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-solution&#34;&gt;The Solution&lt;/h3&gt;
+
+&lt;p&gt;I designed each use case to illustrate a different capability of &lt;code&gt;Test::MockObject&lt;/code&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;User does not have Geo::IP installed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 4;
+use Test::MockObject;
+
+my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Geo::IP&#39; =&amp;gt; (
+    &#39;import&#39; =&amp;gt; sub { die &amp;quot;Could not load Geo::IP&amp;quot; },
+));
+
+use_ok(&#39;Site::Member&#39;);
+
+my $u = Site::Member-&amp;gt;new();
+isa_ok($u, &#39;Site::Member&#39;);
+
+my $warning;
+local $SIG{__WARN__} = sub { $warning = shift };
+
+ok(!defined($u-&amp;gt;city()), &#39;... this should return undef&#39;);
+like($warning, 
+        qr/^You must have Geo\:\:IP installed for this feature/, 
+        &#39;... and we should have our warning&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This use case illustrates the use of &lt;code&gt;Test::MockObject&lt;/code&gt; to mock the failure of the loading of an optional resource, which in this case is the &lt;code&gt;Geo::IP&lt;/code&gt; module.&lt;/p&gt;
+
+&lt;p&gt;The sample code attempts to load &lt;code&gt;Geo::IP&lt;/code&gt; by calling &lt;code&gt;eval &amp;quot;use Geo::IP&amp;quot;&lt;/code&gt;. Because &lt;code&gt;use&lt;/code&gt; always calls a module&amp;rsquo;s &lt;code&gt;import&lt;/code&gt; method, it is possible to exploit this and mock a &lt;code&gt;Geo::IP&lt;/code&gt; load failure. This is easy to accomplish by using the &lt;code&gt;fake_module&lt;/code&gt; method and making the &lt;code&gt;import&lt;/code&gt; method die. This then triggers the warning code in the &lt;code&gt;city&lt;/code&gt; method, which the &lt;code&gt;$SIG{__WARN__}&lt;/code&gt; handler captures into &lt;code&gt;$warning&lt;/code&gt; for a later test.&lt;/p&gt;
+
+&lt;p&gt;This is an example of a failure edge case which would be difficult to test without &lt;code&gt;Test::MockObject&lt;/code&gt; because it requires control of the Perl libraries installed. Testing this without &lt;code&gt;Test::MockObject&lt;/code&gt; would require altering the &lt;code&gt;@INC&lt;/code&gt; in subtle ways or mocking a &lt;code&gt;Geo::IP&lt;/code&gt; package of your own. &lt;code&gt;Test::MockObject&lt;/code&gt; does that for you, so why bother to re-invent a wheel if you don&amp;rsquo;t need to?&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; installed but does not have the city data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 3;
+use Test::Exception;
+use Test::MockObject;
+
+my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Geo::IP&#39; =&amp;gt; (
+    &#39;open&#39;           =&amp;gt; sub { undef },
+    &#39;GEOIP_STANDARD&#39; =&amp;gt; sub { 0 }
+));
+
+use_ok(&#39;Site::Member&#39;);
+
+my $u = Site::Member-&amp;gt;new();
+isa_ok($u, &#39;Site::Member&#39;);
+
+$u-&amp;gt;ip_address(&#39;64.40.146.219&#39;);
+
+throws_ok {
+    $u-&amp;gt;city()
+} qr/Could not create a Geo\:\:IP object/, &#39;... got the error we expected&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This next use case illustrates the use of &lt;code&gt;Test::MockObject&lt;/code&gt; to mock a dependency relationship, in particular the failure case where &lt;code&gt;Geo::IP&lt;/code&gt; cannot find the specified database file.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Geo::IP&lt;/code&gt; follows the common Perl idiom of returning &lt;code&gt;undef&lt;/code&gt; if the object constructor fails. The example code tests for this case and throws an exception if it comes up. Testing for this failure uses the &lt;code&gt;fake_module&lt;/code&gt; method again to hijack &lt;code&gt;Geo::IP&lt;/code&gt; and install a mocked version of its &lt;code&gt;open&lt;/code&gt; method (the code also fakes the &lt;code&gt;GEOIP_STANDARD&lt;/code&gt; constant here). The mocked &lt;code&gt;open&lt;/code&gt; simply returns &lt;code&gt;undef&lt;/code&gt; which will create the proper conditions to trigger the exception in the example code. The exception is then caught using the &lt;code&gt;throws_ok&lt;/code&gt; method of the &lt;a href=&#34;https://metacpan.org/pod/Test::Exception&#34;&gt;Test::Exception&lt;/a&gt; module.&lt;/p&gt;
+
+&lt;p&gt;This example illustrates that it is still possible to mock objects even if your code is not in the position to pass in a mocked instance itself. Again, to test this without using &lt;code&gt;Test::MockObject&lt;/code&gt; would require control of the outside environment (the &lt;code&gt;Geo::IP database&lt;/code&gt; file), or in some way having control over where &lt;code&gt;Geo::IP&lt;/code&gt; looks for the database file. While well-written and well-architected code would probably allow you to alter the database file path and therefore test this without using mock objects, the mock object version makes no such assumptions and therefore works the same in either case.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;User has &lt;code&gt;Geo::IP&lt;/code&gt; and the Geo-IP city data installed correctly.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 7;
+use Test::MockObject;
+
+my $mock = Test::MockObject-&amp;gt;new();
+$mock-&amp;gt;fake_module(&#39;Geo::IP&#39; =&amp;gt; (
+    &#39;open&#39;           =&amp;gt; sub { $mock },
+    &#39;GEOIP_STANDARD&#39; =&amp;gt; sub { 0 }
+));
+
+my $mock_record = Test::MockObject-&amp;gt;new();
+$mock_record-&amp;gt;set_always(&#39;city&#39;, &#39;New York City&#39;);
+
+$mock-&amp;gt;set_always(&#39;record_by_addr&#39;, $mock_record);
+
+use_ok(&#39;Site::Member&#39;);
+
+my $u = Site::Member-&amp;gt;new();
+isa_ok($u, &#39;Site::Member&#39;);
+
+$u-&amp;gt;ip_address(&#39;64.40.146.219&#39;);
+
+is($u-&amp;gt;city(), &#39;New York City&#39;, &#39;... got the right city&#39;);
+
+cmp_ok($mock-&amp;gt;call_pos(&#39;record_by_addr&#39;), &#39;==&#39;, 0,
+        &#39;... our mock object was called&#39;);
+is_deeply(
+        [ $mock-&amp;gt;call_args(0) ],
+        [ $mock, &#39;64.40.146.219&#39; ],
+        &#39;... our mock was called with the right args&#39;);
+
+cmp_ok($mock_record-&amp;gt;call_pos(&#39;city&#39;), &#39;==&#39;, 0,
+        &#39;... our mock record object was called&#39;);
+is_deeply(
+        [ $mock_record-&amp;gt;call_args(0) ],
+        [ $mock_record ],
+        &#39;... our mock record was called with the right args&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This next case illustrates a success case, where &lt;code&gt;Geo::IP&lt;/code&gt; finds the database file it wants and returns the expected results.&lt;/p&gt;
+
+&lt;p&gt;Once again, the &lt;code&gt;fake_module&lt;/code&gt; method of &lt;code&gt;Test::MockObject&lt;/code&gt; mocks &lt;code&gt;Geo::IP&lt;/code&gt;&amp;rsquo;s &lt;code&gt;open&lt;/code&gt; method, this time returning the &lt;code&gt;$mock&lt;/code&gt; instance itself. The code creates another mock object, this time for the &lt;code&gt;Geo::IP::Record&lt;/code&gt; instance which &lt;code&gt;Geo::IP&lt;/code&gt;&amp;rsquo;s &lt;code&gt;record_by_addr&lt;/code&gt; returns. &lt;code&gt;Test::MockObject&lt;/code&gt;&amp;rsquo;s &lt;code&gt;set_always&lt;/code&gt; method mocks the &lt;code&gt;city&lt;/code&gt; method for the &lt;code&gt;$mock_record&lt;/code&gt; instance. After this, &lt;code&gt;Geo::IP&lt;/code&gt;&amp;rsquo;s &lt;code&gt;record_by_addr&lt;/code&gt; is mocked to return the &lt;code&gt;$mock_record&lt;/code&gt; instance. With all of these mocks in place, the tests then run. After that, inspecting the mock objects ensures that the code called the correct methods on the mocked objects in the correct order and with the correct arguments.&lt;/p&gt;
+
+&lt;p&gt;This example illustrates testing success without needing to worry about the existence of an outside dependency. &lt;code&gt;Test::MockObject&lt;/code&gt; supports taking this test one step further and providing methods for inspecting the details of the interaction between the example code and that of the mocked &lt;code&gt;Geo::IP&lt;/code&gt; module. Accomplishing this test without &lt;code&gt;Test::MockObject&lt;/code&gt; would be almost impossible given the lack of control over the &lt;code&gt;Geo::IP&lt;/code&gt; module and its internals.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Mock objects can seem complex and overly abstract at first, but once grasped they can be a simple, clean way to make hard things easy. I hope to have shown how creating simple and minimal mock object with &lt;code&gt;Test::MockObject&lt;/code&gt; can help in testing cases which might be difficult using more traditional means.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Code Kata: Testing Databases</title>
+      <link>http://localhost:1313/pub/2005/02/10/database_kata.html/</link>
+      <pubDate>Thu, 10 Feb 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/02/10/database_kata.html/</guid>
+      <description>
+
+&lt;p&gt;Testing code that uses a database can be tricky. The most common solution is to set up a test database with test data and run your tests against this. This, of course, requires bookkeeping code to keep your test database in the proper state for all your tests to run without adversely affecting one another. This can range from dropping and recreating the test database for each test, to a more granular adding and deleting at the row level. Either way, you are introducing non-test code into your tests that open up possibilities for contamination. Ultimately, because you have control over the environment in which your tests run, you can manage this despite the occasional headache.&lt;/p&gt;
+
+&lt;p&gt;The real fun only starts when you decide that you should release your masterpiece unto the world at large. As any CPAN author will tell you, it is absolutely impossible to control the environment other people will run your code in once you release it. Testing database code in such a hostile environment can be frustrating for both the module developer and the module installer. A common approach is to allow the user to specify the specific database connection information as either environment variables or command-line arguments, skipping the tests unless those variables are present. Another approach is to use the lightweight and very portable &lt;a href=&#34;http://www.sqlite.org/&#34;&gt;SQLite&lt;/a&gt; as your test database (of course, testing first that the user has installed SQLite). While these solutions do work, they can often be precarious, and in the end will increase the number of possible installation problems you, as module author, could face.&lt;/p&gt;
+
+&lt;p&gt;What is a module author to do?&lt;/p&gt;
+
+&lt;h3 id=&#34;dbd-mock-testing-kata&#34;&gt;DBD::Mock Testing Kata&lt;/h3&gt;
+
+&lt;p&gt;This code kata introduces an alternate approach to testing database code, that of using mock-objects, and specifically of using the &lt;a href=&#34;https://metacpan.org/pod/DBD::Mock&#34;&gt;DBD::Mock&lt;/a&gt; mock DBI driver. Before showing off any code, I want to explain the basic philosophy of Mock Objects as well as where DBD::Mock fits in.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-are-mock-objects&#34;&gt;What are Mock Objects?&lt;/h4&gt;
+
+&lt;p&gt;When writing unit tests, it is best to try to isolate what you are testing as much as possible. You want to be sure that not only are you &lt;em&gt;only&lt;/em&gt; testing the code in question, but that a bug or issue in code outside what you are testing will not introduce false negatives in your tests. Unfortunately, this ideal of a completely decoupled design is just an ideal. In real-world practice, code has dependencies that you cannot remove for testing. This is where Mock Objects come in.&lt;/p&gt;
+
+&lt;p&gt;Mock Objects are exactly what they sound like; they are &amp;ldquo;mocked&amp;rdquo; or &amp;ldquo;fake&amp;rdquo; objects. Good polymorphic thought says that you should be able to swap out one object for another object implementing the same interface. Mock Objects take advantage of this by allowing you to substitute the &lt;em&gt;most minimally mocked implementation of an object possible&lt;/em&gt; for the real one during testing. This allows you to concentrate on the code being tested without worrying about silly things, such as whether your database is still running or if there is a database available to test against.&lt;/p&gt;
+
+&lt;h4 id=&#34;where-does-dbd-mock-fit-in&#34;&gt;Where Does DBD::Mock Fit In?&lt;/h4&gt;
+
+&lt;p&gt;DBD::Mock is a mock DBI Driver that allows you to test code which uses DBI without needing to worry about the who, what, when, and where of a database. DBD::Mock also helps to reduce the amount of database bookkeeping code by doing away with the database entirely, instead keeping a detailed record of all the actions performed by your code through DBI. Of course, database interaction/communication is not only one way, so DBD::Mock also allows you to seed the driver with mock record sets. DBD::Mock makes it possible to fake most (non-vendor specific) database interaction for the purpose of writing tests. For more detailed documentation I suggest reading the DBD::Mock POD documentation itself.&lt;/p&gt;
+
+&lt;h4 id=&#34;sample-dbi-code&#34;&gt;Sample DBI Code&lt;/h4&gt;
+
+&lt;p&gt;In the tradition of past Perl Code katas here is some simplified code to write your tests against. This code should be simple enough to understand, but also complex enough to show the real usefulness of DBD::Mock.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package MyApp::Login;
+
+use DBI;
+
+my $MAX_LOGIN_FAILURES = 3;
+
+sub login {
+  my ($dbh, $u, $p) = @_;
+  # look for the right username and password
+  my ($user_id) = $dbh-&amp;gt;selectrow_array(
+      &amp;quot;SELECT user_id FROM users WHERE username = &#39;$u&#39; AND password = &#39;$p&#39;&amp;quot;
+  );
+  # if we find one, then ...
+  if ($user_id) {
+      # log the event and return success
+      $dbh-&amp;gt;do(
+          &amp;quot;INSERT INTO event_log (event) VALUES(&#39;User $user_id logged in&#39;)&amp;quot;
+      );
+      return &#39;LOGIN SUCCESSFUL&#39;;
+  }
+  # if we don&#39;t find one then ...
+  else {
+      # see if the username exists ...
+      my ($user_id, $login_failures) = $dbh-&amp;gt;selectrow_array(
+          &amp;quot;SELECT user_id, login_failures FROM users WHERE username = &#39;$u&#39;&amp;quot;
+      );
+      # if we do have a username, and the password doesnt match then
+      if ($user_id) {
+          # if we have not reached the max allowable login failures then
+          if ($login_failures &amp;lt; $MAX_LOGIN_FAILURES) {
+              # update the login failures
+              $dbh-&amp;gt;do(qq{
+                  UPDATE users
+                  SET login_failures = (login_failures + 1)
+                  WHERE user_id = $user_id
+              });
+              return &#39;BAD PASSWORD&#39;;
+          }
+          # otherwise ...
+          else {
+              # we must update the login failures, and lock the account
+              $dbh-&amp;gt;do(
+                  &amp;quot;UPDATE users SET login_failures = (login_failures + 1), &amp;quot; .
+                  &amp;quot;locked = 1 WHERE user_id = $user_id&amp;quot;
+              );
+              return &#39;USER ACCOUNT LOCKED&#39;;
+          }
+      }
+      else {
+          return &#39;USERNAME NOT FOUND&#39;;
+      }
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are four distinct paths through this code, each one resulting in one of the four return messages; &lt;code&gt;LOGIN SUCCESSFUL&lt;/code&gt;, &lt;code&gt;BAD PASSWORD&lt;/code&gt;, &lt;code&gt;USER ACCOUNT LOCKED&lt;/code&gt;, and &lt;code&gt;USERNAME NOT FOUND&lt;/code&gt;. See if you can write tests enough to cover all four paths. Feel free to use &lt;a href=&#34;https://metacpan.org/pod/Devel::Cover&#34;&gt;Devel::Cover&lt;/a&gt; to verify this.&lt;/p&gt;
+
+&lt;p&gt;Armed with your knowledge of DBD::Mock, go forth and write tests! The next page describes DBD::Mock in more detail and gives some strategies for writing the appropriate tests. You should spend between 30 and 45 minutes writing the tests before continuing.&lt;/p&gt;
+
+&lt;h3 id=&#34;tips-tricks-and-suggestions&#34;&gt;Tips, Tricks, and Suggestions&lt;/h3&gt;
+
+&lt;p&gt;Because DBD::Mock is an implementation of a DBD driver, its usage is familiar to that of DBI. DBD::Mock is unique in its ability to mock the database interaction. The following is a short introduction to these features of DBD::Mock.&lt;/p&gt;
+
+&lt;p&gt;Fortunately, connecting to the database is the only part of your regular DBI code which needs to be DBD::Mock specific, because DBI chooses the driver based upon the dsn string given it. To do this with DBD::Mock:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because DBI will not actually connecting to a real database here, you need no database name, username, or password. The next thing to do is to seed the database driver with a result set. Do this through the &lt;code&gt;mock_add_resultset&lt;/code&gt; attribute of the &lt;code&gt;$dbh&lt;/code&gt; handle.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_add_resultset} = [
+  [ &#39;user_id&#39;, &#39;username&#39;, &#39;password&#39; ],
+  [ 1, &#39;stvn&#39;, &#39;****&#39; ]
+];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;DBD::Mock will return this particular result set the next time a statement executes on this &lt;code&gt;$dbh&lt;/code&gt;. Note that the first row is the column names, while all subsequent rows are data. Of course, in some cases, this is not specific enough, and so DBD::Mock also allows the binding of a particular SQL statement to a particular result set:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_add_resultset} = {
+  sql     =&amp;gt; &amp;quot;SELECT * FROM user_table WHERE username = &#39;stvn&#39;&amp;quot;,
+  results =&amp;gt; [[ &#39;user_id&#39;, &#39;username&#39;, &#39;password&#39; ],
+              [ 1, &#39;stvn&#39;, &#39;****&#39; ]]
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now whenever the statement &lt;code&gt;SELECT * FROM user_table WHERE username = &#39;stvn&#39;&lt;/code&gt; executes, DBD::Mock will return this result set DBD::Mock can also specify the number of rows affected for &lt;code&gt;UPDATE&lt;/code&gt;, &lt;code&gt;INSERT&lt;/code&gt;, and &lt;code&gt;DELETE&lt;/code&gt; statements using &lt;code&gt;mock_add_resultset&lt;/code&gt; as well. For example, here DBI will see the &lt;code&gt;DELETE&lt;/code&gt; statement as having deleted 3 rows of data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_add_resultset} = {
+  sql     =&amp;gt; &amp;quot;DELETE FROM session_table WHERE active = 0&amp;quot;,
+  results =&amp;gt; [[ &#39;rows&#39; ], [], [], []]
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;DBD::Mock version 0.18 introduced the DBD::Mock::Session object, which allows the scripting of a &lt;code&gt;session&lt;/code&gt; of database interaction &amp;ndash; and DBD::Mock can verify that the session executes properly. Here is an example of DBD::Mock::Session:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh-&amp;gt;{mock_session} = DBD::Mock::Session-&amp;gt;new(&#39;session_reaping&#39; =&amp;gt; (
+  {
+  statement =&amp;gt; &amp;quot;UPDATE session_table SET active = 0 WHERE timeout &amp;lt; NOW()&amp;quot;,
+  results  =&amp;gt; [[ &#39;rows&#39; ], [], [], []]
+  },
+  {
+  statement =&amp;gt; &amp;quot;DELETE FROM session_table WHERE active = 0&amp;quot;,
+  results  =&amp;gt; [[ &#39;rows&#39; ], [], [], []]
+  }
+));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The hash reference given for each statement block in the session should look very similar to the values added with &lt;code&gt;mock_add_resultset&lt;/code&gt;, with the only difference in the substitution of the word &lt;code&gt;statement&lt;/code&gt; for the word &lt;code&gt;sql&lt;/code&gt;. DBD::Mock will assure that the first statement run matches the first statement in the session, raising an error (in the manner specified by &lt;code&gt;PrintError&lt;/code&gt; or &lt;code&gt;RaiseError&lt;/code&gt;) if not. DBD::Mock will then continue through the session until it reaches the last statement, verifying that each statement run matches in the order specified. You can also use regular expression references and code references in the &lt;code&gt;statement&lt;/code&gt; slots of DBD::Mock::Session for even more sophisticated comparisons. See the documentation for more details of how those features work.&lt;/p&gt;
+
+&lt;p&gt;After you seed a &lt;code&gt;$dbh&lt;/code&gt; with result sets, the next step is to run the DBI code which will use those result sets. This is just normal regular everyday DBI code, with nothing unique to DBD::Mock.&lt;/p&gt;
+
+&lt;p&gt;After all the DBI code runs, it is possible to then go through all the statements that have been executed and examine them using the array of DBD::Mock::StatementTrack objects found in the &lt;code&gt;mock_all_history&lt;/code&gt; attribute of your &lt;code&gt;$dbh&lt;/code&gt;. Here is a simple example of printing information about each statement run and the bind parameters used:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $history = $dbh-&amp;gt;{mock_all_history};
+foreach my $s (@{$history}) {
+  print &amp;quot;Statement  : &amp;quot; . $s-&amp;gt;statement() . &amp;quot;\n&amp;quot; .
+        &amp;quot;bind params: &amp;quot; . (join &#39;, &#39;, @{$s-&amp;gt;bound_params()}) . &amp;quot;\n&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;DBD::Mock::StatementTrack also offers many other bits of statement information. I refer you again to the DBD::Mock POD documentation for more details.&lt;/p&gt;
+
+&lt;p&gt;Now, onto the tests.&lt;/p&gt;
+
+&lt;h3 id=&#34;solutions&#34;&gt;Solutions&lt;/h3&gt;
+
+&lt;p&gt;The saying goes of Perl, &amp;ldquo;there is more than one way to do it&amp;rdquo;, and this is true of DBD::Mock as well. The test code had four distinct paths through the code, and the test solutions will use each one to demonstrate a different technique for writing tests with DBD::Mock.&lt;/p&gt;
+
+&lt;p&gt;The first example is the &lt;code&gt;LOGIN SUCCESSFUL&lt;/code&gt; path. The code uses the array version of &lt;code&gt;mock_add_resultset&lt;/code&gt; to seed the &lt;code&gt;$dbh&lt;/code&gt; and then examines the &lt;code&gt;mock_all_history&lt;/code&gt; to be sure all the statements ran in the correct order.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 4;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;);
+
+$dbh-&amp;gt;{mock_add_resultset} = [[ &#39;user_id&#39; ], [ 1 ]];
+$dbh-&amp;gt;{mock_add_resultset} = [[ &#39;rows&#39; ], []];
+
+is(MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;),
+   &#39;LOGIN SUCCESSFUL&#39;,
+   &#39;... logged in successfully&#39;);
+
+my $history = $dbh-&amp;gt;{mock_all_history};
+
+cmp_ok(@{$history}, &#39;==&#39;, 2, &#39;... we ran 2 statements&#39;);
+
+is($history-&amp;gt;[0]-&amp;gt;statement(),
+   &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39; AND password =
+    &#39;****&#39;&amp;quot;, &#39;... the first statement is correct&#39;);
+
+is($history-&amp;gt;[1]-&amp;gt;statement(),
+   &amp;quot;INSERT INTO event_log (event) VALUES(&#39;User 1 logged in&#39;)&amp;quot;,
+   &#39;... the second statement is correct&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the simplest and most direct use of DBD::Mock. Simply seed the &lt;code&gt;$dbh&lt;/code&gt; with an appropriate number of result sets, run the code, and then test to verify it called the right SQL in the right order. It doesn&amp;rsquo;t come much simpler than that. This approach does have its drawbacks though, the most obvious being that there is no means of associating the SQL directly with the result sets (as would happen in a real database). However, DBD::Mock returns result sets in the order added, so there is an implied sequence of events, verifiable later with &lt;code&gt;mock_all_history&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The next example is the &lt;code&gt;USERNAME NOT FOUND&lt;/code&gt; path. The test code uses the hash version of &lt;code&gt;mock_add_resultset&lt;/code&gt; to seed the &lt;code&gt;$dbh&lt;/code&gt; and the &lt;code&gt;mock_all_history_iterator&lt;/code&gt; to check the statements afterwards.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 4;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;);
+
+$dbh-&amp;gt;{mock_add_resultset} = {
+  sql =&amp;gt; &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39;
+       AND password = &#39;****&#39;&amp;quot;, results =&amp;gt; [[ &#39;user_id&#39; ],
+       [ undef ]]
+};
+$dbh-&amp;gt;{mock_add_resultset} = {
+  sql =&amp;gt; &amp;quot;SELECT user_id, login_failures FROM users WHERE
+       username = &#39;user&#39;&amp;quot;, results =&amp;gt; [[ &#39;user_id&#39;,
+       &#39;login_failures&#39; ], [ undef, undef ]]
+};
+
+is(MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;),
+  &#39;USERNAME NOT FOUND&#39;,
+  &#39;... username is not found&#39;);
+
+my $history_iterator = $dbh-&amp;gt;{mock_all_history_iterator};
+
+is($history_iterator-&amp;gt;next()-&amp;gt;statement(),
+   &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39; AND password = &#39;****&#39;&amp;quot;,
+   &#39;... the first statement is correct&#39;);
+
+is($history_iterator-&amp;gt;next()-&amp;gt;statement(),
+   &amp;quot;SELECT user_id, login_failures FROM users WHERE username = &#39;user&#39;&amp;quot;,
+   &#39;... the second statement is correct&#39;);
+
+ok(!defined($history_iterator-&amp;gt;next()), &#39;... we have no more statements&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach allows the association of a specific SQL statement with a specific result sets. However, it loses the implied ordering of statements, which is one of the benefits of the array version of &lt;code&gt;mock_add_resultset&lt;/code&gt;. You can check this manually using &lt;code&gt;mock_all_history_iterator&lt;/code&gt; (which simply iterates over the array returned by &lt;code&gt;mock_all_history&lt;/code&gt;). One of the nice things about using &lt;code&gt;mock_all_history_iterator&lt;/code&gt; is that if the need arises to add, delete, or reorder your SQL statements, you don&amp;rsquo;t need to change all the &lt;code&gt;$history&lt;/code&gt; array indices in your test. It is also a good idea to check that only the two expected statements ran; do this by exploiting the fact that the iterator returns undefined values when it exhausts its contents.&lt;/p&gt;
+
+&lt;p&gt;The next example is the &lt;code&gt;USER ACCOUNT LOCKED&lt;/code&gt; path. The test code uses the DBD::Mock::Session object to test this path. I recommend to set the &lt;code&gt;$dbh&lt;/code&gt; to &lt;code&gt;RaiseError&lt;/code&gt; so that DBD::Mock::Session will throw an exception if it runs into an issue.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 2;
+use Test::Exception;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;, { RaiseError =&amp;gt; 1, PrintError =&amp;gt; 0 });
+
+my $lock_user_account = DBD::Mock::Session-&amp;gt;new(&#39;lock_user_account&#39; =&amp;gt; (
+  {
+      statement =&amp;gt; &amp;quot;SELECT user_id FROM users WHERE username = &#39;user&#39; AND
+           password = &#39;****&#39;&amp;quot;, results   =&amp;gt; [[ &#39;user_id&#39; ], [ undef]]
+  },
+  {
+      statement =&amp;gt; &amp;quot;SELECT user_id, login_failures FROM users WHERE
+           username = &#39;user&#39;&amp;quot;, results   =&amp;gt; [[ &#39;user_id&#39;, &#39;login_failures&#39; ],
+           [ 1, 4 ]]
+  },
+  {
+      statement =&amp;gt; &amp;quot;UPDATE users SET login_failures = (login_failures + 1),
+      locked = 1 WHERE user_id = 1&amp;quot;, results   =&amp;gt; [[ &#39;rows&#39; ], []]
+  }
+));
+
+$dbh-&amp;gt;{mock_session} = $lock_user_account;
+my $result;
+lives_ok {
+    $result = MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;)
+} &#39;... our session ran smoothly&#39;;
+is($result,
+  &#39;USER ACCOUNT LOCKED&#39;,
+  &#39;... username is found, but the password is wrong,
+       so we lock the the user account&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The DBD::Mock::Session approach has several benefits. First, the SQL statements are associated with specific result sets (as with the hash version of &lt;code&gt;mock_add_resultset&lt;/code&gt;). Second, there is an explicit ordering of statements (like the array version of &lt;code&gt;mock_add_resultset&lt;/code&gt;). DBD::Mock::Session will verify that the session has been followed properly, and raise an error if it is not. The one drawback of this example is the use of static strings to compare the SQL with. However, DBD::Mock::Session can use other things, as illustrated in the next and final example.&lt;/p&gt;
+
+&lt;p&gt;The next and final example is the &lt;code&gt;BAD PASSWORD&lt;/code&gt; path. The test code demonstrates some of the more complex possibilities of the DBD::Mock::Session object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More tests =&amp;gt; 2;
+use Test::Exception;
+
+use SQL::Parser;
+use Data::Dumper;
+
+use MyApp::Login;
+
+my $dbh = DBI-&amp;gt;connect(&#39;dbi:Mock:&#39;, &#39;&#39;, &#39;&#39;, { RaiseError =&amp;gt; 1, PrintError =&amp;gt; 0 });
+
+my $bad_password = DBD::Mock::Session-&amp;gt;new(&#39;bad_password&#39; =&amp;gt; (
+{
+  statement =&amp;gt; qr/SELECT user_id FROM users WHERE username = \&#39;.*?\&#39; AND
+       password = \&#39;.*?\&#39;/, results   =&amp;gt; [[ &#39;user_id&#39; ], [ undef]]
+},
+{
+  statement =&amp;gt; qr/SELECT user_id, login_failures FROM users WHERE username =
+  \&#39;.*?\&#39;/, results   =&amp;gt; [[ &#39;user_id&#39;, &#39;login_failures&#39; ], [ 1, 0 ]]
+},
+{
+  statement =&amp;gt; sub {
+      my $parser1 = SQL::Parser-&amp;gt;new(&#39;ANSI&#39;);
+      $parser1-&amp;gt;parse(shift(@_));
+      my $parsed_statement1 = $parser1-&amp;gt;structure();
+      delete $parsed_statement1-&amp;gt;{original_string};
+
+      my $parser2 = SQL::Parser-&amp;gt;new(&#39;ANSI&#39;);
+      $parser2-&amp;gt;parse(&amp;quot;UPDATE users SET login_failures =
+           (login_failures + 1) WHERE user_id = 1&amp;quot;);
+      my $parsed_statement2 = $parser2-&amp;gt;structure();
+      delete $parsed_statement2-&amp;gt;{original_string};
+
+      return Dumper($parsed_statement2) eq Dumper($parsed_statement1);
+  },
+  results   =&amp;gt; [[ &#39;rows&#39; ], []]
+}
+));
+
+$dbh-&amp;gt;{mock_session} = $bad_password;
+
+my $result;
+lives_ok {
+    $result = MyApp::Login::login($dbh, &#39;user&#39;, &#39;****&#39;)
+} &#39;... our session ran smoothly&#39;;
+is($result, &#39;BAD PASSWORD&#39;, &#39;... username is found, but the password is wrong&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach uses DBD::Mock::Session&amp;rsquo;s more flexible means of performing SQL comparisons. The first and second statements are compared using regular expressions, which alleviates the need to hardcode test data into the statement. The third statement uses a subroutine reference to perform the SQL comparison. As you may have noticed in the test code provided, the &lt;code&gt;UPDATE&lt;/code&gt; statement for the &lt;code&gt;BAD PASSWORD&lt;/code&gt; path used Perl&amp;rsquo;s &lt;code&gt;qq()&lt;/code&gt; quoting mechanism to format the SQL in a more freeform manner. This can create complexities when trying to verify the SQL using strings or regular expressions. The test here uses &lt;a href=&#34;https://metacpan.org/pod/SQL::Parser&#34;&gt;SQL::Parser&lt;/a&gt; to determine the &lt;em&gt;functional equivalence&lt;/em&gt; of the test statement and the statement run in the code.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;I hope this kata has illustrated that unit-testing DBI code does not have to be as difficult and dangerous as it might seem. Through the use of Mock Objects in general and specifically the DBD::Mock DBI driver, it is possible to achieve 100% code coverage of your DBI-related code without ever having touched a real database. Here is the Devel::Cover output for the tests above:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; ---------------------------- ------ ------ ------ ------ ------ ------ ------
+ File                           stmt branch   cond    sub    pod   time  total
+ ---------------------------- ------ ------ ------ ------ ------ ------ ------
+ lib/MyApp/Login.pm            100.0  100.0    n/a  100.0    n/a  100.0  100.0
+ Total                         100.0  100.0    n/a  100.0    n/a  100.0  100.0
+ ---------------------------- ------ ------ ------ ------ ------ ------ ------
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;see-also&#34;&gt;See Also &amp;ndash;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.mockobjects.com/&#34;&gt;MockObjects Wiki&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/pub/2002/07/10/tmo.html&#34;&gt;A Test::MockObject Illustrated Example&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

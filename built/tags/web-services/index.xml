@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Web Services on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/web-services/</link>
+    <description>Recent content in Web Services on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 08 Apr 2008 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/web-services/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Using Amazon S3 from Perl</title>
+      <link>http://localhost:1313/pub/2008/04/08/using-amazon-s3-from-perl.html/</link>
+      <pubDate>Tue, 08 Apr 2008 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2008/04/08/using-amazon-s3-from-perl.html/</guid>
+      <description>
+
+&lt;p&gt;Data management is a critical and challenging aspect for any online resource. With exponentially growing data sizes and popularity of rich media, even small online resources must effectively manage and distribute a significant amount of data. Moreover, the peace of mind associated with an additional offsite data storage resource is invaluable to everyone involved.&lt;/p&gt;
+
+&lt;p&gt;At &lt;a href=&#34;http://www.sundaymorningrides.com/&#34;&gt;SundayMorningRides.com&lt;/a&gt;, we manage a growing inventory of GPS and general GIS (Geography Information Systems) data and web content (text, images, videos, etc.) for the end users. In addition, we must also effectively manage daily snapshots, backups, as well as multiple development versions of our web site and supporting software. For any small organization, this can add up to significant costs &amp;ndash; not only as an initial monetary investment but also in terms of ongoing labor costs for maintenance and administration.&lt;/p&gt;
+
+&lt;p&gt;Amazon Simple Storage Service (S3) was released specifically to address the problem of data management for online resources &amp;ndash; with the aim to provide &amp;ldquo;reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.&amp;rdquo; Amazon S3 provides a web service interface that allows developers to store and retrieve any amount of data. S3 is attractive to companies like SundayMorningRides.com as it frees us from upfront costs and the ongoing costs of purchasing, administration, maintenance, and scaling our own storage servers.&lt;/p&gt;
+
+&lt;p&gt;This article covers the Perl, REST, and the Amazon S3 REST module, walking through the development of a collection of Perl-based tools for UNIX command-line based interaction to Amazon S3. I&amp;rsquo;ll also show how to set access permissions so that you can serve images or other data directly to your site from Amazon S3.&lt;/p&gt;
+
+&lt;h4 id=&#34;a-bit-on-web-services&#34;&gt;A Bit on Web Services&lt;/h4&gt;
+
+&lt;p&gt;Web services have become the de-facto method of exposing information and, well, services via the Web. Intrinsically, web services provide a means of interaction between two networked resources. Amazon S3 is accessible via both Simple Object Access Protocol (SOAP) or representational state transfer (REST).&lt;/p&gt;
+
+&lt;p&gt;The SOAP interface organizes features into custom-built operations, similar to remote objects when using Java Remote Method Invocation (RMI) or Common Object Resource Broker Architecture (CORBA). Unlike RMI or CORBA, SOAP uses XML embedded in the body of HTTP requests as the application protocol.&lt;/p&gt;
+
+&lt;p&gt;Like SOAP, REST also uses HTTP for transport. Unlike SOAP, REST operations are the standard HTTP operations &amp;ndash; GET, POST, PUT, and DELETE. I think of REST operations in terms of the CRUD semantics associated with relational databases: POST is Create, GET is Retrieve, PUT is Update, and DELETE is Delete.&lt;/p&gt;
+
+&lt;h4 id=&#34;storage-for-the-internet&#34;&gt;&amp;ldquo;Storage for the Internet&amp;rdquo;&lt;/h4&gt;
+
+&lt;p&gt;Amazon S3 represents the data space in three core concepts: &lt;em&gt;objects&lt;/em&gt;, &lt;em&gt;buckets&lt;/em&gt;, and &lt;em&gt;keys&lt;/em&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Objects are the base level entities within Amazon S3. They consist of both object data and metadata. This metadata is a set of name-attribute pairs defined in the HTTP header.&lt;/li&gt;
+&lt;li&gt;Buckets are collections of objects. There is no limit to the number of objects in a bucket, but each developer is limited to 100 buckets.&lt;/li&gt;
+&lt;li&gt;Keys are unique identifiers for objects.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Without wading through the details, I tend think of buckets as folders, objects as files, and keys as filenames. The purpose of this abstraction is to create a unique HTTP namespace for every object.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll assume that you have already signed up for &lt;a href=&#34;http://aws.amazon.com/s3&#34;&gt;Amazon S3&lt;/a&gt; and received your Access Key ID and Secret Access Key. If not, please do so.&lt;/p&gt;
+
+&lt;p&gt;Please note that the &lt;code&gt;S3::*&lt;/code&gt; modules aren&amp;rsquo;t the only Perl modules available for connecting to Amazon S3. In particular, &lt;a href=&#34;https://metacpan.org/pod/Net::Amazon::S3&#34;&gt;Net::Amazon::S3&lt;/a&gt; hides a lot of the details of the S3 service for you. For now, I&amp;rsquo;m going to use a simpler module to explain how the service works internally.&lt;/p&gt;
+
+&lt;h4 id=&#34;connecting-creating-and-listing-buckets&#34;&gt;Connecting, Creating, and Listing Buckets&lt;/h4&gt;
+
+&lt;p&gt;Connecting to Amazon S3 is as simple as supplying your Access Key ID and your Secret Access Key to create a connection, called here &lt;code&gt;$conn&lt;/code&gt;. Here&amp;rsquo;s how to create and list the contents of a bucket as well as list all buckets.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+
+use S3::AWSAuthConnection;
+use S3::QueryStringAuthGenerator;
+
+use Data::Dumper;
+
+my $AWS_ACCESS_KEY_ID     = &#39;YOUR ACCESS KEY&#39;;
+my $AWS_SECRET_ACCESS_KEY = &#39;YOUR SECRET KEY&#39;;
+
+my $conn = S3::AWSAuthConnection-&amp;gt;new($AWS_ACCESS_KEY_ID,
+                                      $AWS_SECRET_ACCESS_KEY);
+
+my $BUCKET = &amp;quot;foo&amp;quot;;
+
+print &amp;quot;creating bucket $BUCKET \n&amp;quot;;
+print $conn-&amp;gt;create_bucket($BUCKET)-&amp;gt;message, &amp;quot;\n&amp;quot;;
+
+print &amp;quot;listing bucket $BUCKET \n&amp;quot;;
+print Dumper @{$conn-&amp;gt;list_bucket($BUCKET)-&amp;gt;entries}, &amp;quot;\n&amp;quot;;
+
+print &amp;quot;listing all my buckets \n&amp;quot;;
+print Dumper @{$conn-&amp;gt;list_all_my_buckets()-&amp;gt;entries}, &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because every S3 action takes place over HTTP, it is good practice to check for a 200 response.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $response = $conn-&amp;gt;create_bucket($BUCKET);
+if ($response-&amp;gt;http_response-&amp;gt;code == 200) {
+    # Good
+} else {
+    # Not Good
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see from the output, the results come back in a hash. I&amp;rsquo;ve used &lt;a href=&#34;https://metacpan.org/pod/Data::Dumper&#34;&gt;Data::Dumper&lt;/a&gt; as a convenient way to view the contents. If you are running this for the first time, you will obviously not see anything listed in the bucket.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;listing bucket foo
+$VAR1 = {
+          &#39;Owner&#39; =&amp;gt; {
+                     &#39;ID&#39; =&amp;gt; &#39;xxxxx&#39;,
+                     &#39;DisplayName&#39; =&amp;gt; &#39;xxxxx&#39;
+                   },
+          &#39;Size&#39; =&amp;gt; &#39;66810&#39;,
+          &#39;ETag&#39; =&amp;gt; &#39;&amp;quot;xxxxx&amp;quot;&#39;,
+          &#39;StorageClass&#39; =&amp;gt; &#39;STANDARD&#39;,
+          &#39;Key&#39; =&amp;gt; &#39;key&#39;,
+          &#39;LastModified&#39; =&amp;gt; &#39;2007-12-18T22:08:09.000Z&#39;
+        };
+$VAR4 = &#39;
+&#39;;
+listing all my buckets
+$VAR1 = {
+          &#39;CreationDate&#39; =&amp;gt; &#39;2007-11-28T17:31:48.000Z&#39;,
+          &#39;Name&#39; =&amp;gt; &#39;foo&#39;
+        };
+&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;writing-an-object&#34;&gt;Writing an Object&lt;/h4&gt;
+
+&lt;p&gt;Writing an object is simply a matter of using the HTTP PUT method. Be aware that there is nothing to prevent you from overwriting an existing object; Amazon S3 will automatically update the object with the more recent write request. Also, it&amp;rsquo;s currently not possible to append to or otherwise modify an object in place without replacing it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %headers = (
+    &#39;Content-Type&#39; =&amp;gt; &#39;text/plain&#39;
+);
+$response = $conn-&amp;gt;put( $BUCKET, $KEY, S3Object-&amp;gt;new(&amp;quot;this is a test&amp;quot;),
+                        \%headers);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Likewise, you can read a file from STDIN:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %headers;
+
+FILE: while(1) {
+    my $n = sysread(STDIN, $data, 1024 * 1024, length($data));
+    if ($n &amp;lt; 0) {
+        print STDERR &amp;quot;Error reading input: $!\n&amp;quot;;
+        exit 1;
+    }
+    last FILE if $n == 0;
+}
+$response = $conn-&amp;gt;put(&amp;quot;$BUCKET&amp;quot;, &amp;quot;$KEY&amp;quot;, $data, \%headers);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To add custom metadata, simply add to the &lt;code&gt;S3Object&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;S3Object-&amp;gt;new(&amp;quot;this is a test&amp;quot;, { name =&amp;gt; &amp;quot;attribute&amp;quot; })
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default, every object has private access control when written. This allows only the user that stored the object to read it back. You can change these settings. Also, note that each object can hold a maximum of 5 GB of data.&lt;/p&gt;
+
+&lt;p&gt;You are probably wondering if it is also possible to upload via a standard HTTP POST. The folks at Amazon are working on it as we speak &amp;ndash; see &lt;a href=&#34;http://developer.amazonwebservices.com/connect/thread.jspa?threadID=18616&amp;amp;tstart=0&#34;&gt;HTTP POST beta discussion&lt;/a&gt; for more information. Until that&amp;rsquo;s finished, you&amp;rsquo;ll have to perform web-based uploads via an intermediate server.&lt;/p&gt;
+
+&lt;h4 id=&#34;reading-an-object&#34;&gt;Reading an Object&lt;/h4&gt;
+
+&lt;p&gt;Like writing objects, there are several ways to read data from Amazon S3. One way is to generate a temporary URL to use with your favorite client (for example, wget or Curl) or even a browser to view or retrieve the object. All you have to do is generate the URL used to make the REST call.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $generator = S3::QueryStringAuthGenerator-&amp;gt;new($AWS_ACCESS_KEY_ID,
+    $AWS_SECRET_ACCESS_KEY);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;and then perform a simple HTTP GET request. This is a great trick if all you want to do is temporarily view or verify the data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$generator-&amp;gt;expires_in(60);
+my $url = $generator-&amp;gt;get($BUCKET, &amp;quot;$KEY&amp;quot;);
+print &amp;quot;$url \n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can also programmatically read the data directly from the initial connection. This is handy if you have to perform additional processing of the data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $response = $conn-&amp;gt;get(&amp;quot;$BUCKET&amp;quot;, &amp;quot;$KEY&amp;quot;);
+my $data     = $response-&amp;gt;object-&amp;gt;data;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another cool feature is &lt;a href=&#34;http://docs.amazonwebservices.com/AmazonS3/2006-03-01/&#34;&gt;the ability to use BitTorrent to download files from Amazon S3&lt;/a&gt; . You can access any object that has anonymous access privileges via BitTorrent.&lt;/p&gt;
+
+&lt;h4 id=&#34;delete-an-object&#34;&gt;Delete an Object&lt;/h4&gt;
+
+&lt;p&gt;By now you probably have the hang of the process. If you&amp;rsquo;re going to create objects, you&amp;rsquo;re probably going to have to delete them at some point.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$conn-&amp;gt;delete(&amp;quot;$BUCKET&amp;quot;, &amp;quot;$KEY&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;set-access-permissions-and-publish-to-a-website&#34;&gt;Set Access Permissions and Publish to a Website&lt;/h4&gt;
+
+&lt;p&gt;As you may have noticed from the previous examples, all Amazon S3 objects access goes through HTTP. This makes Amazon S3 particularly useful as a online repository. In particular, it&amp;rsquo;s useful to manage and serve website media. You could almost imagine Amazon S3 serving as mini Content Delivery Network for media on your website. This example will demonstrate how to build a very simple online page where the images are served dynamically via Amazon S3.&lt;/p&gt;
+
+&lt;p&gt;The first thing to do us to upload some images and set the ACL permissions to public. I&amp;rsquo;ve modified the previous example with one difference. To make objects publicly readable, include the header &lt;code&gt;x-amz-acl: public-read&lt;/code&gt; with the HTTP PUT request.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %headers = (
+    &#39;x-amz-acl&#39; =&amp;gt; &#39;public-read&#39;,
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Additional ACL permissions include:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;private (default setting if left blank)&lt;/li&gt;
+&lt;li&gt;public-read&lt;/li&gt;
+&lt;li&gt;public-read-write&lt;/li&gt;
+&lt;li&gt;authenticated-read&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Now you know enough to put together a small script that will automatically display all images in the bucket to a web page (you&amp;rsquo;ll probably want to spruce up the formatting).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;...
+my $BUCKET   = &amp;quot;foobar&amp;quot;;
+my $response = $conn-&amp;gt;list_bucket(&amp;quot;$BUCKET&amp;quot;);
+
+for my $entry (@{$response-&amp;gt;entries}) {
+    my $public_url   = $generator-&amp;gt;get($BUCKET, $entry-&amp;gt;{Key});
+    my ($url, undef) = split (/\?/, $public_url);
+    $images         .= &amp;quot;&amp;lt;img src=\&amp;quot;$url\&amp;quot;&amp;gt;&amp;lt;br /&amp;gt;&amp;quot;;
+}
+($webpage =  &amp;lt;&amp;lt;&amp;quot;WEBPAGE&amp;quot;);
+&amp;lt;html&amp;gt;&amp;lt;body&amp;gt;$images&amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;
+WEBPAGE
+print $q-&amp;gt;header();
+print $webpage;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To add images to this web page, upload more files into the bucket and they will automatically appear the next time you load the page.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s also simple to link to media one at a time for a webpage. If you examine the HTML generated by this example, you&amp;rsquo;ll see that all Amazon S3 URLs have the basic form &lt;code&gt;http://bucketname.s3.amazon.com/objectname&lt;/code&gt;. Also note that the namespace for buckets is shared with all Amazon S3 users. You may have already picked up on this.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Amazon S3 is a great tool that can help with the data management needs of all sized organizations by offering cheap and unlimited storage. For personal use, it&amp;rsquo;s a great tool for backups (also good for organizations) and general file storage. It&amp;rsquo;s also a great tool for collaboration. Instead of emailing files around, just upload a file and set the proper access controls &amp;ndash; no more dealing with 10 MB attachment restrictions!&lt;/p&gt;
+
+&lt;p&gt;At &lt;a href=&#34;http://www.sundaymorningrides.com/&#34;&gt;SundayMorningRides.com&lt;/a&gt; we use S3 as part of our web serving infrastructure to reduce the load on our hardware when serving media content.&lt;/p&gt;
+
+&lt;p&gt;When combined with other Amazon Web Services such as SimpleDB (for structured data queries) and Elastic Compute Cloud (for data processing) it&amp;rsquo;s easy to envision a low cost solution for web-scale computing and data management.&lt;/p&gt;
+
+&lt;h4 id=&#34;more-resources-and-references&#34;&gt;More Resources and References&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://aws.amazon.com/s3&#34;&gt;Amazon S3 Homepage&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://developer.amazonwebservices.com/&#34;&gt;Amazon Webservices Developer Connection&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://developer.amazonwebservices.com/connect/entry.jspa?externalID=133&amp;amp;categoryID=47&#34;&gt;Amazon S3 Library for REST in Perl&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://aws.typepad.com/&#34;&gt;Amazon Web Services Blog&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Don&#39;t Be Afraid to Drop the SOAP</title>
+      <link>http://localhost:1313/pub/2004/09/30/drop_the_soap.html/</link>
+      <pubDate>Thu, 30 Sep 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/09/30/drop_the_soap.html/</guid>
+      <description>
+
+&lt;p&gt;SOAP has great hype; portable, simple, efficient, flexible, and open, SOAP has it all. According to many intelligent people, writing a web service with SOAP should be a snap, and the results will speak for themselves. So they do, although what they have to say isn&amp;rsquo;t pretty.&lt;/p&gt;
+
+&lt;p&gt;Two years ago I added a SOAP interface to the &lt;a href=&#34;http://bricolage.cc/&#34;&gt;Bricolage&lt;/a&gt; open source content management system. I had high expectations. SOAP would give me a flexible and efficient control system, one that would be easy to develop and simple to debug. What&amp;rsquo;s more, I&amp;rsquo;d be out on the leading edge of cool XML tech.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately the results haven&amp;rsquo;t lived up to my hopes. The end result is fragile and a real resource hog. In this article I&amp;rsquo;ll explore what went wrong and why.&lt;/p&gt;
+
+&lt;p&gt;Last year, I led the development of a new content-management system called &lt;a href=&#34;http://krang.sf.net/&#34;&gt;Krang&lt;/a&gt;, and I cut SOAP out of the mix. Instead, I created a custom XML file-format based on TAR. Performance is up, development costs are down, and debugging is a breeze. I&amp;rsquo;ll describe this system in detail at the end of the article.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;div class=&#34;secondary&#34;&gt;
+&lt;h3 id=&#34;what-is-soap&#34;&gt;What is SOAP?&lt;/h3&gt;
+&lt;p&gt;In case you&#39;ve been out to lunch, SOAP (Simple Object Access Protocol) is a relatively new RPC (Remote Procedure Call) system that works by exchanging XML messages over a network connection, usually over HTTP. In an RPC system, a server offers routines (procedures) that clients may call over a network connection. SOAP surpasses its direct predecessor, XML-RPC, with an enhanced type system and an improved error-handling system. Despite the name, SOAP is neither particularly simple nor object-oriented.&lt;/p&gt;
+&lt;/div&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&#34;bricolage-gets-soap&#34;&gt;Bricolage Gets SOAP&lt;/h3&gt;
+
+&lt;p&gt;When I joined the Bricolage project, it lacked a good way to control the application aside from the browser-based GUI. In particular, we needed a way to import data and trigger publish runs. Bricolage is a network application, and some useful tasks require interaction with multiple Bricolage servers. SOAP seemed like an obvious choice. I read &amp;ldquo;Programming Web Services with Perl&amp;rdquo; and I was ready to go.&lt;/p&gt;
+
+&lt;p&gt;I implemented the Bricolage SOAP interface as a set of classes that map SOAP requests to method calls on the underlying objects, with some glue code to handle XML serialization and deserialization. I used XML Schema to describe an XML vocabulary for each object type, which we used to validate input and output for the SOAP methods during testing.&lt;/p&gt;
+
+&lt;p&gt;By far the most important use-case for this new system was data import. Many of our customers were already using content management systems (CMSs) and we needed to move their data into Bricolage. A typical migration involved processing a database dump from the client&amp;rsquo;s old system and producing XML files to load in Bricolage via SOAP requests.&lt;/p&gt;
+
+&lt;p&gt;The SOAP interface could also move content from one system to another, most commonly when moving completed template changes into production. Finally, SOAP helped to automate publish runs and other system maintenance tasks.&lt;/p&gt;
+
+&lt;p&gt;To provide a user interface to the SOAP system, I wrote a command-line client called &lt;code&gt;bric_soap&lt;/code&gt;. The &lt;code&gt;bric_soap&lt;/code&gt; script is a sort of Swiss Army knife for the Bricolage SOAP interface; it can call any available method and pipe the results from command to command. For example, to find and export all the story objects with the word &lt;code&gt;foo&lt;/code&gt; in their title:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ bric_soap story list_ids --search &amp;quot;title=%foo%&amp;quot; |
+    bric_soap story export - &amp;gt; stories.xml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Later we wrote several single-purpose SOAP clients, including &lt;code&gt;bric_republish&lt;/code&gt; for republishing stories and &lt;code&gt;bric_dev_sync&lt;/code&gt; for moving templates and elements between systems.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-went-right&#34;&gt;What Went Right&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The well-documented XML format for Bricolage objects made developing data import systems straightforward. Compared to previous projects that attempted direct-to-SQL imports, the added layer of abstraction and validation was an advantage.&lt;/li&gt;
+&lt;li&gt;The interface offered by the Bricolage SOAP classes is simpler and more regular than the underlying Bricolage object APIs. This, coupled with the versatile &lt;code&gt;bric_soap&lt;/code&gt; client, allowed developers to easily script complex automations.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&#34;what-went-wrong&#34;&gt;What Went Wrong&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;SOAP is difficult to debug. The SOAP message format is verbose even by XML standards, and decoding it by hand is a great way to waste an afternoon. As a result, development took almost twice as long as anticipated.&lt;/li&gt;
+&lt;li&gt;The fact that all requests happened live over the network further hampered debugging. Unless the user was careful to log debugging output to a file it was difficult to determine what went wrong.&lt;/li&gt;
+&lt;li&gt;SOAP doesn&amp;rsquo;t handle large amounts of data well. This became immediately apparent as we tried to load a large data import in a single request. Since SOAP requires the entire request to travel in one XML document, SOAP implementations usually load the entire request into memory. This required us to split large jobs into multiple requests, reducing performance and making it impossible to run a complete import inside a transaction.&lt;/li&gt;
+&lt;li&gt;SOAP, like all network services, requires authentication to be safe against remote attack. This means that each call to &lt;code&gt;bric_soap&lt;/code&gt; required at least two SOAP requests — one to login and receive a cookie and the second to call the requested method. Since the overhead of a SOAP request is sizable, this further slowed things down. Later we added a way to save the cookie between requests, which helped considerably.&lt;/li&gt;
+&lt;li&gt;Network problems affected operations that needed to access multiple machines, such as the program responsible for moving templates and elements — &lt;code&gt;bric_dev_sync&lt;/code&gt;. Requests would frequently timeout in the middle, sometimes leaving the target system in an inconsistent state.&lt;/li&gt;
+&lt;li&gt;At the time, there was no good Perl solution for validating object XML against an XML Schema at runtime. For testing purposes I hacked together a way to use a command-line verifier using Xerces/C++. Although not a deficiency in SOAP itself, not doing runtime validation led to bad data passing through the SOAP interface and ending up in the database where we often had to perform manual cleanup.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;round-two-krang&#34;&gt;Round Two: Krang&lt;/h3&gt;
+
+&lt;p&gt;When I started development on Krang, our new content management system, I wanted to find a better way to meet our data import and automation needs. After searching in vain for better SOAP techniques, I realized that the problems were largely inherent in SOAP itself. SOAP is a network system, tuned for small messages and it carries with it complexity that resists easy debugging.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, when I considered the XML aspects of the Bricolage system, I found little to dislike. XML is easy to understand and is sufficiently flexible to represent all the data handled by the system. In particular, I wanted to reuse my hard-won XML Schema writing skills, although I knew that I&amp;rsquo;d need runtime validation.&lt;/p&gt;
+
+&lt;p&gt;In designing the new system I took a big step back from the leading edge. I based the new system on the TAR archive file format, which dates back to the mid-70s!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_09_30_drop_the_soap/KDS.jpg&#34; width=&#34;206&#34; height=&#34;294&#34; /&gt;
+&lt;em&gt;Figure 1.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;I named the file format &amp;ldquo;Krang Data Set&amp;rdquo; (KDS). A KDS file is a TAR archive containing a set of XML files. A special file, &lt;em&gt;index.xml&lt;/em&gt;, contains data about all the files contained in the KDS file, providing class names and IDs. To reduce their size, it&amp;rsquo;s possible to compress KDS files using &lt;code&gt;gzip&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I wrote two scripts, &lt;code&gt;krang_import&lt;/code&gt; and &lt;code&gt;krang_export&lt;/code&gt;, to read and write KDS files. Each object type has its own XML Schema document describing its structure. Krang classes implement their own &lt;code&gt;deserialize_xml()&lt;/code&gt; and &lt;code&gt;serialize_xml()&lt;/code&gt; methods. For example, to export all templates into a file called &lt;em&gt;templates.kds&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ krang_export --templates --output templates.kds
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To import those templates, possibly on a different machine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ krang_import templates.kds
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the object being exported has any dependencies, the KDS file will include them. In this way a KDS file generated by &lt;code&gt;krang_export&lt;/code&gt; is guaranteed to import successfully.&lt;/p&gt;
+
+&lt;p&gt;By using a disk-based system for importing and exporting data I cut the network completely out of the picture. This alone accomplishes a major reduction in complexity and a sizable performance increase. Recently we completed a very large import into Krang comprising 12,000 stories and 160,000 images. This took around 4 hours to complete, which may seem like a long time but it&amp;rsquo;s a big improvement over the 28 hours the same import required using SOAP and Bricolage!&lt;/p&gt;
+
+&lt;p&gt;For system automation such as running publish jobs from &lt;code&gt;cron&lt;/code&gt;, I decided to code utilities directly to Krang&amp;rsquo;s Perl API. This means these tools must run on the target machine, but in practice this is usually how people used the Bricolage tools. When an operation must run across multiple machines, perhaps when moving templates from beta to production, the administrator simply uses &lt;code&gt;scp&lt;/code&gt; to transfer the KDS files.&lt;/p&gt;
+
+&lt;p&gt;I also took the opportunity to write XML::Validator::Schema, a pure-Perl XML Schema validator. It&amp;rsquo;s far from complete, but it supports all the schema constructs I needed for Krang. This allows Krang to perform runtime schema validation on KDS files.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-went-right-1&#34;&gt;What Went Right&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The new system is fast. Operating on KDS files on disk is many times faster than SOAP network transfers.&lt;/li&gt;
+&lt;li&gt;Capacity is practically unlimited. Since KDS files separate objects into individual XML files, Krang never has to load them all into memory at once. This means that a KDS file containing 10,000 objects is just as easy to process as one containing 10.&lt;/li&gt;
+&lt;li&gt;Debugging is much easier. When an import fails the user simply sends me the KDS file and I can easily examine the XML files or attempt an import on my own system. I don&amp;rsquo;t have to wade through SOAP XML noise or try to replicate network operations to reproduce a bug. Separating each object into a single XML file made working on the data much easier because each file is small enough to load into Emacs.&lt;/li&gt;
+&lt;li&gt;Runtime schema validation helps find bugs faster and prevents bad data from ending up in the database.&lt;/li&gt;
+&lt;li&gt;Because Krang&amp;rsquo;s design accounted for the XML system from the start it has a much closer integration with the overall system. This gives it greater coverage and stability.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&#34;what-went-wrong-1&#34;&gt;What Went Wrong&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Operations across multiple machines require the user to manually transfer KDS files across the network.&lt;/li&gt;
+&lt;li&gt;Users who have developed expertise in using the Bricolage SOAP clients must learn a new technology.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;SOAP isn&amp;rsquo;t a bad technology, but it does have limits. My experience developing a SOAP interface for Bricolage taught me some important lessons that I&amp;rsquo;ve tried to apply to Krang. So far the experiment is a success, but Krang is young and problems may take time to appear.&lt;/p&gt;
+
+&lt;p&gt;Does this mean you shouldn&amp;rsquo;t use SOAP for your next project? Not necessarily. It does mean that you should take a close look at your requirements and consider whether an alternative implementation would help you avoid some of the pitfalls I&amp;rsquo;ve described.&lt;/p&gt;
+
+&lt;p&gt;The best candidates for SOAP applications are lightweight network applications without significant performance requirements. If your application doesn&amp;rsquo;t absolutely require network interaction, or if it will deal with large amounts of data then you should avoid SOAP. Maybe you can use TAR instead!&lt;/p&gt;
+
+&lt;h3 id=&#34;resources&#34;&gt;Resources&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://krang.sf.net/&#34;&gt;Krang&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://bricolage.cc/&#34;&gt;Bricolage&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://bricolage.cc/docs/current/api/Bric/SOAP.html&#34;&gt;Bricolage SOAP documentation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.w3.org/TR/SOAP/&#34;&gt;SOAP&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.soaplite.com/&#34;&gt;SOAP::Lite&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://xml.apache.org/xerces-c/&#34;&gt;Xerces/C++&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.w3.org/XML/Schema&#34;&gt;XML Schema&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/XML::Validator::Schema&#34;&gt;XML::Validator::Schema&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/pwebserperl/&#34;&gt;Programming Web Services with Perl&lt;/a&gt; by Randy J. Ray and Pavel Kulchenko&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

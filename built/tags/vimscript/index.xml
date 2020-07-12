@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Vimscript on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/vimscript/</link>
+    <description>Recent content in Vimscript on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 30 May 2019 08:45:17 +0000</lastBuildDate>
+    <atom:link href="/tags/vimscript/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Using the right dictionary with Perl and Vim</title>
+      <link>http://localhost:1313/article/using-the-right-dictionary-with-perl-and-vim/</link>
+      <pubDate>Thu, 30 May 2019 08:45:17 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/using-the-right-dictionary-with-perl-and-vim/</guid>
+      <description>
+
+&lt;p&gt;I recently read James Summers&amp;rsquo; excellent article, &lt;a href=&#34;http://jsomers.net/blog/dictionary&#34;&gt;You&amp;rsquo;re probably using the wrong dictionary&lt;/a&gt; and was inspired to start using Webster&amp;rsquo;s 1913 edition myself. Using the instructions in the article, I was able to integrate searching the dictionary into my browser, but I spend most of my time working in the terminal, and wanted a command line solution.&lt;/p&gt;
+
+&lt;p&gt;I got a text version of the dictionary from &lt;a href=&#34;https://archive.org/details/webstersunabridg29765gut&#34;&gt;archive.org&lt;/a&gt;, and set about writing a Perl script to search it.&lt;/p&gt;
+
+&lt;h2 id=&#34;a-naive-search&#34;&gt;A naive search&lt;/h2&gt;
+
+&lt;p&gt;Every entry in the 1913 text edition begins with the capitalized term at the beginning of a line followed by a newline, and the details about the entry. Webster&amp;rsquo;s definition for &amp;ldquo;llama&amp;rdquo; is typical:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;LLAMA
+Lla&amp;quot;ma, n. Etym: [Peruv.] (Zoöl.)
+
+Defn: A South American ruminant (Auchenia llama), allied to the
+camels, but much smaller and without a hump. It is supposed to be a
+domesticated variety of the guanaco. It was formerly much used as a
+beast of burden in the Andes.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this case it tells us that &amp;ldquo;llama&amp;rdquo; is a noun, originating from Peru. The abbreviation &amp;ldquo;Zoöl.&amp;rdquo; means it&amp;rsquo;s a Zoölogical term. Wiktionary has a handy &lt;a href=&#34;https://en.wiktionary.org/wiki/Wiktionary:Abbreviations_in_Webster&#34;&gt;list&lt;/a&gt; of Webster&amp;rsquo;s abbreviations.&lt;/p&gt;
+
+&lt;p&gt;A single term can contain uppercase letters, numbers, spaces, dashes and single quotes. When there are alternative spellings for the same term, each spelling appears on the same line separated by a semicolon and space, like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;WOLVERENE; WOLVERINE
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To find matching entries in the dictionary, I want to search for matching terms, print their content and stop printing when I get to the next term:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $search_term &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; uc join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, @ARGV;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $entry_pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qr/^[A-Z][A-Z0-9&amp;#39; ;-]*$/&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $search_pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qr/^$search_term/&lt;/span&gt;;
+
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dict, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:encoding(latin1)&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;webster-1913.txt&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$dict&amp;gt;&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$entry_pattern/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$search_term/&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $output &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $_;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+   &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $next_line &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; readline $dict;
+   &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($next_line &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$entry_pattern/&lt;/span&gt;) {
+     seek $dict, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;length($next_line), &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+     &lt;span style=&#34;color:#66d9ef&#34;&gt;last&lt;/span&gt;;
+   }
+   $output &lt;span style=&#34;color:#f92672&#34;&gt;.=&lt;/span&gt; $next_line;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $output;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This script reads a search term from its command line args, converting it to uppercase. It then opens the dictionary which is encoded in &lt;a href=&#34;https://en.wikipedia.org/wiki/ISO/IEC_8859-1&#34;&gt;Latin 1&lt;/a&gt;, and scans for lines matching the pattern: &lt;code&gt;qr/^[A-Z][A-Z0-9&#39; ;-]*$/&lt;/code&gt;, which tries to only match lines marking the beginning of an entry (&amp;ldquo;WOLVERENE; WOLVERINE&amp;rdquo;). It then uses &lt;code&gt;readline&lt;/code&gt; to slurp the dictionary definition, until it finds the next entry, at which point it sets the filehandle pointer back one line, and prints the text it matched.&lt;/p&gt;
+
+&lt;p&gt;One of the nice properties of Latin 1 is every character is a single byte, which means I don&amp;rsquo;t need to worry about &lt;a href=&#34;https://perldoc.perl.org/functions/seek.html&#34;&gt;seek&lt;/a&gt; breaking on a character because &lt;a href=&#34;https://perldoc.perl.org/functions/length.html&#34;&gt;length&lt;/a&gt; was counting in characters, but &lt;code&gt;seek&lt;/code&gt; uses bytes.&lt;/p&gt;
+
+&lt;p&gt;Run run the script like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ ./webster-search.pl tower
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On my laptop it takes about a second to run, which isn&amp;rsquo;t bad considering the dictionary is 27mb.&lt;/p&gt;
+
+&lt;h2 id=&#34;a-faster-search&#34;&gt;A faster search&lt;/h2&gt;
+
+&lt;p&gt;One obvious improvement is to have the script exit once it finds an entry which is alphabetically higher than the search term. The entry after &amp;ldquo;LLAMA&amp;rdquo; is &amp;ldquo;LLANDEILO GROUP&amp;rdquo;, which I can compare using &lt;a href=&#34;https://perldoc.perl.org/functions/cmp.html&#34;&gt;cmp&lt;/a&gt;. If the search term sorts earlier than the comparison term, &lt;code&gt;cmp&lt;/code&gt; will return 1, if they match 0, otherwise it will return -1:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;LLAMA&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;cmp&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;LLANDEILO GROUP&amp;#34;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# -1&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;An interesting property of Webster&amp;rsquo;s 1913 dictionary as a data source is that it never changes, so I can take advantage of that by building a static index for each letter&amp;rsquo;s starting point. Each letter&amp;rsquo;s section begins with the capitalized letter alone on a line.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dict, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:encoding(latin1)&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;webster-1913.txt&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @alphabet &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Z&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$dict&amp;gt;&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/^$alphabet[0]$/&lt;/span&gt;;
+  printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%s =&amp;gt; %d\n&amp;#34;&lt;/span&gt;, shift @alphabet, tell $dict;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;last&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; @alphabet;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;When this script encounters a new letter&amp;rsquo;s section, it calls &lt;a href=&#34;https://perldoc.perl.org/functions/tell.html&#34;&gt;tell&lt;/a&gt; on the filehandle to determine the byte location, and then prints the details to stdout:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ ./build-index.pl
+A =&amp;gt; 601
+B =&amp;gt; 1796502
+C =&amp;gt; 3293436
+D =&amp;gt; 6039049
+E =&amp;gt; 7681559
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Curiously this index data stopped at &amp;ldquo;S&amp;rdquo; the first time I ran it. That&amp;rsquo;s because the copies of Webster&amp;rsquo;s 1913 dictionary on archive.org are missing the &amp;ldquo;T&amp;rdquo; entry! I found the entry &lt;a href=&#34;http://www.webster-dictionary.org/definition/T&#34;&gt;online&lt;/a&gt; and added it to my copy.&lt;/p&gt;
+
+&lt;p&gt;By incorporating this index data into my script, I&amp;rsquo;ll jump to the section of the first letter of the search term, and start searching from there.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $search_term &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; uc join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, @ARGV;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $entry_pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qr/^[A-Z][A-Z0-9&amp;#39; ;-]*$/&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $search_pattern &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qr/^$search_term/&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %index &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+  A &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;601&lt;/span&gt;,
+  B &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1796502&lt;/span&gt;,
+  C &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3293436&lt;/span&gt;,
+  D &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6039049&lt;/span&gt;,
+  E &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;7681559&lt;/span&gt;,
+  F &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8833301&lt;/span&gt;,
+  G &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10034091&lt;/span&gt;,
+  H &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10926753&lt;/span&gt;,
+  I &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;11930292&lt;/span&gt;,
+  J &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;13148994&lt;/span&gt;,
+  K &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;13380269&lt;/span&gt;,
+  L &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;13586035&lt;/span&gt;,
+  M &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;14532408&lt;/span&gt;,
+  N &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;15916448&lt;/span&gt;,
+  O &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;16385339&lt;/span&gt;,
+  P &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;17042770&lt;/span&gt;,
+  Q &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;19439223&lt;/span&gt;,
+  R &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;19610041&lt;/span&gt;,
+  S &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;21015876&lt;/span&gt;,
+  T &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;24379537&lt;/span&gt;,
+  U &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;25941093&lt;/span&gt;,
+  V &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;26405366&lt;/span&gt;,
+  W &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;26925697&lt;/span&gt;,
+  X &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;27748359&lt;/span&gt;,
+  Y &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;27774096&lt;/span&gt;,
+  Z &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;27866401&lt;/span&gt;,
+);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $start &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $index{ substr $search_term, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; };
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dict, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;:encoding(latin1)&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;webster-1913.txt&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+seek $dict, $start, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $found_match &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; undef;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$dict&amp;gt;&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $_ &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; $entry_pattern;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($_ &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; $search_term) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $output &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+     &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $next_line &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; readline $dict;
+     &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($next_line &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$entry_pattern/&lt;/span&gt;) {
+       seek $dict, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;length($next_line), &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+       &lt;span style=&#34;color:#66d9ef&#34;&gt;last&lt;/span&gt;;
+     }
+     $output &lt;span style=&#34;color:#f92672&#34;&gt;.=&lt;/span&gt; $next_line;
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $output;
+    $found_match &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;last&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $found_match &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; ($search_term &lt;span style=&#34;color:#f92672&#34;&gt;cmp&lt;/span&gt; $_) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Searching for &amp;ldquo;tower&amp;rdquo; this script finishes in 70ms, which is a 14x improvement over the initial script. Not bad for 2 simple optimizations. I could spend time tuning this further with a more specific index, or an optimized regex, but this is fast enough for now.&lt;/p&gt;
+
+&lt;h2 id=&#34;searching-from-vim&#34;&gt;Searching from Vim&lt;/h2&gt;
+
+&lt;p&gt;It&amp;rsquo;s fairly straightforward to integrate the Perl script into Vim with vimscript plugin:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-vim&#34; data-lang=&#34;vim&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;#34; webster-search.vim&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;:&lt;span style=&#34;color:#a6e22e&#34;&gt;parent_dir&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;expand&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;sfile&amp;gt;:p:h&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;! &lt;span style=&#34;color:#a6e22e&#34;&gt;WebsterSearch&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;term&lt;/span&gt;)&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;l&lt;/span&gt;:&lt;span style=&#34;color:#a6e22e&#34;&gt;perl_script&lt;/span&gt; = &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;webster-search.pl&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;l&lt;/span&gt;:&lt;span style=&#34;color:#a6e22e&#34;&gt;command&lt;/span&gt; =  &lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;:&lt;span style=&#34;color:#a6e22e&#34;&gt;parent_dir&lt;/span&gt; . &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; . &lt;span style=&#34;color:#a6e22e&#34;&gt;l&lt;/span&gt;:&lt;span style=&#34;color:#a6e22e&#34;&gt;perl_script&lt;/span&gt; . &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt; . &lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt;:&lt;span style=&#34;color:#a6e22e&#34;&gt;term&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;execute&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; &amp;#34;let output = system(&amp;#39;&amp;#34; . l:command . &amp;#34;&amp;#39;)&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;vnew&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;setlocal&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;nobuflisted&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;buftype&lt;/span&gt;=&lt;span style=&#34;color:#a6e22e&#34;&gt;nofile&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;bufhidden&lt;/span&gt;=&lt;span style=&#34;color:#a6e22e&#34;&gt;wipe&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;noswapfile&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;call&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;setline&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;split&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;output&lt;/span&gt;,&lt;span style=&#34;color:#75715e&#34;&gt; &amp;#34;\n&amp;#34;))&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;endfunction&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;command&lt;/span&gt;! -&lt;span style=&#34;color:#a6e22e&#34;&gt;nargs&lt;/span&gt;=&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;WebsterSearch&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;call&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;WebsterSearch&lt;/span&gt;(&amp;lt;&lt;span style=&#34;color:#a6e22e&#34;&gt;args&lt;/span&gt;&amp;gt;)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The first line obtains the parent directory of the plugin file, to avoid hard coding a path to the Perl script. Next it adds a function called &amp;ldquo;WebsterSearch&amp;rdquo; which calls the Perl script with a search term, printing the output into a new vertical window. The last line calls the &lt;code&gt;command&lt;/code&gt; function to register the user defined function, and avoid having to dispatch to it using &lt;code&gt;call&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;To use the plugin, I map a shortcut in my .vimrc:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-vim&#34; data-lang=&#34;vim&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;nnoremap&lt;/span&gt; &amp;lt;&lt;span style=&#34;color:#a6e22e&#34;&gt;leader&lt;/span&gt;&amp;gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;d&lt;/span&gt; :&lt;span style=&#34;color:#a6e22e&#34;&gt;WebsterSearch&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;expand&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;cWORD&amp;gt;&amp;#39;&lt;/span&gt;))&amp;lt;&lt;span style=&#34;color:#a6e22e&#34;&gt;cr&lt;/span&gt;&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now whenever my cursor is over a word I want to lookup in the dictionary, I press &amp;ldquo;\d&amp;rdquo; and I get Webster&amp;rsquo;s entry right there in my terminal! One downside of &lt;code&gt;cWORD&lt;/code&gt; is it will only match the first word under the cursor, but some dictionary entries contain spaces (&amp;ldquo;ad hominem&amp;rdquo;). For those rarer cases, I can highlight the words in visual mode, and then execute a dictionary search:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-vim&#34; data-lang=&#34;vim&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;vnoremap&lt;/span&gt; &amp;lt;&lt;span style=&#34;color:#a6e22e&#34;&gt;leader&lt;/span&gt;&amp;gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;d&lt;/span&gt; :&amp;lt;&lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;-&lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt;&amp;gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;WebsterSearch&lt;/span&gt;(@*)&amp;lt;&lt;span style=&#34;color:#a6e22e&#34;&gt;cr&lt;/span&gt;&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This maps the same shortcut when Vim is in visual mode; &lt;code&gt;&amp;lt;c-u&amp;gt;&lt;/code&gt; clears the range automatically entered by Vim, then it calls the function passing the register variable &lt;code&gt;@*&lt;/code&gt; (the last highlighted text) as the search term.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve uploaded this code to &lt;a href=&#34;https://github.com/dnmfarrell/WebsterSearch&#34;&gt;GitHub&lt;/a&gt;, along with Vim install instructions.&lt;/p&gt;
+
+&lt;p&gt;An alternative to searching the raw dictionary text is to use &lt;a href=&#34;http://gcide.gnu.org.ua/&#34;&gt;GCIDE&lt;/a&gt; (h/t &lt;a href=&#34;https://blog.afoolishmanifesto.com/&#34;&gt;frew&lt;/a&gt;) which is based on Webster&amp;rsquo;s 1913 dictionary, and has machine-readable markup for easier parsing.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Activating Perl 6 syntax highlighting in Vim</title>
+      <link>http://localhost:1313/article/194/2015/9/22/Activating-Perl-6-syntax-highlighting-in-Vim/</link>
+      <pubDate>Tue, 22 Sep 2015 22:16:48 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/194/2015/9/22/Activating-Perl-6-syntax-highlighting-in-Vim/</guid>
+      <description>
+
+&lt;p&gt;Modern versions of the Vim text editor ship with Perl 6 syntax highlighting, but automatically activating it is tricky because Perl 6 files can have ambiguous file extensions. It can get tiresome to correct the file type every time you open a Perl 6 file, so I&amp;rsquo;m going to show you a few tricks that I use to make Vim detect Perl 6 files automatically.&lt;/p&gt;
+
+&lt;h3 id=&#34;showing-and-setting-the-filetype-in-vim&#34;&gt;Showing and setting the filetype in Vim&lt;/h3&gt;
+
+&lt;p&gt;First of all I want to make sure that syntax highlighting is turned on by default, so I add this option to my &lt;code&gt;.vimrc&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;syntax on
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To edit your &lt;code&gt;.vimrc&lt;/code&gt; just start Vim and enter this command &lt;code&gt;:e $MYVIMRC&lt;/code&gt;. Save your changes with &lt;code&gt;:w&lt;/code&gt;, and then reload your &lt;code&gt;.vimrc&lt;/code&gt; with &lt;code&gt;:so %&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now that I have syntax highlighting turned on, I need to know how set Vim&amp;rsquo;s file type to Perl 6 when I&amp;rsquo;m working with Perl 6 files. I can see the current file type by typing this command &lt;code&gt;:set filetype?&lt;/code&gt;. To set the file type to Perl 6, I use this command &lt;code&gt;:set filetype=perl6&lt;/code&gt;. The &lt;code&gt;filetype&lt;/code&gt; keyword can be shortened to &lt;code&gt;ft&lt;/code&gt;. In which case the last command becomes &lt;code&gt;:set ft=perl6&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;detecting-perl-6-files&#34;&gt;Detecting Perl 6 files&lt;/h3&gt;
+
+&lt;p&gt;Now the challenge becomes correctly detecting when I&amp;rsquo;m working with Perl 6 files in Vim. Perl 6 scripts shouldn&amp;rsquo;t be a problem: Vim (not Vi) automatically parses the &lt;a href=&#34;https://en.wikipedia.org/wiki/Shebang_line&#34;&gt;shebang&lt;/a&gt; line to determine the file type. However this fails when the script has an extension like &lt;code&gt;.pl&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;use-the-pm6-file-extension&#34;&gt;Use the .pm6 file extension&lt;/h4&gt;
+
+&lt;p&gt;Vim will automatically use Perl 6 syntax highlighting if the file extension is &lt;code&gt;.pm6&lt;/code&gt;. So when working with Perl 6 module files, it&amp;rsquo;s better to use this extension. This doesn&amp;rsquo;t help when I&amp;rsquo;m working on other people&amp;rsquo;s Perl 6 projects however. It also doesn&amp;rsquo;t help for test files, which do not have an equivalent Perl 6 file extension (&lt;code&gt;.t6&lt;/code&gt; test files are ignored when installing Perl 6 modules).&lt;/p&gt;
+
+&lt;h4 id=&#34;use-a-modeline&#34;&gt;Use a modeline&lt;/h4&gt;
+
+&lt;p&gt;A modeline is a line of code in the text of the file which Vim reads and executes. So to activate Perl 6 syntax highlighting I just need to add this modeline to every Perl 6 file I work with:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# vim: filetype=perl6&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Take a look at the &lt;a href=&#34;https://github.com/Mouq/json5/blob/master/lib/JSON5/Tiny.pm6#L54&#34;&gt;source code&lt;/a&gt; of JSON5::Tiny for a real-World example. To Perl 6 this code looks just like an ordinary comment, but Vim will use it to turn on Perl 6 syntax highlighting. The modeline can appear anywhere in the code, but it&amp;rsquo;s better to place it at the start or end of the file.&lt;/p&gt;
+
+&lt;p&gt;Older versions of Vim (pre 7.3) and when Vim is run under root privileges, disable modelines as a security risk. Don&amp;rsquo;t run Vim as root! But if you have an older Vim, you can turn on modelines with &lt;code&gt;:set modeline&lt;/code&gt;. As with &lt;code&gt;filetype&lt;/code&gt;, modeline can be abbreviated to &lt;code&gt;ml&lt;/code&gt;, so &lt;code&gt;set ml&lt;/code&gt; works too. To activate modelines automatically, add this line to your &lt;code&gt;.vimrc&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;set ml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The downside of using modelines? First there is aforementioned security risk for older Vims. Also it feels impure to add editor directives to the code I&amp;rsquo;m working with, as not everyone uses Vim. These seem like minor issues though.&lt;/p&gt;
+
+&lt;h4 id=&#34;use-a-local-vimrc&#34;&gt;Use a local vimrc&lt;/h4&gt;
+
+&lt;p&gt;Often different Open Source projects will have different coding conventions that I need to follow, so it can be helpful to use a local vimrc file to store these project-specific settings. This works for syntax highlighting too. In order to use local vimrc files, I add the following code to my &lt;code&gt;.vimrc&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if filereadable(&amp;quot;.vimrc.local&amp;quot;)
+  so .vimrc.local
+endif
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will check the current working directory for &lt;code&gt;.vimrc.local&lt;/code&gt; file, and automatically execute it if it finds it. &lt;strong&gt;Warning&lt;/strong&gt; this is a security risk - Vim will execute ANY instruction in a local vimrc, so I am very careful when working with projects that are not my own. Next I create a &lt;code&gt;.vimrc.local&lt;/code&gt; file in the root project directory and add this auto command to it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;au Bufnewfile,bufRead *.pm,*.t,*.pl set filetype=perl6
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now when I open or create any file with a Perl extension, Vim will set the syntax highlighting to Perl 6. I like this technique because it&amp;rsquo;s not intrusive: it doesn&amp;rsquo;t require any changes to the Perl 6 files themselves, so it works well on shared projects (I never check-in my local vimrc to the Git repo).&lt;/p&gt;
+
+&lt;h4 id=&#34;use-code-detection&#34;&gt;Use code detection&lt;/h4&gt;
+
+&lt;p&gt;I can also have Vim try to detect Perl 6 code automatically. Two directives which would indicate we&amp;rsquo;re working with Perl 6 instead of Perl 5 code: the shebang line and the &lt;code&gt;use v6;&lt;/code&gt; directive. To check for these, I&amp;rsquo;ll add a function to my .vimrc:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;function! LooksLikePerl6 ()
+  if getline(1) =~# &#39;^#!.*/bin/.*perl6&#39;
+    set filetype=perl6
+  else
+    for i in [1,2,3,4,5]
+      if getline(i) == &#39;use v6;&#39;
+        set filetype=perl6
+        break
+      endif
+    endfor
+  endif
+endfunction
+
+au bufRead *.pm,*.t,*.pl call LooksLikePerl6()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This function uses &lt;code&gt;getline()&lt;/code&gt; to check the first line of the file to see if it looks like a Perl 6 shebang. This should work well for &lt;code&gt;.pl&lt;/code&gt; scripts, but Perl 6 module files will not have a shebang, so the next part of the script checks the first 5 lines of the file for the &lt;code&gt;use v6;&lt;/code&gt; directive. The last line of code is an auto command which will call the function anytime we open file with a Perl file extension.&lt;/p&gt;
+
+&lt;p&gt;The main drawback of this technique is that not all Perl 6 code uses the &lt;code&gt;use v6;&lt;/code&gt; directive, and so when working with module files, the code detection can fail. However the code detection could be improved to use more rules for detecting Perl 6 code such as class declarations. The &lt;a href=&#34;https://github.com/vim-perl/vim-perl&#34;&gt;vim-perl&lt;/a&gt; plugin has more sophisticated Perl 6 code detection &lt;a href=&#34;https://github.com/vim-perl/vim-perl/blob/master/ftdetect/perl11.vim&#34;&gt;rules&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;complete-vimrc&#34;&gt;Complete .vimrc&lt;/h3&gt;
+
+&lt;p&gt;This &lt;code&gt;.vimrc&lt;/code&gt; contains all the code shown above:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;syntax on
+
+&amp;quot;Recognize modeline # vim: filetype=perl6
+set ml
+
+&amp;quot;check for a local vimrc
+if filereadable(&amp;quot;.vimrc.local&amp;quot;)
+  so .vimrc.local
+endif
+
+&amp;quot;check for Perl 6 code
+function! LooksLikePerl6 ()
+  if getline(1) =~# &#39;^#!.*/bin/.*perl6&#39;
+    set filetype=perl6
+  else
+    for i in [1,2,3,4,5]
+      if getline(i) == &#39;use v6;&#39;
+        set filetype=perl6
+        break
+      endif
+    endfor
+  endif
+endfunction
+
+au bufRead *.pm,*.t,*.pl call LooksLikePerl6()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;So that&amp;rsquo;s it, four useful-but-imperfect techniques for detecting file types in Vim. I tend to use a combination of all four. This would be a nice problem not to have. I&amp;rsquo;d like the Perl 6 community to agree and encourage unambiguous file extensions like &lt;code&gt;.pm6&lt;/code&gt;, &lt;code&gt;.t6&lt;/code&gt; and &lt;code&gt;.pl6&lt;/code&gt;. Larry Wall called this &amp;ldquo;free advertising&amp;rdquo;. It&amp;rsquo;s also a simple way to make Perl 6 programmers more productive. Not every text editor is as customizable as Vim.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

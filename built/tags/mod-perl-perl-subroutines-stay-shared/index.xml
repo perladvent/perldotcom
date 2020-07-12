@@ -1,0 +1,728 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mod Perl Perl Subroutines Stay Shared on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/mod-perl-perl-subroutines-stay-shared/</link>
+    <description>Recent content in Mod Perl Perl Subroutines Stay Shared on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 07 May 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/mod-perl-perl-subroutines-stay-shared/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The Perl You Need To Know - Part 2</title>
+      <link>http://localhost:1313/pub/2002/05/07/mod_perl.html/</link>
+      <pubDate>Tue, 07 May 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/05/07/mod_perl.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-introduction-introduction-span&#34;&gt;&lt;span id=&#34;introduction&#34;&gt;Introduction&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In this article, we continue to talk about the essential Perl basics that you should know before starting to program for mod_perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-tracing-warnings-reports-tracing-warnings-reports-span&#34;&gt;&lt;span id=&#34;tracing warnings reports&#34;&gt;Tracing Warnings Reports&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Sometimes it&amp;rsquo;s hard to understand what a warning is complaining about. You see the source code, but you cannot understand why some specific snippet produces that warning. The mystery often results from the fact that the code can be called from different places if it&amp;rsquo;s located inside a subroutine.&lt;/p&gt;
+
+&lt;p&gt;Here is an example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  warnings.pl
+  -----------
+  #!/usr/bin/perl -w
+
+  use strict;
+
+  correct();
+  incorrect();
+
+  sub correct{
+    print_value(&amp;quot;Perl&amp;quot;);
+  }
+
+  sub incorrect{
+    print_value();
+  }
+
+  sub print_value{
+    my $var = shift;
+    print &amp;quot;My value is $var\n&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the code above, &lt;code&gt;print_value()&lt;/code&gt; prints the passed value. Subroutine &lt;code&gt;correct()&lt;/code&gt; passes the value to print, but in subroutine &lt;code&gt;incorrect()&lt;/code&gt; we forgot to pass it. When we run the script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./warnings.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;we get the warning:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Use of uninitialized value at ./warnings.pl line 16.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Perl complains about an undefined variable &lt;code&gt;$var&lt;/code&gt; at the line that attempts to print its value:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  print &amp;quot;My value is $var\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But how do we know why it is undefined? The reason here obviously is that the calling function didn&amp;rsquo;t pass the argument. But how do we know who was the caller? In our example, there are two possible callers, in the general case there can be many of them, perhaps located in other files.&lt;/p&gt;
+
+&lt;p&gt;We can use the &lt;code&gt;caller()&lt;/code&gt; function, which tells who has called us, but even that might not be enough: It&amp;rsquo;s possible to have a longer sequence of called subroutines, and not just two. For example, here it is sub &lt;code&gt;third()&lt;/code&gt; which is at fault, and putting sub &lt;code&gt;caller()&lt;/code&gt; in sub &lt;code&gt;second()&lt;/code&gt; would not help:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub third{
+    second();
+  }
+  sub second{
+    my $var = shift;
+    first($var);
+  }
+  sub first{
+    my $var = shift;
+   print &amp;quot;Var = $var\n&amp;quot;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The solution is quite simple. What we need is a full calls stack trace to the call that triggered the warning.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;Carp&lt;/code&gt; module comes to our aid with its &lt;code&gt;cluck()&lt;/code&gt; function. Let&amp;rsquo;s modify the script by adding a couple of lines. The rest of the script is unchanged.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  warnings2.pl
+  -----------
+  #!/usr/bin/perl -w
+
+  use strict;
+  use Carp ();
+  local $SIG{__WARN__} = \&amp;amp;Carp::cluck;
+
+  correct();
+  incorrect();
+
+  sub correct{
+    print_value(&amp;quot;Perl&amp;quot;);
+  }
+
+  sub incorrect{
+    print_value();
+  }
+
+  sub print_value{
+    my $var = shift;
+    print &amp;quot;My value is $var\n&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now when we execute it, we see:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Use of uninitialized value at ./warnings2.pl line 19.
+    main::print_value() called at ./warnings2.pl line 14
+    main::incorrect() called at ./warnings2.pl line 7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Take a moment to understand the calls stack trace. The deepest calls are printed first. So the second line tells us that the warning was triggered in print_value(); the third, that &lt;code&gt;print_value()&lt;/code&gt; was called by subroutine, incorrect().&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  script =&amp;gt; incorrect() =&amp;gt; print_value()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;
+
+&lt;a href=&#34;http://conferences.oreilly.com/oscon/&#34;&gt;O&amp;#39;Reilly Open Source Convention -- July 22-26, San Diego, CA.&lt;/a&gt;
+&lt;p&gt;&lt;strong&gt;From the Frontiers of Research to the Heart of the Enterprise&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://conferences.oreillynet.com/cs/os2002/view/e_sess/3032&#34;&gt;mod_perl 2.0, the Next Generation&lt;/a&gt; Stas Bekman will provide an overview of what&#39;s new in mod_perl 2.0 and what else is planned for the future in his talk at the upcoming &lt;a href=&#34;http://conferences.oreillynet.com/os2002/&#34;&gt;O&#39;Reilly Open Source Convention&lt;/a&gt;, this July 22-26, in San Diego.&lt;/p&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;We go into &lt;code&gt;incorrect()&lt;/code&gt; and indeed see that we forgot to pass the variable. Of course, when you write a subroutine such as &lt;code&gt;print_value&lt;/code&gt;, it would be a good idea to check the passed arguments before starting execution. We omitted that step to contrive an easily debugged example.&lt;/p&gt;
+
+&lt;p&gt;Sure, you say, I could find that problem by simple inspection of the code!&lt;/p&gt;
+
+&lt;p&gt;Well, you&amp;rsquo;re right. But I promise you that your task would be quite complicated and time consuming if your code has some thousands of lines. In addition, under mod_perl, certain uses of the &lt;code&gt;eval&lt;/code&gt; operator and ``here documents&amp;rdquo; are known to throw off Perl&amp;rsquo;s line numbering, so the messages reporting warnings and errors can have incorrect line numbers. This can be easily fixed by helping compiler with &lt;code&gt;#line&lt;/code&gt; directive. If you put the following at the beginning of the line in your script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; #line 125
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then it will tell the compiler that the &lt;strong&gt;next&lt;/strong&gt; line is number 125 for reporting needs. Of course, the rest of the lines would be adapted as well.&lt;/p&gt;
+
+&lt;p&gt;Getting the trace helps a lot.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-my-scoped-variable-in-nested-subroutines-my-scoped-variable-in-nested-subroutines-span&#34;&gt;&lt;span id=&#34;my() scoped variable in nested subroutines&#34;&gt;&lt;code&gt;my()&lt;/code&gt; Scoped Variable in Nested Subroutines&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Before we proceed let&amp;rsquo;s make the assumption that we want to develop the code under the &lt;code&gt;strict&lt;/code&gt; pragma. We will use lexically scoped variables (with help of the &lt;code&gt;my()&lt;/code&gt; operator) whenever it&amp;rsquo;s possible.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-the-poison-the-poison-span&#34;&gt;&lt;span id=&#34;the poison&#34;&gt;The Poison&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at this code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  nested.pl
+  -----------
+  #!/usr/bin/perl
+
+  use strict;
+
+  sub print_power_of_2 {
+    my $x = shift;
+
+    sub power_of_2 {
+      return $x ** 2;
+    }
+
+    my $result = power_of_2();
+    print &amp;quot;$x^2 = $result\n&amp;quot;;
+  }
+
+  print_power_of_2(5);
+  print_power_of_2(6);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Don&amp;rsquo;t let the weird subroutine names fool you, the &lt;code&gt;print_power_of_2()&lt;/code&gt; subroutine should print the square of the number passed to it. Let&amp;rsquo;s run the code and see whether it works:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./nested.pl
+
+  5^2 = 25
+  6^2 = 25
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Ouch, something is wrong. May be there is a bug in Perl and it doesn&amp;rsquo;t work correctly with the number 6? Let&amp;rsquo;s try again using 5 and 7:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  print_power_of_2(5);
+  print_power_of_2(7);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And run it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./nested.pl
+
+  5^2 = 25
+  7^2 = 25
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Wow, does it works only for 5? How about using 3 and 5:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  print_power_of_2(3);
+  print_power_of_2(5);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the result is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./nested.pl
+
+  3^2 = 9
+  5^2 = 9
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we start to understand &amp;ndash; only the first call to the &lt;code&gt;print_power_of_2()&lt;/code&gt; function works correctly. This makes us think that our code has some kind of memory for the results of the first execution, or it ignores the arguments in subsequent executions.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-the-diagnosis-the-diagnosis-span&#34;&gt;&lt;span id=&#34;the diagnosis&#34;&gt;The Diagnosis&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Let&amp;rsquo;s follow the guidelines and use the &lt;code&gt;-w&lt;/code&gt; flag:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -w
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Under Perl version 5.6.0+ we use the &lt;code&gt;warnings&lt;/code&gt; pragma:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+  use warnings;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now execute the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./nested.pl
+
+  Variable &amp;quot;$x&amp;quot; will not stay shared at ./nested.pl line 9.
+  5^2 = 25
+  6^2 = 25
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We have never seen such a warning message before and we don&amp;rsquo;t quite understand what it means. The &lt;code&gt;diagnostics&lt;/code&gt; pragma will certainly help us. Let&amp;rsquo;s prepend this pragma before the &lt;code&gt;strict&lt;/code&gt; pragma in our code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -w
+
+  use diagnostics;
+  use strict;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And execute it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./nested.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Variable &amp;ldquo;$x&amp;rdquo; will not stay shared at ./nested.pl line 10 (#1)&lt;/p&gt;
+
+&lt;p&gt;(W) An inner (nested) named subroutine is referencing a lexical variable defined in an outer subroutine.&lt;/p&gt;
+
+&lt;p&gt;When the inner subroutine is called, it will probably see the value of the outer subroutine&amp;rsquo;s variable as it was before and during the *first* call to the outer subroutine; in this case, after the first call to the outer subroutine is complete, the inner and outer subroutines will no longer share a common value for the variable. In other words, the variable will no longer be shared.&lt;/p&gt;
+
+&lt;p&gt;Furthermore, if the outer subroutine is anonymous and references a lexical variable outside itself, then the outer and inner subroutines will never share the given variable.&lt;/p&gt;
+
+&lt;p&gt;This problem can usually be solved by making the inner subroutine anonymous, using the sub {} syntax. When inner anonymous subs that reference variables in outer subroutines are called or referenced, they are automatically rebound to the current values of such variables.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  5^2 = 25
+  6^2 = 25
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Well, now everything is clear. We have the &lt;strong&gt;inner&lt;/strong&gt; subroutine &lt;code&gt;power_of_2()&lt;/code&gt; and the &lt;strong&gt;outer&lt;/strong&gt; subroutine &lt;code&gt;print_power_of_2()&lt;/code&gt; in our code.&lt;/p&gt;
+
+&lt;p&gt;When the inner &lt;code&gt;power_of_2()&lt;/code&gt; subroutine is called for the first time, it sees the value of the outer &lt;code&gt;print_power_of_2()&lt;/code&gt; subroutine&amp;rsquo;s &lt;code&gt;$x&lt;/code&gt; variable. On subsequent calls the inner subroutine&amp;rsquo;s &lt;code&gt;$x&lt;/code&gt; variable won&amp;rsquo;t be updated, no matter what new values are given to &lt;code&gt;$x&lt;/code&gt; in the outer subroutine. There are two copies of the &lt;code&gt;$x&lt;/code&gt; variable, no longer a single one shared by the two routines.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-the-remedy-the-remedy-span&#34;&gt;&lt;span id=&#34;the remedy&#34;&gt;The Remedy&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The &lt;code&gt;diagnostics&lt;/code&gt; pragma suggests that the problem can be solved by making the inner subroutine anonymous.&lt;/p&gt;
+
+&lt;p&gt;An anonymous subroutine can act as a &lt;em&gt;closure&lt;/em&gt; with respect to lexically scoped variables. Basically, this means that if you define a subroutine in a particular &lt;strong&gt;lexical&lt;/strong&gt; context at a particular moment, then it will run in that same context later, even if called from outside that context. The upshot of this is that when the subroutine &lt;strong&gt;runs&lt;/strong&gt;, you get the same copies of the lexically scoped variables that were visible when the subroutine was &lt;strong&gt;defined&lt;/strong&gt;. So you can pass arguments to a function when you define it, as well as when you invoke it.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s rewrite the code to use this technique:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  anonymous.pl
+  --------------
+  #!/usr/bin/perl
+
+  use strict;
+
+  sub print_power_of_2 {
+    my $x = shift;
+
+    my $func_ref = sub {
+      return $x ** 2;
+    };
+
+    my $result = &amp;amp;$func_ref();
+    print &amp;quot;$x^2 = $result\n&amp;quot;;
+  }
+
+  print_power_of_2(5);
+  print_power_of_2(6);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now &lt;code&gt;$func_ref&lt;/code&gt; contains a reference to an anonymous function, which we later use when we need to get the power of two. (In Perl, a function is the same thing as a subroutine.) Since it is anonymous, the function will automatically be rebound to the new value of the outer scoped variable &lt;code&gt;$x&lt;/code&gt;, and the results will now be as expected.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s verify:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./anonymous.pl
+
+  5^2 = 25
+  6^2 = 36
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we can see that the problem is solved.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-when-you-cannot-get-rid-of-the-inner-subroutine-when-you-cannot-get-rid-of-the-inner-subroutine-span&#34;&gt;&lt;span id=&#34;when you cannot get rid of the inner subroutine&#34;&gt;When You Cannot Get Rid of the Inner Subroutine&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;First, you might wonder, why in the world will someone need to define an inner subroutine? Well, for example, to reduce some of Perl&amp;rsquo;s script startup overhead you might decide to write a daemon that will compile the scripts and modules only once, and cache the pre-compiled code in memory. When some script is to be executed, you just tell the daemon the name of the script to run and it will do the rest and do it much faster since compilation has already taken place.&lt;/p&gt;
+
+&lt;p&gt;Seems like an easy task; and it is. The only problem is once the script is compiled, how do you execute it? Or let&amp;rsquo;s put it another way: After it was executed for the first time and it stays compiled in the daemon&amp;rsquo;s memory, how do you call it again? If you could get all developers to code their scripts so each has a subroutine called &lt;code&gt;run()&lt;/code&gt; that will actually execute the code in the script, then we&amp;rsquo;ve solved half the problem.&lt;/p&gt;
+
+&lt;p&gt;But how does the daemon know to refer to some specific script if they all run in the &lt;code&gt;main::&lt;/code&gt; name space? One solution might be to ask the developers to declare a package in each and every script, and for the package name to be derived from the script name. However, since there is a chance that there will be more than one script with the same name but residing in different directories, then in order to prevent namespace collisions the directory has to be a part of the package name, too. And don&amp;rsquo;t forget that the script may be moved from one directory to another, so you will have to make sure that the package name is corrected each time the script gets moved.&lt;/p&gt;
+
+&lt;p&gt;But why enforce these strange rules on developers, when we can arrange for our daemon to do this work? For every script that the daemon is about to execute for the first time, the script should be wrapped inside the package whose name is constructed from the mangled path to the script and a subroutine called run(). For example, if the daemon is about to execute the script &lt;em&gt;/tmp/hello.pl&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  hello.pl
+  --------
+  #!/usr/bin/perl
+  print &amp;quot;Hello\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then prior to running it, the daemon will change the code to be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  wrapped_hello.pl
+  ----------------
+  package cache::tmp::hello_2epl;
+
+  sub run{
+    #!/usr/bin/perl
+    print &amp;quot;Hello\n&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The package name is constructed from the prefix &lt;code&gt;cache::&lt;/code&gt;, each directory separation slash is replaced with &lt;code&gt;::&lt;/code&gt;, and nonalphanumeric characters are encoded so that for example &lt;code&gt;.&lt;/code&gt; (a dot) becomes &lt;code&gt;_2e&lt;/code&gt; (an underscore followed by the ASCII code for a dot in hex representation).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; % perl -e &#39;printf &amp;quot;%x&amp;quot;,ord(&amp;quot;.&amp;quot;)&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;prints: &lt;code&gt;2e&lt;/code&gt;. The underscore is the same you see in URL encoding except the &lt;code&gt;%&lt;/code&gt; character is used instead (&lt;code&gt;%2E&lt;/code&gt;), but since &lt;code&gt;%&lt;/code&gt; has a special meaning in Perl (prefix of hash variable) it couldn&amp;rsquo;t be used.&lt;/p&gt;
+
+&lt;p&gt;Now when the daemon is requested to execute the script &lt;em&gt;/tmp/hello.pl&lt;/em&gt;, all it has to do is to build the package name as before based on the location of the script and call its &lt;code&gt;run()&lt;/code&gt; subroutine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use cache::tmp::hello_2epl;
+  cache::tmp::hello_2epl::run();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We have just written a partial prototype of the daemon we wanted. The only outstanding problem is how to pass the path to the script to the daemon. This detail is left as an exercise for the reader.&lt;/p&gt;
+
+&lt;p&gt;If you are familiar with the &lt;code&gt;Apache::Registry&lt;/code&gt; module, then you know that it works in almost the same way. It uses a different package prefix and the generic function is called &lt;code&gt;handler()&lt;/code&gt; and not run(). The scripts to run are passed through the HTTP protocol&amp;rsquo;s headers.&lt;/p&gt;
+
+&lt;p&gt;Now you understand that there are cases where your normal subroutines can become inner, since if your script was a simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  simple.pl
+  ---------
+  #!/usr/bin/perl
+  sub hello { print &amp;quot;Hello&amp;quot; }
+  hello();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Wrapped into a &lt;code&gt;run()&lt;/code&gt; subroutine it becomes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  simple.pl
+  ---------
+  package cache::simple_2epl;
+
+  sub run{
+    #!/usr/bin/perl
+    sub hello { print &amp;quot;Hello&amp;quot; }
+    hello();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Therefore, &lt;code&gt;hello()&lt;/code&gt; is an inner subroutine and if you have used &lt;code&gt;my()&lt;/code&gt; scoped variables defined and altered outside and used inside hello(), it won&amp;rsquo;t work as you expect starting from the second call, as was explained in the previous section.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-remedies-for-inner-subroutines-remedies-for-inner-subroutines-span&#34;&gt;&lt;span id=&#34;remedies for inner subroutines&#34;&gt;Remedies for Inner Subroutines&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;First of all, there is nothing to worry about, as long as you don&amp;rsquo;t forget to turn the warnings On. If you do happen to have the &lt;em&gt;``my() Scoped Variable in Nested Subroutines&amp;rdquo;&lt;/em&gt; problem, then Perl will always alert you.&lt;/p&gt;
+
+&lt;p&gt;Given that you have a script that has this problem, what are the ways to solve it? There are many of them and we will discuss some of them here.&lt;/p&gt;
+
+&lt;p&gt;We will use the following code to show the different solutions.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  multirun.pl
+  -----------
+  #!/usr/bin/perl -w
+
+  use strict;
+
+  for (1..3){
+    print &amp;quot;run: [time $_]\n&amp;quot;;
+    run();
+  }
+
+  sub run{
+    my $counter = 0;
+
+    increment_counter();
+    increment_counter();
+
+    sub increment_counter{
+      $counter++;
+      print &amp;quot;Counter is equal to $counter !\n&amp;quot;;
+    }
+
+  } # end of sub run
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code executes the &lt;code&gt;run()&lt;/code&gt; subroutine three times, which in turn initializes the &lt;code&gt;$counter&lt;/code&gt; variable to 0 each time it is executed and then calls the inner subroutine &lt;code&gt;increment_counter()&lt;/code&gt; twice. Sub &lt;code&gt;increment_counter()&lt;/code&gt; prints &lt;code&gt;$counter&lt;/code&gt;&amp;rsquo;s value after incrementing it. One might expect to see the following output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  run: [time 1]
+  Counter is equal to 1 !
+  Counter is equal to 2 !
+  run: [time 2]
+  Counter is equal to 1 !
+  Counter is equal to 2 !
+  run: [time 3]
+  Counter is equal to 1 !
+  Counter is equal to 2 !
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But as we have already learned from the previous sections, this is not what we are going to see. Indeed, when we run the script we see:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./multirun.pl
+  Variable &amp;quot;$counter&amp;quot; will not stay shared at ./nested.pl line 18.
+  run: [time 1]
+  Counter is equal to 1 !
+  Counter is equal to 2 !
+  run: [time 2]
+  Counter is equal to 3 !
+  Counter is equal to 4 !
+  run: [time 3]
+  Counter is equal to 5 !
+  Counter is equal to 6 !
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Obviously, the &lt;code&gt;$counter&lt;/code&gt; variable is not reinitialized on each execution of run(). It retains its value from the previous execution, and sub &lt;code&gt;increment_counter()&lt;/code&gt; increments that.&lt;/p&gt;
+
+&lt;p&gt;One of the workarounds is to use globally declared variables, with the &lt;code&gt;vars&lt;/code&gt; pragma.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  multirun1.pl
+  -----------
+  #!/usr/bin/perl -w
+
+  use strict;
+  use vars qw($counter);
+
+  for (1..3){
+    print &amp;quot;run: [time $_]\n&amp;quot;;
+    run();
+  }
+
+  sub run {
+
+    $counter = 0;
+
+    increment_counter();
+    increment_counter();
+
+    sub increment_counter{
+      $counter++;
+      print &amp;quot;Counter is equal to $counter !\n&amp;quot;;
+    }
+
+  } # end of sub run
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you run this and the other solutions offered below, then the expected output will be generated:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./multirun1.pl
+
+  run: [time 1]
+  Counter is equal to 1 !
+  Counter is equal to 2 !
+  run: [time 2]
+  Counter is equal to 1 !
+  Counter is equal to 2 !
+  run: [time 3]
+  Counter is equal to 1 !
+  Counter is equal to 2 !
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By the way, the warning we saw before has gone, and so has the problem, since there is no &lt;code&gt;my()&lt;/code&gt; (lexically defined) variable used in the nested subroutine.&lt;/p&gt;
+
+&lt;p&gt;Another approach is to use fully qualified variables. This is better, since less memory will be used, but it adds a typing overhead:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  multirun2.pl
+  -----------
+  #!/usr/bin/perl -w
+
+  use strict;
+
+  for (1..3){
+    print &amp;quot;run: [time $_]\n&amp;quot;;
+    run();
+  }
+
+  sub run {
+
+    $main::counter = 0;
+
+    increment_counter();
+    increment_counter();
+
+    sub increment_counter{
+      $main::counter++;
+      print &amp;quot;Counter is equal to $main::counter !\n&amp;quot;;
+    }
+
+  } # end of sub run
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can also pass the variable to the subroutine by value and make the subroutine return it after it was updated. This adds time and memory overheads, so it may not be good idea if the variable can be very large, or if speed of execution is an issue.&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t rely on the fact that the variable is small during the development of the application, it can grow quite big in situations you don&amp;rsquo;t expect. For example, a simple HTML form text entry field can return a few megabytes of data if one of your users is bored and wants to test how good your code is. It&amp;rsquo;s not uncommon to see users copy-and-paste 10Mb core dump files into a form&amp;rsquo;s text fields and then submit it for your script to process.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  multirun3.pl
+  -----------
+  #!/usr/bin/perl -w
+
+  use strict;
+
+  for (1..3){
+    print &amp;quot;run: [time $_]\n&amp;quot;;
+    run();
+  }
+
+  sub run {
+
+    my $counter = 0;
+
+    $counter = increment_counter($counter);
+    $counter = increment_counter($counter);
+
+    sub increment_counter{
+      my $counter = shift;
+
+      $counter++;
+      print &amp;quot;Counter is equal to $counter !\n&amp;quot;;
+
+      return $counter;
+    }
+
+  } # end of sub run
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, you can use references to do the job. The version of &lt;code&gt;increment_counter()&lt;/code&gt; below accepts a reference to the &lt;code&gt;$counter&lt;/code&gt; variable and increments its value after first dereferencing it. When you use a reference, the variable you use inside the function is physically the same bit of memory as the one outside the function. This technique is often used to enable a called function to modify variables in a calling function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  multirun4.pl
+  -----------
+  #!/usr/bin/perl -w
+
+  use strict;
+
+  for (1..3){
+    print &amp;quot;run: [time $_]\n&amp;quot;;
+    run();
+  }
+
+  sub run {
+
+    my $counter = 0;
+
+    increment_counter(\$counter);
+    increment_counter(\$counter);
+
+    sub increment_counter{
+      my $r_counter = shift;
+
+      $$r_counter++;
+      print &amp;quot;Counter is equal to $$r_counter !\n&amp;quot;;
+    }
+
+  } # end of sub run
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is yet another and more obscure reference usage. We modify the value of &lt;code&gt;$counter&lt;/code&gt; inside the subroutine by using the fact that variables in &lt;code&gt;@_&lt;/code&gt; are aliases for the actual scalar parameters. Thus if you called a function with two arguments, then those would be stored in &lt;code&gt;$_[0]&lt;/code&gt; and &lt;code&gt;$_[1]&lt;/code&gt;. In particular, if an element &lt;code&gt;$_[0]&lt;/code&gt; is updated, then the corresponding argument is updated (or an error occurs if it is not updatable as would be the case of calling the function with a literal, e.g. &lt;em&gt;increment_counter(5)&lt;/em&gt;).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  multirun5.pl
+  -----------
+  #!/usr/bin/perl -w
+
+  use strict;
+
+  for (1..3){
+    print &amp;quot;run: [time $_]\n&amp;quot;;
+    run();
+  }
+
+  sub run {
+
+    my $counter = 0;
+
+    increment_counter($counter);
+    increment_counter($counter);
+
+    sub increment_counter{
+      $_[0]++;
+      print &amp;quot;Counter is equal to $_[0] !\n&amp;quot;;
+    }
+
+  } # end of sub run
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The approach given above is generally not recommended because most Perl programmers will not expect &lt;code&gt;$counter&lt;/code&gt; to be changed by the function; the example where we used &lt;code&gt;\$counter&lt;/code&gt;, i.e. pass-by-reference would be preferred.&lt;/p&gt;
+
+&lt;p&gt;Here is a solution that avoids the problem entirely by splitting the code into two files: The first is really just a wrapper and loader, the second file contains the heart of the code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  multirun6.pl
+  -----------
+  #!/usr/bin/perl -w
+
+  use strict;
+  require &#39;multirun6-lib.pl&#39; ;
+
+  for (1..3){
+    print &amp;quot;run: [time $_]\n&amp;quot;;
+    run();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Separate file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  multirun6-lib.pl
+  ----------------
+  use strict ;
+
+  my $counter;
+  sub run {
+    $counter = 0;
+    increment_counter();
+    increment_counter();
+  }
+
+  sub increment_counter{
+    $counter++;
+    print &amp;quot;Counter is equal to $counter !\n&amp;quot;;
+  }
+
+  1 ;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you have at least six workarounds to choose from.&lt;/p&gt;
+
+&lt;p&gt;For more information, please refer to perlref and perlsub manpages.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;Previously in the Series&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/pub/2002/04/23/mod_perl.html&#34;&gt;The Perl You Need To Know&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;a href=&#34;http://localhost:1313/pub/2002/04/10/mod_perl.html&#34;&gt;Installing mod_perl without superuser privileges&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;a href=&#34;http://localhost:1313/pub/2002/03/22/modperl.html&#34;&gt;mod_perl in 30 minutes&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;a href=&#34;http://localhost:1313/pub/2002/02/26/whatismodperl.html&#34;&gt;Why mod_perl?&lt;/a&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&#34;span-id-perldoc-s-rarely-known-but-very-useful-options-perldoc-s-rarely-known-but-very-useful-options-span&#34;&gt;&lt;span id=&#34;perldoc&#39;s rarely known but very useful options&#34;&gt;perldoc&amp;rsquo;s Rarely Known But Very Useful Options&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s a known fact that one cannot become a Perl hacker and especially mod_perl hacker without knowing how to read Perl documentation and search through it. Books are good, but an easily accessible and searchable Perl reference at your fingertips is a great time saver. It always has the up-to-date information for the version of perl you&amp;rsquo;re using.&lt;/p&gt;
+
+&lt;p&gt;Of course, you can use online Perl documentation at the Web: &lt;a href=&#34;https://perldoc.perl.org&#34;&gt;perldoc&lt;/a&gt;. The &lt;code&gt;perldoc&lt;/code&gt; utility provides you with access to the documentation installed on your system. To find out what Perl manpages are available execute:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perldoc perl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To find what functions perl has, execute:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perldoc perlfunc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To learn the syntax and to find examples of a specific function, you would execute (e.g. for &lt;code&gt;open()&lt;/code&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perldoc -f open
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note: In perl5.005_03 and earlier, there is a bug in this and the &lt;code&gt;-q&lt;/code&gt; options of &lt;code&gt;perldoc&lt;/code&gt;. It won&amp;rsquo;t call &lt;code&gt;pod2man&lt;/code&gt;, but will display the section in POD format instead. Despite this bug it&amp;rsquo;s still readable and very useful.&lt;/p&gt;
+
+&lt;p&gt;The Perl FAQ (&lt;em&gt;perlfaq&lt;/em&gt; manpage) is in several sections. To search through the sections for &lt;code&gt;open&lt;/code&gt; you would execute:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perldoc -q open
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will show you all the matching question-and-answer sections, still in POD format.&lt;/p&gt;
+
+&lt;p&gt;To read the &lt;em&gt;perldoc&lt;/em&gt; manpage you would execute:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perldoc perldoc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Online documentation: &lt;a href=&#34;https://perldoc.perl.org&#34;&gt;perldoc&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The book ``&lt;em&gt;Programming Perl&lt;/em&gt;&amp;rdquo; 3rd edition by L.Wall, T. Christiansen and J.Orwant (also known as the ``&lt;em&gt;Camel&lt;/em&gt;&amp;rdquo; book, named after the camel picture on the cover of the book). You want to refer to Chapter 8 that talks about nested subroutines among other things.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The &lt;em&gt;perlref&lt;/em&gt; and &lt;em&gt;perlsub&lt;/em&gt; man pages.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

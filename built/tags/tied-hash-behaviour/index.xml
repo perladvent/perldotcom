@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tied Hash Behaviour on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/tied-hash-behaviour/</link>
+    <description>Recent content in Tied Hash Behaviour on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 04 Sep 2001 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/tied-hash-behaviour/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Changing Hash Behaviour with tie</title>
+      <link>http://localhost:1313/pub/2001/09/04/tiedhash.html/</link>
+      <pubDate>Tue, 04 Sep 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/09/04/tiedhash.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-introduction-introduction-span&#34;&gt;&lt;span id=&#34;introduction&#34;&gt;Introduction&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In my experience, hashes are just about the most useful built-in datatype that Perl has. They are useful for so many things - from simple lookup tables to complex data structures. And, of course, most Perl objects have a blessed hash as their underlying implementation.&lt;/p&gt;
+
+&lt;p&gt;The fact that they have so many uses must mean the Larry and the Perl5 Porters must have got the functionality of hashes pretty much right when designing them - it&amp;rsquo;s simple, instinctive and effective. But have you ever come across a situation where you wanted to change the way that hashes worked? Perhaps you wanted hashes that only had a fixed set of keys. Faced with this requirement, it&amp;rsquo;s tempting to move away from the hash interface completely and use an object. The downside to this decision is that you lose the easy-to-understand hash interface. But using &lt;em&gt;tied variables&lt;/em&gt; it is possible to create an object and still use it like a hash.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-tied-objects-tied-objects-span&#34;&gt;&lt;span id=&#34;tied objects&#34;&gt;Tied Objects&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Tied objects are, in my opinion, an underused feature of Perl. The details (together with some very good examples) are in &lt;em&gt;perltie&lt;/em&gt; and there are some extended examples in the &amp;ldquo;Tied variables&amp;rdquo; chapter of &lt;em&gt;Programming Perl&lt;/em&gt;. Despite all of this great documentation, most people seem to believe that &lt;code&gt;tie&lt;/code&gt;ing is only used to &lt;code&gt;tie&lt;/code&gt; a hash to a DBM file. The truth is that any type of Perl data structure can be &lt;code&gt;tie&lt;/code&gt;d to just about anything. It&amp;rsquo;s simply a case of writing an object that includes certain pre-defined methods. If you want to create a &lt;code&gt;tie&lt;/code&gt;d object that emulates a standard Perl object most of the time, then it&amp;rsquo;s even easier, as the Perl distribution contains modules that define objects that mimic the behavior of that standard data types. For example, there is a class called &lt;code&gt;Tie::StdHash&lt;/code&gt; (in the file Tie::Hash) that mimics the behavior of a real hash. To alter that behavior we simply have to subclass &lt;code&gt;Tie::StdHash&lt;/code&gt; and override the methods that we&amp;rsquo;re interested in.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-using-tied-objects-using-tied-objects-span&#34;&gt;&lt;span id=&#34;using tied objects&#34;&gt;Using Tied Objects&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In your Perl program, you make use of a &lt;code&gt;tie&lt;/code&gt;d object by calling the &lt;code&gt;tie&lt;/code&gt; function. &lt;code&gt;tie&lt;/code&gt; takes two mandatory parameters: the variable that you are &lt;code&gt;tie&lt;/code&gt;ing and the name of the class to &lt;code&gt;tie&lt;/code&gt; it to, followed by any number of optional parameters. For example, if we had written the hash with fixed keys discussed earlier (which we will do soon), we could use the class in our program like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Tie::Hash::FixedKey;
+
+  my %person;
+
+  my @keys = qw(forename surname date_of_birth gender);
+
+  tie %person, &#39;Tie::Hash::FixedWidth&#39;, @keys;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After running this code, &lt;code&gt;%person&lt;/code&gt; can still be used like a hash, but its behavior will have been changed. Any attempt to assign a value to a key outside the list that we used in the call to &lt;code&gt;tie&lt;/code&gt; will fail in some way that we get to specify when we write the module.&lt;/p&gt;
+
+&lt;p&gt;If for some reason we wanted to get to the underlying object that is tied to the hash, then we can use the &lt;code&gt;tied&lt;/code&gt; function. For example,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $obj = tied(%person);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will give us back the Tie::Hash::FixedKeys object that is tied to our &lt;code&gt;%person&lt;/code&gt; hash. This is sometimes used to extend the functionality in ways that aren&amp;rsquo;t available through the standard hash interface. In our fixed keys example, we might want the user to be able to extend or reduce the list of valid keys. There is no way to do this in the standard hash interface so we would need to add new methods called, say, &lt;code&gt;add_keys&lt;/code&gt; and &lt;code&gt;del_keys&lt;/code&gt;, which can be called like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  tied(%person)-&amp;gt;add_keys(&#39;weight&#39;, &#39;height&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you have finished with the tied object and want to return it to being an ordinary hash, you can use the &lt;code&gt;untie&lt;/code&gt; function. For example,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  untie %person;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;returns &lt;code&gt;%person&lt;/code&gt; to being an ordinary hash.&lt;/p&gt;
+
+&lt;p&gt;To tie an object to a Perl hash, your object needs to define the following set of methods. Notice that they are all named in upper case. This is the standard for function names that Perl is going to call for you.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_TIEHASH&#34;&gt;TIEHASH&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the constructor function. It is called when the user calls the &lt;code&gt;tie&lt;/code&gt; function. It is passed the name of the class and the list of parameters that were passed to &lt;code&gt;tie&lt;/code&gt;. It should return a reference to the new tied object.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_FETCH&#34;&gt;FETCH&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the method that is called when the user accesses a value from the hash. The method is passed a reference to the tied object and the key that the user is trying to access. It should return the value associated with the given key (or &lt;code&gt;undef&lt;/code&gt; if the key isn&amp;rsquo;t found).&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_STORE&#34;&gt;STORE&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This method is called when the user tries to store a value against a key in the tied hash. It is passed a reference to the object, together with the key and value pair.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_DELETE&#34;&gt;DELETE&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This method is called when the user calls the &lt;code&gt;delete&lt;/code&gt; function to remove one of the key/value pairs in the tied hash. It is passed a reference to the tied object and the key that the user wishes to remove. The return value becomes the return value from the &lt;code&gt;delete&lt;/code&gt; call. To emulate the &amp;lsquo;real&amp;rsquo; &lt;code&gt;delete&lt;/code&gt; function, this should be the value that was stored in the hash before it was deleted.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_CLEAR&#34;&gt;CLEAR&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This method is called when the user clears the whole hash (usually by assigning an empty list to the hash). It is passed a reference to the tied object.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_EXISTS&#34;&gt;EXISTS&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This method is called when the user calls the &lt;code&gt;exists&lt;/code&gt; function to see whether a given key exists in the hash. It is passed a reference to the tied object and the key to search for. It should return a true value if the key is found and false otherwise.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_FIRSTKEY&#34;&gt;FIRSTKEY&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This method is called when one of the hash iterator functions (&lt;code&gt;each&lt;/code&gt; or &lt;code&gt;keys&lt;/code&gt;) is called for the first time. It is passed a reference to the tied object and should return the first key in the hash.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_NEXTKEY&#34;&gt;NEXTKEY&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This method is called when one of the iterator functions is called. It is passed a reference to the tied object and the name of the last key that was processed. It should return the name of the next key or &lt;code&gt;undef&lt;/code&gt; if there are no more keys.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_UNTIE&#34;&gt;UNTIE&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This method is called when the &lt;code&gt;untie&lt;/code&gt; function is called. It is passed a reference to the tied object.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_DESTROY&#34;&gt;DESTROY&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This method is called when the tied variable goes out of scope. It is passed a reference to the tied object.&lt;/p&gt;
+
+&lt;p&gt;As you can see, there are a large number of methods to implement, but in the next section we&amp;rsquo;ll see how you can get away with only implementing some of them.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-first-example-tie-hash-fixedkeys-a-first-example-tie-hash-fixedkeys-span&#34;&gt;&lt;span id=&#34;a first example: tie::hash::fixedkeys&#34;&gt;A First Example: Tie::Hash::FixedKeys&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s take a look at the implementation of Tie::Hash::FixedKeys. This module is available on CPAN if you want to take a closer look.&lt;/p&gt;
+
+&lt;p&gt;Writing the module is made far easier for use by the existence of a package called Tie::StdHash. This is a tied hash that mirrors the behavior of a standard Perl hash. This package is stored in the module Tie::Hash. This means that if you wrote code like the following example, then you would have a tied hash that acts the same way as a &amp;lsquo;real&amp;rsquo; hash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Tie::Hash;
+
+    my %hash;
+
+    tie %hash, &#39;Tie::StdHash&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So far, so good. But it hasn&amp;rsquo;t really achieved much. The hash &lt;code&gt;%hash&lt;/code&gt; is now a tied object, but we haven&amp;rsquo;t changed any of its functionalities. Tie::StdHash works much better if it is used as a base class from which you inherit behavior. For example, the start of the Tie::Hash::FixedKeys class looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Tie::Hash::FixedKeys;
+
+    use strict;
+    use Tie::Hash;
+    use Carp;
+    use vars qw(@ISA);
+
+    @ISA = qw(Tie::StdHash);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is standard for a Perl object, but notice that we&amp;rsquo;ve loaded the Tie::Hash module (with &lt;code&gt;use Tie::Hash&lt;/code&gt;) and have told our package to inherit behavior from Tie::StdHash by putting Tie::StdHash in the &lt;code&gt;@ISA&lt;/code&gt; package variable.&lt;/p&gt;
+
+&lt;p&gt;If we stopped there, our Tie::Hash::FixedKeys package would have the same behavior as a standard Perl hash. This is because each time Perl tried to find one of the tie interface methods (like &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_FETCH&#34;&gt;&lt;code&gt;FETCH&lt;/code&gt;&lt;/a&gt; or &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_STORE&#34;&gt;&lt;code&gt;STORE&lt;/code&gt;&lt;/a&gt;) in our package it would fail and would call the version found in our parent class, Tie::StdHash.&lt;/p&gt;
+
+&lt;p&gt;At this point we can start to change the standard hash behavior by simply overriding the methods that we want to change. We&amp;rsquo;ll start by implementing the &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_TIEHASH&#34;&gt;&lt;code&gt;TIEHASH&lt;/code&gt;&lt;/a&gt; method differently.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub TIEHASH {
+      my $class = shift;
+
+      my %hash;
+
+      @hash{@_} = (undef) x @_;
+
+      bless \%hash, $class;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_TIEHASH&#34;&gt;&lt;code&gt;TIEHASH&lt;/code&gt;&lt;/a&gt; function is passed the name of the class as its first parameter, so we &lt;code&gt;shift&lt;/code&gt; that into &lt;code&gt;$class&lt;/code&gt; in the first line. The rest of the parameters in &lt;code&gt;@_&lt;/code&gt; are whatever extra parameters have been passed into the &lt;code&gt;tie&lt;/code&gt; call. In the example of how to use our proposed class at the start of this article, we passed it the list of valid keys. Therefore, we take this list of keys and (using a hash slice) we initialize a hash so that it has &lt;code&gt;undef&lt;/code&gt; as the value for each of these keys. Finally, we take a reference to this hash, bless it into the required class and return the reference.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s worth pointing out here, the one caveat about using Tie::StdHash. In order to use the default behavior, your new class &lt;em&gt;must&lt;/em&gt; be based on a hash reference and this hash must contain &lt;em&gt;only&lt;/em&gt; real hash data. We couldn&amp;rsquo;t, for example, invent a key called &lt;code&gt;_keys&lt;/code&gt; that would contain a list of valid key names as, for example, this key would be shown if the user called the &lt;code&gt;keys&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;At this point we have a hash that has values (of &lt;code&gt;undef&lt;/code&gt;) for each of the allowed keys. This doesn&amp;rsquo;t yet prevent us from adding new keys. For that we need to override the STORE method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub STORE {
+      my ($self, $key, $val) = @_;
+
+      unless (exists $self-&amp;gt;{$key}) {
+        croak &amp;quot;invalid key [$key] in hash\n&amp;quot;;
+        return;
+      }
+
+      $self-&amp;gt;{$key} = $val;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The three parameters passed to the &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_STORE&#34;&gt;&lt;code&gt;STORE&lt;/code&gt;&lt;/a&gt; method are a reference to the tied object, and a new key/value pair. We need the &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_STORE&#34;&gt;&lt;code&gt;STORE&lt;/code&gt;&lt;/a&gt; method to prevent new keys being added to the underlying hash, and we achieve that by checking that the given key exists before setting the value. Note that as our underlying object is a real hash, we can check this simply by using the &lt;code&gt;exists&lt;/code&gt; function. If the key doesn&amp;rsquo;t exist we give the user a friendly warning and return from the method without changing the hash.&lt;/p&gt;
+
+&lt;p&gt;We have now prevented the hash from growing by adding keys, but it is still possible to remove keys from the hash (and our &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_STORE&#34;&gt;&lt;code&gt;STORE&lt;/code&gt;&lt;/a&gt; implementation would prevent them from being set once they had been removed), so we also need to override the implementation of &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_DELETE&#34;&gt;&lt;code&gt;DELETE&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub DELETE {
+      my ($self, $key) = @_;
+
+      return unless exists $self-&amp;gt;{$key};
+
+      my $ret = $self-&amp;gt;{$key};
+
+      $self-&amp;gt;{$key} = undef;
+
+      return $ret;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once again, we don&amp;rsquo;t actually want to change the existing set of keys in the hash, so we check to see whether the key already exists and return immediately if it doesn&amp;rsquo;t. If the key &lt;em&gt;does&lt;/em&gt; exist, then we don&amp;rsquo;t want to actually delete it, so we simply set the value back to &lt;code&gt;undef&lt;/code&gt;. Notice that we note the value before deleting it so that we can return it from the method, thus mimicking the behavior of the real &lt;code&gt;delete&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s one other way to affect the keys in our hash. Code like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    %hash = ();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will cause the &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_CLEAR&#34;&gt;&lt;code&gt;CLEAR&lt;/code&gt;&lt;/a&gt; method to be called. The default behavior for this method is to remove all of the data from the hash. We need to replace this with a method that will reset all of the values to &lt;code&gt;undef&lt;/code&gt; without changing the keys in any way.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub CLEAR {
+      my $self = shift;
+
+      $self-&amp;gt;{$_} = undef foreach keys %$self;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that&amp;rsquo;s all that we need to do. All of the other functionality of a standard hash is inherited from Tie::StdHash. You can fetch values from our hash as normal without us writing any more lines of code. Built-in Perl functions like &lt;code&gt;each&lt;/code&gt; and &lt;code&gt;keys&lt;/code&gt; also work as expected.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-another-example-tie-hash-regex-another-example-tie-hash-regex-span&#34;&gt;&lt;span id=&#34;another example: tie::hash::regex&#34;&gt;Another Example: Tie::Hash::Regex&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at another example. This module came about from a discussion on Perlmonks a couple of months ago. Someone asked whether it was possible to match hash keys approximately. I suggested that a hash that matched keys as regular expressions might solve their problem and wrote the first draft of this module. I&amp;rsquo;m grateful to Jeff Pinyan, who made some suggestions for improvements to the module.&lt;/p&gt;
+
+&lt;p&gt;In order to make this change to the behavior of the hash, we need to override the behavior of the &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_FETCH&#34;&gt;&lt;code&gt;FETCH&lt;/code&gt;&lt;/a&gt;, &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_EXISTS&#34;&gt;&lt;code&gt;EXISTS&lt;/code&gt;&lt;/a&gt; and &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_DELETE&#34;&gt;&lt;code&gt;DELETE&lt;/code&gt;&lt;/a&gt; methods. Here&amp;rsquo;s the &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_FETCH&#34;&gt;&lt;code&gt;FETCH&lt;/code&gt;&lt;/a&gt; method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub FETCH {
+    my $self = shift;
+    my $key = shift;    
+
+    my $is_re = (ref $key eq &#39;Regexp&#39;);
+
+    return $self-&amp;gt;{$key} if !$is_re &amp;amp;&amp;amp; exists $self-&amp;gt;{$key};
+
+    $key = qr/$key/ unless $is_re;
+
+    /$key/ and return $self-&amp;gt;{$_} for keys %$self;
+
+    return;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Knowing what we know about tied objects, this is pretty simple to follow. We start by getting the reference to the tied object (which will be a hash reference) and the required key. We then check to see whether the key is a reference to a precompiled regular expression (which would have been compiled with &lt;code&gt;qr//&lt;/code&gt;. If the key &lt;em&gt;isn&amp;rsquo;t&lt;/em&gt; a regex, then we start by checking whether the key exists in the hash. If it does, we return the associated value. If the key isn&amp;rsquo;t found, then we assume that it is a regex to search for. At this point we compile the regex as if it isn&amp;rsquo;t already precompiled (this gives us a performance boost as we could potentially need to match the regex against all of the keys in the hash). Finally, we check each key in the hash in turn against the regex and if it matches, then we return the associated value. If there are no matches we simply &lt;code&gt;return&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;At this point you may realize that it&amp;rsquo;s possible for more than one key to match a regex and you may suggest that it would be nice for &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_FETCH&#34;&gt;&lt;code&gt;FETCH&lt;/code&gt;&lt;/a&gt; to return &lt;em&gt;all&lt;/em&gt; matches as if it was called in scalar context. This is a nice idea, but in current versions of Perl the syntax &lt;code&gt;$hash{$key}&lt;/code&gt; &lt;em&gt;always&lt;/em&gt; calls &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_FETCH&#34;&gt;&lt;code&gt;FETCH&lt;/code&gt;&lt;/a&gt; in scalar context (and the syntax &lt;code&gt;@hash{@keys}&lt;/code&gt; calls &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_FETCH&#34;&gt;&lt;code&gt;FETCH&lt;/code&gt;&lt;/a&gt; once in scalar context for each element of &lt;code&gt;@keys&lt;/code&gt;) so this won&amp;rsquo;t work. To get round this, you can use the slightly kludgey syntax &lt;code&gt;@vals = tied(%hash)-&amp;gt;FETCH($pattern)&lt;/code&gt; and the version of the module on CPAN supports this.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_EXISTS&#34;&gt;&lt;code&gt;EXISTS&lt;/code&gt;&lt;/a&gt; method uses similar processing, but in this case we return 1 if the key is found instead of the associated value.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub EXISTS {
+    my $self = shift;
+    my $key = shift;
+
+    my $is_re = (ref $key eq &#39;Regexp&#39;);
+
+    return 1 if !$is_re &amp;amp;&amp;amp; exists $self-&amp;gt;{$key};
+
+    $key = qr/$key/ unless $is_re;
+
+    /$key/ &amp;amp;&amp;amp; return 1 for keys %$key;
+
+    return;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://localhost:1313/pub/2001/09/04/tiedhash.html#item_DELETE&#34;&gt;&lt;code&gt;DELETE&lt;/code&gt;&lt;/a&gt; method is somewhat different. In this case, we can delete &lt;em&gt;all&lt;/em&gt; matching key/value pairs, which we do with the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub DELETE {
+    my $self = shift;
+    my $key = shift;
+
+    my $is_re = (ref $key eq &#39;Regexp&#39;);
+
+    return delete $self-&amp;gt;{$key} if !$is_re &amp;amp;&amp;amp; exists $self-&amp;gt;{$key};
+
+    $key = qr/$key/ unless $is_re;
+
+    for (keys %$self) {
+      if (/$key/) {
+        delete $self-&amp;gt;{$_};
+      }
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I should point out that there is another similar module on CPAN called Tie::RegexpHash written by robert Rothenberg. Tie::RegexpHash actually does the opposite to Tie::Hash::Regex. When you store a value in it, the key is a regular expression and any time you look up a value with a key, you will get the value associated with the first regex key that matches your string. It&amp;rsquo;s interesting to note that Tie::RegexpHash &lt;em&gt;isn&amp;rsquo;t&lt;/em&gt; based on Tie::StdHash and, as a result, contains a lot more code than Tie::Hash::Regex.&lt;/p&gt;
+
+&lt;p&gt;Another recent addition to CPAN is Tie::Hash::Approx, which was written by Briac Pilpré. This addresses a similar problem, but instead of using regex matching, it uses Jarkko Hietaniemi&amp;rsquo;s String::Approx module.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-tie-hash-cannabinol-conclusion-tie-hash-cannabinol-span&#34;&gt;&lt;span id=&#34;conclusion: tie::hash::cannabinol&#34;&gt;Conclusion: Tie::Hash::Cannabinol&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;As a final example, here&amp;rsquo;s something that isn&amp;rsquo;t quite so useful. This is a hash that forgets just about everything that you tell it. Its &lt;code&gt;exists&lt;/code&gt; function isn&amp;rsquo;t exactly to be trusted either.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Tie::Hash::Cannabinol;
+
+    use strict;
+    use vars qw($VERSION @ISA);
+    use Tie::Hash;
+
+    $VERSION = &#39;0.01&#39;;
+    @ISA = qw(Tie::StdHash);
+
+    sub STORE {
+      my ($self, $key, $val) = @_;
+
+      return if rand &amp;gt; .75;
+
+      $self-&amp;gt;{$key} = $val;
+    }
+
+    sub FETCH {
+      my ($self, $key) = @_;
+
+      return if rand &amp;gt; .75;
+
+      return $self-&amp;gt;{rand keys %$self};
+    }
+
+    sub EXISTS {
+      return rand &amp;gt; .5;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, it&amp;rsquo;s simple to make some radical alterations to the behavior of Perl hashes using &lt;code&gt;tie&lt;/code&gt; and the Tie::StdHash base class. As I said at the start of the article, this often enables you to create new &amp;ldquo;objects&amp;rdquo; without having to make the leap to full object orientation in your programs.&lt;/p&gt;
+
+&lt;p&gt;And it isn&amp;rsquo;t just hashes that you can do it for. The standard Perl distribution also comes with packages called Tie::StdArray, Tie::StdHandle and Tie::StdScalar.&lt;/p&gt;
+
+&lt;p&gt;Have fun with them.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

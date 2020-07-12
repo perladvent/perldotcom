@@ -1,0 +1,1073 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Searching Search Reverse Index on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/searching-search-reverse-index/</link>
+    <description>Recent content in Searching Search Reverse Index on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 25 Sep 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/searching-search-reverse-index/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Adding Search Functionality to Perl Applications</title>
+      <link>http://localhost:1313/pub/2003/09/25/searching.html/</link>
+      <pubDate>Thu, 25 Sep 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/09/25/searching.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;introduction-to-searching&#34;&gt;Introduction to Searching&lt;/h3&gt;
+
+&lt;p&gt;Usually, when building an application, a lot of thought goes into how the data is entered and updated, rather than finding it again. Finding data is an afterthought, especially when developing with a small dataset.&lt;/p&gt;
+
+&lt;p&gt;If you are building a small, simple database-backed web site with only a couple of hundred records, then relatively simple SQL should be all you need. It would be trivial to add a simple &lt;em&gt;and Foo_Name like &amp;lsquo;%keyword%&amp;rsquo;&lt;/em&gt; to the queries being used.&lt;/p&gt;
+
+&lt;p&gt;When your needs go beyond this, there are three ways you can proceed: you can use native database full-text searching, an external search engine, or you can roll your own. Most relational databases come with a full-text search functionality, but can have disadvantages:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Mutually incompatible syntax and behavior.&lt;/li&gt;
+&lt;li&gt;Poor and often unconfigurable ranking and scoring.&lt;/li&gt;
+&lt;li&gt;Difficult or impossible to query across multiple tables.&lt;/li&gt;
+&lt;li&gt;Require schema changes and rebuilding of indexes for any additional or removed fields.&lt;/li&gt;
+&lt;li&gt;Lack of advanced features such as application context, word&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;An external search engine, such as &lt;code&gt;htdig&lt;/code&gt;, offers independence from your database and application, as well as powerful indexing and searching functionality. However, this solution is limited in how it can interact with your application &amp;ndash; it depends both on its crawler and own your applications interface. An external search engine can quickly become out of date, as changes to your data will not be reflected until it next reads through your site.&lt;/p&gt;
+
+&lt;p&gt;Integrating customized searching into your application can provide you with many benefits:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;A cross-platform search component that:
+
+&lt;ul&gt;
+&lt;li&gt;Doesn&amp;rsquo;t tie you to a specific database.&lt;/li&gt;
+&lt;li&gt;Is easy to abstract and re-use.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;The ability to customize how searching works:
+
+&lt;ul&gt;
+&lt;li&gt;Search subsets of data or across tables.&lt;/li&gt;
+&lt;li&gt;Tune scoring, weighting, stemming, stop-words, etc.&lt;/li&gt;
+&lt;li&gt;Utilize relationships to provide additional data.&lt;/li&gt;
+&lt;li&gt;Specify when and how to update the index according to your needs.&lt;/li&gt;
+&lt;li&gt;Add extra columns or tables without modifying the schema or interface.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Leverage the metadata and word index:
+
+&lt;ul&gt;
+&lt;li&gt;Re-use the data to provide extra features, such as computing vectors to find similar records.&lt;/li&gt;
+&lt;li&gt;Categorize data according to vectors or important keywords, rather than using tables or by hand.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;When you build searching into your application, it can make the difference between users finding the right information on your site or going somewhere else &amp;ndash; advanced search syntax and features are no substitute for finding the right results for the user in the first place!&lt;/p&gt;
+
+&lt;h3 id=&#34;organizing-and-indexing-your-data&#34;&gt;Organizing and Indexing Your Data&lt;/h3&gt;
+
+&lt;p&gt;Most search engines use a reverse (or inverted) index to store a list of words or phrases and locations where they are found. This means building up a list of locations, which could be web pages, files, objects or database records, and then adding an entry into the index for each word found, specifying the location, and possibly some metadata like a score or the type of location.&lt;/p&gt;
+
+&lt;p&gt;A reverse index can be just a simple table:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;create table ReverseIndex (
+ ReverseIndex_Word varchar(32) not null,
+ ReverseIndex_Document varchar(255) not null,
+ ReverseIndex_Score int,
+ primary key (ReverseIndex_Word, ReverseIndex_Document)
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This table assumes that each document has a score for each word, based on, perhaps, the number of occurrences. Some example data would look something like this:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;ReverseIndex_Word&lt;/th&gt;
+&lt;th&gt;ReverseIndex_Document&lt;/th&gt;
+&lt;th&gt;ReverseIndex_Score&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;art&lt;/td&gt;
+&lt;td&gt;/samantha/stuff/ballet.doc&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;ballet&lt;/td&gt;
+&lt;td&gt;/samantha/stuff/ballet.doc&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;boy&lt;/td&gt;
+&lt;td&gt;/aaron/simpsons/homer/quotes.foo&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;boy&lt;/td&gt;
+&lt;td&gt;/samantha/stuff/ballet.doc&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;dance&lt;/td&gt;
+&lt;td&gt;/aaron/simpsons/homer/quotes.foo&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;dance&lt;/td&gt;
+&lt;td&gt;/samantha/stuff/ballet.doc&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;monkey&lt;/td&gt;
+&lt;td&gt;/aaron/simpsons/homer/quotes.foo&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;To search the index for Homer&amp;rsquo;s &amp;ldquo;Dance monkey boy dance!&amp;rdquo; quote, you would split, lowercase, remove duplicates and punctuation, and build a query from the array:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT ReverseIndex_Document as Name, 
+       Sum(ReverseIndex_Score) as Total_Score, 
+       Count(ReverseIndex_Score) as Matches
+FROM ReverseIndex
+WHERE ReverseIndex_Word IN (&#39;dance&#39;,&#39;monkey&#39;,&#39;boy&#39;)
+GROUP BY ReverseIndex_Document
+ORDER BY Matches DESC , Total_Score DESC
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This query returns:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Name&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;Total_Score&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;Count&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;/aaron/simpsons/homer/quotes.foo&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;/samantha/stuff/ballet.doc&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;This query has a few features that make it more effective. The query tests not only the sum of scores, but also the number of matches. Ordering by matches before scores is a crude measure to give slightly better results than just by score, where a single highly scored word in a document can skew the results.&lt;/p&gt;
+
+&lt;p&gt;Because your search results are only as good as your index, it is worth investing the time to polishing your index to minimize skewed results. You can limit your scores per record or normalize the whole index. This would ensure that results are more even, and therefore more likely to give the results the user is looking for.&lt;/p&gt;
+
+&lt;p&gt;The key to integrating a customized search into your application is the ability to use additional contextual information to give more accurate results. This additional information could be records in other tables, filenames, or any other metadata you have available. In the example above, if we also indexed the words &amp;ldquo;homer&amp;rdquo; and &amp;ldquo;quote&amp;rdquo; from the file name and path, and the user had entered &amp;ldquo;homer&amp;rdquo; and/or &amp;ldquo;quote,&amp;rdquo; the score and rank for the &amp;ldquo;quotes.foo&amp;rdquo; document would be much better and more accurately reflect what the user was looking for.&lt;/p&gt;
+
+&lt;h3 id=&#34;adding-indexing-and-searching-to-a-legacy-application&#34;&gt;Adding Indexing and Searching to a Legacy Application&lt;/h3&gt;
+
+&lt;p&gt;Although it can be easier to provide a search engine externally through Lucene or Swish, you don&amp;rsquo;t have to tightly integrate searching at a code level to reap benefits from customized indexing. Adding your own search engine can be a high-level operation. When adding search functionality to a legacy application, you have the choice of reworking the code, annexing, or adding triggers.&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;annexing&#34;&gt;&lt;/span&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;annexing-searching-to-an-application&#34;&gt;Annexing Searching to an Application&lt;/h4&gt;
+
+&lt;p&gt;Annexing searching to your application can be as simple as couple of extra tables in a database and a &lt;code&gt;perl&lt;/code&gt; script called from &lt;code&gt;cron&lt;/code&gt;. The database need only contain the reverse index and some summary information about the locations that would be displayed in search results.&lt;/p&gt;
+
+&lt;p&gt;Your searching logic should do the minimum of work to ensure fast results, with as much of the work as possible being done up front. This is the flaw in just adding simple SQL queries to pages to provide searching: they&amp;rsquo;re simply not efficient. Exact matches on indexed columns as, in a reverse index, are far faster than the SQL-like/wildcard queries people tack onto a page to allow searching, and built-in database full-text indexes will be very slow or may not even be available when searching columns not specified in the index. This leaves a lot of work to be done for each search, which is avoided when you roll your own.&lt;/p&gt;
+
+&lt;p&gt;This simple example uses two tables, a script for indexing, and a &lt;code&gt;mod_perl&lt;/code&gt; handler for searching. The &lt;code&gt;ReverseIndex&lt;/code&gt; table is going to be three columns: &lt;code&gt;Word&lt;/code&gt;, &lt;code&gt;Score&lt;/code&gt;, and &lt;code&gt;Location&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;create table ReverseIndex ( 
+ReverseIndex_Word varchar(64), 
+ReverseIndex_Score float, 
+Location_ID int, 
+primary key( ReverseIndex_Word, ReverseIndex_Score )
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Location table will have seven columns: &lt;code&gt;Location_ID&lt;/code&gt;, &lt;code&gt;Title&lt;/code&gt;, &lt;code&gt;Type&lt;/code&gt;, &lt;code&gt;Key&lt;/code&gt;, &lt;code&gt;Identifier&lt;/code&gt;, &lt;code&gt;URL&lt;/code&gt;, and &lt;code&gt;Summary&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;create table Location (
+Location_ID integer primary key auto_increment,
+Location_Title varchar(64),
+Location_Type varchar(16),
+Location_Key varchar(32),
+Location_Identifier integer,
+Location_URL varchar(255),
+Location_Summary text
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The indexing script just reads records from the application table and populates the reverse index and locations tables. This example uses a simple local weighting based on the fields and doesn&amp;rsquo;t check if locations already exist. (If you store your application data in XML, it should still be relatively simple to change the code fetching data from the database to pull from XML files instead.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# give fields weighting
+my %weight = ( Pub_Name =&amp;gt; 1, 
+               Pub_Type =&amp;gt; 0.5, 
+               Pub_Description =&amp;gt; 0.8, 
+               Brewery_Name=&amp;gt; 0.6, 
+               Town_Name =&amp;gt; 0.4);
+
+# fetch records from the Pub table, joined against Town and Brewery
+my $sth = $dbh-&amp;gt;prepare(&#39;select 
+    Pub_ID, Pub_Name, Pub_Type, Pub_Description, 
+    Brewery_Name, Town_Name 
+    from Pubs, Brewerys, Towns 
+    where Towns.Town_ID = Pubs.Town_ID and 
+          Brewerys.Brewery_ID = Pubs.Brewery_ID&#39;);
+my $rv = $sth-&amp;gt;execute();
+
+while (my $record = $sth-&amp;gt;fetchrow_hashref() ) {
+  my %words = ();
+  # create the location
+  # index the record
+  my $location_sth = $dbh-&amp;gt;prepare_cached(&amp;quot;
+    insert into Location 
+        (Location_Title, Location_Type, Location_Key, 
+        Location_Identifier, Location_URL, 
+        Location_Summary ) 
+    values (?,&#39;Pub&#39;,&#39;Pub_ID&#39;,?,&#39;/pub.cgi&#39;, ?) 
+  &amp;quot;);
+  (my $summary) = $record-&amp;gt;{Pub_Description} =~ /(\w+\s+){0,20}/;
+  my $rv = $location_sth-&amp;gt;execute(
+        $record-&amp;gt;{Pub_Name}, $record-&amp;gt;{Pub_ID}, &amp;quot;$summary ..&amp;quot;
+  );
+  my $location = $dbh-&amp;gt;{mysql_insertid};
+
+  # short stop-word dictionary
+  my @stopwords = qw/a i you he she they the it is as to 
+                     not on or no/;
+  my %stopwords; @stopwords{@stopwords} = @stopwords;
+
+  # delete all old words for this location
+  my $deleted = $dbh-&amp;gt;do(&amp;quot;
+    delete from ReverseIndex 
+    where Location_ID = $location&amp;quot;);
+
+  foreach my $field ( keys %$record ) {
+    # split the words out of the field ( from Tim Kientzle&#39;s article )
+    my @words = split(/[^a-zA-Z0-9\xc0-\xff\+\/\_\-]+/, 
+                        lc $record-&amp;gt;{$field});
+
+                # Strip leading punct
+    @words    = grep { s/^[^a-zA-Z0-9\xc0-\xff\_\-]+//; $_ } 
+                # Must be longer than one character
+                grep { length &amp;gt; 1 }  
+                # must have an alphanumeric
+                grep { /[a-zA-Z0-9\xc0-\xff]/ } @words;
+
+    # score the words
+    foreach (@words) { 
+      next if $stopwords{$_};
+      $words{$_} += $weight{$field} 
+        unless defined $words{$_} &amp;amp;&amp;amp; $words{$_} &amp;gt; 5;
+    }
+  }
+
+  # insert the new words into the index
+  my $sth = $dbh-&amp;gt;prepare(&#39;
+ insert into ReverseIndex 
+        (ReverseIndex_Word, ReverseIndex_Score, Location_ID) 
+ values (?,?,? ) &#39;);
+  foreach my $word (keys %words) {
+    my $rv = $sth-&amp;gt;execute($word,$words{$word},$location);
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The search handler only really needs a simple SQL query with an autogenerated clause, and a short dictionary of stop words (see above).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Search::Pub;
+
+use strict;
+use DBI;
+use Template;
+
+use Apache;
+use Apache::Constants;
+
+my %stopwords;
+@stopwords{(qw(a i at be do to or is not no the 
+               that they then these them who where 
+               why can find on an of and it by))} = 1 x 27;
+
+my $dbh = DBI-&amp;gt;connect(&amp;quot;DBI:mysql:pubs:host&amp;quot;, &#39;username&#39;, &#39;password&#39;);
+
+# initialise and create template
+my $config = {
+    INCLUDE_PATH =&amp;gt; &#39;/search/path&#39;,  # or list ref
+    POST_CHOMP   =&amp;gt; 1,               # cleanup whitespace
+};
+my $template_file = &#39;results.tt&#39;;
+my $template = Template-&amp;gt;new($config);
+
+sub handler {
+  my $r = shift;
+
+  # remove stoplist words
+  my @wordlist  = split(/\s+/,$r-&amp;gt;param(&#39;searchstring&#39;));
+  my @shortlist = ();
+  my @arglist   = ();
+
+  foreach my $word (@wordlist) {
+    next if ($stopwords{$word});
+    push(@shortlist, $word);
+    push(@arglist,&#39;?&#39;)
+  }
+
+  # build SQL
+  my $where = &#39;WHERE ReverseIndex_Word IN (&#39; 
+              . join(&#39;,&#39;,@arglist) . &#39;) &#39;;
+  my $sql = qq{
+  SELECT Location_Title, 
+         sum(ReverseIndex_Score) as score, 
+         count(*) as count, 
+         Location_Summary, Location_ID, Location_Key, 
+         Location_Identifier, Location_URL
+  FROM   ReverseIndex, Location
+  $where
+  AND ReverseIndex.Location_ID = Location.Location_ID
+  Group By ReverseIndex.Location_ID 
+  Order By score DESC, Count DESC };
+
+  my $sth = $dbh-&amp;gt;prepare($sql) 
+    or $r-&amp;gt;warn(&amp;quot;couldn&#39;t prepare statement!\n&amp;quot;);
+  $sth-&amp;gt;execute(@shortlist);
+  my $results = $sth-&amp;gt;fetchall_arrayref();
+
+  # populate template variables
+  my $template_vars = { foo=&amp;gt;&#39;bar&#39;};
+  $template_vars-&amp;gt;{Results} = $results;
+  $template_vars-&amp;gt;{Words} = @shortlist;
+
+  # output page
+  $r-&amp;gt;send_http_header(&#39;TEXT/HTML&#39;);
+  $template-&amp;gt;process($template_file, $template_vars, $r) 
+    || die $template-&amp;gt;error();
+
+  return OK;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;span id=&#34;modifying&#34;&gt;&lt;/span&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;modifying-your-objects-to-use-a-trigger&#34;&gt;Modifying Your Objects to Use a Trigger&lt;/h4&gt;
+
+&lt;p&gt;An easy way to add indexing to objects is to use &lt;code&gt;Class::Trigger&lt;/code&gt;. A good example of this can be seen in Kake Pugh&amp;rsquo;s &lt;a href=&#34;#kh&#34;&gt;article&lt;/a&gt;, where she combines &lt;code&gt;Search::InvertedIndex&lt;/code&gt; with &lt;code&gt;Class::DBI&lt;/code&gt;&amp;rsquo;s trigger support, or in Tony Bowden&amp;rsquo;s &lt;code&gt;Class::DBI::mysql::FullTextSearch&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Using triggers provides an alternative to hacking calls to reindex the object in each place it is updated. More importantly, it allows you to separate the indexing from the object to another piece of code &amp;ndash; possibly implementing the update outside of the object, in the application, or even in a &lt;code&gt;mod_perl&lt;/code&gt; cleanup handler (tricky, but possible).&lt;/p&gt;
+
+&lt;p&gt;If you already have objects to which you wish to add indexing, then using triggers means minimal changes to your objects and therefore less regression testing &amp;ndash; allowing you to get on with adding your indexing and searching code to your application. You can also build objects that index themselves with minimal code. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Class::Trigger
+
+ . . .
+
+ sub set_foo {
+      my ($self,$new_value) = @_;
+
+      . . .
+
+      $self-&amp;gt;call_trigger(&#39;after_update&#39;);
+
+      . . .
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You could then add a trigger elsewhere in the application, or possibly in a subclass, that would call your indexing logic:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $object-&amp;gt;add_trigger( after_update =&amp;gt; sub {
+      my $self = shift;
+      # logic to index object
+      reindex($self-&amp;gt;{id},$self); # pass identifier and object
+      return;
+  } );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The indexing logic would update the reverse index table based on the object&amp;rsquo;s identifier and type. If you are keeping data about your objects/locations in a separate table, then you will need to get the foreign key that joins the tables before updating the reverse index table itself.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub reindex {
+  my ($id,$object) = @_;
+
+  # fetch the foreign key if required
+  my ($location) = $dbh-&amp;gt;selectrow_array(&amp;quot;
+    select Location_ID 
+    from Location 
+    where Location_Type = &#39;$type&#39; 
+        and Location_Identifier = $id&amp;quot;);
+
+  # build new word/score data structure according to object type
+  my %words = ();
+  foreach my $field ( @{$objectfields{$type}} ) {
+    my $text = $object-&amp;gt;{$field-&amp;gt;{name}};
+    my @words = split(/[^a-zA-Z0-9\xc0-\xff\+\/\_\-]+/, lc $text);
+    @words    = grep { s/^[^a-zA-Z0-9\xc0-\xff\_\-]+//; $_ }
+            grep { length &amp;gt; 1 }         
+            grep { /[a-zA-Z0-9\xc0-\xff]/ } 
+            @words;
+
+    # score the words
+    foreach (@words) { 
+      next if $stopwords{$_};
+      $words{$_} += $field-&amp;gt;{weight} 
+        unless ($words{$_} &amp;gt; 5 );
+    }
+  }
+
+  # mark old indexed values and fetch them
+  $dbh-&amp;gt;do(&amp;quot;update ReverseIndex 
+            set ReverseIndex_Obselete = 1 
+            where Location_ID = $location&amp;quot;);
+  my @oldvalues = $dbh-&amp;gt;selectcol_arrayref(&amp;quot;
+        select ReverseIndex_Word 
+        from ReverseIndex 
+        where Location_ID = $location&amp;quot; );
+
+  # update values already present
+  my $sth = $dbh-&amp;gt;prepare(&#39;update ReverseIndex 
+    set ReverseIndex_Score = ?, 
+    set ReverseIndex_Obselete = 0 
+    where Location_ID = ? and ReverseIndex_Word = ?&#39;);
+
+  foreach my $word (@oldvalues) {
+    next unless ( defined $words{$word} );
+    $sth-&amp;gt;execute($words{$word},$location,$word);
+    delete $words{$word};
+  }
+
+  # insert new values
+  $sth = $dbh-&amp;gt;prepare(&#39;
+    insert into ReverseIndex 
+    (ReverseIndex_Word, ReverseIndex_Score, 
+        Location_ID, ReverseIndex_Obselete) 
+    values ( :word, :score, :location, 0) &#39;);
+
+  foreach my $word (keys %words) {
+    $sth-&amp;gt;execute($word,$words{$word},$location);
+    delete $words{$word};
+  }
+
+  # delete remaining obselete values
+  $dbh-&amp;gt;do(&amp;quot;delete from ReverseIndex 
+            where Location_ID = $location 
+                and ReverseIndex_Obselete = 1&amp;quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This process ensures the minimum of interruption to service &amp;ndash; rather than doubling entries or removing all entries for an object while it was being updated. It would be slower than a simple wipe and replace, but for frequently read and updated objects, it would ensure more consistent search results. It would be simple to add object-level locking by checking before the update that no entries for an object are marked obselete; this would stop corruption of the index when multiple processes are updating a single object.&lt;/p&gt;
+
+&lt;p&gt;That takes care of indexing; for searching, you can either re-use the &lt;code&gt;mod_perl&lt;/code&gt; search handler above, or add a new search method to your class. The following example assumes it is called as &lt;code&gt;$objects = myapp-&amp;gt;myclass::search($searchstring);&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub search {
+  my ($class,$searchstring) = @_;
+
+  # remove stoplist words
+  . . .
+
+  # build SQL
+  my $where = &#39;WHERE ReverseIndex_Word IN (&#39; 
+                    . join(&#39;,&#39;,(&#39;?&#39; x scalar @shortlist)) . &#39;) &#39;;
+  my $sql = qq{
+  SELECT Location_Title as title, 
+         sum(ReverseIndex_Score) as score, 
+         count(*) as count, 
+         Location_Summary as summary, 
+         Location_Identifier, 
+         Location_URL as url
+  FROM   ReverseIndex, Location
+  $where
+      AND ReverseIndex.Location_ID = Location.Location_ID
+  Group By ReverseIndex.Location_ID 
+  Order By score DESC, Count DESC };
+
+  my $sth = $dbh-&amp;gt;prepare($sql) or warn &amp;quot;couldn&#39;t prepare statement !\n&amp;quot;;
+  $sth-&amp;gt;execute(@shortlist);
+
+  # build a list of objects from the search results
+  my $objects = [];
+  while ( my $result = $sth-&amp;gt;fetchrow_hashref ) {
+    my $object = myapp::myclass-&amp;gt;new(id =&amp;gt; $result-&amp;gt;{Location_Identifier}));
+    push (@$objects, { object  =&amp;gt; $object, 
+                       score   =&amp;gt; $result-&amp;gt;{score}, 
+                       count   =&amp;gt; $result-&amp;gt;{count},
+                       url     =&amp;gt; $result-&amp;gt;{url}, 
+                       summary =&amp;gt; $result-&amp;gt;{summary}, 
+                       title   =&amp;gt; $result-&amp;gt;{title} );
+  }
+
+  return $objects;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;span id=&#34;integrating&#34;&gt;&lt;/span&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;integrating-indexing-into-a-new-class-or-application&#34;&gt;Integrating Indexing Into a New Class or Application&lt;/h3&gt;
+
+&lt;p&gt;Whether building a new application or refactoring an old one, it is worth factoring &amp;ldquo;searchability&amp;rdquo; into the design. Designing in searching at the start can save a lot of work later as database schemas and business logic change.&lt;/p&gt;
+
+&lt;p&gt;The foundation of your application&amp;rsquo;s searching facilities will be the index. One way to proceed is to have a two-level index, with the normal reverse index table, plus a lookup table that provides additional information about the objects indexed. This lookup table can be used to hold all of the information you wish to display with the results in a single place.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;create table ReverseIndex (
+ ReverseIndex_Word varchar(64) not null,
+ Location_ID int not null,
+ ReverseIndex_Score int default 0,
+ ReverseIndex_Fields text,
+ primary key (ReverseIndex_Word,Location_ID)
+)
+
+create table Location (
+ Location_ID int primary key auto_increment,
+ Location_Type varchar(32),
+ Location_Key varchar(32),
+ Location_KeyValue int,
+ Location_Title varchar(128),
+ Location_Summary text,
+ Location_URL varchar(255)
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Any extra information you wish to show in the results &amp;ndash; such as paths, icons, or the objects status &amp;ndash; should be stored in the &lt;code&gt;Location&lt;/code&gt; table. If a location has been replaced or should only be visible under certain conditions, you can keep relevant flags in this table and check them when processing the results.&lt;/p&gt;
+
+&lt;p&gt;Turning to the code side of searching, a good trick is to use &lt;code&gt;perl&lt;/code&gt;&amp;rsquo;s multiple inheritance to make your application&amp;rsquo;s objects inherit from a superclass that contains the search logic. This &lt;code&gt;IndexedObject&lt;/code&gt; class provides a fine-grained, incremental update to the index, reindexing individual object attributes as they are changed. If your object only updates the database when the object is synchronized explicitly, then you can either reindex the whole object or keep track of changes and index the fields that have been changed as part of your synchronize method. Here&amp;rsquo;s a sample base class that provides a few reverse indexing methods:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package myapp::classes::IndexedObject;
+use strict;
+
+use myapp::libraries::Search;
+
+################
+# public methods
+
+sub index_object {
+  my $self = shift;
+  foreach $field (keys %{$self-&amp;gt;{_RIND_fields}} ) {
+    $self-&amp;gt;index_field($self-&amp;gt;,$field,$self-&amp;gt;{$field});
+  }
+}
+
+sub index_field {
+  my ($self, $field, $value) = @_;
+  return 0 unless $self-&amp;gt;{_RIND_fields}{$field};
+  my $location = $self-&amp;gt;{_RIND_Location};
+  my $query = &amp;quot;select * from $self-&amp;gt;{table} 
+               where Location_ID = ?&amp;quot;;
+  my $sth = $self-&amp;gt;{_RIND_DBH}-&amp;gt;prepare($query);
+  my $rv = $sth-&amp;gt;execute($location);
+  my %newwords = ();
+  my @newwords = get_words($string);
+  foreach my $word (@newwords) {
+    next if ($stopwords{$word});
+    $newwords{$word} += $self-&amp;gt;{_RIND_fields}{$field}{weight};
+  }
+
+  while ( my $row = $sth-&amp;gt;fetchrow_hashref() ) {
+    next unless ($row-&amp;gt;{ReverseIndex_Fields} =~ m/&#39;$field&#39;/);
+    $self-&amp;gt;{locationwords}{$row-&amp;gt;{ReverseIndex_Word}} = $row;
+
+    my %fields = ( $row-&amp;gt;{ReverseIndex_Fields} =~ m/&#39;(.*?)&#39;:([\d.]+)/g );
+
+    if ( exists $newwords{$row-&amp;gt;{ReverseIndex_Word}} ) {
+      $self-&amp;gt;_RIND_UpdateFieldEntry( $row, $field, 
+                       $newwords{$row-&amp;gt;{ReverseIndex_Word}});
+      delete $newwords{$row-&amp;gt;{ReverseIndex_Word}};
+    } else {
+      $self-&amp;gt;_RIND_RemoveFieldEntry($row,$field,$lid);
+    }
+  }
+
+  foreach my $word ( keys %newwords ) {
+    $self-&amp;gt;_RIND_AddFieldEntry($lid,$word,$newwords{$word},$field);
+  }
+
+}
+
+sub delete_location {
+  my $self = shift;
+
+  my $query = &amp;quot;delete from ReverseIndex where Location_ID = ?&amp;quot;;
+  my $sth = $self-&amp;gt;{_RIND_DBH}-&amp;gt;prepare($query);
+  my $rv1 = $sth-&amp;gt;execute($self-&amp;gt;{_RIND_Location});
+
+  $query = &amp;quot;delete from Location where Location_ID = ?&amp;quot;;
+  $sth = $self-&amp;gt;{_RIND_DBH}-&amp;gt;prepare($query);
+  my $rv2 = $sth-&amp;gt;execute($self-&amp;gt;{_RIND_Location});
+
+  return $rv1 + $rv2;
+}
+
+sub indexed_fields {
+  my ($self,%args) = @_;
+  if (keys %args) {
+    $self-&amp;gt;{_RIND_DBH} = $args{dbh} if defined $args{dbh};
+    if defined $args{key} {
+      $self-&amp;gt;{_RIND_Key} = $args{key};
+      ($self-&amp;gt;{_RIND_Location}) = 
+        $self-&amp;gt;{_RIND_DBH}-&amp;gt;selectrow_array(&amp;quot;
+            select Location_ID 
+            from Location 
+            where Location_Key = &#39;$args{key}&#39; 
+            and Location_KeyValue = $self-&amp;gt;{$args{key}}&amp;quot;);
+    }
+    if ( defined $args{fields} ) {
+      foreach (@{$args{$fields}}) { 
+        $self-&amp;gt;{_RIND_fields}{$_-&amp;gt;{name}} = $_ ; 
+      }
+    }
+  }
+  return @{$self-&amp;gt;{_RIND_FIELDS}} if wantarray; 
+}
+
+#################
+# private methods 
+
+sub _RIND_UpdateFieldEntry {
+  my ($self,$row, $field,$score) = @_;
+  my %fields = ($row-&amp;gt;{Location_Fields} =~ m/&#39;(.*?)&#39;:([\d.]+)/g);
+
+  # recalculate total score
+  my $newscore = ($row-&amp;gt;{ReverseIndex_Score} - $fields{$field}) 
+                 + $score;
+  if ($fields{$field} == $score) {
+    # skip if the same
+    return 1;
+  }
+
+  # update entry, removing field and score from end
+  $fields{$field} = $score;
+  my $newfields;
+  foreach (keys %fields) {
+    $newfields .= &amp;quot;&#39;$_&#39;:$fields{$_}&amp;quot;;
+  }
+  $self-&amp;gt;_RIND_UpdateIndex(
+        word      =&amp;gt; $row-&amp;gt;{ReverseIndex_Word},
+        location  =&amp;gt; $row-&amp;gt;{Location_ID},
+        newscore  =&amp;gt; $newscore,
+        newfields =&amp;gt; $newfields);
+}
+
+sub _RIND_AddFieldEntry {
+  my ($self,$location, $word, $score, $field) = @_;
+
+  # check if record already exists for this location 
+  # and update/insert entry
+  if (exists $self-&amp;gt;{locationwords}{$word}) {
+    # recalculate total score
+    my $newscore = $self-&amp;gt;{locationwords}{$word}{ReverseIndex_Score} 
+                  + $score;
+    # update entry, appending field and score to end
+    my $newfields = $self-&amp;gt;{locationwords}{$word}{Location_Fields} 
+                    . &amp;quot;&#39;$field&#39;:$score&amp;quot;;
+    $self-&amp;gt;_RIND_UpdateIndex(
+        word      =&amp;gt; $word,
+        location  =&amp;gt; $location,
+        newscore  =&amp;gt; $newscore,
+        newfields =&amp;gt; $newfields);
+  } else {
+    # insert new entry
+    $self-&amp;gt;_RIND_UpdateIndex(
+        insert   =&amp;gt; 1,
+        word     =&amp;gt; $word,
+        location =&amp;gt; $location,
+        score    =&amp;gt; $score,
+        fields   =&amp;gt;&amp;quot;&#39;$field&#39;:$score&amp;quot;);
+  }
+}
+
+sub _RIND_RemoveFieldEntry {
+  my ($self,$row,$field,$lid) = @_;
+
+  # check if record contains other fields
+  my %fields = ( $row-&amp;gt;{Location_Fields} =~ m/&#39;(.*?)&#39;:([\d.]+)/g );
+  if ( keys %fields &amp;gt; 1 ) {
+    # recalculate total score
+    my $newscore = $row-&amp;gt;{ReverseIndex_Score} - $fields{$field};
+    delete $fields{$field};
+    # update entry, removing field and score from end
+    my $newfields = &#39;&#39;;
+    foreach (keys %fields) {
+      $newfields .= &amp;quot;&#39;$_&#39;:$fields{$_}&amp;quot;;
+    }
+    $self-&amp;gt;_RIND_UpdateIndex(
+        word      =&amp;gt; $row-&amp;gt;{ReverseIndex_Word},
+        location  =&amp;gt; $lid,
+        newscore  =&amp;gt; $newscore,
+        newfields =&amp;gt; $newfields
+    );
+  } else {
+    # delete entry
+    $self-&amp;gt;_RIND_UpdateIndex(
+        word      =&amp;gt; $row-&amp;gt;{ReverseIndex_Word},
+        location  =&amp;gt; $lid,
+        newscore  =&amp;gt; $newscore,
+        newfields =&amp;gt; $newfields,
+        delete    =&amp;gt; 1
+    );
+  }
+}
+
+sub _RIND_UpdateIndex {
+  my ($self,%args) = @_;
+  my $query = &amp;quot;update $self-&amp;gt;{table} 
+               set ReverseIndex_Score = ?, 
+                   Location_Fields = ? 
+               where ReverseIndex_Word = ? 
+                   and Location_ID = ?&amp;quot;;
+
+  my @args = ($args{newscore},$args{newfields},$args{word},$args{location});
+
+  SWITCH : {
+    if ($args{insert} == 1) {
+      $query = &amp;quot;insert into $self-&amp;gt;{table} 
+                (ReverseIndex_Score, Location_Fields, 
+                 ReverseIndex_Word, Location_ID) 
+                values (?,?,?,?) &amp;quot;; 
+      last;
+    }
+    if ($args{delete} == 1) {
+      $query = &amp;quot;delete from $self-&amp;gt;{table} 
+                where ReverseIndex_Word = ? 
+                    and Location_ID = ?&amp;quot;;
+      @args = ($args{word},$args{location});
+      last;
+    }
+  } # end of SWITCH
+  my $sth = $self-&amp;gt;{dbh}-&amp;gt;prepare($query);
+  my $rv = $sth-&amp;gt;execute(@args);
+  return;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code that extracts words from objects and search queries has to be the same, so it is a good candidate for putting into a separate library; this also helps make the code more manageable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;myapp::libraries::Search;
+use strict;
+require Exporter;
+
+our @ISA = qw(Exporter);
+our @EXPORT = qw(%stopwords &amp;amp;get_words);
+
+# stop words
+my %stopwords;
+@stopwords{(qw(a i at be do to or is not no the that they 
+    then these them who where why can find on an of and it by))} = 1 x 27;
+
+sub get_words {
+  my $text = shift;
+  # Split text into Array of words
+  my @words = split(/[^a-zA-Z0-9\xc0-\xff\+\/\_\-]+/, lc $text);
+           # Strip leading punct
+  @words = grep { s/^[^a-zA-Z0-9\xc0-\xff\_\-]+//; $_ } 
+           # Must be longer than one character
+           grep { length &amp;gt; 1 }         
+           # must have an alphanumeric
+           grep { /[a-zA-Z0-9\xc0-\xff]/ } @words;
+  return @words;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Your own objects can then inherit the index and search methods from the superclass and provide their own logic to manage how metadata is stored.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package myapp::classes::Pub;
+use strict;
+
+our @ISA = qw(myapp::classes::IndexedObject 
+              myapp::classes::DatabaseObject);
+
+sub new {
+
+ . . .
+
+ $self-&amp;gt;indexed_fields(
+                       dbh=&amp;gt;$self-&amp;gt;get_dbh, key=&amp;gt;&#39;Pub_ID&#39;,
+                       fields=&amp;gt;[
+                                { name=&amp;gt;&#39;Pub_Name&#39;, weight=&amp;gt;1}, 
+                                  . . .
+                               ],
+                      );
+ return $self;
+}
+
+sub create {
+  my ($class,%args) = @_;
+  my $self = $class-&amp;gt;_new();
+  $self-&amp;gt;_initialise_from_values(%args);
+  $self-&amp;gt;create_location(%args);
+  $self-&amp;gt;index_object();
+  return $self;
+}
+
+sub load {
+  my ($class,%args) = @_;
+  my $self = $class-&amp;gt;_new();
+  $self-&amp;gt;_initialise_from_db(%args);
+  return $self;
+}
+
+sub update {
+  my ($self, $field, $value) = @_;
+  $self-&amp;gt;{$field} = $value;
+  $self-&amp;gt;execute(&amp;quot;update Pubs 
+                  set $field = ? 
+                  where Pub_ID = ?&amp;quot;,
+                  $value, $self-&amp;gt;{Pub_ID});
+
+  $self-&amp;gt;IndexField($self-&amp;gt;{Pub_ID},$field,$value);
+  return 1;
+}
+
+sub delete {
+  my $self = shift;
+  $self-&amp;gt;delete_location();
+  $self-&amp;gt;execute(&amp;quot;delete from pubs 
+                  where = Pub_ID = ?&amp;quot;,$value);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Adding lookups and replacements to your objects indexing logic can be pretty painless. Here&amp;rsquo;s the data that gets passed to &lt;code&gt;indexed_fields&lt;/code&gt; for a &lt;code&gt;Pub&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      fields=&amp;gt;[
+           { name=&amp;gt;&#39;Pub_Name&#39;, weight=&amp;gt;1}, 
+           { name   =&amp;gt; &#39;Brewery_Name&#39;, 
+             weight =&amp;gt; &#39;0.4&#39;, 
+             lookup =&amp;gt; &#39;Brewery_ID&#39;, 
+             table  =&amp;gt; &#39;Brewery&#39;},
+           { name   =&amp;gt;&#39;Pub_IsCAMRA&#39;, 
+             weight =&amp;gt;&#39;0.6&#39;, 
+             replace=&amp;gt;&#39;CAMRA Real Ale&#39;}
+          ],
+      table=&amp;gt;&#39;Pub&#39;,
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The hard work can be done in the superclass, updating the &lt;code&gt;index_fields&lt;/code&gt; method to do lookups and replacements.
+    sub index&lt;em&gt;fields {
+      my ($self, $field, $value) = @&lt;/em&gt;;
+      return 0 unless $self-&amp;gt;{_RIND_fields}{$field};
+      my $location = $self-&amp;gt;{_RIND_Location};
+      my $query = &amp;lsquo;select * from $self-&amp;gt;{table} where Location_ID = ?&amp;lsquo;;
+      my $sth = $self-&amp;gt;{_RIND_DBH}-&amp;gt;prepare($query);
+      my $rv = $sth-&amp;gt;execute($location);
+      my %newwords = ();&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  if ( defined $self-&amp;gt;{_RIND_fields}{$field}{replace} ) {
+    @words = get_words($self-&amp;gt;{_RIND_fields}{$field}{replace});
+  } elsif ( defined $self-&amp;gt;{_RIND_fields}{$field}{lookup} ) {
+    my $column = $self-&amp;gt;{_RIND_fields}{$field}{lookup};
+    my $table = $self-&amp;gt;{_RIND_fields}{$field}{table};
+    my $words = $self-&amp;gt;{_RIND_DBH}-&amp;gt;selectrow_array(&amp;quot;
+        select $field 
+        from $table 
+        where $table.$column = $self-&amp;gt;{table}.$column &amp;quot;);
+    @words = get_words($words);
+  } else {
+    warn &amp;quot;this is just a normal field\n&amp;quot;;
+    @words = get_words ($fields{$field-&amp;gt;{name}});
+  }
+
+  my @newwords = get_words($string);
+  foreach my $word (@newwords) {
+    next if ($stopwords{$word});
+    $newwords{$word} += $self-&amp;gt;{_RIND_fields}{$field}{weight};
+  }
+
+  while ( my $row = $sth-&amp;gt;fetchrow_hashref() ) {
+    $self-&amp;gt;{locationwords}{$row-&amp;gt;{ReverseIndex_Word}} = $row;
+    next unless ($row-&amp;gt;{ReverseIndex_Fields} =~ m/&#39;$field&#39;/);
+    my %fields = ( $row-&amp;gt;{ReverseIndex_Fields} =~ m/&#39;(.*?)&#39;:([\d.]+)/g );
+    if ( exists $newwords{$row-&amp;gt;{ReverseIndex_Word}} ) {
+      $self-&amp;gt;_RIND_UpdateFieldEntry($row,$field,
+                        $newwords{$row-&amp;gt;{ReverseIndex_Word}});
+      delete $newwords{$row-&amp;gt;{ReverseIndex_Word}};
+    } else {
+      $self-&amp;gt;_RIND_RemoveFieldEntry($row,$field,$lid);
+    }
+  }
+
+  foreach my $word ( keys %newwords ) {
+    $self-&amp;gt;_RIND_AddFieldEntry($lid,$word,$newwords{$word},$field);
+  }
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The problem with doing lookups is that it&amp;rsquo;s possible that another object could update some data that affects other objects. To avoid this, you&amp;rsquo;ll have to make the other object check which objects would be affected by changes to itself.&lt;/p&gt;
+
+&lt;p&gt;If you store the indexed fields in the database, it&amp;rsquo;s possible to only check those object types affected with two queries: the first query will get the object types that index the changed field, and the second will update the affected records, joining as per the original lookup. An alternative to keeping the indexed fields in the database would be to keep the indexing information in an XML file &amp;ndash; such a file could also contain configuration options that the search system could check, such as whether to use stemming, ranges for grades, and so on.&lt;/p&gt;
+
+&lt;p&gt;The two-level solution we discussed with the additional metadata table lets us store data about which object attributes are indexed and how, and it also allows for easy reporting. Additionally, we can control the indexing process purely by updating the database or XML, without having to modify the codebase at all.&lt;/p&gt;
+
+&lt;h4 id=&#34;normalizing-and-global-weighting&#34;&gt;Normalizing and Global Weighting&lt;/h4&gt;
+
+&lt;p&gt;Normalizing scores within the reverse index ensures that all scores are within constrained limits, making them much easier to interpret and use in your application. How you normalize the scores depends on both the data you have indexed and how it will be searched. A common scenario is that the index breaks down into three groups of words.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;A small number of high-scoring words, with relatively low frequency.&lt;/strong&gt; These words are usually rare across the data set, but appear frequently in a small number of objects.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Some middle-scoring words with a high frequency across the index.&lt;/strong&gt; These words are common across the whole data set.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A large number of low-scoring words with low frequency.&lt;/strong&gt; These words occur rarely in the data set and rarely in any object.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2003_09_25_searching/normal2.gif&#34; alt=&#34;&#34; /&gt;
+A simple way to normalize scores, while at the same time narrowing the gap between high-scoring and low-scoring words, is to use the sine curve to reshape the distribution of scores.&lt;/p&gt;
+
+&lt;p&gt;This graph shows the area of the sine curve we are using &amp;ndash; the flat top reducing the impact of outlying high scores and translating scores into a value between 0 and 1 &amp;ndash; in this case, the maximum is assumed to be 10. The normalize function show here can be added to the &lt;code&gt;myapp::libraries::Search&lt;/code&gt; module and called from &lt;code&gt;IndexObject&lt;/code&gt;&amp;rsquo;s indexing methods.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub normalise {
+   my $score = shift;
+   return sin(($score/$max)/(PI/4));
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If your data (scores by frequency) follow more of a bell curve, with a small number of low-scoring words, many middle-scoring words and a few high-scoring words, you would want to normalize using mu-law or a-law functions. In this example, outliers at top and bottom are compressed to fit within the range of 0 to 1 &amp;ndash; see the chart below.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2003_09_25_searching/normal4.gif&#34; alt=&#34;&#34; /&gt;
+    use Math::Trig;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;. . .
+
+sub normalise {
+   my $score = shift;
+   $score = ($score / $max) * 10;
+   return sin(1 + tanh($score -5 )) / 2;
+} 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When indexing, you can weight scores both locally and globally. Local weighting is covered earlier in the article, and global weighting reduces the scores of frequently found or particularly highly scoring words that can skew results, as well as increase the scores of rare words.&lt;/p&gt;
+
+&lt;p&gt;For the best results when weighting scores globally, you should normalize in advance to ensure a limited range of scores; this can also reign in outlying scores that could skew the weighting. Global weighting of scores requires that scores still reflect the relevance of an object, and can be problematic if the solution doesn&amp;rsquo;t consider that a rare word with a low mean score can still have a few high scores that could end up being scored too highly, or vice versa, making results less, rather than more, useful.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub global_weighted_score {
+  my ($word,$score) = @_;
+  my $word_avg = get_average($word); # get average score for word
+  my $global_avg = get_average($word);       # get average score across index
+  $score = normalise($score);                # normalise score before weighting
+  if ($word_avg &amp;gt; $global_avg) {
+    $score += (($global_avg - $word_avg) * 0.25) / 
+                ($global_avg / $score ); 
+  } else {
+    $score += (($global_avg - $word_avg) * 0.25) / 
+                ($score / $global_avg );
+  }
+  return $score;
+}
+
+sub get_average {
+  my $word = shift;
+  my $query = &#39;select avg(ReverseIndex_Score) 
+                 from ReverseIndex&#39;;
+  if ($word) {
+    $word = $dbh-&amp;gt;quote($word);
+    $query .= &amp;quot; where ReverseIndex_Word = $word&amp;quot;;
+  }
+  my ($avg) = $dbh-&amp;gt;selectrow_array($query);
+  return $avg;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is nothing stopping you from keeping multiple scores in your index for each word; as long as you index them appropriately, there will not be a significant impact on performance. In particular, you could weight scores at the class level as well as at the global level. Keeping track of original, normalized, and weighted scores means that changes to code require only recalculating of scores rather than re-indexing everything. This additional information could also be included in data made available through web services.&lt;/p&gt;
+
+&lt;h4 id=&#34;stopwords&#34;&gt;Stopwords&lt;/h4&gt;
+
+&lt;p&gt;Integrating indexing and searching into your classes allows you to have class-level or even object-level stopwords. This can be particularly handy when one word is so frequent in one class or set of objects as to become meaningless, while rare and useful in others, and resolving the limitations of global weighting.&lt;/p&gt;
+
+&lt;p&gt;Stopwords can be normalized by ignoring them while building the word list and adding them later, based on other object attributes. For instance, if you had a load of objects representing pubs, you could add the pub&amp;rsquo;s town to the global or class stopword list and then give all pubs in &amp;ldquo;Watford&amp;rdquo; the same score for &amp;ldquo;Watford&amp;rdquo; in the index. Other options would be to score down words in the index based on object attributes such as location, or even having stopwords apply to specific fields &amp;ndash; for example, if you ignored the word &amp;ldquo;watford&amp;rdquo; in the description of a pub, you could still increase the pub&amp;rsquo;s score for &amp;ldquo;watford&amp;rdquo; if it was in a name or address field &amp;ndash; so a pub called &amp;ldquo;The Watford Arms&amp;rdquo; would score higher than &amp;ldquo;The Kings Head.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;results&#34;&gt;&lt;/span&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;integrating-the-search-into-your-application&#34;&gt;Integrating the Search into Your Application&lt;/h3&gt;
+
+&lt;p&gt;The results are the important part as far as the user is concerned &amp;ndash; this where all the hard work should bear fruit with a responsive site and useful information.&lt;/p&gt;
+
+&lt;p&gt;Critical considerations are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;What information is needed.&lt;/li&gt;
+&lt;li&gt;How ranking and scoring will be determined.&lt;/li&gt;
+&lt;li&gt;How to normalize scores if they are shown.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Showing results for subsets or grouping can also be important. Your presentation of the results can also make a difference &amp;ndash; paging and balancing the trade-off between the amount of information you can show for each result and how many results you can fit on a page.&lt;/p&gt;
+
+&lt;p&gt;Assuming the database schema outlined earlier, it would be possible to denormalize some of the information held into the &lt;code&gt;Location&lt;/code&gt; table. Although this will consume some more memory, it saves on joining tables when searching, and would be updated at the same time as the index, so remaining in sync with the application data itself.&lt;/p&gt;
+
+&lt;p&gt;When displaying results to your users, you are heavily constrained in how much data you can present at once. This means some form of paging is often required if you have more than a screenful of results. It also means that you must sacrifice the number of results shown per page if you want to show more than a trivial amount of information in that page.&lt;/p&gt;
+
+&lt;p&gt;Often it can be difficult to grade the quality of results returned to the user &amp;ndash; although index scores are limited and normalized, you also need to be able to display scores in a meaningful way to the user. This means both simplifying and explaining the scores. A numeric score without qualification is meaningless: is 5 out of 5, or 10, or 100?&lt;/p&gt;
+
+&lt;p&gt;The simplest way to grade scores is to work out the maximum score and divide it into grades. For example, if you have a maximum of 5 points per word matched, then you could divide the score by the number of words searched for and grade it by rounding up to 1, 2, 3, 4 or 5 out of 5. This information can then be presented using text and/or graphics, the latter allowing for color-coding of results. A small colored bar for each result allows you to show both the score and the grade in the minimum of space. The bar can easily be replaced by stars or other symbols, to fit in with the look and feel of an application.&lt;/p&gt;
+
+&lt;p&gt;By normalizing the scores as you index the objects (see above), you make the results much easier to use. If you know that the maximum score per search term is 1, then scores can be easily graded with a simple piece of code into something users can understand.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $wc = scalar @searchwords;
+foreach my $result (@$results) {
+  $result-&amp;gt;{grade} = get_grade($result-&amp;gt;{score}/$wc);
+}
+
+sub get_grade {
+  my $score = shift;
+  return &#39;poor&#39; if ($score &amp;lt; 0.35);
+  return &#39;good&#39; if ($score &amp;lt; 0.65);
+  return &#39;very good&#39; if ($score &amp;lt; 0.85);
+  return &#39;excellent&#39;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are many ways of getting extra value from your results. You can group results by object type, either by adding logic to the query or by using an &lt;code&gt;Iterator&lt;/code&gt; class that differentiates between object types.&lt;/p&gt;
+
+&lt;p&gt;By checking the status or type of each item in the result list, you can present it in a different way or provide additional information. Items in a catalogue that have been recalled or replaced can include a link to the replacement or recall notice &amp;ndash; again, this is one of the benefits of keeping such information in a metadata table.&lt;/p&gt;
+
+&lt;p&gt;You can check for spelling mistakes and alternative words using CPAN modules such as &lt;a href=&#34;https://metacpan.org/pod/Lingua::Spelling::Alternative&#34;&gt;&lt;code&gt;Lingua::Spelling::Alternative&lt;/code&gt;&lt;/a&gt;. You can also provide related links for items or keyword-based advertising.&lt;/p&gt;
+
+&lt;p&gt;&lt;span id=&#34;tuning&#34;&gt;&lt;/span&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;tuning-and-customizing&#34;&gt;Tuning and Customizing&lt;/h3&gt;
+
+&lt;p&gt;Once you have your search engine working and integrated with your application, you can work on tuning it for more accurate scoring and more intuitive results. You can also work on customizing it further to meet the needs of your application.&lt;/p&gt;
+
+&lt;p&gt;For instance, if part of your application was a catalogue, then you could add a status field to your locations. This would allow your to mark old items as replaced and provide an alternative result in its place in search results, with a note saying which item it replaced. You could also provide similar features for items that have been recalled or books no longer in print.&lt;/p&gt;
+
+&lt;p&gt;You can further tune results using two powerful modules on CPAN &amp;ndash; &lt;code&gt;Lingua::Stem::En&lt;/code&gt; (replace &lt;code&gt;En&lt;/code&gt; with whichever language suits your needs) and &lt;code&gt;Lingua::EN::Tagger&lt;/code&gt;. For the sake of simplicity, I haven&amp;rsquo;t used these in this article, but they are relatively simple to integrate into searching and indexing.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Linga::Stem::En&lt;/code&gt; provides Porter Stemming for &lt;code&gt;perl&lt;/code&gt;. Porter&amp;rsquo;s algorithm is a well-known way of cutting down a word to its stem &amp;ndash; removing grammatical information from words to find their root. For instance, you&amp;rsquo;ll want &amp;ldquo;training&amp;rdquo; and &amp;ldquo;trains&amp;rdquo; both to match the same results as &amp;ldquo;train,&amp;rdquo; so Porter Stemming can be used to reduce both words to &amp;ldquo;train.&amp;rdquo; As well as increasing the accuracy of your search, this technique also drastically reduces the number of words in the index. If you are getting a high number of word misses on your index, this can improve results greatly &amp;ndash; if you are already getting plenty of word hits on your index, then this can normalize your results more by losing grammatical information in the words that may distinguish results better. A simple rule of thumb is that if you get a low number of results for each word, then you need it; if you have a high number of results for each word, you don&amp;rsquo;t. To add stemming to your index with a module like &lt;code&gt;Lingua::Stem::En&lt;/code&gt;, you would use the module&amp;rsquo;s function to extract words rather than (or as well as) your own, when splitting search phrases and text to be indexed into keywords.&lt;/p&gt;
+
+&lt;p&gt;Tagger is a clever module that can add something approaching phrase matching without having to muck about (too much) with your working index algorithm. Tagger will pull out groups of words from a string of text (optionally stemming words) by looking for nouns and &amp;ldquo;Parts Of Speech.&amp;rdquo; By passing text to be indexed and text to be searched for through the tagger, you can extract groups of words. For example, instead of just indexing &amp;ldquo;Justice Department&amp;rdquo; as two separate words, a good tagger will return it as a single phrase.&lt;/p&gt;
+
+&lt;p&gt;Once you&amp;rsquo;re used the tagger to segment your text, you can treat the individual words and the phrases alike for both indexing and searching purposes. This means you can avoid the slow and unpleasant task of doing phrase matching properly &amp;ndash; because the tagger would also apply to the search query, a phrase like &amp;ldquo;Justice Department&amp;rdquo; in a search term would be automatically kept together. The phrase-matching process would be transparent to the user, meaning there&amp;rsquo;s no need for additional syntax such as putting quotes around phrases.&lt;/p&gt;
+
+&lt;p&gt;Both &lt;code&gt;Tagger&lt;/code&gt; and &lt;code&gt;Lingua::Stem&lt;/code&gt; can be integrated into the &lt;code&gt;get_words&lt;/code&gt; function above, transparent to both index and search logic.&lt;/p&gt;
+
+&lt;p&gt;When you control the indexing, it is possible to recognize dates and convert them to an internal format for full-text searching, applying similar logic to stemming &amp;ndash; as long as your internal date format is consistent, it doesn&amp;rsquo;t matter how dates are entered by the user or stored in the data. They can be converted to the internal date format when indexed or queried. This is useful if date information is particularly important to your objects.&lt;/p&gt;
+
+&lt;h3 id=&#34;references-and-further-reading&#34;&gt;References and Further Reading&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&amp;ldquo;&lt;a href=&#34;http://localhost:1313/pub/2001/04/10/engine.html&#34;&gt;Designing a Search Engine&lt;/a&gt;&amp;rdquo; by Pete Sergeant. Useful information on coping without an RDBMS and implementing phrase-matching/Boolean searches. (perl.com)&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;&lt;a href=&#34;http://www.ddj.com/articles/2000/0012/&#34;&gt;The Windows 2000 Content Index&lt;/a&gt;&amp;rdquo; by Bartosz Milewski. The principles and design of the Windows 2000 content index. (Dr. Dobb&amp;rsquo;s Journal &amp;ndash; registration required.)&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;&lt;a href=&#34;http://www.ddj.com/articles/2001/0103/&#34;&gt;Web Site Searching and Indexing in Perl&lt;/a&gt;&amp;rdquo; by Neil Gunton. Indexing websites using MySQL and DBIx::FullTextSearch. (Dr. Dobb&amp;rsquo;s Journal &amp;ndash; registration required.)&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;&lt;a href=&#34;http://www.ddj.com/articles/1999/9901/&#34; id=&#34;tk&#34;&gt;Full-text indexing in perl&lt;/a&gt;&amp;rdquo; by Tim Kientzle. A concise introduction to full-text indexing in &lt;code&gt;perl&lt;/code&gt; &amp;ndash; an essential read. (Dr. Dobb&amp;rsquo;s Journal &amp;ndash; registration required.)&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;&lt;a href=&#34;http://localhost:1313/pub/2003/02/19/engine.html&#34; id=&#34;mc&#34;&gt;Building a Vector Space Search Engine in Perl&lt;/a&gt;&amp;rdquo; by Maciej Ceglowski. Covers the Vector-based alternative to Reverse Index searching, as well as pointers on splitting text into words, etc. (perl.com)&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;&lt;a href=&#34;http://localhost:1313/pub/2003/07/15/nocode.html&#34; id=&#34;kh&#34;&gt;How to Avoid Writing Code&lt;/a&gt;&amp;rdquo; by Kake Pugh. Quick introduction to practical use of Class::DBI including how to add a full-text search to an object. (perl.com)&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

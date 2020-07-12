@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Joe Nasal on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/joe-nasal/</link>
+    <description>Recent content in Joe Nasal on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 27 Mar 2001 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/joe-nasal/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>A Simple Gnome Panel Applet</title>
+      <link>http://localhost:1313/pub/2001/03/27/gnome.html/</link>
+      <pubDate>Tue, 27 Mar 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/03/27/gnome.html/</guid>
+      <description>
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Table of Contents&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;•&lt;a href=&#34;#overview&#34;&gt;Program overview&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#intialization&#34;&gt;Initialization&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#callbacks&#34;&gt;The callbacks&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#conclusion&#34;&gt;Conclusion&lt;/a&gt;&lt;br /&gt;
+&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Gnome is the desktop environment of choice on my home Linux system because it is feature-packed and user friendly. Gnome is also flexible, and thanks to the Gtk-Perl module and associated desktop toolkit bindings, I can use my favorite programming language to further customize and extend my Gnome environment.&lt;/p&gt;
+
+&lt;p&gt;This article shows how a useful Gnome tool can be built in an afternoon. It is also an example of some common techniques to employ when doing this sort of GUI programming, including widget creation, signal handling, timers, and event loops. It also covers some Perl basics, in review. So, read on and you may be inspired to write some Gnome applications of your own.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2001_03_27_gnome/ping_gateway.pl&#34;&gt;Download the source code&lt;/a&gt; referred to in this article.&lt;/p&gt;
+
+&lt;h3 id=&#34;gnome&#34;&gt;Gnome&lt;/h3&gt;
+
+&lt;p&gt;On a Gnome desktop, the panel contains a variety of buttons and other widgets which serve to launch applications, display menus, and other common functions. It&amp;rsquo;s standard desktop fare, like the Microsoft Windows Start menu.&lt;/p&gt;
+
+&lt;p&gt;An &lt;em&gt;applet&lt;/em&gt; is a particular kind of Gnome application, which resides within and operates on the panel itself. The Gnome distribution comes with several of these including a variety of clocks, the Game of Life, and system resource utilization monitors. The Gtk-Perl module enables a Perl programmer to create custom Gnome panel applets, and many other GUI-related applications.&lt;/p&gt;
+
+&lt;p&gt;The Gnome panel applet we&amp;rsquo;ll build finds the local host&amp;rsquo;s default TCP/IP gateway and displays the gateway&amp;rsquo;s status on a button in the applet. When the button is in an &amp;ldquo;off&amp;rdquo; position the gateway is not polled (Figure 1).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_03_27_gnome/figure1.jpg&#34; alt=&#34;Gnome gateway not polled&#34; /&gt;
+&lt;strong&gt;Fig. 1: Gnome Gateway in the &amp;ldquo;off&amp;rdquo; position.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;When the button is on, the gateway is polled at scheduled intervals and the button&amp;rsquo;s label is updated with the result: (Figures 2a &amp;amp; 2b) response or non-response.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_03_27_gnome/figure2.jpg&#34; alt=&#34;Gnome gateway polled&#34; /&gt;
+&lt;strong&gt;Fig. 2a: Gnome Gateway in the &amp;ldquo;on&amp;rdquo; position.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_03_27_gnome/figure2b.jpg&#34; alt=&#34;Gnome gateway polled&#34; /&gt;
+&lt;strong&gt;Fig. 2b: Gnome Gateway not available.&lt;/strong&gt;
+This diagnostic may be used to regularly and unobtrusively report the status of the local network relative to the machine&amp;rsquo;s default gateway. Check the button&amp;rsquo;s label to see how things are faring on the upstream network.&lt;/p&gt;
+
+&lt;p&gt;The applet uses the system commands &lt;code&gt;netstat&lt;/code&gt; and &lt;code&gt;ping&lt;/code&gt; familiar to Unix users, and system and network admins.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-overview-program-overview-span&#34;&gt;&lt;span id=&#34;overview&#34;&gt;Program overview&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The top-level code in the script is lines 1 through 21. Lines 23 through 69 define subroutines. One subroutine is called by our code (&lt;code&gt;fetch_gateway&lt;/code&gt;), but two others are &amp;ldquo;callbacks&amp;rdquo; (&lt;code&gt;check_gateway&lt;/code&gt; and &lt;code&gt;reset_state&lt;/code&gt;). A callback is a subroutine that will be called by the Gnome code when something happens &amp;ndash; for example, a timer expires or button gets clicked. Now, let&amp;rsquo;s see what we can learn about how the application works.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-intialization-initialization-span&#34;&gt;&lt;span id=&#34;intialization&#34;&gt;Initialization&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Line 3 indicates that we&amp;rsquo;ll be using the Gnome module. &lt;code&gt;Gnome.pm&lt;/code&gt; is distributed with the Gtk-Perl package. The program discussed here has developed against Gtk-Perl version 0.7003. &lt;code&gt;Gnome.pm&lt;/code&gt; requires separate installation: download and unpack Gtk-Perl, install it, and then change directories into the GdkImlib and Gnome distribution and install them too. If you want to develop panel applets (as we&amp;rsquo;re doing here) you&amp;rsquo;ll need to append the build option &lt;code&gt;--with-panel&lt;/code&gt; to the end of the usual &lt;code&gt;perl Makefile.PL&lt;/code&gt; portion of the install process:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  perl Makefile.PL --with-panel
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Although &lt;code&gt;Gnome.pm&lt;/code&gt; hasn&amp;rsquo;t made it to Version 1.0 yet I&amp;rsquo;ve found it to be stable. The biggest problem is the lack of documentation.&lt;/p&gt;
+
+&lt;p&gt;Lines 5 and 6 initialize a new AppletWidget object in &lt;code&gt;$a&lt;/code&gt;. This object is the container for all the doodads that will be part of our applet. Line 8 creates a label for use when our button is in the &amp;ldquo;off&amp;rdquo; position.&lt;/p&gt;
+
+&lt;p&gt;Line 10 creates a timer. The prototype for the &lt;code&gt;Gtk-&amp;gt;timeout_add&lt;/code&gt; function is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Gtk-&amp;gt;timeout_add( $interval, \&amp;amp;function, @function_data );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here our interval is 20000 (this value is in milliseconds, so the timer will go off every 20 seconds), and the function to be called when the timer goes off is &lt;code&gt;check_gateway&lt;/code&gt;. We could use the third parameter to pass some data into the &lt;code&gt;check_gateway&lt;/code&gt; function if it were appropriate to do so. In this case it isn&amp;rsquo;t necessary.&lt;/p&gt;
+
+&lt;p&gt;Line 11 creates a new ToggleButton object in &lt;code&gt;$button&lt;/code&gt;, and labels it &amp;ldquo;off&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;Line 12 registers the other callback in this application. This one will be called when a particular &amp;ldquo;signal&amp;rdquo; occurs within Gnome. These aren&amp;rsquo;t normal Unix signals like &lt;code&gt;SIGINT&lt;/code&gt; and &lt;code&gt;SIGCHLD&lt;/code&gt;, but GUI events. In this case, the event is &amp;ldquo;clicked&amp;rdquo;. The ToggleButton widget also has the signals &amp;ldquo;pressed&amp;rdquo;, &amp;ldquo;released&amp;rdquo;, &amp;ldquo;enter&amp;rdquo;, and &amp;ldquo;leave&amp;rdquo;, each of which is emitted in response to either actions of the mouse pointer or a function call, such as &lt;code&gt;$button-&amp;gt;pressed()&lt;/code&gt;. In our application, Gnome will call &lt;code&gt;reset_state()&lt;/code&gt; whenever &lt;code&gt;ToggleButton $button&lt;/code&gt; is clicked.&lt;/p&gt;
+
+&lt;p&gt;Line 14 sets the size of the button to be a square with sides of 50 pixels. This is a good fit for the default Gnome panel. Gnome uses global theme and style information to determine how the button is to be drawn: line, color, shadow, etc. Line 15 calls the button&amp;rsquo;s &lt;code&gt;show&lt;/code&gt; method, indicating that we&amp;rsquo;re finished setting its attributes and that it is ready for display. Line 16 adds the button to the applet. Technically, we&amp;rsquo;ve packed the ToggleButton widget into the AppletWidget container by invoking the AppletWidget&amp;rsquo;s add method on the ToggleButton. The ToggleButton is now a &amp;ldquo;child&amp;rdquo; of its container. At line 17 the applet is allowed to be visible by calling its &lt;code&gt;show&lt;/code&gt; method as well. A widget&amp;rsquo;s children will not be displayed until the parent&amp;rsquo;s &lt;code&gt;show&lt;/code&gt; method is invoked.&lt;/p&gt;
+
+&lt;p&gt;Line 19 calls the &lt;code&gt;fetch_gateway&lt;/code&gt; routine to gather in the local host&amp;rsquo;s default TCP/IP gateway. In that subroutine, &lt;code&gt;`netstat -rn`&lt;/code&gt; captures the local routing table, returning all addresses in dotted quad +notation. The test in line 30 gets triggered by the IP address +0.0.0.0, which indicates the default gateway. When it matches, the +gateway&amp;rsquo;s name is looked up from the IP address, and stored in the +variable $hostname. Finally, we translate this value to lowercase, which will look better when we finally display it on the button. Then &lt;code&gt;fetch_gateway&lt;/code&gt; returns.&lt;/p&gt;
+
+&lt;p&gt;At line 21, we&amp;rsquo;re ready to hand off to the &lt;code&gt;gtk_main&lt;/code&gt; event loop, which is responsible for drawing the application on the screen and managing user interaction. At this point, our only interface with the application will be through signal handling and callback functions. The Gnome Toolkit (GTK) is event driven: once we enter &lt;code&gt;gtk_main&lt;/code&gt; the application stays put until an event occurs (caught via a signal) and the associated callback function is invoked. Therefore, we should have completed all of our application setup beforehand.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-callbacks-the-callbacks-span&#34;&gt;&lt;span id=&#34;callbacks&#34;&gt;The callbacks&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s examine the two callback functions: &lt;code&gt;reset_state&lt;/code&gt;, associated with catching a &amp;ldquo;clicked&amp;rdquo; signal on our button (line 12); and check_gateway, associated with the timer (line 10).&lt;/p&gt;
+
+&lt;p&gt;At line 38, we query the state of the toggle button by invoking its &lt;code&gt;get_active method&lt;/code&gt;. This returns 0 if the button is off and 1 if it is on. By default, the ToggleButton widget has one child &amp;ndash; its own label. We label the button with the contents of &lt;code&gt;$off_label&lt;/code&gt; if it is in the OFF position or the string &amp;ldquo;Wait&amp;rdquo; if it is in the ON position (figure 3) because we know that &lt;code&gt;check_gateway&lt;/code&gt; is going to be called soon (within the next 20 seconds). Part of &lt;code&gt;check_gateway&lt;/code&gt;&amp;rsquo;s job is to update the button with the status of our TCP/IP gateway, the whole point of this applet.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_03_27_gnome/figure3.jpg&#34; alt=&#34;Gnome gateway waiting&#34; /&gt;
+&lt;strong&gt;Fig. 3: Gnome Gateway waiting.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Line 53 stores either the value in &lt;code&gt;$hostname&lt;/code&gt; or the string &amp;ldquo;gateway&amp;rdquo;, depending upon whether or not &lt;code&gt;$hostname&lt;/code&gt; is longer than eight characters (lines 47-52). This is the number of characters that will fit comfortably on one line within the button&amp;rsquo;s label.&lt;/p&gt;
+
+&lt;p&gt;If the button is in the ON position (line 55), we go ahead and attempt to ping the gateway with a single ICMP packet, redirecting &lt;code&gt;STDOUT&lt;/code&gt; and &lt;code&gt;STDERR&lt;/code&gt; to the round-file. We don&amp;rsquo;t care about the output of the &lt;code&gt;ping&lt;/code&gt; command, only it&amp;rsquo;s return value, so we execute the command via &lt;code&gt;system()&lt;/code&gt;. &lt;code&gt;Ping&lt;/code&gt; will return 0 upon success (gateway alive) and something else if it fails (probably because the gateway is dead), so we check the result and update the button&amp;rsquo;s label appropriately in lines 59-66.&lt;/p&gt;
+
+&lt;p&gt;We want &lt;code&gt;check_gateway&lt;/code&gt; to continue to be called, every 20 seconds, until the application terminates. So, at line 68 the function returns a true value. A true return value will allow further execution of a timer&amp;rsquo;s callback function while a false return value forces the opposite behavior.&lt;/p&gt;
+
+&lt;p&gt;Note that 20 seconds is enough time to allow the call to &lt;code&gt;ping&lt;/code&gt; to timeout and return a value to the application. It is also an appropriate level of resolution for this kind of discovery activity: If information about the status of my gateway is at most 20 seconds old, then I&amp;rsquo;m happy. Your mileage may vary, of course.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s easy to write Gnome applets in Perl. This simple example showed you the basic elements of Gnome programming, including the event model and callbacks. Go forth and hack your own applet!&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

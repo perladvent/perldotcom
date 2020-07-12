@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Caller on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/caller/</link>
+    <description>Recent content in Caller on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 07 Aug 2014 12:22:42 +0000</lastBuildDate>
+    <atom:link href="/tags/caller/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Rescue legacy code with modulinos</title>
+      <link>http://localhost:1313/article/107/2014/8/7/Rescue-legacy-code-with-modulinos/</link>
+      <pubDate>Thu, 07 Aug 2014 12:22:42 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/107/2014/8/7/Rescue-legacy-code-with-modulinos/</guid>
+      <description>
+
+&lt;p&gt;As businesses grow, they move into situations they didn&amp;rsquo;t anticipate and often have problems other businesses would love to have. Under rapid growth their codebase struggles to keep up. I&amp;rsquo;ve seen more bad code making money than I&amp;rsquo;ve seen good code making money, and it&amp;rsquo;s an exciting situation to fix. Modulinos have been a nice trick for me to move standalone programs toward a testable and manageable CPAN-like distribution.&lt;/p&gt;
+
+&lt;p&gt;Modulinos isn&amp;rsquo;t an idea that I invented, but it&amp;rsquo;s something I popularized. I first got the idea from a talk by &lt;a href=&#34;http://blog.plover.com&#34;&gt;Mark Jason Dominus&lt;/a&gt; and the &lt;a href=&#34;https://github.com/Perl/perl5/blob/blead/lib/diagnostics.pm&#34;&gt;diagnostics&lt;/a&gt; module, written by Tom Christiansen way back in 1995. In this article I&amp;rsquo;ll talk a little about the trick, but more about why and how I&amp;rsquo;ve used it.&lt;/p&gt;
+
+&lt;p&gt;The trick involves using &lt;a href=&#34;https://perldoc.perl.org/functions/caller.html&#34;&gt;caller&lt;/a&gt; to decide how a Perl file should act depending on how it&amp;rsquo;s loaded. When run from the command line, it acts like a program, but when loaded as a module, it doesn&amp;rsquo;t run anything while still making its subroutines and packages available. In the second edition of &lt;a href=&#34;http://www.masteringperl.org/&#34;&gt;Mastering Perl&lt;/a&gt;, I expanded this a bit to check for the presence of a test harness so it could run methods that start with &lt;code&gt;test_&lt;/code&gt;, a Python feature I&amp;rsquo;ve liked.&lt;/p&gt;
+
+&lt;p&gt;You can see the basic structure in &lt;a href=&#34;https://metacpan.org/pod/Modulino::Test&#34;&gt;Modulino::Test&lt;/a&gt;, part of the &lt;a href=&#34;https://metacpan.org/release/Modulino-Demo&#34;&gt;Modulino::Demo&lt;/a&gt; distribution:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Modulino::Test;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; utf8;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;our&lt;/span&gt; $VERSION &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0.10_01&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;_running_under_tester&lt;/span&gt; { &lt;span style=&#34;color:#f92672&#34;&gt;!!&lt;/span&gt; $ENV{CPANTEST} }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;_running_as_app&lt;/span&gt; { &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt; defined scalar caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;_loaded_as_module&lt;/span&gt; { defined scalar caller(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;); }
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $method &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;( _running_under_tester()   ) { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;test&amp;#39;&lt;/span&gt; }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt;( _loaded_as_module()       ) { undef  }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt;( _running_as_app()            ) { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;run&amp;#39;&lt;/span&gt;  }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;                                { undef }
+    };
+
+__PACKAGE__&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;$method(@ARGV) &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; defined $method;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test&lt;/span&gt; { &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;run&lt;/span&gt;  { &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I originally wrote about modulinos in &lt;a href=&#34;http://www.perlmonks.org/index.pl?node_id=396759&#34;&gt;How a script becomes a module&lt;/a&gt; on Perlmonks, and that&amp;rsquo;s where I first used the term. I might have even invented in while creating that post. I expanded it a little bit for &lt;a href=&#34;http://www.drdobbs.com/scripts-as-modules/184416165&#34;&gt;Scripts as Modules&lt;/a&gt; for &lt;em&gt;The Perl Journal&lt;/em&gt; (now swallowed as &lt;em&gt;Dr. Dobbs Journal&lt;/em&gt;).&lt;/p&gt;
+
+&lt;p&gt;At the time, I was doing quite a bit of work to translate legacy codebases into something more manageable. Instead of rewriting everything, I created paths to better behavior with immediate results. Part of this path is testing the existing codebase so I could recreate it, bugs and rough edges included, in the next part. Moving standalone scripts to libraries or modules is a big part of that; I have to maintain the program behavior, but I want to unit test its innards.&lt;/p&gt;
+
+&lt;p&gt;I have quite a bit of fun organizing a messy and (previously) unmanaged codebase. A little work makes a big difference and gives quick gains. From there it&amp;rsquo;s an easy path toward adding tests. It&amp;rsquo;s part of my motivation for &lt;a href=&#34;https://metacpan.org/pod/App::scriptdist&#34;&gt;scriptdist&lt;/a&gt;, which I wrote about in &lt;a href=&#34;http://www.drdobbs.com/web-development/automating-distributions-with-scriptdist/184416112&#34;&gt;Automating Distributions with scriptdist&lt;/a&gt;. Given a stand-alone program, I used that tool to build a distribution around it and include the test files. The program file stays the same, but once wrapped in the distribution goodness, I can start the transformation. Even if this code will never make it to CPAN, I can still use all the CPAN tools by making it look like a CPAN distribution.&lt;/p&gt;
+
+&lt;h3 id=&#34;converting-a-script-to-a-modulino&#34;&gt;Converting a script to a modulino&lt;/h3&gt;
+
+&lt;p&gt;Suppose I start with a script. Here&amp;rsquo;s a short one:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello World!\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Even this simple program has problems (we never have trouble finding faults with programs; it&amp;rsquo;s almost bloodsport in some parts!). I can&amp;rsquo;t change where the output goes and it&amp;rsquo;s hard-coded to use English.&lt;/p&gt;
+
+&lt;p&gt;My first step is to make this a program that behaves the same but has a different structure. Larry designed Perl to do away with the &lt;code&gt;main&lt;/code&gt; subroutine required by many other languages, but I bring it back:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+
+__PACKAGE__&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;run();
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;run&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello World!\n&amp;#34;&lt;/span&gt;;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;__PACKAGE__&lt;/code&gt; token is a compiler directive that refers to the current package. It calls the &lt;code&gt;run&lt;/code&gt; subroutine, which operates the same as it introduces a new scope. Some black magic and weird idioms might break, but, for the most part, this should (a dangerous word!) run the same. At this point, I&amp;rsquo;m probably also introducing this legacy codebase to source control, so a small change with no new behavior makes for a good first patch to a new branch.&lt;/p&gt;
+
+&lt;p&gt;This program is now mostly a module and it has the distribution structure that allows me to test it. I can start to create acceptance tests (end-to-end, or some other label even) since I haven&amp;rsquo;t had a way to reach into the code itself. These form the basis of the regression tests I can use to check the new code against the original code.&lt;/p&gt;
+
+&lt;p&gt;When I&amp;rsquo;m satisfied that the new code works, I can make more changes. This is where the modulino idea comes in. I want to test the code without automatically executing the code in &lt;code&gt;run&lt;/code&gt;. I can use the &lt;code&gt;caller&lt;/code&gt; trick; I don&amp;rsquo;t execute the code if there&amp;rsquo;s a higher level in the call stack (a program would be at the top):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+
+__PACKAGE__&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;run() &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; caller;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;run&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello World!\n&amp;#34;&lt;/span&gt;;
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That&amp;rsquo;s another small change in the actual code, but a significant change in behavior. I can get to the code in a test program:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test::More;
+
+subtest &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;load program&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    require_ok( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;scripts/program.pl&amp;#39;&lt;/span&gt; );
+    };
+
+subtest &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;test innards&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    ok( defined &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;run, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Run subroutine is defined&amp;#39;&lt;/span&gt; );
+    };
+
+done_testing();&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;From there the path forward is more clear. I can add a package statement to the program and start to refactor the &lt;code&gt;run&lt;/code&gt;, using the test best practices I know. Soon the development morphs into module maintenance and its history as a standalone program doesn&amp;rsquo;t matter anymore. As I go through the process, I&amp;rsquo;ve also set the eventual maintainers on the right path.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Cover image &lt;a href=&#34;https://creativecommons.org/licenses/by/4.0/&#34;&gt;©&lt;/a&gt; &lt;a href=&#34;https://www.flickr.com/photos/deia/321829326/in/photolist-ursDu-71wk9y-nYpsHQ-e3P2i9-e1TW4-32LHXt-e4bYT8-e4bYNV-e4hB2m-e4hB5Y-69pxDc-7YWXJX-cwAfvs-e1TUY-4zkBG7-dcyLpA-aj8HAk-ajbu5L-ajbuh7-94j7Df-94jsgo-d9QS9u-dcyJAE-dcyHcT-bavZfB-2nPfVE-52nPvi-RBuWd-4tpcsD-55P2hs-4WaC4T-7w6TC-9FUUPM-94jwv1-8ohTWP-94g9Ep-6ijaiB-94jpgQ-94jcQd-94gcw8-94jveU-94jy93-94g6v8-94j9nu-94jmud-dh1bAe-dcyJoM-dcyJNK-duC43R-dcyK6z&#34;&gt;Andréia Bohner&lt;/a&gt;, the image has been digitally altered.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

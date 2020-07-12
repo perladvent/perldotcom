@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Multicore on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/multicore/</link>
+    <description>Recent content in Multicore on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 21 Jan 2014 03:22:40 +0000</lastBuildDate>
+    <atom:link href="/tags/multicore/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Make your code run faster with Perl&#39;s secret turbo module</title>
+      <link>http://localhost:1313/article/61/2014/1/21/Make-your-code-run-faster-with-Perl-s-secret-turbo-module/</link>
+      <pubDate>Tue, 21 Jan 2014 03:22:40 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/61/2014/1/21/Make-your-code-run-faster-with-Perl-s-secret-turbo-module/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Most modern processors are multi-core, yet Perl programs will typically run single-threaded on only one core at a time. Enter the &lt;a href=&#34;https://metacpan.org/pod/MCE&#34;&gt;Many Core Engine&lt;/a&gt; module - it makes it easy to run your existing Perl code in parallel across every core on your platform, and get a huge speed boost along the way.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;requirements&#34;&gt;Requirements&lt;/h3&gt;
+
+&lt;p&gt;You&amp;rsquo;ll need to install the MCE module. The current &lt;a href=&#34;http://matrix.cpantesters.org/?dist=MCE+1.509&#34;&gt;CPAN Testers&amp;rsquo; results&lt;/a&gt; show it runs on a wide array of platforms and Perl versions. You can install MCE via CPAN at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan MCE&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You do not need to have compiled Perl with threads enabled in order to get the parallel processing benefits as MCE can implement parallel processing using child processes via fork, &lt;a href=&#34;https://metacpan.org/pod/forks::shared&#34;&gt;forks::shared&lt;/a&gt;, or &lt;a href=&#34;https://metacpan.org/pod/threads::shared&#34;&gt;threads::shared&lt;/a&gt;. By default MCE will check for the presence of a threads module, otherwise, child processes are created via fork.&lt;/p&gt;
+
+&lt;h3 id=&#34;understanding-mce&#34;&gt;Understanding MCE&lt;/h3&gt;
+
+&lt;p&gt;MCE&amp;rsquo;s &lt;a href=&#34;http://code.google.com/p/many-core-engine-perl/&#34;&gt;documentation&lt;/a&gt; describes its implementation as a &amp;ldquo;bank queueing model&amp;rdquo;. Essentially, MCE uses up to one worker per core on the host platform, and distributes work between them in &amp;ldquo;chunks&amp;rdquo;. A chunk is just collection of elements, such as an array slice or a several lines of a file. The workers will process each chunk in parallel. The actual &amp;ldquo;work&amp;rdquo; done by a worker is usually the execution of a Perl subroutine. This will become clearer in the example below.&lt;/p&gt;
+
+&lt;p&gt;Managing the distribution and assignment of chunks creates a small overhead: therefore MCE is most effective when you have a large number of of elements to be processed and the &amp;ldquo;work&amp;rdquo; being done on every element is more than a basic pattern match. In the testing for this article, I was data munging web server logs and found a 50% runtime reduction was common.&lt;/p&gt;
+
+&lt;h3 id=&#34;getting-started&#34;&gt;Getting started&lt;/h3&gt;
+
+&lt;p&gt;The easiest way to get started with MCE is by using one of the 3 basic automation models that come with MCE. The basic models are drop-in replacements for Perl&amp;rsquo;s foreach, map and grep controls. The models automatically tune themselves - by default they use the maximum number of cores available on the host platform and select an optimal chunk size based on the number of input records and source type.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at the grep model. The code below is standard Perl code; it opens an nginx access.log and prints the number of records in the log that were from a robot useragent:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Nginx::Log::Entry;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;detect_robot&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; Nginx::Log::Entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($_[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;])&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;was_robot;
+}
+
+open(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $LOG, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/var/logs/access.log&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; grep { detect_robot($_) } &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$LOG&amp;gt;&lt;/span&gt;;
+say scalar $count;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let&amp;rsquo;s modify the code above to use the MCE::Grep model. The new code is below:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Nginx::Log::Entry;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; MCE::Grep;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;detect_robot&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; Nginx::Log::Entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($_[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;])&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;was_robot;
+}
+
+open(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $LOG, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/var/logs/access.log&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; mce_grep { detect_robot($_) } $LOG;
+say scalar $count;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The main changes here are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The &amp;ldquo;use MCE::Grep&amp;rdquo; line which imports the module&lt;/li&gt;
+&lt;li&gt;Changing grep to &amp;ldquo;mce_grep&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;Removing the diamond operator from the filehandle ($LOG)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The other difference is that this code will run a lot faster than the first example. How much faster depends on the platform and the number of input records. In my testing on a quad core processor, I found that the MCE::Grep was consistently 100-150% faster, but with more cores I would expect this to increase further.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/61/mce_grep_comparison_630.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The other basic automation models &lt;a href=&#34;https://metacpan.org/pod/MCE::Loop&#34;&gt;MCE::Loop&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/MCE::Map&#34;&gt;MCE::Map&lt;/a&gt; work in much the same was as MCE::Grep.&lt;/p&gt;
+
+&lt;h3 id=&#34;working-with-filepaths&#34;&gt;Working with filepaths&lt;/h3&gt;
+
+&lt;p&gt;MCE also provides a special &amp;ldquo;mce_grep_f&amp;rdquo; function for working directly with files (the function is provided for all MCE models, e.g. mce_loop_f, and mce_map_f). The &amp;ldquo;mce_grep_f&amp;rdquo; function requires a filepath argument:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Nginx::Log::Entry;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; MCE::Grep;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;detect_robot&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; Nginx::Log::Entry&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;($_[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;])&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;was_robot;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; mce_grep_f { detect_robot($_) } &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/var/logs/access.log&amp;#39;&lt;/span&gt;;
+say scalar $count;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This feature is broken in version 1.504 of MCE, however it&amp;rsquo;s easy to fix - just insert one line. The module&amp;rsquo;s author Mario Roy contacted me and kindly provided a &lt;a href=&#34;http://code.google.com/p/many-core-engine-perl/source/diff?spec=svn456&amp;amp;r=456&amp;amp;format=side&amp;amp;path=/trunk/lib/MCE/Grep.pm&#34;&gt;diff&lt;/a&gt;. I&amp;rsquo;m told that this feature will be fixed in the next version of MCE. (&lt;em&gt;EDIT: it is now fixed as of 1.509&lt;/em&gt;).&lt;/p&gt;
+
+&lt;p&gt;In testing the mce_grep_f function using the code above on a 55mb log file, I didn&amp;rsquo;t see a marked difference in performance compared to mce_grep, however there are reports of up to 4x speed improvement, so definitely explore this further.&lt;/p&gt;
+
+&lt;h3 id=&#34;changing-the-number-of-workers&#34;&gt;Changing the number of workers&lt;/h3&gt;
+
+&lt;p&gt;By default MCE initializes one worker per core. It detects the number of cores using the following methods:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Linux: reads /proc/stat&lt;/li&gt;
+&lt;li&gt;OSX/BSD: executes &amp;ldquo;sysctl -n hw.ncpu 2&amp;gt;/dev/null&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;Windows: uses the environmental variable: ENV{NUMBER_OF_PROCESSORS}&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;MCE also has platform-specific methods defined for Solaris, HP-UX and other systems. Assuming that MCE will correctly guess the number of processors, the only reason to change the default behavior would be to use less than 100% of the available cores. You can do this using the &amp;ldquo;init()&amp;rdquo; method:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; MCE::Grep;
+MCE::Grep::init({max_workers &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The code above uses MCE::Grep, but the same init() command is provided for all MCE models.&lt;/p&gt;
+
+&lt;h3 id=&#34;changing-the-chunk-size&#34;&gt;Changing the chunk size&lt;/h3&gt;
+
+&lt;p&gt;When the source type is an array, MCE auto-calculates the chunk size based on the number of input records and workers available. You can override this, however in my testing I found that the auto-calculated chunk-size was nearly always optimal. Here is a typical result set, for processing a 55mb log file:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/61/mce_grep_chunk_size_630.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;If the source type is a filehandle, the chunk size defaults to 2 (The module&amp;rsquo;s author Mario Roy has told me this will change in the next version, 1.506). Therefore you may want to override the chunk size to try to get better performance. You can do this using the &amp;ldquo;init()&amp;rdquo; method:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; MCE::Grep;
+MCE::Grep::init({chunk_size &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;500&lt;/span&gt;});&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Because the management of assigning work chunks between workers carries a small overhead, the optimal chunk size would be the one that minimizes the number of chunk assignments, whilst keeping the workers equally busy. One factor that MCE does not take into account is the difficulty of the &amp;ldquo;work&amp;rdquo; that is being processed: that is, the length of time it takes one worker to complete one unit of work.It might be cool to develop some kind of dynamic chunk-sizing logic based on runtime performance.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;MCE&amp;rsquo;s author, Mario Roy has done wonderful job of providing a simple API and fantastic &lt;a href=&#34;https://metacpan.org/pod/MCE::Examples&#34;&gt;documentation&lt;/a&gt;. It&amp;rsquo;s really easy to get started with a basic automation model like MCE::Grep, and obtain instant speed improvements. There is however, a lot more to MCE such as initialization and shutdown routines, callbacks and sequencing. Be sure to check it out.&lt;/p&gt;
+
+&lt;h3 id=&#34;thanks&#34;&gt;Thanks&lt;/h3&gt;
+
+&lt;p&gt;Thanks to Jeff Thalhammer (&lt;a href=&#34;https://stratopan.com/&#34;&gt;Stratopan&lt;/a&gt;) for championing this module.&lt;/p&gt;
+
+&lt;p&gt;Do you know a module that you&amp;rsquo;d like us to cover? If so, we&amp;rsquo;d love to hear from you! Email us at: perltricks.com@gmail.com.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

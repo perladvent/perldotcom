@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Improving mod_perl Sites&#39; Performance: Part 3 </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" In this article we will continue the topic started in the previous article. This time we talk about tools that help us with code profiling and memory usage measuring. Code Profiling Techniques The profiling process helps you to determine..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2002/07/16/mod_perl.html/" />
+<meta property="og:title" content="Improving mod_perl Sites&#39; Performance: Part 3" />
+<meta property="og:description" content=" In this article we will continue the topic started in the previous article. This time we talk about tools that help us with code profiling and memory usage measuring. Code Profiling Techniques The profiling process helps you to determine...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2002-07-07T07:07:07Z" />
+<meta property="og:image" content="http://localhost:1313/images/site/avatar.png" />
+<meta property="og:article:tag" content="mod-perl-benchmarking-test" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Improving mod_perl Sites&#39; Performance: Part 3</h1>
+              <p class="blog-post-meta">Jul 16, 2002 by
+              
+              
+                
+                
+                <a href="#author-bio-stas-bekman">Stas Bekman</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>In this article we will continue the topic started in the previous article. This time we talk about tools that help us with code profiling and memory usage measuring.</p>
+
+<h3 id="span-id-code-profiling-techniques-code-profiling-techniques-span"><span id="code_profiling_techniques">Code Profiling Techniques</span></h3>
+
+<p>The profiling process helps you to determine which subroutines or just snippets of code take the longest time to execute and which subroutines are called most often. You will probably just want to optimize those.</p>
+
+<p>When do you need to profile your code? You do that when you suspect that some part of your code is being called very often and so there may be a need to optimize it to significantly improve the overall performance.</p>
+
+<p>For example, you might have used the <code>diagnostics</code> pragma, which extends the terse diagnostics normally emitted by both the Perl compiler and the Perl interpreter, augmenting them with the more verbose and endearing descriptions found in the <code>perldiag</code> manpage. If you&rsquo;ve ever done so, then you know that it might slow your code down tremendously, so let&rsquo;s first see whether or not it actually does.</p>
+
+<p>We will run a benchmark, once with diagnostics enabled and once disabled, on a subroutine called <em>test_code</em>.</p>
+
+<p>The code inside the subroutine does an arithmetic and a numeric comparison of two strings. It assigns one string to another if the condition tests true but the condition always tests false. To demonstrate the <code>diagnostics</code> overhead the comparison operator is intentionally <em>wrong</em>. It should be a string comparison, not a numeric one.</p>
+
+<pre><code>  use Benchmark;
+  use diagnostics;
+  use strict;
+
+  my $count = 50000;
+
+  disable diagnostics;
+  my $t1 = timeit($count,\&amp;test_code);
+
+  enable  diagnostics;
+  my $t2 = timeit($count,\&amp;test_code);
+
+  print &quot;Off: &quot;,timestr($t1),&quot;\n&quot;;
+  print &quot;On : &quot;,timestr($t2),&quot;\n&quot;;
+
+  sub test_code{
+    my ($a,$b) = qw(foo bar);
+    my $c;
+    if ($a == $b) {
+      $c = $a;
+    }
+  }
+</code></pre>
+
+<p>For only a few lines of code we get:</p>
+
+<pre><code>  Off:  1 wallclock secs ( 0.81 usr +  0.00 sys =  0.81 CPU)
+  On : 13 wallclock secs (12.54 usr +  0.01 sys = 12.55 CPU)
+</code></pre>
+
+<p>With <code>diagnostics</code> enabled, the subroutine <code>test_code()</code> is 16 times slower than with <code>diagnostics</code> disabled!</p>
+
+<p>Now let&rsquo;s fix the comparison the way it should be, by replacing <code>==</code> with <code>eq</code>, so we get:</p>
+
+<pre><code>    my ($a,$b) = qw(foo bar);
+    my $c;
+    if ($a eq $b) {
+      $c = $a;
+    }
+</code></pre>
+
+<p>and run the same benchmark again:</p>
+
+<pre><code>  Off:  1 wallclock secs ( 0.57 usr +  0.00 sys =  0.57 CPU)
+  On :  1 wallclock secs ( 0.56 usr +  0.00 sys =  0.56 CPU)
+</code></pre>
+
+<p>Now there is no overhead at all. The <code>diagnostics</code> pragma slows things down only when warnings are generated.</p>
+
+<p>After we have verified that using the <code>diagnostics</code> pragma might adds a big overhead to execution runtime, let&rsquo;s use the code profiling to understand why this happens. We are going to use <code>Devel::DProf</code> to profile the code. Let&rsquo;s use this code:</p>
+
+<pre><code>  diagnostics.pl
+  --------------
+  use diagnostics;
+  print &quot;Content-type: text/html\n\n&quot;;
+  test_code();
+  sub test_code{
+    my ($a,$b) = qw(foo bar);
+    my $c;
+    if ($a == $b) {
+      $c = $a;
+    }
+  }
+</code></pre>
+
+<p>Run it with the profiler enabled, and then create the profiling stastics with the help of dprofpp:</p>
+
+<pre><code>  % perl -d:DProf diagnostics.pl
+  % dprofpp
+
+  Total Elapsed Time = 0.342236 Seconds
+    User+System Time = 0.335420 Seconds
+  Exclusive Times
+  %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+   92.1   0.309  0.358      1   0.3089 0.3578  main::BEGIN
+   14.9   0.050  0.039   3161   0.0000 0.0000  diagnostics::unescape
+   2.98   0.010  0.010      2   0.0050 0.0050  diagnostics::BEGIN
+   0.00   0.000 -0.000      2   0.0000      -  Exporter::import
+   0.00   0.000 -0.000      2   0.0000      -  Exporter::export
+   0.00   0.000 -0.000      1   0.0000      -  Config::BEGIN
+   0.00   0.000 -0.000      1   0.0000      -  Config::TIEHASH
+   0.00   0.000 -0.000      2   0.0000      -  Config::FETCH
+   0.00   0.000 -0.000      1   0.0000      -  diagnostics::import
+   0.00   0.000 -0.000      1   0.0000      -  main::test_code
+   0.00   0.000 -0.000      2   0.0000      -  diagnostics::warn_trap
+   0.00   0.000 -0.000      2   0.0000      -  diagnostics::splainthis
+   0.00   0.000 -0.000      2   0.0000      -  diagnostics::transmo
+   0.00   0.000 -0.000      2   0.0000      -  diagnostics::shorten
+   0.00   0.000 -0.000      2   0.0000      -  diagnostics::autodescribe
+</code></pre>
+
+<p>It&rsquo;s not easy to see what is responsible for this enormous overhead, even if <code>main::BEGIN</code> seems to be running most of the time. To get the full picture we must see the OPs tree, which shows us who calls whom, so we run:</p>
+
+<pre><code>  % dprofpp -T
+</code></pre>
+
+<p>and the output is:</p>
+
+<pre><code> main::BEGIN
+   diagnostics::BEGIN
+      Exporter::import
+         Exporter::export
+   diagnostics::BEGIN
+      Config::BEGIN
+      Config::TIEHASH
+      Exporter::import
+         Exporter::export
+   Config::FETCH
+   Config::FETCH
+   diagnostics::unescape
+   .....................
+   3159 times [diagnostics::unescape] snipped
+   .....................
+   diagnostics::unescape
+   diagnostics::import
+ diagnostics::warn_trap
+   diagnostics::splainthis
+      diagnostics::transmo
+      diagnostics::shorten
+      diagnostics::autodescribe
+ main::test_code
+   diagnostics::warn_trap
+      diagnostics::splainthis
+         diagnostics::transmo
+         diagnostics::shorten
+         diagnostics::autodescribe
+   diagnostics::warn_trap
+      diagnostics::splainthis
+         diagnostics::transmo
+         diagnostics::shorten
+        diagnostics::autodescribe
+</code></pre>
+
+<p>So we see that two executions of <code>diagnostics::BEGIN</code> and 3161 of <code>diagnostics::unescape</code> are responsible for most of the running overhead.</p>
+
+<p>If we comment out the <code>diagnostics</code> module, we get:</p>
+
+<pre><code>  Total Elapsed Time = 0.079974 Seconds
+    User+System Time = 0.059974 Seconds
+  Exclusive Times
+  %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+   0.00   0.000 -0.000      1   0.0000      -  main::test_code
+</code></pre>
+
+<p>It is possible to profile code running under mod_perl with the <code>Devel::DProf</code> module, available on CPAN. However, you must have apache version 1.3b3 or higher and the <code>PerlChildExitHandler</code> enabled during the httpd build process. When the server is started, <code>Devel::DProf</code> installs an <code>END</code> block to write the <em>tmon.out</em> file. This block will be called at server shutdown. Here is how to start and stop a server with the profiler enabled:</p>
+
+<pre><code>  % setenv PERL5OPT -d:DProf
+  % httpd -X -d `pwd` &amp;
+  ... make some requests to the server here ...
+  % kill `cat logs/httpd.pid`
+  % unsetenv PERL5OPT
+  % dprofpp
+</code></pre>
+
+<p>The <code>Devel::DProf</code> package is a Perl code profiler. It will collect information on the execution time of a Perl script and of the subs in that script (remember that <code>print()</code> and <code>map()</code> are just like any other subroutines you write, but they come bundled with Perl!)</p>
+
+<p>Another approach is to use <code>Apache::DProf</code>, which hooks <code>Devel::DProf</code> into mod_perl. The <code>Apache::DProf</code> module will run a <code>Devel::DProf</code> profiler inside each child server and write the <em>tmon.out</em> file in the directory <code>$ServerRoot/logs/dprof/$$</code> when the child is shutdown (where <code>$$</code> is the number of the child process). All it takes is to add to <em>httpd.conf</em>:</p>
+
+<pre><code>  PerlModule Apache::DProf
+</code></pre>
+
+<p>Remember that any PerlHandler that was pulled in before <code>Apache::DProf</code> in the <em>httpd.conf</em> or <em>startup.pl</em>, will not have its code debugging information inserted. To run <code>dprofpp</code>, chdir to <code>$ServerRoot/logs/dprof/$$</code> and run:</p>
+
+<pre><code>  % dprofpp
+</code></pre>
+
+<p>(Lookup the <code>ServerRoot</code> directive&rsquo;s value in <em>httpd.conf</em> to figure out what your <code>$ServerRoot</code> is.)</p>
+
+<h3 id="span-id-measuring-the-memory-of-the-process-measuring-the-memory-of-the-process-span"><span id="measuring_the_memory_of_the_process">Measuring the Memory of the Process</span></h3>
+
+<p>One very important aspect of performance tuning is to make sure that your applications don&rsquo;t use much memory, since if they do you cannot run many servers and therefore in most cases under a heavy load the overall performance degrades.</p>
+
+<p>In addition the code may not be clean and leak memory, which is even worse. In this case, the same process serves many requests and after each request more memory is used. After a while all your RAM will be used and machine will start swapping (use the swap partition) which is a very undesirable event, since it may lead to a machine crash.</p>
+
+<p>The simplest way to figure out how big the processes are and see whether they grow is to watch the output of <code>top(1)</code> or <code>ps(1)</code> utilities.</p>
+
+<p>For example the output of top(1):</p>
+
+<pre><code>    8:51am  up 66 days,  1:44,  1 user,  load average: 1.09, 2.27, 2.61
+  95 processes: 92 sleeping, 3 running, 0 zombie, 0 stopped
+  CPU states: 54.0% user,  9.4% system,  1.7% nice, 34.7% idle
+  Mem:  387664K av, 309692K used,  77972K free, 111092K shrd,  70944K buff
+  Swap: 128484K av,  11176K used, 117308K free                170824K cached
+
+     PID USER PRI NI SIZE  RSS SHARE STAT LIB %CPU %MEM   TIME COMMAND
+  29225 nobody 0  0  9760 9760  7132 S      0 12.5  2.5   0:00 httpd_perl
+  29220 nobody 0  0  9540 9540  7136 S      0  9.0  2.4   0:00 httpd_perl
+  29215 nobody 1  0  9672 9672  6884 S      0  4.6  2.4   0:01 httpd_perl
+  29255 root   7  0  1036 1036   824 R      0  3.2  0.2   0:01 top
+    376 squid  0  0 15920  14M   556 S      0  1.1  3.8 209:12 squid
+  29227 mysql  5  5  1892 1892   956 S N    0  1.1  0.4   0:00 mysqld
+  29223 mysql  5  5  1892 1892   956 S N    0  0.9  0.4   0:00 mysqld
+  29234 mysql  5  5  1892 1892   956 S N    0  0.9  0.4   0:00 mysqld
+</code></pre>
+
+<p>Which starts with overall information of the system and then displays the most active processes at the given moment. So for example if we look at the <code>httpd_perl</code> processes we can see the size of the resident (<code>RSS</code>) and shared (<code>SHARE</code>) memory segments. This sample was taken on the production server running linux.</p>
+
+<p>But of course we want to see all the apache/mod_perl processes, and that&rsquo;s where <code>ps(1)</code> comes to help. The options of this utility vary from one Unix flavor to another, and some flavors provide their own tools. Let&rsquo;s check the information about mod_perl processes:</p>
+
+<pre><code>  % ps -o pid,user,rss,vsize,%cpu,%mem,ucomm -C httpd_perl
+    PID USER      RSS   VSZ %CPU %MEM COMMAND
+  29213 root     8584 10264  0.0  2.2 httpd_perl
+  29215 nobody   9740 11316  1.0  2.5 httpd_perl
+  29216 nobody   9668 11252  0.7  2.4 httpd_perl
+  29217 nobody   9824 11408  0.6  2.5 httpd_perl
+  29218 nobody   9712 11292  0.6  2.5 httpd_perl
+  29219 nobody   8860 10528  0.0  2.2 httpd_perl
+  29220 nobody   9616 11200  0.5  2.4 httpd_perl
+  29221 nobody   8860 10528  0.0  2.2 httpd_perl
+  29222 nobody   8860 10528  0.0  2.2 httpd_perl
+  29224 nobody   8860 10528  0.0  2.2 httpd_perl
+  29225 nobody   9760 11340  0.7  2.5 httpd_perl
+  29235 nobody   9524 11104  0.4  2.4 httpd_perl
+</code></pre>
+
+<p>Now you can see the resident (<code>RSS</code>) and virtual (<code>VSZ</code>) memory segments (and shared memory segment if you ask for it) of all mod_perl processes. Please refer to the <code>top(1)</code> and <code>ps(1)</code> man pages for more information.</p>
+
+<p>You probably agree that using <code>top(1)</code> and <code>ps(1)</code> are cumbersome if we want to use memory size sampling during the benchmark test. We want to have a way to print memory sizes during the program execution at desired places. If you have <code>GTop</code> modules installed, which is a perl glue to the <code>libgtop</code> library, it&rsquo;s exactly what we need.</p>
+
+<p>Note: <code>GTop</code> requires the <code>libgtop</code> library but is not available for all platforms. Visit <a href="http://www.home-of-linux.org/gnome/libgtop/">http://www.home-of-linux.org/gnome/libgtop/</a> to check whether your platform/flavor is supported.</p>
+
+<p><code>GTop</code> provides an API for retrieval of information about processes and the whole system. We are only interested in memory sampling API methods. To print all the process related memory information we can execute the following code:</p>
+
+<pre><code>  use GTop;
+  my $gtop = GTop-&gt;new;
+  my $proc_mem = $gtop-&gt;proc_mem($$);
+  for (qw(size vsize share rss)) {
+      printf &quot;   %s =&gt; %d\n&quot;, $_, $proc_mem-&gt;$_();
+  }
+</code></pre>
+
+<p>When executed we see the following output (in bytes):</p>
+
+<pre><code>      size =&gt; 1900544
+     vsize =&gt; 3108864
+     share =&gt; 1392640
+       rss =&gt; 1900544
+</code></pre>
+
+<p>So if we are interested in to print the process resident memory segment before and after some event we just do it: For example if we want to see how much extra memory was allocated after a variable creation we can write the following code:</p>
+
+<pre><code>  use GTop;
+  my $gtop = GTop-&gt;new;
+  my $before = $gtop-&gt;proc_mem($$)-&gt;rss;
+  my $x = 'a' x 10000;
+  my $after  = $gtop-&gt;proc_mem($$)-&gt;rss;
+  print &quot;diff: &quot;,$after-$before, &quot; bytes\n&quot;;
+</code></pre>
+
+<p>and the output</p>
+
+<pre><code>  diff: 20480 bytes
+</code></pre>
+
+<p>So we can see that Perl has allocated extra 20480 bytes to create <code>$x</code> (of course the creation of <code>after</code> needed a few bytes as well, but it&rsquo;s insignificant compared to a size of <code>$x</code>)</p>
+
+<p>The <code>Apache::VMonitor</code> module with help of the <code>GTop</code> module allows you to watch all your system information using your favorite browser from anywhere in the world without a need to telnet to your machine. If you are looking into what information you can retrieve with <code>GTop</code>, you should examine <code>Apache::VMonitor</code>, as it deploys a big part of the API that <code>GTop</code> provides.</p>
+
+<p>If you are running a true BSD system, you may use <code>BSD::Resource::getrusage</code> instead of <code>GTop</code>. For example:</p>
+
+<pre><code>  print &quot;used memory = &quot;.(BSD::Resource::getrusage)[2].&quot;\n&quot;
+</code></pre>
+
+<p>For more information refer to the <code>BSD::Resource</code> manpage.</p>
+
+<h3 id="span-id-measuring-the-memory-usage-of-subroutines-measuring-the-memory-usage-of-subroutines-span"><span id="measuring_the_memory_usage_of_subroutines">Measuring the Memory Usage of Subroutines</span></h3>
+
+<p>With help of <code>Apache::Status</code> you can find out the size of each and every subroutine.</p>
+
+<ol>
+<li>Build and install mod_perl as you always do, make sure it&rsquo;s version 1.22 or higher.</li>
+
+<li><p>Configure /perl-status if you haven&rsquo;t already:</p>
+
+<pre><code>  &lt;Location /perl-status&gt;
+    SetHandler perl-script
+    PerlHandler Apache::Status
+    order deny,allow
+    #deny from all
+    #allow from ...
+  &lt;/Location&gt;
+</code></pre></li>
+
+<li><p>Add to httpd.conf</p>
+
+<pre><code>  PerlSetVar StatusOptionsAll On
+  PerlSetVar StatusTerse On
+  PerlSetVar StatusTerseSize On
+  PerlSetVar StatusTerseSizeMainSummary On
+
+  PerlModule B::TerseSize
+</code></pre></li>
+
+<li><p>Start the server (best in httpd -X mode)</p></li>
+
+<li><p>From your favorite browser fetch <a href="http://localhost/perl-status">http://localhost/perl-status</a></p></li>
+
+<li><p>Click on &lsquo;Loaded Modules&rsquo; or &lsquo;Compiled Registry Scripts&rsquo;</p></li>
+
+<li><p>Click on the module or script of your choice (you might need to run some script/handler before you will see it here unless it was preloaded)</p></li>
+
+<li><p>Click on &lsquo;Memory Usage&rsquo; at the bottom</p></li>
+
+<li><p>You should see all the subroutines and their respective sizes.</p></li>
+</ol>
+
+<p>Now you can start to optimize your code, or test which of several implementations is of the least size.</p>
+
+<p>For example let&rsquo;s compare <code>CGI.pm</code>&rsquo;s OO vs. procedural interfaces:</p>
+
+<p>As you will see below the first OO script uses about 2k bytes while the second script (procedural interface) uses about 5k.</p>
+
+<p>Here are the code examples and the numbers:</p>
+
+<ol>
+<li><p>cgi_oo.pl
+      &mdash;&mdash;&mdash;
+      use CGI ();
+      my $q = CGI-&gt;new;
+      print $q-&gt;header;
+      print $q-&gt;b(&ldquo;Hello&rdquo;);</p></li>
+
+<li><p>cgi_mtd.pl
+      &mdash;&mdash;&mdash;
+      use CGI qw(header b);
+      print header();
+      print b(&ldquo;Hello&rdquo;);</p></li>
+</ol>
+
+<p>After executing each script in single server mode (-X) the results are:</p>
+
+<ol>
+<li><p>Totals: 1966 bytes | 27 OPs</p>
+
+<pre><code>  handler 1514 bytes | 27 OPs
+  exit     116 bytes |  0 OPs
+</code></pre></li>
+
+<li><p>Totals: 4710 bytes | 19 OPs</p>
+
+<pre><code>  handler  1117 bytes | 19 OPs
+  basefont  120 bytes |  0 OPs
+  frameset  120 bytes |  0 OPs
+  caption   119 bytes |  0 OPs
+  applet    118 bytes |  0 OPs
+  script    118 bytes |  0 OPs
+  ilayer    118 bytes |  0 OPs
+  header    118 bytes |  0 OPs
+  strike    118 bytes |  0 OPs
+  layer     117 bytes |  0 OPs
+  table     117 bytes |  0 OPs
+  frame     117 bytes |  0 OPs
+  style     117 bytes |  0 OPs
+  Param     117 bytes |  0 OPs
+  small     117 bytes |  0 OPs
+  embed     117 bytes |  0 OPs
+  font      116 bytes |  0 OPs
+  span      116 bytes |  0 OPs
+  exit      116 bytes |  0 OPs
+  big       115 bytes |  0 OPs
+  div       115 bytes |  0 OPs
+  sup       115 bytes |  0 OPs
+  Sub       115 bytes |  0 OPs
+  TR        114 bytes |  0 OPs
+  td        114 bytes |  0 OPs
+  Tr        114 bytes |  0 OPs
+  th        114 bytes |  0 OPs
+  b         113 bytes |  0 OPs
+</code></pre></li>
+</ol>
+
+<p>Note, that the above is correct if you didn&rsquo;t precompile all <code>CGI.pm</code>&rsquo;s methods at server startup. Since if you did, the procedural interface in the second test will take up to 18k and not 5k as we saw. That&rsquo;s because the whole of <code>CGI.pm</code>&rsquo;s namespace is inherited and it already has all its methods compiled, so it doesn&rsquo;t really matter whether you attempt to import only the symbols that you need. So if you have:</p>
+
+<pre><code>  use CGI  qw(-compile :all);
+</code></pre>
+
+<p>in the server startup script. Having:</p>
+
+<pre><code>  use CGI qw(header);
+</code></pre>
+
+<p>or</p>
+
+<pre><code>  use CGI qw(:all);
+</code></pre>
+
+<p>is essentially the same. You will have all the symbols precompiled at startup imported even if you ask for only one symbol. It seems to me like a bug, but probably that&rsquo;s how <code>CGI.pm</code> works.</p>
+
+<p>BTW, you can check the number of opcodes in the code by a simple command line run. For example comparing &lsquo;my %hash&rsquo; vs. &lsquo;my %hash = ()&rsquo;.</p>
+
+<pre><code>  % perl -MO=Terse -e 'my %hash' | wc -l
+  -e syntax OK
+      4
+
+  % perl -MO=Terse -e 'my %hash = ()' | wc -l
+  -e syntax OK
+     10
+</code></pre>
+
+<p>The first one has fewer opcodes.</p>
+
+<p>Note that you shouldn&rsquo;t use <code>Apache::Status</code> module on production server as it adds quite a bit of overhead to each request.</p>
+
+<hr />
+
+<h1 id="span-id-references-references-span"><span id="references">References</span></h1>
+
+<ul>
+<li>The mod_perl site&rsquo;s URL: <a href="http://perl.apache.org">http://perl.apache.org</a></li>
+<li><a href="https://metacpan.org/pod/Devel::DProf">Devel::DProf</a></li>
+<li><a href="https://metacpan.org/pod/Apache::DProf">Apache::DProf</a></li>
+<li><a href="https://metacpan.org/pod/Apache::VMonitor">Apache::VMonitor</a></li>
+<li><a href="https://metacpan.org/pod/GTop">GTop</a>
+The home of the C library: <a href="http://www.home-of-linux.org/gnome/libgtop/">http://www.home-of-linux.org/gnome/libgtop/</a></li>
+<li><a href="https://metacpan.org/pod/BSD::Resource">BSD::Resource</a></li>
+</ul>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/web">web</a></div>
+                
+                  <div class="tag"><a href="/tags/mod-perl-benchmarking-test">mod-perl-benchmarking-test</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-stas-bekman">
+  <div class="col-sm-2">
+    
+    <a href="/authors/stas-bekman/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/stas-bekman/"><h3>Stas Bekman</h3></a>
+    <p></p>
+    <h5><a href="/authors/stas-bekman/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2002_07_16_mod_perl.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

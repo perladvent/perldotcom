@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Automated Testing on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/automated-testing/</link>
+    <description>Recent content in Automated Testing on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 02 Feb 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/automated-testing/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Test-Driving X11 GUIs</title>
+      <link>http://localhost:1313/pub/2006/02/02/x11_gui_testing.html/</link>
+      <pubDate>Thu, 02 Feb 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/02/02/x11_gui_testing.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;driving-x11-guis-using-x11-guitest&#34;&gt;Driving X11 GUIs using X11::GUITest&lt;/h3&gt;
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;Interfaces to GUI applications like &lt;a href=&#34;http://developer.kde.org/documentation/library/kdeqt/kde3arch/dcop.html&#34;&gt;DCOP&lt;/a&gt; or &lt;a href=&#34;http://www.freedesktop.org/Software/dbus&#34;&gt;D-BUS&lt;/a&gt; allow you to interact with GUI applications in order to get at their internal states or set some arbitrary states.&lt;/p&gt;
+
+&lt;p&gt;Sometimes GUIs don&amp;rsquo;t allow for such interaction and you need to &amp;ldquo;click&amp;rdquo; them. If you&amp;rsquo;re writing such an application, you need some sort of regression tests for it to make sure your widget/windows are as accessible as they should be. If this is the case, there is a Perl module to help you: &lt;a href=&#34;https://metacpan.org/pod/X11::GUITest&#34;&gt;X11::GUITest&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Be aware that &lt;code&gt;X11::GUITest&lt;/code&gt; allows you to drive a GUI, but you can&amp;rsquo;t &amp;ldquo;read&amp;rdquo; data written in a widget, such as a button or an edit box. More on this in the Limitations section below.&lt;/p&gt;
+
+&lt;p&gt;To install &lt;code&gt;X11::GUITest&lt;/code&gt;, run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl -MCPAN -e &#39;shell&#39;
+install X11::GUITest
+quit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;a-simple-example&#34;&gt;A Simple Example&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve included two example programs. One is &lt;a href=&#34;http://localhost:1313/media/_pub_2006_02_02_x11_gui_testing/tested.pl&#34;&gt;&lt;em&gt;tested.pl&lt;/em&gt;&lt;/a&gt; and it serves as an example GUI. The other is &lt;a href=&#34;http://localhost:1313/media/_pub_2006_02_02_x11_gui_testing/tester.pl&#34;&gt;&lt;em&gt;tester.pl&lt;/em&gt;&lt;/a&gt; that starts and drives the tested program.&lt;/p&gt;
+
+&lt;p&gt;You need Tk installed for the tested GUI. Tk comes as a package in most GNU/Linux distributions or other *NIX OSes. Download both files in the same folder, run &lt;em&gt;./tester.pl&lt;/em&gt;, and watch.&lt;/p&gt;
+
+&lt;p&gt;What are they doing and how do they work?&lt;/p&gt;
+
+&lt;h3 id=&#34;starting-a-gui&#34;&gt;Starting a GUI&lt;/h3&gt;
+
+&lt;p&gt;First thing to do prior to driving a GUI is to start the driven program. While you can use &lt;code&gt;fork&lt;/code&gt; and &lt;code&gt;exec&lt;/code&gt; or any other means, &lt;code&gt;X11::GUITest&lt;/code&gt; comes with a routine of its own.&lt;/p&gt;
+
+&lt;p&gt;Use &lt;code&gt;StartApp( $tested_application );&lt;/code&gt; to start a GUI, which results in starting the desired application in an asynchronous manner.&lt;/p&gt;
+
+&lt;p&gt;If you want to start an application and wait for it to finish before going on, use &lt;code&gt;RunApp&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;finding-a-window&#34;&gt;Finding a Window&lt;/h3&gt;
+
+&lt;p&gt;After having the GUI started, you need to search for it among the other open windows on your desktop. For this, use &lt;code&gt;FindWindowLike()&lt;/code&gt;, &lt;code&gt;WaitWindowLike()&lt;/code&gt;, or &lt;code&gt;WaitWindowViewable()&lt;/code&gt;, depending on what you need. Their names are pretty much self-explanatory.&lt;/p&gt;
+
+&lt;p&gt;Usually you need to have only one instance of the tested application started:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@windows = FindWindowLike( $tested_app_title );
+print &amp;quot;* Number of $tested_app_title windows found: &amp;quot;, scalar @windows, &amp;quot;\n&amp;quot;;
+
+if ( @windows == 1 ) {
+     print &amp;quot;* Only one instance found, going on ...\n&amp;quot;;
+} else {
+    print &amp;quot;* The number of $tested_app_title instances is different than 1\n&amp;quot;;
+    print &amp;quot;exiting ...\n&amp;quot;;
+    exit;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;FindWindowLike()&lt;/code&gt; returns a list of windows that match the search criteria, which is a regular expression to match against the window title. In case there is more than one window that matches the criteria, either you have the same window started multiple times, or the regular expression isn&amp;rsquo;t specific enough.&lt;/p&gt;
+
+&lt;h3 id=&#34;sending-keyboard-events-to-an-application&#34;&gt;Sending Keyboard Events to an Application&lt;/h3&gt;
+
+&lt;p&gt;Having found the window, (when you know that there is only one, you can access it as the first element of &lt;code&gt;@windows&lt;/code&gt;, namely &lt;code&gt;$windows[0]&lt;/code&gt;), you probably want to send it some keystrokes. Use &lt;code&gt;SendKeys()&lt;/code&gt; to do this.&lt;/p&gt;
+
+&lt;p&gt;If you are having a busy X server, or just want your testing to be easy for the human eye to watch, set the delay between the keystrokes (in milliseconds) with &lt;code&gt;SetKeySendDelay()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SetKeySendDelay( $delay );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To send &lt;code&gt;Alt&lt;/code&gt;+&lt;code&gt;O&lt;/code&gt;, followed by a delay of &lt;code&gt;$delay&lt;/code&gt; milliseconds, then &lt;code&gt;e&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SendKeys( &#39;%(o)e&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Besides sending plain text to an application, like sending the infamous &amp;ldquo;Hello World&amp;rdquo; to an editor window, you may have noticed that the previous example sent a combination of keys. Do so by using modifiers. The modifier keys are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;^&lt;/code&gt;, &lt;code&gt;Ctrl&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;%&lt;/code&gt;, &lt;code&gt;Alt&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;+&lt;/code&gt;, &lt;code&gt;Shift&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The &lt;code&gt;X11::GUITest&lt;/code&gt; documentation has a complete list of special keys and their &amp;ldquo;encodings.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;You may also find it useful to use &lt;code&gt;QuoteStringForSendKeys()&lt;/code&gt; in the case of complicated strings.&lt;/p&gt;
+
+&lt;h3 id=&#34;sending-mouse-events-to-an-application&#34;&gt;Sending Mouse Events to an Application&lt;/h3&gt;
+
+&lt;p&gt;Sending keys may be not enough in some situations. Having an application that has keyboard shortcuts is nice, but not all of them support it. Sometimes you may need to send mouse events.&lt;/p&gt;
+
+&lt;p&gt;To get the absolute position of the appropriate window on your desktop:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my ($x, $y, $width, $height) = GetWindowPos($edit_windows[0]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Suppose that you want to click right in the middle of it. First, compute the position of the middle of the window:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$x += $width  / 2;
+$y += $height / 2;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now move the mouse:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;MoveMouseAbs( $x, $y );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then press the right mouse button:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PressMouseButton M_RIGHT;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Do something useful, and then release the mouse button. (Don&amp;rsquo;t forget to do that when you&amp;rsquo;re using &lt;code&gt;PressMouseButton&lt;/code&gt;; otherwise, you may experience &amp;ldquo;strange&amp;rdquo; desktop behavior when your testing application exits.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ReleaseMouseButton M_RIGHT
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You could replace &lt;code&gt;PressMouseButton()&lt;/code&gt; and &lt;code&gt;ReleaseMouseButton()&lt;/code&gt; with &lt;code&gt;ClickMouseButton()&lt;/code&gt; if you don&amp;rsquo;t have anything to do between pressing and releasing the mouse button.&lt;/p&gt;
+
+&lt;p&gt;In the example programs, there&amp;rsquo;s something to do&amp;ndash;navigating the context menu with keystrokes.&lt;/p&gt;
+
+&lt;h3 id=&#34;moving-a-window&#34;&gt;Moving a Window&lt;/h3&gt;
+
+&lt;p&gt;This is a neat and interesting feature: the ability to move windows. While it is useful to impress your friends with having their favorite mail program moving up and down, its utility lies in the fact that you can arrange the tested windows on the desktop so they are all visible.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;MoveWindow( $window_id, $x, $y );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;limitations&#34;&gt;Limitations&lt;/h3&gt;
+
+&lt;p&gt;As you may have noticed reading the example code, there is almost no way of validating the fact that you are indeed interacting with the right widget or window. The functions you can use for this are &lt;code&gt;FindWindow*&lt;/code&gt; or &lt;code&gt;WaitWindow*&lt;/code&gt;, which return a list of windows whose titles match an arbitrary regexp, and the functions that deal with child windows, such as &lt;code&gt;IsChild()&lt;/code&gt; and &lt;code&gt;GetChildWindows()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;While you may pass the window ID to a testing program, using external means to validate the tested application (such as indicating the coordinates on the screen), the problem is that you can&amp;rsquo;t grab a widget&amp;rsquo;s contents.&lt;/p&gt;
+
+&lt;p&gt;Also, while you might be tempted to parse the child tree of an application to get from the main window to one of its children, this doesn&amp;rsquo;t work every time. Plenty of GUIs spawn other windows at the top level, and the spawned windows have as root window the topmost window (which is the desktop).&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s an example of the problem that uses Mozilla Firefox. Before running the test, you must meet some prerequisites:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Back up your preferences before running the tests.&lt;/li&gt;
+&lt;li&gt;Go to Edit -&amp;gt; Preferences -&amp;gt; General -&amp;gt; Connection Settings and set it to &amp;ldquo;Direct connection to the Internet.&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;Click OK, and then OK, and close the browser.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Now run the &lt;em&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2006_02_02_x11_gui_testing/Firefox.pl&#34;&gt;Firefox.pl&lt;/a&gt;&lt;/em&gt; example code.&lt;/p&gt;
+
+&lt;p&gt;The test program assumes that when the Preferences window pops up, the General menu is selected.&lt;/p&gt;
+
+&lt;p&gt;Open Mozilla Firefox again, go to Preferences, select the Web Features menu, click OK, and exit the browser.&lt;/p&gt;
+
+&lt;p&gt;Rerun the &lt;em&gt;Firefox.pl&lt;/em&gt; program, and watch it.&lt;/p&gt;
+
+&lt;p&gt;It has no idea which menu is selected, because every menu component belongs to the same window, having the same title.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-guis-for-testability&#34;&gt;Writing GUIs for Testability&lt;/h3&gt;
+
+&lt;p&gt;Having in mind the strengths and weaknesses of &lt;code&gt;X11::GUITest&lt;/code&gt;, it&amp;rsquo;s critical to design graphical user interfaces that are easy to test. This way, you shorten your maintenance time, as you can have a tester program that can help check that the GUI hasn&amp;rsquo;t lost some of its windows in the development/maintenance process.&lt;/p&gt;
+
+&lt;p&gt;Of course, when displaying a license text when your GUI starts, you don&amp;rsquo;t have the means to check that the contents are unchanged using &lt;code&gt;X11::GUITest&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;What you can do is to ensure that all child windows are &amp;ldquo;in place&amp;rdquo; and that a user can access them in the same way as he/she could in previous versions.&lt;/p&gt;
+
+&lt;p&gt;If you define ways of navigating the GUI using keyboard shortcuts so that you can reach any &amp;ldquo;leaf&amp;rdquo; window starting from the top-level window, then it&amp;rsquo;s trivial for a test program to navigate the same way you do and ensure that all windows are reachable as they were in previous versions.&lt;/p&gt;
+
+&lt;p&gt;Consider the following code based on the tested Tk program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$menu{&#39;OTHER&#39;} = $menu_bar-&amp;gt;cascade(
+    -label   =&amp;gt; &#39;Other&#39;,
+    -tearoff =&amp;gt; 0,
+);
+
+$menu{&#39;OTHER&#39;}-&amp;gt;command(
+    -label   =&amp;gt; &#39;Editor&#39;,
+    -command =&amp;gt; sub {
+        edit_window();
+    }
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It defines a piece of menu from the overall menu of the application. As you may notice, there are no keyboard shortcuts that you can use to access the Editor window.&lt;/p&gt;
+
+&lt;p&gt;Thinking of testability, you could go to some lengths to test this piece of code to ensure that the Editor window is reachable and that it indeed pops up. You could record the application&amp;rsquo;s position on the screen and then click the Other button, then move the mouse over the Editor button and click it. I&amp;rsquo;m sure you can spot some caveats here, among them:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You need to make sure that the application is always on the screen at some known coordinates (use &lt;code&gt;GetWindowPos()&lt;/code&gt;) or maybe that the test always moves the window to the same place (use &lt;code&gt;MoveWindow()&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;You have to take into consideration font size changes, localization, and resolution changes so that you are sure you are clicking in the right place.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This kind of testing is fragile and error-prone. You can make things simpler and more robust: add keyboard shortcuts for each action. You gain two main benefits: you make some users (like me) happier and ease the testing process. You just need to define all the &amp;ldquo;paths&amp;rdquo; that you need to &amp;ldquo;walk&amp;rdquo; and define the child window titles so you know you&amp;rsquo;ve reached them.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a slight adjustment to the tested application so that it provides keyboard shortcuts:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$menu{&#39;OTHER&#39;} = $menu_bar-&amp;gt;cascade(
+    -label   =&amp;gt; &#39;~Other&#39;,
+    -tearoff =&amp;gt; 0,
+);
+
+$menu{&#39;OTHER&#39;}-&amp;gt;command(
+    -label   =&amp;gt; &#39;~Editor&#39;,
+    -command =&amp;gt; sub {
+        edit_window();
+    }
+);
+
+sub edit_window {
+    # some initialization code here ...
+
+    $edit_window = $main_window-&amp;gt;Toplevel();
+
+    # Set the title of the Editor window
+    $edit_window-&amp;gt;title(&amp;quot;This is an edit window&amp;quot;);
+
+    # the rest of the code here ....
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This piece of code is easier to test. Navigate the application until you reach the Editor window:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SendKeys(&#39;%(o)e&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you should have the Editor window spawned. Grab a list of windows having the title matching the Editor window&amp;rsquo;s title:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@edit_windows = FindWindowLike( $edit_title );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Check to see whether the Editor window is present. Also, there should be only one Editor window started:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ( @edit_windows == 1 ) {
+    # code here
+} else {
+    # we have zero or more than one Editor window, so something is not quite
+    # right
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This kind of code is easy to extend, as you can store the application window hierarchy in some external file outside of the program source (in some sort of markup language file, or anything that suits your needs). Having this external definition of the windows&amp;rsquo; hierarchy and their properties, the tester program can read the same file the tested application uses; thus, both know the same keyboard shortcuts and window titles.&lt;/p&gt;
+
+&lt;p&gt;Program logic errors and/or bugs in underlying libraries used are easier to catch before you release the software.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;As you can see, there is no easy way to test an entire GUI application with &lt;code&gt;X11::GUITest&lt;/code&gt;, but you can test the important parts. Also, for some actions you can use a mixed approach, such as initiating an event using the application interface (connecting to a remote server protected with a user/password auth scheme) and picking the results from a log file.&lt;/p&gt;
+
+&lt;p&gt;While the testing done in the previous paragraph is necessary, it is not sufficient. It would be great if there were someone willing to pick up the module and research whether it could be possible for &lt;code&gt;X11::GUITest&lt;/code&gt; to be able to fetch data from the widgets, making it possible to &amp;ldquo;read&amp;rdquo; the contents of a window (from a text widget, for example).&lt;/p&gt;
+
+&lt;p&gt;This kind of testing is more complete than simply driving the GUI.&lt;/p&gt;
+
+&lt;p&gt;Of course, you could also use &lt;code&gt;X11::GUITest&lt;/code&gt; to write a &amp;ldquo;record and playback&amp;rdquo; application. You might only need &lt;code&gt;GetMousePos()&lt;/code&gt;, &lt;code&gt;IsMouseButtonPressed()&lt;/code&gt;, and the other mouse functions. As I said earlier, in my opinion this kind of testing is too fragile.&lt;/p&gt;
+
+&lt;p&gt;The problem is that you can&amp;rsquo;t validate the contents of the windows.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>An Introduction to Quality Assurance</title>
+      <link>http://localhost:1313/pub/2005/01/13/quality_assurance.html/</link>
+      <pubDate>Thu, 13 Jan 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/01/13/quality_assurance.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;on-being-wrong&#34;&gt;On Being Wrong&lt;/h3&gt;
+
+&lt;p&gt;When I decided to study computer science, I installed Linux on my computer and bought a copy of &amp;ldquo;The C Programming Language&amp;rdquo; by Kernighan and Ritchie. I have been trying to solve software problems ever since. After much heartache, I decided that if I was to continue programming I would have to come to terms with being wrong, because I quickly discovered that being wrong is a big part of the development cycle: you code, compile, view the errors, and then code some more. I found it helpful to actually say &amp;ldquo;I am wrong&amp;rdquo; when the compiler complained, to remind myself where the fault lay. It made finding problems a lot easier when I accepted responsibility for the errors.&lt;/p&gt;
+
+&lt;h3 id=&#34;enjoy-the-ride&#34;&gt;Enjoy the Ride&lt;/h3&gt;
+
+&lt;p&gt;To deal with the frustration of constantly being wrong, I began to view programming more as a game that I enjoyed than as an epic battle, and I started looking at things from the compiler&amp;rsquo;s perspective. This view has improved my overall approach to software immensely. I was also fortunate to discover &lt;em&gt;&lt;a href=&#34;http://www.perldebugged.com/&#34;&gt;Perl Debugged&lt;/a&gt;&lt;/em&gt; by Peter Scott and Ed Wright. The authors provide a wealth of information about debugging and testing Perl scripts, but they also emphasize that the right mental attitude is often the key to a programmer&amp;rsquo;s success. Basically, they say that you should enjoy what you do.&lt;/p&gt;
+
+&lt;p&gt;Bugs come in many flavors, from syntax errors to errors of logic. Perl&amp;rsquo;s interpreter will catch most typos, especially if you &lt;code&gt;use warnings&lt;/code&gt;, but some can be tricky&amp;ndash;and errors of logic are often even harder to tease out.&lt;/p&gt;
+
+&lt;p&gt;Here is a common syntax error:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($two_plus_two = 5) {
+   print &amp;quot;two plus two is five&amp;quot;; 
+} else {
+   # I never seem to get here...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is common logical error:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;I know of software companies that let their customers find their bugs for them.&lt;/li&gt;
+&lt;li&gt;These companies are worth millions of dollars.&lt;/li&gt;
+&lt;li&gt;If I let my customers find my bugs for me, I will be worth millions of dollars.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;This particular error can lead to embarrassing code such as the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub handle_error() {
+
+print &amp;lt;&amp;lt;END;
+
+   Dear Friend,
+      We realize this may be a difficult time 
+      for you, but there has been an SQL error. 
+      Please email us for further assistance, 
+      or try entering your obituary again. 
+      Thank you. 
+
+END
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, anyone who wants to sleep easy at night will want to avoid shameful code like this, because slowly but surely, users are becoming less tolerant of buggy code. If you haven&amp;rsquo;t done so already, you will want to read through Michael G. Schwern&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Test::Tutorial&#34;&gt;Test::Tutorial&lt;/a&gt; and get started. Test-based development, combined with quality assurance, can enable a company to offer its customers a rare and valuable commodity: reliable software. In the future, the world of software may very well be divided between the companies that incorporate testing into their development cycle and those that used to be in business.&lt;/p&gt;
+
+&lt;h3 id=&#34;parts-of-a-test&#34;&gt;Parts of a Test&lt;/h3&gt;
+
+&lt;p&gt;When the compiler stops complaining, many developers are happy to declare victory and move on to the next project, but for the tester (often just the developer with his hat on backwards), things are just becoming interesting. Testers begin by breaking the program into sections, as Lydia Ash does in &lt;em&gt;&lt;a href=&#34;http://www.wiley.com/WileyCDA/WileyTitle/productCd-0471430218.html&#34;&gt;The Web Testing Companion&lt;/a&gt;&lt;/em&gt;. She notes the following five basic software functions:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Accepting input&lt;/li&gt;
+&lt;li&gt;Giving output&lt;/li&gt;
+&lt;li&gt;Saving data&lt;/li&gt;
+&lt;li&gt;Manipulating data&lt;/li&gt;
+&lt;li&gt;Removing data&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;To begin testing, start at the top of the list and work down, one section at a time. At this point in the process, you really understand why everyone always tells you to write modular code. It is much easier to work through the list if you&amp;rsquo;ve broken your program into the functions &lt;code&gt;get_input()&lt;/code&gt;, &lt;code&gt;display_members()&lt;/code&gt;, &lt;code&gt;add_member()&lt;/code&gt;, &lt;code&gt;update_info()&lt;/code&gt;, and &lt;code&gt;delete_member()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;where-to-look&#34;&gt;Where to Look&lt;/h3&gt;
+
+&lt;p&gt;When asked where to look for bugs, software testers sometimes speak of the &amp;ldquo;joints&amp;rdquo; between program components, &amp;ldquo;equivalence classes,&amp;rdquo; and &amp;ldquo;edge values.&amp;rdquo; These are the primary points of weakness in an application.&lt;/p&gt;
+
+&lt;p&gt;An example of a joint is the place where your software interacts with a third-party module. It&amp;rsquo;s important to make sure that all of the components send and receive what you think they should.&lt;/p&gt;
+
+&lt;p&gt;An equivalence class is a class of data that follows the same data path through the program. Consider a program that divides the number 50 by whatever number the user enters and either returns a positive integer or tells them why the answer is not a positive integer. You might have the following classes: negative numbers; the number zero; the numbers 1, 2, 5, 10, 25, and 50; numbers greater than 50; and non-numbers. Consider the following incomplete but well-intentioned code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub factor_of_50 {
+    my $divisor = shift;
+    my $result  = 50 / $divisor;
+
+    return $result if $result == int( $result );
+    return &amp;quot;$divisor is negative&amp;quot; if $result &amp;lt; 0;
+    return &amp;quot;$result is not an integer&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this case, good tests should start with -1, 0, 1, 49, and 51, the edge values for this program, to test the different paths through the code. Edge values define the limits of the program, values near and past the stated minimum and maximum that the program should handle. In the example above, you&amp;rsquo;d also want to enter a string of letters and punctuation to see how the program handles it. Then, compare the test results to the program&amp;rsquo;s specification, which tells you which inputs should work and what outputs the users should see.&lt;/p&gt;
+
+&lt;h3 id=&#34;specifications&#34;&gt;Specifications&lt;/h3&gt;
+
+&lt;p&gt;Any non-trivial program needs to have a specified list of what it should do. This list of requirements lays a foundation on which to build the software and against which testers can test. There must be a specification of quality from the beginning, or else there is no way to tell if the program has passed or failed a given test. Functional specifications tell you about the program&amp;rsquo;s logic, while non-functional specifications include things like the speed of the application, usability issues for a user interface, and security.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-tests&#34;&gt;Writing Tests&lt;/h3&gt;
+
+&lt;p&gt;Once you have a specification, you can make a test inventory&amp;ndash;a list of all the tests you need to write in order to prove that the software meets the specifications. Of course, you need to eliminate all the bugs that crash the program and as many more as you can find, but when do you say enough is enough?&lt;/p&gt;
+
+&lt;p&gt;In &lt;em&gt;&lt;a href=&#34;http://he-cda.wiley.com/WileyCDA/HigherEdTitle/productCd-047143020X,courseCd-CX4700.html&#34;&gt;Software Testing Fundamentals&lt;/a&gt;&lt;/em&gt;, Marnie Hutcheson describes her Most Important Tests method. This process tries to determine which tests will be most valuable to run. Essentially, it is a way to present management with the opportunity to weigh the tradeoffs between further testing and pushing the product to market sooner.&lt;/p&gt;
+
+&lt;h3 id=&#34;reporting&#34;&gt;Reporting&lt;/h3&gt;
+
+&lt;p&gt;Reporting is, of course, crucial to testing. You test, trying to get the software to fail, so that you can report the bugs you find back to the development team, so they can fix things before the software&amp;rsquo;s release. A clear, informative bug report is the only one worth writing. Here is a template for a web application&amp;rsquo;s bug report from &lt;em&gt;The Web Testing Companion&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;SERVER CONFIG
+Operating System: &amp;lt;Operating system and hardware, if applicable.&amp;gt;
+Software Build: &amp;lt;Build-number of your software.&amp;gt;
+Topology: &amp;lt;If you have multiple topologies where you test your server in-house.&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;CLIENT
+OS: &amp;lt;Operating system, service packs, and other dependent DLL versions, if applicable&amp;gt;
+Browser: &amp;lt;Browser and version&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;DESCRIPTION
+&amp;lt;Brief description of the problem&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;Repro (short for reproduction)&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&amp;lt;Very descriptive steps showing how to recreate the problem&amp;gt;&lt;/li&gt;
+&lt;li&gt; &lt;/li&gt;
+&lt;li&gt; &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Result:
+&amp;lt;Description of exactly what happens after the last repro step&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;Expected Results:
+&amp;lt;Description of what should have happened after the last repro step&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;Notes:
+&amp;lt;Add any information about when this was last verified or what this might be related to here&amp;gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h3&gt;
+
+&lt;p&gt;When all the tests have finshed, the tester turns the repro reports in to the development team and starts looking forward to the next project. If there are any bugs found, the developer is back to square one: debugging. The process has come full circle. Hopefully, after a few more iterations, everyone can go out and have a paintball war.&lt;/p&gt;
+
+&lt;p&gt;Software development and software testing require two different mindsets. Sometimes it is hard for one person to switch back and forth between them, but testing is essential to the success of any non-trivial software project in the same way that editing is essential for any non-trivial writing project. Without it, progress is ponderous, at best.&lt;/p&gt;
+
+&lt;p&gt;In conclusion, I&amp;rsquo;d like to list the nine debugging rules from David J. Agans&amp;rsquo; excellent book, &lt;em&gt;&lt;a href=&#34;http://www.debuggingrules.com/Debugging_CH1.PDF&#34;&gt;Debugging&lt;/a&gt;&lt;/em&gt;. His book clarifies these essential debugging concepts and is mandatory reading for anyone who fixes things:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Understand the system&lt;/li&gt;
+&lt;li&gt;Make it fail&lt;/li&gt;
+&lt;li&gt;Quit thinking and look&lt;/li&gt;
+&lt;li&gt;Divide and conquer&lt;/li&gt;
+&lt;li&gt;Change one thing at a time&lt;/li&gt;
+&lt;li&gt;Keep an audit trail&lt;/li&gt;
+&lt;li&gt;Check the plug&lt;/li&gt;
+&lt;li&gt;Get a fresh view&lt;/li&gt;
+&lt;li&gt;If you didn&amp;rsquo;t fix it, it isn&amp;rsquo;t fixed&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&#34;bibliography&#34;&gt;Bibliography&lt;/h3&gt;
+
+&lt;p&gt;Agans, David J. &lt;em&gt;Debugging&lt;/em&gt;, American Management Association, 2002&lt;/p&gt;
+
+&lt;p&gt;Ash, Lydia. &lt;em&gt;The Web Testing Companion&lt;/em&gt;, Wiley, 2003&lt;/p&gt;
+
+&lt;p&gt;Hutcheson, Marnie L. &lt;em&gt;Software Testing Fundamentals&lt;/em&gt;, Wiley, 2003&lt;/p&gt;
+
+&lt;p&gt;Scott, Peter J.; Wright, Ed. &lt;em&gt;Perl Debugged&lt;/em&gt;, Addison-Wesley Pub Co, 2001&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

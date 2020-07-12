@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Music on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/music/</link>
+    <description>Recent content in Music on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 29 Aug 2014 15:03:09 +0000</lastBuildDate>
+    <atom:link href="/tags/music/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Facing the music with Perl</title>
+      <link>http://localhost:1313/article/111/2014/8/29/Facing-the-music-with-Perl/</link>
+      <pubDate>Fri, 29 Aug 2014 15:03:09 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/111/2014/8/29/Facing-the-music-with-Perl/</guid>
+      <description>&lt;p&gt;My digital music libraries were messed up. Spread across several devices and a couple of flirtations with iTunes Match and iCloud, I didn&amp;rsquo;t have everything in one place—ironically. Not only that, but Apple had replaced some files with what it considered better versions. Although I don&amp;rsquo;t want to perform the experiment to confirm it, I&amp;rsquo;m sure that the new files had different metadata. I needed to sort it out to start on a better system. I thought the task would be arduous, and it was until I settled on a simpler problem that a couple of Perl modules solved quickly.&lt;/p&gt;
+
+&lt;p&gt;For my first step, I needed to find all the music I had. I had backed up my files before I let Apple replace them with better versions. But I seemed to have made several backups, each with a different subset of my music. One backup would have most of the Led Zepplin but none of the Beatles, while another had no Zepplin and some of the Beatles. Another had all of the Beatles but no Cat Stevens.&lt;/p&gt;
+
+&lt;p&gt;I started by collecting all the unique files from the directories in which I had found music. This program has some of my favorite things about Perl, especially since I still have the wounds from moving files around during my C phase.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.10&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Digest::MD5 &lt;span style=&#34;color:#e6db74&#34;&gt;qw(md5_hex)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Copy  &lt;span style=&#34;color:#e6db74&#34;&gt;qw(copy)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Find;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Map   &lt;span style=&#34;color:#e6db74&#34;&gt;qw(map_file)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Path  &lt;span style=&#34;color:#e6db74&#34;&gt;qw(make_path)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Spec::Functions &lt;span style=&#34;color:#e6db74&#34;&gt;qw(catfile)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $wanted &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    state $Seen  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {};
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $full_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $File::Find::name;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $full_name;
+
+    map_file &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $map, $full_name, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;+&amp;lt;&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $digest_hex &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; md5_hex( $map );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $Seen&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ $digest_hex }&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $extension )     &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $full_name  &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/(\.[^.]+)\z/&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $n, $m, $o, $p ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $digest_hex &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/\A (..) (..) (..) (..)/x&lt;/span&gt;;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $basename &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $_;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dir &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; catfile( $new_dir, $n, $m, $o, $p );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $new_file &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; catfile( $dir, $basename );
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e $new_file;
+
+    make_path( $dir ) &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $dir;
+
+    copy(
+        $full_name, 
+        catfile( $dir, $basename )
+        );
+    };
+
+find( $wanted, @ARGV );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/File::Find&#34;&gt;File::Find&lt;/a&gt; provides the code to traverse the file structure for me. I give find the list of starting directories, in this case those in &lt;code&gt;@ARGV&lt;/code&gt;, and a callback subroutine as a reference. The meat of my program is in that &lt;code&gt;$wanted&lt;/code&gt; subroutine. The hardest part of this code is remembering that &lt;code&gt;$File::Find::name&lt;/code&gt; is the full path and &lt;code&gt;$_&lt;/code&gt; is the filename only. I put those into variables to remind me which is which.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/File::Map&#34;&gt;File::Map&lt;/a&gt; allows me to access a file&amp;rsquo;s data directly from disk as a memory map rather than reading it into memory. I don&amp;rsquo;t need to change the file to get its digest (using &lt;a href=&#34;https://metacpan.org/pod/Digest::MD5&#34;&gt;Digest::MD5&lt;/a&gt;), so memory mapping is a big win across tens of thousands of music files. If I have seen that digest before, I move on to the next file. Otherwise I do some string manipulations to create new file paths, putting the pieces together with the cross-plaform &lt;a href=&#34;https://metacpan.org/pod/File::Spec&#34;&gt;File::Spec&lt;/a&gt;. I copy the file to the new location with &lt;a href=&#34;https://metacpan.org/pod/File::Copy&#34;&gt;File::Copy&lt;/a&gt;. I specifically make a copy so I leave the original files where they are for now. I anticipate messing up at least a couple of times. The new path is four levels deep with each deeper level based on the next two characters in the file&amp;rsquo;s digest. That way, no directory gets too big, slowing down all directory operations.&lt;/p&gt;
+
+&lt;p&gt;Some rough calculations showed me that no particular music library was more than 85% complete. This was where the real fun began, but also my embarrassing tales of woe. Out of the newly copied files, I needed to select the ones I wanted to keep.&lt;/p&gt;
+
+&lt;p&gt;First, I merely cleaned out my iTunes library and reimported everything to see what I was working with. Most music I had in duplicates, and some in triplicates. iTunes Match had upgraded MP3 files to M4A (encoded in Apple&amp;rsquo;s AAC codec) and had done the same for M4P files, the DRM-ed versions of music I had purchased. Each version had a different digest, so several versions of the same content survived.&lt;/p&gt;
+
+&lt;p&gt;I struggled with the next part of the problem because I have too much computer power at my disposal. I could collect all of the metadata for each file and store it in a database. I could throw it into a NoSQL thingy. I even thought about redis. Any one of these technologies are fun diversions but they require too much work. I started and abandoned several approaches, including a brief attempt to use AppleScript to interact with iTunes directly. Oh, the insanity.&lt;/p&gt;
+
+&lt;p&gt;Working from the digested directory each time was a bad decision. I&amp;rsquo;d have to collect the metadata then group files by album or artist. iTunes had already done that for me, although I didn&amp;rsquo;t realize this for a week. When I imported the music, it copied the files into folders named after the artist and album (something I could have done instead of using the digests). Most of my work would be limited to the files in a single directory. I don&amp;rsquo;t need a data structure to hold all of that. I certainly didn&amp;rsquo;t need a database.&lt;/p&gt;
+
+&lt;p&gt;If I could enter a directory, examine each file in that directory, then process them on the way out of that directory, removing the duplicate files becomes much easier. I remembered that &lt;a href=&#34;https://metacpan.org/pod/File::Find&#34;&gt;File::Find&lt;/a&gt; has a &lt;code&gt;post_process&lt;/code&gt; option that allows me to do this, although I haven&amp;rsquo;t used it in years:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Find &lt;span style=&#34;color:#e6db74&#34;&gt;qw(find)&lt;/span&gt;;
+
+find( 
+    { 
+    wanted      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $wanted,   &lt;span style=&#34;color:#75715e&#34;&gt;#code refs&lt;/span&gt;
+    postprocess &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $post,
+    },
+    @ARGV,
+    );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;While I was in each directory, I could collect information on each file. Each file is already sorted by artist and album but I still need to choose which one of the duplicate files to keep. After a bit of thought, the solution turned out to be simple. I could sort on file extension, looking up the ordering in a hash. When I have two files with the same extension I&amp;rsquo;ll choose the one with the higher bitrate. When the bitrates match, I&amp;rsquo;ll choose the one with the shortest filename. With the various music libraries, I had some files like &lt;em&gt;Susie Q.m4a&lt;/em&gt; and &lt;em&gt;Susie Q 1.m4a&lt;/em&gt;; essentially the same file except for some slight metadata differences. I used &lt;a href=&#34;https://metacpan.org/pod/Music::Tag&#34;&gt;Music::Tag&lt;/a&gt; to get the metadata since it automatically delegated to plugins for the various file formats.&lt;/p&gt;
+
+&lt;p&gt;After sorting, I mark for deletion everything except the first element in the list. I don&amp;rsquo;t delete them right away; I print the list to a file which I can use later to delete files. I&amp;rsquo;ve been around too long to delete files right away.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/Users/brian/bin/perls/perl5.18.1&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.18&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Digest::MD5 &lt;span style=&#34;color:#e6db74&#34;&gt;qw( md5_hex )&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Basename &lt;span style=&#34;color:#e6db74&#34;&gt;qw( basename )&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Find;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Map   &lt;span style=&#34;color:#e6db74&#34;&gt;qw( map_file )&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Copy  &lt;span style=&#34;color:#e6db74&#34;&gt;qw( copy )&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Path  &lt;span style=&#34;color:#e6db74&#34;&gt;qw( make_path )&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; File::Spec::Functions  &lt;span style=&#34;color:#e6db74&#34;&gt;qw(abs2rel rel2abs splitdir)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Music::Tag;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $extensions_order &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+    m4a &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,        
+    mp3 &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+    m4p &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+    };
+
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;gt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;delete_files.txt&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $hash &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {};
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $wanted, $post ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; make_subs( $dir, $hash );
+
+find( 
+    { 
+    wanted      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $wanted,
+    postprocess &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $post,
+    },
+    @ARGV,
+    );
+    
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;make_subs&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $dir, $hash ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+    
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#75715e&#34;&gt;# wanted&lt;/span&gt;
+        &lt;span style=&#34;color:#75715e&#34;&gt;# my $path     = $File::Find::name;&lt;/span&gt;
+        &lt;span style=&#34;color:#75715e&#34;&gt;# my $filename = $_;&lt;/span&gt;
+        
+        state $count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;( &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $File::Find::name &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;l $File::Find::name );
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $_ &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.DS_Store&amp;#39;&lt;/span&gt;;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $filename &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; basename( $File::Find::name );
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $relative &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; abs2rel( $File::Find::name, $dir );
+        
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $basename_no_ext &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $filename &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/\.[^.]+\z//&lt;/span&gt;r;
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $extension ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $filename &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;m/ \. ( [^.]+ ) \z /x&lt;/span&gt;;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; exists $extensions_order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$extension};
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $this_file &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {};
+
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $info &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; eval { Music::Tag&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( $filename )&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_tag };
+        
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $title &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; eval{ $info&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;title };
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;( $@ ) { 
+            warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Title had a problem: $@&amp;#34;&lt;/span&gt;;
+            }
+
+        $this_file&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{tag} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+            title   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $title,
+            bitrate &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; eval{ $info&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;bitrate },
+            };    
+        $this_file&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+            extension &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $extension,
+            basename  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $filename,
+            relative  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $relative,
+            no_ext    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $basename_no_ext,
+            &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;File::Find::name&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $File::Find::name,
+            &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;_&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $_,
+            };    
+        
+        push @{ $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$File::Find::dir}{$title} }, $this_file;
+
+        $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{extensions}{$extension}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+        },
+        
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#75715e&#34;&gt;# postprocess        &lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $this &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$File::Find::dir};
+
+        TITLE: &lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $title ( sort keys %$this ) {
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $songs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $this&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ $title };
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; @$songs &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# no duplicates, no problem&lt;/span&gt;
+
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @sorted &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sort {
+              state $e &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $extensions_order;
+                
+              $e&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ $a&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{extension} } &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;=&amp;gt;&lt;/span&gt; $e&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{ $b&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{extension} }
+                    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt;
+              length $a&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{basename} &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;=&amp;gt;&lt;/span&gt; length $b&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{basename}
+                    &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt;
+              $b&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{tag}{bitrate} &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;=&amp;gt;&lt;/span&gt; $a&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{tag}{bitrate}
+              } @$songs;
+
+            &lt;span style=&#34;color:#75715e&#34;&gt;# everything without the chosen key will be deleted&lt;/span&gt;
+            $sorted[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]{chosen}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+            
+            SONG: &lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $song ( @sorted ) {
+                $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{seen}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; exists $extensions_order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{
+                    $song&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{extension} };
+                $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{examined}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $song&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{chosen};
+                
+                &lt;span style=&#34;color:#75715e&#34;&gt;# ignore other files, such as videos and e-books&lt;/span&gt;
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; exists $extensions_order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{
+                    $song&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{file}{extension} };
+
+                $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{deleted}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+                &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; { $fh } &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;delete:\t$song-&amp;gt;{file}{relative}\n&amp;#34;&lt;/span&gt;;
+                }
+            }
+
+        delete $hash&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$File::Find::dir};
+        }
+    }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And that was it. This left behind a couple of problems, such as messed up metadata, but I wasn&amp;rsquo;t going to be able to solve that programmatically anyway. Getting a complete set of files with no duplicates solved most of the problem and leaves me with the joy of flipping through physical albums that only us grey beards remember.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Visualizing Music with SDL and Perl</title>
+      <link>http://localhost:1313/pub/2011/01/visualizing-music-with-sdl-and-perl.html/</link>
+      <pubDate>Mon, 24 Jan 2011 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/01/visualizing-music-with-sdl-and-perl.html/</guid>
+      <description>
+
+&lt;h1 id=&#34;music-visualization-with-perl-and-sdl&#34;&gt;&lt;strong&gt;Music Visualization with Perl and SDL&lt;/strong&gt;&lt;/h1&gt;
+
+&lt;p&gt;Many users know SDL as a powerful cross-platform library for graphics programming and input, especially as the foundation of many open source games. Perl users know it as the technology behind the beloved &lt;a href=&#34;http://www.frozen-bubble.org/&#34;&gt;Frozen Bubble&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Perl and SDL can do far more than destroy an infinite onslaught of cartoon bubbles, however. The recently revitalized &lt;a href=&#34;http://sdlperl.ath.cx/projects/SDLPerl/&#34;&gt;SDL Perl&lt;/a&gt; project has taken up the challenge of demonstrating that everyone&amp;rsquo;s favorite system administration language is capable of producing powerful multimedia programs—including, but not limited to, games.&lt;/p&gt;
+
+&lt;p&gt;In this edited excerpt from the &lt;a href=&#34;http://sdlperl.ath.cx/releases/SDL_Manual.html&#34;&gt;SDL Perl manual&lt;/a&gt;, lead developer Kartik Thakore walks through a non-game application of SDL and Perl, building a music player with visualizations in just a few lines of code.&lt;/p&gt;
+
+&lt;h2 id=&#34;running-this-demo&#34;&gt;&lt;strong&gt;Running this Demo&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;To run this example software, you need:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Perl 5.10, with threading enabled&lt;/li&gt;
+&lt;li&gt;A curent installation of CPAN&lt;/li&gt;
+&lt;li&gt;The native libraries of libsdl, libsdl_mixer (with Ogg support), libsdl_gfx, and their development packages&lt;/li&gt;
+&lt;li&gt;SDL perl version 5.526 or newer&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2011_01_visualizing-music-with-sdl-and-perl/music_visualizer.zip&#34;&gt;this article&amp;rsquo;s example files&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;With all of that installed, extract the example file and run the visualizer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ cd music_visualiser/
+    $ perl visualiser.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;music-visualizer&#34;&gt;&lt;strong&gt;Music Visualizer&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The music visualizer example processes real-time sound data—data as it plays—and displays the wave form on the screen. It will look something like Figure 1.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_01_visualizing-music-with-sdl-and-perl/spectro-1.png&#34; alt=&#34;Simple Music Visualization&#34; /&gt;
+&lt;em&gt;Figure 1. A simple music visualization.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;the-code-and-comments&#34;&gt;&lt;strong&gt;The Code and Comments&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;The program begins with the usual boilerplate of an SDL Perl application:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use strict;
+    use warnings;
+
+    use Cwd;
+    use Carp;
+    use File::Spec;
+
+    use threads;
+    use threads::shared;
+
+    use SDL;
+    use SDL::Event;
+    use SDL::Events;
+
+    use SDL::Audio;
+    use SDL::Mixer;
+    use SDL::Mixer::Music;
+    use SDL::Mixer::Effects;
+
+    use SDLx::App;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It then creates an application with both audio and video support:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $app = SDLx::App-&amp;gt;new(
+        init   =&amp;gt; SDL_INIT_AUDIO | SDL_INIT_VIDEO,
+        width  =&amp;gt; 800,
+        height =&amp;gt; 600,
+        depth  =&amp;gt; 32,
+        title  =&amp;gt; &amp;quot;Sound Event Demo&amp;quot;,
+        eoq    =&amp;gt; 1,
+        dt     =&amp;gt; 0.2,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The application must initialize the audio system with a format matching the expected audio input. &lt;code&gt;AUDIO_S16&lt;/code&gt; provides a 16-bit signed integer array for the stream data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Initialize the Audio
+    unless ( SDL::Mixer::open_audio( 44100, AUDIO_S16, 2, 1024 ) == 0 ) {
+        Carp::croak &amp;quot;Cannot open audio: &amp;quot; . SDL::get_error();
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The music player needs the music files from the &lt;em&gt;data/music/&lt;/em&gt; directory:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Load our music files
+    my $data_dir = &#39;.&#39;;
+    my @songs    = glob &#39;data/music/*.ogg&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A music effect reads the music data into a stream array, shared between threads:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @stream_data :shared;
+
+    #  Music Effect to pull Stream Data
+    sub music_data {
+        my ( $channel, $samples, $position, @stream ) = @_;
+
+        {
+            lock(@stream_data);
+            push @stream_data, @stream;
+        }
+
+        return @stream;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and that effect gets registered as a callback with &lt;code&gt;SDL::Mixer::Effects&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $music_data_effect_id =
+          SDL::Mixer::Effects::register( MIX_CHANNEL_POST, &amp;quot;main::music_data&amp;quot;,
+            &amp;quot;main::done_music_data&amp;quot;, 0 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The program&amp;rsquo;s single command-line option governs the number of lines to display in the visualizer. The default is 50.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $lines = $ARGV[0] || 50;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The drawing callback for the &lt;code&gt;SDLx::App&lt;/code&gt; runs while a song plays. It reads the stream data and displays it on the screen as a wave form. The math calculations produce a multi-colored bar graph representing slices of the music data. The remaining visualization code should be straightforward:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #  Music Playing Callbacks
+    my $current_song = 0;
+    my $lines        = $ARGV[0] || 50;
+
+    my $current_music_callback = sub {
+        my ( $delta, $app ) = @_;
+
+        $app-&amp;gt;draw_rect( [ 0, 0, $app-&amp;gt;w(), $app-&amp;gt;h() ], 0x000000FF );
+        $app-&amp;gt;draw_gfx_text(
+            [ 5, $app-&amp;gt;h() - 10 ],
+            [ 255, 0, 0, 255 ],
+            &amp;quot;Playing Song: &amp;quot; . $songs[ $current_song - 1 ]
+        );
+
+        my @stream;
+        {
+            lock @stream_data;
+            @stream      = @stream_data;
+            @stream_data = ();
+        }
+
+        # To show the right amount of lines we choose a cut of the stream
+        # this is purely for asthetic reasons.
+
+        my $cut = @stream / $lines;
+
+        # The width of each line is calculated to use.
+        my $l_wdt = ( $app-&amp;gt;w() / $lines ) / 2;
+
+        for ( my $i = 0 ; $i &amp;lt; $#stream ; $i += $cut ) {
+
+            #  In stereo mode the stream is split between two alternating streams
+            my $left  = $stream[$i];
+            my $right = $stream[ $i + 1 ];
+
+            #  For each bar we calculate a Y point and a X point
+            my $point_y = ( ( ($left) ) * $app-&amp;gt;h() / 4 / 32000 ) + ( $app-&amp;gt;h / 2 );
+            my $point_y_r =
+              ( ( ($right) ) * $app-&amp;gt;h() / 4 / 32000 ) + ( $app-&amp;gt;h / 2 );
+            my $point_x = ( $i / @stream ) * $app-&amp;gt;w;
+
+            # Using the parameters
+            #   Surface, box coordinates and color as RGBA
+            SDL::GFX::Primitives::box_RGBA(
+                $app,
+                $point_x - $l_wdt,
+                $app-&amp;gt;h() / 2,
+                $point_x + $l_wdt,
+                $point_y, 40, 0, 255, 128
+            );
+            SDL::GFX::Primitives::box_RGBA(
+                $app,
+                $point_x - $l_wdt,
+                $app-&amp;gt;h() / 2,
+                $point_x + $l_wdt,
+                $point_y_r, 255, 0, 40, 128
+            );
+
+        }
+
+      $app-&amp;gt;flip();
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whenever a song finishes, &lt;code&gt;SDL::Mixer::Music::playing_music&lt;/code&gt; returns &lt;code&gt;0&lt;/code&gt;. The program detects this state change and calls &lt;code&gt;music_finished_playing()&lt;/code&gt;, where the program attaches the &lt;code&gt;$play_next_song_callback&lt;/code&gt; callback to switch to the next song gracefully:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $cms_move_callback_id;
+    my $pns_move_callback_id;
+    my $play_next_song_callback;
+
+    sub music_finished_playing {
+        SDL::Mixer::Music::halt_music();
+        $pns_move_callback_id = $app-&amp;gt;add_move_handler( $play_next_song_callback )
+            if defined $play_next_song_callback;
+    }
+
+    $play_next_song_callback = sub {
+        return $app-&amp;gt;stop() if $current_song &amp;gt;= @songs;
+
+        my $song = SDL::Mixer::Music::load_MUS($songs[$current_song++]);
+
+        SDL::Mixer::Music::hook_music_finished(&#39;main::music_finished_playing&#39;);
+        SDL::Mixer::Music::play_music($song, 0 );
+
+        $app-&amp;gt;remove_move_handler( $pns_move_callback_id )
+            if defined $pns_move_callback_id;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A move handler detects if music is playing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;add_move_handler(
+       sub {
+           my $music_playing = SDL::Mixer::Music::playing_music();
+           music_finished_playing() unless $music_playing;
+       }
+   );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first callback to trigger &lt;code&gt;$play_next_song_callback&lt;/code&gt; gets the first song:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;add_show_handler($current_music_callback);
+    $pns_move_callback_id = $app-&amp;gt;add_move_handler( $play_next_song_callback);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and a keyboard event handler for a keypress allows the user to move through songs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;add_event_handler(
+        sub {
+            my ($event, $app) = @_;
+
+            if ($event-&amp;gt;type == SDL_KEYDOWN &amp;amp;&amp;amp; $event-&amp;gt;key_sym == SDLK_DOWN)
+            {
+                # Indicate that we are done playing the music_finished_playing
+                music_finished_playing();
+            }
+        }
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;From there, the application is ready to run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;run();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and the final code gracefully stops &lt;code&gt;SDL::Mixer&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    SDL::Mixer::Effects::unregister( MIX_CHANNEL_POST, $music_data_effect_id );
+    SDL::Mixer::Music::hook_music_finished();
+    SDL::Mixer::Music::halt_music();
+    SDL::Mixer::close_audio();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The result? Several dozen lines of code glue together the SDL mixer and display a real-time visualization of the music.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Identifying Audio Files with MusicBrainz</title>
+      <link>http://localhost:1313/pub/2003/10/03/musicbrainz.html/</link>
+      <pubDate>Fri, 03 Oct 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/10/03/musicbrainz.html/</guid>
+      <description>
+
+&lt;p&gt;It&amp;rsquo;s quite possible to end up with digital music files that don&amp;rsquo;t have good information about what they are. Files that don&amp;rsquo;t have ID3 information can rely on paths for album information, for example, and that is lost easily. M3U files describing track order can be deleted or ignored by naive archiving.&lt;/p&gt;
+
+&lt;p&gt;Wouldn&amp;rsquo;t it be nice if, once you had a music file, you could use Perl to take what information you did have about a track, send it to the Internet, and get back the data you were missing? Well, you can.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-step-through-history-a-step-through-history-span&#34;&gt;&lt;span id=&#34;a_step_through_history&#34;&gt;A Step Through History&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In the beginning (well, more or less), music was on CDs. People started listening to CDs on computers shortly after that, and they found that it would be nice to know the track&amp;rsquo;s name, not just the number. Applications were developed that could store the CD metadata locally. Still, it was tedious to type in all those CD lists, so people shared the metadata in a single index file on the Internet.&lt;/p&gt;
+
+&lt;p&gt;As with most other single-file data stores in Internet history, soon it became sensible to turn this into a proper database. And so the CDDB was born. Clients could upload a description of the disc (the Table of Contents, which described how long each track is) and either download the information for that CD, or contribute it if it wasn&amp;rsquo;t in the database.&lt;/p&gt;
+
+&lt;p&gt;During 1999 and 2000, however, the CDDB (after its acquisition by Gracenote) moved from an open position (with GPLed downloads of its data files) to a proprietary one. During this time it stopped access to clients speaking the first version of the CDDB protocol, and instead moved to licensing &amp;ndash; at some cost &amp;ndash; CDDB2 clients, and stopped offering downloads of its data.&lt;/p&gt;
+
+&lt;p&gt;However, a few projects started up, taking advantage of the data that had been freely available until this point. One of these was FreeDB, which quickly established an open replacement for the CDDB. The other is MusicBrainz, which is much more interesting.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-freedb-freedb-span&#34;&gt;&lt;span id=&#34;freedb&#34;&gt;FreeDB&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;FreeDB replicates the structure of the old CDDB very faithfully. This means that a number of Perl modules for handling CDDB data are applicable to the FreeDB as well.&lt;/p&gt;
+
+&lt;p&gt;However, despite the large number of FreeDB modules on CPAN, it&amp;rsquo;s not really well suited to the task of finding or correcting digital music file metadata. FreeDB grew out of CDDB, which was designed around the task of identifying entire CDs, not merely single tracks, and that is still reflected in the way most of the modules work; they require you to either have or fake the CD&amp;rsquo;s table of contents to get results.&lt;/p&gt;
+
+&lt;p&gt;FreeDB also has a search form on its web site, and there&amp;rsquo;s a Perl module &amp;ndash; &lt;code&gt;Webservice::FreeDB&lt;/code&gt; &amp;ndash; that you can use to find out information on a per-track basis. However, wherever possible a web service is probably preferable to using a screen scraper, and thankfully such a service is available.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-musicbrainz-musicbrainz-span&#34;&gt;&lt;span id=&#34;musicbrainz&#34;&gt;MusicBrainz&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;MusicBrainz has similar origins to FreeDB in the post-Gracenote era. Unlike FreeDB, MB was much more ambitious; as the description says, `&amp;ldquo;MusicBrainz is a community music metadatabase that attempts to create a comprehensive music information site.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;In addition to taking the FreeDB data and making it available (in fact, the FreeDB changes appear to be regularly merged into MusicBrainz), MB takes care to make sure that their data is moderated regularly. FreeDB&amp;rsquo;s discid-based system didn&amp;rsquo;t always make sure that different versions CDs were recognized as duplicates, for example, whereas the MB volunteers attempt to consolidate such data. They also offer fairly powerful searches of the data from a web-based front end.&lt;/p&gt;
+
+&lt;p&gt;More importantly for our purposes, MusicBrainz has a web services API. Rather than using SOAP, it&amp;rsquo;s a REST-based service based on RDF.&lt;/p&gt;
+
+&lt;p&gt;You can see an example of this by downloading the data at a URL like &lt;a href=&#34;http://mm.musicbrainz.org/mm-2.1/album/1073abfc-768e-455b-9937-9b41b923c746/4&#34;&gt;http://mm.musicbrainz.org/mm-2.1/album/1073abfc-768e-455b-9937-9b41b923c746/4&lt;/a&gt;. This returns RDF for the Underworld album &lt;em&gt;Beaucoup Fish&lt;/em&gt;. The long hex string is the album&amp;rsquo;s unique identifier within MusicBrainz, and the number at the end (4) tells MusicBrainz how deeply to go when building the RDF graph. This level of depth means that as well as merely getting a track listing as references to other RDF documents (like &lt;a href=&#34;http://musicbrainz.org/track/55ef9194-bb58-4397-a8a2-e0d41d2e1435&#34;&gt;http://musicbrainz.org/track/55ef9194-bb58-4397-a8a2-e0d41d2e1435&lt;/a&gt;), you get the name of the track inlined in the document.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-using-musicbrainz-client-using-musicbrainz-client-span&#34;&gt;&lt;span id=&#34;using_musicbrainz::client&#34;&gt;Using MusicBrainz::Client&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;However, requesting that URL directly requires you know the MusicBrainz ID for that album, track, or artist, and that you can parse RDF. Unsurprisingly, there&amp;rsquo;s code out there that can do both from a given piece of information.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;the MusicBrainz::Client manpage&lt;/code&gt; is a Perl interface to the C client library for MB, and is available as part of the &lt;a href=&#34;http://musicbrainz.org/products/client/download.html&#34;&gt;Client SDK download&lt;/a&gt;, as well as on CPAN.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a small example of using one of the more useful queries provided, the snappily-entitled &lt;code&gt;MBQ_FileInfoLookup&lt;/code&gt;. This takes up to 10 parameters, as documented in the &lt;a href=&#34;http://musicbrainz.org/docs/mb_client/queries_h.html#a84&#34;&gt;Query reference&lt;/a&gt;. However, you can provide as many or as few items as you wish, and in this example, merely two pieces of information are provided: an artist, and a track name.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -w
+  use strict;
+
+  use MusicBrainz::Client;
+  use MusicBrainz::Queries qw(:all);
+
+  my $mb = MusicBrainz::Client-&amp;gt;new();
+  my $query = [ &#39;&#39;, &#39;Underworld&#39;, &#39;&#39;, &#39;Air Towel&#39; ];
+  my $result;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we&amp;rsquo;ve set up the script, and initialized a client object, let&amp;rsquo;s actually talk to the server.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  if (!$mb-&amp;gt;query_with_args( MBQ_FileInfoLookup, $query )) {
+    die &amp;quot;Query failed &amp;quot;.$mb-&amp;gt;get_query_error();
+  }
+
+  if (!$mb-&amp;gt;select1(MBS_SelectLookupResult, 1)) {
+    die &amp;quot;No lookup result&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This sends off a query to the MusicBrainz server, and does two checks to see if it&amp;rsquo;s worth continuing. If there&amp;rsquo;s no return value from query_with_args, the script dies with the error returned. If there&amp;rsquo;s not at least one result in the returned data, it also dies.&lt;/p&gt;
+
+&lt;p&gt;The exact arguments that &lt;code&gt;MBQ_FileInfoLookUp&lt;/code&gt; take are documented in the query reference above. Notably, the first argument is the TRM ID. This is a generated, unique identifier for the file, based on a number of weighted checks, including wavelet analysis. Generally I&amp;rsquo;ve found it&amp;rsquo;s still possible to get good results without including it, though.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $type = $mb-&amp;gt;get_result_data(MBE_LookupGetType);
+  my $frag = $mb-&amp;gt;get_fragment_from_url($type);
+
+  if ($frag eq &#39;AlbumTrackResult&#39;) {
+    $result = handle_album_track_list($mb);
+  }
+  else {
+    die &amp;quot;Not an AlbumTrackResult; instead of type &#39;$frag&#39;&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;MBQ_FileInfoLookup&lt;/code&gt; can return different types of result. This code uses two more functions from MusicBrainz to find out the type of the result (the LookupGetType function) and then to parse out from the URL what type of result that is. We&amp;rsquo;re only interested in AlbumTrackResult type, so we die if that&amp;rsquo;s not what&amp;rsquo;s found. If it is of that type, it&amp;rsquo;s handled by a subroutine, which we&amp;rsquo;ll look at now.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub handle_album_track_list {
+    my $mb = shift;
+    my $result;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, we get the MusicBrainz client object and pre-declare our result variable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (my $i = 1;; $i++) {
+      $mb-&amp;gt;select(MBS_Rewind);
+
+      if (!$mb-&amp;gt;select1(MBS_SelectLookupResult, $i)) {
+        last;
+      }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;MusicBrainz results sets are a lot like database rows. You loop over them, and pull out the data you want.&lt;/p&gt;
+
+&lt;p&gt;However, the interface to the results is somewhat C-like. As you can see, we loop over the results one by one, stopping only when there isn&amp;rsquo;t a result in the set.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      my $relevance = $mb-&amp;gt;get_result_int(MBE_LookupGetRelevance);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, once there is a result, we can pull out information from it, like the relevance of that data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      # get track info
+      $mb-&amp;gt;select(MBS_SelectLookupResultTrack);
+      my $track   = $mb-&amp;gt;get_result_data(MBE_TrackGetTrackName);
+      my $length  = $mb-&amp;gt;get_result_data(MBE_TrackGetTrackDuration);     
+      my $artist  = $mb-&amp;gt;get_result_data(MBE_TrackGetArtistName);
+      $mb-&amp;gt;select(MBS_Back);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To get the information about the track, you select the track portion of that result, then issue get_result_data calls for each of the pieces of information you want (such as the artist name, track name and so on).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      # get album info
+      $mb-&amp;gt;select(MBS_SelectLookupResultAlbum);
+      my $album   = $mb-&amp;gt;get_result_data(MBE_AlbumGetAlbumName);
+      my $trackct = $mb-&amp;gt;get_result_int(MBE_AlbumGetNumTracks);
+      $mb-&amp;gt;select(MBS_Back);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Similarly, you select the album data, and then select the information about the album you want to return.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      $result-&amp;gt;[$i-1] = { relevance =&amp;gt; $relevance,
+                          track     =&amp;gt; $track,
+                          album     =&amp;gt; $album,
+                          artist    =&amp;gt; $artist,
+                          total     =&amp;gt; $trackct,
+                          time      =&amp;gt; $length,
+                        };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is stored in a hash reference, itself stored in the list of results. (Note we move from MusicBrainz offset of 1 to the Perl offset of 0 here.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    }
+    return $result;
+  }
+
+  use Data::Dumper;
+  print Dumper($result);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally the result is returned and (crudely) inspected. Of course, you could instead take the result with the highest relevance and tag a file here, or offer the choice via some user interface of which result is more likely to be appropriate.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-using-audiofile-identify-musicbrainz-using-audiofile-identify-musicbrainz-span&#34;&gt;&lt;span id=&#34;using_audiofile::identify::musicbrainz&#34;&gt;Using AudioFile::Identify::MusicBrainz&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;As you can see, returning the data from MusicBrainz::Client is a fairly verbose procedure. In addition, it&amp;rsquo;s not a pure Perl implementation, so installing the module isn&amp;rsquo;t as easy as it could be, and in some places it&amp;rsquo;s not possible at all.&lt;/p&gt;
+
+&lt;p&gt;Given that the REST interface is open, Tom Insam and I decided to play with getting the RDF results and parsing them, putting together Perl modules along the way to help. The result is &lt;code&gt;the AudioFile::Identify::MusicBrainz manpage&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -w
+  use strict;
+
+  use AudioFile::Identify::MusicBrainz::Query;
+  my $query = { artist =&amp;gt; &#39;Underworld&#39;, 
+                track  =&amp;gt; &#39;Air Towel&#39;,
+              };
+  my $result;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Again, this is simple setup stuff. You&amp;rsquo;ll note that instead of a list, AIM takes a hash reference with named fields, which is hopefully a little easier to use.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $aim = AudioFile::Identify::MusicBrainz::Query-&amp;gt;new()
+            or die &amp;quot;Can&#39;t make query&amp;quot;;
+
+  $aim-&amp;gt;FileInfoLookup($query);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This block of code instantiates the AIM object and sends off the query.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  for my $record (@{ $aim-&amp;gt;results }) {
+    push @{ $result }, {  relevance =&amp;gt; $record-&amp;gt;relevance,
+                          track     =&amp;gt; $record-&amp;gt;track-&amp;gt;title,
+                          album     =&amp;gt; $record-&amp;gt;album-&amp;gt;title,
+                          artist    =&amp;gt; $record-&amp;gt;track-&amp;gt;artist-&amp;gt;title,
+                          tracknum  =&amp;gt; $record-&amp;gt;track-&amp;gt;trackNum,
+                          total     =&amp;gt; scalar @{$record-&amp;gt;album-&amp;gt;tracks},
+                          time      =&amp;gt; $record-&amp;gt;track-&amp;gt;duration,
+                       };
+  };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This manipulates the results from AIM such that they match the result list that we created from MusicBrainz::Client. Each of them is a method on the returned object. Some, such as the artist name, are objects referenced from other objects.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Data::Dumper;
+  print Dumper($result);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Again, we crudely inspect the output, which is identical but for the addition of the track number.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-inside-audofile-identify-musicbrainz-inside-audofile-identify-musicbrainz-span&#34;&gt;&lt;span id=&#34;inside_audofile::identify::musicbrainz&#34;&gt;Inside AudoFile::Identify::MusicBrainz&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;As you&amp;rsquo;d expect, Perl (and its retinue of modules) made writing this module fairly straightforward. Firstly, LWP makes requesting data from the MusicBrainz server pretty easy. (This code is in &lt;code&gt;the AudioFile::Identify::MusicBrainz::Query manpage, for the curious.)&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use LWP;
+  use LWP::UserAgent;
+
+  # ...
+
+  my $ua = LWP::UserAgent-&amp;gt;new();
+
+  my $req = HTTP::Request-&amp;gt;new(POST =&amp;gt; $self-&amp;gt;url,);
+  $req-&amp;gt;content($rdf);
+
+  my $res = $ua-&amp;gt;request($req);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This sets up an LWP user agent, and sends the RDF query (more on that later) to a URL (returned by another method in the module). That&amp;rsquo;s all you need to get the returned result into the string $res. (The real module has a custom UserAgent string that I&amp;rsquo;ve omitted to save space.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Check the outcome of the response
+  if ($res-&amp;gt;is_success) {
+    $self-&amp;gt;response($res-&amp;gt;content);
+    return $self-&amp;gt;parse();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As long as there&amp;rsquo;s a result, it gets stored and then parsed. (Don&amp;rsquo;t worry; the real module also handles errors.) So, what does the parser do?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $parser = new XML::DOM::Parser;
+  my $doc = $parser-&amp;gt;parse($self-&amp;gt;response);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;MusicBrainz returns results in RDF, but that RDF is itself encapsulated in XML. Although it&amp;rsquo;s not ideal to use XML tools on RDF, it works well enough in this case.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $result_nodes = $doc-&amp;gt;getElementsByTagName(&#39;mq:AlbumTrackResult&#39;);
+
+  $n = $result_nodes-&amp;gt;getLength;
+  for (my $i = 0; $i &amp;lt; $n; $i++) {
+    my $node = $result_nodes-&amp;gt;item($i);
+    my $result =
+      AudioFile::Identify::MusicBrainz::Result-&amp;gt;new()
+                                              -&amp;gt;store($self-&amp;gt;store)
+                                              -&amp;gt;type(&#39;Track&#39;)
+                                              -&amp;gt;parse($node);
+    push @$results, $result;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This block of code is a good example of how the XML is parsed. Firstly, all elements with the name mq:AlbumTrackResult are found. These are progressively looped over, and stored in a new Result object (of type Track), and parsed. So, what happens within the parser?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $child = $node-&amp;gt;getFirstChild();
+  while($child) {
+    if ($child-&amp;gt;getNodeType == 1) {
+      my $tag = $child-&amp;gt;getTagName;
+      $tag =~ s/.*://;
+      if ($self-&amp;gt;can($tag)) {
+        $self-&amp;gt;$tag($child);
+      }
+    }
+    $child = $child-&amp;gt;getNextSibling();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The node (as passed in above) is examined, and the first child node is examined. While we have a child node to examine, the program checks that it&amp;rsquo;s an element (of node type 1), gets the tag name and removes the namespace, then calls the appropriate get/set method with the appropriate XML node, before moving on to the next child. (This is a somewhat simplified version, with the error checking removed.)&lt;/p&gt;
+
+&lt;p&gt;What happens in an example get/set method? Here&amp;rsquo;s part of the title method from the Track package.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  if (defined($set)) {
+    if ($set-&amp;gt;isa(&#39;XML::DOM::Element&#39;) and $set-&amp;gt;getFirstChild) {
+      $self-&amp;gt;{title} = $set-&amp;gt;getFirstChild-&amp;gt;toString;
+    } else {
+      $self-&amp;gt;{title} = $set;
+    }
+    return $self;
+  } else {
+    return $self-&amp;gt;{title};
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the method is called with some data, the program makes sure it&amp;rsquo;s an XML::DOM element, then parses it and stores the string within that element, or stores the data that was passed in. Otherwise, it returns the data that was previously stored.&lt;/p&gt;
+
+&lt;p&gt;One point to note is that MusicBrainz doesn&amp;rsquo;t return all the track information you might need in the initial FileInfoLookup query. Therefore the Result package uses another method, called getData in the Track package, to download the RDF for the track from MusicBrainz. This is then parsed and stored in the same way as the RDF above.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In this article I&amp;rsquo;ve shown you how to connect to MusicBrainz and retrieve information from their web services API with both the MusicBrainz::Client and AudioFile::Identify::MusicBrainz modules, and a little of the internal workings of the latter. This should allow you to find out all those niggling missing pieces of information about the tracks at the bottom of your music collection.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

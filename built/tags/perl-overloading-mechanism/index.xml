@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Overloading Mechanism on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-overloading-mechanism/</link>
+    <description>Recent content in Perl Overloading Mechanism on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 22 Jul 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-overloading-mechanism/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Overloading</title>
+      <link>http://localhost:1313/pub/2003/07/22/overloading.html/</link>
+      <pubDate>Tue, 22 Jul 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/07/22/overloading.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;introduction-what-is-overloading&#34;&gt;Introduction: What is Overloading?&lt;/h3&gt;
+
+&lt;p&gt;All object-oriented programming languages have a feature called overloading, but in most of them this term means something different from what it means in Perl. Take a look at this Java example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;public Fraction(int num, int den);
+public Fraction(Fraction F);
+public Fraction();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example, we have three methods called &lt;code&gt;Fraction&lt;/code&gt;. Java, like many languages, is very strict about the number and type of arguments that you can pass to a function. We therefore need three different methods to cover the three possibilities. In the first example, the method takes two integers (a numerator and a denominator) and it returns a &lt;code&gt;Fraction&lt;/code&gt; object based on those numbers. In the second example, the method takes an existing &lt;code&gt;Fraction&lt;/code&gt; object as an argument and returns a copy (or clone) of that object. The final method takes no arguments and returns a default &lt;code&gt;Fraction&lt;/code&gt; object, maybe representing &lt;sup&gt;1&lt;/sup&gt;&amp;frasl;&lt;sub&gt;1&lt;/sub&gt; or 0/1. When you call one of these methods, the Java Virtual Machine determines which of the three methods you wanted by looking at the number and type of the arguments.&lt;/p&gt;
+
+&lt;p&gt;In Perl, of course, we are far more flexible about what arguments we can pass to a method. Therefore the same method can be used to handle all of the three cases from the Java example. (We&amp;rsquo;ll see an example of this in a short while.) This means that in Perl we can save the term &amp;ldquo;overloading&amp;rdquo; for something far more interesting — &lt;em&gt;operator overloading&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;number-fraction-the-constructor&#34;&gt;&lt;code&gt;Number::Fraction&lt;/code&gt; — The Constructor&lt;/h3&gt;
+
+&lt;p&gt;Imagine you have a Perl object that represents fractions (or, more accurately, rational numbers, but we&amp;rsquo;ll call them fractions as we&amp;rsquo;re not all math geeks). In order to handle the same situations as the Java class we mentioned above, we need to be able to run code like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Number::Fraction;
+
+my $half       = Number::Fraction-&amp;gt;new(1, 2);
+my $other_half = Number::Fraction-&amp;gt;new($half);
+my $default    = Number::Fraction-&amp;gt;new;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To do this, we would write a constructor method like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub new {
+    my $class = shift;
+    my $self;
+    if (@_ &amp;gt;= 2) {
+        return if $_[0] =~ /\D/ or $_[1] =~ /\D/;
+        $self-&amp;gt;{num} = $_[0];
+        $self-&amp;gt;{den} = $_[1];
+    } elsif (@_ == 1) {
+        if (ref $_[0]) {
+            if (UNIVERSAL::isa($_[0], $class) {
+                return $class-&amp;gt;new($_[0]-&amp;gt;{num}, $_[0]-&amp;gt;{den});
+            } else {
+                croak &amp;quot;Can&#39;t make a $class from a &amp;quot;, ref $_[0];
+            }
+        } else {
+            return unless $_[0] =~ m|^(\d+)/(\d+)|;
+
+            $self-&amp;gt;{num} = $1;
+            $self-&amp;gt;{den} = $2;
+        }
+    } elsif (!@_) {
+        $self-&amp;gt;{num} = 0;
+        $self-&amp;gt;{den} = 1;
+    }
+
+    bless $self, $class;
+    $self-&amp;gt;normalise;
+    return $self;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As promised, there&amp;rsquo;s just one method here and it does everything that the three Java methods did and more even, so it&amp;rsquo;s a good example of why we don&amp;rsquo;t need method overloading in Perl. Let&amp;rsquo;s look at the various parts in some detail.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub new {
+    my $class = shift;
+    my $self;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The method starts out just like most Perl object constructors. It grabs the class which is passed in as the first argument and then declares a variable called &lt;code&gt;$self&lt;/code&gt; which will contain the object.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if (@_ &amp;gt;= 2) {
+        return if $_[0] =~ /\D/ or $_[1] =~ /\D/;
+        $self-&amp;gt;{num} = $_[0];
+        $self-&amp;gt;{den} = $_[1];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is where we start to work out just how the method was called. We look at &lt;code&gt;@_&lt;/code&gt; to see how many arguments we have been given. If we&amp;rsquo;ve got two arguments then we assume that they are the numerator and denominator of the fraction. Notice that there&amp;rsquo;s also another check to ensure that both arguments contain only digits. If this check fails, we return &lt;code&gt;undef&lt;/code&gt; from the constructor.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     } elsif (@_ == 1) {
+        if (ref $_[0]) {
+            if (UNIVERSAL::isa($_[0], $class) {
+                return $class-&amp;gt;new($_[0]-&amp;gt;num, $_[0]-&amp;gt;den);
+            } else {
+                croak &amp;quot;Can&#39;t make a $class from a &amp;quot;, ref $_[0];
+            }
+        } else {
+            return unless $_[0] =~ m|^(\d+)/(\d+)|;
+            $self-&amp;gt;{num} = $1;
+            $self-&amp;gt;{den} = $2;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we&amp;rsquo;ve been given just one argument, then there are a couple of things we can do. First we see if the argument is a reference, and if it is, we check that it&amp;rsquo;s a reference to another &lt;code&gt;Number::Fraction&lt;/code&gt; object (or a subclass). If it&amp;rsquo;s the right kind of object then we get the numerators and denominators (using the accessor functions) and use them to call the two argument forms of &lt;code&gt;new&lt;/code&gt;. It the argument is the wrong type of reference then we complain bitterly to the user.&lt;/p&gt;
+
+&lt;p&gt;If the single argument isn&amp;rsquo;t a reference then we assume it&amp;rsquo;s a string of the form &lt;code&gt;num/den&lt;/code&gt;, which we can split apart to get the numerator and denominator of the fraction. Once more we check for the correct format using a regex and return &lt;code&gt;undef&lt;/code&gt; if the check fails.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     } elsif (!@_) {
+        $self-&amp;gt;{num} = 0;
+        $self-&amp;gt;{den} = 1;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we are given no arguments, then we just create a default fraction which is &lt;code&gt;0/1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    bless $self, $class;
+    $self-&amp;gt;normalise;
+    return $self;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At the end of the constructor we do more of the normal OO Perl stuff. We &lt;code&gt;bless&lt;/code&gt; the object into the correct class and return the reference to our caller. Between these two actions we pause to call the &lt;code&gt;normalise&lt;/code&gt; method, which converts the fraction to its simplest form. For example, it will convert &lt;code&gt;12/16&lt;/code&gt; to &lt;code&gt;3/4&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;number-fraction-doing-calculations&#34;&gt;&lt;code&gt;Number::Fraction&lt;/code&gt; — Doing Calculations&lt;/h3&gt;
+
+&lt;p&gt;Having now created fraction objects, we will want to start doing calculations with them. For that we&amp;rsquo;ll need methods that implement the various mathematical functions. Here&amp;rsquo;s the &lt;code&gt;add&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub add {
+    my ($self, $delta) = @_;
+
+    if (ref $delta) {
+        if (UNIVERSAL::isa($delta, ref $self)) {
+            $self-&amp;gt;{num} = $self-&amp;gt;num  * $delta-&amp;gt;den
+                + $delta-&amp;gt;num * $self-&amp;gt;den;
+            $self-&amp;gt;{den} = $self-&amp;gt;den  * $delta-&amp;gt;den;
+        } else {
+            croak &amp;quot;Can&#39;t add a &amp;quot;, ref $delta, &amp;quot; to a &amp;quot;, ref $self;
+        }
+    } else {
+        if ($delta =~ m|(\d+)/(\d+)|) {
+            $self-&amp;gt;add(Number::Fraction-&amp;gt;new($1, $2));
+        } elsif ($delta !~ /\D/) {
+            $self-&amp;gt;add(Number::Fraction-&amp;gt;new($delta, 1));
+        } else {
+            croak &amp;quot;Can&#39;t add $delta to a &amp;quot;, ref $self;
+        }
+    }
+    $self-&amp;gt;normalise;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once more we try to handle a number of different types of arguments. We can add the following things to our fraction object:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Another object of the same class (or a subclass).&lt;/li&gt;
+&lt;li&gt;A string in the format &lt;code&gt;num/den&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;An integer. This is converted to a fraction with a denominator of 1.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This then allows us to write code like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $half           = Number::Fraction-&amp;gt;new(1, 2);
+my $quarter        = Number::Fraction-&amp;gt;new(1, 4);
+my $three_quarters = $half;
+$three_quarters-&amp;gt;add($quarter);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In my opinion, this code looks pretty horrible. It also has a nasty, subtle bug. Can you spot it? (Hint: What will be in &lt;code&gt;$half&lt;/code&gt; after running this code?) To tidy up this code we can turn to &lt;em&gt;operator overloading&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;number-fraction-operator-overloading&#34;&gt;&lt;code&gt;Number::Fraction&lt;/code&gt; — Operator Overloading&lt;/h3&gt;
+
+&lt;p&gt;The module &lt;code&gt;overload.pm&lt;/code&gt; is a standard part of the Perl distribution. It allows your objects to define how they will react to a number of Perl&amp;rsquo;s operators. For example, we can add code like this to &lt;code&gt;Number::Fraction&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use overload &#39;+&#39; =&amp;gt; &#39;add&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whenever a Number::Fraction is used as one of the operands to the &lt;code&gt;+&lt;/code&gt; operator, the &lt;code&gt;add&lt;/code&gt; method will be called instead. Code like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$three_quarters = $half + &#39;3/4&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is converted to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$three_quarters = $half-&amp;gt;add(&#39;3/4&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is getting closer, but it still has a serious problem. The &lt;code&gt;add&lt;/code&gt; method works on the &lt;code&gt;$half&lt;/code&gt; object. In general, however, that&amp;rsquo;s not how an assignment should work. If you were working with ordinary scalars and had code like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$foo = $bar + 0.75;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You would be very surprised if this altered the value of &lt;code&gt;$bar&lt;/code&gt;. Our objects need to work in the same way. We need to change our add method so that it doesn&amp;rsquo;t alter &lt;code&gt;$self&lt;/code&gt; but instead returns the new fraction.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub add {
+    my ($l, $r) = @_;
+    if (ref $r) {
+        if (UNIVERSAL::isa($r, ref $l) {
+            return Number::Fraction-&amp;gt;new($l-&amp;gt;num * $r-&amp;gt;den + $r-&amp;gt;num * $l-&amp;gt;den,
+                    $l-&amp;gt;den * $r-&amp;gt;den})
+        } else {
+            ...
+        } else {
+            ...
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example, I&amp;rsquo;ve only shown one of the sections, but I hope it&amp;rsquo;s clear how it would work. Notice that I&amp;rsquo;ve also renamed &lt;code&gt;$self&lt;/code&gt; and &lt;code&gt;$delta&lt;/code&gt; to &lt;code&gt;$l&lt;/code&gt; and &lt;code&gt;$r&lt;/code&gt;. I find this makes more sense as we are working with the left and right operands of the &lt;code&gt;+&lt;/code&gt; operator.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-overloading-noncommutative-operators-overloading-non-commutative-operators-span&#34;&gt;&lt;span id=&#34;overloading noncommutative operators&#34;&gt;Overloading Non-Commutative Operators&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We can now happily handle code like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$three_quarters = $half + &#39;1/4&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our object will do the right thing — &lt;code&gt;$three_quarters&lt;/code&gt; will end up as a &lt;code&gt;Number::Fraction&lt;/code&gt; object that contains the value &lt;code&gt;3/4&lt;/code&gt;. What will happen if we write code like this?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$three_quarters = &#39;1/4&#39; + $half;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;overload&lt;/code&gt; modules handle this case as well. If your object is &lt;em&gt;either&lt;/em&gt; operand of one of the overloaded operators, then your method will be called. You get passed an extra argument which indicates whether your object was the left or right operand of the operator. This argument is false if your object is the left operand and true if it is the right operand.&lt;/p&gt;
+
+&lt;p&gt;For commutative operators you probably don&amp;rsquo;t need to take any notice of this argument as, for example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$half + &#39;1/4&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is the same as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&#39;1/4&#39; + $half
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, for non-commutative operators (like &lt;code&gt;-&lt;/code&gt; and &lt;code&gt;/&lt;/code&gt;) you will need to do something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub subtract {
+    my ($l, $r, $swap) = @_;
+
+    ($l, $r) = ($r, $l) if $swap;
+    ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;overloadable-operators&#34;&gt;Overloadable Operators&lt;/h3&gt;
+
+&lt;p&gt;Just about any Perl operator can be overloaded in this way. This is a partial list:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Arithmetic: &lt;code&gt;+&lt;/code&gt;, &lt;code&gt;+=&lt;/code&gt;, &lt;code&gt;-&lt;/code&gt;, &lt;code&gt;-=&lt;/code&gt;, &lt;code&gt;*&lt;/code&gt;, &lt;code&gt;*=&lt;/code&gt;, &lt;code&gt;/&lt;/code&gt;, &lt;code&gt;/=&lt;/code&gt;, &lt;code&gt;%&lt;/code&gt;, &lt;code&gt;%=&lt;/code&gt;, &lt;code&gt;**&lt;/code&gt;, &lt;code&gt;**=&lt;/code&gt;, &lt;code&gt;&amp;lt;&amp;lt;&lt;/code&gt;, &lt;code&gt;&amp;lt;&amp;lt;=&lt;/code&gt;, &lt;code&gt;&amp;gt;&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;gt;&amp;gt;=&lt;/code&gt;, &lt;code&gt;x&lt;/code&gt;, &lt;code&gt;x=&lt;/code&gt;, &lt;code&gt;.&lt;/code&gt;, &lt;code&gt;.=&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Comparison: &lt;code&gt;&amp;lt;&lt;/code&gt;, &lt;code&gt;&amp;lt;=&lt;/code&gt;, &lt;code&gt;&amp;gt;&lt;/code&gt;, &lt;code&gt;=&amp;gt;&lt;/code&gt;, &lt;code&gt;==&lt;/code&gt;, &lt;code&gt;!=&lt;/code&gt;, &lt;code&gt;&amp;lt;=&amp;gt;&lt;/code&gt; &lt;code&gt;lt&lt;/code&gt;, &lt;code&gt;le&lt;/code&gt;, &lt;code&gt;gt&lt;/code&gt;, &lt;code&gt;ge&lt;/code&gt;, &lt;code&gt;eq&lt;/code&gt;, &lt;code&gt;ne&lt;/code&gt;, &lt;code&gt;cmp&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Increment/Decrement: &lt;code&gt;++&lt;/code&gt;, &lt;code&gt;--&lt;/code&gt; (both pre- and post- versions)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A full list is given in &lt;code&gt;overload&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s a very long list, but thankfully you rarely have to supply an implementation for more than a few operators. Perl is quite happy to synthesize (or &lt;em&gt;autogenerate&lt;/em&gt;) many of the missing operators. For example:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;++ can be derived from +&lt;/li&gt;
+&lt;li&gt;+= can be derived from +&lt;/li&gt;
+&lt;li&gt;- (unary) can be derived from - (binary)&lt;/li&gt;
+&lt;li&gt;All numeric comparisons can be derived from &lt;code&gt;&amp;lt;=&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;All string comparisons can be derived from &lt;code&gt;cmp&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Two other special operators give finer control over this autogeneration of methods. &lt;code&gt;nomethod&lt;/code&gt; defines a subroutine that is called when no other function is found and &lt;code&gt;fallback&lt;/code&gt; controls how hard Perl tries to autogenerate a method. &lt;code&gt;fallback&lt;/code&gt; can have one of three values:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;undef&lt;/code&gt;&lt;br /&gt;
+Attempt to autogenerate methods and &lt;code&gt;die&lt;/code&gt; if a method can&amp;rsquo;t be autogenerated. This is the default.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;0&lt;/code&gt;&lt;br /&gt;
+Never try to autogenerate methods.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;1&lt;/code&gt;&lt;br /&gt;
+Attempt to autogenerate methods but fall back on Perl&amp;rsquo;s default behavior for the the object if a method can&amp;rsquo;t be autogenerated.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s an example of an object that will die gracefully when an unknown operator is called. Notice that the &lt;code&gt;nomethod&lt;/code&gt; subroutine is passed the usual three arguments (left operand, right operand, and the swap flag) together with an extra argument containing the operator that was used.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use overload
+    &#39;-&#39; =&amp;gt; &#39;subtract&#39;,
+    fallback =&amp;gt; 0,
+    nomethod =&amp;gt; sub { 
+        croak &amp;quot;illegal operator $_[3]&amp;quot; 
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Three special operators are provided to control type conversion. They define methods to be called if the object is used in string, numeric, and boolean contexts. These operators are denoted by &lt;code&gt;q{&amp;quot;&amp;quot;}&lt;/code&gt;, &lt;code&gt;0+&lt;/code&gt;, and &lt;code&gt;bool&lt;/code&gt;. Here&amp;rsquo;s how we can use these in &lt;code&gt;Number::Fraction&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use overload
+    q{&amp;quot;&amp;quot;} =&amp;gt; &#39;to_string&#39;,
+    &#39;0+&#39;  =&amp;gt; &#39;to_num&#39;;
+
+sub to_string {
+    my $self = shift;
+    return &amp;quot;$_-&amp;gt;{num}/$_-&amp;gt;{den}&amp;quot;;
+}
+
+sub to_num {
+    my $self = shift;
+    return $_{num}/$_-&amp;gt;{den};
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, when we print a &lt;code&gt;Number::Fraction&lt;/code&gt; object, it will be displayed in &lt;code&gt;num/den&lt;/code&gt; format. When we use the object in a numeric context, Perl will automatically convert it to its numeric equivalent.&lt;/p&gt;
+
+&lt;p&gt;We can use these type-conversion and fallback operators to cut down the number of operators we need to define even further.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use overload
+    &#39;0+&#39; =&amp;gt; &#39;to_num&#39;,
+    fallback =&amp;gt; 1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, whenever our object is used where Perl is expecting a number and we haven&amp;rsquo;t already defined an overloading method, Perl will try to use our object as a number, which will, in turn, trigger our &lt;code&gt;to_num&lt;/code&gt; method. This means that we only need to define operators where their behavior will differ from that of a normal number. In the case of &lt;code&gt;Number::Fraction&lt;/code&gt;, we don&amp;rsquo;t need to define any numeric comparison operators since the numeric value of the object will give the correct behavior. The same is true of the string comparison operators if we define &lt;code&gt;to_string&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;overloading-constants&#34;&gt;Overloading Constants&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ve come a long way with our overloaded objects. Instead of nasty code like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Number::Fraction;
+
+$f = Number::Fraction-&amp;gt;new(1, 2);
+$f-&amp;gt;add(&#39;1/4&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;we can now write code like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Number::Fraction;
+
+$f = Number::Fraction-&amp;gt;new(1, 2) + &#39;1/4&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are still, however, two places where we need to use the full name of the class — when we load the module and when we create a new fraction object. We can&amp;rsquo;t do much about the first of these, but we &lt;em&gt;can&lt;/em&gt; remove the need for that ugly &lt;code&gt;new&lt;/code&gt; call by &lt;em&gt;overloading constants&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;You can use &lt;code&gt;overload::constant&lt;/code&gt; to control how Perl interprets constants in your program. &lt;code&gt;overload::constant&lt;/code&gt; expects a hash where the keys identify various kinds of constants and the values are subroutines which handle the constants. The keys can be any of &lt;code&gt;integer&lt;/code&gt; (for integers), &lt;code&gt;float&lt;/code&gt; (for floating point numbers), &lt;code&gt;binary&lt;/code&gt; (for binary, octal, and hex numbers), &lt;code&gt;q&lt;/code&gt; (for strings), and &lt;code&gt;qr&lt;/code&gt; (for the constant parts of regular expressions).&lt;/p&gt;
+
+&lt;p&gt;When a constant of the right type is found, Perl will call the associated subroutine, passing it the string representation of the constant and the way that Perl would interpret the constant by default. Subroutines associated with &lt;code&gt;q&lt;/code&gt; or &lt;code&gt;qr&lt;/code&gt; also get a third argument &amp;ndash; either &lt;code&gt;qq&lt;/code&gt;, &lt;code&gt;q&lt;/code&gt;, &lt;code&gt;s&lt;/code&gt;, or &lt;code&gt;tr&lt;/code&gt; &amp;ndash;which indicates how the string is being used in the program.&lt;/p&gt;
+
+&lt;p&gt;As an example, here is how we would set up constant handlers so that strings of the form &lt;code&gt;num/den&lt;/code&gt; are always converted to the equivalent &lt;code&gt;Number::Fraction&lt;/code&gt; object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %_const_handlers = 
+    (q =&amp;gt; sub { 
+        return __PACKAGE__-&amp;gt;new($_[0]) || $_[1] 
+});
+
+sub import {
+    overload::constant %_const_handlers if $_[1] eq &#39;:constants&#39;;
+}
+
+sub unimport {
+    overload::remove_constant(q =&amp;gt; undef);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;ve defined a hash, &lt;code&gt;%_const_handlers&lt;/code&gt;, which only contains one entry as we are only interested in strings. The associated subroutine calls the &lt;code&gt;new&lt;/code&gt; method in the current package (which will be &lt;code&gt;Number::Fraction&lt;/code&gt; or a subclass) passing it the string as found in the program source. If this string can be used to create a valid &lt;code&gt;Number::Fraction&lt;/code&gt; object, a reference to that object is returned.&lt;/p&gt;
+
+&lt;p&gt;If a valid object isn&amp;rsquo;t returned then the subroutine returns its second argument, which is Perl&amp;rsquo;s default intepretation of the constant. As a result, any strings in the program that can be intepreted as a fraction are converted to the correct &lt;code&gt;Number::Fraction&lt;/code&gt; object and other strings are left unchanged.&lt;/p&gt;
+
+&lt;p&gt;The constant handler is loaded as part of our package&amp;rsquo;s &lt;code&gt;import&lt;/code&gt; subroutine. Notice that it is only loaded if the &lt;code&gt;import&lt;/code&gt; subroutine is passed the optional argument &lt;code&gt;:constants&lt;/code&gt;. This is because this is a potentially big change to the way that a program&amp;rsquo;s source code is interpreted so we only want to turn it on if the user wants it. &lt;code&gt;Number::Fraction&lt;/code&gt; can be used in this way by putting the following line in your program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Number::Fraction &#39;:constants&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you don&amp;rsquo;t want the scary constant-refining stuff you can just use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Number::Fraction;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Also note that we&amp;rsquo;ve defined an &lt;code&gt;unimport&lt;/code&gt; subroutine which removes the constant handler. An &lt;code&gt;unimport&lt;/code&gt; subroutine is called when a program calls &lt;code&gt;no Number::Fraction&lt;/code&gt; — it&amp;rsquo;s the opposite of &lt;code&gt;use&lt;/code&gt;. If you&amp;rsquo;re going to make major changes to the way that Perl parses a program then it&amp;rsquo;s only polite to undo your changes if the programmer askes you to.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ve finally managed to get rid of most of the ugly class names from our code. We can now write code like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Number::Fraction &#39;:constants&#39;;
+
+my $half = &#39;1/2&#39;;
+my $three_quarters = $half + &#39;1/4&#39;;
+print $three_quarters;  # prints 3/4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I hope you can agree that this has the potential to make code far easier to read and understand.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Number::Fraction&lt;/code&gt; is available on the CPAN. Please feel free to take a closer look at how it is implemented. If you come up with any more interesting overloaded modules, I&amp;rsquo;d love to hear about them.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

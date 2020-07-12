@@ -1,0 +1,2020 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Internals on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/categories/perl-internals/</link>
+    <description>Recent content in Perl Internals on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 23 Jul 2018 09:01:37 +0000</lastBuildDate>
+    <atom:link href="/categories/perl-internals/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Patching Perl: loading modules that return false</title>
+      <link>http://localhost:1313/article/patching-perl-loading-modules-that-return-false/</link>
+      <pubDate>Mon, 23 Jul 2018 09:01:37 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/patching-perl-loading-modules-that-return-false/</guid>
+      <description>
+
+&lt;p&gt;[&lt;strong&gt;Update&lt;/strong&gt;: this is now &lt;a href=&#34;https://github.com/Perl/perl5/issues/17921&#34;&gt;an issue for Perl 7&lt;/a&gt;]&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve been programming Perl for a while, you&amp;rsquo;ve probably run into this exception: &lt;code&gt;Foo.pm did not return a true value&lt;/code&gt;. This is a peculiar quirk of the &lt;code&gt;require&lt;/code&gt; function: modules &lt;em&gt;must&lt;/em&gt; return a true value else Perl interprets it as a failure:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The file must return true as the last statement to indicate
+successful execution of any initialization code, so it&amp;rsquo;s customary
+to end such a file with &amp;ldquo;1;&amp;rdquo; unless you&amp;rsquo;re sure it&amp;rsquo;ll return true
+otherwise. But it&amp;rsquo;s better just to put the &amp;ldquo;1;&amp;rdquo;, in case you add
+more statements.
+&lt;br /&gt;
+&lt;em&gt;perlfunc&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I don&amp;rsquo;t find this feature useful: if a module fails to initialize, it could call &lt;code&gt;die&lt;/code&gt; with a meaningful error message, instead of returning false and Perl croaking with a generic message. I would wager that the majority of the time this exception is encountered, it&amp;rsquo;s because the programmer &lt;em&gt;forgot&lt;/em&gt; to append a true value to their module code. If one ethos of Perl is optimizing for the common case, croaking on require returning false doesn&amp;rsquo;t seem to fit.&lt;/p&gt;
+
+&lt;p&gt;Many other features of Perl have been adopted by other languages, from its regular expression syntax, to &lt;code&gt;use strict&lt;/code&gt; (hello JavaScript!). But I don&amp;rsquo;t know of any language that has copied this feature - perhaps because it&amp;rsquo;s not very useful?&lt;/p&gt;
+
+&lt;h3 id=&#34;allowing-require-to-return-false&#34;&gt;Allowing require to return false&lt;/h3&gt;
+
+&lt;p&gt;So what could I do about this? In order to allow modules to be loaded that don&amp;rsquo;t return a true value, the Perl source code would need to be changed. I&amp;rsquo;ve dumpster-dived into the source occasionally to help better understand the Perl interpreter API, but I&amp;rsquo;ve never changed the source code before &amp;hellip; until now!&lt;/p&gt;
+
+&lt;p&gt;The first thing I did was fork the Perl &lt;a href=&#34;https://github.com/Perl/perl5&#34;&gt;source code&lt;/a&gt;. I started grepping the code for the exception message &amp;ldquo;did not return a true value&amp;rdquo; and sure enough, I found the function &lt;code&gt;S_pop_eval_context_maybe_croak&lt;/code&gt; in &lt;code&gt;pp_ctl.c&lt;/code&gt;. This function is called when an eval completes (&lt;code&gt;require&lt;/code&gt; evals the code it&amp;rsquo;s trying to load) in order to clean up the stack and optionally, croak if an exception was encountered. It accepts a number between 0 and 2: 0 means &amp;ldquo;don&amp;rsquo;t croak&amp;rdquo;, 1 means &amp;ldquo;croak: require did not return a true value&amp;rdquo;, and 2 means &amp;ldquo;croak: require triggered a compilation error&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;Next I searched for callers to &lt;code&gt;S_pop_eval_context_maybe_croak&lt;/code&gt; and found just one caller that passed a 1 to the function, this was the &amp;ldquo;leave eval&amp;rdquo; op code declaration, that included this logic:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;failed &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;    CxOLD_OP_TYPE(cx) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; OP_REQUIRE
+             &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;(gimme &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; G_SCALAR
+                    &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt; SvTRUE_NN(&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;PL_stack_sp)
+                    &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; PL_stack_sp &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; oldsp);
+
+...
+
+&lt;span style=&#34;color:#75715e&#34;&gt;/* pop the CXt_EVAL, and if a require failed, croak */&lt;/span&gt;
+S_pop_eval_context_maybe_croak(aTHX_ cx, NULL, failed);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Does this C code hurt your eyes? Welcome to the world of Perl internals! What it does is check if the current Perl context is a require op, and then if the return context is scalar, check if the top value on the stack is true or not, else (for list context) it checks that the stack count has increased.&lt;/p&gt;
+
+&lt;p&gt;So I &lt;a href=&#34;https://github.com/dnmfarrell/perl5/commit/a27d5730eca477a85b81f3226c13ba87f52b5857&#34;&gt;deleted&lt;/a&gt; the &lt;code&gt;failed&lt;/code&gt; code block, and changed the call to &lt;code&gt;S_pop_eval_context_maybe_croak&lt;/code&gt; to always pass 0 instead.&lt;/p&gt;
+
+&lt;p&gt;Then I compiled the source:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./Configure -des -Dusedevel -Dprefix&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;$HOME/blead-perl
+$ make -j4&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Finally I created a module called &amp;ldquo;Foo.pm&amp;rdquo; that only contained: &lt;code&gt;0;&lt;/code&gt;. Then I tried to load it with the newly compiled Perl:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./perl -I. -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;require &amp;#34;Foo.pm&amp;#34;&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And I didn&amp;rsquo;t see a &amp;ldquo;Foo.pm did not return a true value&amp;rdquo; error, yay!&lt;/p&gt;
+
+&lt;h3 id=&#34;making-it-a-feature&#34;&gt;Making it a &amp;ldquo;feature&amp;rdquo;&lt;/h3&gt;
+
+&lt;p&gt;I don&amp;rsquo;t think P5P (the group that maintains the Perl source code) would accept my change as-is. For one thing, any code that &lt;em&gt;does&lt;/em&gt; rely on the require returning false feature would be broken by the next Perl release. The preferred way to introduce new behavior these days is to use the &lt;a href=&#34;https://metacpan.org/pod/feature&#34;&gt;feature&lt;/a&gt; pragma. So I removed my previous changes and tried to implement allowing require to return false as a feature.&lt;/p&gt;
+
+&lt;p&gt;The Perl source code has a handy utility called &lt;a href=&#34;https://github.com/dnmfarrell/perl5/blob/66f43943f438f5bc7970dab0b7940e46c84909f5/regen/feature.pl&#34;&gt;regen/feature.pl&lt;/a&gt; which takes care of generating the necessary C and Perl code to implement the feature flag. All you have to do is add the new feature&amp;rsquo;s name to &lt;code&gt;regen/feature.pl&lt;/code&gt;, and then run the script to add it to the Perl source.&lt;/p&gt;
+
+&lt;p&gt;I added the &amp;ldquo;require_false&amp;rdquo; feature to &lt;code&gt;regen/feature.pl&lt;/code&gt; and ran the script, resulting in these &lt;a href=&#34;https://github.com/dnmfarrell/perl5/commit/66f43943f438f5bc7970dab0b7940e46c84909f5#diff-731afc105e527b56f99b7fa4c365e82c&#34;&gt;changes&lt;/a&gt;. This added the macro &lt;code&gt;FEATURE_REQUIRE_FALSE_IS_ENABLED&lt;/code&gt; to &lt;code&gt;header.h&lt;/code&gt;, which I&amp;rsquo;ll use later to check if the feature is enabled or not. Also note because &lt;code&gt;require_false&lt;/code&gt; was the longest feature name in the set, the script also updated the &lt;code&gt;MAX_FEATURE_LEN&lt;/code&gt; macro value so that the Perl&amp;rsquo;s interpreter would compare the right number of bytes when checking feature names.&lt;/p&gt;
+
+&lt;h3 id=&#34;adding-tests&#34;&gt;Adding tests&lt;/h3&gt;
+
+&lt;p&gt;At this stage I&amp;rsquo;ve created a new feature, but don&amp;rsquo;t use it anywhere. This felt like a good time to update the source code tests to check if the feature works: at first it won&amp;rsquo;t, but whilst I&amp;rsquo;m working on the feature I can quickly recompile and run the tests to check.&lt;/p&gt;
+
+&lt;p&gt;Searching through the battery of tests that ship with Perl, I found &lt;a href=&#34;https://github.com/dnmfarrell/perl5/blob/5bad2b3959332943ca48f8b4f44af83effad4314/t/comp/require.t&#34;&gt;t/comp/require.t&lt;/a&gt; which tests that &lt;code&gt;require&lt;/code&gt; does the right thing when loading modules. One interesting thing about the Perl source test suite is they can&amp;rsquo;t use common tools we use for testing like &lt;code&gt;Test::More&lt;/code&gt;, instead they just print TAP output and let the test harness figure it out.&lt;/p&gt;
+
+&lt;p&gt;I updated &lt;a href=&#34;https://github.com/dnmfarrell/perl5/commit/66ee6057c84e8bcb50f73ed1a11c62df60277f58&#34;&gt;t/comp/require.t&lt;/a&gt; to enable the new feature, and test loading a module returning a false value. I also test that compilation errors are not ignored when the feature is enabled. Because pragmas are scoped, I had to write the tests within a block, but also I couldn&amp;rsquo;t use the test helper function &lt;code&gt;do_require&lt;/code&gt; to handle everything for me, as it would be executed in a different scope:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;use feature &amp;#39;require_false;&amp;#39;\n&amp;#34;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; feature &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;require_false&amp;#39;&lt;/span&gt;;
+    write_file(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bleah.pm&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0;&amp;#39;&lt;/span&gt;);
+    %INC &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ();
+    eval { &lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;bleah.pm&amp;#34;&lt;/span&gt; };
+    $i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;not &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $@ &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/did not return a true value/&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ok $i - require loads module returning 0\n&amp;#34;&lt;/span&gt;;
+    write_file(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bleah.pm&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;die &amp;#34;foobar&amp;#34;;&amp;#39;&lt;/span&gt;);
+    %INC &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ();
+    eval { &lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;bleah.pm&amp;#34;&lt;/span&gt; };
+    $i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;not &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $@ &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/foobar/&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ok $i - require throws compile error\n&amp;#34;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Notice how &lt;code&gt;%INC&lt;/code&gt; is cleared before each test as Perl won&amp;rsquo;t reload a module that it finds in &lt;code&gt;%INC&lt;/code&gt; already. I then recompiled Perl via &lt;code&gt;make&lt;/code&gt; and ran the test with:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./perl -I. -MTestInit t/comp/require.t
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;..60
+ok &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; - require &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;.005 try &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+...
+&lt;span style=&#34;color:#75715e&#34;&gt;# use feature &amp;#39;require_false&amp;#39;;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;not ok &lt;span style=&#34;color:#ae81ff&#34;&gt;59&lt;/span&gt; - require loads module returning &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+ok &lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt; - require throws compile error&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And as expected, the module wasn&amp;rsquo;t loaded. By the way, &lt;code&gt;TestInit&lt;/code&gt; is a useful module to load to avoid running the entire Perl source test suite which can take a long time when you only want to test certain behavior (I ran &lt;code&gt;make -j4 &amp;amp;&amp;amp; ./perl -I. -MTestInit t/comp/require.t&lt;/code&gt; countless times).&lt;/p&gt;
+
+&lt;h3 id=&#34;using-the-feature&#34;&gt;Using the feature&lt;/h3&gt;
+
+&lt;p&gt;In my previous change I updated the &lt;a href=&#34;https://github.com/dnmfarrell/perl5/blob/521634c9fb488f9e3a1310d7eec7ab9a94dc2188/pp_ctl.c#L4506&#34;&gt;leave eval op declaration&lt;/a&gt; in &lt;code&gt;pp_ctl.c&lt;/code&gt; and that would seem like a logical place to add a check that the feature was enabled or not, and tell &lt;code&gt;S_pop_eval_context_maybe_croak&lt;/code&gt; to croak or not. However, I found that this didn&amp;rsquo;t work, and even when the feature was enabled, &lt;code&gt;FEATURE_REQUIRE_FALSE_IS_ENABLED&lt;/code&gt; was always false.&lt;/p&gt;
+
+&lt;p&gt;I think this is because the line beginning &lt;code&gt;PP(pp_leaveval)&lt;/code&gt; is declaring a new op via the &lt;code&gt;PP&lt;/code&gt; macro - it&amp;rsquo;s not a C function declaration. Instead of that, I tried adding the logic to &lt;code&gt;S_pop_eval_context_maybe_croak&lt;/code&gt; itself and it worked. The &lt;a href=&#34;https://github.com/dnmfarrell/perl5/commit/a003a3f0354ba227835a3c1e29141a354aa13e78&#34;&gt;change&lt;/a&gt; turned out to be very simple. I imported &lt;code&gt;feature.h&lt;/code&gt; and then added a logical condition to the &lt;code&gt;do_croak&lt;/code&gt; assignment which checks if &lt;code&gt;FEATURE_REQUIRE_FALSE_IS_ENABLED&lt;/code&gt; is enabled or not. I explained the &lt;code&gt;action&lt;/code&gt; variable earlier: if it has a value of 2 that means there was compilation error, which we still want to allow to croak.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;S_pop_eval_context_maybe_croak(pTHX_ PERL_CONTEXT &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;cx, SV &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;errsv, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; action)
+    ...
+    do_croak &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; action &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; (CxOLD_OP_TYPE(cx) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; OP_REQUIRE) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;
+        (&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;FEATURE_REQUIRE_FALSE_IS_ENABLED &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; action &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;);
+    ...&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All that was left was to re-compile and run the tests again:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ ./perl -I. -MTestInit t/comp/require.t
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;..60
+ok &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; - require &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;.005 try &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+...
+&lt;span style=&#34;color:#75715e&#34;&gt;# use feature &amp;#39;require_false&amp;#39;;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;ok &lt;span style=&#34;color:#ae81ff&#34;&gt;59&lt;/span&gt; - require loads module returning &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+ok &lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt; - require throws compile error&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All the &lt;code&gt;require&lt;/code&gt; tests pass, woohoo!&lt;/p&gt;
+
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap-up&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m planning on getting feedback from P5P on this change: implementation-wise, I&amp;rsquo;m not sure if I&amp;rsquo;ve violated an unwritten rule by importing &lt;code&gt;feature.h&lt;/code&gt; into &lt;code&gt;pp_ctl.c&lt;/code&gt;. If I have, another way to achieve the same thing would be to declare a new a private flag for the require op, and set it in &lt;code&gt;perly.y&lt;/code&gt; in the sections of the grammar which create a new require op (whenever it encounters &lt;code&gt;require&lt;/code&gt; in Perl code). The flag could then be checked in &lt;code&gt;pp_ctl.c&lt;/code&gt; instead of the feature is enabled macro.&lt;/p&gt;
+
+&lt;p&gt;Whilst this change is relatively safe - modules are free to continue to return a true value if they want to, I worry that it&amp;rsquo;s not useful enough to warrant being a feature. I struggle to imagine users of 5.30 next year eagerly adding this feature to their code. Maybe it&amp;rsquo;s not worth changing?&lt;/p&gt;
+
+&lt;p&gt;Yet another way it could be implemented is to deprecate the exception: &amp;ldquo;Foo.pm did not return a true value. WARNING This behavior is deprecated and will be removed in a future version of Perl&amp;rdquo;. This would have the advantage of not adding a new feature (more code, version complexity), and giving users of the feature advanced warning of its removal. And when the behavior is removed it would result in &lt;em&gt;less&lt;/em&gt; code in the Perl source, which seems like a win to me.&lt;/p&gt;
+
+&lt;p&gt;Working with the Perl source can be intimidating: it&amp;rsquo;s a large collection of advanced C code, which leans heavily on macros. The source&amp;rsquo;s conventions can be opaque too: function, macro and variable names often follow a logical, but unintuitive naming format. Previously I&amp;rsquo;ve found myself unpacking a macro declaration to find it contains &amp;hellip; another macro, and another macro inside that one and so on. It&amp;rsquo;s easy to forget the context and get lost in the code.&lt;/p&gt;
+
+&lt;p&gt;Sometimes I&amp;rsquo;ve had to literally write out call chains on paper to keep track. But it is incredibly satisfying to change Perl&amp;rsquo;s behavior to suit your tastes. Imagine with that power, what would &lt;em&gt;you&lt;/em&gt; change? It might not be an easy road, but things of value rarely come easily, and if nothing else you might learn more about how Perl works internally, and pick up some new C programming tricks along the way.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>P5P update: Smarter Match</title>
+      <link>http://localhost:1313/article/p5p-update-smarter-match/</link>
+      <pubDate>Thu, 22 Feb 2018 08:30:36 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/p5p-update-smarter-match/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;This post will be part of a new communication channel between p5p and the community. We hope to share more with you and keep you up-to-date using this platform.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;On December 20th, 2017, we released Perl 5.27.7, which included a massive change to &lt;a href=&#34;https://perldoc.perl.org/perlop.html#Smartmatch-Operator&#34;&gt;smartmatch&lt;/a&gt;. Since then it has been reverted. What happened?&lt;/p&gt;
+
+&lt;p&gt;Smartmatch has a long history. It was introduced in 5.10 back in December 2007 and significantly revised in 5.10.1. It was a good idea, but ended up causing more harm than good to the point it was deemed unreliable.&lt;/p&gt;
+
+&lt;p&gt;In an unprecedented step, it was marked as &amp;ldquo;experimental&amp;rdquo; in Perl 5.18.0, released in May 2013. Here is the mention of this in &lt;a href=&#34;https://perldoc.perl.org/perl5180delta.html&#34;&gt;perldelta&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Smartmatch, added in v5.10.0 and significantly revised in v5.10.1, has been a regular point of complaint. Although there are some ways in which it is useful, it has also proven problematic and confusing for both users and implementors of Perl. There have been some proposals on how to best address the problem. It is clear that smartmatch is almost certainly either going to change or go away in the future. Relying on its current behavior is not recommended.&lt;/p&gt;
+
+&lt;p&gt;Warnings will now be issued when the parser sees &lt;code&gt;~~&lt;/code&gt;, &lt;code&gt;given&lt;/code&gt;, or &lt;code&gt;when&lt;/code&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Since then, various threads were raised on how to resolve it. The decided approach was to simplify the syntax considerably. It took several rounds of discussions (with some bike-shedding) to settle what to simplify and to reach an agreement on the new behavior.&lt;/p&gt;
+
+&lt;p&gt;Last year we had finally reached an agreement on the significant perspectives. The changes were implemented by Zefram, a core developer. The work was published on a public branch for comments.&lt;/p&gt;
+
+&lt;p&gt;When no objections were filed, Zefram merged the new branch. It was included in the &lt;a href=&#34;https://github.com/Perl/perl5/releases/tag/v5.27.7&#34;&gt;5.27.7&lt;/a&gt; development release.&lt;/p&gt;
+
+&lt;p&gt;Following the release of this development version, issues started popping up with the effect this change made. A fair portion of CPAN was breaking to the point that one of the dedicated Perl testers decided it was unfeasible for them to continue testing. Subsequently, we decided to revert this change.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-went-wrong&#34;&gt;What went wrong?&lt;/h3&gt;
+
+&lt;p&gt;First of all, it was clear that moving smartmatch to experimental did not achieve what we had hoped. Features are marked as experimental to allow us to freely (for some value of &amp;ldquo;freely&amp;rdquo;) adjust and tinker with them until we are comfortable making them stable. The policy is that any experimental feature can be declared stable after two releases with no behavioral change. With smartmatch, it was marked after numerous versions in which it existed as a stable feature.&lt;/p&gt;
+
+&lt;p&gt;Secondly, the change was massive. This in and of itself is not necessarily wrong, but how we handled it leaves room for improvement.&lt;/p&gt;
+
+&lt;p&gt;Thirdly, centering the communication around this change on the core mailing list was insufficient to receive enough feedback and eyes on the problem and the proposed solution. We should have published it off the list and sought more input and comments. We hope to use this platform to accomplish that.&lt;/p&gt;
+
+&lt;p&gt;Fourthly, we could have asked our dedicated testers for help on running additional, specific tests, to view what would break on CPAN and how damaging this change could be.&lt;/p&gt;
+
+&lt;h3 id=&#34;where-do-we-go-from-here&#34;&gt;Where do we go from here?&lt;/h3&gt;
+
+&lt;p&gt;Despite not being the best way to learn from a mistake, there was minimal damage. The new syntax and behavior were only available on a single development release, did not reach any production code, and was reverted within that single release.&lt;/p&gt;
+
+&lt;p&gt;To address smartmatch again, we will need to reflect upon our mistakes and consider approaching it again by communicating the change better and by receiving additional feedback to both offer a useful feature and pleasing syntax. This will take time, and we are not rushing to revisit smartmatch at the moment.&lt;/p&gt;
+
+&lt;p&gt;We apologize for the scare and we appreciate the quick responses to resolve this situation. Thank you.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Hidden Treasures of the Perl Core, part II</title>
+      <link>http://localhost:1313/pub/2003/06/19/treasures.html/</link>
+      <pubDate>Thu, 19 Jun 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/06/19/treasures.html/</guid>
+      <description>
+
+&lt;p&gt;In the &lt;a href=&#34;http://localhost:1313/pub/2003/05/29/treasures.html&#34;&gt;previous hidden treasures article&lt;/a&gt;, we looked at some easy-to-use (but not well-known) modules in the Perl Core. In this article, we dig deeper to uncover some of the truly precious and unique gems in the Perl Core.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-constant-constant-span&#34;&gt;&lt;span id=&#34;constant&#34;&gt;&lt;code&gt;constant&lt;/code&gt;&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;The &lt;code&gt;constant&lt;/code&gt; pragma is not new or unknown, but it is a nice feature enhancement. Many people have used constant. Here is a standard example of using the constant for π.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use constant PI =&amp;gt; 22/7;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When &lt;code&gt;constant&lt;/code&gt;s are used in programs or modules, they are often used in a set. Older versions of Perl shipped with a &lt;code&gt;constant&lt;/code&gt; pragma that required a high level of work to produce a set.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use constant SUNDAY  =&amp;gt; 0;
+        use constant MONDAY  =&amp;gt; 1;
+        use constnat TUESDAY =&amp;gt; 2;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Wow, that&amp;rsquo;s a lot of work! I&amp;rsquo;ve already given up on my program, not to mention the syntax error in the declaration of &lt;code&gt;TUESDAY&lt;/code&gt;. Now let&amp;rsquo;s try this again using the multiple declaration syntax, new to the &lt;code&gt;constant&lt;/code&gt; pragma for Perl 5.8.0.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use constant {
+                SUNDAY    =&amp;gt; 0,
+                MONDAY    =&amp;gt; 1,
+                TUESDAY   =&amp;gt; 2,
+                WEDNESDAY =&amp;gt; 3,
+                THURSDAY  =&amp;gt; 4,
+                FRIDAY    =&amp;gt; 5,
+                SATURDAY  =&amp;gt; 6,
+        };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only warning here is that this syntax is new to Perl 5.8.0. If you intend to distribute a program using multiple constant declarations, then remember the limitations of the program. You may want to specify what version of Perl is required for your program to work.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use 5.8.0;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Perl will throw a fatal error if the version is anything less than &lt;code&gt;5.8.0&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-attribute-handlers-attribute-handlers-span&#34;&gt;&lt;span id=&#34;attribute::handlers&#34;&gt;&lt;code&gt;Attribute::Handlers&lt;/code&gt;&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;This module allows us to play with Perl&amp;rsquo;s subroutine attribute syntax by defining our attributes. This is a powerful module with a rich feature set. Here I&amp;rsquo;ll give you an example of writing a minimal debugger using subroutine attributes.&lt;/p&gt;
+
+&lt;p&gt;First, we need to create an attribute. An attribute is any subroutine that has an attribute of &lt;code&gt;:ATTR&lt;/code&gt;. Setting up our &lt;code&gt;debug&lt;/code&gt; attribute is easy.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use Attribute::Handlers;
+
+        sub debug :ATTR {
+                my (@args) = @_;
+                warn &amp;quot;DEBUG: @args\n&amp;quot;;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we have a simple debug attribute named &lt;code&gt;:debug&lt;/code&gt;. Using our attribute is also easy.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        sub table :debug {
+                # ...
+        }
+        table(%data);
+        table(%other_data);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, since attributes are compiled just before runtime, in the &lt;code&gt;CHECK&lt;/code&gt; phase, our debugging output will only be sent to &lt;code&gt;STDERR&lt;/code&gt; once. For the code above, we might get output like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        DEBUG: main GLOB(0x523d8) CODE(0x2e758) debug  CHECK
+           Casey  Dad
+        Chastity  Mom
+         Evelina  Kid
+        Coffee  Oily
+          Cola  Fizzy
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That debug string represents some of the information we get in an attribute subroutine. The first argument is the name of the package the attribute was declared in. Next is a reference to the symbol table entry for the subroutine, followed by a reference to the subroutine itself. Next comes the name of the attribute, followed by any data associated with the attribute (none in this case). Finally, the name of the phase that invoked the handler passed.&lt;/p&gt;
+
+&lt;p&gt;At this point, our debugging attribute isn&amp;rsquo;t useful, but the parameters we are given to work with are promising. We can use them to invoke debugging output each time the subroutine is called. Put on your hard hat, this is where things get interesting.&lt;/p&gt;
+
+&lt;p&gt;First, let us take a look at how we want to debug our subroutine. I think we&amp;rsquo;d like different levels of debugging output. At the lowest level (&lt;code&gt;1&lt;/code&gt;), the name of the subroutine being invoked should be sent to &lt;code&gt;STDERR&lt;/code&gt;. At the next level (&lt;code&gt;2&lt;/code&gt;), it would be nice to be notified of entry and exit of the subroutine. Going further (level &lt;code&gt;3&lt;/code&gt;), we might want to see the arguments passed to the subroutine. Even more detail can be done, but we&amp;rsquo;ll save that for later and stop at three debug levels.&lt;/p&gt;
+
+&lt;p&gt;In order to do this voodoo, we need to replace our subroutine with one doing the debugging for us. The subroutine doing the debugging must then invoke our original code with the parameters passed to it, and return the proper output from it. Here is the implementation for debug level one (&lt;code&gt;1&lt;/code&gt;).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use Attribute::Handlers;
+        use constant {
+                PKG    =&amp;gt; 0,
+                SYMBOL =&amp;gt; 1,
+                CODE   =&amp;gt; 2,
+                ATTR   =&amp;gt; 3,
+                DATA   =&amp;gt; 4,
+                PHASE  =&amp;gt; 5,
+        };
+        sub debug :ATTR {
+                my ($symbol, $code, $level) = @_[SYMBOL, CODE, DATA];
+                $level ||= 1;
+
+                my $name = join &#39;::&#39;, *{$symbol}{PACKAGE}, *{$symbol}{NAME};
+
+                no warnings &#39;redefine&#39;;
+                *{$symbol} = sub {
+                        warn &amp;quot;DEBUG: entering $name\n&amp;quot;;
+                        return $code-&amp;gt;(@_);
+                };
+        }
+        sub table :debug {
+                # ...
+        }
+        table(%data);
+        table(%other_data);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are some sticky bits in the debug subroutine that I need to explain in more detail.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $name = join &#39;::&#39;, *{$symbol}{PACKAGE}, *{$symbol}{NAME};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This line is used to find the name and package of the subroutine we&amp;rsquo;re debugging. We do the lookups from the symbol table, using the reference to the symbol that our attribute is given.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        no warnings &#39;redefine&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we turn off warnings about redefining a subroutine, because we&amp;rsquo;re going to redefine a subroutine on purpose.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        *{$symbol} = sub { ... };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This construct simply replaces the code section in the symbol table with this anonymous subroutine (which is a code reference).&lt;/p&gt;
+
+&lt;p&gt;In this example, we set the default log level to one (&lt;code&gt;1&lt;/code&gt;), set up some helper variables, and replace our &lt;code&gt;table()&lt;/code&gt; subroutine with a debugging closure. I call the anonymous subroutine a closure because we are reusing some variables that are defined in the &lt;code&gt;debug()&lt;/code&gt; subroutine. Closures are explained in greater detail in &lt;em&gt;perlref&lt;/em&gt; (&lt;code&gt;perldoc perlref&lt;/code&gt; from the command line).&lt;/p&gt;
+
+&lt;p&gt;To set the debug level for a subroutine, just a number the &lt;code&gt;:debug&lt;/code&gt; attribute.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        sub table :debug(1) {
+                # ...
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The output looks something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        DEBUG: entering main::table
+           Casey  Dad
+        Chastity  Mom
+         Evelina  Kid
+        DEBUG: entering main::table
+        Coffee  Oily
+          Cola  Fizzy
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Creating debug level two (&lt;code&gt;2&lt;/code&gt;) is pretty easy from here. Time stamps will also be added to the output, which are useful for calculating how long your subroutine takes to run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        *{$symbol} = sub {
+                warn sprintf &amp;quot;DEBUG[%s]: entering %s\n&amp;quot;,
+                        scalar(localtime), $name;
+                my @output = $code-&amp;gt;(@_);
+                if ( $level &amp;gt;= 2 ) {
+                        warn sprintf &amp;quot;DEBUG[%s]: leaving %s\n&amp;quot;,
+                                scalar(localtime), $name;
+                }
+                return @output;
+        };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example, we use &lt;code&gt;sprintf&lt;/code&gt; to make out debugging statements a little more readable as complexity grows. This time, we cannot return directly from the original code reference. Instead, we have to capture the output and return it at the end of the routine. When the &lt;code&gt;table()&lt;/code&gt; subroutine defines its debug level as &lt;code&gt;:debug(2)&lt;/code&gt; the output is thus.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        DEBUG[Wed Jun 18 12:18:44 2003]: entering main::table
+           Casey  Dad
+        Chastity  Mom
+         Evelina  Kid
+        DEBUG[Wed Jun 18 12:18:44 2003]: leaving main::table
+        DEBUG[Wed Jun 18 12:18:44 2003]: entering main::table
+        Coffee  Oily
+          Cola  Fizzy
+        DEBUG[Wed Jun 18 12:18:44 2003]: leaving main::table
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, debug level three (&lt;code&gt;3&lt;/code&gt;) should also print the arguments passed to the subroutine. This is a simple modification to the first debugging statement.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        warn sprintf &amp;quot;DEBUG[%s]: entering %s(%s)\n&amp;quot;,
+                scalar(localtime), $name, ($level &amp;gt;= 3 ? &amp;quot;@_&amp;quot; : &#39;&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The resulting output.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        DEBUG[Wed Jun 18 12:21:06 2003]: entering main::table(Chastity Mom Casey Dad Evelina Kid)
+           Casey  Dad
+        Chastity  Mom
+         Evelina  Kid
+        DEBUG[Wed Jun 18 12:21:06 2003]: leaving main::table
+        DEBUG[Wed Jun 18 12:21:06 2003]: entering main::table(Coffee Oily Cola Fizzy)
+        Coffee  Oily
+          Cola  Fizzy
+        DEBUG[Wed Jun 18 12:21:06 2003]: leaving main::table
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Attribute::Handlers&lt;/code&gt; can do quite a lot more than what I&amp;rsquo;ve shown you already. If you like what you see, then you may want to add attributes to variables or worse. Please read the thorough documentation provided with the module.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-b-deparse-b-deparse-span&#34;&gt;&lt;span id=&#34;b::deparse&#34;&gt;&lt;code&gt;B::Deparse&lt;/code&gt;&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;This module is a well-known Perl debugging module. It generates Perl source code from Perl source code provided to it. This may seem useless to some, but to the aspiring obfuscator, it&amp;rsquo;s useful in understanding odd code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        perl -snle&#39;$w=($b=&amp;quot;bottles of beer&amp;quot;).&amp;quot; on the wall&amp;quot;;$i&amp;gt;=0?print:last
+        LINE for(map &amp;quot;$i $_&amp;quot;,$w,$b),&amp;quot;take one down, pass it around&amp;quot;,
+        do{$i--;&amp;quot;$i $w!&amp;quot;}&#39; -- -i=100
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That is an example of an obfuscated program. It could be worse, but it&amp;rsquo;s pretty bad already. Understanding this gem is as simple as adding &lt;code&gt;-MO=Deparse&lt;/code&gt; to the command line. This will use &lt;code&gt;B::Deparse&lt;/code&gt; to turn that mess into more readable Perl source code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        LINE: while (defined($_ = &amp;lt;ARGV&amp;gt;)) {
+                chomp $_;
+                $w = ($b = &#39;bottles of beer&#39;) . &#39; on the wall&#39;;
+                foreach $_ (
+                         map(&amp;quot;$i $_&amp;quot;, $w, $b),
+                         &#39;take one down, pass it around&#39;,
+                         do { --$i; &amp;quot;$i $w!&amp;quot; }
+                       ) {
+                        $i &amp;gt;= 0 ? print($_) : last LINE;
+                }
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To use &lt;code&gt;B::Deparse&lt;/code&gt; in the everyday example, just run your program using it on the command line.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        perl -MO=Deparse prog.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But if you want to have some real fun, then dig into the object-oriented interface for &lt;code&gt;B::Deparse&lt;/code&gt;. There you will find an amazing method called &lt;code&gt;coderef2text()&lt;/code&gt;. This method turns any code reference to text, just like the command line trick does for an entire program. Here is a short example.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use B::Deparse;
+
+        my $deparser = B::Deparse-&amp;gt;new;
+
+        print $deparser-&amp;gt;coderef2text(
+                sub { print &amp;quot;Hello, world!&amp;quot; }
+        );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The output will be the code block, after it&amp;rsquo;s been deparsed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        {
+        print &#39;Hello, world!&#39;;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can use this to add another debug level to our &lt;code&gt;Attribute::Handlers&lt;/code&gt; example. Here, debug level four (&lt;code&gt;4&lt;/code&gt;) will print out the source of our subroutine.&lt;/p&gt;
+
+&lt;p&gt;Before our &lt;code&gt;debug()&lt;/code&gt; subroutine declaration we add the following lines of code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use B::Deparse;
+        my $deparser = B::Deparse-&amp;gt;new;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, our debugging closure declaration is updated to print out the full subroutine with the &lt;code&gt;DEBUG:&lt;/code&gt; prefix on each line.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        *{$symbol} = sub {
+                warn sprintf &amp;quot;DEBUG[%s]: entering %s(%s)\n&amp;quot;,
+                        scalar(localtime), $name, ($level &amp;gt;= 3 ? &amp;quot;@_&amp;quot; : &#39;&#39; );
+                if ( $level &amp;gt;= 4 ) {
+                        my $sub = sprintf &amp;quot;sub %s %s&amp;quot;,
+                                $name, $deparser-&amp;gt;coderef2text( $code );
+                        $sub =~ s/\n/\nDEBUG: /g;
+                        warn &amp;quot;DEBUG: $sub\n&amp;quot;;
+                }
+                my @output = $code-&amp;gt;(@_);
+                if ( $level &amp;gt;= 2 ) {
+                        warn sprintf &amp;quot;DEBUG[%s]: leaving %s\n&amp;quot;,
+                                scalar(localtime), $name;
+                }
+                return @output;
+        };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The verbose debugging output looks like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        DEBUG[Wed Jun 18 12:47:22 2003]: entering main::table(Chastity Mom Casey Dad Evelina Kid)
+        DEBUG: sub main::table {
+        DEBUG:    BEGIN {${^WARNING_BITS} = &amp;quot;UUUUUUUUUUUU&amp;quot;}
+        DEBUG:    use strict &#39;refs&#39;;
+        DEBUG:    my(%data) = @_;
+        DEBUG:    my $length = 0;
+        DEBUG:    foreach $_ (keys %data) {
+        DEBUG:        $length = length $_ if length $_ &amp;gt; $length;
+        DEBUG:    }
+        DEBUG:    my $output = &#39;&#39;;
+        DEBUG:    while (my($k, $v) = each %data) {
+        DEBUG:        $output .= sprintf(&amp;quot;%${length}s  %s\n&amp;quot;, $k, $v);
+        DEBUG:    }
+        DEBUG:    print &amp;quot;\n$output&amp;quot;;
+        DEBUG:}
+           Casey  Dad
+        Chastity  Mom
+         Evelina  Kid
+        DEBUG[Wed Jun 18 12:47:22 2003]: leaving main::table
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are more methods in the &lt;code&gt;B::Deparse&lt;/code&gt; class that you can use to muck around with the results of &lt;code&gt;coderef2text()&lt;/code&gt;. This module is powerful and useful for debugging. I suggest you at least use the simple version if code becomes ambiguous and incomprehensible.&lt;/p&gt;
+
+&lt;p&gt;While &lt;code&gt;B::Deparse&lt;/code&gt; is good at what it does, it&amp;rsquo;s not complete. Each version of Perl has made it better, and it&amp;rsquo;s good in Perl 5.8.0. Don&amp;rsquo;t trust &lt;code&gt;B::Deparse&lt;/code&gt; to get everything right, though. For instance, I wouldn&amp;rsquo;t trust it to serialize code for later use.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-class-struct-class-struct-span&#34;&gt;&lt;span id=&#34;class::struct&#34;&gt;&lt;code&gt;Class::Struct&lt;/code&gt;&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;This module, just like the &lt;code&gt;constant&lt;/code&gt; pragma, is well-known. The difference is that &lt;code&gt;Class::Struct&lt;/code&gt; is not often used. For many programs, setting up a class to represent data would be ideal, but overkill. &lt;code&gt;Class::Struct&lt;/code&gt; gives us the opportunity to live in our ideal world without the pain of setting up any classes by hand. Here is an example of creating a class with &lt;code&gt;Class::Struct&lt;/code&gt;. In this example, we&amp;rsquo;re going to use compile time-class declarations, a new feature in Perl 5.8.0.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use Class::Struct Person =&amp;gt; {
+                name =&amp;gt; &#39;$&#39;,
+                mom  =&amp;gt; &#39;Person&#39;,
+                dad  =&amp;gt; &#39;Person&#39;,
+        };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we&amp;rsquo;ve created a class called &lt;code&gt;Person&lt;/code&gt; with three attributes. &lt;code&gt;name&lt;/code&gt; can contain a simple scalar value, represented by the dollar sign (&lt;code&gt;$&lt;/code&gt;). &lt;code&gt;mom&lt;/code&gt; and &lt;code&gt;dad&lt;/code&gt; are both objects of type &lt;code&gt;Person&lt;/code&gt;. Using our class within the same program is the same as using any other class.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $self = Person-&amp;gt;new( name =&amp;gt; &#39;Casey West&#39; );
+        my $wife = Person-&amp;gt;new( name =&amp;gt; &#39;Chastity West&#39; );
+        my $baby = Person-&amp;gt;new(
+                name =&amp;gt; &#39;Evelina West&#39;,
+                mom  =&amp;gt; $wife,
+                dad  =&amp;gt; $self,
+        );
+        printf &amp;lt;&amp;lt;__FORMAT__, $baby-&amp;gt;name, $baby-&amp;gt;mom-&amp;gt;name;
+        %s, daughter of %s,
+        went on to cure cancer and disprove Fermat&#39;s Theorem.
+        __FORMAT__
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Class::Struct&lt;/code&gt; classes are simple by design, and can get more complex with further creativity. For instance, to add a method to the &lt;code&gt;Person&lt;/code&gt; class you can simply declare it in the &lt;code&gt;Person&lt;/code&gt; package. Here is a method named &lt;code&gt;birth()&lt;/code&gt; which should be called on a Person object. It takes the name of the baby as an argument, and optionally the father (a &lt;code&gt;Person&lt;/code&gt; object). Returned is a new &lt;code&gt;Person&lt;/code&gt; object representing the baby.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        sub Person::birth {
+                my ($self, $name, $dad) = @_;
+                return Person-&amp;gt;new(
+                        name =&amp;gt; $name,
+                        mom  =&amp;gt; $self,
+                        dad  =&amp;gt; ( $dad || undef ),
+                );
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These object are not meant to be persistent. If you want persistent objects, then you need to look elsewhere, perhaps &lt;code&gt;Class::DBI&lt;/code&gt; or any other implementation, of which there are many.&lt;/p&gt;
+
+&lt;p&gt;These in-memory objects can help to clean up your code, but they add a bit of overhead. You have to decide where the balance in your program is. In most cases, using &lt;code&gt;Class::Struct&lt;/code&gt; is going to be OK.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-encode-encode-span&#34;&gt;&lt;span id=&#34;encode&#34;&gt;&lt;code&gt;Encode&lt;/code&gt;&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;Encode&lt;/code&gt; is Perl&amp;rsquo;s interface to Unicode. An explanation of Unicode itself is far beyond the scope of this article. In fact, it&amp;rsquo;s far beyond the scope of most of us. This module is powerful. I&amp;rsquo;m going to provide some examples and lots of pointers to the appropriate documentation.&lt;/p&gt;
+
+&lt;p&gt;The first function of the API to learn is &lt;code&gt;encode()&lt;/code&gt;. &lt;code&gt;encode()&lt;/code&gt; will convert a string for Perl&amp;rsquo;s internal format to a series of octets in the encoding you choose. Here is an example.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use Encode;
+        my $octets = encode( &amp;quot;utf8&amp;quot;, &amp;quot;Hello, world!&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we have turned the string &lt;em&gt;Hello, world!&lt;/em&gt; into a &lt;code&gt;utf8&lt;/code&gt; string, which is now in &lt;code&gt;$octets&lt;/code&gt;. We can also decode strings using the &lt;code&gt;decode()&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $string = decode( &amp;quot;utf8&amp;quot;, $utf8_string );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we&amp;rsquo;ve decoded a &lt;code&gt;utf8&lt;/code&gt; string into Perl&amp;rsquo;s internal string representation. Since &lt;code&gt;utf8&lt;/code&gt; is a common encoding to deal with, there are two helper functions: &lt;code&gt;encode_utf8()&lt;/code&gt;, and &lt;code&gt;decode_utf8&lt;/code&gt;. Both of these function take a string as the argument.&lt;/p&gt;
+
+&lt;p&gt;A list of supported encodings can be found in &lt;code&gt;Encode::Supported&lt;/code&gt;, or by using the &lt;code&gt;encodings()&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my @encodings = Encode-&amp;gt;encodings;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For even more Unicode fun, dive into the documentation in &lt;code&gt;Encode&lt;/code&gt; (&lt;code&gt;perldoc Encode&lt;/code&gt; on the command line).&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-filter-simple-filter-simple-span&#34;&gt;&lt;span id=&#34;filter::simple&#34;&gt;&lt;code&gt;Filter::Simple&lt;/code&gt;&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;This module gives us an easy way to write source-code filters. These filters may change the behavior of calling Perl code, or implement new features of Perl, or do anything else they want. Some of the more infamous source-filter modules on the CPAN include &lt;code&gt;Acme::Bleach&lt;/code&gt;, &lt;code&gt;Semi::Semicolons&lt;/code&gt;, and even &lt;code&gt;Switch&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In this article, I&amp;rsquo;m going to implement a new comment syntax for Perl. Using the following source-filter package will allow you to comment your code using SQL comments. SQL comments begin with two consecutive dashes (&lt;code&gt;--&lt;/code&gt;). For our purposes, these dashes cannot be directly followed by a semicolon (&lt;code&gt;;&lt;/code&gt;) or be preceded by something other than whitespace or a the beginning of a line.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        package SQLComments;
+        use Filter::Simple sub {
+                s/(?:^|\s)--(?!;)/#/g;
+        };
+        1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example, we create an anonymous subroutine that is passed on to &lt;code&gt;Filter::Simple&lt;/code&gt;. The entire source of the calling program is in &lt;code&gt;$_&lt;/code&gt;, and we use a regular expression to search for our SQL comments and change them to Perl comments.&lt;/p&gt;
+
+&lt;p&gt;Using our new source filter works like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use SQLComments;
+        -- Here is some code that decrements a variable.
+        my $i = 100; -- start at 100.
+        while ( $i ) {
+                $i--; -- decrement
+        }
+        -- That&#39;s it!.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using &lt;code&gt;B::Deparse&lt;/code&gt; on the command line, we can see what the code looks like after it&amp;rsquo;s filtered. Just remember that &lt;code&gt;B::Deparse&lt;/code&gt; doesn&amp;rsquo;t preserve comments.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use SQLComments;
+
+        my $i = 100;
+        while ($i) {
+            --$i;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The output is exactly as we expect. Filtering source code is a complex art. If your filters are not perfect, then you can break code in unexpected ways. Our &lt;code&gt;SQLComments&lt;/code&gt; filter will break the following code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        print &amp;quot;This is nice -- I mean really nice!\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It will turn into this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        print &amp;quot;This is nice# I mean really nice!\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Not exactly the results we want. This particular problem can be avoided, however, using &lt;code&gt;Filter::Simple&lt;/code&gt; in a slightly different way. You can specify filters for different sections of the source code, here is how we can limit our &lt;code&gt;SQLComments&lt;/code&gt; filter to just code and not quote-like constructs.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        package SQLComments;
+
+        use Filter::Simple;
+
+        FILTER_ONLY code =&amp;gt; sub { s/(?:^|\s)--(?!;)/#/g };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you want to learn more about source filters, then read the documentation provided in &lt;code&gt;Filter::Simple&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-variable-utility-modules-variable-utility-modules-span&#34;&gt;&lt;span id=&#34;variable_utility_modules&#34;&gt;Variable Utility Modules&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;There are some functions that are repeated in hundreds (probably thousands) of programs. Think of all the sorting functions written in C programs. Perl programs have them, too, and the following utility modules try to clean up our code, eliminating duplication is simple routines.&lt;/p&gt;
+
+&lt;p&gt;There are a number of useful functions in each of these modules. I&amp;rsquo;m going to highlight a few, but be sure to read the documentation provided with each of them for a full list.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_scalar%3a%3autil&#34;&gt;&lt;code&gt;Scalar::Util&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;blessed()&lt;/code&gt; will return the package name that the variable is blessed into, or &lt;code&gt;undef&lt;/code&gt; if the variable isn&amp;rsquo;t blessed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $baby  = Person-&amp;gt;new;
+        my $class = blessed $baby;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$class&lt;/code&gt; will hold the string &lt;em&gt;Person&lt;/em&gt;. &lt;code&gt;weaken&lt;/code&gt; is a function that takes a reference and makes it weak. This means that the variable will not hold a reference count on the thing it references. This is useful for objects, where you want to keep a copy but you don&amp;rsquo;t want to stop the object from being &lt;code&gt;DESTROY&lt;/code&gt;-ed at the right time.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_list%3a%3autil&#34;&gt;&lt;code&gt;List::Util&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;first()&lt;/code&gt; function returns the first element in the list for which the block returns true.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $person = first { $_-&amp;gt;age &amp;lt; 18 } @people;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;shuffle()&lt;/code&gt; will return the elements of the list in random order. Here is an example of breaking a group of people into teams.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my @people = shuffle @people;
+
+        my @team1  = splice @people,  0, (@people/2);
+        my @team2  = @people;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, &lt;code&gt;sum&lt;/code&gt; returns the sum of all the elements in a list.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $sum = sum 1 .. 10;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_hash%3a%3autil&#34;&gt;&lt;code&gt;Hash::Util&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;#item_hash%3a%3autil&#34;&gt;&lt;code&gt;Hash::Util&lt;/code&gt;&lt;/a&gt; has a slightly different function than the previously discussed variable utility modules. This module implements restricted hashes, which are the predecessor to the undesirable (and now obsolete) pseudo-hashes.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;lock_keys()&lt;/code&gt; is a function that will restrict the allowed keys of a hash. If a list of keys is given, the hash will be restricted to that set, otherwise the hash is locked down to the currently existing keys.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use Hash::Util qw[lock_keys];
+
+        my %person = (
+                name =&amp;gt; &amp;quot;Casey West&amp;quot;,
+                dad  =&amp;gt; $dad,
+                mom  =&amp;gt; $mom,
+        );
+
+        lock_keys( %person );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;%person&lt;/code&gt; hash is now restricted. Any keys currently in the hash may be modified, but no keys may be added. The following code will result in a fatal error.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $person{wife} = $wife;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can use the &lt;code&gt;unlock_keys()&lt;/code&gt; function to release your restricted hash.&lt;/p&gt;
+
+&lt;p&gt;You can also lock (or unlock) a value in the hash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        lock_value( %person, &amp;quot;name&amp;quot; );
+        $person{name} = &amp;quot;Bozo&amp;quot;; # Fatal error!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, you can lock and unlock an entire hash, making it read only in the first case.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        lock_hash( %person );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now our &lt;code&gt;%person&lt;/code&gt; hash is really restricted. No keys can be added or deleted, and no values can be changed. I know all those OO folks out there wishing Perl made it easy to keep class and instance data private are smiling.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-locale-modules-locale-modules-span&#34;&gt;&lt;span id=&#34;locale_modules&#34;&gt;&lt;code&gt;Locale&lt;/code&gt; Modules&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;I&amp;rsquo;ve seen these modules implemented time and time again. Perl 5.8.0 introduced them. Each of them implements a set of functions that handle locale issues for you.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_locale%3a%3alanguage&#34;&gt;&lt;code&gt;Locale::Language&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This module will translate language codes to names, and vice-versa.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $lang = code2language( &#39;es&#39; );      # Spanish
+        my $code = language2code( &#39;English&#39; ); # en
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can also get a full list of supported language names and codes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my @codes = all_language_codes();
+        my @names = all_language_names();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_locale%3a%3acountry&#34;&gt;&lt;code&gt;Locale::Country&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Convert country names to codes, and vice-versa. By default country codes are represented in two character codes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $code = country2code( &#39;Finland&#39; ); # fi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can change the default behavior to get three character codes, or the numeric country codes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $code = country2code( &#39;Russia&#39;, LOCALE_CODE_ALPHA_3 ); # rus
+        my $num  = country2code( &#39;Australia&#39;, LOCALE_CODE_NUMERIC ); # 036
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can also go from any code type to country name.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $name = code2country( &#39;jp&#39; ); # Japan
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can specify any type of code, but if it&amp;rsquo;s not the default two character representation you must supply the extra argument to define what type it is.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $name = code2country( &amp;quot;120&amp;quot;, LOCALE_CODE_NUMERIC ); # Cameroon
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Just as before, you can get a full list of codes and countries using the two query functions: &lt;code&gt;all_country_codes()&lt;/code&gt;, and &lt;code&gt;all_country_names()&lt;/code&gt;. Both of these functions accept an optional argument specifying the code set to use for the resulting list.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_locale%3a%3acurrency&#34;&gt;&lt;code&gt;Locale::Currency&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This module has the same properties as the other locale modules. You can convert currency codes into full names, and vice-versa.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my $curr = code2currency( &#39;jpy&#39; ); # Yen
+        my $code = currency2code( &#39;US Dollar&#39; ); # usd
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The query functions are: &lt;code&gt;all_currency_codes()&lt;/code&gt;, and &lt;code&gt;all_currency_names()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-memoize-memoize-span&#34;&gt;&lt;span id=&#34;memoize&#34;&gt;&lt;code&gt;Memoize&lt;/code&gt;&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;Memoize&lt;/code&gt; is a module that performs code optimization for you. In a general sense, when you &lt;em&gt;memoize&lt;/em&gt; a function, it is replaced by a &lt;em&gt;memoized&lt;/em&gt; version of the same function. OK, that was too general. More specifically, every time your memoized function is called, the calling arguments are cached and anything the function returns is cached as well. If the function is called with a set of arguments that has been seen before, then the cached return value is sent back and the actual function is never called. This makes the function faster.&lt;/p&gt;
+
+&lt;p&gt;Not all functions can be memoized. For instance, if your function would return a different value on two calls, even for the exact same set of calling arguments, then it will be broken. Only the first sets return values will be returned for every call. Many function do not act this way, and that&amp;rsquo;s what makes &lt;code&gt;Memoize&lt;/code&gt; so useful.&lt;/p&gt;
+
+&lt;p&gt;Here is an example of a *memoize*able function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        sub add {
+                my ($x, $y) = @_;
+                return $x + $y;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For every time this function is called as &lt;code&gt;add( 2, 2 )&lt;/code&gt;, the result will be &lt;code&gt;4&lt;/code&gt;. Rather than compute the value of &lt;code&gt;4&lt;/code&gt; in every case, we can cache it away the first time and retrieve it from the cache every other time we need to compute &lt;code&gt;2 + 2&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use Memoize;
+
+        memoize( &#39;add&#39; );
+
+        sub add {
+                my ($x, $y) = @_;
+                return $x + $y;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;ve just made &lt;code&gt;add()&lt;/code&gt; faster, without any work. Of course, our addition function isn&amp;rsquo;t slow to begin with. The documentation of &lt;code&gt;Memoize&lt;/code&gt; gives a much more details look into this algorithm. I highly suggest you invest time in learning about &lt;code&gt;Memoize&lt;/code&gt;, it can give you wonderful speed increases if you know how and when to use it.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-win32-win32-span&#34;&gt;&lt;span id=&#34;win32&#34;&gt;&lt;code&gt;Win32&lt;/code&gt;&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;I currently don&amp;rsquo;t have a Microsoft operating system running on any of my networks, but when perusing the Perl core, I happened upon the &lt;code&gt;Win32&lt;/code&gt; module. I wanted to bring it up because if I were using a Microsoft OS, then I would find the functions in his module invaluable. Please, if you are running in that environment, then look at the documentation for &lt;code&gt;Win32&lt;/code&gt; for dozens of helpful functions (&lt;code&gt;perldoc Win32&lt;/code&gt; on the command line).&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Just as before, I&amp;rsquo;ve still not covered all of the Perl core. There is much more to explore and a full list can be found by reading &lt;em&gt;perlmodlib&lt;/em&gt;. The benefit of having these modules in the core is great. Lots of environments require programmers to be bound to using only code that is distributed with Perl. I hope I&amp;rsquo;ve been able to lighten the load for anyone who has been put in that position (even by choice).&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Hidden Treasures of the Perl Core</title>
+      <link>http://localhost:1313/pub/2003/05/29/treasures.html/</link>
+      <pubDate>Thu, 29 May 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/05/29/treasures.html/</guid>
+      <description>
+
+&lt;p&gt;The Perl Core comes with a lot of little modules to help you get thejob done. Many of these modules are not well-known. Even some of the well-known modules have some nice features that are often overlooked. In this article, we&amp;rsquo;ll dive into many of these hidden treasures of the Perl Core.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-blib-blib-span&#34;&gt;&lt;span id=&#34;blib&#34;&gt;&lt;code&gt;blib&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This module allows you to use &lt;code&gt;MakeMaker&lt;/code&gt;s to-be-installed version of a package. Most of the distributions on the CPAN conform to &lt;code&gt;MakeMaker&lt;/code&gt;s building techniques. If you are writing a Perl module that has a build system, then there would be a good chance &lt;code&gt;MakeMaker&lt;/code&gt; is involved. Testing on the command line is common; I know I find myself doing it often. This is one of the places that &lt;code&gt;blib&lt;/code&gt; comes in handy. When running my test suite (you all have test suites, right?) on the command line, I&amp;rsquo;m able to execute individual tests easily.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  perl -Mblib t/deepmagic.t
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you are building someone elses module and find yourself debugging a testing failure, then &lt;code&gt;blib&lt;/code&gt; could be used the same way.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-diagnostics-diagnostics-span&#34;&gt;&lt;span id=&#34;diagnostics&#34;&gt;&lt;code&gt;diagnostics&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;em&gt;PC Load Letter, what the frell does that mean?!&lt;/em&gt; &amp;ndash; Micheal Bolton&lt;/p&gt;
+
+&lt;p&gt;When pushed hard enough, the Perl interpreter can spew out hundreds of error messages. Some of them can be quite cryptic. Running the following code snippet under the &lt;code&gt;warnings&lt;/code&gt; pragma yields the warning &lt;em&gt;Unterminated &amp;lt;&amp;gt; operator at program.perl line 11&lt;/em&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $i &amp;lt;&amp;lt;&amp;lt; $j;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Thankfully, &lt;code&gt;diagnostics&lt;/code&gt; is an easy way to get a better explanation from Perl. Since we&amp;rsquo;re all running our important programs under the &lt;code&gt;strict&lt;/code&gt; and &lt;code&gt;warnings&lt;/code&gt; pragmas, it&amp;rsquo;s easy to add &lt;code&gt;diagnostics&lt;/code&gt; to the mix.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use strict;
+  use warnings;
+  use diagnostics;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The previous code snippet now yields the following warning:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Unterminated &amp;lt;&amp;gt; operator at -e line 1 (#1)
+    (F) The lexer saw a left-angle bracket in a place where it was expecting
+    a term, so it&#39;s looking for the corresponding right-angle bracket, and
+    not finding it.  Chances are you left some needed parentheses out
+    earlier in the line, and you really meant a &amp;quot;less than&amp;quot;.
+
+  Uncaught exception from user code:
+        Unterminated &amp;lt;&amp;gt; operator at program.perl line 11.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Use of the &lt;code&gt;diagnostics&lt;/code&gt; pragma should be kept to development only (where it&amp;rsquo;s truly useful).&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-benchmark-benchmark-span&#34;&gt;&lt;span id=&#34;benchmark&#34;&gt;&lt;code&gt;Benchmark&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;It can be difficult to benchmark code. When trying to optimise a program or routine, you want to try several approaches and see which comes out faster. That&amp;rsquo;s what the &lt;code&gt;Benchmark&lt;/code&gt; module is for. This way, you don&amp;rsquo;t have to calculate start and stop times yourself, and in general you can do high-level profiling quickly. Here is an example that tries to determine which is faster, literal hash slices or retrieving hash values one at a time.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Benchmark;
+
+  sub literal_slice {
+    my %family = (
+      Daughter =&amp;gt; &#39;Evilina&#39;,
+      Father =&amp;gt; &#39;Casey&#39;,
+      Mother =&amp;gt; &#39;Chastity&#39;,
+    );
+    my ($mom, $dad) = @family{qw[Mother Father]};
+  }
+
+  sub one_at_a_time {
+    my %family = (
+      Daughter =&amp;gt; &#39;Evelina&#39;,
+      Father =&amp;gt; &#39;Casey&#39;,
+      Mother =&amp;gt; &#39;Chastity&#39;,
+    );
+    my $mom = $family{Mother};
+    my $dad = $family{Father};
+  }
+
+  timethese(
+    5_000_000 =&amp;gt; {
+      slice       =&amp;gt; \&amp;amp;literal_slice,
+      one_at_time =&amp;gt; \&amp;amp;one_at_a_time,
+    },
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On the hardware I have at work, a dual G4 PowerMac, the answer seems obvious. Being cute and clever doesn&amp;rsquo;t hurt us too badly. Here is the output.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Benchmark: timing 5000000 iterations of one_at_time, slice...
+  one_at_time: 53 wallclock secs (53.63 usr +  0.00 sys = 53.63 CPU) 
+         @ 93231.40/s (n=5000000)
+        slice: 56 wallclock secs (56.72 usr +  0.00 sys = 56.72 CPU) 
+         @ 88152.33/s (n=5000000)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-cgi-pretty-cgi-pretty-span&#34;&gt;&lt;span id=&#34;cgi::pretty&#34;&gt;&lt;code&gt;CGI::Pretty&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Many of you know you can use Perl to write your HTML, in fact, this trick is often used in CGI programs. If you have used the &lt;code&gt;CGI&lt;/code&gt; module to create HTML, then it would be obvious that the output is not intended for humans to parse. The ``browser only&amp;rdquo; nature of the output makes debugging nearly impossible.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use CGI qw[:standard];
+
+  print header,
+    start_html( &#39;HTML from Perl&#39; ),
+    h2(&#39;Writiing HTML using Perl&#39; ),
+    hr,
+    p( &#39;Writing HTML with Perl is simple with the CGI module.&#39; ),
+    end_html;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The previous program produces the following incomprehensible output.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Content-Type: text/html; charset=ISO-8859-1
+
+  &amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;iso-8859-1&amp;quot;?&amp;gt;
+  &amp;lt;!DOCTYPE html
+          PUBLIC &amp;quot;-//W3C//DTD XHTML 1.0 Transitional//EN&amp;quot;
+           &amp;quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&amp;quot;&amp;gt;;
+  &amp;lt;html xmlns=&amp;quot;http://www.w3.org/1999/xhtml&amp;quot;; lang=&amp;quot;en-US&amp;quot;&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;title&amp;gt;HTML from Perl&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;&amp;lt;body&amp;gt;&amp;lt;h2&amp;gt;Writing 
+  HTML using Perl&amp;lt;/h2&amp;gt;&amp;lt;hr /&amp;gt;&amp;lt;p&amp;gt;Writing HTML with Perl is simple with the 
+  CGI module.&amp;lt;/p&amp;gt;&amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By changing the first line to &lt;code&gt;use CGI::Pretty qw[:standard];&lt;/code&gt;, our output is now manageable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Content-Type: text/html; charset=ISO-8859-1
+
+  &amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;iso-8859-1&amp;quot;?&amp;gt;
+  &amp;lt;!DOCTYPE html
+          PUBLIC &amp;quot;-//W3C//DTD XHTML 1.0 Transitional//EN&amp;quot;
+           &amp;quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&amp;quot;&amp;gt;;
+  &amp;lt;html xmlns=&amp;quot;http://www.w3.org/1999/xhtml&amp;quot;; lang=&amp;quot;en-US&amp;quot;&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;title&amp;gt;HTML from Perl&amp;lt;/title&amp;gt;
+  &amp;lt;/head&amp;gt;&amp;lt;body&amp;gt;
+  &amp;lt;h2&amp;gt;
+          Writing HTML using Perl
+  &amp;lt;/h2&amp;gt;
+  &amp;lt;hr&amp;gt;&amp;lt;p&amp;gt;
+          Writing HTML with Perl is simple with the CGI module.
+  &amp;lt;/p&amp;gt;
+  &amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;While not as attractive as I&amp;rsquo;d like, there are lots of customizations to be made, all outlined in the &lt;code&gt;CGI::Pretty&lt;/code&gt; documentation.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-class-isa-class-isa-span&#34;&gt;&lt;span id=&#34;class::isa&#34;&gt;&lt;code&gt;Class::ISA&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The world of class inheritance is a complex and twisting maze. This module provides some functions to help us navigate the maze. The most common need is for the function &lt;code&gt;super_path()&lt;/code&gt;. When dealing with complex OO hierarchies, &lt;code&gt;super_path()&lt;/code&gt; can help us know which classes we&amp;rsquo;re inheriting from (it isn&amp;rsquo;t always obvious), and find method declarations.&lt;/p&gt;
+
+&lt;p&gt;I have a little project that requires &lt;code&gt;Class::DBI&lt;/code&gt;, so I ran &lt;code&gt;super_path()&lt;/code&gt; on one of the classes to determine how Perl would search the inheritance tree for a method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  perl -MJobSearch -MClass::ISA -le&#39;print for 
+      Class::ISA::super_path( &amp;quot;JobSearch::Job&amp;quot; )&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The following list of classes is in the order Perl would search to find a method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  JobSearch::Object
+  Class::DBI::mysql
+  Class::DBI
+  Class::DBI::__::Base
+  Class::Data::Inheritable
+  Class::Accessor
+  Ima::DBI
+  Class::WhiteHole
+  DBI
+  Exporter
+  DynaLoader
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now if I have a question about a method implementation, or where methods are coming from, I have a nice list to look through. &lt;code&gt;Class::ISA&lt;/code&gt; intentionally leaves out the current class (in this case &lt;code&gt;JobSearch::Job&lt;/code&gt;), and &lt;code&gt;UNIVERSAL&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here is a little trick that allows me to find out which classes &lt;em&gt;may&lt;/em&gt; implement the &lt;code&gt;mk_accessors&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  perl -MJobSearch -MClass::ISA -le \
+    &#39;for (Class::ISA::super_path( &amp;quot;JobSearch::Job&amp;quot; )) { 
+        print if $_-&amp;gt;can(&amp;quot;mk_accessors&amp;quot;) }&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because of inheritance, all of the classes listed can invoke &lt;code&gt;mk_accessors&lt;/code&gt;, but not all of them actually define &lt;code&gt;mk_accessors&lt;/code&gt;. It still manages to narrow the list.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Class::ISA&lt;/code&gt; was introduced to the Perl Core in release &lt;strong&gt;5.8.0&lt;/strong&gt;. If you&amp;rsquo;re using an older Perl, you can download it from the CPAN.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-cwd-cwd-span&#34;&gt;&lt;span id=&#34;cwd&#34;&gt;&lt;code&gt;Cwd&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This module makes it simple to find the current working directory. There is no need to go to the shell, as so many of us do. Instead, use &lt;code&gt;Cwd&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Cwd;
+  my $path = cwd;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-env-env-span&#34;&gt;&lt;span id=&#34;env&#34;&gt;&lt;code&gt;Env&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Perl provides access to environment variables via the global &lt;code&gt;%ENV&lt;/code&gt; hash. For many applications, this is fine. Other times it can get in the way. Enter the &lt;code&gt;Env&lt;/code&gt; module. By default, this module will create global scalars for all the variables in your environment.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Env;
+  print &amp;quot;$USER uses $SHELL&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some variables are of better use as a list. You can alter the behavior of &lt;code&gt;Env&lt;/code&gt; by specifying an import list.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Env qw[@PATH $USER];
+  print &amp;quot;$USER&#39;s  path is @PATH&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yet another module to save time and energy when writing programs.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-file-path-file-path-span&#34;&gt;&lt;span id=&#34;file::path&#34;&gt;&lt;code&gt;File::Path&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This module has a useful function called &lt;code&gt;mkpath&lt;/code&gt;. With &lt;code&gt;mkpath&lt;/code&gt; you can create more than one level of directory at a time. In some cases, this could reduce a recursive function or a loop construct to a simple function call.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use File::Path;
+  mkpath &amp;quot;/usr/local/apache/htdocs/articles/2003&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since &lt;code&gt;mkpath&lt;/code&gt; will create any directory it needs to in order to finally create the &lt;code&gt;2003&lt;/code&gt; directory, a tremendous amount of code is no longer needed.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-file-spec-functions-file-spec-functions-span&#34;&gt;&lt;span id=&#34;file::spec::functions&#34;&gt;&lt;code&gt;File::Spec::Functions&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This module implements a sane and useful interface over the &lt;code&gt;File::Spec&lt;/code&gt; module. &lt;code&gt;File::Spec&lt;/code&gt; must be used by calling class methods, while &lt;code&gt;File::Spec::Functions&lt;/code&gt; turns those methods into functions. There are many functions that are all useful (and fully documented in &lt;code&gt;File::Spec::Unix&lt;/code&gt;). Here are a few examples.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use File::Spec::Functions qw[splitpath canonpath splitdir abs2rel];
+
+  # split a path into logical pieces
+  my ($volume, $dir_path, $file) = splitpath( $path );
+
+  # clean up directory path
+  $dir_path = canonpath $dir_path;
+
+  # split the directories into a list
+  my @dirs = splitdir $dir_path;
+
+  # turn the full path into a relative path
+  my $rel_path = abs2rel $path;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, there are plenty of ways to save yourself coding time by using &lt;code&gt;File::Spec::Functions&lt;/code&gt;. Don&amp;rsquo;t forget, these functions are portable because they use different symantecs behind the senses for the operating system Perl is running on.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-file-temp-file-temp-span&#34;&gt;&lt;span id=&#34;file::temp&#34;&gt;&lt;code&gt;File::Temp&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you need a temporary file, then use &lt;code&gt;File::Temp&lt;/code&gt;. This module will find a temporary directory that is suitable for the operating system Perl is running on and open a temporary file in that location. This is yet another example of the Perl Core saving you time.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use File::Temp;
+  my $fh = tempfile;
+
+  print $fh &amp;quot;temp data&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will open a temporary file for you and return the filehandle for you to write to. When your program exits, the temporary file will be deleted.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-findbin-findbin-span&#34;&gt;&lt;span id=&#34;findbin&#34;&gt;&lt;code&gt;FindBin&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;FindBin&lt;/code&gt; has a small but useful purpose: to find the original directory of the Perl script being run. When a program is invoked, it can be hard to determine this directory. If a program is calling &lt;code&gt;chdir&lt;/code&gt;, then it can be even more difficult. &lt;code&gt;FindBin&lt;/code&gt; makes it easy.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use FindBin;
+  my $program_dir = $FindBin::Bin;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-shell-shell-span&#34;&gt;&lt;span id=&#34;shell&#34;&gt;&lt;code&gt;Shell&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;Shell&lt;/code&gt; takes the ugliness of dealing with the command line and wraps it up in pretty functions. The effect here is prettier programs. Here is a simple demonstration.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Shell qw[ls du];
+  use File::Spec::Functions qw[rel2abs];
+
+  chomp( my @files = ls );
+  foreach ( @files ) {
+        print du &amp;quot;-sk&amp;quot;, rel2abs $_;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-time-localtime-time-localtime-span&#34;&gt;&lt;span id=&#34;time::localtime&#34;&gt;&lt;code&gt;Time::localtime&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This module allows &lt;code&gt;localtime&lt;/code&gt; to return an object. The object gives you by-name access to the individual elements returned by &lt;code&gt;localtime&lt;/code&gt; in list context. This doesn&amp;rsquo;t save us much coding time, but is can save us a trip to the documentation.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Time::localtime;
+  my $time = localtime;
+  print $time-&amp;gt;year += 1900;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is a similar module called &lt;code&gt;Time::gmtime&lt;/code&gt;, which provides the same functionality for the &lt;code&gt;gmtime&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-universal-universal-span&#34;&gt;&lt;span id=&#34;universal&#34;&gt;&lt;code&gt;UNIVERSAL&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;UNIVERSAL&lt;/code&gt; module is handy. Two of its most common functions, &lt;code&gt;isa&lt;/code&gt; and &lt;code&gt;can&lt;/code&gt; are almost always used in OO programming as methods. &lt;code&gt;isa&lt;/code&gt; is used to determine what class an object belongs to, and &lt;code&gt;can&lt;/code&gt; will tell us whether an object supports a method. This is useful for testing. For example.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Time::localtime;
+  my $time = localtime;
+
+  if ( $time-&amp;gt;isa( &#39;Time::localtime&#39; ) ) {
+    print &amp;quot;We have a Time::localtime object&amp;quot;;
+  }
+
+  if ( $time-&amp;gt;can( &amp;quot;year&amp;quot; ) ) {
+    print &amp;quot;We can get the year from our object&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another less-known function in &lt;code&gt;UNIVERSAL&lt;/code&gt; is &lt;code&gt;VERSION&lt;/code&gt;. I often need to know the version of an installed module and I find myself writing a one-liner like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  perl -MTest::More -le&#39;print $Test::More::VERSION&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s just not as pretty as this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  perl -MTest::More -le&#39;print Test::More-&amp;gt;VERSION&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The Perl Core has many hidden wonders, and I&amp;rsquo;ve just laid out a few here. Trolling the Core for interesting functions and modules has saved me a lot of work over the years. If you would like to look further, then browse the &lt;code&gt;perlmodlib&lt;/code&gt; manpage for a list of the core modules. Whether your interest is CGI, I18N, Locale, or Math, you can find something there that saves a few hours of work.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Where Wizards Fear To Tread</title>
+      <link>http://localhost:1313/pub/2002/05/07/optree.html/</link>
+      <pubDate>Tue, 07 May 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/05/07/optree.html/</guid>
+      <description>
+
+&lt;p&gt;So you&amp;rsquo;re a Perl master. You&amp;rsquo;ve got XS sorted. You know how the internals work. Hey, there&amp;rsquo;s nothing we can teach you on perl.com that you don&amp;rsquo;t already know. You think? Where Wizards Fear To Tread brings you the information you won&amp;rsquo;t find anywhere else concerning the very top level of Perl hackery.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-putting-down-your-roots-putting-down-your-roots-span&#34;&gt;&lt;span id=&#34;putting down your roots&#34;&gt;Putting Down Your Roots&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This month, we look at the Perl op tree. Every Perl program is compiled into an internal representation before it is executed. Functions, subroutine calls, variable accesses, control structures, and all that makes up a Perl program, are converted into a series of different fundamental operations (&lt;em&gt;ops&lt;/em&gt;) and these ops are strung together into a tree data structure.&lt;/p&gt;
+
+&lt;p&gt;For more on the different types of ops available, how they fit together, and how to manipulate them with the &lt;a href=&#34;https://metacpan.org/pod/B&#34;&gt;B&lt;/a&gt; compiler module, look at the &lt;a href=&#34;https://web.archive.org/web/20050205214309/http://www.netthink.co.uk:80/downloads/internals/&#34;&gt;Perl 5 internals tutorial&lt;/a&gt;. Right now, though, we&amp;rsquo;re going to take things a step further.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-b-and-beyond-with-b-utils-b-and-beyond-with-b-utils-span&#34;&gt;&lt;span id=&#34;b and beyond with b::utils&#34;&gt;B and Beyond With B::Utils&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;B&lt;/code&gt; module allows us to get at a wealth of information about an op, but it can become incredibly frustrating to know which op you want to deal with, and to perform simple manipulation on a range of ops. It also offers limited functionality for navigating around the op tree, meaning that you need to hold onto a load of additional state about which op is where. This gets complicated quickly. Finally, it&amp;rsquo;s not easy to get at the op trees for particular subroutines, or indeed, all subroutines both named and anonymous.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/B::Utils&#34;&gt;B::Utils&lt;/a&gt; was created at the request of Michael Schwern to address these issues. It offers much more high-level functionality for navigating through the tree, such as the ability to move &amp;ldquo;upward&amp;rdquo; or &amp;ldquo;backward&amp;rdquo;, to return the old name of an op that has currently been optimized away, to get a list of the op&amp;rsquo;s children, and so on. It can return arrays of anonymous subroutines, and hashes of subroutine op roots and starts. It also contains functions for walking through the op tree from various starting points in various orders, optionally filtering out ops that don&amp;rsquo;t match certain conditions; while performing actions on ops, &lt;code&gt;B::Utils&lt;/code&gt; provides &lt;code&gt;carp&lt;/code&gt; and &lt;code&gt;croak&lt;/code&gt; routines which perform error reporting from the point of view of the original source code.&lt;/p&gt;
+
+&lt;p&gt;But one of the most useful functions provided by &lt;code&gt;B::Utils&lt;/code&gt; is the &lt;code&gt;opgrep&lt;/code&gt; routine. This allows you to filter a series of ops based on a pattern that represents their attributes and their position in a tree. The major advantage over doing it yourself is that &lt;code&gt;opgrep&lt;/code&gt; takes care of making sure that the attributes are present before testing them - the seasoned &lt;code&gt;B&lt;/code&gt; user is likely to be accustomed to the carnage that results from accidentally trying to call &lt;code&gt;name&lt;/code&gt; on a &lt;code&gt;B::NULL&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;p&gt;For instance, we can find all the subroutine calls in a program with&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;walkallops_filtered (
+    sub { opgrep( { name =&amp;gt; &amp;quot;entersub&amp;quot; }, @_) },
+    sub { print &amp;quot;Found one: $_[0]\n&amp;quot;; }
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;opgrep&lt;/code&gt; supports alternation and negation of attribute queries. For instance, here are all the scalar variable accesses, whether to globals or lexicals:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@svs = opgrep ( { name =&amp;gt; [&amp;quot;padsv&amp;quot;, &amp;quot;gvsv&amp;quot;] }, @ops)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And as for checking an op&amp;rsquo;s position in the tree, here are all the &lt;code&gt;exec&lt;/code&gt; ops followed by a &lt;code&gt;nextstate&lt;/code&gt; and then followed by something other than &lt;code&gt;exit&lt;/code&gt;, &lt;code&gt;warn&lt;/code&gt; or &lt;code&gt;die&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;walkallops_filtered(
+    sub { opgrep( {
+                      name =&amp;gt; &amp;quot;exec&amp;quot;,
+                      next =&amp;gt; {
+                         name    =&amp;gt; &amp;quot;nextstate&amp;quot;,
+                         sibling =&amp;gt; {
+                                       name =&amp;gt; [qw(! exit warn die)]
+                                    }
+                              }
+                  }, @_)},
+    sub {
+          carp(&amp;quot;Statement unlikely to be reached&amp;quot;);
+          carp(&amp;quot;\t(Maybe you meant system() when you said exec()?)\n&amp;quot;);
+    }
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-don-t-do-that-do-this-don-t-do-that-do-this-span&#34;&gt;&lt;span id=&#34;don&#39;t do that, do this&#34;&gt;Don&amp;rsquo;t Do That, Do This&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So, what can we do with all this? The answer is, of course, &amp;ldquo;anything we want&amp;rdquo;. If you can mess about with the op tree, then you have complete control over Perl&amp;rsquo;s operation. Let&amp;rsquo;s take an example.&lt;/p&gt;
+
+&lt;p&gt;Damian Conway recently released the &lt;a href=&#34;https://metacpan.org/pod/Acme::Don::t&#34;&gt;Acme::Don&amp;rsquo;t&lt;/a&gt; module, which doesn&amp;rsquo;t do anything:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;don&#39;t { print &amp;quot;Something\n&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;doesn&amp;rsquo;t print anything. Very clever. But not clever enough. You see, I like double negatives:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $x = 1;
+don&#39;t { print &amp;quot;Something\n&amp;quot; } unless $x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;doesn&amp;rsquo;t print anything either, and if you like double negatives, then you might agree that it should print something. But how on earth are we going to get Perl to do something when a test proves false? By messing about with the op tree, of course.&lt;/p&gt;
+
+&lt;p&gt;The way to solve any problem like this is to think about the op tree that we&amp;rsquo;ve currently got, work out what we&amp;rsquo;d rather do instead, and work out the differences between the op trees. Then, we write something that looks for a given pattern in a program&amp;rsquo;s op tree and modifies it to be what we want.&lt;/p&gt;
+
+&lt;p&gt;There are several ways of achieving what we actually want to get but the simplest one is this: add a second parameter to &lt;code&gt;don&#39;t&lt;/code&gt; which, if set, actually &lt;em&gt;does&lt;/em&gt; do the code. This allows us to replace any occurrence of&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;don&#39;t { print &amp;quot;Something\n&amp;quot; } if (condition);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;with&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;don&#39;t(sub { print &amp;quot;Something\n&amp;quot; }, 1) unless (condition);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s now look at this in terms of op trees. Here&amp;rsquo;s the relevant part of the op tree for &lt;code&gt;don&#39;t { ... } if $x&lt;/code&gt;, produced by running &lt;code&gt;perl -MO=Terse&lt;/code&gt; and then using &lt;code&gt;sed&lt;/code&gt; to trim out to unsightly hex addresses:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    UNOP  null
+        LOGOP  and
+            UNOP  null [15]
+                SVOP  *x
+            UNOP  entersub [2]
+                UNOP  null [141]
+                    OP  pushmark
+                    UNOP  refgen
+                        UNOP  null [141]
+                            OP  pushmark
+                            SVOP  anoncode  SPECIAL #0 Nullsv
+                    UNOP  null [17]
+                        SVOP  *don::t
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As we can see, the &lt;code&gt;if&lt;/code&gt; is represented as an &lt;code&gt;and&lt;/code&gt; op internally, which makes sense if you think about it. The two &amp;ldquo;legs&amp;rdquo; of the &lt;code&gt;and&lt;/code&gt;, called &amp;ldquo;first&amp;rdquo; and &amp;ldquo;other&amp;rdquo; are a call to fetch the value of &lt;code&gt;$c&lt;/code&gt;, and a subroutine call. Look at the subroutine call closely: the ops &amp;ldquo;inside&amp;rdquo; this set up a mark to say where the parameters start, push a reference to anonymous code (that&amp;rsquo;s our &lt;code&gt;{ ... }&lt;/code&gt;) onto the stack, and then push the glob for &lt;code&gt;*don::t&lt;/code&gt; on there.&lt;/p&gt;
+
+&lt;p&gt;So, we need to do two things: We need to insert another parameter between &lt;code&gt;refgen&lt;/code&gt; and the &lt;code&gt;null&lt;/code&gt; attached to &lt;code&gt;*don::t&lt;/code&gt;, and we need to invert the sense of the test.&lt;/p&gt;
+
+&lt;p&gt;Now we know what we&amp;rsquo;ve got to do, let&amp;rsquo;s start doing it - remember our solution: stage one, write code to find the pattern.&lt;/p&gt;
+
+&lt;p&gt;This is actually pretty simple: We&amp;rsquo;re looking for either an &lt;code&gt;and&lt;/code&gt; or an &lt;code&gt;or&lt;/code&gt; op, and the &amp;ldquo;other&amp;rdquo; leg of the op is going to be a call to &lt;code&gt;*don::t&lt;/code&gt;. However, we have to be a bit clever here, since Perl internally performs a few optimizations on the op tree that even the &lt;code&gt;B::*&lt;/code&gt; reporting modules don&amp;rsquo;t tell you about. When Perl threads the &lt;code&gt;next&lt;/code&gt; pointers around an op tree, it does something special for a short-circuiting binary op like &lt;code&gt;and&lt;/code&gt; or &lt;code&gt;or&lt;/code&gt; - it sets the &lt;code&gt;other&lt;/code&gt; pointer to be not the first sibling in the tree, but the first op in execution order. In this case, that&amp;rsquo;s &lt;code&gt;pushmark&lt;/code&gt;, as we can see from running &lt;code&gt;B::Terse,exec&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    LOGOP (0x80fa008) and
+    AND =&amp;gt; {
+        OP (0x80f9f88) pushmark
+        OP (0x80f9f20) pushmark
+        SVOP (0x80f9ec0) anoncode  SPECIAL #0 Nullsv
+        ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With this knowledge, we can create a pattern to pass to &lt;code&gt;opgrep&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    {
+        name =&amp;gt; [&amp;quot;and&amp;quot;, &amp;quot;or&amp;quot;],
+        other =&amp;gt; {
+            name =&amp;gt; &amp;quot;pushmark&amp;quot;,
+            sibling =&amp;gt; { next =&amp;gt; { name =&amp;gt; &amp;quot;gv&amp;quot; }}
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unfortunately, this doesn&amp;rsquo;t tell us the whole story, since we actually need to check that the subroutine call &lt;strong&gt;is&lt;/strong&gt; to &lt;code&gt;don&#39;t&lt;/code&gt;, rather than to any other given subroutine that might be called conditionally. Hence, our filter looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub {
+    my $op = shift;
+    opgrep(
+        {
+            name =&amp;gt; [&amp;quot;and&amp;quot;, &amp;quot;or&amp;quot;],
+            other =&amp;gt; {
+                name =&amp;gt; &amp;quot;pushmark&amp;quot;,
+                sibling =&amp;gt; { next =&amp;gt; { name =&amp;gt; &amp;quot;gv&amp;quot; }}
+            }
+        }, $op) or return;
+    my $gv = $op-&amp;gt;other-&amp;gt;sibling-&amp;gt;next-&amp;gt;gv;
+    return unless $gv-&amp;gt;STASH-&amp;gt;NAME eq &amp;quot;don&amp;quot; and $gv-&amp;gt;NAME eq &amp;quot;t&amp;quot;;
+    return 1;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We grab the GV (we know exactly where it&amp;rsquo;s going to be because of our pattern!) and test that it&amp;rsquo;s in the &lt;code&gt;don&lt;/code&gt; stash and is called &lt;code&gt;t&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Part one done - we have located the ops that we want to change. Now how on earth do we change ops in an op tree?&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-fixing-it-up-with-b-generate-fixing-it-up-with-b-generate-span&#34;&gt;&lt;span id=&#34;fixing it up with b::generate&#34;&gt;Fixing It Up With B::Generate&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;B::Generate&lt;/code&gt; was written to allow users to create their own ops and insert them into the op tree. The original intent was to be able to create bytecode for other languages to be run on the Perl virtual machine, but it&amp;rsquo;s found plenty of use manipulating existing Perl op trees.&lt;/p&gt;
+
+&lt;p&gt;It provides &amp;ldquo;constructor&amp;rdquo; methods in all of the &lt;code&gt;B::*OP&lt;/code&gt; classes, and makes many of the accessor methods read-write instead of read-only. Let&amp;rsquo;s see how we can apply it to this problem. Remember that we want to negate the sense of the test, and then to add another argument to the call to &lt;code&gt;don&#39;t&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;For the first of these tasks, &lt;code&gt;B::Generate&lt;/code&gt; provides the handy &lt;code&gt;mutate&lt;/code&gt; and &lt;code&gt;convert&lt;/code&gt; methods on each &lt;code&gt;B::OP&lt;/code&gt;-derived object to change one op&amp;rsquo;s type into another. The decision as to which of them use is slightly complex: &lt;code&gt;mutate&lt;/code&gt; can only be used for ops of the same type - for instance, you cannot use it to mutate a binary op into a unary op. However, &lt;code&gt;convert&lt;/code&gt; produces a completely new op, which needs to be threaded back into the op tree. So &lt;code&gt;convert&lt;/code&gt; is much more powerful, but &lt;code&gt;mutate&lt;/code&gt; is much more convenient. In this case, since we&amp;rsquo;re just flipping between &lt;code&gt;and&lt;/code&gt; and &lt;code&gt;or&lt;/code&gt;, we can get away with using &lt;code&gt;mutate&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;require B::Generate;
+my $op = shift;
+if ($op-&amp;gt;name eq &amp;quot;and&amp;quot;) {
+    $op-&amp;gt;mutate(&amp;quot;or&amp;quot;);
+} else {
+    $op-&amp;gt;mutate(&amp;quot;and&amp;quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now to insert the additional parameter. For this, remember that &lt;code&gt;entersub&lt;/code&gt; works by popping off the top entry in the stack and calling that as a subroutine, and the remaining stack entries become parameters to the subroutine. So we want to add a &lt;code&gt;const&lt;/code&gt; op to put a constant on the stack. We use the &lt;code&gt;B::SVOP-&amp;gt;new&lt;/code&gt; constructor to create a new one, and then thread the &lt;code&gt;next&lt;/code&gt; pointers so that Perl&amp;rsquo;s main loop will call it between &lt;code&gt;$op-&amp;gt;other-&amp;gt;sibling&lt;/code&gt; (the &lt;code&gt;refgen&lt;/code&gt; op) and the op after it. (the GV which represents &lt;code&gt;*don::t&lt;/code&gt;)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $to_insert = $op-&amp;gt;other-&amp;gt;sibling;
+my $newop = B::SVOP-&amp;gt;new(&amp;quot;const&amp;quot;, 0, 1);
+$newop-&amp;gt;next($to_insert-&amp;gt;next);
+$to_insert-&amp;gt;next($newop);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;All that&amp;rsquo;s left is to replace the definition of &lt;code&gt;don&#39;t&lt;/code&gt; so that, depending on the parameters, it sometimes &lt;code&gt;do&lt;/code&gt;es:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub don&#39;t (&amp;amp;;$) { $_[0]-&amp;gt;() if $_[1] }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And there we have it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Acme::Don&#39;t;
+CHECK {
+    use B::Utils qw(opgrep walkallops_filtered);
+    walkallops_filtered(
+        sub {
+            my $op = shift;
+            opgrep(
+            {
+                name =&amp;gt; [&amp;quot;and&amp;quot;, &amp;quot;or&amp;quot;],
+                other =&amp;gt; {
+                    name =&amp;gt; &amp;quot;pushmark&amp;quot;,
+                    sibling =&amp;gt; { next =&amp;gt; { name =&amp;gt; &amp;quot;gv&amp;quot; }}
+                }
+            }, $op) or return;
+            my $gv = $op-&amp;gt;other-&amp;gt;sibling-&amp;gt;next-&amp;gt;gv;
+            return unless $gv-&amp;gt;STASH-&amp;gt;NAME eq &amp;quot;don&amp;quot; and $gv-&amp;gt;NAME eq &amp;quot;t&amp;quot;;
+            return 1;
+        },
+        sub {
+            require B::Generate;
+            my $op = shift;
+            if ($op-&amp;gt;name eq &amp;quot;and&amp;quot;) {
+                $op-&amp;gt;mutate(&amp;quot;or&amp;quot;);
+            } else {
+                $op-&amp;gt;mutate(&amp;quot;and&amp;quot;);
+            }
+
+            my $to_insert = $op-&amp;gt;other-&amp;gt;sibling;
+            my $newop = B::SVOP-&amp;gt;new(&amp;quot;const&amp;quot;, 0, 1);
+            $newop-&amp;gt;next($to_insert-&amp;gt;next);
+            $to_insert-&amp;gt;next($newop);
+        }
+   );
+}
+
+sub don&#39;t (&amp;amp;;$) { $_[0]-&amp;gt;() if $_[1] }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will turn&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$false = 0; $true = 1;
+
+don&#39;t { print &amp;quot;Testing&amp;quot; } if $false;
+don&#39;t { print &amp;quot;Testing again&amp;quot; } unless $true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;into&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$false = 0; $true = 1;
+
+don&#39;t(sub { print &amp;quot;Testing&amp;quot; }, 1) unless $false;
+don&#39;t(sub { print &amp;quot;Testing again&amp;quot; }, 1) if $true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;setting off the conditions and making &lt;code&gt;don&#39;t&lt;/code&gt; do the code. A neat trick? We think so.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-where-to-from-here-where-to-from-here-span&#34;&gt;&lt;span id=&#34;where to from here&#34;&gt;Where To From Here?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;But that&amp;rsquo;s not all! And, of course, this doesn&amp;rsquo;t cater for some of the more complex constructions people can create, such as&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($x) {
+    do_something();
+    don&#39;t { do_the_other_thing() };
+    do_something_else();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or even&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($x) {
+    do_that();
+    don&#39;t { do_this() }
+} else {
+    do_the_other();
+    don&#39;t { do_something_else() }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But this can be solved in just the same way. For instance, you want to turn the first one into&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($x) {
+    do_something();
+    do_something_else();
+} else {
+    don&#39;t(sub { do_the_other_thing() }, 1);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the second into&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($x) {
+    do_that();
+    don&#39;t(sub { do_something_else() }, 1);
+} else {
+    do_the_other();
+    don&#39;t(sub { do_this() }, 1);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Both of these transformations can be done by applying the method above: compare the op trees, work out the difference, find the pattern you want to look for, then write some code to manipulate the op tree into the desired output. An easy task for the interested reader &amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;And we really haven&amp;rsquo;t scratched the surface of what can be done with &lt;code&gt;B::Generate&lt;/code&gt; and &lt;code&gt;B::Utils&lt;/code&gt;; the &lt;code&gt;B::Generate&lt;/code&gt; test suite shows what sort of mayhem can be caused to existing Perl programs, and there have been experiments using &lt;code&gt;B::Generate&lt;/code&gt; to generate op trees for other languages - a &lt;code&gt;B::Generate&lt;/code&gt; port of Leon Brocard&amp;rsquo;s &lt;a href=&#34;http://www.sourceforge.net/projects/shiny&#34;&gt;shiny&lt;/a&gt; Ruby interpreter could produce Perl bytecode for simple Ruby programs; &lt;code&gt;chromatic&lt;/code&gt; is working on an idea to turn Perl programs into XML, manipulate them and use &lt;code&gt;B::Generate&lt;/code&gt; to turn them back into Perl op trees.&lt;/p&gt;
+
+&lt;p&gt;Later in our &amp;ldquo;Where Wizards Fear To Tread&amp;rdquo; series, we&amp;rsquo;ll have articles about Perl and Java interaction, &lt;code&gt;iThreads&lt;/code&gt;, and more.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Why Not Translate Perl to C?</title>
+      <link>http://localhost:1313/pub/2001/06/27/ctoperl.html/</link>
+      <pubDate>Wed, 27 Jun 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/06/27/ctoperl.html/</guid>
+      <description>
+
+&lt;p&gt;People often have the idea that automatically translating Perl to C and then compiling the C will make their Perl programs run faster, because &amp;ldquo;C is much faster than Perl.&amp;rdquo; This article explains why this strategy is unlikely to work.&lt;/p&gt;
+
+&lt;h3 id=&#34;short-summary&#34;&gt;Short Summary&lt;/h3&gt;
+
+&lt;p&gt;Your Perl program is being run by the Perl interpreter. You want a C program that does the same thing that your Perl program does. A C program to do what your Perl program does would have to do most of the same things that the Perl interpreter does when it runs your Perl program. There is no reason to think that the C program could do those things faster than the Perl interpreter does them, because the Perl interpreter itself is written in very fast C.&lt;/p&gt;
+
+&lt;p&gt;Some detailed case studies follow.&lt;/p&gt;
+
+&lt;h3 id=&#34;built-in-functions&#34;&gt;Built-In Functions&lt;/h3&gt;
+
+&lt;p&gt;Suppose your program needs to split a line into fields, and uses the Perl &lt;code&gt;split&lt;/code&gt; function to do so. You want to compile this to C so it will be faster.&lt;/p&gt;
+
+&lt;p&gt;This is obviously not going to work, because the &lt;code&gt;split&lt;/code&gt; function is already implemented in C. If you have the Perl source code, you can see the implementation of &lt;code&gt;split&lt;/code&gt; in the file &lt;code&gt;pp.c&lt;/code&gt;; it is in the function named &lt;code&gt;pp_split&lt;/code&gt;. When your Perl program uses &lt;code&gt;split&lt;/code&gt;, Perl calls this &lt;code&gt;pp_split&lt;/code&gt; function to do the splitting. &lt;code&gt;pp_split&lt;/code&gt; is written in C, and it has already been compiled to native machine code.&lt;/p&gt;
+
+&lt;p&gt;Now, suppose you want to translate your Perl program to C. How will you translate your &lt;code&gt;split&lt;/code&gt; call? The only thing you can do is translate it to a call to the C &lt;code&gt;pp_split&lt;/code&gt; function, or some other equivalent function that splits. There is no reason to believe that any C implementation of &lt;code&gt;split&lt;/code&gt; will be faster than the &lt;code&gt;pp_split&lt;/code&gt; that Perl already has. Years of work have gone into making &lt;code&gt;pp_split&lt;/code&gt; as fast as possible.&lt;/p&gt;
+
+&lt;p&gt;You can make the same argument for all of Perl&amp;rsquo;s other built-in functions, such as &lt;code&gt;join&lt;/code&gt;, &lt;code&gt;printf&lt;/code&gt;, &lt;code&gt;rand&lt;/code&gt; and &lt;code&gt;readdir&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;So much for built-in functions.&lt;/p&gt;
+
+&lt;h3 id=&#34;data-structures&#34;&gt;Data Structures&lt;/h3&gt;
+
+&lt;p&gt;Why is Perl slow to begin with? One major reason is that its data structures are extremely flexible, and this flexibility imposes a speed penalty.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look in detail at an important example: strings. Consider this Perl code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $x = &#39;foo&#39;;     
+        $y = &#39;bar&#39;;
+        $x .= $y;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That is, we want to append &lt;code&gt;$y&lt;/code&gt; to the end of &lt;code&gt;$x&lt;/code&gt;. In C, this is extremely tricky. In C, you would start by doing something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        char *x = &amp;quot;foo&amp;quot;;
+        char *y = &amp;quot;bar&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you have a problem. You would like to insert &lt;code&gt;bar&lt;/code&gt; at the end of the buffer pointed to by &lt;code&gt;x&lt;/code&gt;. But you can&amp;rsquo;t, because there is not enough room; &lt;code&gt;x&lt;/code&gt; only points to enough space for four characters, and you need space for seven. (C strings always have an extra &lt;code&gt;nul&lt;/code&gt; character on the end.) To append &lt;code&gt;y&lt;/code&gt; to &lt;code&gt;x&lt;/code&gt;, you must allocate a new buffer, and then arrange for &lt;code&gt;x&lt;/code&gt; to point to the new buffer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        char *tmp = malloc(strlen(x) + strlen(y) + 1);
+        strcpy(tmp, x);
+        strcat(tmp, y);
+        x = tmp;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This works fine if &lt;code&gt;x&lt;/code&gt; is the only pointer to that particular buffer. But if some other part of the program also had a pointer to the buffer, this code does not work. Why not? Here&amp;rsquo;s the picture of what we did:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;BEFORE:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_06_27_ctoperl/cbef.gif&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Here &lt;code&gt;x&lt;/code&gt; and &lt;code&gt;z&lt;/code&gt; are two variables that both contain pointers to the same buffer. We want to append &lt;code&gt;bar&lt;/code&gt; to the end of the string. But the C code we used above doesn&amp;rsquo;t quite work, because we allocated a new region of memory to hold the result, and then pointed &lt;code&gt;x&lt;/code&gt; to it:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;AFTER &lt;code&gt;x = tmp&lt;/code&gt;:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_06_27_ctoperl/caft.gif&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s tempting to think that we should just point &lt;code&gt;z&lt;/code&gt; to the new buffer also, but in practice this is impossible. The function that is doing the appending cannot know whether there is such a &lt;code&gt;z&lt;/code&gt;, or where it may be. There might be 100 variables like &lt;code&gt;z&lt;/code&gt; all pointing to the old buffer, and there is no good way to keep track of them so that they can all be changed when the array moves.&lt;/p&gt;
+
+&lt;p&gt;Perl does support a transparent string append operation. Let&amp;rsquo;s see how this works. In Perl, a variable like &lt;code&gt;$x&lt;/code&gt; does not point directly at the buffer. Instead, it points at a structure called an SV. (&amp;lsquo;Scalar Value&amp;rsquo;) The SV has the pointer to the buffer, and also some other things that I do not show:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;BEFORE &lt;code&gt;$x .= $y&lt;/code&gt;&lt;/strong&gt;
+&lt;img src=&#34;http://localhost:1313/images/_pub_2001_06_27_ctoperl/pbef.gif&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;When you ask Perl to append &lt;code&gt;bar&lt;/code&gt; to &lt;code&gt;$x&lt;/code&gt;, it follows the pointers and finds that there is not enough space in the buffer. So, just as in C, it allocates a new buffer and stores the result in the new buffer. Then it fixes the pointer in the SV to point to the new buffer, and it throws away the old buffer:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2001_06_27_ctoperl/paft.gif&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now &lt;code&gt;$x&lt;/code&gt; and &lt;code&gt;$z&lt;/code&gt; have both changed. If there were any other variables sharing the SV, their values would have changed also. This technique is called &amp;ldquo;double indirection,&amp;lsquo;&amp;rdquo; and it is how Perl can support operations like &lt;code&gt;.=&lt;/code&gt;. A similar principle applies for arrays; this is how Perl can support the &lt;code&gt;push&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;p&gt;The flexibility comes at a price: Whenever you want to use the value of &lt;code&gt;$x&lt;/code&gt;, Perl must follow two pointers to get the value: The first to find the SV structure, and the second to get to the buffer with the character data. This means that using a string in Perl takes at least twice as long as in C. In C, you follow just one pointer.&lt;/p&gt;
+
+&lt;p&gt;If you want to compile Perl to C, you have a big problem. You would like to support operations like &lt;code&gt;.=&lt;/code&gt; and &lt;code&gt;push&lt;/code&gt;, but C does not support these very well. There are only three solutions:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Don&amp;rsquo;t support &lt;code&gt;.=&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This is a bad solution, because after you disallow all the Perl operations like &lt;code&gt;.=&lt;/code&gt; and &lt;code&gt;push&lt;/code&gt; what you have left is not very much like Perl; it is much more like C, and then you might as well just write the program in C in the first place.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Do something extremely clever&lt;/p&gt;
+
+&lt;p&gt;Cleverness is in short supply this month. &lt;code&gt;:)&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Use a double-indirection technique in the compiled C code&lt;/p&gt;
+
+&lt;p&gt;This works, but the resulting C code will be slow, because you will have to traverse twice as many pointers each time you want to look up the value of a variable. But that is why Perl is slow! Perl is already doing the double-indirection lookup in C, and the code to do this has already been compiled to native machine code.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;So again, it&amp;rsquo;s not clear that you are going to get any benefit from translating Perl to C. The slowness of Perl comes from the flexibility of the data structures. The code to manipulate these structures is already written in C. If you translate a Perl program to C, you have the choice of throwing away the flexibility of the data structure, in which case you are now writing C programs with C structures, or keeping the flexibility with the same speed penalty. You probably cannot speed up the data structures, because if anyone knew how to make the structures faster and still keep them flexible, they would already have made those changes in the C code for Perl itself.&lt;/p&gt;
+
+&lt;h3 id=&#34;possible-future-work&#34;&gt;Possible Future Work&lt;/h3&gt;
+
+&lt;p&gt;It should now be clear that although it might not be hard to translate Perl to C, programs probably will not be faster as a result.&lt;/p&gt;
+
+&lt;p&gt;However, it&amp;rsquo;s possible that a sufficiently clever person could make a Perl-to-C translator that produced faster C code. The programmer would need to give hints to the translator to say how the variables were being used. For example, suppose you have an array &lt;code&gt;@a&lt;/code&gt;. With such an array, Perl is ready for anything. You might do &lt;code&gt;$a[1000000] = &#39;hello&#39;;&lt;/code&gt; or &lt;code&gt;$a[500] .= &#39;foo&#39;;&lt;/code&gt; or &lt;code&gt;$a[500] /= 17;&lt;/code&gt;. This flexibility is expensive. But suppose you know that this array will only hold integers and there will never be more than 1,000 integers. You might tell the translator that, and then instead of producing C code to manage a slow Perl array, the translator can produce&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;int a[&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;];&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and use a fast C array of machine integers.&lt;/p&gt;
+
+&lt;p&gt;To do this, you have to be very clever and you have to think of a way of explaining to the translator that &lt;code&gt;@a&lt;/code&gt; will never be bigger than 1,000 elements and will only contain integers, or a way for the translator to guess that just from looking at the Perl program.&lt;/p&gt;
+
+&lt;p&gt;People are planning these features for Perl 6 right now. For example, Larry Wall, the author of Perl, plans that you will be able to declare a Perl array as&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; int @a is dim(&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then a Perl-to-C translator (or Perl itself) might be able to use a fast C array of machine integers rather than a slow Perl array of SVs. If you are interested, you may want to join the perl6-internals mailing list.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Pathologically Polluting Perl</title>
+      <link>http://localhost:1313/pub/2001/02/inline.html/</link>
+      <pubDate>Tue, 06 Feb 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/02/inline.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;pathologically-polluting-perl&#34;&gt;Pathologically Polluting Perl&lt;/h3&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Table of Contents&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;•&lt;a href=&#34;#inline%20in%20action%20%20simple%20examples%20in%20c&#34;&gt;Inline in Action - Simple examples in C&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#hello,%20world&#34;&gt;Hello, world&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#just%20another%20____%20hacker&#34;&gt;Just Another ____ Hacker&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#what%20about%20xs%20and%20swig&#34;&gt;What about XS and SWIG?&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#oneliners&#34;&gt;One-Liners&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#supported%20platforms%20for%20c&#34;&gt;Supported Platforms for C&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#the%20inline%20syntax&#34;&gt;The Inline Syntax&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#fine%20dining%20%20a%20glimpse%20at%20the%20c%20cookbook&#34;&gt;Fine Dining - A Glimpse at the C Cookbook&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#external%20libraries&#34;&gt;External Libraries&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#it%20takes%20all%20types&#34;&gt;It Takes All Types&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#some%20ware%20beyond%20the%20c&#34;&gt;Some Ware Beyond the C&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#see%20perl%20run.%20run%20perl,%20run!&#34;&gt;See Perl Run. Run, Perl, Run!&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#the%20future%20of%20inline&#34;&gt;The Future of Inline&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#conclusion&#34;&gt;Conclusion&lt;/a&gt;&lt;br /&gt;
+&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;No programming language is Perfect. Perl comes very close. &lt;strong&gt;P&lt;/strong&gt;! &lt;strong&gt;e&lt;/strong&gt;! &lt;strong&gt;r&lt;/strong&gt;! &lt;em&gt;l&lt;/em&gt;? :-( Not quite ``Perfect&amp;rdquo;. Sometimes it just makes sense to use another language for part of your work. You might have a stable, pre-existing code base to take advantage of. Perhaps maximum performance is the issue. Maybe you just ``know how to do it&amp;rdquo; that way. Or very likely, it&amp;rsquo;s a project requirement forced upon you by management. Whatever the reason, wouldn&amp;rsquo;t it be great to use Perl most of the time, but be able to invoke something else when you had to?&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Inline.pm&lt;/code&gt; is a new module that glues other programming languages to Perl. It allows you to write C, C++, and Python code directly inside your Perl scripts and modules. This is conceptually similar to the way you can write inline assembly language in C programs. Thus the name: &lt;code&gt;Inline.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The basic philosophy behind Inline is this: ``make it as easy as possible to use Perl with other programming languages, while ensuring that the user&amp;rsquo;s experience retains the DWIMity of Perl&amp;rdquo;. To accomplish this, Inline must do away with nuisances such as interface definition languages, makefiles, build directories and compiling. You simply write your code and run it. Just like Perl.&lt;/p&gt;
+
+&lt;p&gt;Inline will silently take care of all the messy implementation details and ``do the right thing&amp;rdquo;. It analyzes your code, compiles it if necessary, creates the correct Perl bindings, loads everything up, and runs the whole schmear. The net effect of this is you can now write functions, subroutines, classes, and methods in another language and call them as if they were Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-inline-in-action-simple-examples-in-c-inline-in-action-simple-examples-in-c-span&#34;&gt;&lt;span id=&#34;inline in action  simple examples in c&#34;&gt;Inline in Action - Simple examples in C&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Inline addresses an old problem in a completely revolutionary way. Just describing Inline doesn&amp;rsquo;t really do it justice. It should be &lt;em&gt;seen&lt;/em&gt; to be fully appreciated. Here are a couple examples to give you a feel for the module.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-hello-world-hello-world-span&#34;&gt;&lt;span id=&#34;hello, world&#34;&gt;Hello, world&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;It seems that the first thing any programmer wants to do when he learns a new programming technique is to use it to greet the Earth. In keeping with that tradition, here is the ``Hello, world&amp;rdquo; program using Inline.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C =&amp;gt; &amp;lt;&amp;lt;&#39;END_C&#39;;
+    void greet() {
+        printf(&amp;quot;Hello, world\n&amp;quot;);
+    }
+    END_C
+
+    greet;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Simply run this script from the command line and it will print (you guessed it):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Hello, world
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example, &lt;code&gt;Inline.pm&lt;/code&gt; is instantiated with the name of a programming language, ``C&amp;rdquo;, and a string containing a piece of that language&amp;rsquo;s source code. This C code defines a function called &lt;code&gt;greet()&lt;/code&gt; which gets bound to the Perl subroutine &lt;code&gt;&amp;amp;main::greet&lt;/code&gt;. Therefore, when we call the &lt;code&gt;greet()&lt;/code&gt; subroutine, the program prints our message on the screen.&lt;/p&gt;
+
+&lt;p&gt;You may be wondering why there are no &lt;code&gt;#include&lt;/code&gt; statements for things like &lt;code&gt;stdio.h&lt;/code&gt;? That&amp;rsquo;s because Inline::C automatically prepends the following lines to the top of your code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #include &amp;quot;EXTERN.h&amp;quot;
+    #include &amp;quot;perl.h&amp;quot;
+    #include &amp;quot;XSUB.h&amp;quot;
+    #include &amp;quot;INLINE.h&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These header files include all of the standard system header files, so you almost never need to use &lt;code&gt;#include&lt;/code&gt; unless you are dealing with a non-standard library. This is in keeping with Inline&amp;rsquo;s philosophy of making easy things easy. (Where have I heard that before?)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-just-another-hacker-just-another-hacker-span&#34;&gt;&lt;span id=&#34;just another ____ hacker&#34;&gt;Just Another ____ Hacker&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The next logical question is, ``How do I pass data back and forth between Perl and C?&amp;rdquo; In this example we&amp;rsquo;ll pass a string to a C function and have it pass back a brand new Perl scalar.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C;
+    print JAxH(&#39;Perl&#39;);
+
+
+    __END__
+    __C__
+    SV* JAxH(char* x) {
+        return newSVpvf(&amp;quot;Just Another %s Hacker\n&amp;quot;, x);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you run this program, it prints:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Just Another Perl Hacker
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You&amp;rsquo;ve probably noticed that this example is coded differently then the last one. The &lt;code&gt;use Inline&lt;/code&gt; statement specifies the language being used, but not the source code. This is an indicator for Inline to look for the source at the end of the program, after the special marker &amp;lsquo;&lt;code&gt;__C__&lt;/code&gt;&amp;rsquo;.&lt;/p&gt;
+
+&lt;p&gt;The concept being demonstrated is that we can pass Perl data in and out of a C function. Using the default Perl type conversions, Inline can easily convert all of the basic Perl data types to C and vice-versa.&lt;/p&gt;
+
+&lt;p&gt;This example uses a couple of the more advanced concepts of Inlining. Its return value is of the type &lt;code&gt;SV*&lt;/code&gt; (or Scalar Value). The Scalar Value is the most common Perl internal type. Also, the Perl internal function &lt;code&gt;newSVpfv()&lt;/code&gt; is called to create a new Scalar Value from a string, using the familiar &lt;code&gt;sprintf()&lt;/code&gt; syntax. You can learn more about simple Perl internals by reading the &lt;code&gt;perlguts&lt;/code&gt; and &lt;code&gt;perlapi&lt;/code&gt; documentation distributed with Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-what-about-xs-and-swig-what-about-xs-and-swig-span&#34;&gt;&lt;span id=&#34;what about xs and swig&#34;&gt;What about XS and SWIG?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s detour momentarily to ponder ``Why Inline?&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;There are already two major facilities for extending Perl with C. They are XS and SWIG. Both are similar in their capabilities, at least as far as Perl is concerned. And both of them are quite difficult to learn compared to Inline. Since SWIG isn&amp;rsquo;t used in practice to nearly the degree that XS is, I&amp;rsquo;ll only address XS.&lt;/p&gt;
+
+&lt;p&gt;There is a big fat learning curve involved with setting up and using the XS environment. You need to get quite intimate with the following docs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; * perlxs
+ * perlxstut
+ * perlapi
+ * perlguts
+ * perlcall
+ * perlmod
+ * h2xs
+ * xsubpp
+ * ExtUtils::MakeMaker
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With Inline you can be up and running in minutes. There is a C Cookbook with lots of short but complete programs that you can extend to your real-life problems. No need to learn about the complicated build process going on in the background. You don&amp;rsquo;t even need to compile the code yourself. Perl programmers cannot be bothered with silly things like compiling. ``Tweak, Run, Tweak, Run&amp;rdquo; is our way of life. Inline takes care of every last detail except writing the C code.&lt;/p&gt;
+
+&lt;p&gt;Another advantage of Inline is that you can use it directly in a script. As we&amp;rsquo;ll soon see, you can even use it in a Perl one-liner. With XS and SWIG, you always set up an entirely separate module, even if you only have one or two functions. Inline makes easy things easy, and hard things possible. Just like Perl.&lt;/p&gt;
+
+&lt;p&gt;Finally, Inline supports several programming languages (not just C and C++). As of this writing, Inline has support for C, C++, Python, and CPR. There are plans to add many more.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-oneliners-one-liners-span&#34;&gt;&lt;span id=&#34;oneliners&#34;&gt;One-Liners&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Perl is famous for its one-liners. A Perl one-liner is short piece of Perl code that can accomplish a task that would take much longer in another language. It is one of the popular techniques that Perl hackers use to flex their programming muscles.&lt;/p&gt;
+
+&lt;p&gt;So you may wonder: ``Is Inline powerful enough to produce a one-liner that is also bonifide C extension?&amp;rdquo; Of course it is! Here you go:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    perl -e &#39;use Inline C=&amp;gt;
+    q{void J(){printf(&amp;quot;Just Another Perl Hacker\n&amp;quot;);}};J&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Try doing that with XS! We can even write the more complex Inline &lt;code&gt;JAxH()&lt;/code&gt; discussed earlier as a one-liner:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    perl -le &#39;use Inline C=&amp;gt;
+    q{SV*JAxH(char*x){return newSVpvf(&amp;quot;Just Another %s Hacker&amp;quot;,x);}};print JAxH+Perl&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I have been using this one-liner as my email signature for the past couple months. I thought it was pretty cool until Bernhard Muenzer posted this gem to &lt;code&gt;comp.lang.perl.modules&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl -- -* Nie wieder Nachtschicht! *- -- lrep\nib\rsu\!#
+    use Inline C=&amp;gt;&#39;void C(){int m,u,e=0;float l,_,I;for(;1840-e;putchar((++e&amp;gt;907
+     &amp;amp;&amp;amp;942&amp;gt;e?61-m:u)[&amp;quot;\n)moc.isc@rezneumb(rezneuM drahnreB&amp;quot;]))for(u=_=l=0;79-(m
+      =e%80)&amp;amp;&amp;amp;I*l+_*_&amp;lt;6&amp;amp;&amp;amp;26-++u;_=2*l*_+e/80*.09-1,l=I)I=l*l-_*_-2+m/27.;}&#39;;&amp;amp;C
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-supported-platforms-for-c-supported-platforms-for-c-span&#34;&gt;&lt;span id=&#34;supported platforms for c&#34;&gt;Supported Platforms for C&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Inline C works on all of the Perl platforms that I have tested it with so far. This includes all common Unixes and recent versions of Microsoft Windows. The only catch is that you must have the same compiler and &lt;code&gt;make&lt;/code&gt; utility that was used to build your &lt;code&gt;perl&lt;/code&gt; binary.&lt;/p&gt;
+
+&lt;p&gt;Inline has been successfully used on Linux, Solaris, AIX, HPUX, and all the recent BSD&amp;rsquo;s.&lt;/p&gt;
+
+&lt;p&gt;There are two common ways to use Inline on MS Windows. The first one is with ActiveState&amp;rsquo;s ActivePerl for MSWin32. In order to use Inline in that environment, you&amp;rsquo;ll need a copy of MS Visual C++ 6.0. This comes with the &lt;code&gt;cl.exe&lt;/code&gt; compiler and the &lt;code&gt;nmake&lt;/code&gt; make utility. Actually these are the only parts you need. The visual components aren&amp;rsquo;t necessary for Inline.&lt;/p&gt;
+
+&lt;p&gt;The other alternative is to use the Cygwin utilities. This is an actual Unix porting layer for Windows. It includes all of the most common Unix utilities, such as &lt;code&gt;bash&lt;/code&gt;, &lt;code&gt;less&lt;/code&gt;, &lt;code&gt;make&lt;/code&gt;, &lt;code&gt;gcc&lt;/code&gt; and of course &lt;code&gt;perl&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-inline-syntax-the-inline-syntax-span&#34;&gt;&lt;span id=&#34;the inline syntax&#34;&gt;The Inline Syntax&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Inline is a little bit different than most of the Perl modules that you are used to. It doesn&amp;rsquo;t import any functions into your namespace and it doesn&amp;rsquo;t have any object oriented methods. Its entire interface is specified through &lt;code&gt;&#39;use Inline ...&#39;&lt;/code&gt; commands. The general Inline usage is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C =&amp;gt; source-code,
+               config_option =&amp;gt; value,
+               config_option =&amp;gt; value;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Where &lt;code&gt;C&lt;/code&gt; is the programming language, and &lt;code&gt;source-code&lt;/code&gt; is a string, filename, or the keyword &amp;lsquo;&lt;code&gt;DATA&lt;/code&gt;&amp;rsquo;. You can follow that with any number of optional &amp;lsquo;&lt;code&gt;keyword =&amp;gt; value&lt;/code&gt;&amp;rsquo; configuration pairs. If you are using the &amp;lsquo;DATA&amp;rsquo; option, with no configuration parameters, you can just say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-fine-dining-a-glimpse-at-the-c-cookbook-fine-dining-a-glimpse-at-the-c-cookbook-span&#34;&gt;&lt;span id=&#34;fine dining  a glimpse at the c cookbook&#34;&gt;Fine Dining - A Glimpse at the C Cookbook&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In the spirit of the O&amp;rsquo;Reilly book ``Perl Cookbook&amp;rdquo;, Inline provides a manpage called C-Cookbook. In it you will find the recipes you need to help satisfy your Inline cravings. Here are a couple of tasty morsels that you can whip up in no time. Bon Appetit!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-external-libraries-external-libraries-span&#34;&gt;&lt;span id=&#34;external libraries&#34;&gt;External Libraries&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The most common real world need for Inline is probably using it to access existing compiled C code from Perl. This is easy to do. The secret is to write a wrapper function for each function you want to expose in Perl space. The wrapper calls the real function. It also handles how the arguments get passed in and out. Here is a short Windows example that displays a text box with a message, a caption and an ``OK&amp;rdquo; button:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C =&amp;gt; DATA =&amp;gt;
+               LIBS =&amp;gt; &#39;-luser32&#39;,
+               PREFIX =&amp;gt; &#39;my_&#39;;
+
+    MessageBoxA(&#39;Inline Message Box&#39;, &#39;Just Another Perl Hacker&#39;);
+
+
+    __END__
+    __C__
+    #include &amp;lt;windows.h&amp;gt;
+    int my_MessageBoxA(char* Caption, char* Text) {
+      return MessageBoxA(0, Text, Caption, 0);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This program calls a function from the MSWin32 &lt;code&gt;user32.dll&lt;/code&gt; library. The wrapper determines the type and order of arguments to be passed from Perl. Even though the real &lt;code&gt;MessageBoxA()&lt;/code&gt; needs four arguments, we can expose it to Perl with only two, and we can change the order. In order to avoid namespace conflicts in C, the wrapper must have a different name. But by using the &lt;code&gt;PREFIX&lt;/code&gt; option (same as the XS &lt;code&gt;PREFIX&lt;/code&gt; option) we can bind it to the original name in Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-it-takes-all-types-it-takes-all-types-span&#34;&gt;&lt;span id=&#34;it takes all types&#34;&gt;It Takes All Types&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Older versions of Inline only supported five C data types. These were: &lt;code&gt;int&lt;/code&gt;, &lt;code&gt;long&lt;/code&gt;, &lt;code&gt;double&lt;/code&gt;, &lt;code&gt;char*&lt;/code&gt; and &lt;code&gt;SV*&lt;/code&gt;. This was all you needed. All the basic Perl scalar types are represented by these. Fancier things like references could be handled by using the generic &lt;code&gt;SV*&lt;/code&gt; (scalar value) type, and then doing the mapping code yourself, inside the C function.&lt;/p&gt;
+
+&lt;p&gt;The process of converting between Perl&amp;rsquo;s &lt;code&gt;SV*&lt;/code&gt; and C types is called &lt;strong&gt;typemapping&lt;/strong&gt;. In XS, you normally do this by using &lt;code&gt;typemap&lt;/code&gt; files. A default &lt;code&gt;typemap&lt;/code&gt; file exists in every Perl installation in a file called &lt;code&gt;/usr/lib/perl5/5.6.0/ExtUtils/typemap&lt;/code&gt; or something similar. This file contains conversion code for over 20 different C types, including all of the Inline defaults.&lt;/p&gt;
+
+&lt;p&gt;As of version 0.30, Inline no longer has &lt;em&gt;any&lt;/em&gt; built in types. It gets all of its types exclusively from &lt;code&gt;typemap&lt;/code&gt; files. Since it uses Perl&amp;rsquo;s default &lt;code&gt;typemap&lt;/code&gt; file for its own defaults, it actually has many more types available automatically.&lt;/p&gt;
+
+&lt;p&gt;This setup provides a lot of flexibility. You can specify your own &lt;code&gt;typemap&lt;/code&gt; files through the use of the &lt;code&gt;TYPEMAPS&lt;/code&gt; configuration option. This not only allows you to override the defaults with your own conversion code, but it also means that you can add new types to Inline as well. The major advantage to extending the Inline syntax this way is that there are already many typemaps available for various APIs. And if you&amp;rsquo;ve done your own XS coding in the past, you can use your existing &lt;code&gt;typemap&lt;/code&gt; files as is. No changes are required.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at a small example of writing your own typemaps. For some reason, the C type &lt;code&gt;float&lt;/code&gt; is not represented in the default Perl &lt;code&gt;typemap&lt;/code&gt; file. I suppose it&amp;rsquo;s because Perl&amp;rsquo;s floating point numbers are always stored as type &lt;code&gt;double&lt;/code&gt;, which is higher precision than &lt;code&gt;float&lt;/code&gt;. But if we wanted it anyway, writing a &lt;code&gt;typemap&lt;/code&gt; file to support &lt;code&gt;float&lt;/code&gt; is trivial.&lt;/p&gt;
+
+&lt;p&gt;Here is what the file would look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    float                   T_FLOAT
+
+
+    INPUT
+    T_FLOAT
+            $var = (float)SvNV($arg)
+
+
+    OUTPUT
+    T_FLOAT
+            sv_setnv($arg, (double)$var);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Without going into details, this file provides two snippets of code. One for converting a &lt;code&gt;SV*&lt;/code&gt; to a float, and one for the opposite. Now we can write the following script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline C =&amp;gt; DATA =&amp;gt;
+               TYPEMAPS =&amp;gt; &#39;./typemap&#39;;
+
+
+    print &#39;1.2 + 3.4 = &#39;, fadd(1.2, 3.4), &amp;quot;\n&amp;quot;;
+
+
+    __END__
+    __C__
+    float fadd(float x, float y) {
+        return x + y;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-some-ware-beyond-the-c-some-ware-beyond-the-c-span&#34;&gt;&lt;span id=&#34;some ware beyond the c&#34;&gt;Some Ware Beyond the C&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The primary goal of Inline is to make it easy to use other programming languages with Perl. This is not limited to C. The initial implementations of Inline only supported C, and the language support was built directly into &lt;code&gt;Inline.pm&lt;/code&gt;. Since then things have changed considerably. Inline now supports multiple languages of both compiled and interpreted nature. And it keeps the implementations in an object oriented type structure, whereby each language has its own separate module, but they can inherit behavior from the base Inline module.&lt;/p&gt;
+
+&lt;p&gt;On my second day working at ActiveState, a young man approached me. ``Hi, my name is Neil Watkiss. I just hacked your Inline module to work with C++.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Neil, I soon found out, was a computer science student at a local university. He was working part-time for ActiveState then, and had somehow stumbled across Inline. I was thrilled! I had wanted to pursue new languages, but didn&amp;rsquo;t know how I&amp;rsquo;d find the time. Now I was sitting 15 feet away from my answer!&lt;/p&gt;
+
+&lt;p&gt;Over the next couple months, Neil and I spent our spare time turning Inline into a generic environment for gluing new languages to Perl. I ripped all the C specific code out of Inline and put it into Inline::C. Neil started putting together Inline::CPP and Inline::Python. Together we came up with a new syntax that allowed multiple languages and easier configuration.&lt;/p&gt;
+
+&lt;p&gt;Here is a sample program that makes uses of Inline Python:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Inline Python;
+    my $language = shift;
+    print $language, 
+          (match($language, &#39;Perl&#39;) ? &#39; rules&#39; : &#39; sucks&#39;),
+          &amp;quot;!\n&amp;quot;;
+    __END__
+    __Python__
+    import sys
+    import re
+    def match(str, regex):
+        f = re.compile(regex);
+        if f.match(str): return 1
+        return 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This program uses a Python regex to show that ``Perl rules!&amp;ldquo;.&lt;/p&gt;
+
+&lt;p&gt;Since Python supports its own versions of Perl scalars, arrays, and hashes, Inline::Python can flip-flop between them easily and logically. If you pass a hash reference to python, it will turn it into a dictionary, and vice-versa. Neil even has mechanisms for calling back to Perl from Python code. See the Inline::Python docs for more info.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-see-perl-run-run-perl-run-see-perl-run-run-perl-run-span&#34;&gt;&lt;span id=&#34;see perl run. run perl, run!&#34;&gt;See Perl Run. Run Perl, Run!&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Inline is a great way to write C extensions for Perl. But is there an equally simple way to embed a Perl interpreter in a C program? I pondered this question myself one day. Writing Inline functionality for C would not be my cup of tea.&lt;/p&gt;
+
+&lt;p&gt;The normal way to embed Perl into C involves jumping through a lot of hoops to bootstrap a perl interpreter. Too messy for one-liners. And you need to compile the C. Not very Inlinish. But what if you could pass your C program to a perl program that could pass it to Inline? Then you could write this program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/cpr
+    int main(void) {
+        printf(&amp;quot;Hello, world\n&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and just run it from the command line. Interpreted C!&lt;/p&gt;
+
+&lt;p&gt;And thus, a new programming language was born. &lt;strong&gt;CPR&lt;/strong&gt;. ``C Perl Run&amp;rdquo;. The Perl module that gives it life is called &lt;code&gt;Inline::CPR&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, CPR is not really its own language, in the strict sense. But you can think of it that way. CPR is just like C except that you can call out to the Perl5 API at any time, without any extra code. In fact, CPR redefines this API with its own CPR wrapper API.&lt;/p&gt;
+
+&lt;p&gt;There are several ways to think of CPR: ``a new language&amp;rdquo;, ``an easy way to embed Perl in C&amp;rdquo;, or just ``a cute hack&amp;rdquo;. I lean towards the latter. CPR is probably a far stretch from meeting most peoples embedding needs. But at the same time its a very easy way to play around with, and perhaps redefine, the Perl5 internal API. The best compliment I&amp;rsquo;ve gotten for CPR is when my ActiveState coworker Adam Turoff said, ``I feel like my head has just been wrapped around a brick&amp;rdquo;. I hope this next example makes you feel that way too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/cpr
+    int main(void) {
+        CPR_eval(&amp;quot;use Inline (C =&amp;gt; q{
+            char* greet() {
+                return \&amp;quot;Hello world\&amp;quot;;
+            }
+        })&amp;quot;);
+
+        printf(&amp;quot;%s, I&#39;m running under Perl version %s\n&amp;quot;,
+               CPR_eval(&amp;quot;&amp;amp;greet&amp;quot;),
+               CPR_eval(&amp;quot;use Config; $Config{version}&amp;quot;));
+        return 0;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running this program prints:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Hello world, I&#39;m running under Perl version 5.6.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using the &lt;code&gt;eval()&lt;/code&gt; call this CPR program calls Perl and tells it to use Inline C to add a new function, which the CPR program subsequently calls. I think I have a headache myself.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-future-of-inline-the-future-of-inline-span&#34;&gt;&lt;span id=&#34;the future of inline&#34;&gt;The Future of Inline&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Inline version 0.30 was written specifically so that it would be easy for other people in the Perl community to contribute new language bindings for Perl. On the day of that release, I announced the birth of the Inline mailing list, &lt;a href=&#34;mailto:inline@perl.org.&#34;&gt;inline@perl.org.&lt;/a&gt; This is intended to be the primary forum for discussion on all Inline issues, including the proposal of new features, and the authoring of new ILSMs.&lt;/p&gt;
+
+&lt;p&gt;In the year 2001, I would like to see bindings for Java, Ruby, Fortran and Bash. I don&amp;rsquo;t plan on authoring all of these myself. But I may kickstart some of them, and see if anyone&amp;rsquo;s interested in taking over. If &lt;em&gt;you&lt;/em&gt; have a desire to get involved with Inline development, please join the mailing list (&lt;a href=&#34;mailto:inline-subscribe@perl.org&#34;&gt;inline-subscribe@perl.org&lt;/a&gt;) and speak up.&lt;/p&gt;
+
+&lt;p&gt;My primary focus at the present time, is to make the base Inline module as simple, flexible, and stable as possible. Also I want to see Inline::C become an acceptable replacement for XS; at least for most situations.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Using XS is just too hard. At least when you compare it to the rest of the Perl we know and love. Inline takes advantage of the existing frameworks for combining Perl and C, and packages it all up into one easy to swallow pill. As an added bonus, it provides a great framework for binding other programming languages to Perl. You might say, ``It&amp;rsquo;s a &amp;lsquo;Perl-fect&amp;rsquo; solution!&amp;rdquo;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Sapphire</title>
+      <link>http://localhost:1313/pub/2000/09/sapphire.html/</link>
+      <pubDate>Tue, 19 Sep 2000 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2000/09/sapphire.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;span id=&#34;sapphire  another gem of an idea&#34;&gt;&lt;/span&gt;
+&lt;span id=&#34;__index__&#34;&gt;&lt;/span&gt;&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Table of Contents&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;•&lt;a href=&#34;#design%20principles&#34;&gt;Design Principles&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#so,%20uh,%20what%20is%20it&#34;&gt;So, uh, what is it?&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#where%20did%20it%20get&#34;&gt;Where did it get?&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#what%20else%20can%20be%20done&#34;&gt;What else can be done?&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#what%20can&amp;#39;t%20be%20done&#34;&gt;What can&#39;t be done?&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#structure%20of%20a%20sapphire&#34;&gt;Structure of a Sapphire&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#the%20future%20of%20sapphire&#34;&gt;The future of Sapphire&lt;/a&gt;&lt;br /&gt;
+•&lt;a href=&#34;#reflections%20through%20a%20sapphire&#34;&gt;Reflections through a Sapphire&lt;/a&gt;&lt;br /&gt;
+&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Naming languages after stones is getting a bit old-hat these days. We all know and love Perl; you might have heard of the &lt;a href=&#34;http://www.ruby-lang.org/&#34;&gt;Ruby language&lt;/a&gt;, which I&amp;rsquo;ll talk more about another time. There&amp;rsquo;s also Chip Salzenberg&amp;rsquo;s Topaz project, an idea to rewrite Perl in C++, which ended with the announcement of the Perl 6 effort. And now, there&amp;rsquo;s Sapphire. So what&amp;rsquo;s this all about?&lt;/p&gt;
+
+&lt;p&gt;Sapphire is one of the many projects which was started purely and simply to prove a point. In this case, the point was that building a large program from scratch in this day and age is crazy. I was going to prove it by showing how rapidly software can be developed when using established libraries, and &lt;strong&gt;that&lt;/strong&gt; was done by seeing how quickly I could rewrite Perl 5.&lt;/p&gt;
+
+&lt;p&gt;Also, as a secondary goal, I wanted to show the flexibility of some of my design ideas for Perl 6. It&amp;rsquo;s dangerous when people are sitting around for a long time discussing software design without implementations, without benchmarks and without a single line of code. I prefer getting up and doing something rather than talking about it. So I was going to show my ideas in software, not in words.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-design-principles-design-principles-span&#34;&gt;&lt;span id=&#34;design principles&#34;&gt;Design Principles&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Here are some of the ideas I was intending to showcase:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Being_Good_Open_Source_Citizens&#34;&gt;Being Good Open-Source Citizens&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;What do I mean by this? Perl 5 is extremely self-sufficient. Once you&amp;rsquo;ve got the source kit, it&amp;rsquo;ll compile anywhere, on almost any platform and requiring very few ``support&amp;rdquo; libraries. It&amp;rsquo;ll make do with what you have. One of the unfortunate side-effects of this is that if Perl wants to do something, it implements it itself. As a result, Perl contains a load of interesting routines, but keeps them to itself. It also doesn&amp;rsquo;t use any of the perfectly fine implementations of those interesting routines which are already out there.&lt;/p&gt;
+
+&lt;p&gt;Some people think this is a feature; I think it&amp;rsquo;s a wart. If we can give things back to the open-source community, and work with them to help improve their tools, then everyone benefits.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Generalising_Solutions&#34;&gt;Generalizing Solutions&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;One of the great design choices of Perl 5 which appears to have been completely and utterly rejected in the discussions on Perl 6&amp;rsquo;s proposed language is that we do things in the most general way possible. This is why Perl doesn&amp;rsquo;t &lt;em&gt;need&lt;/em&gt; huge numbers of new built-ins - it just needs a way to make user-defined syntax with the same status as built-ins. It doesn&amp;rsquo;t &lt;em&gt;need&lt;/em&gt; beautiful new OO programming models - it just needs a way to help people write their own OO models. Sapphire tries to do things in the most general way possible.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Modularity&#34;&gt;Modularity&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Perl 5 consists of a number of parts, including a stunning regular expression engine and a decent way of dealing with multityped variables. Unfortunately, in the current implementation, these parts are all highly interdependent in twisty ways. Separating them out into modules means that you can test them independently, distribute them as independent libraries, and upgrade them independently.&lt;/p&gt;
+
+&lt;p&gt;Seems like a winner to me!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-so-uh-what-is-it-so-uh-what-is-it-span&#34;&gt;&lt;span id=&#34;so, uh, what is it&#34;&gt;So, uh, what is it?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Sapphire, then, is a partial implementation of the Perl 5 API. I wasn&amp;rsquo;t setting out to create a new interpreter, although that would have been necessary for some of the API routines, such as those which execute Perl code. What I wanted was to re-create the programming environment which Perl 5 gives you internally - a sort of ``super C,&amp;rdquo; a C customized for creating things such as Perl interpreters.&lt;/p&gt;
+
+&lt;p&gt;Specifically, I wasn&amp;rsquo;t trying to do anything new. I &lt;em&gt;like&lt;/em&gt; Perl 5. It has a lot going for it. Of course, it could be tidier, since five years of cruft have accumulated all around it now. It could be less quirky, and it could display the design goals I have just mentioned. That&amp;rsquo;s what I wanted to do.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-where-did-it-get-where-did-it-get-span&#34;&gt;&lt;span id=&#34;where did it get&#34;&gt;Where did it get?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I gave myself a week. I was going to hack on it for one week, and see where that got me. I didn&amp;rsquo;t spend a lot of time on it, but I still managed to achieve a fair amount: I had scalars, arrays and hashes working, as well as Unicode manipulation to the level of Perl 5 and slightly beyond.&lt;/p&gt;
+
+&lt;p&gt;How? Well, I started by looking at the glib library, at &lt;a href=&#34;http://developer.gnome.org/doc/API/glib/&#34;&gt;http://developer.gnome.org/doc/API/glib/.&lt;/a&gt; This provided a fantastic amount of what I needed. The &lt;code&gt;GPtrArray&lt;/code&gt; corresponds nicely with a Perl &lt;code&gt;AV&lt;/code&gt;, and glib also implements hashes, which saved a lot of time, although to have &lt;code&gt;HE&lt;/code&gt;s (hash entries) you need to dig a little into the glib source.&lt;/p&gt;
+
+&lt;p&gt;All the Unicode support was there. I initially used GNOME&amp;rsquo;s libunicode, but then found that the development version of glib added UTF8 support and was much easier to deal with. There were a few functions I needed which Perl 5 already had, and I&amp;rsquo;ll be pushing those back to the glib maintainers for potential inclusion.&lt;/p&gt;
+
+&lt;p&gt;Perl uses a lot of internal variable types to ensure portability - an &lt;code&gt;I32&lt;/code&gt; is an integer type guaranteed to be 32 bits, no matter where it runs. Not surprisingly, I didn&amp;rsquo;t have much work to do there, since glib provides a family of types, such as &lt;code&gt;gint32&lt;/code&gt;, to do the same thing. Differing byte orders are also catered for. The ``super C&amp;rdquo; environment the Perl 5 API provides is largely out there, in existing code.&lt;/p&gt;
+
+&lt;p&gt;Oh, and let&amp;rsquo;s be honest: There was one large piece of existing code that was just &lt;em&gt;too&lt;/em&gt; tempting not to use, and that was Perl itself. When you&amp;rsquo;re trying to replicate something and you&amp;rsquo;ve got a working version in front of you, it&amp;rsquo;s tricky not to borrow from it; it seems a shame to throw away five years of work without looking for what can be salvaged from it. A lot of the scalar handling code came from Perl 5, although I did rearrange it and make it a lot more sensible and maintainable. I wasn&amp;rsquo;t just interested in developing with external libraries. I also wanted to see if I could correct some other misfeatures of Perl&amp;rsquo;s internals.&lt;/p&gt;
+
+&lt;p&gt;The first problem to solve was the insidious use of macros on macros on macros. The way I went about this was by first outlawing lvalue macros. That is, for example,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    SvPVX(sv) = &amp;quot;foo&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;had to turn into&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sv_setpv(sv, &amp;quot;foo&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Incidentally, this is how &lt;em&gt;perlapi&lt;/em&gt; says it should be done. Perl 5 often optimizes for speed (sometimes too enthusiastically) at the expense of maintainability - Sapphire questions that trade-off, preferring to trust compiler optimization and Moore&amp;rsquo;s Law.&lt;/p&gt;
+
+&lt;p&gt;Next, I wrote a reasonably sophisticated Perl program to convert inline functions into macros. That is, it would take
+        #ifdef EXPAND_MACROS
+        INLINE void sv_setpv (SV* sv, char * pv) {
+           ((XPV*)  SvANY(sv))-&amp;gt;xpv_pv = pv;
+        }
+        #endif&lt;/p&gt;
+
+&lt;p&gt;and turn it, automatically, into:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #ifdef EXPAND_MACROS
+    #ifdef EXPAND_HERE
+    INLINE void sv_setpv (SV* sv, char * pv) {
+       ((XPV*)  SvANY(sv))-&amp;gt;xpv_pv = pv;
+    }
+    #endif
+    #else
+    #define sv_setpv(sv, pv) ((XPV*)  SvANY(sv))-&amp;gt;xpv_pv = pv
+    #endif
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you can choose whether your macros should be expanded by flipping on &lt;code&gt;-DEXPAND_MACROS&lt;/code&gt; and whether they should be inline by playing with &lt;code&gt;-DINLINE&lt;/code&gt;. But what&amp;rsquo;s &lt;code&gt;EXPAND_HERE&lt;/code&gt; for? Well, the above code snippet would go into an include file, maybe &lt;code&gt;sv.h&lt;/code&gt;, and one C file - let&amp;rsquo;s call it &lt;em&gt;sv_inline.c&lt;/em&gt; - would contain the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #include &amp;lt;sapphire.h&amp;gt;
+    #define EXPAND_HERE
+    #include &amp;lt;sv.h&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then if &lt;code&gt;EXPAND_MACROS&lt;/code&gt; was defined, the function definitions would all be provided in one place; if macros were not expanded, &lt;code&gt;sv_inline.c&lt;/code&gt; would define no functions. The function prototypes would be extracted automatically with &lt;a href=&#34;https://metacpan.org/pod/C::Scan&#34;&gt;C::Scan&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;With the state of compiler optimization these days, it&amp;rsquo;s likely that turning everything into macros makes no significant speed difference. In which case, it&amp;rsquo;s best to turn on &lt;code&gt;EXPAND_MACROS&lt;/code&gt; to assist with source-level debuggers which cannot read macros. However, you can&amp;rsquo;t tell until you benchmark, and the ``optional expansion&amp;rdquo; method gives you a nice easy way to do that.&lt;/p&gt;
+
+&lt;p&gt;I also took a swipe at memory allocation; it seems the first job in every large project is to write your own memory allocator. I had heard from perl5-porters and other places that the biggest speed overhead in XS routines is SV creation, so I wrote an allocator which would maintain pools of ready-to-ship variables, refreshing the pools when there was nothing else to do, like a McDonald&amp;rsquo;s burger line.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-what-else-can-be-done-what-else-can-be-done-span&#34;&gt;&lt;span id=&#34;what else can be done&#34;&gt;What else can be done?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If I had given myself two weeks, where would I be? Sticking with glib, I could very easily have safe signal handling, portable loadable module support, a main event dispatch loop and a safe threading model. It&amp;rsquo;s all there, ready to go. It&amp;rsquo;s free software, and that&amp;rsquo;s just one library.&lt;/p&gt;
+
+&lt;p&gt;To be honest, I wouldn&amp;rsquo;t advocate the use of glib for everything I could do with it. For example, I replaced Perl&amp;rsquo;s main run loop &lt;code&gt;Perl_runops_standard&lt;/code&gt; in &lt;em&gt;run.c&lt;/em&gt;) with a &lt;code&gt;GMainLoop&lt;/code&gt; and benchmarked the two. The glib version, although signal safe, was at least five times slower. (However, you may want to contemplate what it means for graphical application programming if you have, effectively, a GNOME event loop right there in your interpreter.)&lt;/p&gt;
+
+&lt;p&gt;Heavier Unicode support would probably need libunicode. What about regular expressions? Well, the glib developers are working on a fully Unicode-aware Perl-compatible regular expression library (which, frankly, is more than we have). If they don&amp;rsquo;t finish that, &lt;a href=&#34;ftp://ftp.cus.cam.ac.uk/pub/software/programs/pcre/&#34;&gt;Philip Hazel&amp;rsquo;s Perl Compatible Regular Expression library&lt;/a&gt; does exactly what it says on the tin.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-what-can-t-be-done-what-can-t-be-done-span&#34;&gt;&lt;span id=&#34;what can&#39;t be done&#34;&gt;What can&amp;rsquo;t be done?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There are some areas of Perl&amp;rsquo;s programming environment where I&amp;rsquo;m not aware of a pre-existing solution. For instance, &lt;em&gt;scope.c&lt;/em&gt; in the Perl source distribution gives C the concept of ``dynamic scope,&amp;rdquo; allowing you to save variables and restore them at the end of a block, just like the &lt;code&gt;local&lt;/code&gt; operator in Perl.&lt;/p&gt;
+
+&lt;p&gt;And some problems just can&amp;rsquo;t be solved in C. There&amp;rsquo;s no good way, for instance, to get a partitioned namespace. I didn&amp;rsquo;t bother trying. Once you&amp;rsquo;ve told the developer what the API is, it&amp;rsquo;s his responsibility to ensure it works.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, C is not meant to be a language that gives you this type of support. Some would argue that C++ solves these problems, but in my experience, C++ never solves anything.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-structure-of-a-sapphire-structure-of-a-sapphire-span&#34;&gt;&lt;span id=&#34;structure of a sapphire&#34;&gt;Structure of a Sapphire&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;As I&amp;rsquo;ve mentioned, I tried to plan the structure of Sapphire along modular lines, so that pieces could be tested individually and upgraded. My proposed structure was a series of libraries, like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_libsvar&#34;&gt;&lt;code&gt;libsvar&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Standing for ``Sapphire variables,&amp;rdquo; &lt;code&gt;libsvar&lt;/code&gt; contains all the functions for manipulating SVs, AVs and HVs. This is an interesting library in its own right which can be used for programming outside of the Sapphire environment - having SVs in an ordinary C program without the overhead of a Perl interpreter really expands your programming possibilities, and, as far as I&amp;rsquo;m aware, there isn&amp;rsquo;t a good variable-handling library around.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_libre&#34;&gt;&lt;code&gt;libre&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The regular expression engine would be separated into its own library, again so that external applications can use it without an entire Perl interpreter. I didn&amp;rsquo;t implement this myself, leaving it to PCRE or glib to provide this.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_libutf8&#34;&gt;&lt;code&gt;libutf8&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Again, we can split off the Unicode handling functions into their own library, although this functionality can be implemented by libunicode or glib.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_libscope&#34;&gt;&lt;code&gt;libscope&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The present-day &lt;em&gt;scope.c&lt;/em&gt; and &lt;em&gt;scope.h&lt;/em&gt; solve a problem in C by giving it dynamic scoping; this is something that contributes to the friendliness of the Perl programming environment, and something we can separate and share.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_libpp&#34;&gt;&lt;code&gt;libpp&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Although this wouldn&amp;rsquo;t be useful outside of Sapphire, &lt;code&gt;libpp&lt;/code&gt; would contain the ``push-pop&amp;rdquo; code which runs the operations inside the interpreter.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_libutil&#34;&gt;&lt;code&gt;libutil&lt;/code&gt;&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Libutil&lt;/code&gt; would contain everything else which was potentially useful outside of Sapphire - the memory allocation, the stack manipulation and so on.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-future-of-sapphire-the-future-of-sapphire-span&#34;&gt;&lt;span id=&#34;the future of sapphire&#34;&gt;The future of Sapphire&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So, what am I going to do with Sapphire now? To be honest, nothing at all. I hope it has served its purpose by presenting the argument for reusable code and stable design principles.&lt;/p&gt;
+
+&lt;p&gt;I certainly don&amp;rsquo;t, at present, want to be placed in a position where I&amp;rsquo;m choosing between spending time fiddling with Sapphire and spending time contributing to coding Perl 6. Please understand: Sapphire is emphatically not intended to be a fork of Perl, merely an interesting interlude, and this is shown by the fact that I didn&amp;rsquo;t try to make any exciting changes.&lt;/p&gt;
+
+&lt;p&gt;If anyone has some interesting ideas on how to take this ball and run with it, feel free. It&amp;rsquo;s free software, and this is exactly what you should be doing. Contact me if you&amp;rsquo;d like a copy of the source.&lt;/p&gt;
+
+&lt;p&gt;I do have some thoughts on what my next experiment is going to be, however &amp;hellip; .&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-reflections-through-a-sapphire-reflections-through-a-sapphire-span&#34;&gt;&lt;span id=&#34;reflections through a sapphire&#34;&gt;Reflections through a Sapphire&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;What have I learned from all this? I&amp;rsquo;ve learned a lot about the structure of Perl 5. I&amp;rsquo;ve realized that roughly half of it is support infrastructure for the other half, the business half. Is this good or bad? Well, it certainly means that we&amp;rsquo;re not beholden to anyone else - an external library may suddenly change its implementation, semantics or interface, and Sapphire would have to struggle to catch up. Perhaps it&amp;rsquo;s all about control. By implementing everything ourselves, the porters retain control over Perl.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve also learned that Perl 5, internally, has a lot to share, yet, even though we claim to believe in code reuse where the CPAN&amp;rsquo;s concerned, we do very little of it on a lower level, neither really giving nor really taking.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve learned that rapid development can come out of a number of things. First, having external code already written to do the work for you helps a lot, even though you don&amp;rsquo;t have much control over it.&lt;/p&gt;
+
+&lt;p&gt;Second, having an existing implementation of what you&amp;rsquo;re trying to program also helps, although you have to walk a fine line. Taking Perl 5 code wholesale meant I either had to do a lot of surgery or support things I didn&amp;rsquo;t really want to support, but ignoring the whole of the existing code base would feel like throwing the baby out with the bathwater. (Hence I would caution the Perl 6 internals people to thresh carefully the Perl 5 code; there is some wheat in that chaff, or else you wouldn&amp;rsquo;t be using it &amp;hellip; .)&lt;/p&gt;
+
+&lt;p&gt;Finally, rapid development can come from having a well-organized and disciplined team. My team swiftly agreed on all matters of design and implementation and got down to coding without interminable and fruitless discussions, taking unanimous decisions on how to get around problems - because I was my team.&lt;/p&gt;
+
+&lt;p&gt;Would I say the Sapphire experiment was a success? Well, since it taught me all the above, it certainly couldn&amp;rsquo;t have been a failure. Did it prove the point that developing with reusable code is worth the sacrifice in terms of control? That remains to be seen.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

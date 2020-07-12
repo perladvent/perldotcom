@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl_6 on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl_6/</link>
+    <description>Recent content in Perl_6 on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 12 May 2015 12:54:26 +0000</lastBuildDate>
+    <atom:link href="/tags/perl_6/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Script-fu: how to raise 641 request tracker tickets</title>
+      <link>http://localhost:1313/article/174/2015/5/12/Script-fu--how-to-raise-641-request-tracker-tickets/</link>
+      <pubDate>Tue, 12 May 2015 12:54:26 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/174/2015/5/12/Script-fu--how-to-raise-641-request-tracker-tickets/</guid>
+      <description>
+
+&lt;p&gt;I spent most of the NYC Perl Hackathon (thanks Bloomberg!) hacking on Perl 6 stuff. Led by Will &amp;ldquo;Coke&amp;rdquo; Coleda, one of the tasks for the group was to find skip/todo directives that were missing Request Tracker (RT) ticket numbers in the Perl 6 test suite.&lt;/p&gt;
+
+&lt;p&gt;A typical skip/todo directive looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#?rakudo todo &amp;#34;doesn&amp;#39;t work yet due to copying of arrays&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This tells Rakudo to skip the following block of tests. For each skip/todo directive, a new RT ticket had to be raised and the ticket number added to the skip directive line in the test file, like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#?rakudo todo &amp;#34;doesn&amp;#39;t work yet due to copying of arrays RT #99999&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This makes it easier for the Rakudo team to identify the remaining bugs or missing features in Rakudo.&lt;/p&gt;
+
+&lt;p&gt;I cloned the Perl 6 test suite, roast and after working through the workflow for reporting a single ticket, I wondered how many other skip/todo directives were missing RT tickets. To find out, I used a little &lt;code&gt;grep&lt;/code&gt; magic:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ grep &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;rlP &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;#?rakudo.+?(?:skip|todo)(?:(?!RT).{2})+$&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; wc &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;l&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This tells grep to recursively search for files in the current directory, and for each file, print the filename if the Perl-style regex matches the text in the file. The regex matches Rakudo skip/todo directives that didn&amp;rsquo;t already have an RT reference. The output of grep is then passed to &lt;code&gt;wc&lt;/code&gt; in order to count the number of files. Turns out there were 236 files affected, and this method didn&amp;rsquo;t even count the number of occurrences &lt;em&gt;within&lt;/em&gt; a file. Even if it took 5 minutes per file to raise the ticket on RT, update the file, commit the change and issue a pull request, that&amp;rsquo;s still 20 hours of work. It gets more complicated when you have to apportion that work between several people. At this point my spidey sense was tingling &amp;hellip; can you say &amp;ldquo;automation&amp;rdquo;?&lt;/p&gt;
+
+&lt;h3 id=&#34;using-a-machine-to-raise-rt-tickets-like-a-machine&#34;&gt;Using a machine to raise RT tickets &amp;ldquo;like a machine&amp;rdquo;&lt;/h3&gt;
+
+&lt;p&gt;I wrote a quick script to find all the skip/todo directives again, only this time I would capture the filename, line number and description:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+scan_directory(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;scan_directory&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($dir) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  opendir(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$dir&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die $!;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (readdir $dh)
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $newpath &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$dir/$_&amp;#34;&lt;/span&gt;;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $newpath &lt;span style=&#34;color:#f92672&#34;&gt;!~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qr/^\.\/&lt;/span&gt;S&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;l $newpath;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $newpath &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; $newpath &lt;span style=&#34;color:#f92672&#34;&gt;!~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/\.$/&lt;/span&gt;)
+    {
+      scan_directory($newpath);
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f $newpath)
+    {
+      open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, $newpath &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;failed to open $newpath $!\n&amp;#34;&lt;/span&gt;;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $line_num &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;·&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$file&amp;gt;&lt;/span&gt;)
+      {
+        chomp;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;/^#\?rakudo.+?(?:skip|todo)((?:(?!RT).)+)$/&lt;/span&gt;)
+        {
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $subject &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Roast rakudo skip/todo test:%s line:%s reason:%s&amp;#34;&lt;/span&gt;,
+            $newpath, $line_num, $1;
+
+         $subject &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/&amp;#34;//g&lt;/span&gt;;
+
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`rt create -t ticket set subject=&amp;#34;$subject&amp;#34; queue=perl6 priority=0`&lt;/span&gt;;
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($response &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/([0-9]+)/&lt;/span&gt;)
+          {
+            printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%s RT#:%s\n&amp;#34;&lt;/span&gt;, $subject, $1;
+          }
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+          {
+            die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Failed to capture ticket # for $subject response: $response&amp;#34;&lt;/span&gt;;
+          }
+        }
+        $line_num&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+      }
+      close $file;
+    }
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The script is fairly simple: it&amp;rsquo;s a recursive directory scanner that scans files for Rakudo skip/todo blocks. The script uses the following line of code with backticks to execute the &lt;code&gt;rt&lt;/code&gt; command line program, raise a ticket in the Perl 6 queue and captures the response:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`rt create -t ticket set subject=&amp;#34;$subject&amp;#34; queue=perl6 priority=0`&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The script then extracts the RT ticket number from the &lt;code&gt;$response&lt;/code&gt;, and prints out a line containing the filename, line number, description and the RT ticket number. I saved this output in a separate file&lt;/p&gt;
+
+&lt;p&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-quick-note-on-configuring-rt-cli&#34;&gt;A quick note on configuring RT CLI&lt;/h3&gt;
+
+&lt;p&gt;Configuring and using the RT command line client is simple, but finding out how to do it can be a hard - most of the sources I looked at were out of date, and the &lt;a href=&#34;https://metacpan.org/search?q=RT&amp;amp;size=20&#34;&gt;RT CPAN namespace&lt;/a&gt; has so many burned-out carcasses that Mad Max would be comfortable there. To use the command line client, first install RT::Client::CLI:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan RT::Client::CLI&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then login to the RT Perl &lt;a href=&#34;http://rt.perl.org/&#34;&gt;website&lt;/a&gt; and go to user &lt;a href=&#34;https://rt.perl.org/User/Prefs.html&#34;&gt;preferences&lt;/a&gt; and set a CLI password. Finally, create the file &lt;code&gt;.rtrc&lt;/code&gt; in your home directory. This file should contain:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;server https://rt.perl.org/
+user rt_username
+passwd rt_cli_password
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Replace &lt;code&gt;rt_username&lt;/code&gt; with whatever name shows as the top of the RT screen under &amp;ldquo;logged in as&amp;rdquo;. For me it&amp;rsquo;s my email address. Also replace &lt;code&gt;rt_cli_password&lt;/code&gt; with the CLI password you just set. Alternatively instead of a config file, you can use the following environment variables: RTSERVER, RTUSER and RTPASSWD.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s it, RT is now configured! Try out some &lt;a href=&#34;http://requesttracker.wikia.com/wiki/CLI&#34;&gt;commands&lt;/a&gt;. &lt;a href=&#34;https://www.safaribooksonline.com/library/view/rt-essentials/0596006683/ch04.html&#34;&gt;Chapter 4&lt;/a&gt; from the RT Essentials book was also useful.&lt;/p&gt;
+
+&lt;h3 id=&#34;updating-roast&#34;&gt;Updating roast&lt;/h3&gt;
+
+&lt;p&gt;Now that I had the RT ticket numbers I needed to go back and add them to the skip/todo directives in the unit test files in roast. I scripted that too:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+
+open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tickets, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;./tickets&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $line &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$tickets&amp;gt;&lt;/span&gt;)
+{
+  chomp $line;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($filename, $line_num, $reason, $ticket_num) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $line &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/:(.+?) .+?:(.+?) .+?:(.+?) .+?:(.+?)$/&lt;/span&gt;)
+  {
+    open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;lt;&amp;#39;&lt;/span&gt;, $filename &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;failed to open $filename $!\n&amp;#34;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $counter &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @lines;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $line &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$file&amp;gt;&lt;/span&gt;)
+    {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($counter &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; $line_num)
+      {
+        chomp $line;
+        $line &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/(&amp;#39;|&amp;#34;)\s*$/ RT #$ticket_num$1\n/&lt;/span&gt;;
+      }
+      push @lines, $line;
+      $counter&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    }
+    close $file;
+
+    open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $output_file, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;gt;&amp;#39;&lt;/span&gt;, $filename &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;failed to open $filename $!\n&amp;#34;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (@lines)
+    {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $output_file $_;
+    }
+    close $output_file;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+  {
+    die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;failed to match $line!\n&amp;#34;&lt;/span&gt;;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This took a couple of attempts to get right. At first I thought I would try using &lt;code&gt;open&lt;/code&gt; with an awesome read/write filehandle using &lt;code&gt;+&amp;lt;&lt;/code&gt; but that turned out to be more trouble than it was worth. The other challenge was inserting the RT ticket number within the quoted string on the line, rather than outside of it. So this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#?rakudo todo &amp;#34;doesn&amp;#39;t work yet due to copying of arrays&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Would become this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#?rakudo todo &amp;#34;doesn&amp;#39;t work yet due to copying of arrays RT #124652&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The challenge here is that different descriptions use different delimiters to capture the description, either single or double quotes. In the script, this line handles that problem:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$line &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/(&amp;#39;|&amp;#34;)\s*$/ RT #$ticket_num$1\n/&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It&amp;rsquo;s a substitution regex that captures the last quoting delimiter on the line, and replaces that with the RT ticket number plus the captured delimiter (&lt;code&gt;$1&lt;/code&gt;). It worked!&lt;/p&gt;
+
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap up&lt;/h3&gt;
+
+&lt;p&gt;In the end I raised 641 tickets across 236 test files in roast, for about 2 hours of work. And most of that was spent trying to configure the RT command line client. One thing to keep in mind with raising hundreds of tickets is email notification. Luckily for me Robert Spier intercepted the mailsend (thanks Robert!), but it would be great if there was a way to avoid creating hundreds of notifications when raising tickets. If there&amp;rsquo;s a way, I&amp;rsquo;d love to know how.&lt;/p&gt;
+
+&lt;p&gt;Thanks to Will &amp;ldquo;Coke&amp;rdquo; Coleda, Tobias Leich (FROGGS) and Christian Bartolomäus (usev6) for reviewing the pull request and doing the work of merging it. If you&amp;rsquo;re interested in supporting Perl 6, the Rakudo team have a &lt;a href=&#34;http://rakudo.org/how-to-help/&#34;&gt;page&lt;/a&gt; explaining way to contribute. I&amp;rsquo;d also recommend looking at the Perl 6 community &lt;a href=&#34;http://perl6.org/community/&#34;&gt;page&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re based in New York or in the North-East of America, I&amp;rsquo;ll be at the &lt;a href=&#34;http://mini-conf.com&#34;&gt;Miniconf&lt;/a&gt; hackathon on June 6th, leading a team to convert Perl 5 modules to Perl 6. Hope to see everyone there!&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How to create a grammar in Perl 6</title>
+      <link>http://localhost:1313/article/144/2015/1/13/How-to-create-a-grammar-in-Perl-6/</link>
+      <pubDate>Tue, 13 Jan 2015 15:45:36 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/144/2015/1/13/How-to-create-a-grammar-in-Perl-6/</guid>
+      <description>
+
+&lt;p&gt;In programming, a grammar is a set of rules for parsing text. They&amp;rsquo;re incredibly useful, for instance you can use a grammar to check if a text string conforms to a specific standard or not. Perl 6 has native support for grammars - they&amp;rsquo;re so easy to write that once you start using them, you&amp;rsquo;ll find yourself using them everywhere.&lt;/p&gt;
+
+&lt;p&gt;Recently I&amp;rsquo;ve been working on Module::Minter, a simple app to create a base skeleton structure for a new Perl 6 module. I needed a way to check that the proposed module name would conform to Perl 6&amp;rsquo;s naming conventions.&lt;/p&gt;
+
+&lt;p&gt;Module names can be described as identifiers separated by 2 colons, &lt;a href=&#34;https://github.com/labster/perl6-File-Compare/&#34;&gt;File::Compare&lt;/a&gt; for example*. An identifier must begin with an alpha character (a-z) or an underscore, followed by zero or more alphanumeric characters. So far so good, but it&amp;rsquo;s not that simple; some module names only have a single identifier and no colons like &lt;a href=&#34;https://github.com/tadzik/Bailador/&#34;&gt;Bailador&lt;/a&gt; whilst other modules are more of a mouthful like &lt;a href=&#34;https://github.com/tony-o/perl6-http-server-async-plugins-router-simple/&#34;&gt;HTTP::Server::Async::Plugins::Router::Simple&lt;/a&gt;. This sounds like a job for a grammar!&lt;/p&gt;
+
+&lt;h3 id=&#34;defining-the-grammar&#34;&gt;Defining the grammar&lt;/h3&gt;
+
+&lt;p&gt;Perl 6 Grammars are built from regexes. I need two regexes: one for matching identifiers and one for matching the double colon separators. For the identifier regex, I&amp;rsquo;ll use:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;[A..Za..z_]&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# begins with letter or underscore&lt;/span&gt;
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;[A..Za..z0..9]&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..*&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# zero or more alpanumeric&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Remember we&amp;rsquo;re using Perl 6 regexes, so things might look a little different if you&amp;rsquo;re used to Perl 5 style regexes. A character class is defined by &lt;code&gt;&amp;lt;[ ... ]&amp;gt;&lt;/code&gt; and ranges are defined using the range operator &lt;code&gt;..&lt;/code&gt; instead of a hyphen. This regex matches any leading letter or underscore followed by zero or more alphanumeric characters. Matching two colons is easy:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;:&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;: &lt;span style=&#34;color:#75715e&#34;&gt;# colon pairs&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Grammars are defined using the &lt;code&gt;grammar&lt;/code&gt; keyword, followed by the name of the grammar. I&amp;rsquo;m going to call this grammar &lt;code&gt;Legal::Module::Name&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;grammar Legal::Module::Name
+{
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now I can add the regexes as tokens to the grammar:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;grammar Legal::Module::Name
+{
+  token identifier
+  {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# leading alpha or _ only&lt;/span&gt;
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;[A..Za..z_]&amp;gt;&lt;/span&gt;
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;[A..Za..z0..9]&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..*&lt;/span&gt;
+  } 
+  token separator
+  {
+    &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;:&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;: &lt;span style=&#34;color:#75715e&#34;&gt;# colon pairs&lt;/span&gt;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Every Grammar needs a token called &lt;code&gt;TOP&lt;/code&gt;, which is the starting point for the grammar:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;grammar Legal::Module::Name
+{
+  token TOP
+  { &lt;span style=&#34;color:#75715e&#34;&gt;# identifier followed by zero or more separator identifier pairs&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;^&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;identifier&amp;gt;&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;separator&amp;gt;&amp;lt;identifier&amp;gt;&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..*&lt;/span&gt; $
+  &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;}&lt;/span&gt;
+  token identifier
+  {
+    &lt;span style=&#34;color:#75715e&#34;&gt;# leading alpha or _ only&lt;/span&gt;
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;[A..Za..z_]&amp;gt;&lt;/span&gt;
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;[A..Za..z0..9]&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..*&lt;/span&gt;
+  } 
+  token separator
+  {
+    &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;:&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;: &lt;span style=&#34;color:#75715e&#34;&gt;# colon pairs&lt;/span&gt;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;TOP&lt;/code&gt; token defines a valid module name as one that begins with an identifier token, followed by zero or more separator and identifier token pairs. This is nice to write and maintain - let&amp;rsquo;s say I wanted to change the rules for separators to include hyphens (&amp;lsquo;-&amp;rsquo;), I could just update the separator token regex and the effect would bubble up to the &lt;code&gt;TOP&lt;/code&gt; token definition.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-the-grammar&#34;&gt;Using the grammar&lt;/h3&gt;
+
+&lt;p&gt;Now I&amp;rsquo;ve got the grammar, it&amp;rsquo;s time to put it into action. The &lt;code&gt;parse&lt;/code&gt; method runs the grammar on a string and if successful, returns a match object. This code parses the &lt;code&gt;$proposed_module_name&lt;/code&gt; string, and either prints out the match object or an error message if the propose module name is invalid.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $proposed_module_name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Super::New::Module&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $match_obj &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Legal::Module::Name&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;parse($proposed_module_name);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $match_obj
+{
+    say $match_obj;
+}
+&lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+{
+    say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Invalid module name!&amp;#39;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code prints:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｢&lt;/span&gt;Super::New::Module&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｣&lt;/span&gt;
+ identifier &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｢&lt;/span&gt;Super&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｣&lt;/span&gt;
+ separator &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｢&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｣&lt;/span&gt;
+ identifier &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｢&lt;/span&gt;New&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｣&lt;/span&gt;
+ separator &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｢&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｣&lt;/span&gt;
+ identifier &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｢&lt;/span&gt;Module&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;｣&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;extracting-content-from-the-match-object&#34;&gt;Extracting content from the match object&lt;/h3&gt;
+
+&lt;p&gt;Rather than dumping the contents of the match object to the command line, we can extract matched tokens from the match object. This uses the same quoting syntax often used elsewhere in Perl 6 (e.g. named regexes and hash keys):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;say $match_obj[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str; &lt;span style=&#34;color:#75715e&#34;&gt;# Super&lt;/span&gt;
+say $match_obj[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str; &lt;span style=&#34;color:#75715e&#34;&gt;# New&lt;/span&gt;
+say $match_obj[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str; &lt;span style=&#34;color:#75715e&#34;&gt;# Module&lt;/span&gt;
+
+say $match_obj; &lt;span style=&#34;color:#75715e&#34;&gt;# all 3 captures&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;action-classes&#34;&gt;Action Classes&lt;/h3&gt;
+
+&lt;p&gt;So far the grammar can detect if a proposed module name is legal or not, and produces a match object from which it&amp;rsquo;s easy to extract the components of the module name. Perl 6 also let&amp;rsquo;s you add an action class which defines extra behaviour for matched tokens. I&amp;rsquo;d like to add a warning when a module name has too many identifiers, in other words, it&amp;rsquo;s a legal module name, but the user might want to shorten it. First I define the action class itself:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;class Module::Name::Actions
+{
+  method TOP($/)
+  {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;lt;&lt;/span&gt;identifier&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;.&lt;/span&gt;elems &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;
+    {
+      warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Module name has a lot of identifiers, consider simplifying the name&amp;#39;&lt;/span&gt;;
+    }
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;As you can see this is an ordinary Perl 6 class definition. I&amp;rsquo;ve added one method called &lt;code&gt;TOP&lt;/code&gt; which matches the first token in the grammar. I use the named regex syntax to count all identifier matches, and if there are more than 5, fire a warning. This won&amp;rsquo;t stop the code from running, but it might cause the user to reconsider their choice of module name.&lt;/p&gt;
+
+&lt;p&gt;I then initialize the action class and pass it as an argument in to &lt;code&gt;parse&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $actions &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Module::Name::Actions&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;; 
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $match_obj &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Legal&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Module&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Name&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;parse($proposed_module_name, :actions($actions));&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The grammar will call the matching action class method every time the token is encountered during parsing. In this case that&amp;rsquo;s once per parse, but we could add an additional length length on identifier tokens for example. Check out the &lt;a href=&#34;https://github.com/sillymoose/Module-Minter/blob/master/lib/Module/Minter.pm6&#34;&gt;Module::Minter&lt;/a&gt; source to see how to incorporate a grammar into a module.&lt;/p&gt;
+
+&lt;h3 id=&#34;grammars-in-perl-5&#34;&gt;Grammars in Perl 5&lt;/h3&gt;
+
+&lt;p&gt;You can also write grammars in Perl 5. For a solution similar to the Perl 6 implementation, have a look at &lt;a href=&#34;https://metacpan.org/pod/Regexp::Grammars&#34;&gt;Regexp::Grammars&lt;/a&gt; or Ingy Döt Net&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Pegex&#34;&gt;Pegex&lt;/a&gt; distribution. For a different approach, check out chapter 1 of &lt;a href=&#34;http://www.masteringperl.org/&#34;&gt;Mastering Perl&lt;/a&gt; by brian d foy, which contains an example JSON grammar.&lt;/p&gt;
+
+&lt;p&gt;* This isn&amp;rsquo;t strictly correct - the entire name (colons included) is the identifier.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; &lt;em&gt;added link to Regexp::Grammars. 2015-01-13&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -102,7 +102,7 @@ You can use a telnet client to retrieve data from any Web server. You need to be
 
 With the above information, it isn't hard to write your own simple Web server. There are several ways to do this and a few already written on CPAN. We're going to start from first principles though, and pretend, for the moment, we don't know about CPAN.
 
-A good place to start looking for client/server information is in the [perlipc](https://perldoc.perl.org/perlipc.html) document. About 2/3 of the way through is a section on "Internet TCP Clients and Servers". This section shows how to use simple socket commands to setup a simple server. A little further down is the section we're interested in - it demonstrates using the IO::Socket module to write a simple TCP server. I'll replicate that here.
+A good place to start looking for client/server information is in the [perlipc]({{</* perldoc "perlipc" */>}}) document. About 2/3 of the way through is a section on "Internet TCP Clients and Servers". This section shows how to use simple socket commands to setup a simple server. A little further down is the section we're interested in - it demonstrates using the IO::Socket module to write a simple TCP server. I'll replicate that here.
 
      #!/usr/bin/perl -w
      use IO::Socket;
@@ -211,7 +211,7 @@ There are two schemes used to take advantage of modern computers' ability to mul
 
 For a simple embedded server, it isn't much more difficult to build a forking server, but the extra work is unnecessary if it's only going to be used by one person or with a low hit-rate. The only advantage to the forking method is that it can serve multiple pages at once. (Taking advantage of modern operating systems ability to multiprocess.)
 
-More information on forking servers, can be found in the [perlipc](https://perldoc.perl.org/perlipc.html) documentation.
+More information on forking servers, can be found in the [perlipc]({{</* perldoc "perlipc" */>}}) documentation.
 
 With a simple modification to our loop, we can turn our Web server into a forking client:
 

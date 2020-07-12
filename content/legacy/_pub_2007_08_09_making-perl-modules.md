@@ -169,7 +169,7 @@ This result matches the resultant terms as shown in the graph in Figure 1, so it
 
 ### Creating a Perl Package from a Program
 
-With a working program, you can create a Perl package as a step toward being able to reuse code in a larger application. The initial program has two pieces of input data (the major generator and the minor generator). The single output is the list of numbers that make up the resultant. These three pieces of data could be combined in an object. The program could easily become a subroutine to generate the terms in the resultant. This could be a method in the class contained in the package. Creating a class implies adding a constructor method to create a new object. Finally, there should be some methods to get the major generator and minor generator from the object to use in generating the resultant (see the [perlboot](http://perldoc.perl.org/perlboot.html) and [perltoot](http://perldoc.perl.org/perltoot.html) tutorials for background on object-oriented programming in Perl).
+With a working program, you can create a Perl package as a step toward being able to reuse code in a larger application. The initial program has two pieces of input data (the major generator and the minor generator). The single output is the list of numbers that make up the resultant. These three pieces of data could be combined in an object. The program could easily become a subroutine to generate the terms in the resultant. This could be a method in the class contained in the package. Creating a class implies adding a constructor method to create a new object. Finally, there should be some methods to get the major generator and minor generator from the object to use in generating the resultant (see the [perlboot]({{</* perldoc "perlboot" */>}}) and [perltoot]({{</* perldoc "perltoot" */>}}) tutorials for background on object-oriented programming in Perl).
 
 From these requirements, the resulting package might be:
 
@@ -337,7 +337,7 @@ and the last lines of the source appears without the the final closing brace as:
        @{$self->{ResultList}} = @result;
       }
 
-After making the above changes, save *Resultant.pm*. This is all that you need to do to create a module for your own use. If you eventually release your module to the Perl community or upload it to [CPAN](http://www.cpan.org/), you should do some more work to prepare the module and its documentation (see the [perlmod](http://perldoc.perl.org/perlmod.html) and [perlmodlib](http://perldoc.perl.org/perlmodlib.html) documentation for more information).
+After making the above changes, save *Resultant.pm*. This is all that you need to do to create a module for your own use. If you eventually release your module to the Perl community or upload it to [CPAN](http://www.cpan.org/), you should do some more work to prepare the module and its documentation (see the [perlmod]({{</* perldoc "perlmod" */>}}) and [perlmodlib]({{</* perldoc "perlmodlib" */>}}) documentation for more information).
 
 After modifying *Resultant.pm*, you need to install the module to make it available for other Perl applications. To avoid configuration issues, install the module in your home directory, separate from your main Perl installation.
 

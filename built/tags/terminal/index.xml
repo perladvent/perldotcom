@@ -1,0 +1,1437 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Terminal on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/terminal/</link>
+    <description>Recent content in Terminal on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 23 Oct 2018 20:07:36 +0000</lastBuildDate>
+    <atom:link href="/tags/terminal/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Use terminal colors to distinguish information</title>
+      <link>http://localhost:1313/article/use-terminal-colors-to-distinguish-information/</link>
+      <pubDate>Tue, 23 Oct 2018 20:07:36 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/use-terminal-colors-to-distinguish-information/</guid>
+      <description>&lt;p&gt;The module &lt;a href=&#34;https://metacpan.org/pod/Term::ANSIColor&#34;&gt;Term::ANSIColor&lt;/a&gt; is one of my favorite Perl tools. It doesn&amp;rsquo;t make my program work better but it allows me to quickly identify the output that&amp;rsquo;s important to me without missing out on the other stuff. I recently used it to track the shipments of my latest book.&lt;/p&gt;
+
+&lt;p&gt;When &lt;a href=&#34;https://www.learningperl6.com&#34;&gt;Learning Perl 6&lt;/a&gt; was published and the paper versions were available, I owed about 100 people a signed copy. From my years of publishing a print Perl magazine, I know that physically shipping stuff is an exercise in pain and memory. Did I send the book? When did I send it? I&amp;rsquo;m never quite sure the task is finished because a parcel might go missing without the recipient realizing they are missing something. Months later I get a complaint. No big whoop—that&amp;rsquo;s life in retail.&lt;/p&gt;
+
+&lt;p&gt;I ship these through the US Postal Service and get a tracking number for each parcel. I could check those by hand at the USPS website, but I also wrote the &lt;a href=&#34;https://metacpan.org/pod/Business::US::USPS::WebTools&#34;&gt;Business::US::USPS::WebTools&lt;/a&gt; module to handle that for me. I can use the post office&amp;rsquo;s web API (rudimentary as it is) to get the status of packages.&lt;/p&gt;
+
+&lt;p&gt;Curiously, this summer I had just given up this module because I didn&amp;rsquo;t want to maintain it anymore. I hadn&amp;rsquo;t used it in a couple of years and the web API interfaces had changed slightly. A couple weeks later I had another use for it. Go figure. It now lives in the &lt;a href=&#34;https://github.com/CPAN-Adoptable-Modules&#34;&gt;CPAN Adoptable Modules&lt;/a&gt; GitHub organization that I set up. If you have repos for modules that you no longer want, let me know about them. I&amp;rsquo;ll pull them into that organization and you can delete them from your own account. Anyone who wants to maintain them later will still find them. And, there&amp;rsquo;s also &lt;a href=&#34;https://github.com/gitpan&#34;&gt;GitPAN&lt;/a&gt;, but that&amp;rsquo;s not quite the same thing.&lt;/p&gt;
+
+&lt;p&gt;To use this program, grab the module source from &lt;a href=&#34;https://github.com/CPAN-Adoptable-Modules/business-us-usps-webtools&#34;&gt;GitHub&lt;/a&gt;. I had to update a few things to make it work and I might make further changes. &lt;a href=&#34;https://github.com/CPAN-Adoptable-Modules/business-us-usps-webtools/commit/27c9443cc918d67f19f9a3a594e364a22fc5d16f&#34;&gt;Commit 27c9443&lt;/a&gt; from October 2, 2018 should be good. (And yes, it feels very strange not to point to a version on CPAN).&lt;/p&gt;
+
+&lt;p&gt;You&amp;rsquo;ll also need credentials from the &lt;a href=&#34;https://www.usps.com/business/web-tools-apis/welcome.htm&#34;&gt;WebTools site&lt;/a&gt;. They make it sound like a government official is going to scrutinize your application but you&amp;rsquo;ll get an email a couple of minutes later. No one from the USPS has ever contacted me to ask me what I was doing with the module. One curiosity of the US Government is that the Post Office has their own police force (mostly for  mail theft or mail fraud). But I don&amp;rsquo;t need to worry about that because my program adheres to the intended use of the service.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll start with a short program that gets the record for a single tracking number. I have my credentials in the environment so I can easily grab them for any other WebTools program I create. This one  prints a summary of the shipment (although there is a chain of steps from acceptance when I drop off the parcel to when they deliver it):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.28&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; utf8;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; lib &lt;span style=&#34;color:#e6db74&#34;&gt;qw(/path/to/business-us-usps-webtools/lib)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Business::US::USPS::WebTools::TrackConfirm;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tracker &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Business::US::USPS::WebTools::TrackConfirm&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( {
+	UserID   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{USPS_WEBTOOLS_USERID},
+	Password &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{USPS_WEBTOOLS_PASSWORD},
+	} );
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tracking_number &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $ARGV[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $details &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $tracker&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;track( TrackID &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $tracking_number );
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;( $tracker&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;is_error ) {
+	warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Oh No! $tracker-&amp;gt;{error}{description}\n&amp;#34;&lt;/span&gt;;
+	}
+&lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;uninitialized&amp;#39;&lt;/span&gt;;
+	state @keys &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw(EventTime EventDate Event EventCity)&lt;/span&gt;;
+	printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%-22s %8s %-20s %s %s\n&amp;#34;&lt;/span&gt;,
+		$tracking_number, $details&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@{@keys};
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The output is serviceable but boring (and I&amp;rsquo;ve mutated the tracking numbers so they aren&amp;rsquo;t valid and don&amp;rsquo;t represent actual shipments):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl track-one.pl 84058036993006920289
+84058036993006920289  8:38 am September 14, 2018   Delivered, In/At Mailbox NEW YORK
+$ perl track-one.pl CJ6467937US
+CJ6467937US           9:38 am September 26, 2018   Departed PARIS
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using this program is much quicker than me going to the USPS website to paste numbers into their form. It can be better—what I really want to know is if I need to do anything for a shipment. I can read the output to figure that out. If it&amp;rsquo;s &amp;ldquo;Delivered&amp;rdquo; than I should be fine. If not, it can still be lost. But reading is hard! Adding color to that relieves me of the burden of scanning a whole line of text. The program can read the text for me and categorize it with color.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Term::ANSIColor&#34;&gt;Term::ANSIColor&lt;/a&gt; works by outputting &lt;a href=&#34;http://wiki.bash-hackers.org/scripting/terminalcodes&#34;&gt;special escape sequences&lt;/a&gt; that instruct the (ANSI) terminal to switch colors. The new color is in effect until you output the special reset sequence (or change to another color):&lt;/p&gt;
+
+&lt;pre&gt;$ perl -MTerm::ANSIColor=:constants -e &#39;print RED, &#34;Hello World&#34;, RESET&#39;
+&lt;code style=&#34;color:red&#34;&gt;Hello World&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I can do that in my tracking program. I&amp;rsquo;ll use green to indicate an outstanding shipment (a brighter color on my dark background) and blue (a darker color that subdues the line) to indicate a delivered shipment. I can know the status just by the color:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.28&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; utf8;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; lib &lt;span style=&#34;color:#e6db74&#34;&gt;qw(/path/to/business-us-usps-webtools/lib)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Business::US::USPS::WebTools::TrackConfirm;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Term::ANSIColor;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tracker &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Business::US::USPS::WebTools::TrackConfirm&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( {
+	UserID   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{USPS_WEBTOOLS_USERID},
+	Password &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{USPS_WEBTOOLS_PASSWORD},
+	} );
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tracking_number &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $ARGV[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $details &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $tracker&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;track( TrackID &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $tracking_number );
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;( $tracker&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;is_error ) {
+	warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Oh No! $tracker-&amp;gt;{error}{description}\n&amp;#34;&lt;/span&gt;;
+	}
+&lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;uninitialized&amp;#39;&lt;/span&gt;;
+	state @keys &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw(EventTime EventDate Event EventCity )&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; color(
+		$details&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]{Event} &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;m/Delivered/&lt;/span&gt; ? &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;blue&amp;#39;&lt;/span&gt; : &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;green&amp;#39;&lt;/span&gt;
+		);
+	printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%-22s %8s %-20s %s %s\n&amp;#34;&lt;/span&gt;, $tracking_number, $details&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@{@keys};
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; color(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;reset&amp;#39;&lt;/span&gt;);
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That&amp;rsquo;s fine, but I don&amp;rsquo;t want to do these individually. I have all the tracking numbers in a file (a spreadsheet really, but that&amp;rsquo;s not important here). I want to check them all at once. I can do that in a &lt;code&gt;while&lt;/code&gt; loop that takes the lines from standard input. Of course the data are a bit dirty so I remove whitespace (the USPS formats it in different ways on different pages) and then skip lines that are empty. I do have some could that checks the validity of tracking numbers but it&amp;rsquo;s a bit old and doesn&amp;rsquo;t cover some of the new (undocumented) numbers they have been giving me. So I&amp;rsquo;m stuck with these simple checks. Otherwise, the program is mostly the same:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.28&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; utf8;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; lib &lt;span style=&#34;color:#e6db74&#34;&gt;qw(/path/to/business-us-usps-webtools/lib)&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Business::US::USPS::WebTools::TrackConfirm;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Term::ANSIColor;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tracker &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Business::US::USPS::WebTools::TrackConfirm&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;( {
+	UserID   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{USPS_WEBTOOLS_USERID},
+	Password &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $ENV{USPS_WEBTOOLS_PASSWORD},
+	} );
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt; ) {
+	chomp;
+	&lt;span style=&#34;color:#e6db74&#34;&gt;s/\s+//g&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; length $_;
+
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $details &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $tracker&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;track( TrackID &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $_ );
+
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;( $tracker&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;is_error ) {
+		warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Oh No! $tracker-&amp;gt;{error}{description}\n&amp;#34;&lt;/span&gt;;
+		}
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+		&lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;uninitialized&amp;#39;&lt;/span&gt;;
+		state @keys &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;qw(EventTime EventDate Event EventCity )&lt;/span&gt;;
+		&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; color(
+			$details&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]{Event} &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;m/Delivered/&lt;/span&gt; ? &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;blue&amp;#39;&lt;/span&gt; : &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;green&amp;#39;&lt;/span&gt;
+			);
+		printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%-22s %8s %-20s %s %s\n&amp;#34;&lt;/span&gt;, $_, $details&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@{@keys};
+		&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; color(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;reset&amp;#39;&lt;/span&gt;);
+		}
+
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now the outstanding shipments stand out from the delivered ones. Even with the heavily blurred screenshot I can make out which lines are the ones that I want to investigate. I&amp;rsquo;ve blurred this image a bit to protect personal information but even then I can pick out the shipments that are still out there.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/use-terminal-colors-to-distinguish-information/blurred-term-ansicolor.png&#34; alt=&#34;blurred output&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s amazing that this works. The international cooperation for many countries is pretty good. I can get tracking all the way to the final delivery in many countries.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Write multiline programs at the terminal</title>
+      <link>http://localhost:1313/article/write-multiline-programs-at-the-terminal/</link>
+      <pubDate>Tue, 05 Jul 2016 11:18:55 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/write-multiline-programs-at-the-terminal/</guid>
+      <description>
+
+&lt;p&gt;Perl one liners are incredibly useful, and when I&amp;rsquo;m working I write several a day. Whether it&amp;rsquo;s to test if a new module compiles, check the syntax of a function, or edit a file, one liners do the trick. Sometimes when I need to do something more involved, instead of a one liner I&amp;rsquo;ll write a throwaway script. Of course I usually forget to delete the script and that&amp;rsquo;s why my machine is littered with Perl files like &amp;lsquo;tmp.pl&amp;rsquo;, &amp;lsquo;getname.pl&amp;rsquo; etc. But I&amp;rsquo;ve since found a better way - using a shell here-doc!&lt;/p&gt;
+
+&lt;h3 id=&#34;shell-here-docs&#34;&gt;Shell here-docs&lt;/h3&gt;
+
+&lt;p&gt;In the terminal I can use the here-doc syntax to write an entire Perl script at the command line. Here&amp;rsquo;s an example using &lt;a href=&#34;https://metacpan.org/pod/HTTP::Tiny&#34;&gt;HTTP::Tiny&lt;/a&gt; to print out the HTTP headers returned by this website.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl - &amp;lt;&amp;lt;&#39;EOF&#39;
+&amp;gt; use HTTP::Tiny;
+&amp;gt; use Data::Dumper;
+&amp;gt; my $res = HTTP::Tiny-&amp;gt;new-&amp;gt;get(&#39;http://perltricks.com/&#39;);
+&amp;gt; print Dumper($res-&amp;gt;{headers});
+&amp;gt; EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What&amp;rsquo;s happening here? The syntax &lt;code&gt;perl -&lt;/code&gt; primes Perl to execute STDIN. The syntax for a shell here-doc is &lt;code&gt;&amp;lt;&amp;lt;&#39;word&#39;&lt;/code&gt; where &amp;ldquo;word&amp;rdquo; is the value to terminate the here-doc with (I tend to use &lt;code&gt;EOF&lt;/code&gt; or &lt;code&gt;END&lt;/code&gt;). After typing the first line and pressing enter, the shell caret will move to a new line, prefixed with &lt;code&gt;&amp;gt;&lt;/code&gt;. It would look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl - &amp;lt;&amp;lt;&#39;EOF&#39;
+&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At this point, you can type the lines of the Perl script, pressing enter for a new line. Or you can paste in code from an existing script. Once you type the terminating word on a new line, the terminal sends the script to &lt;code&gt;perl&lt;/code&gt; via STDIN. Unlike with one-liners, you&amp;rsquo;re free to use both single and double quotes in the program text. Yay!&lt;/p&gt;
+
+&lt;p&gt;If I want shell parameter expansion, I leave the terminator unquoted:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl - &amp;lt;&amp;lt;EOF
+&amp;gt; print &amp;quot;$HOME\n&amp;quot;
+&amp;gt; EOF
+/home/dfarrell
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I can write throwaway scripts in the terminal, and not leave them littered all over my hard drive. Just like other successful commands, Bash will store the script in it&amp;rsquo;s history, so you can search for, edit and re-execute the scripts over and over again.&lt;/p&gt;
+
+&lt;p&gt;This trick isn&amp;rsquo;t specific to Perl. Shell here-docs can be used in the same way to execute code in Perl 6, Python, Ruby &amp;hellip; any binary which can execture code from STDIN.&lt;/p&gt;
+
+&lt;h3 id=&#34;editing-tips&#34;&gt;Editing tips&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s say you just ran a throwaway script using a here-doc, and now you want to edit it and run it again. If you press the up arrow, Bash will display the command, but you can&amp;rsquo;t press up again, else Bash will display the previous command. Instead, use the left and right arrow keys to move to the beginning and end of lines, and the caret will automatically jump to the next line.&lt;/p&gt;
+
+&lt;p&gt;When editing a throwaway script, I start by deleting the terminator word (&amp;ldquo;EOF&amp;rdquo; or whatever). That way when I press enter, I can add more lines to the script. If the command you&amp;rsquo;re looking for is an old one, you can search your terminal history with &lt;code&gt;&amp;lt;Ctrl&amp;gt;&amp;lt;shift&amp;gt;r&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The Wikipedia &lt;a href=&#34;https://en.wikipedia.org/wiki/Heredoc#Unix_shells&#34;&gt;here-docs entry&lt;/a&gt; has examples of shell here-doc syntax.&lt;/li&gt;
+&lt;li&gt;The bash manpage (&lt;code&gt;man bash&lt;/code&gt;) has a concise but useful entry on shell here-docs and the different types.&lt;/li&gt;
+&lt;li&gt;The more common way to use here-docs is inside Perl code. Read about &lt;em&gt;those&lt;/em&gt; in &lt;a href=&#34;https://perldoc.perl.org/perlop.html&#34;&gt;perlop&lt;/a&gt;, the official Perl documentation.Read it in the terminal with &lt;code&gt;perldoc perlop&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/HTTP::Tiny&#34;&gt;HTTP::Tiny&lt;/a&gt; is a lightweight, &lt;em&gt;fast&lt;/em&gt; Perl user agent that comes bundled with Perl (since version 5.14.0). You probably have it installed already, so you can read it&amp;rsquo;s documentation with &lt;code&gt;perldoc HTTP::Tiny&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;N.B. When reading documentation in the terminal, type &lt;code&gt;/search-term&amp;lt;enter&amp;gt;&lt;/code&gt; to jump to the next search match. Pressing &lt;code&gt;n&lt;/code&gt; will jump to the next match and &lt;code&gt;N&lt;/code&gt; the previous match. Pressing &lt;code&gt;h&lt;/code&gt; will display the help page. (all of this assumes your terminal reader is &lt;code&gt;less&lt;/code&gt;, which is typical).&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Displaying the Git branch in the terminal prompt with and without Perl</title>
+      <link>http://localhost:1313/article/displaying-the-git-branch-in-the-terminal-prompt-with-perl/</link>
+      <pubDate>Fri, 13 May 2016 07:57:42 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/displaying-the-git-branch-in-the-terminal-prompt-with-perl/</guid>
+      <description>
+
+&lt;p&gt;One way to evolve as a programmer is to pay attention to things you do repeatedly, and replace that action with an efficient alternative. It took me a shamefully long time to realize I was typing &lt;code&gt;git branch&lt;/code&gt; many times a day to check which branch I was committing code to. A more efficient way is to display the current branch name in the terminal prompt. Ideally I&amp;rsquo;d like to see something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/some/path [master]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;the-branch-command&#34;&gt;The branch command&lt;/h3&gt;
+
+&lt;p&gt;With Git version control, code changes are committed to branches. The active branch is the context for work. For example I might be working on a new feature, so I create a new branch called &amp;ldquo;new-feature-x&amp;rdquo; and start writing code. Any changes I make to the code whilst in this branch, do not affect the master branch of code. This makes knowing the active branch really important - I don&amp;rsquo;t want to commit code to the wrong branch.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;branch&lt;/code&gt; command displays a list of all local branches and places an asterisk next to the active one. So in my fictional example, it might look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch
+  master
+* new-feature-x
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Git prepends an asterisk to highlight the active branch name. Sometimes I use this to remind myself which branches are available locally, but most of the time I&amp;rsquo;m checking it to see which branch I&amp;rsquo;m currently working on. The Git &lt;a href=&#34;https://git-scm.com/docs/git-branch&#34;&gt;branch documentation&lt;/a&gt; has more information on the ins and outs of &lt;code&gt;branch&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;parsing-git-branch-with-perl&#34;&gt;Parsing git branch with Perl&lt;/h3&gt;
+
+&lt;p&gt;This is the one liner I want to use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch 2&amp;gt; /dev/null | perl -ne &#39;print &amp;quot; [$_]&amp;quot; if s/^\*\s+// &amp;amp;&amp;amp; chomp&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It runs &lt;code&gt;git branch&lt;/code&gt; redirecting error messages to the netherworld. That means if the current working directory is not a git repository, the ensuing error message will be ignored. We pipe the list of git branches to Perl, which uses the &lt;code&gt;-n&lt;/code&gt; option to loop through each line of input, running the quoted code.&lt;/p&gt;
+
+&lt;p&gt;The code operates on the default variable &lt;code&gt;$_&lt;/code&gt; which is the line of output from &lt;code&gt;git branch&lt;/code&gt; being looped over. The active branch name always begins with an asterisk, So &lt;code&gt;s/^\*\s+//&lt;/code&gt; tries to substitute the leading asterisk and whitespace from the branch name. Substitute returns the number of characters it replaced, so for all lines except the active branch, that will be zero and evaluate to false. If it&amp;rsquo;s true, the code then chomps the trailing newline character from the branch name and prints it.&lt;/p&gt;
+
+&lt;p&gt;I can add this as a function to my &lt;code&gt;.bashrc&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;function current_git_branch {
+  git branch &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/dev/&lt;/span&gt;null &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;ne&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print &amp;#34; [$_]&amp;#34; if s/^\*\s+// &amp;amp;&amp;amp; chomp&amp;#39;&lt;/span&gt;
+}
+PS1&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\w\$(current_git_branch) &amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;PS1&lt;/code&gt; variable defines the terminal prompt content and style. Here I&amp;rsquo;ve defined it as follows: &lt;code&gt;\w&lt;/code&gt; is the current working directory path, e.g. &lt;code&gt;~/Projects/work/&lt;/code&gt; or whatever. This is followed by the call to &lt;code&gt;current_git_branch&lt;/code&gt;. Once those edits are saved in my &lt;code&gt;.bashrc&lt;/code&gt;, I need to save the file and reload it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ . ~/.bashrc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now my terminal prompt looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/Projects/work [new-feature-x]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And if I checkout a different branch it will change:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/Projects/work [new-feature-x] git checkout master
+~/Projects/work [master]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;some-other-ways&#34;&gt;Some other ways&lt;/h3&gt;
+
+&lt;p&gt;One easy alternative would be to use Perl 6:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch 2&amp;gt; /dev/null | perl6 -ne &#39;print &amp;quot; [$_]&amp;quot; if s/^\*\s+// &amp;amp;&amp;amp; .chomp&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code is almost the same as before, only &lt;code&gt;chomp&lt;/code&gt; has been changed to a method call. A regex capture could be used instead too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch 2&amp;gt; /dev/null | perl -ne &#39;print &amp;quot; [$1]&amp;quot; if /^\*\s+(\S+)/&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;ve also seen &lt;a href=&#34;https://askubuntu.com/questions/730754/how-do-i-show-the-git-branch-with-colours-in-bash-prompt&#34;&gt;examples&lt;/a&gt; using &lt;code&gt;sed&lt;/code&gt; to parse the output instead of Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;bash-only&#34;&gt;Bash only&lt;/h3&gt;
+
+&lt;p&gt;Perhaps a more efficient approach is to have Git emit only the active branch name, and then we don&amp;rsquo;t need another program to parse the output at all, we can just use bash. Credit goes to &lt;a href=&#34;http://randalschwartz.com&#34;&gt;Randal Schwartz&lt;/a&gt; for showing me this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git rev-parse --abbrev-ref HEAD
+new-feature-x
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This emits the active branch only. So now the code in my &lt;code&gt;.bashrc&lt;/code&gt; becomes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;function current_git_branch {
+  local branch&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;$&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;git rev&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;parse &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;abbrev&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;ref HEAD &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/dev/&lt;/span&gt;null);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; [[ &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;n $branch ]];&lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+    echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; [$branch]&amp;#34;&lt;/span&gt;;
+  fi
+}
+PS1&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\w\$(current_git_branch) &amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code assigns the output of the git command to the variable &lt;code&gt;branch&lt;/code&gt;. It then echoes the branch name as long as it&amp;rsquo;s not a zero length string (which happens when the current working directory is not a git repository). But wait a second, what happened to that newline at the end of the branch name? Bash has some interesting behavior with nested &lt;code&gt;echo&lt;/code&gt; commands. Check this out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ echo -n $(echo -e &amp;quot;\n\n\n\n&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you run that command at the terminal you should get no output, even though it includes 4 newline characters, plus another newline appended by the &lt;code&gt;echo&lt;/code&gt; subcommand. The outer &lt;code&gt;echo&lt;/code&gt; ignores all newlines returned by the subcommand, and the &lt;code&gt;-n&lt;/code&gt; option suppresses its own newline append (thanks to Ben Grimm for the explanation).&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m going with the bash variant, but whichever method you use, displaying the branch name in the terminal is a nice time saver.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>An introduction to Tmux</title>
+      <link>http://localhost:1313/article/an-introduction-to-tmux/</link>
+      <pubDate>Wed, 24 Feb 2016 09:29:18 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/an-introduction-to-tmux/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;https://tmux.github.io/&#34;&gt;Tmux&lt;/a&gt; is a terminal multiplexer: it&amp;rsquo;s like a power-up for terminal programming. You can manage several terminals under a session, split terminal screens, detach and re-attach sessions and much more. If you do most of your programming at the command line, you&amp;rsquo;ll find using a terminal multiplexer invaluable.&lt;/p&gt;
+
+&lt;h3 id=&#34;setup&#34;&gt;Setup&lt;/h3&gt;
+
+&lt;p&gt;First you&amp;rsquo;ll need to install Tmux via your package manager or &lt;a href=&#34;https://tmux.github.io/&#34;&gt;download&lt;/a&gt; it. Tmux is highly configurable but the first change I&amp;rsquo;d recommend is to ssh, not Tmux. Make ssh &amp;ldquo;keep alive&amp;rdquo; for all connections by adding this to &lt;code&gt;~/.ssh/config&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;host *
+   ServerAliveInterval 300
+   ServerAliveCountMax 3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the file doesn&amp;rsquo;t exist, create it. This configuration instructs your local machine for all user ssh sessions to send a server alive message every 300 seconds to keep the ssh session alive. If the local machine sends 3 unanswered messages, it will disconnect the session. You should tweak these settings to suit your needs: for instance by restricting the &lt;code&gt;host&lt;/code&gt; to specific domains you can have different settings per domain. If you have a slow or unreliable internet connection, consider changing &lt;code&gt;ServerAliveInterval&lt;/code&gt; to a lower number to send more frequent messages.&lt;/p&gt;
+
+&lt;p&gt;If you have permission on the servers you use, you can update them with a similar configuration, in &lt;code&gt;/etc/ssh/sshd_config&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ClientAliveInterval 300
+ClientAliveCountMax 3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;the-prefix-and-one-true-command-trade&#34;&gt;The Prefix and One True Command&amp;trade;&lt;/h3&gt;
+
+&lt;p&gt;Once Tmux is installed, start a new Tmux session from the command line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tmux
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Ctrl-b&lt;/code&gt; is the &lt;strong&gt;prefix&lt;/strong&gt; combination. Press the Ctrl key AND the letter b at the same time. When inside a Tmux session, the prefix is nearly always pressed before the shortcut key to trigger a command.&lt;/p&gt;
+
+&lt;p&gt;The prefix combination is really important. Once you get the hang of the prefix combination, you can pretty much bootstrap yourself into learning Tmux with just one command. To display a list of Tmux commands, type: &lt;code&gt;Ctrl-b ?&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;That means press &lt;code&gt;Control&lt;/code&gt; and &lt;code&gt;b&lt;/code&gt; together, release, then press &lt;code&gt;?&lt;/code&gt;. Tmux should display:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;bind-key        C-b send-prefix
+bind-key        C-o rotate-window
+bind-key        C-z suspend-client
+bind-key      Space next-layout
+bind-key          ! break-pane
+bind-key          &amp;quot; split-window
+bind-key          # list-buffers
+bind-key          $ command-prompt -I #S &amp;quot;rename-session &#39;%%&#39;&amp;quot;
+bind-key          % split-window -h
+bind-key          &amp;amp; confirm-before -p &amp;quot;kill-window #W? (y/n)&amp;quot; kill-window
+bind-key          &#39; command-prompt -p index &amp;quot;select-window -t &#39;:%%&#39;&amp;quot;
+bind-key          ( switch-client -p
+bind-key          ) switch-client -n
+bind-key          , command-prompt -I #W &amp;quot;rename-window &#39;%%&#39;&amp;quot;
+bind-key          - delete-buffer
+bind-key          . command-prompt &amp;quot;move-window -t &#39;%%&#39;&amp;quot;
+bind-key          0 select-window -t :0
+bind-key          1 select-window -t :1
+bind-key          2 select-window -t :2
+bind-key          3 select-window -t :3
+bind-key          4 select-window -t :4
+bind-key          5 select-window -t :5
+bind-key          6 select-window -t :6
+bind-key          7 select-window -t :7
+bind-key          8 select-window -t :8
+bind-key          9 select-window -t :9
+bind-key          : command-prompt
+bind-key          ; last-pane
+bind-key          = choose-buffer
+bind-key          ? list-keys
+bind-key          D choose-client
+bind-key          L switch-client -l
+bind-key          [ copy-mode
+bind-key          ] paste-buffer
+bind-key          c new-window
+bind-key          d detach-client
+bind-key          f command-prompt &amp;quot;find-window &#39;%%&#39;&amp;quot;
+bind-key          i display-message
+bind-key          l last-window
+bind-key          n next-window
+bind-key          o select-pane -t :.+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can also change the prefix combination (see the Config options section). If you do that, remember to use your prefix combination instead of &lt;code&gt;Ctrl-b&lt;/code&gt; in the examples below.&lt;/p&gt;
+
+&lt;h3 id=&#34;window-control&#34;&gt;Window control&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at a key Tmux feature: windows. They&amp;rsquo;re similar to tabs in browsers. Each one is a different terminal from where you can run different commands at the same time. To create a new window press&lt;code&gt;Ctrl-b c&lt;/code&gt;. You can cycle between windows: &lt;code&gt;Ctrl-b n&lt;/code&gt; for the next window and &lt;code&gt;Ctrl-b p&lt;/code&gt; takes you to the prior window. &lt;code&gt;Ctrl-b w&lt;/code&gt; list all windows in a session and let&amp;rsquo;s you select which one to active (using the arrow keys and enter).&lt;/p&gt;
+
+&lt;p&gt;If you know the window number you can also jump straight to it with &lt;code&gt;Ctrl-b #&lt;/code&gt; replacing &amp;ldquo;#&amp;rdquo; with the window number. By default they begin at 0, not 1!&lt;/p&gt;
+
+&lt;p&gt;You might be wondering what&amp;rsquo;s the benefit of using Tmux windows over tabbed terminals. First, with regular terminals if the window manager crashes, you&amp;rsquo;ll lose the terminals as well. This won&amp;rsquo;t happen with Tmux: it will keep the terminals running in the background and you can re-attach a new terminal to them at any time. Windows can also be subdivided into panes, all running pseudo-terminals. Let&amp;rsquo;s look at them now.&lt;/p&gt;
+
+&lt;h3 id=&#34;pane-control&#34;&gt;Pane control&lt;/h3&gt;
+
+&lt;p&gt;Panes are great. You can split a window horizontally, vertically and with any dimensions you like. Have you ever wanted to quickly look up a man page whilst coding? Instead of dropping back to the terminal, looking up the man page and then foregrounding your editor, just open a new vertical pane, like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/an-introduction-to-tmux/tmux-split-screen.png&#34; alt=&#34;Tmux Panes&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now you can read the man page and code at the same time; you can even copy and paste between the two panes. Much more convenient!&lt;/p&gt;
+
+&lt;p&gt;Recently I was processing a huge set of data; I arranged my Tmux window with 3 panes running the data processing and 1 pane monitoring the server resources with &lt;a href=&#34;http://hisham.hm/htop/&#34;&gt;htop&lt;/a&gt;. This server is almost overloaded:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/an-introduction-to-tmux/tmux-panes.png&#34; alt=&#34;Tmux Panes&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;These are the key pane controls:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Ctrl-b &amp;quot;      split pane horizontally
+Ctrl-b %      split pane vertically
+Ctrl-b o      next pane
+Ctrl-b ;      prior pane
+Ctrl-b ←↑→↓   jump to pane
+Ctrl-b Ctrl-o swap panes
+Ctrl-b space  arrange panes
+Ctrl-b-←↑→↓   change pane size
+Ctrl-b !      pop a pane into a new window
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The arrows &lt;code&gt;←↑→↓&lt;/code&gt; represent the arrow keys, just use one of these. For example to jump to a pane on the right, you&amp;rsquo;d press &lt;code&gt;Ctrl-b →&lt;/code&gt;. The change pane size controls are a little different. To make that work you first have to have more than one pane. Next press &lt;code&gt;Ctrl-b&lt;/code&gt; and keep the control key held down. Now you can repeatedly press an arrow key to change the pane size.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Ctrl-b !&lt;/code&gt; is one of my favorite features. It pops the current pane out of the window and moves it to its own window. This is wonderful if you find yourself doing some unrelated activity in one pane and want to re-organize your setup.&lt;/p&gt;
+
+&lt;h3 id=&#34;scrolling-and-copy-paste&#34;&gt;Scrolling and copy/paste&lt;/h3&gt;
+
+&lt;p&gt;If you can master scrolling and copy/paste in Tmux, you can master anything. I won&amp;rsquo;t lie, this is the clunkiest feature. But it&amp;rsquo;s really useful. The interface is modal, so start by entering scroll mode by typing &lt;code&gt;Ctrl-b [&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Pressing &lt;code&gt;esc&lt;/code&gt; will exit scroll mode. You should know you&amp;rsquo;re in scroll mode because an orange line count appears in the top-right corner of the pane.&lt;/p&gt;
+
+&lt;p&gt;Once you&amp;rsquo;re in scroll mode, you can move the cursor using the arrow keys and page up and down. By default Tmux doesn&amp;rsquo;t retain much history, but you can change that (see the Config options section).&lt;/p&gt;
+
+&lt;p&gt;You can copy and paste in scroll mode. This is useful when you have split screens as a regular highlight and copy using the mouse won&amp;rsquo;t work across vertically split panes.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/an-introduction-to-tmux/tmux-copy-fail.png&#34; alt=&#34;copy fail&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;To copy, position the cursor where you want to start copying. Press &lt;code&gt;Ctrl-space&lt;/code&gt; to begin highlighting the text to copy. Press &lt;code&gt;Alt-w&lt;/code&gt; to copy the highlighted text. Pressing &lt;code&gt;Ctrl-b ]&lt;/code&gt; will paste the copied text. There are ways to make copy and paste easier: Tmux has a &amp;ldquo;vim like&amp;rdquo; copy mode (see the Config options section and the &lt;a href=&#34;http://man.openbsd.org/OpenBSD-current/man1/tmux.1&#34;&gt;man&lt;/a&gt; page for details).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/an-introduction-to-tmux/tmux-copy-win.png&#34; alt=&#34;copy win&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Shortcut&lt;/strong&gt; You can jump into scroll mode and page up in one fell swoop with &lt;code&gt;Ctrl-b PgUp&lt;/code&gt; (thanks to Ludovic Tolhurst for the tip).&lt;/p&gt;
+
+&lt;h4 id=&#34;bonus-feature-search&#34;&gt;Bonus feature - search&lt;/h4&gt;
+
+&lt;p&gt;If you took the time to learn scroll mode, you deserve something extra, something special. Here is your prize: you can search the Tmux buffer! Just enter scroll mode with &lt;code&gt;Ctrl-b [&lt;/code&gt; and then press &lt;code&gt;Ctrl-r&lt;/code&gt;. Type your search text and press enter. Tmux will jump to the last match it finds. You can press &lt;code&gt;n&lt;/code&gt; to jump to the next match or &lt;code&gt;Shift-n&lt;/code&gt; to jump back one match.&lt;/p&gt;
+
+&lt;p&gt;There is also &lt;code&gt;Ctrl-s&lt;/code&gt; to search down the buffer, but I hardly ever use it.&lt;/p&gt;
+
+&lt;h3 id=&#34;session-control&#34;&gt;Session control&lt;/h3&gt;
+
+&lt;p&gt;Sessions are one of the most useful features of Tmux. They let you group multiple terminal processes into a single Tmux session which can be worked on (attached), put into the background (detached) and discarded as you see fit. Programmers will often have different sessions for different projects. Because Tmux operates under a client-server architecture, even if the original terminal that started Tmux dies or your desktop GUI crashes, the Tmux session will be preserved, along with all of the terminal sessions in it.&lt;/p&gt;
+
+&lt;p&gt;Detach your Tmux session with &lt;code&gt;Ctrl-b d&lt;/code&gt;. This will return you to a regular terminal prompt.&lt;/p&gt;
+
+&lt;p&gt;To list existing Tmux sessions just use the &lt;code&gt;ls&lt;/code&gt; command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tmux ls
+0: 1 windows (created Thu Jan 28 08:15:20 2016) [190x50] (attached)
+2: 2 windows (created Thu Jan 28 09:11:59 2016) [190x50]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This shows that I have two Tmux sessions running, one of which is attached to a terminal window already. To attach to a session just use the &lt;code&gt;attach&lt;/code&gt; command at the terminal prompt:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tmux attach
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default Tmux attaches to the next unattached session (&amp;ldquo;2&amp;rdquo;) in this case. If I have many different sessions and want to attach to a particular one, I can specify it with &lt;code&gt;-t&lt;/code&gt; for target:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tmux attach -t 2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;config-options&#34;&gt;Config options&lt;/h3&gt;
+
+&lt;p&gt;The file &lt;code&gt;~/.tmux.conf&lt;/code&gt; is a plaintext file used by Tmux for local config. This is what mine looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# set scroll history to 10,000 lines
+set -g history-limit 10000
+
+# modern encoding and colors
+set -g utf8 on set-window-option -g utf8 on
+set -g default-terminal screen-256color
+
+# don&#39;t use a login shell
+set -g default-command /bin/bash
+
+# unbind the prefix and bind it to Ctrl-a like screen
+unbind C-b set -g prefix C-a bind C-a send-prefix
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Tmux starts with a tiny scroll history, so I like to bump that up. The modern encoding and colors are there to jive with my terminal setup - they may even be the default Tmux settings by now. By default Tmux uses a login shell, so every new pane will execute &lt;code&gt;.bash_profile&lt;/code&gt;. I prefer to disable that behavior and just launch regular non-login shells.&lt;/p&gt;
+
+&lt;p&gt;Tmux has hundreds more options: many users will switch to a different shell like zsh, enable pane switching with the trackpad, display custom data in the Tmux footer (like weather info!) and so on. Copying other programmers&amp;rsquo; &lt;a href=&#34;https://github.com/search?utf8=%E2%9C%93&amp;amp;q=.tmux.conf&#34;&gt;conf files&lt;/a&gt; is a great way to learn and experiment.&lt;/p&gt;
+
+&lt;p&gt;To reload your &lt;code&gt;.tmux.conf&lt;/code&gt; within a Tmux session, type: &lt;code&gt;Ctrl-b :&lt;/code&gt; then &lt;code&gt;source-file ~/.tmux.conf&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;tmux-resources&#34;&gt;Tmux resources&lt;/h3&gt;
+
+&lt;p&gt;The official Tmux &lt;a href=&#34;https://tmux.github.io/&#34;&gt;website&lt;/a&gt; is a good starting point with summary information, a changelog, downloads and a link to the extensive &lt;a href=&#34;http://man.openbsd.org/OpenBSD-current/man1/tmux.1&#34;&gt;man page&lt;/a&gt;. The Arch Linux &lt;a href=&#34;https://wiki.archlinux.org/index.php/Tmux&#34;&gt;tmux documentation&lt;/a&gt; covers advanced features and troubleshooting tips. The book &lt;a href=&#34;https://pragprog.com/book/bhtmux/tmux&#34;&gt;tmux - Productive Mouse-Free Development&lt;/a&gt; by Pragmatic Bookshelf is thorough introduction to Tmux.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://perltricks.com/article/153/2015/2/16/Get-to-grips-with-GNU-Screen/&#34;&gt;GNU Screen&lt;/a&gt; is another terminal multiplexer program. It&amp;rsquo;s older than Tmux and a little bit crufty, but it has most of the features Tmux has. The controls for Screen and Tmux are similar enough that if you know one of them you can get by using the other. The Tmux &lt;a href=&#34;https://raw.githubusercontent.com/tmux/tmux/master/FAQ&#34;&gt;FAQ&lt;/a&gt; lists the differences between them.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Professional scripts are a snap with Getopt::Long</title>
+      <link>http://localhost:1313/article/195/2015/10/21/Professional-scripts-are-a-snap-with-Getopt--Long/</link>
+      <pubDate>Wed, 21 Oct 2015 12:40:21 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/195/2015/10/21/Professional-scripts-are-a-snap-with-Getopt--Long/</guid>
+      <description>
+
+&lt;p&gt;Scripts are practically Perl&amp;rsquo;s raison d&amp;rsquo;être, and so naturally it has some great scripting tools. &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; is a module for parsing command line arguments (similar to Python&amp;rsquo;s &lt;a href=&#34;https://docs.python.org/dev/library/argparse.html&#34;&gt;argparse&lt;/a&gt;). Using &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt;, you can quickly define a standard Unix-like interface for your program. With just a few lines of code you can parse, type-check and assign the parameters passed to your program. Sounds good? Read on to find out how.&lt;/p&gt;
+
+&lt;h3 id=&#34;building-a-basic-app&#34;&gt;Building a basic app&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s imagine I wanted to create a program for creating software licenses, like &lt;a href=&#34;https://metacpan.org/pod/App::Software::License&#34;&gt;App::Software::License&lt;/a&gt;. The user will run the program and it will print the software license text, with the license text customized for the user. To do this, the program will need to process a few arguments from the user—a perfect use case for &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt;! Let&amp;rsquo;s start with the license holder&amp;rsquo;s name:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Getopt::Long;
+
+GetOptions(
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;holder=s&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $holder_name,
+) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Invalid options passed to $0\n&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$holder_name\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I start by importing &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt;, it&amp;rsquo;s part of the core Perl distribution, so if you have Perl installed, you should already have it. The &lt;code&gt;GetOptions&lt;/code&gt; function from &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; is where the magic happens. It takes a hash of parameter names and variable references which define the program&amp;rsquo;s API. The string &lt;code&gt;holder=s&lt;/code&gt; tells &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; to accept an argument like &lt;code&gt;--holder&lt;/code&gt; and assign it to &lt;code&gt;$holder_name&lt;/code&gt;. If we receive any arguments that are not defined in &lt;code&gt;GetOptions&lt;/code&gt;, the code dies and prints out an exception message (terminating the exception message with a newline stops Perl from printing the line reference of the exception). The final line just prints out the value. I&amp;rsquo;ll save the script as &lt;code&gt;license&lt;/code&gt; and test it out:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ chmod a&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;x license
+$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;license &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;holder &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David Farrell&amp;#34;&lt;/span&gt;
+David Farrell&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;On Windows, you&amp;rsquo;ll need to type:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl license &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;holder &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David Farrell&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;By default &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; also recognizes the short form of arguments, so this works too:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;license &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;h &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David Farrell&amp;#34;&lt;/span&gt;
+David Farrell&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;type-checking&#34;&gt;Type checking&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; provides basic type checking for strings, integers and floating point numbers. I&amp;rsquo;ve already added a string argument for the license holder&amp;rsquo;s name, so I&amp;rsquo;ll add an integer option for the license year:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Getopt::Long;
+
+GetOptions(
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;holder=s&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $holder_name,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;year=i&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $year,
+) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Invalid options passed to $0\n&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$holder_name $year\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Running the program again, it will now accept a &lt;code&gt;--year&lt;/code&gt; argument:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;license &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;h &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David Farrell&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;y &lt;span style=&#34;color:#ae81ff&#34;&gt;2014&lt;/span&gt;
+David Farrell &lt;span style=&#34;color:#ae81ff&#34;&gt;2014&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note how I was able to pass &lt;code&gt;-y 2014&lt;/code&gt; and &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; knew to assign it to &lt;code&gt;$year&lt;/code&gt;. &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; will also do basic type checking, so if a non-integer value is passed, it will print and warning and the script will die.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;license &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;h &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David Farrell&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;year abcd
+Value &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;abcd&amp;#34;&lt;/span&gt; invalid &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; option year (number expected)
+Invalid options passed to &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;getopt&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;m going to add an option for the license type, so the user can specify which license text they want such as the GPL, MIT or BSD licenses (there are many more).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Getopt::Long;
+
+GetOptions(
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;holder=s&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $holder_name,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;year=i&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $year,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;type=s&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $type,
+) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Invalid options passed to $0\n&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$holder_name $year $type\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;boolean-options&#34;&gt;Boolean options&lt;/h3&gt;
+
+&lt;p&gt;Finally I want to add a boolean option for whether to print out the full license text or not. To use boolean options with &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt;, it&amp;rsquo;s the same as with other options except that you don&amp;rsquo;t specify the type after the option name:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Getopt::Long;
+
+GetOptions(
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;holder=s&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $holder_name,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;year=i&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $year,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;type=s&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $type,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;fulltext&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fulltext,
+) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Invalid options passed to $0\n&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$holder_name $year $type $fulltext\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The fulltext option does not take a value and will be initialized as 1 if present, or &lt;code&gt;undef&lt;/code&gt; if not:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;license &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;h &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;David Farrell&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;y &lt;span style=&#34;color:#ae81ff&#34;&gt;2012&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;t FreeBSD &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;fulltext
+David Farrell &lt;span style=&#34;color:#ae81ff&#34;&gt;2012&lt;/span&gt; FreeBSD &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;default-values&#34;&gt;Default values&lt;/h3&gt;
+
+&lt;p&gt;Some options I can give default values to. For example if the user doesn&amp;rsquo;t pass the year they want the license for, I&amp;rsquo;ll assume they want the current year.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Getopt::Long;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Time::Piece;
+
+GetOptions(
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;holder=s&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $holder_name,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;year=i&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $year &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; year_now()),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;type=s&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $type &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;artistic 2.0&amp;#39;&lt;/span&gt;),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;fulltext&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fulltext,
+) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Invalid options passed to $0\n&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;year_now&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $localtime &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; localtime;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $localtime&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;year;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$holder_name $year $type $fulltext\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve added the &lt;a href=&#34;https://metacpan.org/pod/Time::Piece&#34;&gt;Time::Piece&lt;/a&gt; module, which is a &lt;a href=&#34;http://perltricks.com/article/59/2014/1/10/Solve-almost-any-datetime-need-with-Time--Piece&#34;&gt;useful&lt;/a&gt; module for datetime handling, and a subroutine &lt;code&gt;year_now&lt;/code&gt; which returns the current year. Meanwhile I&amp;rsquo;ve updated &lt;code&gt;GetOptions&lt;/code&gt; to assign the current year to the &lt;code&gt;$year&lt;/code&gt; variable. This will be overridden if the user passes the year argument. I&amp;rsquo;ve also given the license type the default value of &amp;ldquo;artistic 2.0&amp;rdquo; as that is the same license as Perl 5 (and the license used by many modules).&lt;/p&gt;
+
+&lt;h3 id=&#34;mandatory-parameters&#34;&gt;Mandatory parameters&lt;/h3&gt;
+
+&lt;p&gt;So far so good, but what about mandatory parameters? This script will not work unless the user passes the license holder information. For mandatory parameters I have to check for their presence myself, &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; can&amp;rsquo;t help me here. Luckily it&amp;rsquo;s a simple check:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Getopt::Long;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Time::Piece;
+
+GetOptions(
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;holder=s&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $holder_name,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;year=i&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $year &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; year_now()),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;type=s&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $type &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;artistic 2.0&amp;#39;&lt;/span&gt;),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;fulltext&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fulltext,
+) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Invalid options passed to $0\n&amp;#34;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# check we got a license holder&lt;/span&gt;
+die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$0 requires the license holder argument (--holder)\n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $holder_name;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;year_now&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $localtime &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; localtime;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $localtime&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;year;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$holder_name $year $type $fulltext\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In case you&amp;rsquo;re wondering, the variable &lt;code&gt;$0&lt;/code&gt; is a special variable that is the program&amp;rsquo;s name. It&amp;rsquo;s a handy shortcut for exception messages and cheating at writing &lt;a href=&#34;https://en.wikipedia.org/wiki/Quine_%28computing%29&#34;&gt;quines&lt;/a&gt; (like this: &lt;code&gt;open+0;print&amp;lt;0&amp;gt;&lt;/code&gt;).&lt;/p&gt;
+
+&lt;h3 id=&#34;help-text&#34;&gt;Help text&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;re almost done, but &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; has more tricks up its sleeve. I&amp;rsquo;ll add some basic documentation to this script, in &lt;a href=&#34;https://perldoc.perl.org/perlpod.html&#34;&gt;Pod&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Getopt::Long &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;HelpMessage&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Time::Piece;
+
+GetOptions(
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;holder=s&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $holder_name,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;year=i&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $year &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; year_now()),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;type=s&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $type &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;artistic 2.0&amp;#39;&lt;/span&gt;),
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;fulltext&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fulltext,
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;help&amp;#39;&lt;/span&gt;     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;   &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { HelpMessage(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) },
+) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; HelpMessage(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# die unless we got the mandatory argument&lt;/span&gt;
+HelpMessage(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $holder_name;
+
+print_license ($holder_name, $year, $type, $fulltext);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;year_now&lt;/span&gt;
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $localtime &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; localtime;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $localtime&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;year;
+}
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# tbc&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;print_license&lt;/span&gt; { &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; }
+
+&lt;span style=&#34;color:#75715e&#34;&gt;=head1 NAME
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;license - get license texts at the command line!
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 SYNOPSIS
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  --holder,-h     Holder name (required)
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  --year,-y       License year (defaults to current year)
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  --type,-t       License type (defaults to Artistic 2.0)
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  --fulltext,-f   Print the full license text
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;  --help,-h       Print this help
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=head1 VERSION
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;0.01
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;=cut&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The documentation is pretty minimal, just the program name, synopsis of its arguments and a version number. I&amp;rsquo;ve replaced the print statement with a stub function &lt;code&gt;print_license&lt;/code&gt;, which is where the main program would be implemented. I&amp;rsquo;ve replaced the &lt;code&gt;die&lt;/code&gt; calls with the &lt;a href=&#34;https://metacpan.org/pod/Getopt::Long&#34;&gt;Getopt::Long&lt;/a&gt; function &lt;code&gt;HelpMessage&lt;/code&gt;. This will print a usage help text and exit the program when called. Let&amp;rsquo;s try it out:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;license &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;k
+Unknown option: k
+Usage:
+      &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;holder, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;h    Holder name (required)
+      &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;year, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;y      License year (defaults to current year)
+      &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;type, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;t      License type (defaults to Artistic &lt;span style=&#34;color:#ae81ff&#34;&gt;2.0&lt;/span&gt;)
+      &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;fulltext, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f  Print the full license text
+      &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;help, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;h      Print this help&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Not bad! &lt;code&gt;HelpMessage&lt;/code&gt; takes an exit value to return to the OS. If the user passes the argument &lt;code&gt;--help&lt;/code&gt; the program should print the usage and exit without error (value zero). However if they don&amp;rsquo;t pass any arguments at all or if they pass any invalid arguments, the same usage text will be printed but the program will exit with 1, indicating that something went wrong.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Display real-time data with Curses</title>
+      <link>http://localhost:1313/article/197/2015/10/6/Display-real-time-data-with-Curses/</link>
+      <pubDate>Tue, 06 Oct 2015 13:18:48 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/197/2015/10/6/Display-real-time-data-with-Curses/</guid>
+      <description>&lt;p&gt;Sometimes a terminal interface is the easiest way to get an answer, and when it is, I like to use Curses to make the experience pleasant. In this article, I&amp;rsquo;ll rewrite a Curses program I&amp;rsquo;ve written many times, mostly because I forget where I had put it the last time I created it (and this time I found that I&amp;rsquo;d posted it to &lt;a href=&#34;http://www.perlmonks.org/index.pl/jacques?node_id=388218&#34;&gt;Perlmonks&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;Every time I reinvent it I write it a little differently than I did before, and now I want to update it for Perl&amp;rsquo;s new features, mainly its &lt;a href=&#34;http://www.effectiveperlprogramming.com/2015/04/use-v5-20-subroutine-signatures/&#34;&gt;subroutine signatures&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;One day I had a small task to prune a directory tree and I wanted to look at the largest files in it. I knew about &lt;code&gt;du&lt;/code&gt; and that it could show me a list of files and their sizes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ du &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;a
+&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/apache2/&lt;/span&gt;extra
+&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/apache2/o&lt;/span&gt;riginal&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;extra
+&lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/apache2/o&lt;/span&gt;riginal
+&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/apache2/o&lt;/span&gt;ther
+&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/apache2/&lt;/span&gt;users
+&lt;span style=&#34;color:#ae81ff&#34;&gt;192&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;apache2
+&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;   &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;asl
+&lt;span style=&#34;color:#ae81ff&#34;&gt;104&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;certificates
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;12904&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The problem is the command&amp;rsquo;s depth-first traversal. I could play various tricks to sort the output once I had it, but for a large directory I want to see the results as they come in. Perl, being the Unix glue language (Swiss Army Chainsaw, etc.), is perfect for this. I can read the real-time output of &lt;code&gt;du&lt;/code&gt; and display it how I like.&lt;/p&gt;
+
+&lt;p&gt;The first part is easy. I can open a pipe to the external command (see my earlier article &lt;a href=&#34;http://perltricks.com/article/182/2015/7/15/Stupid-open---tricks&#34;&gt;Stupid open tricks&lt;/a&gt;). This time, I use the three-argument pipe-open instead of the two-argument form I&amp;rsquo;d used earlier.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pipe, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-|&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;du -a&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;After that, I need to display the data. My concept is that the on-screen list will update with the largest files so far. I take each line of output, split it into its size and filename, and add them to the list. I&amp;rsquo;ve created a class to handle that, including the parts that decide which files are large enough to display:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $files &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Local::files&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$pipe&amp;gt;&lt;/span&gt; ) {
+  chomp;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt;( $size, $file ) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\s+/&lt;/span&gt;, $_, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;d $file;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $file &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;.&amp;#34;&lt;/span&gt;;
+  $files&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add( $size, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$file&amp;#34;&lt;/span&gt; );
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The next part I update for Perl 5.12&amp;rsquo;s &lt;a href=&#34;http://www.effectiveperlprogramming.com/2013/08/declare-packages-outside-of-their-block/&#34;&gt;package NAME BLOCK&lt;/a&gt; syntax that allows me to declare the &lt;code&gt;package&lt;/code&gt; outside of its block:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Local::files {
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The rest is list manipulation and Curses stuff. I won&amp;rsquo;t go through the list code. Basically, if the next item is greater than the size of the last element in the list, the new, larger element replaces the existing one. After that, I resort the list.&lt;/p&gt;
+
+&lt;p&gt;The setup for Curses is easy. It knows the screen size already:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;init&lt;/span&gt; ($self) {
+  initscr;
+  curs_set(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;# hide cursor&lt;/span&gt;
+  $win &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Curses&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; MAX; $i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; $i&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt; ) {
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;size_at( $i, undef );
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;name_at( $i, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt; );
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I need to remember to undo all the magic that Curses does by calling &lt;code&gt;endwin&lt;/code&gt; at the end, so I put the &lt;code&gt;DESTROY&lt;/code&gt; right after the part I go through the initial setup:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;DESTROY&lt;/span&gt; { endwin; }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Once I have the sorted list, I have to draw it to the screen. This involves two things. I need to erase what&amp;rsquo;s already there so a shorter filename doesn&amp;rsquo;t leave parts of a longer filename it might replace. The &lt;code&gt;addstr&lt;/code&gt; puts text on the screen (the top-left corner being (1,1)). None of the new text shows up until I call &lt;code&gt;refresh&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;draw&lt;/span&gt; ($self) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;( &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; $i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; MAX; $i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt; ) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;size_at( $i ) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;name_at( $i ) &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+    $win&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;addstr( $i,  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; &amp;#34;&lt;/span&gt; x $Curses::COLS );
+    $win&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;addstr( $i,  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, sprintf( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%8d&amp;#34;&lt;/span&gt;, $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[$i][SIZE] &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt; )  );
+    $win&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;addstr( $i, &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;, $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;name_at( $i ) );
+    $win&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;refresh;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now I have a little script that makes some fancy output to the screen as I sort the list of largest files in real time. Here&amp;rsquo;s a run against my &lt;a href=&#34;https://metacpan.org/pod/CPAN::Mini&#34;&gt;MiniCPAN&lt;/a&gt; directory:&lt;/p&gt;
+
+&lt;p&gt;The way I&amp;rsquo;ve written it, I have to run it from the directory I want to check. I can avoid all sorts of nonsense with taint-checking and weird directory names that way. You could easily make it work otherwise. You could even adapt this program to list something else. The list management stuff is already there and it doesn&amp;rsquo;t really care about the particular problem. The full code is on &lt;a href=&#34;https://github.com/briandfoy/du-curses/blob/master/curses.pl&#34;&gt;GitHub as briandfoy/du-curses&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Quickly Debug your Perl code at the command line</title>
+      <link>http://localhost:1313/article/160/2015/3/13/Quickly-Debug-your-Perl-code-at-the-command-line/</link>
+      <pubDate>Fri, 13 Mar 2015 13:34:06 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/160/2015/3/13/Quickly-Debug-your-Perl-code-at-the-command-line/</guid>
+      <description>
+
+&lt;p&gt;I remember when I first started programming in Perl, whenever something wasn&amp;rsquo;t working as I expected it to, I would write a quick script to isolate the problem and test it. I didn&amp;rsquo;t give the scripts good names; they were throwaway, and soon I had hundreds of useless Perl scripts littered all over my hard drive.&lt;/p&gt;
+
+&lt;p&gt;I rarely write scripts like that anymore. If I&amp;rsquo;m developing a module, I&amp;rsquo;ll write a unit test to bottom-out whatever problem I&amp;rsquo;m investigating - that way I&amp;rsquo;m making an investment instead of throwing code away. Most of the time however, I just write a one liner, which is a single line of Perl code typed directly into the terminal. One liners are fast to type and they hang around in your terminal history for quick iterations. So if you find yourself needing to test a particular function is doing what you think it does, or are unsure if you&amp;rsquo;re carefully-crafted regex works, write a one liner.&lt;/p&gt;
+
+&lt;h3 id=&#34;one-liner-basics&#34;&gt;One liner basics&lt;/h3&gt;
+
+&lt;p&gt;Perl has a ton of command line switches (see &lt;code&gt;perldoc perlrun&lt;/code&gt;), but I&amp;rsquo;m just going to cover the ones you&amp;rsquo;ll commonly need to debug code. The most important switch is &lt;code&gt;-e&lt;/code&gt;, for execute (or maybe &amp;ldquo;engage&amp;rdquo; :) ). The &lt;code&gt;-e&lt;/code&gt; switch takes a quoted string of Perl code and executes it. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print &amp;#34;Hello, World!\n&amp;#34;&amp;#39;&lt;/span&gt;
+Hello, World&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It&amp;rsquo;s important that you use single-quotes to quote the code for &lt;code&gt;-e&lt;/code&gt;. This usually means you can&amp;rsquo;t use single-quotes within the one liner code. If you&amp;rsquo;re using Windows cmd.exe or PowerShell, you must use double-quotes instead.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m always forgetting what Perl&amp;rsquo;s predefined special variables do, and often test them at the command line with a one liner to see what they contain. For instance do you remember what &lt;code&gt;$^O&lt;/code&gt; is?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print &amp;#34;$^O\n&amp;#34;&amp;#39;&lt;/span&gt;
+linux&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It&amp;rsquo;s the operating system name. With that cleared up, let&amp;rsquo;s see what else we can do. If you&amp;rsquo;re using a relatively new Perl (5.10.0 or higher) you can use the &lt;code&gt;-E&lt;/code&gt; switch instead of &lt;code&gt;-e&lt;/code&gt;. This turns on some of Perl&amp;rsquo;s newer features, like &lt;code&gt;say&lt;/code&gt;, which prints a string and appends a newline to it. This saves typing and makes the code cleaner:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say &amp;#34;$^O&amp;#34;&amp;#39;&lt;/span&gt;
+linux&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Pretty handy! &lt;code&gt;say&lt;/code&gt; is a nifty feature that you&amp;rsquo;ll use again and again.&lt;/p&gt;
+
+&lt;h3 id=&#34;v-is-for-version&#34;&gt;V is for version&lt;/h3&gt;
+
+&lt;p&gt;If you ever need to check which version of Perl is installed on your system, use the &lt;code&gt;-v&lt;/code&gt; switch:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;v
+
+This is perl &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;, version &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;, subversion &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; (v5&lt;span style=&#34;color:#ae81ff&#34;&gt;.20.2&lt;/span&gt;) built &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; x86_64&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;linux
+(with &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; registered patch, see perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;V &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; more detail)
+
+Copyright &lt;span style=&#34;color:#ae81ff&#34;&gt;1987&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2015&lt;/span&gt;, Larry Wall
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Quick tip: if you need detailed information about the installed Perl version, use a capital: &lt;code&gt;-V&lt;/code&gt; instead.&lt;/p&gt;
+
+&lt;h3 id=&#34;load-modules-with-m&#34;&gt;Load modules with M&lt;/h3&gt;
+
+&lt;p&gt;Modules can be loaded at the command line too. For instance to download and print the PerlTricks.com homepage, I can use &lt;a href=&#34;https://metacpan.org/pod/HTTP::Tiny&#34;&gt;HTTP::Tiny&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MHTTP::Tiny &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say HTTP::Tiny-&amp;gt;new-&amp;gt;get(&amp;#34;http://perltricks.com&amp;#34;)-&amp;gt;{content}&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;!&lt;/span&gt;DOCTYPE html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;html lang&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;en&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;head&amp;gt;&lt;/span&gt;
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;title&amp;gt;&lt;/span&gt;PerlTricks&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; Perl programming news, code &lt;span style=&#34;color:#f92672&#34;&gt;and&lt;/span&gt; culture&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/title&amp;gt;&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;meta charset&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;utf-8&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+   ,,,&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you need to import functions from a module, use an equals sign followed by a comma separated list of function names. I can check if an XML file is valid XML with &lt;a href=&#34;https://metacpan.org/pod/XML::Simple&#34;&gt;XML::Simple&lt;/a&gt; and it&amp;rsquo;s &lt;code&gt;XMLin&lt;/code&gt; function just by loading the XML file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MXML::Simple&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;XMLin &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;XMLin(&amp;#34;data.xml&amp;#34;)&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If &lt;code&gt;XMLin&lt;/code&gt; doesn&amp;rsquo;t emit any warnings or exceptions, the data is probably correctly formatted.&lt;/p&gt;
+
+&lt;h3 id=&#34;turn-on-warnings-with-w&#34;&gt;Turn on warnings with w&lt;/h3&gt;
+
+&lt;p&gt;This one is pretty simple: use &lt;code&gt;-w&lt;/code&gt; to turn on warnings. This can be incredibly helpful when code is not behaving the way you think it should. Warnings can help you identify issues that would otherwise be hard to spot:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$counter = 2; $countor = 3; say $counter&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Hmm &lt;code&gt;$counter&lt;/code&gt; should be 3 shouldn&amp;rsquo;t it? Turning on warnings quickly identifies the issue:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;wE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$counter = 2; $countor = 3; say $counter&amp;#39;&lt;/span&gt;
+Name &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;main::countor&amp;#34;&lt;/span&gt; used only once: possible typo at &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e line &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;There are plenty of more subtle bugs that warnings won&amp;rsquo;t identify directly, but the fact that Perl issues a warning puts you onto the fact that something is wrong. Take this example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MTry::Tiny &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;wE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$pass; try { $pass = &amp;#34;true&amp;#34; } catch { say $_ } return $pass if $pass or die&amp;#39;&lt;/span&gt;
+Useless &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; of a variable in void context at &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e line &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+Died at &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e line &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Can you see what&amp;rsquo;s wrong here? The &lt;code&gt;catch&lt;/code&gt; block is missing a trailing semicolon. With warnings turned on, you can see that &lt;em&gt;something&lt;/em&gt; is up, but it&amp;rsquo;s not obvious what&amp;rsquo;s wrong.&lt;/p&gt;
+
+&lt;h3 id=&#34;use-i-to-include-directories&#34;&gt;Use I to include directories&lt;/h3&gt;
+
+&lt;p&gt;Sometimes you&amp;rsquo;ll be working with modules that are not installed in Perl&amp;rsquo;s standard locations. This often happens when you&amp;rsquo;re debugging an application but it&amp;rsquo;s not installed via CPAN. To demonstrate this, I&amp;rsquo;ll download my &lt;a href=&#34;https://metacpan.org/pod/WWW::curlmyip&#34;&gt;WWW::curlmyip&lt;/a&gt; module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;g WWW::curlmyip
+$~ tar xzf WWW&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;curlmyip&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.02&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;tar&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;gz 
+$ cd WWW&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;curlmyip&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.02&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;WWW::curlmyip exports a function called &lt;code&gt;get_ip&lt;/code&gt; which returns your external IP address. I can use it in a one liner:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MWWW::curlmyip &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say get_ip&amp;#39;&lt;/span&gt;
+Can&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;t locate WWW&lt;span style=&#34;color:#e6db74&#34;&gt;/curlmyip.pm in @INC (you may need to install the WWW::curlmyip module) (@INC contains: /&lt;/span&gt;home&lt;span style=&#34;color:#e6db74&#34;&gt;/dfarrell/&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plenv&lt;span style=&#34;color:#e6db74&#34;&gt;/versions/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/lib/&lt;/span&gt;perl5&lt;span style=&#34;color:#e6db74&#34;&gt;/site_perl/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/x86_64-linux /&lt;/span&gt;home&lt;span style=&#34;color:#e6db74&#34;&gt;/dfarrell/&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plenv&lt;span style=&#34;color:#e6db74&#34;&gt;/versions/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/lib/&lt;/span&gt;perl5&lt;span style=&#34;color:#e6db74&#34;&gt;/site_perl/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/home/&lt;/span&gt;dfarrell&lt;span style=&#34;color:#e6db74&#34;&gt;/.plenv/&lt;/span&gt;versions&lt;span style=&#34;color:#e6db74&#34;&gt;/5.20.2/&lt;/span&gt;lib&lt;span style=&#34;color:#e6db74&#34;&gt;/perl5/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/x86_64-linux /&lt;/span&gt;home&lt;span style=&#34;color:#e6db74&#34;&gt;/dfarrell/&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;plenv&lt;span style=&#34;color:#e6db74&#34;&gt;/versions/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/lib/&lt;/span&gt;perl5&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5.20.2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; failed&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;compilation aborted&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That didn&amp;rsquo;t work. Perl is complaining that it can&amp;rsquo;t find WWW::curlmyip. To fix this, I can include the distribution &lt;code&gt;lib&lt;/code&gt; directory that contains the module using &lt;code&gt;-I&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Ilib &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;MWWW::curlmyip &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say get_ip&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;100.241.20.7&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And the &lt;code&gt;get_ip&lt;/code&gt; function now works.&lt;/p&gt;
+
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap-up&lt;/h3&gt;
+
+&lt;p&gt;If you ever need to check the one liner syntax, just run &lt;code&gt;perl -h&lt;/code&gt; to get a summary of the available options. Another good resource is the official documentation, which you can read at the terminal with &lt;code&gt;perldoc perlrun&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This article has covered the most common command line switches used for debugging code but a whole book could be written about Perl one liners. In fact, one has: &lt;a href=&#34;http://www.catonmat.net/blog/perl-one-liners-no-starch-press/&#34;&gt;Perl One-Liners&lt;/a&gt; by Peteris Krummins. In the book Peteris describes the various command line switches with example programs. It also has an excellent &amp;ldquo;how to&amp;rdquo; for running one liners on Windows.&lt;/p&gt;
+
+&lt;p&gt;Finally, Perl 6 also has excellent one liner support and the switches are mostly the same as Perl 5. If you&amp;rsquo;re interested, check out our article &lt;a href=&#34;http://perltricks.com/article/136/2014/11/20/Get-started-with-Perl-6-one-liners&#34;&gt;Get started with Perl 6 one liners&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Hello perldoc, productivity booster</title>
+      <link>http://localhost:1313/article/155/2015/2/26/Hello-perldoc--productivity-booster/</link>
+      <pubDate>Thu, 26 Feb 2015 13:42:57 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/155/2015/2/26/Hello-perldoc--productivity-booster/</guid>
+      <description>
+
+&lt;p&gt;Imagine this scenario: you&amp;rsquo;re using the DateTime module but you can&amp;rsquo;t remember the exact name of a function it provides. What do you do? You could open your browser, go to &lt;a href=&#34;https://metacpan.org/&#34;&gt;MetaCPAN&lt;/a&gt;, search for DateTime and look up the answer in the module&amp;rsquo;s documentation. A faster way would be to switch to the command line, and type &lt;code&gt;perldoc DateTime&lt;/code&gt; to display the module&amp;rsquo;s documentation right there in the terminal.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;perldoc&lt;/code&gt; is a command line program for reading Perl documentation. It comes with Perl, so if you&amp;rsquo;ve got Perl installed, perldoc should be available too. Using perldoc is easy: as you&amp;rsquo;ve already seen, to view the documentation of a module you&amp;rsquo;ve installed, at the command line type:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perldoc Module::Name&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;perldoc will search for the module and if it finds it, display the module&amp;rsquo;s documentation (written in Pod). Using perldoc you can learn more about any aspect of Perl almost instantly. Want to know more about Pod? Try &lt;code&gt;perldoc pod&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;dial-f-for-functions&#34;&gt;Dial -f for functions&lt;/h3&gt;
+
+&lt;p&gt;Perl has a huge number of built-in functions, about 224 depending on the Perl version. Who can remember exactly how they all work? I know I can&amp;rsquo;t. To lookup a Perl function, use perldoc with the &lt;code&gt;-f&lt;/code&gt; switch. For instance to look up the documentation on the &lt;code&gt;rindex&lt;/code&gt; function:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perldoc &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;f rindex&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Which will display:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;rindex STR,SUBSTR,POSITION
+rindex STR,SUBSTR
+      Works just like index() except that it returns the position of the
+      last occurrence of SUBSTR in STR. If POSITION is specified,
+      returns the last occurrence beginning at or before that position.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Aha! This is all well and good, but what do you do if you can&amp;rsquo;t remember the function name? Well you could use &lt;a href=&#34;https://metacpan.org/pod/B::Keywords&#34;&gt;B::Keywords&lt;/a&gt;, but another way would be to check out &lt;code&gt;perlfunc&lt;/code&gt; the Perl documentation on built-in functions. To read it, with perldoc just type:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perldoc perlfunc&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;predefined-variables&#34;&gt;Predefined Variables&lt;/h3&gt;
+
+&lt;p&gt;As with functions, Perl has a large number of predefined variables that do everything from storing the program name to tracking the state of the regex engine. They&amp;rsquo;re really useful, but often have obscure names like &lt;code&gt;$^O&lt;/code&gt; (the OS name). So if you find yourself needing to check whether you&amp;rsquo;re looking at a list separator (&lt;code&gt;$&amp;quot;&lt;/code&gt;) or an output separator (&lt;code&gt;$/&lt;/code&gt;), just use perldoc with the &lt;code&gt;-v&lt;/code&gt; switch:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perldoc &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;v $/&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Because some predefined variables have weird names, you may need to quote them on the command line for perldoc to work:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perldoc &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;v &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$&amp;#34;&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The predefined variables documentation is known as &lt;code&gt;perlvar&lt;/code&gt;. It&amp;rsquo;s well worth a read through at least once (&lt;code&gt;perldoc perlvar&lt;/code&gt;).&lt;/p&gt;
+
+&lt;h3 id=&#34;searching-the-documentation&#34;&gt;Searching the documentation&lt;/h3&gt;
+
+&lt;p&gt;Perl has a lot of great documentation, but it can be hard to remember the names of all of the entries. If you ever want to browse the table of contents, use &lt;code&gt;perl&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perldoc perl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Many people recommend perltoc for this, but for finding relevant entries, I think the perl entry is easier to browse than perltoc.&lt;/p&gt;
+
+&lt;p&gt;Perl also has an extensive FAQ, (another entry that&amp;rsquo;s worth a read through). It has loads of answers to common queries. As usual you can read it with &lt;code&gt;perldoc faq&lt;/code&gt;, but you can also search it using the &lt;code&gt;-q&lt;/code&gt; switch. Want to know if there are any good IDEs for Perl? (a common newbie question):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;q ide&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;pre&gt;&lt;code&gt;Is there an IDE or Windows Perl Editor?
+ Perl programs are just plain text, so any editor will do.
+
+ If you&#39;re on Unix, you already have an IDE--Unix itself. The Unix
+ philosophy is the philosophy of several small tools that each do one thing
+ and do it well. It&#39;s like a carpenter&#39;s toolbox.
+
+ If you want an IDE, check the following (in alphabetical order, not order
+ of preference):
+
+ Eclipse
+
+
+     The Eclipse Perl Integration Project integrates Perl editing/debugging
+     with Eclipse.
+
+ Komodo
+
+
+     ActiveState&#39;s cross-platform (as of October 2004, that&#39;s Windows,
+     Linux, and Solaris), multi-language IDE has Perl support, including a
+     regular expression debugger and remote debugging.
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;finding-module-install-locations&#34;&gt;Finding module install locations&lt;/h3&gt;
+
+&lt;p&gt;perldoc isn&amp;rsquo;t just about documentation. If you need to find out where a module is installed, using the &lt;code&gt;-l&lt;/code&gt; switch, perldoc will return the filepath of the module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perldoc &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;l Test::More&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you get the path, you can open it in an editor directly:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ vi $&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;perldoc &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;l Test::More)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;One trick here: some modules don&amp;rsquo;t have any POD in them, for those modules, use &lt;code&gt;-lm&lt;/code&gt; to still return the path.&lt;/p&gt;
+
+&lt;h3 id=&#34;read-module-source-code-in-perldoc&#34;&gt;Read module source code in perldoc&lt;/h3&gt;
+
+&lt;p&gt;Finally, perldoc can also display module source code. Just use the &lt;code&gt;-m&lt;/code&gt; switch:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ perldoc &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;m Test::More&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;wrap-up&#34;&gt;Wrap up&lt;/h3&gt;
+
+&lt;p&gt;This article has covered the most common features, but perldoc has a bunch of other capabilities that you can read about at the command line with &lt;code&gt;man perldoc&lt;/code&gt;. The Perl documentation is also &lt;a href=&#34;http://perldoc.perl.org/&#34;&gt;online&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Keep in mind that as you get more proficient with perldoc, you&amp;rsquo;ll need the online resources less and less. Get in the habit of switching to the command line, looking up something in perldoc and flipping right back to programming - it&amp;rsquo;s a productivity win.&lt;/p&gt;
+
+&lt;h3 id=&#34;perldoc-cheatsheet&#34;&gt;perldoc cheatsheet&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;perldoc [option]
+
+Module Options                               
+--------------                               
+         Module documentation     
+-l       Module filepath          
+-lm      Module filepath (alt.)   
+-m       Module source
+
+
+Search Options
+--------------
+-f     Get a built-in function definition
+-v     Get a variable definition
+-q      Search the faq for a keyword
+
+
+Commonly Used Entries
+---------------------
+perl         Language overview, list of all other entries
+perltoc      Table of contents
+perlfunc     Built-in functions documentation
+perlvar      Predefined variables documentation
+perlref      References documentation
+perlre       Regex documentation
+faq          The Perl FAQ
+
+Help
+----
+man perldoc     List of all perldoc options
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Get to grips with GNU Screen</title>
+      <link>http://localhost:1313/article/153/2015/2/16/Get-to-grips-with-GNU-Screen/</link>
+      <pubDate>Mon, 16 Feb 2015 14:15:50 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/153/2015/2/16/Get-to-grips-with-GNU-Screen/</guid>
+      <description>
+
+&lt;p&gt;GNU Screen is a terminal multiplexer, a program that manages terminal windows. It&amp;rsquo;s been around for 28 years, which makes it older than Perl 5. So if you thought Perl had some archaic conventions, you ain&amp;rsquo;t seen nothing yet. But despite it&amp;rsquo;s age Screen is a powerful tool for managing terminals; if you often find yourself using more than one terminal, you owe it to yourself to start using a multiplexer for major productivity gains. Screen is the most widely used multiplexer, another popular option is &lt;a href=&#34;https://github.com/tmux/tmux&#34;&gt;tmux&lt;/a&gt;, but this article is about Screen.&lt;/p&gt;
+
+&lt;h3 id=&#34;getting-started&#34;&gt;Getting started&lt;/h3&gt;
+
+&lt;p&gt;Start Screen by simply typing &lt;code&gt;screen&lt;/code&gt; at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ screen&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All commands in Screen start with the prefix &lt;code&gt;Control + a&lt;/code&gt;. The first command to learn is the most important; how to display the commands menu! To do this type &lt;code&gt;Control + a, ?&lt;/code&gt; (that is, press Control and the &amp;ldquo;A&amp;rdquo; key, release the keys and then type question mark). If you remember this one command, you can always get yourself out of trouble, even if you forget some of the other commands.&lt;/p&gt;
+
+&lt;h3 id=&#34;managing-windows&#34;&gt;Managing windows&lt;/h3&gt;
+
+&lt;p&gt;To open a new terminal window, type &lt;code&gt;Control + a, c&lt;/code&gt;. Screen will create a new window - this is a new terminal process. To see a list of open windows, type &lt;code&gt;Control + a, &amp;quot;&lt;/code&gt;. You can press up and down to highlight the window you want to use, and press enter to open it.&lt;/p&gt;
+
+&lt;p&gt;You can also cycle through windows, by pressing &lt;code&gt;Control + a, n&lt;/code&gt; to move to the next window and &lt;code&gt;Control + a, p&lt;/code&gt; to move to the previous one. Every window is assigned a number, and you can jump straight to a window with: &lt;code&gt;Control + a, #&lt;/code&gt; where the pound key is the number window to jump to.&lt;/p&gt;
+
+&lt;p&gt;Finally if you want to kill a window type &lt;code&gt;Control + a, k&lt;/code&gt;. To kill all windows and exit screen the combination is: &lt;code&gt;Control + a, \&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;split-screen&#34;&gt;Split Screen&lt;/h3&gt;
+
+&lt;p&gt;Screen can split the terminal window into multiple windows. This is really helpful if you need to look at multiple terminals simultaneously. Any window can be split vertically or horizontally and multiple times, leading to all kinds of &lt;a href=&#34;https://encrypted.google.com/search?tbm=isch&amp;amp;q=gnu%20screen&amp;amp;tbs=imgo:1&#34;&gt;combinations&lt;/a&gt;. To vertically split the screen type: &lt;code&gt;Control + a, |&lt;/code&gt; and to horizontally split type: &lt;code&gt;Control + a, S&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;To highlight the next split window, type &lt;code&gt;Control + a, tab&lt;/code&gt; (there&amp;rsquo;s also a config option to select by mouse click, more on that later). The combination &lt;code&gt;Control + a, Q&lt;/code&gt;. will quit split screen mode.&lt;/p&gt;
+
+&lt;h3 id=&#34;copy-and-paste&#34;&gt;Copy and paste&lt;/h3&gt;
+
+&lt;p&gt;Copying and pasting with Screen isn&amp;rsquo;t super easy. So much so that I often found myself using the terminal copy and paste instead (highlight with mouse, then &lt;code&gt;Control + C&lt;/code&gt;, &lt;code&gt;Control + V&lt;/code&gt;). However it&amp;rsquo;s useful to know Screen&amp;rsquo;s copy and paste because terminal copy and paste just crumbles on split screen mode, and you may want to use the mouse select for something more useful anyway.&lt;/p&gt;
+
+&lt;p&gt;Copy and paste is modal, so you first have to enter &amp;ldquo;copy mode&amp;rdquo;. To do that type &lt;code&gt;Control + a, [&lt;/code&gt;. Now move the cursor to the beginning of the text you want to copy. Press &lt;code&gt;space&lt;/code&gt; to mark it and use the arrow keys (or h, j, k, l) to move the cursor to the end of the text you want to copy. Pressing &lt;code&gt;space&lt;/code&gt; again will copy the highlighted text. To paste, type &lt;code&gt;Control + a, ]&lt;/code&gt;. Ew.&lt;/p&gt;
+
+&lt;h3 id=&#34;scrolling&#34;&gt;Scrolling&lt;/h3&gt;
+
+&lt;p&gt;By default Screen prevents scrolling using the X-Window scrollbar (it also doesn&amp;rsquo;t keep much history). This can be get very annoying, so you&amp;rsquo;ll want to know how to scroll. To do so, you need to enter copy mode with &lt;code&gt;Control + a, [&lt;/code&gt;. and then press &lt;code&gt;Control + u&lt;/code&gt; to scroll up and &lt;code&gt;Control + d&lt;/code&gt; to go down. Press &lt;code&gt;escape&lt;/code&gt; to exit copy mode. And until you can remember the combinations for scrolling, you&amp;rsquo;ll find yourself piping output to &lt;code&gt;less&lt;/code&gt; more than you ever imagined.&lt;/p&gt;
+
+&lt;h3 id=&#34;detaching-screen-sessions&#34;&gt;Detaching Screen Sessions&lt;/h3&gt;
+
+&lt;p&gt;Screen sessions can be put into the background just like any other terminal process. Screen will keep open any terminal processes (like ssh sessions). This is very useful - if you find yourself working with more than 5 or 6 windows, it might be easier to detach and start a new screen session than adding more windows. To detach screen, the combination is &lt;code&gt;Control + a, d&lt;/code&gt;. When you detach, screen will print the session name and return to the terminal prompt. To re-attach to a detached session just use &lt;code&gt;screen -r&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ screen &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;r&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you have more than one screen session, you can display all detached sessions with &lt;code&gt;-ls&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ screen &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;ls
+There are screens on:
+    &lt;span style=&#34;color:#ae81ff&#34;&gt;30549&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pts&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;localhost   (Detached)
+    &lt;span style=&#34;color:#ae81ff&#34;&gt;30498&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pts&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;localhost   (Detached)
+    &lt;span style=&#34;color:#ae81ff&#34;&gt;29207&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pts&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;localhost   (Detached)
+&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; Sockets in &lt;span style=&#34;color:#e6db74&#34;&gt;/var/&lt;/span&gt;run&lt;span style=&#34;color:#e6db74&#34;&gt;/screen/&lt;/span&gt;S&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;sillymoose&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then just re-attach to the session you want by providing the session name as an option to &lt;code&gt;-r&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ screen &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;r &lt;span style=&#34;color:#ae81ff&#34;&gt;29207&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;But if you&amp;rsquo;ve really got multiple Screen sessions going, it can be hard to remember what they&amp;rsquo;re all doing. So when you start Screen, use the &lt;code&gt;-S&lt;/code&gt; option to give the session a name:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ screen &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;S aws_ec2&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you name all your sessions, it&amp;rsquo;s much easier to know which one to re-attach to:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ screen &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;ls
+There are screens on:
+    &lt;span style=&#34;color:#ae81ff&#34;&gt;31155&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;aws_ec2   (Detached)
+    &lt;span style=&#34;color:#ae81ff&#34;&gt;30866&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;email_servers (Detached)
+    &lt;span style=&#34;color:#ae81ff&#34;&gt;30815&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ecommerce_app (Detached)
+&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; Sockets in &lt;span style=&#34;color:#e6db74&#34;&gt;/var/&lt;/span&gt;run&lt;span style=&#34;color:#e6db74&#34;&gt;/screen/&lt;/span&gt;S&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;sillymoose&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+
+$ screen &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;r email_servers&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;customizing-screen&#34;&gt;Customizing Screen&lt;/h3&gt;
+
+&lt;p&gt;Screen is highly configurable which is good because you&amp;rsquo;ll probably want to change a few of the default options. The first option you should consider isn&amp;rsquo;t a Screen option at all however.&lt;/p&gt;
+
+&lt;p&gt;To stop your ssh sessions from timing out, add the following to your &lt;code&gt;~/.ssh/config&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# dont timeout connections&lt;/span&gt;
+ServerAliveInternal &lt;span style=&#34;color:#ae81ff&#34;&gt;600&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If the &lt;code&gt;~/.ssh/config&lt;/code&gt; file didn&amp;rsquo;t already exist, you may have to change the permissions on the file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ chmod &lt;span style=&#34;color:#ae81ff&#34;&gt;644&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/.ssh/co&lt;/span&gt;nfig&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This option will have ssh send a byte every 10 minutes to the remote server to keep the session alive. You may want to change the frequency depending on your needs. Now you can have multiple ssh windows within screen, detach them for hours and return and you&amp;rsquo;ll still be logged in.&lt;/p&gt;
+
+&lt;p&gt;Like many other terminal programs, screen will look for a runcom config file (&lt;code&gt;~/.screenrc&lt;/code&gt;). I like the following options:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# no welcome message&lt;/span&gt;
+startup_message off
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# keep running processes on detach&lt;/span&gt;
+autodetach on
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# start windows at 1 instead of 0&lt;/span&gt;
+bind c screen &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+bind &lt;span style=&#34;color:#f92672&#34;&gt;^&lt;/span&gt;c screen &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+bind &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; select &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;
+screen &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# large scrollback buffer&lt;/span&gt;
+defscrollback &lt;span style=&#34;color:#ae81ff&#34;&gt;5000&lt;/span&gt;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# on split screen, switch window focus by clicking&lt;/span&gt;
+mousetrack on
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# refresh screen after closing a program&lt;/span&gt;
+altscreen on&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;There are loads more options to choose from. Screen has a huge online &lt;a href=&#34;https://www.gnu.org/software/screen/manual/screen.html&#34;&gt;manual&lt;/a&gt; and it&amp;rsquo;s terminal man page is comprehensive too. Any typed command listed in the manual can be run from within screen, or added to the &lt;code&gt;~/.screenrc&lt;/code&gt; file. For instance if you don&amp;rsquo;t like Screen&amp;rsquo;s default key bindings, checkout the &lt;code&gt;bindkey&lt;/code&gt; command for overriding them, as you don&amp;rsquo;t want to be typing them for another 28 years.&lt;/p&gt;
+
+&lt;h3 id=&#34;screen-cheatsheet&#34;&gt;Screen Cheatsheet&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;# Type before other commands
+Prefix: Control + a
+
+Shortcuts menu: ?
+
+New window:    c      Split Vertical:   |       Copy mode:     [
+Close window:  k      Split Horizontal: S       Start copy:    space
+Next window:   n      Focus next region: tab    Scroll up:     u
+Prior window:  p      Quit split screem: Q      Scroll down:   d
+Jump window #: 0-9                              End copy:      space
+List windows:  &amp;quot;                                Paste:         ]
+                                                End copy mode: escape
+
+Detach: d
+Quit:   \
+
+# Terminal commands
+Launch Screen:     screen
+Named session:     screen -S &amp;lt;name&amp;gt;
+List sessions:     screen -ls
+Re-attach session: screen -r [name]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Get started with Perl 6 one liners</title>
+      <link>http://localhost:1313/article/136/2014/11/20/Get-started-with-Perl-6-one-liners/</link>
+      <pubDate>Thu, 20 Nov 2014 14:04:56 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/136/2014/11/20/Get-started-with-Perl-6-one-liners/</guid>
+      <description>
+
+&lt;p&gt;One thing that sets Perl apart from other languages is the ability to write small programs in a single line of code, known as a &amp;ldquo;one liner&amp;rdquo;. It&amp;rsquo;s often faster to type a program directly into the terminal than to write a throwaway script. And one liners are powerful too; they&amp;rsquo;re complete Perl programs that can load external libraries but also integrate into the terminal. You can pipe data in or out of a one liner.&lt;/p&gt;
+
+&lt;p&gt;Like its predecessor, Perl 6 supports one liners. And in the same way Perl 6 cleaned up Perl 5&amp;rsquo;s warts elsewhere, the one liner syntax is also better. It&amp;rsquo;s cleaner with fewer special variables and options to memorize. This article aims to get you up-and-running with Perl 6 one liners.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-basics&#34;&gt;The basics&lt;/h3&gt;
+
+&lt;p&gt;To get started with one liners, all you really need to understand is the &lt;code&gt;-e&lt;/code&gt; option. This tells Perl to execute what follows as a program. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;perl6 -e &#39;say &amp;quot;Hello, World!&amp;quot;&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s step through this code.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;perl6&lt;/code&gt; invokes the Perl 6 program&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-e&lt;/code&gt; tells Perl 6 to execute&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&#39;say &amp;quot;Hello, World!&amp;quot;&#39;&lt;/code&gt; is the program. Every program must be surrounded in single quotes (except on Windows, see (&lt;a href=&#34;https://github.com/sillymoose/Perl6-One-Liners#converting-for-windows&#34;&gt;converting for Windows&lt;/a&gt;).&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;To run a one-liner, just type it into the terminal:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say &amp;#34;Hello, World!&amp;#34;&amp;#39;&lt;/span&gt;
+Hello, World&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;file-processing&#34;&gt;File processing&lt;/h3&gt;
+
+&lt;p&gt;If you want to load a file, just add the path to the file after the program code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;for (lines) { say $_ }&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;txt&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This program prints every line in &lt;code&gt;/path/to/file.txt&lt;/code&gt;. You may know that &lt;code&gt;$_&lt;/code&gt; is the default variable, which in this case is the current line being looped through. &lt;code&gt;lines&lt;/code&gt; is a list that is automatically created for you whenever you pass a filepath to a one-liner. Now let&amp;rsquo;s re-write that one liner, step-by-step. These one liners are all equivalent:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;for (lines) { say $_ }&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;txt
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;for (lines) { $_.say }&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;txt
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;for (lines) { .say }&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;txt
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.say for (lines)&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;txt
+&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.say for lines&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;txt&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Just like &lt;code&gt;$_&lt;/code&gt; is the default variable, methods called on the default variable can omit the variable name. They become default methods. So &lt;code&gt;$_.say&lt;/code&gt; becomes &lt;code&gt;.say&lt;/code&gt;. This brevity pays off with one liners - it&amp;rsquo;s less typing!&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;-n&lt;/code&gt; option changes the behavior of the program: it executes the code once for every line of the file. To uppercase and print every line of &lt;code&gt;/path/to/file.txt&lt;/code&gt; you can type:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;ne&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.uc.say&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;txt&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;-p&lt;/code&gt; option is just like &lt;code&gt;-n&lt;/code&gt; except that it will automatically print &lt;code&gt;$_&lt;/code&gt;. This means that another way we could uppercase a file would be:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;pe &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$_ = $_.uc&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;txt&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Or by applying a shortcut, this does the same thing:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;pe &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.=uc&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/path/&lt;/span&gt;to&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;file&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;txt&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;-n&lt;/code&gt; and &lt;code&gt;-p&lt;/code&gt; options are really useful and often spare the programmer from extra typing.&lt;/p&gt;
+
+&lt;h3 id=&#34;load-modules&#34;&gt;Load modules&lt;/h3&gt;
+
+&lt;p&gt;The final thing you should know is how to load a module. This is really powerful as you can extend Perl 6&amp;rsquo;s capabilities by importing external libraries. The &lt;code&gt;-M&lt;/code&gt; switch stands for load module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;M URI::Encode &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say encode_uri(&amp;#34;/10 ways to crush it with Perl 6&amp;#34;)&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The code &lt;code&gt;-M URI::Encode&lt;/code&gt; loads the URI::Encode module, which exports the &lt;code&gt;encode_uri&lt;/code&gt; subroutine. It prints:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;%2F10%20ways%20to%20crush%20it%20with%20Perl%206&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;What if you have a module that is not installed in a standard location? In this case using &lt;code&gt;-M&lt;/code&gt; alone won&amp;rsquo;t work, as Perl won&amp;rsquo;t find the module. For these scenarios, just pass use the &lt;code&gt;-I&lt;/code&gt; switch to include the directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;I lib &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;M URI::Encode &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;say encode_uri(&amp;#34;www.example.com/10 ways to crush it with Perl 6&amp;#34;)&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now Perl 6 will search for URI::Encode in &lt;code&gt;lib&lt;/code&gt; as well as the standard install locations.&lt;/p&gt;
+
+&lt;p&gt;Finally, if you want a summary of all of these options, just use the &lt;code&gt;-h&lt;/code&gt; option:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; perl6 &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;h&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will print:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;    With &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; arguments, enters a REPL&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; With a &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;[programfile]&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; the &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;-e&amp;#34;&lt;/span&gt; option, compiles the given program &lt;span style=&#34;color:#f92672&#34;&gt;and&lt;/span&gt; by default also executes the compiled code&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+ 
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;c                   check syntax only (runs &lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;and&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CHECK&lt;/span&gt; blocks)
+    &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;doc                extract documentation &lt;span style=&#34;color:#f92672&#34;&gt;and&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; it as text
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;e program           one line of program
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;h, &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;help           display this help text
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;n                   run program once &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; each line of input
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;p                   same as &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;n, but also &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $_ at the end of lines
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;I path              adds the path to the module search path
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;M module            loads the module prior to running the program
+    &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;target&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[stage]     specify compilation stage to emit
+    &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;optimize&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[level]   &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; the given level of optimization (&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;)
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;t, &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;trace&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[flags]  enable trace flags, see &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;parrot --help-debug&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;encoding&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[mode]    specify string encoding mode
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;o, &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;output&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[name]  specify name of output file
+    &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;v, &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;version        display version information
+    &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;stagestats         display time spent in the compilation stages
+    &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;ll&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;exception       display a low level backtrace on errors
+    &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;profile            &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; profile information to standard error
+    &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;doc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[module]       Use Pod::To::[module] to render inline documentation&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+     
+    Note that only boolean single&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;letter options may be bundled&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+
+    Output from &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;profile can be visualized by kcachegrind&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+
+    To modify the include path, you can set the PERL6LIB environment variable:
+
+    PERL6LIB&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;lib&amp;#34;&lt;/span&gt; perl6 example&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl
+
+    For more information, see the perl6(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) man page&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;This article was adapted from my open source &lt;a href=&#34;https://github.com/sillymoose/Perl6-One-Liners&#34;&gt;book&lt;/a&gt;, which has lots of example Perl 6 one liners, many of which were contributed by the Perl 6 community. If you&amp;rsquo;re interested in learning more Perl 6, I&amp;rsquo;d recommend visiting the official &lt;a href=&#34;http://perl6.org/&#34;&gt;website&lt;/a&gt;, which has links to the IRC channel and official documentation.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Get a weather report at the terminal with Perl</title>
+      <link>http://localhost:1313/article/114/2014/9/11/Get-a-weather-report-at-the-terminal-with-Perl/</link>
+      <pubDate>Thu, 11 Sep 2014 12:36:33 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/114/2014/9/11/Get-a-weather-report-at-the-terminal-with-Perl/</guid>
+      <description>
+
+&lt;p&gt;Getting a weather forecast can be a chore; you have to navigate to the right website, close the banner ad, type in your location, click the right link, and &lt;em&gt;maybe&lt;/em&gt; then you can see a forecast. I wanted a more convenient way and found one using &lt;a href=&#34;https://metacpan.org/pod/WWW::Wunderground::API&#34;&gt;WWW::Wunderground::API&lt;/a&gt;. As the name suggests, the module provides a Perl interface to the Wunderground.com API. In this article I&amp;rsquo;ll show you how to use it.&lt;/p&gt;
+
+&lt;h3 id=&#34;setup&#34;&gt;Setup&lt;/h3&gt;
+
+&lt;p&gt;You&amp;rsquo;ll need an API key for Wunderground.com (sign up &lt;a href=&#34;http://www.wunderground.com/weather/api/&#34;&gt;here&lt;/a&gt; it&amp;rsquo;s free). You&amp;rsquo;ll also need to install WWW::Wunderground.::API. The CPAN Testers &lt;a href=&#34;http://matrix.cpantesters.org/?dist=WWW-Wunderground-API+0.06&#34;&gt;results&lt;/a&gt; show that it runs on most platforms, including Windows. You can install the module at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cpan WWW::Wunderground::API&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;the-code&#34;&gt;The Code&lt;/h3&gt;
+
+&lt;p&gt;Using WWW::Wunderground::API, I created a script that would pull an hourly forecast for my local city:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; WWW::Wunderground::API;
+
+binmode STDOUT, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:utf8&amp;#39;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# for degrees symbol&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $w &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; WWW::Wunderground::API(
+    location &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;New York City, NY&amp;#39;&lt;/span&gt;,
+    api_key  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;123456789012345&amp;#39;&lt;/span&gt;,
+    auto_api &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# print header&lt;/span&gt;
+printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%-10s%-4s%-4s%-8s%-20s\n&amp;#34;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Time&amp;#39;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\x{2109}&amp;#34;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\x{2103}&amp;#34;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Rain %&amp;#39;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Conditions&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# print hourly&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (@{ $w&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;hourly })
+{
+    printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%8s%4i%4i%8i  %-30s\n&amp;#34;&lt;/span&gt;,
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{FCTTIME}{civil},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{temp}{english},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{temp}{metric},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{pop},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{condition};
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the script I use code&amp;gt;binmode to switch the standard output to UTF8 mode. This lets me print some cool degrees symbols later on. I then connect to the Wunderground API, passing my API key and location (location can be a city name or a zip code). Finally I print out the weather forecast using printf to format the output nicely. I saved the script as &lt;code&gt;weather&lt;/code&gt; and ran it at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ weather
+Time      &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;℉&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;℃&lt;/span&gt;   Rain %  Conditions
+&lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;69&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;  Partly Cloudy
+&lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;69&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;  Partly Cloudy
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;69&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;  Partly Cloudy
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;69&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;  Mostly Cloudy
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;69&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;  Mostly Cloudy
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;69&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;  Mostly Cloudy
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;69&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;  Overcast
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;69&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  Overcast
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;69&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  Mostly Cloudy
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;70&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  Mostly Cloudy
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;72&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;22&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;  Mostly Cloudy
+&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;74&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;23&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  Mostly Cloudy
+&lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;77&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;25&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  Mostly Cloudy
+&lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;80&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;27&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  Mostly Cloudy
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;82&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  Mostly Cloudy
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;84&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;29&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;  Overcast
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;84&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;29&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;46&lt;/span&gt;  Chance of a Thunderstorm
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;84&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;29&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;52&lt;/span&gt;  Chance of a Thunderstorm
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;82&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;56&lt;/span&gt;  Chance of a Thunderstorm
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;82&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;45&lt;/span&gt;  Chance of a Thunderstorm
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;81&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;27&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;  Chance of a Thunderstorm
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;80&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;27&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;39&lt;/span&gt;  Chance of a Thunderstorm
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;78&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;  Chance of a Thunderstorm
+&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;77&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;25&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;38&lt;/span&gt;  Chance of a Thunderstorm
+&lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; PM  &lt;span style=&#34;color:#ae81ff&#34;&gt;74&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;23&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;  Partly Cloudy
+&lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;71&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;22&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;69&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;67&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;19&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  Partly Cloudy
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;65&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;62&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;17&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;61&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;62&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;17&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  Clear
+&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;  Clear&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The results show an hourly forecast with the temperature in Fahrenheit and Celsius, the probability of rain and an overall description. As I do most of my work from the terminal, this is much more convenient than using the browser and there are no ads!&lt;/p&gt;
+
+&lt;h3 id=&#34;multiple-locations&#34;&gt;Multiple Locations&lt;/h3&gt;
+
+&lt;p&gt;So the script is nice, but how can we make it better? Well, I&amp;rsquo;m rarely in the same place all the time, and I expect most people mover around too, so it would good to be more flexible and let the user type in the location, rather than using the same location every time:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; WWW::Wunderground::API;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $home_location &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;New York City, NY&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# capture location&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Enter city or zip code ($home_location): &amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $location &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;;
+chomp $location;
+
+binmode STDOUT, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:utf8&amp;#39;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# for degrees symbol&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $w &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; WWW::Wunderground::API(
+    location &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $location &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; $home_location,
+    api_key  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;123456789012345&amp;#39;&lt;/span&gt;,
+    auto_api &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# print header&lt;/span&gt;
+printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%-10s%-4s%-4s%-8s%-20s\n&amp;#34;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Time&amp;#39;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\x{2109}&amp;#34;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\x{2103}&amp;#34;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Rain %&amp;#39;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Conditions&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# print hourly&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (@{ $w&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;hourly })
+{
+    printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%8s%4i%4i%8i  %-30s\n&amp;#34;&lt;/span&gt;,
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{FCTTIME}{civil},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{temp}{english},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{temp}{metric},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{pop},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{condition};
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve updated the code to store a default location called &lt;code&gt;$home_location&lt;/code&gt;. I then ask the user to enter a City or zip code, making sure to &lt;a href=&#34;https://perldoc.perl.org/functions/chomp.html&#34;&gt;chomp&lt;/a&gt; the result. Later in the API call, the code: &lt;code&gt;$location || $home_location&lt;/code&gt; will submit the home location unless the user has entered a location. Running the script now, I can get the weather for London easily:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ weather
+Enter city &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; zip code (New York City, NY): London, UK
+Time      &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;℉&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;℃&lt;/span&gt;   Rain %  Conditions
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;49&lt;/span&gt;   &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;49&lt;/span&gt;   &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;52&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  Clear
+ &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;55&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  Clear
+&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;59&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;  Clear
+&lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;00&lt;/span&gt; AM  &lt;span style=&#34;color:#ae81ff&#34;&gt;62&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;17&lt;/span&gt;       &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;  Clear
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;caching&#34;&gt;Caching&lt;/h3&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/WWW::Wunderground::API&#34;&gt;WWW::Wunderground::API&lt;/a&gt; documentation shows how to use &lt;a href=&#34;https://metacpan.org/pod/Cache::FileCache&#34;&gt;Cache::FileCache&lt;/a&gt; to cache the weather results locally. When you setup the cache, you can specify an expiry parameter - until the cache expires the WWW::Wunderground::API will use the cached results instead of the Wunderground API. This prevents unnecessary API calls and makes the script faster:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; WWW::Wunderground::API;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Cache::FileCache;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $home_location &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;New York City, NY&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;#capture location&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Enter city or zip code ($home_location): &amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $location &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;;
+chomp $location;
+
+binmode STDOUT, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:utf8&amp;#39;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;# for degrees symbol&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $w &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; WWW::Wunderground::API(
+    location &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $location &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; $home_location,
+    api_key  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;123456789012345&amp;#39;&lt;/span&gt;,
+    auto_api &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+    cache    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; Cache::FileCache&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;({
+                    namespace          &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;wundercache&amp;#39;&lt;/span&gt;,
+                    default_expires_in &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2400&lt;/span&gt; }),
+);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# print header&lt;/span&gt;
+printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%-10s%-4s%-4s%-8s%-20s\n&amp;#34;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Time&amp;#39;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\x{2109}&amp;#34;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\x{2103}&amp;#34;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Rain %&amp;#39;&lt;/span&gt;,
+       &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Conditions&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# print hourly&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (@{ $w&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;hourly })
+{
+    printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%8s%4i%4i%8i  %-30s\n&amp;#34;&lt;/span&gt;,
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{FCTTIME}{civil},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{temp}{english},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{temp}{metric},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{pop},
+           $_&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{condition};
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Not much has changed in the code. The line &lt;code&gt;use Cache::FileCache;&lt;/code&gt; imports the module and a &lt;code&gt;cache&lt;/code&gt; parameter has been added to the Wunderground API call. WWW::Wunderground::API is smart enough to not return cached results for different locations.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;That&amp;rsquo;s probably enough to get started, however there is more that could be done with this script. I could make the script more portable by using environment variables instead of the hard coded values for my API key and home location. Exception handling could better - checking for an internet connection before running the script, handling failed API calls more gracefully (for unknown locations for example). Finally, why have the user type in a location at all? We could use get the user&amp;rsquo;s IP address and then geolocate them using the &lt;a href=&#34;https://metacpan.org/pod/Geo::IP&#34;&gt;Geo::IP&lt;/a&gt; module.&lt;/p&gt;
+
+&lt;p&gt;The Wunderground API provides a lot more than just a 24 hour forecast. Check out their API &lt;a href=&#34;http://www.wunderground.com/weather/api/d/docs&#34;&gt;documentation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Cover image &lt;a href=&#34;https://creativecommons.org/licenses/by/4.0/&#34;&gt;©&lt;/a&gt; &lt;a href=&#34;https://www.flickr.com/photos/gsfc/5598148465/in/photolist-9wFYv8-kYwXMt-bsoJ2F-epZCJW-51zsz5-4xqurW-dQW1WX-ntLbig-47NhYw-8ha98x-gKjXSn-iGqBL8-fkVu7f-3bs6Hv-9C5Gp9-dfRRoo-ab4NaA-5nNgKY-hkfRe6-hSmCX2-97fCju-8fqUzR-e6xj8j-943upK-CaRbr-5sSeXx-6yuU9E-4adC2H-9YWWVQ-dK9bTn-piUN9-8NP9b5-8hdo8u-8xGTYN-mG2TTk-bmH4rF-7A8s15-97GPeg-fxsEhK-a1cDq-nMWvny-7xTFh6-ow6uvp-i7yjhS-82v13J-6DmEYb-c6BXa-5eCgsS-bo1p2k-nytJYo/&#34;&gt;NASA Goddard Space Flight Center&lt;/a&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

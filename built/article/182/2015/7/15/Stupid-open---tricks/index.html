@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Stupid open() tricks </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Everyone tells you to use a three-argument open(), but there&#39;s a lot more you can do ..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/182/2015/7/15/Stupid-open---tricks/" />
+<meta property="og:title" content="Stupid open() tricks" />
+<meta property="og:description" content="Everyone tells you to use a three-argument open(), but there&#39;s a lot more you can do ...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2015-07-07T07:07:07Z" />
+<meta property="og:image" content="http://localhost:1313/images/182/thumb_4C2E55EC-2AEB-11E5-A78E-67FC9CAABC69.jpeg" />
+<meta property="og:article:tag" content="filehandle" />
+<meta property="og:article:tag" content="ipc" />
+<meta property="og:article:tag" content="perlio" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Stupid open() tricks</h1>
+              <p class="blog-post-meta">Jul 15, 2015 by
+              
+              
+                
+                
+                <a href="#author-bio-brian-d-foy">brian d foy</a>
+              
+              </p>
+              <img alt="" src="/images/182/4C2E55EC-2AEB-11E5-A78E-67FC9CAABC69.jpeg"/>
+                
+
+<p>The <code>open</code> function can do much more than you probably realize. If you read enough about Perl, you&rsquo;ll start to notice the theme that everyone expects you to use the three-argument <code>open</code>. There&rsquo;s much more that the <code>open</code> can do. Some of these &ldquo;stupid open() tricks&rdquo; may be useful, but they may also be dangerous. These tricks were performed on a closed course by a professional driver. Do not attempt at home. Or work. And, to focus on <code>open</code>, I&rsquo;ve left off all of the error checking.</p>
+
+<h3 id="no-explicit-filename">No explicit filename</h3>
+
+<p>There&rsquo;s a one-argument form of <code>open</code> that takes only a bareword filehandle. In this example, when I open the filehandle <code>F</code> with no other arguments, Perl uses the package scalar variable of the same name as the filename:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">our</span> $F;
+<span style="color:#66d9ef">while</span>( $F <span style="color:#f92672">=</span> shift @ARGV ) {
+  open F;
+  <span style="color:#66d9ef">while</span>(  ) { <span style="color:#66d9ef">print</span> }
+  close F;
+  }</code></pre></div>
+<p>This might seem a bit silly, but as many shortcuts like this, consider the one-liner and scripting side of Perl. Imagine I want to go through a bunch of files on the command line, but some of those I want to skip. I can&rsquo;t simply use <code>-n</code> because that opens all the files for me. I have to handle that myself:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">perl <span style="color:#f92672">-</span>e <span style="color:#e6db74">&#39;while($F=shift){next if$F=~/\.jpg/;open F;while(&lt;F&gt;){print;exit if /Perl/}}&#39;</span> <span style="color:#f92672">*</span></code></pre></div>
+<p>Maybe you&rsquo;ll need that once in life. Maybe you&rsquo;ll never want to use it. Still, there it is.</p>
+
+<h3 id="create-an-anonymous-temporary-file">Create an anonymous temporary file</h3>
+
+<p>If I give <code>open</code> a filename of an explicit <code>undef</code> and the read-write mode (<code>+&gt;</code> or <code>+&lt;</code>), Perl opens an anonymous temporary file:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open <span style="color:#66d9ef">my</span> $fh, <span style="color:#e6db74">&#39;+&gt;&#39;</span>, undef;</code></pre></div>
+<p>Perl actually creates a named file and opens it, but immediately unlinks the name. No one else will be able to get to that file because no one else has the name for it. If I had used <a href="https://metacpan.org/pod/File::Temp">File::Temp</a>, I might leave the temporary file there, or something else might be able to see it while I&rsquo;m working with it.</p>
+
+<h3 id="print-to-a-string">Print to a string</h3>
+
+<p>If my <strong>perl</strong> is compiled with PerlIO (it probably is), I can open a filehandle on a scalar variable if the filename argument is a reference to that variable.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open <span style="color:#66d9ef">my</span> $fh, <span style="color:#e6db74">&#39;&gt;&#39;</span>, <span style="color:#f92672">\</span> <span style="color:#66d9ef">my</span> $string;</code></pre></div>
+<p>This is handy when I want to capture output for an interface that expects a filehandle:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">something_that_prints( $fh );</code></pre></div>
+<p>Now <code>$string</code> contains whatever was printed by the function. I can inspect it by printing it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">say <span style="color:#e6db74">&#34;I captured:\n$string&#34;</span>;</code></pre></div>
+<h3 id="read-lines-from-a-string">Read lines from a string</h3>
+
+<p>I can also read from a scalar variable by opening a filehandle on it.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open <span style="color:#66d9ef">my</span> $fh, <span style="color:#e6db74">&#39;&lt;&#39;</span>, <span style="color:#f92672">\</span> $string;</code></pre></div>
+<p>Now I can play with the string line-by-line without messing around with regex anchors or line endings:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">while</span>( <span style="color:#e6db74">&lt;$fh&gt;</span> ) { <span style="color:#f92672">...</span> }</code></pre></div>
+<p>I write about these sorts of filehandle-on-string tricks in <a href="http://www.effectiveperlprogramming.com">Effective Perl Programming</a>.</p>
+
+<h3 id="make-a-pipeline">Make a pipeline</h3>
+
+<p>Most Unix programmers probably already know that they can read the output from a command as the input for another command. I can do that with Perl&rsquo;s <code>open</code> too:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.10</span>;
+
+open <span style="color:#66d9ef">my</span> $pipe, <span style="color:#e6db74">&#39;-|&#39;</span>, <span style="color:#e6db74">&#39;date&#39;</span>;
+<span style="color:#66d9ef">while</span>( <span style="color:#e6db74">&lt;$pipe&gt;</span> ) {
+  say <span style="color:#e6db74">&#34;$_&#34;</span>;
+  }</code></pre></div>
+<p>This reads the output of the <code>date</code> system command and prints it. But, I can have more than one command in that pipeline. I have to abandon the three-argument form which purposely prevents this nonsense:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open <span style="color:#66d9ef">my</span> $pipe, <span style="color:#e6db74">qq(cat &#39;$0&#39; | sort |)</span>;
+<span style="color:#66d9ef">while</span>( <span style="color:#e6db74">&lt;$pipe&gt;</span> ) {
+  <span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;$.: $_&#34;</span>;
+  }</code></pre></div>
+<p>This captures the text of the current program, sorts each line alphabetically and prints the output with numbered lines. I might get a <a href="http://www.smallo.ruhr.de/award.html">Useless Use of cat Award</a> for that program that sorts the lines of the program, but it&rsquo;s still a feature.</p>
+
+<h3 id="gzip-on-the-fly">gzip on the fly</h3>
+
+<p>In <a href="http://perltricks.com/article/162/2015/3/27/Gzipping-data-directly-from-Perl">Gzipping data directly from Perl</a>, I showed how I could compress data on the fly by using Perl&rsquo;s gzip IO layer. This is handy when I have limited disk space:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open <span style="color:#66d9ef">my</span> $fh, <span style="color:#e6db74">&#39;&gt;:gzip&#39;</span> $filename 
+  <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Could not write to $filename: $!&#34;</span>;
+
+<span style="color:#66d9ef">while</span>( $_ <span style="color:#f92672">=</span> something_interesting() ) {
+  <span style="color:#66d9ef">print</span> { $fh } $_;
+}</code></pre></div>
+<p>I can go the other direction as well, reading directly from compressed files when I don&rsquo;t have enough space to uncompress them first:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open <span style="color:#66d9ef">my</span> $fh, <span style="color:#e6db74">&#39;&lt;:gzip&#39;</span> $filename 
+  <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Could not read from $filename: $!&#34;</span>;
+
+<span style="color:#66d9ef">while</span>( <span style="color:#e6db74">&lt;$fh&gt;</span> ) {
+  <span style="color:#66d9ef">print</span>;
+  }</code></pre></div>
+<h3 id="change-stdout">Change STDOUT</h3>
+
+<p>I can change the default output filehandle with <code>select</code> if I don&rsquo;t like standard output, but I can do that in another way. I can change <code>STDOUT</code> for the times when the easy way isn&rsquo;t fun enough. David Farrell showed some of this in <a href="http://perltricks.com/article/45/2013/10/27/How-to-redirect-and-restore-STDOUT">How to redirect and restore STDOUT</a>.</p>
+
+<p>First I can say the &ldquo;dupe&rdquo; the standard output filehandle with the special <code>&amp;</code>mode:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.10</span>;
+
+open <span style="color:#66d9ef">my</span> $STDOLD, <span style="color:#e6db74">&#39;&gt;&amp;&#39;</span>, STDOUT;</code></pre></div>
+<p>Any of the file modes will work there as long as I append the <code>&amp;</code> to it.</p>
+
+<p>I can then re-open <code>STDOUT</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open STDOUT, <span style="color:#e6db74">&#39;&gt;&gt;&#39;</span>, <span style="color:#e6db74">&#39;log.txt&#39;</span>;
+say <span style="color:#e6db74">&#39;This should be logged to log.txt.&#39;</span>;</code></pre></div>
+<p>When I&rsquo;m ready to change it back, I do the same thing:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open STDOUT, <span style="color:#e6db74">&#39;&gt;&amp;&#39;</span>, $STDOLD;
+say <span style="color:#e6db74">&#39;This should show in the terminal&#39;</span>;</code></pre></div>
+<p>If I only have the file descriptor, perhaps because I&rsquo;m working with an old Unix programmer who thinks <strong>vi</strong> is a crutch, I can use that:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open <span style="color:#66d9ef">my</span> $fh, <span style="color:#e6db74">&#34;&lt;&amp;=$fd&#34;</span> 
+  <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Could not open filehandle on $fd\n&#34;</span>;</code></pre></div>
+<p>This file descriptor has a three-argument form too:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">open <span style="color:#66d9ef">my</span> $fh, <span style="color:#e6db74">&#39;&lt;&amp;=&#39;</span>, $fd
+  <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Could not open filehandle on $fd\n&#34;</span>;</code></pre></div>
+<p>I can have multiple filehandles that go to the same place since they are different names for the same file descriptor:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> v5<span style="color:#ae81ff">.10</span>;
+
+open <span style="color:#66d9ef">my</span> $fh, <span style="color:#e6db74">&#39;&gt;&gt;&amp;=&#39;</span>, fileno(STDOUT);
+
+say         <span style="color:#e6db74">&#39;Going to default&#39;</span>;
+say $fh     <span style="color:#e6db74">&#39;Going to duped version. fileno &#39;</span> <span style="color:#f92672">.</span> fileno($fh);
+say STDOUT  <span style="color:#e6db74">&#39;Going to STDOUT. fileno &#39;</span> <span style="color:#f92672">.</span> fileno($fh);</code></pre></div>
+<p>All of these print to STDOUT.</p>
+
+<p><br />
+<em>This article was originally posted on <a href="http://perltricks.com">PerlTricks.com</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/filehandle">filehandle</a></div>
+                
+                  <div class="tag"><a href="/tags/ipc">ipc</a></div>
+                
+                  <div class="tag"><a href="/tags/perlio">perlio</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-brian-d-foy">
+  <div class="col-sm-2">
+    
+    <a href="/authors/brian-d-foy/"><div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/brian-d-foy/"><h3>brian d foy</h3></a>
+    <p><a href="http://www.pair.com/~comdog/">brian d foy</a> is a Perl trainer and writer, and a senior editor at Perl.com. He&rsquo;s the author of <a href="https://www.masteringperl.org">Mastering Perl</a>, <a href="https://leanpub.com/mojo_web_clients">Mojolicious Web Clients</a>, <a href="https://leanpub.com/learning_perl_exercises">Learning Perl Exercises</a>, and co-author of <a href="https://www.programmingperl.org">Programming Perl</a>, <a href="https://www.learning-perl.com">Learning Perl</a>, <a href="https://www.intermediateperl.com">Intermediate Perl</a> and <a href="https://www.effectiveperlprogramming.com">Effective Perl Programming</a>.</p>
+    <h5><a href="/authors/brian-d-foy/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/stupid-open---tricks.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

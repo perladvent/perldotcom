@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Parser on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/parser/</link>
+    <description>Recent content in Parser on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 27 Oct 2019 12:07:00 +0000</lastBuildDate>
+    <atom:link href="/tags/parser/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>My Perl Wishlist: Invariant Sigils (Part 1)</title>
+      <link>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</link>
+      <pubDate>Sun, 27 Oct 2019 12:07:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</guid>
+      <description>
+
+&lt;p&gt;Pop quiz!  Q: What was my mistake in this line?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is %HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;A: I had the answer right, but I messed up the sigil on &lt;code&gt;HASH&lt;/code&gt;.  It
+should be:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is $HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;#  ^ $, not %&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Unfortunately, on Perl v5.20+, both statements work the same way!  I
+didn&amp;rsquo;t catch the problem until I shipped this code and
+&lt;a href=&#34;http://matrix.cpantesters.org/?dist=vars-i+1.08-TRIAL&#34;&gt;cpantesters&lt;/a&gt;
+showed me my mistake.  It was an easy fix, but it reminded me that Perl&amp;rsquo;s
+&lt;a href=&#34;http://modernperlbooks.com/books/modern_perl/chapter_03.html#variablenamesandsigils&#34;&gt;variant sigils&lt;/a&gt;
+can trip up programmers at any level.  If I could change one thing about
+Perl 5, I would change to invariant sigils.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-current-situation&#34;&gt;The current situation&lt;/h2&gt;
+
+&lt;p&gt;In Perl, the sigil tells you
+&lt;a href=&#34;https://perldoc.perl.org/perlintro.html#Perl-variable-types&#34;&gt;how many things to expect&lt;/a&gt;.
+Scalars such as &lt;code&gt;$foo&lt;/code&gt; are single values.  Any single value in an array
+&lt;code&gt;@foo&lt;/code&gt; or hash &lt;code&gt;%foo&lt;/code&gt;, since it is only one thing,
+&lt;a href=&#34;https://perldoc.perl.org/perldata.html#Variable-names&#34;&gt;also uses &lt;code&gt;$&lt;/code&gt;&lt;/a&gt;,
+so &lt;code&gt;$foo&lt;/code&gt;, &lt;code&gt;@foo&lt;/code&gt;, and &lt;code&gt;%foo&lt;/code&gt; could all refer to different pieces of the
+same variable &amp;mdash; or to different variables.
+This technique of &amp;ldquo;variant sigils&amp;rdquo; works, but confuses
+new Perl users and tripped up yours truly.  To know what you
+are accessing in an array or hash, you have to look at both the sigil
+and the brackets.  As a reminder:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: the first element of array &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0, 1]&lt;/code&gt;: the list &lt;code&gt;($z[0], $z[1])&lt;/code&gt; of two elements from &lt;code&gt;@z&lt;/code&gt; (an &amp;ldquo;array slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt; of two elements from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0, 1]&lt;/code&gt;: the list &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt; of keys and two values from array &lt;code&gt;@z&lt;/code&gt; (a &amp;ldquo;hash slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt; of keys and values from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;make-the-sigils-part-of-the-name&#34;&gt;Make the sigils part of the name&lt;/h2&gt;
+
+&lt;p&gt;To save myself from repeating my errors, I&amp;rsquo;d like the sigil to be part of a
+variable&amp;rsquo;s name.  This is not a new idea; scalars work this way in Perl, bash,
+and &lt;a href=&#34;https://docs.perl6.org/language/101-basics#sigil_and_identifier&#34;&gt;Raku&lt;/a&gt;
+(&lt;a href=&#34;https://github.com/perl6/problem-solving/blob/master/solutions/language/Path-to-Raku.md&#34;&gt;formerly Perl 6&lt;/a&gt;).
+That would make the above table look like:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: the first element of &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Simpler!  Any reference to &lt;code&gt;@z&lt;/code&gt; would always be doing &lt;em&gt;something&lt;/em&gt; with
+the array named &lt;code&gt;@z&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;but-what-about-slices&#34;&gt;But what about slices?&lt;/h2&gt;
+
+&lt;p&gt;Slices such as &lt;code&gt;@z[0,1]&lt;/code&gt; and &lt;code&gt;%z{qw(hello there)}&lt;/code&gt; return multiple
+values from an array or hash.  If sigils &lt;code&gt;@&lt;/code&gt; and &lt;code&gt;%&lt;/code&gt; are no longer
+available for slicing, we need an alternative.
+The Perl family currently provides two models: postfix dereferencing
+(&amp;ldquo;postderef&amp;rdquo;) syntax and postfix adverbs.&lt;/p&gt;
+
+&lt;p&gt;Perl v5.20+ support
+&lt;a href=&#34;https://www.effectiveperlprogramming.com/2014/09/use-postfix-dereferencing/&#34;&gt;postderef&lt;/a&gt;,
+which gives us one option.  Postderef separates the name from the slice:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Valid Perl v5.20+&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{a};      &lt;span style=&#34;color:#75715e&#34;&gt;# Scalar, element at index &amp;#34;a&amp;#34; of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;%{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the key &amp;#34;a&amp;#34; and the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The type of slice comes after the reference, instead of as a sigil
+before the reference.  With non-references, that idea would give us slice
+syntax such as &lt;code&gt;@array@[1,2,3]&lt;/code&gt; or &lt;code&gt;%hash%{a}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Raku gives us another option: &amp;ldquo;adverbs&amp;rdquo; such as
+&lt;a href=&#34;https://docs.perl6.org/language/subscripts#:kv&#34;&gt;&lt;code&gt;:kv&lt;/code&gt;&lt;/a&gt;.  For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl6&#34; data-lang=&#34;perl6&#34;&gt;# Valid Raku
+%hash{&amp;#34;a&amp;#34;}          # Single value, element at index &amp;#34;a&amp;#34; of %hash
+%hash{&amp;#34;a&amp;#34;}:v;       # The same --- just the value
+%hash{&amp;#34;a&amp;#34;}:kv;      # The list including key &amp;#34;a&amp;#34; and the value of the &amp;#34;a&amp;#34; element of %hash&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The adverb (e.g., &lt;code&gt;:kv&lt;/code&gt;) goes in postfix position, immediately
+after the brackets or braces.  Following this model,
+slices would look like &lt;code&gt;@array[1,2,3]:l&lt;/code&gt; or &lt;code&gt;%hash{a}:kv&lt;/code&gt;.  (For clarity,
+I propose &lt;code&gt;:l&lt;/code&gt;, as in &lt;strong&gt;l&lt;/strong&gt;ist, instead of Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt;.  Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt; can return
+a scalar or a list.)&lt;/p&gt;
+
+&lt;p&gt;So, the choices I see are (postderef-inspired / Raku-inspired):&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;What you want&lt;/th&gt;
+&lt;th&gt;No subscript&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; access&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; access&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Scalar&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: a single value from an array&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of values&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: an array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z@[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:l&lt;/code&gt;: the list currently written &lt;code&gt;($z[0], $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z@{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:l&lt;/code&gt;: the list currently written &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of key/value pairs&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: a hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z%[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:kv&lt;/code&gt;: the list currently written &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z%{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:kv&lt;/code&gt;: the list currently written &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;you-can-t-always-get-what-you-want&#34;&gt;You can&amp;rsquo;t always get what you want&lt;/h2&gt;
+
+&lt;p&gt;I prefer the adverb syntax.  It is easy to read, and it draws on
+all the expertise that has gone into the design of Raku.
+However, my preference has to be implementable.
+I&amp;rsquo;m not convinced that it is without major surgery.&lt;/p&gt;
+
+&lt;p&gt;The Perl parser decides how to interpret what is inside the brackets
+depending on the context provided by the slice.
+The parser interprets the &lt;code&gt;...&lt;/code&gt; in &lt;code&gt;@foo[...]&lt;/code&gt; as
+a list (&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L1143-L1148&#34;&gt;ref&lt;/a&gt;).
+In &lt;code&gt;$foo[...]&lt;/code&gt;, the parser sees the &lt;code&gt;...&lt;/code&gt; as a scalar expression
+(&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L958-L960&#34;&gt;ref&lt;/a&gt;).
+For any slice syntax, the Perl parser needs to know the desired
+type of result while parsing the subscript expression.  The adverb form,
+unfortunately, leaves the parser guessing until after the subscript
+is parsed.&lt;/p&gt;
+
+&lt;p&gt;You can, in fact, hack the Perl parser to save the subscript
+until it sees a postfix adverb.  The parser can then apply the correct
+context.  I wrote a
+&lt;a href=&#34;https://github.com/Perl/perl5/compare/9786385e68f7f14df6f4dd0f04d2c72c0d9a2511...cxw42:3cd904788536b445c9c3abe9b469e1b569942051&#34;&gt;proof-of-concept&lt;/a&gt;
+for &lt;code&gt;@arr[expr]:v&lt;/code&gt;.  It doesn&amp;rsquo;t execute any code, but it does parse
+a postfix-adverb slice without crashing!  However, while writing that code,
+I ran across a surprise: new syntax isn&amp;rsquo;t tied to a &lt;code&gt;use v5.xx&lt;/code&gt;
+directive.&lt;/p&gt;
+
+&lt;p&gt;It turns out the Perl parser lets code written against any Perl version
+use the latest syntax.  Both of the following command lines work on Perl v5.30:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ perl -Mstrict -Mwarnings -E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#                           ^ -E: use all the latest features
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;$ perl -Mstrict -Mwarnings -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#75715e&#34;&gt;# (!!!)
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;#                           ^ -e: not the latest features&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The second command line does not &lt;code&gt;use v5.30&lt;/code&gt;, so you can&amp;rsquo;t use &lt;code&gt;say&lt;/code&gt;
+(introduced in v5.10).  However, you can use postderef (from v5.20)!&lt;/p&gt;
+
+&lt;p&gt;Because the parser lets old programs use new syntax, any proposed addition
+to Perl&amp;rsquo;s syntax has to be meaningless in all previous Perl versions.
+A postfix adverb fails this test.  For example, the following is a valid
+Perl program:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;kv&lt;/span&gt; { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kv&amp;#34;&lt;/span&gt; }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @arr &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ? @arr[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]:kv;
+        &lt;span style=&#34;color:#75715e&#34;&gt;# ^^^^^^^^^^^^ valid Perl 5 syntax, but not a slice :(&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;My preferred slice syntax could change the meaning of existing programs,
+so it looks like I can&amp;rsquo;t get my first choice.&lt;/p&gt;
+
+&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+
+&lt;p&gt;This is not the end of the story!  In Part 2, I will dig deeper into
+Perl&amp;rsquo;s parser and tokenizer.  I will share some surprises I discovered
+while investigating postderef.  I will then describe a possible path
+to invariant sigils and the simplicity they can provide.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Parsing Perl 5 pod with Perl 6</title>
+      <link>http://localhost:1313/article/170/2015/4/30/Parsing-Perl-5-pod-with-Perl-6/</link>
+      <pubDate>Thu, 30 Apr 2015 13:14:23 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/170/2015/4/30/Parsing-Perl-5-pod-with-Perl-6/</guid>
+      <description>
+
+&lt;p&gt;I&amp;rsquo;ve just finished developing a Perl 5 pod &lt;a href=&#34;https://github.com/dnmfarrell/Pod-Perl5&#34;&gt;parser&lt;/a&gt; written in Perl 6. Developing the grammar was surprisingly easy, which is a testament to Perl 6 as I&amp;rsquo;m no genius coder. With help from the folks at #perl6, I did learn some interesting things along the way, and wanted to share them. Plus, code!&lt;/p&gt;
+
+&lt;p&gt;By the way, if you haven&amp;rsquo;t read my &lt;a href=&#34;http://perltricks.com/article/144/2015/1/13/How-to-create-a-grammar-in-Perl-6&#34;&gt;introduction&lt;/a&gt; to Perl 6 grammars, check it out first, and the rest of this article should make more sense.&lt;/p&gt;
+
+&lt;h3 id=&#34;developing-the-grammar&#34;&gt;Developing the grammar&lt;/h3&gt;
+
+&lt;p&gt;In Perl 6 a grammar is a special type of class for parsing text. The idea is to declare a series of regexes using the &lt;code&gt;token&lt;/code&gt; method, which are then used to parse input. For &lt;a href=&#34;https://github.com/dnmfarrell/Pod-Perl5/blob/master/lib/Pod/Perl5/Grammar.pm&#34;&gt;Pod::Perl5::Grammar&lt;/a&gt; I literally worked my way through &lt;a href=&#34;https://perldoc.perl.org/perlpod.html&#34;&gt;perlpod&lt;/a&gt;, the Perl 5 pod specification, writing tokens as I went.&lt;/p&gt;
+
+&lt;p&gt;There were a few challenges. First, consider how would you define a regex for lists? In pod, lists can contain lists, so can a definition include itself? The answer is yes, a recursive definition is fine, as long as it doesn&amp;rsquo;t match a zero length string, which leads to an infinite loop. Here&amp;rsquo;s the definition:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;token over_back { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;over&amp;gt;&lt;/span&gt;
+                    [
+                      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;_item&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;paragraph&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;verbatim_paragraph&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;blank_line&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+                      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;_for&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;begin_end&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;pod&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;encoding&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;over_back&amp;gt;&lt;/span&gt;
+                    ]&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;
+                    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;back&amp;gt;&lt;/span&gt;
+                  }
+
+token over      { &lt;span style=&#34;color:#f92672&#34;&gt;^^\=&lt;/span&gt;over [&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;h&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;[0..9]&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; ]? &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;n }
+token _item     { &lt;span style=&#34;color:#f92672&#34;&gt;^^\=&lt;/span&gt;item &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;h&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;name&amp;gt;&lt;/span&gt;
+                    [
+                        [ &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;h&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;paragraph&amp;gt;&lt;/span&gt;  ]
+                      &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; [ &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;h&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;n &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;blank_line&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;paragraph&amp;gt;&lt;/span&gt;? ]
+                    ]
+                  }
+token back      { &lt;span style=&#34;color:#f92672&#34;&gt;^^\=&lt;/span&gt;back &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;h&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;n }&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The token &lt;code&gt;over_back&lt;/code&gt; describes an entire list from start to finish. It basically says that a list must begin with an &lt;code&gt;=over&lt;/code&gt; and end with &lt;code&gt;=back&lt;/code&gt;, and can have a whole bunch of things in between, including another &lt;code&gt;over_back&lt;/code&gt;!&lt;/p&gt;
+
+&lt;p&gt;For simplicity&amp;rsquo;s sake, I tried to name the tokens the same as how they&amp;rsquo;re written in pod. In some cases this wasn&amp;rsquo;t possible, for instance &lt;code&gt;item&lt;/code&gt; causes a namespace clash with another method that the Grammar class inherits. So watch out for those cases, you&amp;rsquo;ll get weird errors (this is a &lt;a href=&#34;https://rt.perl.org/rt3//Public/Bug/Display.html?id=77350&#34;&gt;bug&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;This is one pattern I really love and used over and over in the grammar:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;[ &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;pod_section&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;?&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;before &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;pod_section&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;]&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The pattern is useful when you have a pattern to capture, but if there&amp;rsquo;s no matching pattern ignore everything else. In this case, &lt;code&gt;pod_section&lt;/code&gt; is a token that defines a section of pod, but pod is often written inline with Perl code, which the grammar should ignore. So the second half of the definition uses a negative lookahead &lt;code&gt;?!before&lt;/code&gt; to check the next character is not a &lt;code&gt;pod_section&lt;/code&gt;, and uses a period &lt;code&gt;.&lt;/code&gt; to match everything else (including newlines). Both conditions are grouped in square brackets with an asterisk placed &lt;strong&gt;outside&lt;/strong&gt; the group in order to check one character at a time.&lt;/p&gt;
+
+&lt;p&gt;The grammar can be used to parse standalone and inline pod. It will extract every pod section it finds into match object (basically a Perl data structure), ready for processing. It&amp;rsquo;s easy to use:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Pod::Perl5::Grammar;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $match &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Pod::Perl5::Grammar&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;parse($pod);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# or&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $match &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Pod::Perl5::Grammar&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;parsefile(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/path/to/some.pod&amp;#34;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;action-classes&#34;&gt;Action classes&lt;/h3&gt;
+
+&lt;p&gt;So far so cool, but we can do more. Action classes are regular Perl 6 classes that can be given to the grammar at parse time. They provide behavior (actions) for token matching events. Just name the methods in the action class the same as the token they should be executed on. I wrote a pod-to-HTML action &lt;a href=&#34;https://github.com/dnmfarrell/Pod-Perl5/blob/master/lib/Pod/Perl5/ToHTML.pm&#34;&gt;class&lt;/a&gt;. Here is the method for converting &lt;code&gt;=head1&lt;/code&gt; to HTML:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;method head1 ($/)
+{
+  self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;add_to_html(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;body&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;h1&amp;gt;{$/&amp;lt;singleline_text&amp;gt;.Str}&amp;lt;/h1&amp;gt;\n&amp;#34;&lt;/span&gt;);
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Every time the grammar matches a head1 token, this method executes. It&amp;rsquo;s passed the regex capture variable &lt;code&gt;$/&lt;/code&gt;, which contains the head1 regex capture, from which it extracts the text string.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a cool fact: action classes are even easier to write than grammars. It would be trivial to write a pod to markdown converter using Pod::Perl5::Grammar, unless someone beats me to it (hint, hint). That said, I did encounter a few challenges along the way.&lt;/p&gt;
+
+&lt;p&gt;Essentially for HTML conversion, each action class method can just extract the text from it&amp;rsquo;s matching token, reformat it as required, and print it out. This approach worked great until I encountered nested tokens like formatting codes, which sit within a paragraph of text. You don&amp;rsquo;t want to go from this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;There are different ways to emphasize text, I&amp;lt;this is in italics&amp;gt; and  B&amp;lt;this is in bold&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;i&amp;gt;this is in italics&amp;lt;/i&amp;gt;
+&amp;lt;b&amp;gt;this is in bold&amp;lt;/b&amp;gt;
+&amp;lt;p&amp;gt;There are different ways to emphasize text, I&amp;lt;this is in italics&amp;gt; and  B&amp;lt;this is in bold&amp;gt;&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This can happen because the italics and bold token regexes match first. So to get around this issue, I used a buffer to store the HTML from the transformed sub-tokens, and then when a paragraph token is matched, it substitutes its own text with the contents of the buffer. The action class code for this looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;method paragraph ($/ is copy)
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $original_text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $/&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;text&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;chomp;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $para_text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $/&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;text&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;chomp;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;get_buffer(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;paragraph&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;reverse &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; $pair &lt;span style=&#34;color:#75715e&#34;&gt;# reverse as we&amp;#39;re working outside in&lt;/span&gt;
+  {
+    $para_text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $para_text&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;subst($pair&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;key, {$pair&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;value});
+  }
+  self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;add_to_html(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;body&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;p&amp;gt;{$para_text}&amp;lt;/p&amp;gt;\n&amp;#34;&lt;/span&gt;);
+  self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;clear_buffer(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;paragraph&amp;#39;&lt;/span&gt;);
+  }
+
+method italic ($/)
+{
+  self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;add_to_buffer(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;paragraph&amp;#39;&lt;/span&gt;, $/&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;i&amp;gt;{$/&amp;lt;multiline_text&amp;gt;.Str}&amp;lt;/i&amp;gt;&amp;#34;&lt;/span&gt;);
+}
+
+method bold ($/)
+{
+  self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;add_to_buffer(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;paragraph&amp;#39;&lt;/span&gt;, $/&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;b&amp;gt;{$/&amp;lt;multiline_text&amp;gt;.Str}&amp;lt;/b&amp;gt;&amp;#34;&lt;/span&gt;);
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;One thing to watch out for with action classes is regex handling. &lt;strong&gt;Every&lt;/strong&gt; action class example I&amp;rsquo;ve seen uses &lt;code&gt;$/&lt;/code&gt; in the method signature. This is a mistake, as guess what this does:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;method head1 ($/)
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $/&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str &lt;span style=&#34;color:#f92672&#34;&gt;~~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;m/foobar/&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# silly example&lt;/span&gt;
+  {
+    self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;add_to_html(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;body&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;h1&amp;gt;{$/&amp;lt;singleline_text&amp;gt;.Str}\n&amp;#34;&lt;/span&gt;);
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;pre&gt;&lt;code&gt;Cannot assign to a readonly variable or a value
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Mushroom cloud-style boom. When &lt;code&gt;$/&lt;/code&gt; is passed to &lt;code&gt;head1&lt;/code&gt; it is read only. Executing &lt;strong&gt;any&lt;/strong&gt; regex in the same lexical scope will attempt to overwrite &lt;code&gt;$/&lt;/code&gt;. This bit me a few times and with help from #perl6, I ended up using this pattern:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;method head1 ($/ is copy)
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $match &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $/;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $match&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str &lt;span style=&#34;color:#f92672&#34;&gt;~~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;m/foobar/&lt;/span&gt;
+  {
+    self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;add_to_html(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;body&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;h1&amp;gt;{$match&amp;lt;singleline_text&amp;gt;.Str}&amp;lt;/h1&amp;gt;\n&amp;#34;&lt;/span&gt;);
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Adding &lt;code&gt;is copy&lt;/code&gt; to the signature creates a copy instead of a reference for &lt;code&gt;$/&lt;/code&gt;. I then copy the match variable into &lt;code&gt;$match&lt;/code&gt;, so that the following regex can clobber &lt;code&gt;$/&lt;/code&gt;. I *think* a better solution is this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;method head1 ($match)
+{
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $match&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str &lt;span style=&#34;color:#f92672&#34;&gt;~~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;m/foobar/&lt;/span&gt;
+  {
+    self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;add_to_html(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;body&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;h1&amp;gt;{$match&amp;lt;singleline_text&amp;gt;.Str}&amp;lt;/h1&amp;gt;\n&amp;#34;&lt;/span&gt;);
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I think it&amp;rsquo;s that simple, just don&amp;rsquo;t name the signature parameter &lt;code&gt;$/&lt;/code&gt; and all the headaches disappear. I haven&amp;rsquo;t tested this extensively&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;To use an action class, just pass it to the grammar:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Pod::Perl5::Grammar;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Pod::Perl5::ToHTML;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $actions &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Pod::Perl5::ToHTML&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $match &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Pod::Perl5::Grammar&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;parse($pod, :$actions);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;# or&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $match &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Pod::Perl5::Grammar&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;parse($pod, :actions($actions));&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the first example I used a named positional argument &lt;code&gt;:$actions&lt;/code&gt;. This &lt;strong&gt;must&lt;/strong&gt; be called actions to work. In the second example I named the argument like this: &lt;code&gt;:actions($actions)&lt;/code&gt;, in which case the action class object can be called whatever you want.&lt;/p&gt;
+
+&lt;h3 id=&#34;improving-pod&#34;&gt;Improving pod&lt;/h3&gt;
+
+&lt;p&gt;PerlTricks.com articles are written in HTML. Special snowflake style HTML with class names and &lt;code&gt;span&lt;/code&gt; tags. This is a pain for writers to use and a pain to edit. I&amp;rsquo;d love to use pod as the source - it would be easier for writers to use and faster for me to edit. That said, I&amp;rsquo;d like to extend pod with some useful features for blogging. For instance, you may be familiar with formatting codes like &lt;code&gt;B&amp;lt;...&amp;gt;&lt;/code&gt; for bold and the like. Well, what about &lt;code&gt;@&amp;lt; ... &amp;gt;&lt;/code&gt; for a Twitter references, or &lt;code&gt;M&amp;lt; ... &amp;gt;&lt;/code&gt; for &lt;a href=&#34;https://metacpan.org/&#34;&gt;MetaCPAN&lt;/a&gt; links?&lt;/p&gt;
+
+&lt;p&gt;As Perl 6 grammars are classes, they can be inherited and overridden. So I can add my Twitter and Metacpan formatting codes to the grammar like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;grammar Pod::Perl5::Grammar::PerlTricks is Pod::Perl5::Grammar
+{
+  token twitter  { @&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;lt;&lt;/span&gt;name&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&amp;gt;&lt;/span&gt; }
+  token metacpan { M&lt;span style=&#34;color:#f92672&#34;&gt;\&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;name&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&amp;gt;&lt;/span&gt; }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ll also need to override the &lt;code&gt;format_codes&lt;/code&gt; token to include the new tokens:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;token format_codes  {
+  [
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;italic&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;bold&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;code&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;link&amp;gt;&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;escape&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;filename&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;singleline&amp;gt;&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;index&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;zeroeffect&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;twitter|&amp;lt;metacpan&amp;gt;&lt;/span&gt;
+  ]
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It&amp;rsquo;s that easy. The new grammar will parse all pod, plus my two new formatting codes. Of course the action class Pod::Perl5::Pod can be extended and overridden too, and would look something like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Pod::Perl5::ToHTML::PerlTricks is Pod::Perl5::ToHTML
+{
+  method twitter ($match)
+  {
+    self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;add_to_buffer(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;paragraph&amp;#39;&lt;/span&gt;,
+      $match&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;a href=&amp;#34;&lt;/span&gt;http:&lt;span style=&#34;color:#e6db74&#34;&gt;//&lt;/span&gt;twitter&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/{$match&amp;lt;name&amp;gt;.Str}&amp;#34;&amp;gt;{$match&amp;lt;name&amp;gt;.Str}&amp;lt;/&lt;/span&gt;a&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;);
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  }
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  method metacpan ($match)
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;  {
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    self.add_to_buffer(&amp;#39;paragraph&amp;#39;,
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;      $match.Str =&amp;gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;a href&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;{$match&amp;lt;name&amp;gt;.Str}&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;{$match&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;name&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str}&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/a&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;);
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;wait-there-s-more&#34;&gt;Wait, there&amp;rsquo;s more&lt;/h3&gt;
+
+&lt;p&gt;There&amp;rsquo;s a cleaner way to manage groups of tokens, it&amp;rsquo;s called &lt;a href=&#34;http://design.perl6.org/S06.html#Routine_modifiers&#34;&gt;multi-dispatch&lt;/a&gt;. Instead of defining &lt;code&gt;format_codes&lt;/code&gt; as a list of alternative tokens it can match against, we declare a prototype method, and declare each formatting method as a &lt;code&gt;multi&lt;/code&gt; of the prototype. Check this out:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;proto token format_codes  { &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; }
+multi token format_codes:italic { I&lt;span style=&#34;color:#f92672&#34;&gt;\&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;multiline_text&amp;gt;&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;\&amp;gt;&lt;/span&gt;  }
+multi token format_codes:bold   { B&lt;span style=&#34;color:#f92672&#34;&gt;\&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;multiline_text&amp;gt;&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;\&amp;gt;&lt;/span&gt;  }
+multi token format_codes:code   { C&lt;span style=&#34;color:#f92672&#34;&gt;\&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;multiline_text&amp;gt;&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;\&amp;gt;&lt;/span&gt;  }
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now when this grammar is inherited, there is no need to override &lt;code&gt;format_codes&lt;/code&gt;. Instead I can declare the new tokens as multis:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;grammar Pod::Perl5::Grammar::PerlTricks is Pod::Perl5::Grammar
+{
+  token format_codes:twitter  { @&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;\&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;lt;&lt;/span&gt;name&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&amp;gt;&lt;/span&gt; }
+  token format_codes:metacpan { M&lt;span style=&#34;color:#f92672&#34;&gt;\&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;name&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;\&amp;gt;&lt;/span&gt; }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using multi-dispatch also has the modest benefit of simplifying the data extraction path when working with a match object. For instance, these code extracts the link section from the 3rd paragraph of a pod block:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is $match&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;pod_section&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;paragraph&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;text&amp;gt;&amp;lt;format_codes&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;link&amp;gt;&amp;lt;section&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str &lt;span style=&#34;color:#75715e&#34;&gt;# regular version&lt;/span&gt;
+is $match&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;pod_section&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;paragraph&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;text&amp;gt;&amp;lt;format_codes&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;section&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;Str &lt;span style=&#34;color:#75715e&#34;&gt;# multi dispatch equivalent&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the first example, the format token name &lt;code&gt;link&lt;/code&gt; is required. But with multi-dispatch, we can remove that, as shown in the second example.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;So that&amp;rsquo;s what I learned; overall writing a pod parser in Perl 6 was straightforward. If you&amp;rsquo;re programming in Perl 6 and have questions, I&amp;rsquo;d highly recommend the &lt;a href=&#34;http://perl6.org/community/irc&#34;&gt;#perl6&lt;/a&gt; irc channel on freenode, the people there were friendly and responsive.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; &lt;em&gt;Multi-dispatch example added. Thanks to Jonathan Scott Duff for providing the multi-dispatch explanation and code. 2015-05-01&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Independently Parsing Perl</title>
+      <link>http://localhost:1313/pub/2005/06/09/ppi.html/</link>
+      <pubDate>Thu, 09 Jun 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/06/09/ppi.html/</guid>
+      <description>
+
+&lt;p&gt;A few years into my programming career, I found myself involved in a somewhat unusual web project for an enormous global IT company. Due to some odd platform issues, we could write the intranet half of the project &lt;em&gt;only&lt;/em&gt; in Perl and the almost-identical public internet half &lt;em&gt;only&lt;/em&gt; in Java.&lt;/p&gt;
+
+&lt;p&gt;In my efforts to pick up enough Java to help my Perl code interoperate with the code from the Java guys, I stumbled on a relatively new editor with the rather expansive name of JetBrains IntelliJ IDEA.&lt;/p&gt;
+
+&lt;p&gt;What a joy! It quite simply made learning Java an absolute pleasure, with comprehensive tab completion, light and simple API docs, easy exploration of the mountain of Java classes, and unobtrusive indicators showing me my mistakes and offering to fix them. In short, it had lots of brains and a fast, clean user interface.&lt;/p&gt;
+
+&lt;h3 id=&#34;where-is-intelliperl&#34;&gt;Where Is IntelliPerl?&lt;/h3&gt;
+
+&lt;p&gt;Although I only needed it heavily for a few months, it&amp;rsquo;s been my gold standard ever since, and my definition of what a &amp;ldquo;great&amp;rdquo; editor should be. I install every new Perl editor and IDE I come across in the hope that Perl might one day get an editor half as good as what Java has had for years.&lt;/p&gt;
+
+&lt;p&gt;These great editors are spreading. Java is now up to one and a half (Eclipse is nearly great but still seems not quite &amp;ldquo;effortless&amp;rdquo; enough about what it does). Dreamweaver gave HTML people their great editor years ago, and I&amp;rsquo;ve heard that Python may now have something that qualifies.&lt;/p&gt;
+
+&lt;p&gt;Interestingly, these great editors seem to share one major thing in common.&lt;/p&gt;
+
+&lt;h3 id=&#34;how-to-build-a-great-editor&#34;&gt;How to Build a Great Editor&lt;/h3&gt;
+
+&lt;p&gt;Rather than relying on the language&amp;rsquo;s parser to examine code, great editors seem to implement special parsers of their own. These parsers treat a file less like code and more like a generic document (that just also happens to be code).&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s a key distinction, and one that provides two critical capabilities.&lt;/p&gt;
+
+&lt;p&gt;First, it creates a &amp;ldquo;round-trip&amp;rdquo; capability, parsing a file into an internal model and back out again without moving a single white space character out of place. Even if parts of a file are broken or badly formatted, you can still change other parts of the file and save it correctly without it changing anything you don&amp;rsquo;t alter.&lt;/p&gt;
+
+&lt;p&gt;Second, it makes the parser extremely safe and error-tolerant. Any code open in an editor is there for a reason&amp;ndash;generally because it isn&amp;rsquo;t finished yet, is broken, or needs changing. A document parser can hit a problem, flag it, stumble for a character or so until it finds something it recognizes, and then continue on.&lt;/p&gt;
+
+&lt;p&gt;Parsing as code is an entirely different task, and one often unsuited to these type of faults.&lt;/p&gt;
+
+&lt;p&gt;For example, take the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;print &amp;quot;Hello World!\n&amp;quot;;
+
+}
+
+MyModule-&amp;gt;foobar;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For an editor using Perl itself to understand this code, it&amp;rsquo;s game over once it hits the naked closing brace, because the code is invalid. Without knowledge of what is below the brace, you lose all of the intelligence that needs the parser: syntax highlighting, module checking, helpful tips, the lot.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s just simply not a reasonable way to build an editor, where a file can be both unfinished and have dozens of bugs.&lt;/p&gt;
+
+&lt;h3 id=&#34;building-a-document-parser-for-perl&#34;&gt;Building a Document Parser for Perl&lt;/h3&gt;
+
+&lt;p&gt;Even without an editor to put it in (yet), a document parser for Perl would be extraordinarily useful for all sorts of tasks. At the time, though, all I really wanted was a really accurate HTML syntax highlighter.&lt;/p&gt;
+
+&lt;p&gt;Some time in early 2002, I was bored one afternoon and had a first stab at the problem. The result was pretty predictable, given patterns I&amp;rsquo;ve seen in others trying the same thing. It was A) based on regular expressions, and B) useless for anything even remotely interesting.&lt;/p&gt;
+
+&lt;p&gt;Between then and the start of The Perl Foundation grant in December 2004, I&amp;rsquo;ve spent a day or so a month on the problem, rewriting and throwing away code. I&amp;rsquo;ve junked two tokenizers, one lexer, an analysis package, three syntax highlighters, an obfuscation package, a quote engine, and half of the classes in the current object tree.&lt;/p&gt;
+
+&lt;p&gt;Now, finally, &lt;a href=&#34;https://metacpan.org/pod/PPI&#34;&gt;PPI&lt;/a&gt; is complete, bar some minor features and testing. It is 100 percent round-trip safe, and it&amp;rsquo;s been stress tested against the 38,000 (non-Acme) modules in CPAN, handling all but 28 of the most broken and bizarre.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-does-it-do&#34;&gt;What Does It Do?&lt;/h3&gt;
+
+&lt;p&gt;PPI should be the basis for any task where you need to parse, analyze or manipulate Perl, and it finally provides a platform for doing these tasks to their full potential. This covers a huge range of possible tasks; far too many to cover in any depth here.&lt;/p&gt;
+
+&lt;p&gt;For this article, I want to demonstrate how PPI can improve existing tools that currently only do a very basic job, when there is the potential for so much more.&lt;/p&gt;
+
+&lt;p&gt;One of these is part of the PAR application-packaging module. When PAR bundles a module into the internal include directory, it tries to reduce the size of the modules by stripping out POD. Of course, what would be better would be to strip out &lt;em&gt;everything&lt;/em&gt; that is excess and cut PAR file sizes even more.&lt;/p&gt;
+
+&lt;p&gt;This is a form of compression, but given the potential confusion in using something like &amp;ldquo;Compress::Perl&amp;rdquo; as a name, I&amp;rsquo;m picking my own term. I hereby anoint the term &amp;ldquo;Squish&amp;rdquo;. A squished module occupies as little space as possible, having had redundant characters removed. It will be extremely small, although it might look a little &amp;ldquo;squished&amp;rdquo; to look at :)&lt;/p&gt;
+
+&lt;h3 id=&#34;perl-squish&#34;&gt;Perl::Squish&lt;/h3&gt;
+
+&lt;p&gt;Rather than showing you the final project, I prefer to show the process of squishing a single module.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Where is File::Spec on our system?
+use Class::Inspector;
+my $filename = Class::Inspector-&amp;gt;resolved_filename( &#39;File::Spec&#39; );
+
+# Load File::Spec as a document
+use PPI;
+my $Document = PPI::Document-&amp;gt;new( $filename );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Everything you do with PPI starts and finishes with &lt;a href=&#34;https://metacpan.org/pod/PPI::Document&#34;&gt;PPI::Document&lt;/a&gt; objects. If you find yourself using the lexer directly, you are probably doing something wrong.&lt;/p&gt;
+
+&lt;p&gt;Where can I start cutting out the fat? For starters, many core modules have an &lt;code&gt;__END__&lt;/code&gt; section.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Get the (one and only) __END__ section
+my $End = $Document-&amp;gt;find_first( &#39;Statement::End&#39; );
+
+# Delete it from the document
+$End-&amp;gt;delete if $End;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;PPI provides a set of search methods that you can use on any element that has children. &lt;code&gt;find_first&lt;/code&gt; is a safe guess, because there can only be one &lt;code&gt;__END__&lt;/code&gt; section. The search methods actually take &lt;code&gt;&amp;amp;wanted&lt;/code&gt; functions like &lt;a href=&#34;https://metacpan.org/pod/File::Find&#34;&gt;File::Find&lt;/a&gt;, so &lt;code&gt;&#39;Statement::End&#39;&lt;/code&gt; is really syntactic sugar for:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub wanted {
+    my ($Document, $Element) = @_;
+    $Element-&amp;gt;isa(&#39;PPI::Statement::End&#39;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, there&amp;rsquo;s a faster way to do the same thing. The &lt;code&gt;prune&lt;/code&gt; method finds and immediately deletes all elements that match a particular condition.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Delete all comments and POD
+$Document-&amp;gt;prune( &#39;Token::Pod&#39; );
+$Document-&amp;gt;prune( &#39;Token::Comment&#39; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For a more serious example, here&amp;rsquo;s how to strip the non-compulsory braces from &lt;code&gt;-&amp;gt;method()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Remove useless braces
+$Document-&amp;gt;prune( sub {
+    my $Braces = $_[1];
+    $Braces-&amp;gt;isa(&#39;PPI::Structure::List&#39;)      or return &#39;&#39;;
+    $Braces-&amp;gt;children == 0                    or return &#39;&#39;;
+    my $Method = $Braces-&amp;gt;sprevious_sibling   or return &#39;&#39;;
+    $Method-&amp;gt;isa(&#39;PPI::Token::Word&#39;)          or return &#39;&#39;;
+    $Method-&amp;gt;content !~ /:/                   or return &#39;&#39;;
+    my $Operator = $Method-&amp;gt;sprevious_sibling or return &#39;&#39;;
+    $Operator-&amp;gt;isa(&#39;PPI::Token::Operator&#39;)    or return &#39;&#39;;
+    $Operator-&amp;gt;content eq &#39;-&amp;gt;&#39;                or return &#39;&#39;;
+    return 1;
+    } );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s a little bit wordy, but is relatively straightforward to write. Just add conditions and discard as you go. You can get other elements, calculate anything or call sub-searches.&lt;/p&gt;
+
+&lt;p&gt;When you have finished, be sure to save the file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Save the file
+$Document-&amp;gt;save( &amp;quot;$filename.squish&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;wrapping-it-all-up&#34;&gt;Wrapping It All Up&lt;/h3&gt;
+
+&lt;p&gt;All you need to do now is is wrap it all up in some typical module boilerplate.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Perl::Squish;
+
+use strict;
+use PPI;
+
+our $VERSION = &#39;0.01&#39;;
+
+# Squish a file in place
+# Perl::Squish-&amp;gt;file( $filename )
+sub file {
+    my ($class, $file) = @_;
+    my $Document = PPI::Document-&amp;gt;new( $file ) or return undef;
+    $class-&amp;gt;document( $Document ) or return undef;
+    $Document-&amp;gt;save( $file );
+}
+
+# Squish a document object
+# Perl::Squish-&amp;gt;document( $Document );
+sub document {
+    my ($squish, $Document) = @_;
+
+    # Remove the stuff we did earlier
+    $Document-&amp;gt;prune(&#39;Statement::End&#39;);
+    $Document-&amp;gt;prune(&#39;Token::Comment&#39;);
+    $Document-&amp;gt;prune(&#39;Token::Pod&#39;);
+
+    $Document-&amp;gt;prune( sub {
+        my $Braces = $_[1];
+        $Braces-&amp;gt;isa(&#39;PPI::Structure::List&#39;)      or return &#39;&#39;;
+        $Braces-&amp;gt;elements == 0                    or return &#39;&#39;;
+        my $Method = $Braces-&amp;gt;sprevious_sibling   or return &#39;&#39;;
+        $Method-&amp;gt;isa(&#39;PPI::Token::Word&#39;)          or return &#39;&#39;;
+        $Method-&amp;gt;content !~ /:/                   or return &#39;&#39;;
+        my $Operator = $Method-&amp;gt;sprevious_sibling or return &#39;&#39;;
+        $Operator-&amp;gt;isa(&#39;PPI::Token::Operator&#39;)    or return &#39;&#39;;
+        $Operator-&amp;gt;content eq &#39;-&amp;gt;&#39;                or return &#39;&#39;;
+        return 1;
+        } );
+
+    # Let&#39;s also do some whitespace cleanup
+    my @whitespace = $Document-&amp;gt;find(&#39;Token::Whitespace&#39;);
+    foreach ( @whitespace ) {
+        $_-&amp;gt;{content} = $_-&amp;gt;{content} =~ /\n/ ? &amp;quot;\n&amp;quot; : &amp;quot; &amp;quot;;
+    }
+
+    1;
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, the last step is to wrap it all up as a proper module. You can see the finished product prettied up with PPI&amp;rsquo;s syntax highlighter at &lt;a href=&#34;http://ali.as/CPAN/Squish.html&#34;&gt;CPAN::Squish&lt;/a&gt;. I&amp;rsquo;ve added a few additional small features to the basic code described above, but you get the idea. See also &lt;a href=&#34;https://metacpan.org/pod/Perl::Squish&#34;&gt;Perl::Squish&lt;/a&gt; for more details.&lt;/p&gt;
+
+&lt;p&gt;In 15 minutes, I&amp;rsquo;ve knocked together a pretty simple module that dramatically improves on what you could do &lt;em&gt;without&lt;/em&gt; something like PPI. Now imagine the hard things it makes possible.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

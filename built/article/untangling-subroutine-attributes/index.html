@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Untangling subroutine attributes </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How they work and how to implement your own custom versions"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/untangling-subroutine-attributes/" />
+<meta property="og:title" content="Untangling subroutine attributes" />
+<meta property="og:description" content="How they work and how to implement your own custom versions">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2016-06-06T06:06:06Z" />
+<meta property="og:image" content="http://localhost:1313/images/author/david-farrell.jpg" />
+<meta property="og:article:tag" content="attributes" />
+<meta property="og:article:tag" content="symbol_table" />
+<meta property="og:article:tag" content="typeglob" />
+<meta property="og:article:tag" content="lvalue" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Untangling subroutine attributes</h1>
+              <p class="blog-post-meta">Jun 29, 2016 by
+              
+              
+                
+                
+                <a href="#author-bio-david-farrell">David Farrell</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>Subroutine attributes are optional labels that can be included in a subroutine declaration. They&rsquo;re a curious feature with a clunky interface and minimal documentation. They seem underused, but it&rsquo;s hard to think of legitimate uses for them. In my opinion the coolest thing about subroutine attributes is that they run at compile time. This means you can execute custom code before the main program is run, and seeing as Perl gives you access to the symbol table, you can basically do wizardy things.</p>
+
+<h3 id="the-lvalue-trick">The lvalue trick</h3>
+
+<p>Perl has several subroutine attributes built-in. A useful one is <code>lvalue</code> which tells Perl that the subroutine refers to a variable that persists beyond individual calls. A common case is using them as method getter/setters:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">package</span> Foo;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">new</span> { bless {}, shift }
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">bar</span> :lvalue {
+  <span style="color:#66d9ef">my</span> $self <span style="color:#f92672">=</span> shift;
+
+  <span style="color:#75715e"># must return the variable for lvalue-ness</span>
+  $self<span style="color:#f92672">-&gt;</span>{bar};
+}
+
+<span style="color:#66d9ef">package</span> main;
+
+<span style="color:#66d9ef">my</span> $foo <span style="color:#f92672">=</span> Foo<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>();
+
+$foo<span style="color:#f92672">-&gt;</span>bar <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;dogma&#34;</span>; <span style="color:#75715e"># not $foo-&gt;bar(&#34;dogma&#34;);</span>
+<span style="color:#66d9ef">print</span> $foo<span style="color:#f92672">-&gt;</span>bar;</code></pre></div>
+<p>By adding the attribute <code>:lvalue</code> to the <code>bar</code> subroutine, I can use it like a variable, getting, setting and substituting and so on.</p>
+
+<h3 id="custom-attributes">Custom attributes</h3>
+
+<p>To use custom attributes in a package, you must provide a subroutine called <code>MODIFY_CODE_ATTRIBUTES</code>. Perl will call this subroutine during compilation if it find any custom subroutine attributes. It&rsquo;s called once for every subroutine with custom attributes. <code>MODIFY_CODE_ATTRIBUTES</code> receives the package name, a coderef to the subroutine and a list of the attributes it declared:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">package</span> Sub::Attributes;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">MODIFY_CODE_ATTRIBUTES</span> {
+  <span style="color:#66d9ef">my</span> ($package, $coderef, @attributes) <span style="color:#f92672">=</span> @_;
+  <span style="color:#66d9ef">return</span> ();
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">_internal_function</span> :Private {
+  <span style="color:#f92672">...</span>
+}
+<span style="color:#ae81ff">1</span>;</code></pre></div>
+<p>I&rsquo;ve created a new package with the required subroutine - all it does is return an empty list. I&rsquo;ve then declared an empty subroutine called <code>_internal_function</code> which has a custom attribute, <code>Private</code>. I want to do the impossible and create truly private subroutines in Perl by making any subroutine with the <code>Private</code> attribute only callable by its own package. But what if I misspell <code>Private</code>?  If we received any attributes we didn&rsquo;t recognize, <code>MODIFY_CODE_ATTRIBUTES</code> can add them to a list and Perl will throw a compile time error:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">package</span> Sub::Attributes;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">MODIFY_CODE_ATTRIBUTES</span> {
+  <span style="color:#66d9ef">my</span> ($package, $coderef, @attributes, @disallowed) <span style="color:#f92672">=</span> @_;
+
+  push @disallowed, grep { $_ <span style="color:#f92672">ne</span> <span style="color:#e6db74">&#39;Private&#39;</span> } @attributes;
+
+  <span style="color:#66d9ef">return</span> @disallowed;
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">_internal_function</span> :Private {
+  <span style="color:#f92672">...</span>
+}
+<span style="color:#ae81ff">1</span>;</code></pre></div>
+<p>I&rsquo;ve updated to code to declare and return <code>@disallowed</code> - an array of any unrecognized subroutine attributes. Even though it&rsquo;s declared in the first line of the subroutine, it will always be empty because <code>@attributes</code> gobbles up all remaining arguments passed to the subroutine. Next I grep through the list of attributes received and if any don&rsquo;t match &ldquo;Private&rdquo;, I add them to the disallowed array.</p>
+
+<h3 id="adding-compile-time-behavior">Adding compile time behavior</h3>
+
+<p>Now any subroutine in the package can use the attribute <code>Private</code> but it doesn&rsquo;t do anything. I need to add some behavior!</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">package</span> Sub::Attributes;
+<span style="color:#66d9ef">use</span> B <span style="color:#e6db74">&#39;svref_2object&#39;</span>;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">MODIFY_CODE_ATTRIBUTES</span> {
+  <span style="color:#66d9ef">my</span> ($package, $coderef, @attributes, @disallowed) <span style="color:#f92672">=</span> @_;
+
+  <span style="color:#66d9ef">my</span> $subroutine_name <span style="color:#f92672">=</span> svref_2object($coderef)<span style="color:#f92672">-&gt;</span>GV<span style="color:#f92672">-&gt;</span>NAME;
+
+  <span style="color:#66d9ef">my</span> %allowed <span style="color:#f92672">=</span> (
+    Private <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> {
+        <span style="color:#66d9ef">my</span> ($coderef, @args) <span style="color:#f92672">=</span> @_;
+        <span style="color:#66d9ef">my</span> ($calling_package, $filename, $line, $sub) <span style="color:#f92672">=</span> caller(<span style="color:#ae81ff">2</span>);
+        croak <span style="color:#e6db74">&#39;Only the object may call this sub&#39;</span> <span style="color:#66d9ef">unless</span> $sub <span style="color:#f92672">&amp;&amp;</span> $sub <span style="color:#f92672">=~</span> <span style="color:#e6db74">/^Sub\:\:Attributes\:\:/</span>;
+        $coderef<span style="color:#f92672">-&gt;</span>(@args);
+      },
+  );
+
+  <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">my</span> $attribute (@attributes) {
+    <span style="color:#75715e"># parse the attribute into name and value</span>
+
+    <span style="color:#75715e"># attribute not known, compile error</span>
+    push(@disallowed, $attribute) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">next</span> <span style="color:#66d9ef">unless</span> exists $allowed{$attribute};
+
+    <span style="color:#75715e"># override subroutine with attribute coderef</span>
+    <span style="color:#66d9ef">my</span> $overrider <span style="color:#f92672">=</span> $allowed{$attribute};
+    <span style="color:#66d9ef">my</span> $old_coderef <span style="color:#f92672">=</span> $coderef;
+    $coderef <span style="color:#f92672">=</span> <span style="color:#66d9ef">sub</span> { $overrider<span style="color:#f92672">-&gt;</span>($old_coderef, @_) };
+    <span style="color:#f92672">*</span>{<span style="color:#e6db74">&#34;Sub:\:Attributes:\:$subroutine_name&#34;</span>} <span style="color:#f92672">=</span> $coderef;
+  }
+  <span style="color:#66d9ef">return</span> @disallowed;
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">_internal_function</span> :Private {
+  <span style="color:#f92672">...</span>
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">call_internal_function</span> {
+  _internal_function();
+}
+<span style="color:#ae81ff">1</span>;</code></pre></div>
+<p>This code imports the <code>svref_2object</code> function from the <a href="https://metacpan.org/pod/B">B</a> module. This handy function takes a reference and returns an object with the data from Perl&rsquo;s internals. In this case, passing a coderef returns a <a href="https://metacpan.org/pod/B#B::CV-Methods">B::CV</a> object. I use this to get the subroutine name and overrride the subroutine later.</p>
+
+<p>I&rsquo;ve created a hash called <code>%allowed</code> which is where I can declare any permitted custom attributes and their associated code. For <code>Private</code> I made a coderef that checks the caller is in the same package and croaks if it&rsquo;s not, else it will call it.</p>
+
+<p>Next I loop through any attributes received, and check they exist in <code>%attributes</code>. If they don&rsquo;t, I push them into <code>@disallowed</code> and skip to the next attribute. If the attribute does exist, I assign the coderef to <code>$overrider</code> and declare a new coderef which will call <code>$overrider</code> passing the old coderef to be called.</p>
+
+<p>Finally I override the <code>Private</code> subroutine with the new coderef:</p>
+
+<pre><code>*{&quot;Sub:\:Attributes:\:$subroutine_name&quot;} = $coderef;
+</code></pre>
+
+<p>This is how you override subroutines using a <a href="https://perldoc.perl.org/perldata.html#Typeglobs-and-Filehandles">typeglob</a> (<a href="https://www.amazon.com/Mastering-Perl-brian-d-foy/dp/144939311X/">Mastering Perl</a> has a whole chapter dedicated to features like these, highly recommended). But what about that backslash in the middle of the colons <code>:\:</code>?. That escape is necessary for the code to run on Perl versions 5.16 through 5.18 (thanks to Andreas König for debugging this).</p>
+
+<p>If you&rsquo;re wondering why I bothered to create <code>$old_coderef</code> at all, it&rsquo;s so that a subroutine can have multiple attributes with new behaviors nested inside each other.</p>
+
+<p>Now any calls to <code>_internal_function</code> will croak unless they come from within Sub::Attributes:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Sub::Attributes;
+
+Sub::Attributes::call_internal_function(); <span style="color:#75715e"># ok</span>
+Sub::Attributes::_internal_function(); <span style="color:#75715e"># croak!</span></code></pre></div>
+<h3 id="making-it-re-useable">Making it re-useable</h3>
+
+<p>If it seems dumb to create custom attributes and then elsewhere in the same code, validate those attributes, join the club. To get the most out of this system, you have to make your custom attributes re-usable. Fortunately, just a few changes are needed:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">package</span> Sub::Attributes;
+<span style="color:#66d9ef">use</span> B <span style="color:#e6db74">&#39;svref_2object&#39;</span>;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">MODIFY_CODE_ATTRIBUTES</span> {
+  <span style="color:#66d9ef">my</span> ($package, $coderef, @attributes, @disallowed) <span style="color:#f92672">=</span> @_;
+
+  <span style="color:#66d9ef">my</span> $subroutine_name <span style="color:#f92672">=</span> svref_2object($coderef)<span style="color:#f92672">-&gt;</span>GV<span style="color:#f92672">-&gt;</span>NAME;
+
+  <span style="color:#66d9ef">my</span> %allowed <span style="color:#f92672">=</span> (
+    Private <span style="color:#f92672">=&gt;</span>
+      <span style="color:#66d9ef">sub</span> {
+        <span style="color:#66d9ef">my</span> $package <span style="color:#f92672">=</span> shift;
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">sub</span> {
+          <span style="color:#66d9ef">my</span> ($coderef, @args) <span style="color:#f92672">=</span> @_;
+          <span style="color:#66d9ef">my</span> ($calling_package, $filename, $line, $sub) <span style="color:#f92672">=</span> caller(<span style="color:#ae81ff">2</span>);
+          croak <span style="color:#e6db74">&#39;Only the object may call this sub&#39;</span> <span style="color:#66d9ef">unless</span> $sub <span style="color:#f92672">&amp;&amp;</span> $sub <span style="color:#f92672">=~</span> <span style="color:#e6db74">/^$package\:\:/</span>;
+          $coderef<span style="color:#f92672">-&gt;</span>(@args);
+        }
+      },
+  );
+
+  <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">my</span> $attribute (@attributes) {
+    <span style="color:#75715e"># parse the attribute into name and value</span>
+
+    <span style="color:#75715e"># attribute not known, compile error</span>
+    push(@disallowed, $attribute) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">next</span> <span style="color:#66d9ef">unless</span> exists $allowed{$attribute};
+
+    <span style="color:#75715e"># execute compile time code</span>
+    <span style="color:#66d9ef">my</span> $overrider <span style="color:#f92672">=</span> $allowed{$attribute}<span style="color:#f92672">-&gt;</span>($package);
+    <span style="color:#66d9ef">next</span> <span style="color:#66d9ef">unless</span> $overrider;
+
+    <span style="color:#75715e"># override the subroutine if necessary</span>
+    <span style="color:#66d9ef">my</span> $old_coderef <span style="color:#f92672">=</span> $coderef;
+    $coderef <span style="color:#f92672">=</span> <span style="color:#66d9ef">sub</span> { $overrider<span style="color:#f92672">-&gt;</span>($old_coderef, @_) };
+    <span style="color:#f92672">*</span>{<span style="color:#e6db74">&#34;$package:\:$subroutine_name&#34;</span>} <span style="color:#f92672">=</span> $coderef;
+  }
+
+  $Sub::Attributes::attributes{$package}{$subroutine_name} <span style="color:#f92672">=</span> <span style="color:#f92672">\</span>@attributes;
+  <span style="color:#66d9ef">return</span> @disallowed;
+};
+<span style="color:#ae81ff">1</span>;</code></pre></div>
+<p>Rather than hardcoding the package name, I&rsquo;ve made it dynamic. The key change here is that the coderef for <code>Private</code> has been changed to a coderef that returns another coderef. Now I can execute some arbitrary code at compile time and optionally manufacture a new coderef that uses compile time information. In the case of <code>Private</code>, I want to pass the package name of the private subroutine, so I can check later that the caller is from within the same package.</p>
+
+<p>Why optionally return a coderef? Imagine if I created an attribute called <code>After</code> which behaved like the <code>after</code> function in <a href="https://metacpan.org/pod/Class::Method::Modifiers">Class::Method::Modifiers</a>. In this case the subroutine with the private attribute would be reference a <em>different</em> subroutine. That might look like this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">foo</span> { }
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">logger</span> :After(foo) {
+  <span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;foo() was called!\n&#34;</span>;
+}</code></pre></div>
+<p>Here <code>logger</code> should be executed after <code>foo</code>. So logger itself never changes, and doesn&rsquo;t need to be overridden.</p>
+
+<p>I store the attributes for a subroutine under the package name in the symbol table for <code>Sub::Attributes</code>. I could add them to the package&rsquo;s symbol table, but I might inadvertently overwrite something else, so I keep the data within the <code>Sub::Attributes</code> namespace.</p>
+
+<p>$Sub::Attributes::attributes{$package}{$subroutine_name} = \@attributes;</p>
+
+<h3 id="why-no-fetch-code-attributes">Why no FETCH_CODE_ATTRIBUTES?</h3>
+
+<p>The <code>attribute</code> <a href="https://perldoc.perl.org/attributes.html">docs</a> mention another subroutine, called <code>FETCH_CODE_ATTRIBUTES</code> that given a coderef, should return the attributes for the referenced subroutine. When <code>attributes::get</code> is called, it passes the class of the declaring package, which is <code>Sub::Attributes</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#75715e"># $class == &#34;Sub::Attributes&#34;</span>
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">FETCH_CODE_ATTRIBUTES</span> {
+  <span style="color:#66d9ef">my</span> ($class, $coderef) <span style="color:#f92672">=</span> @_;
+  <span style="color:#66d9ef">my</span> $cv <span style="color:#f92672">=</span> svref_2object($coderef);
+  <span style="color:#75715e"># $class should be subclass name, not Sub::Attributes</span>
+  <span style="color:#66d9ef">return</span> @{$Sub::Attributes::attributes{$class}{ $cv<span style="color:#f92672">-&gt;</span>GV<span style="color:#f92672">-&gt;</span>NAME }};
+}</code></pre></div>
+<p>I don&rsquo;t see a way to find out the package name of the original subroutine. <code>FETCH_CODE_ATTRIBUTTES</code> is not required and if it&rsquo;s not there Perl won&rsquo;t throw an exception if <code>attributes::get</code> is called. Instead I provided the <code>sub_attributes</code> method which does work:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">sub_attributes</span> {
+  <span style="color:#66d9ef">my</span> ($package) <span style="color:#f92672">=</span> @_;
+  <span style="color:#66d9ef">my</span> $class_name <span style="color:#f92672">=</span> ref $package <span style="color:#f92672">||</span> $package;
+  <span style="color:#66d9ef">return</span> $Sub::Attributes::attributes{ $class_name };
+}</code></pre></div>
+<p>This returns the attributes stored for a package. This might be useful if other packages want to inspect the attributes for a package&rsquo;s subroutine. it can be called as an object method or class method:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">package</span> Foo;
+<span style="color:#66d9ef">use</span> base <span style="color:#e6db74">&#39;Sub::Attributes&#39;</span>;
+
+<span style="color:#f92672">...</span>
+
+Foo<span style="color:#f92672">-&gt;</span>sub_attributes(); <span style="color:#75715e"># works</span>
+$foo<span style="color:#f92672">-&gt;</span>sub_attributes(); <span style="color:#75715e"># works also</span></code></pre></div>
+<h3 id="squashing-warnings">Squashing warnings</h3>
+
+<p>It&rsquo;s generally good practice to use the <code>strict</code> and <code>warnings</code> pragmas to help detect issues with our code. However the code so far will emit some warnings and an exception if we add those pragmas as-is. This code will add the pragmas but make Perl ignore the violations:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> strict;
+<span style="color:#66d9ef">no</span> strict <span style="color:#e6db74">&#39;refs&#39;</span>;
+<span style="color:#66d9ef">use</span> warnings;
+<span style="color:#66d9ef">no</span> warnings <span style="color:#e6db74">qw(reserved redefine)</span>;</code></pre></div>
+<p>The <code>reserved</code> warning is of particular interest here. This would be caused by using custom subroutine attributes, so no matter what, you&rsquo;d want to turn that off. Redefine is a warning emitted whenever a subroutine is over-written, strict references means no interpolating of variable names in symbol table lookups; we need these features so we can dynamically patch subroutines like this:</p>
+
+<pre><code>*{&quot;$class:\:$subroutine&quot;} = $coderef
+</code></pre>
+
+<h3 id="making-it-extensible">Making it extensible</h3>
+
+<p>If you&rsquo;ve gone to the hard work of setting up the code for inheritable custom attributes, why not make it extensible? That way consuming packages can add their own custom attributes.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">package</span> Sub::Attributes;
+<span style="color:#66d9ef">use</span> strict;
+<span style="color:#66d9ef">no</span> strict <span style="color:#e6db74">&#39;refs&#39;</span>;
+<span style="color:#66d9ef">use</span> warnings;
+<span style="color:#66d9ef">no</span> warnings <span style="color:#e6db74">qw(reserved redefine)</span>;
+
+<span style="color:#66d9ef">use</span> B <span style="color:#e6db74">&#39;svref_2object&#39;</span>;
+
+<span style="color:#66d9ef">BEGIN</span> {
+  <span style="color:#66d9ef">our</span> %allowed <span style="color:#f92672">=</span> (
+    Private <span style="color:#f92672">=&gt;</span>
+      <span style="color:#66d9ef">sub</span> {
+        <span style="color:#66d9ef">my</span> $package <span style="color:#f92672">=</span> shift;
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">sub</span> {
+          <span style="color:#66d9ef">my</span> ($coderef, @args) <span style="color:#f92672">=</span> @_;
+          <span style="color:#66d9ef">my</span> ($calling_package, $filename, $line, $sub) <span style="color:#f92672">=</span> caller(<span style="color:#ae81ff">2</span>);
+          croak <span style="color:#e6db74">&#39;Only the object may call this sub&#39;</span> <span style="color:#66d9ef">unless</span> $sub <span style="color:#f92672">&amp;&amp;</span> $sub <span style="color:#f92672">=~</span> <span style="color:#e6db74">/^$package\:\:/</span>;
+          $coderef<span style="color:#f92672">-&gt;</span>(@args);
+        }
+      },
+    <span style="color:#75715e"># compile time override, run a coderef after running the subroutine</span>
+    After <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> {
+      <span style="color:#66d9ef">my</span> ($package, $value, $coderef) <span style="color:#f92672">=</span> @_;
+
+      <span style="color:#75715e"># full name of the sub to override</span>
+      <span style="color:#66d9ef">my</span> $fq_sub <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;$package:\:$value&#34;</span>;
+
+      <span style="color:#66d9ef">my</span> $target_coderef <span style="color:#f92672">=</span> <span style="color:#f92672">\&amp;</span>{$fq_sub};
+      <span style="color:#f92672">*</span>{$fq_sub} <span style="color:#f92672">=</span> <span style="color:#66d9ef">sub</span> {
+        <span style="color:#66d9ef">my</span> @rv <span style="color:#f92672">=</span> $target_coderef<span style="color:#f92672">-&gt;</span>(@_);
+        $coderef<span style="color:#f92672">-&gt;</span>(@_);
+        <span style="color:#66d9ef">return</span> wantarray ? @rv : $rv[<span style="color:#ae81ff">0</span>];
+      };
+
+      <span style="color:#75715e"># we didn&#39;t change the method with the attribute</span>
+      <span style="color:#75715e"># so we return undef as we have no runtime changes</span>
+      <span style="color:#66d9ef">return</span> undef;
+    },
+  );
+}
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">MODIFY_CODE_ATTRIBUTES</span> {
+  <span style="color:#66d9ef">my</span> ($package, $coderef, @attributes, @disallowed) <span style="color:#f92672">=</span> @_;
+
+  <span style="color:#66d9ef">my</span> $subroutine_name <span style="color:#f92672">=</span> svref_2object($coderef)<span style="color:#f92672">-&gt;</span>GV<span style="color:#f92672">-&gt;</span>NAME;
+
+  <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">my</span> $attribute (@attributes) {
+    <span style="color:#75715e"># parse the attribute into name and value</span>
+    <span style="color:#66d9ef">my</span> ($name, $value) <span style="color:#f92672">=</span> $attribute <span style="color:#f92672">=~</span> <span style="color:#e6db74">qr/^ (\w+) (?:\((\S+?)\))? $/</span>x;
+
+    <span style="color:#75715e"># attribute not known, compile error</span>
+    push(@disallowed, $name) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">next</span> <span style="color:#66d9ef">unless</span> exists $Sub::Attributes::allowed{$name};
+
+    <span style="color:#75715e"># execute compile time code</span>
+    <span style="color:#66d9ef">my</span> $overrider <span style="color:#f92672">=</span> $Sub::Attributes::allowed{$name}<span style="color:#f92672">-&gt;</span>($package, $value, $coderef);
+    <span style="color:#66d9ef">next</span> <span style="color:#66d9ef">unless</span> $overrider;
+
+    <span style="color:#75715e"># override the subroutine if necessary</span>
+    <span style="color:#66d9ef">my</span> $old_coderef <span style="color:#f92672">=</span> $coderef;
+    $coderef <span style="color:#f92672">=</span> <span style="color:#66d9ef">sub</span> { $overrider<span style="color:#f92672">-&gt;</span>($old_coderef, @_) };
+    <span style="color:#f92672">*</span>{<span style="color:#e6db74">&#34;$package:\:$subroutine_name&#34;</span>} <span style="color:#f92672">=</span> $coderef;
+  }
+
+  $Sub::Attributes::attributes{$package}{$subroutine_name} <span style="color:#f92672">=</span> <span style="color:#f92672">\</span>@attributes;
+  <span style="color:#66d9ef">return</span> @disallowed;
+};
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">sub_attributes</span> {
+  <span style="color:#66d9ef">my</span> ($package) <span style="color:#f92672">=</span> @_;
+  <span style="color:#66d9ef">my</span> $class_name <span style="color:#f92672">=</span> ref $package <span style="color:#f92672">||</span> $package;
+  <span style="color:#66d9ef">return</span> $Sub::Attributes::attributes{ $class_name };
+}
+<span style="color:#ae81ff">1</span>;</code></pre></div>
+<p>I&rsquo;ve moved the <code>%allowed</code> hash into a <code>BEGIN</code> block - this has to be declared at compile time so it&rsquo;s available for <code>MODIFY_CODE_ATTRIBUTES</code>. Now new custom attributes can be added by modifying <code>%Sub::Attributes::attributes</code>. I also added a new custom attribute <code>After</code> which implements causes the subroutine to be called after another one, like this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">foo</span> { }
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">bar</span> :After(foo) {
+  <span style="color:#66d9ef">print</span> <span style="color:#e6db74">&#34;foo() was called!\n&#34;</span>;
+}</code></pre></div>
+<p>I added a regex which captures the attribute name and value when passing attributes (so for <code>After(foo)</code> &ldquo;After&rdquo; is the name and &ldquo;foo&rdquo; is the value). The <code>$value</code> and <code>$coderef</code> are now passed to the custom attribute&rsquo;s subroutine to allow compile-time overrides of other subroutines.</p>
+
+<h3 id="resources">Resources</h3>
+
+<ul>
+<li><a href="https://perldoc.perl.org/attributes.html">attributes</a> is the official documentation on attributes.</li>
+<li><a href="https://metacpan.org/pod/Sub::Attributes">Sub::Attributes</a> is my module which implements the above code, and adds a few more custom attributes.</li>
+<li><a href="https://perldoc.perl.org/perldata.html#Typeglobs-and-Filehandles">perldata</a> has an entry on typeglobs and the symbol table.</li>
+<li>Chapters 7 &amp; 8 of <a href="https://www.amazon.com/Mastering-Perl-brian-d-foy/dp/144939311X/">Mastering Perl</a> second edition cover the symbol table and overrriding subroutines in detail.</li>
+<li><a href="https://perldoc.perl.org/perlsub.html">perlsub</a> has information on lvalue subroutines.</li>
+<li>Two useful blog posts by mascip on <a href="http://blogs.perl.org/users/mascip/2014/02/subroutine-attributes-how-to-use-them-and-what-for.html">possible uses</a> and <a href="http://blogs.perl.org/users/mascip/2014/02/three-ways-to-introduce-othogonal-behavior-aspects-method-modifiers-and-subroutine-attributes.html">when to use</a> subroutine attributes.</li>
+<li><a href="https://metacpan.org/pod/Attribute::Handlers">Attribute::Handlers</a> provides a mechanism for calling subroutines via attributes.</li>
+</ul>
+
+<p><br />
+<em>This article was originally posted on <a href="http://perltricks.com">PerlTricks.com</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/attributes">attributes</a></div>
+                
+                  <div class="tag"><a href="/tags/symbol_table">symbol_table</a></div>
+                
+                  <div class="tag"><a href="/tags/typeglob">typeglob</a></div>
+                
+                  <div class="tag"><a href="/tags/lvalue">lvalue</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-david-farrell">
+  <div class="col-sm-2">
+    
+    <a href="/authors/david-farrell/"><div class="circle-avatar" style="background-image:url(/images/author/david-farrell.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/david-farrell/"><h3>David Farrell</h3></a>
+    <p>David is the editor of Perl.com. An organizer of the <a href="http://www.meetup.com/The-New-York-Perl-Meetup-Group/">New York Perl Meetup</a>, he works for ZipRecruiter as a software developer, and sometimes <a href="https://twitter.com/perltricks">tweets</a> about Perl and Open Source.</p>
+    <h5><a href="/authors/david-farrell/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/untangling-subroutine-attributes.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

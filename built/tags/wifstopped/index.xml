@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Wifstopped on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/wifstopped/</link>
+    <description>Recent content in Wifstopped on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 27 Apr 2019 17:28:43 +0000</lastBuildDate>
+    <atom:link href="/tags/wifstopped/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Fork yeah! Part 2</title>
+      <link>http://localhost:1313/article/fork-yeah-part-2/</link>
+      <pubDate>Sat, 27 Apr 2019 17:28:43 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/fork-yeah-part-2/</guid>
+      <description>
+
+&lt;p&gt;In &lt;a href=&#34;http://localhost:1313/article/fork-yeah-/&#34;&gt;part one&lt;/a&gt; of this article I described how to use Perl&amp;rsquo;s &lt;code&gt;fork&lt;/code&gt; function to write concurrent programs. Here are a couple of other ways.&lt;/p&gt;
+
+&lt;h2 id=&#34;wnohang&#34;&gt;WNOHANG&lt;/h2&gt;
+
+&lt;p&gt;Usually &lt;code&gt;waitpid&lt;/code&gt; is a blocking call which returns when a child process exits:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; fork;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($pid &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+  sleep &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+  exit;
+}
+
+waitpid $pid, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this example the second argument to &lt;code&gt;waitpid&lt;/code&gt; is 0, which is the flags &lt;a href=&#34;https://perldoc.perl.org/functions/waitpid.html&#34;&gt;argument&lt;/a&gt;. But what if we wanted to do additional processing in the parent process, whilst still occasionally checking for reaped children?&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/POSIX&#34;&gt;POSIX&lt;/a&gt; module includes the &lt;code&gt;WNOHANG&lt;/code&gt; constant which makes the &lt;code&gt;waitpid&lt;/code&gt; call non-blocking. Instead it returns immediately with an integer:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;-1 indicates no child process exists for that process id, or none at all if pid of -1 was supplied&lt;/li&gt;
+&lt;li&gt;0 indicates there is a child process but it has not changed state yet&lt;/li&gt;
+&lt;li&gt;2-32768 is the pid of the child process which exited (it will never be 1 - that&amp;rsquo;s &lt;a href=&#34;https://en.wikipedia.org/wiki/Init&#34;&gt;init&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; POSIX &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;WNOHANG&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; fork;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($pid &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+  sleep &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+  exit;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $kid;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+  &lt;span style=&#34;color:#75715e&#34;&gt;# do additional processing&lt;/span&gt;
+  sleep &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+
+  $kid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; waitpid &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, WNOHANG;
+} &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; ($kid &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve changed the code to wait for the child to exit in a &lt;code&gt;do&lt;/code&gt; &lt;code&gt;while&lt;/code&gt; loop, each iteration calling &lt;code&gt;waitpid&lt;/code&gt; with &lt;code&gt;WNOHANG&lt;/code&gt; to allow me to undertake any additional processing I want to in the body of the &lt;code&gt;do&lt;/code&gt; block. Without &lt;code&gt;WNOHANG&lt;/code&gt;, this would loop once per reaped child; with it, I can still collect exiting child processes, but the loop may iterate thousands of times in the meantime.&lt;/p&gt;
+
+&lt;h2 id=&#34;wuntraced&#34;&gt;WUNTRACED&lt;/h2&gt;
+
+&lt;p&gt;The POSIX module provides &lt;a href=&#34;https://metacpan.org/pod/POSIX#WAIT&#34;&gt;waitpid&lt;/a&gt; constants and macros. The other constant is &lt;code&gt;WUNTRACED&lt;/code&gt; which causes &lt;code&gt;waitpid&lt;/code&gt; to return if the child process is stopped (but not exited).&lt;/p&gt;
+
+&lt;p&gt;The parent can then take appropriate action: it might record the stopped process somewhere, or choose to resume the child by sending it a continue signal (SIGCONT):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; POSIX &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:sys_wait_h&amp;#39;&lt;/span&gt;;
+$SIG{INT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { exit };
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; fork;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($pid &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;child going to sleep\n&amp;#34;&lt;/span&gt;;
+    sleep &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;;
+  }
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;child PID: $pid\n&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $kid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; waitpid $pid, WUNTRACED;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (WIFSTOPPED(${&lt;span style=&#34;color:#f92672&#34;&gt;^&lt;/span&gt;CHILD_ERROR_NATIVE})) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;sending SIGCONT to child\n&amp;#34;&lt;/span&gt;;
+    kill &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CONT&amp;#39;&lt;/span&gt;, $kid;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+    exit;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve used the group &lt;code&gt;sys_wait_h&lt;/code&gt; to import multiple symbols from the POSIX module. This time, both child and parent are in infinite while loops. If I pause the child by sending it SIGSTOP, &lt;code&gt;waitpid&lt;/code&gt; will return. The parent tests whether the child was stopped with the macro &lt;code&gt;WIFSTOPPED&lt;/code&gt;, if so it sends SIGCONT to the child via &lt;code&gt;kill&lt;/code&gt;, resuming it.&lt;/p&gt;
+
+&lt;p&gt;Running the script as &lt;code&gt;wuntraced.pl&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ ./wuntraced.pl
+child PID: 15013
+child going to sleep
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In another terminal I send SIGSTOP to the child:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;kill -s STOP 15013
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And the parent resumes the child:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sending SIGCONT to child
+child going to sleep
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Both processes keep running until I send SIGINT to the child:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ kill -s INT 15013
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;combining-constants&#34;&gt;Combining Constants&lt;/h2&gt;
+
+&lt;p&gt;WNOHANG and WUNTRACED are not mutually exclusive: I can change waitpid&amp;rsquo;s behavior by combining both constants into a single flag value with binary or (&lt;code&gt;|&lt;/code&gt;).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Data::Dumper &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Dumper&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; POSIX &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;:sys_wait_h&amp;#39;&lt;/span&gt;;
+
+$SIG{INT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { exit };
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %pids;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; fork;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($pid &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+    sleep &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+    $pids{$pid} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+      duration &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; undef,
+      started  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; time,
+      stops    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+    };
+  }
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $kid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; waitpid &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, WNOHANG &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; WUNTRACED;
+
+  &lt;span style=&#34;color:#75715e&#34;&gt;# do additional processing&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; Dumper(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;%pids);
+  sleep &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (WIFSTOPPED(${&lt;span style=&#34;color:#f92672&#34;&gt;^&lt;/span&gt;CHILD_ERROR_NATIVE})) {
+    $pids{$kid}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{stops}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    kill &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CONT&amp;#39;&lt;/span&gt;, $kid;
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($kid &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $exit_time &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; time;
+    $pids{$kid}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{duration} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $exit_time &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; $pids{$kid}&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{started};
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;elsif&lt;/span&gt; ($kid &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+    exit;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code forks 3 children which run forever, and the parent tracks statistics for each child: the start time, duration and number of times it received SIGSTOP. The parent will resume any stopped child with SIGCONT. The parent prints the stats every 3 seconds, and exits when all the children have exited.&lt;/p&gt;
+
+&lt;p&gt;Running this code, I can play around by sending SIGSTOP and SIGINT to different child processes and watch the stats update. Although this is a simple example, by using &lt;code&gt;WNOHANG&lt;/code&gt; and &lt;code&gt;WUNTRACED&lt;/code&gt; you can see how they change the parent process&amp;rsquo;s role from a passive observer to a supervisor which can actively manage its sub-processes.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

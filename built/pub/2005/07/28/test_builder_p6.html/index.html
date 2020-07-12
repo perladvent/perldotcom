@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Porting Test::Builder to Perl 6 </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Pugs let real people write real Perl 6 code. This article presents a case study of porting Perl&#39;s venerable Test::Builder to Perl 6."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2005/07/28/test_builder_p6.html/" />
+<meta property="og:title" content="Porting Test::Builder to Perl 6" />
+<meta property="og:description" content="Pugs let real people write real Perl 6 code. This article presents a case study of porting Perl&#39;s venerable Test::Builder to Perl 6.">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2005-07-07T07:07:07Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2005_07_28_test_builder_p6/111-testbuilder.gif" />
+<meta property="og:article:tag" content="parrot" />
+<meta property="og:article:tag" content="perl-6" />
+<meta property="og:article:tag" content="perl-6-modules" />
+<meta property="og:article:tag" content="porting-to-perl-6" />
+<meta property="og:article:tag" content="pugs" />
+<meta property="og:article:tag" content="refactoring" />
+<meta property="og:article:tag" content="test-driven-design-of-perl-6" />
+<meta property="og:article:tag" content="test-builder" />
+<meta property="og:article:tag" content="porting" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Porting Test::Builder to Perl 6</h1>
+              <p class="blog-post-meta">Jul 28, 2005 by
+              
+              
+                
+                
+                <a href="#author-bio-chromatic">chromatic</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>Perl 6 development now proceeds in two directions. The first is from the bottom up, with the creation and evolution of <a href="http://www.parrotcode.org/">Parrot</a> and underlying code, including the Parrot Grammar Engine. The goal there is to build the structure Perl 6 will need. The second direction is from the top down, with the <a href="http://www.pugscode.org/">Pugs</a> project implementing Perl 6 initially separate from Parrot, though recent additions allow an embedded Parrot to run the parsed code and to emit valid Parrot PIR code.</p>
+
+<p>Both projects are important and both help the design of Perl 6 and its implementation. Parrot is valuable in that it demonstrates a solid foundation for Perl 6 (and other similar languages); a far better foundation than the internals of Perl 5 have become. Pugs is important because it allows people to use Perl 6 productively now, with more features every day.</p>
+
+<h3 id="motivation-and-design">Motivation and Design</h3>
+
+<p>Perl culture values testing very highly. Several years ago, at the suggestion of Michael Schwern, I extracted the code that would become <a href="https://metacpan.org/pod/Test::Builder">Test::Builder</a> from <a href="https://metacpan.org/pod/Test::More">Test::More</a> and unified <a href="https://metacpan.org/pod/Test::Simple">Test::Simple</a> and Test::More to share that back end. Now dozens of other testing modules, built upon Test::Builder, work together seamlessly.</p>
+
+<p>Pugs culture also values testing. However, there was no corresponding Test::Builder for Perl 6 yet&ndash;there was only a single <a href="http://svn.openfoundry.org/pugs/ext/Test/lib/Test.pm"><em>Test.pm</em></a> module that did most of what the early version of Test::More did in Perl 5.</p>
+
+<p>Schwern and I have discussed updates and refactorings of Test::Builder for the past couple of years. We made some mistakes in the initial design. As Perl 6 offers the chance to clean up Perl 5, so does a port of Test::Builder to Perl 6 offer the chance to clean up some of the design decisions we would make differently now.</p>
+
+<p>Internally, Test::Builder provides a few testing and reporting functions and keeps track of some test information. Most importantly, it contains a plan consisting of the number of tests expected to run. It also holds a list of details of every test it has seen. The testing and reporting functions add information to this list of test details. Finally, the module contains functions to report the test details in the standard <a href="https://metacpan.org/pod/TAP::Base">TAP</a> format, so that tools such as <a href="https://metacpan.org/pod/Test::Harness">Test::Harness</a> can interpret the results correctly.</p>
+
+<p>Test::Builder needs to do all of these things, but there are several ways to design the module&rsquo;s internals. Some ways are better than others.</p>
+
+<p>The original Perl 5 version mashed all of this behavior together into one object-oriented module. To allow the use of multiple testing modules without confusing the count or the test details, <code>Test::Builder::new()</code> always returns a singleton. All test modules call the constructor to receive the singleton object and call the test reporting methods to add details of the tests they handle.</p>
+
+<p>This works, but it&rsquo;s a little inelegant. In particular, modules that test test modules have to go to a lot of trouble to work around the design. A more flexible design would make things like <a href="https://metacpan.org/pod/Test::Builder::Tester">Test::Builder::Tester</a> much easier to write.</p>
+
+<p>The biggest change that Schwern and I have discussed is to separate the varying responsibilities into separate modules. The <a href="http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder.pm">new Test::Builder object in Perl 6</a> itself contains a <a href="http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/TestPlan.pm">Test::Builder::TestPlan</a> object that represents the plan (the number of tests to run), a <a href="http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/Output.pm">Test::Builder::Output</a> object that contains the filehandles to which to write TAP and diagnostic output, and an array of tests&rsquo; results (all <a href="http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/Test.pm">Test::Builder::Test</a> instances).</p>
+
+<p>The default constructor, <code>new()</code>, still returns a singleton by default. However, modules that use Test::Builder can create their own objects, which perform the Test::Builder::TestPlan or Test::Builder::Output roles and pass them to the constructor to override the default objects created internally for the singleton. If a test module really needs a separate Test::Builder object, the alternate <code>create()</code> method creates a new object that no other module will share.</p>
+
+<p>This strategy allows the Perl 6 version of <a href="http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/Tester.pm">Test::Builder::Tester</a> to create its own Test::Builder object that reports tests as normal and then creates the shared singleton with output going to filehandles it can read instead of <code>STDOUT</code> and <code>STDERR</code>. The design appears to be sound; it took less than two hours to go from the idea of T::B::T to a fully working implementation&ndash;counting a break to eat ice cream.</p>
+
+<h3 id="first-attempts">First Attempts</h3>
+
+<p>Translating Perl 5 OO code into Perl 6 OO code was mostly straightforward, despite my never having written any runnable Perl 6 OO code. (Also, Pugs was not far enough along that objects worked.)</p>
+
+<h4 id="what-went-right">What Went Right</h4>
+
+<p>One nice revelation is that opaque objects are actually easier to work with than blessed references. Even better, Perl 6&rsquo;s improved function signatures reduce the necessity to write lots of boring boilerplate code.</p>
+
+<p>Breaking Test::Builder into separate pieces gave the opportunity for several other refactorings. One of my favorite is &ldquo;Replace Condititional with Polymorphism&rdquo;. There are four different types of tests that have different reporting styles: <code>pass</code>, <code>fail</code>, <code>SKIP</code>, and <code>TODO</code>. It made sense to create separate classes for each of those, giving each the responsibility and knowledge to produce the correct TAP output. Thus I wrote Test::Builder::Test, a façade factory class with a very smart constructor that creates and returns the correct test object based on the given arguments. When Test::Builder receives one of these test objects, it asks it to return the TAP string, passes that message to its contained Test::Builder::TestOutput object, and stores the test object in the list of run tests.</p>
+
+<p><a href="http://conferences.oreillynet.com/os2005/"><img src="http://conferences.oreillynet.com/images/os2005/banners/468x60.gif" alt="O&#39;Reilly Open Source Convention 2005." width="468" height="60" /></a></p>
+
+<h4 id="what-went-wrong">What Went Wrong</h4>
+
+<p>Writing the base for all (or at least many) possible test modules is tricky. In this case, it was trebly so. Not only was this the first bit of practical OO Perl 6 code I&rsquo;d written, but I had no way to test it, either by hand (how I tested the Perl 5 version, before Schwern and I worked out a way to write automated tests for it), or with automated tests. Pugs didn&rsquo;t even have object support when I wrote this, though checking in this code pushed OO support higher on the schedule.</p>
+
+<h5 id="infinite-loops-in-construction">Infinite Loops in Construction</h5>
+
+<p>Originally, I thought all test classes would inherit from Test::Builder::Test. As Damian Conway pointed out, my technique created an infinite loop. (He suggested that &ldquo;Don&rsquo;t make a façade factory class an ancestor of the instantiable classes&rdquo; is a design mistake akin to &ldquo;Don&rsquo;t get involved in a land war in Asia&rdquo; and mumbled something else about battles of wits and Sicilians.) The code looked something like:</p>
+
+<pre><code>  class Test::Builder::Test
+  {
+      my Test::Builder::Test $:singleton is rw;
+
+      has Bool $.passed;
+      has Int  $.number;
+      has Str  $.diagnostic;
+      has Str  $.description;
+
+      method new (Test::Builder::Test $class, *@args)
+      {
+          return $:singleton if $:singleton;
+          $:singleton = $class.create( @args );
+          return $:singleton;
+      }
+
+      method create(
+          $number, 
+          $passed       =  1,
+          ?$skip        =  0,
+          ?$todo        =  0,
+          ?$reason      = '',
+          ?$description = '',
+      )
+      {
+          return Test::Builder::Test::TODO.new(
+              description =&gt; $description, reason =&gt; $reason, passed =&gt; $passed,
+          ) if $todo;
+
+          return Test::Builder::Test::Skip.new(
+              description =&gt; $description, reason =&gt; $reason, passed =&gt; 1,
+          ) if $skip;
+
+          return Test::Builder::Test::Pass.new(
+              description =&gt; $description, passed =&gt; 1,
+          ) if $passed;
+
+          return Test::Builder::Test::TODO.new(
+              description =&gt; $description, passed =&gt; 0,
+          ) if $todo;
+      }
+  }
+
+  class Test::Builder::Test::Pass is Test::Builder::Test {}
+  class Test::Builder::Test::Fail is Test::Builder::Test {}
+  class Test::Builder::Test::Skip is Test::Builder::Test { ... }
+  class Test::Builder::Test::TODO is Test::Builder::Test { ... }
+
+  # ...
+</code></pre>
+
+<p>Why is this a singleton? I have no idea; I typed that code into the <em>wrong</em> module and continued writing code a few minutes later, thinking that I knew what I was doing. The infinite loop stands out in my mind very clearly now. Because all of the concrete test classes inherit from Test::Builder::Test, they inherit its <code>new()</code> method; none of them override it. Thus, they&rsquo;ll all call <code>create()</code> again (and none of them override <em>that</em> either).</p>
+
+<h5 id="confusing-initialization">Confusing Initialization</h5>
+
+<p>I also struggled with the various bits and pieces of creating and building objects in Perl 6. There are a lot of hooks and overrides available, making the object system very flexible. However, without any experience or examples or guidance, choosing between <code>new()</code>, <code>BUILD()</code>, and <code>BUILDALL()</code> is difficult.</p>
+
+<p>I realized I had no idea how to handle the singleton in Test::Builder. At least, when I realized that (for now) Test::Builder could remain a singleton, I didn&rsquo;t know how or where to create it.</p>
+
+<p>I finally settled on putting it in <code>new()</code>, with code much like that in the broken version of Test::Builder::Test previously. <code>new()</code> eventually allocates space for, creates, and returns an opaque object. <code>BUILD()</code> initializes it. This led me to write code something like:</p>
+
+<pre><code>  class Test::Builder;
+
+  # ...
+
+  has Test::Builder::Output   $.output;
+  has Test::Builder::TestPlan $.plan;
+
+  has @:results;
+
+  submethod BUILD ( Test::Builder::Output ?$output, ?$TestPlan )
+  {
+      $.plan   = $TestPlan if $TestPlan;
+      $.output = $output ?? $output :: Test::Builder::Output.new();
+  }
+</code></pre>
+
+<p>There&rsquo;s a difference here because most uses of Test::Builder set the test plan explicitly later, after receiving the Test::Builder object. I added a <code>plan()</code> method, too:</p>
+
+<pre><code>  method plan ( $self:, Str ?$explanation, Int ?$num )
+  {
+      die &quot;Plan already set!&quot; if $self.plan;
+
+      if ($num)
+      {
+          $self.plan = Test::Builder::TestPlan.new( expect =&gt; $num );
+      }
+      elsif $explanation ~~ 'no_plan'
+      {
+          $self.plan = Test::Builder::NullPlan.new();
+      }
+      else
+      {
+          die &quot;Unknown plan&quot;;
+      }
+
+      $self.output.write( $self.plan.header() );
+  }
+</code></pre>
+
+<p>There are some stylistic errors in the previous code. First, when declaring an invocant, there&rsquo;s a colon but no comma. Second, <code>fail</code> is much better than <code>die</code> (an assertion Damian made that I take on faith, having researched more serious issues instead). Third, the parenthesization of the cases in the <code>if</code> statement is inconsistent.</p>
+
+<h3 id="final-ha-version">Final (Ha!) Version</h3>
+
+<p>Shortly after I checked in the example code, Stevan Little began work on a test suite (using <em>Test.pm</em>). I knew that Pugs didn&rsquo;t support many of the necessary language constructs, but this allowed Pugs hackers to identify necessary features and me to identify legitimate bugs and mistakes in the code. (It&rsquo;s tricky to bootstrap test-driven development.)</p>
+
+<p>After filling out the test suite, fixing all of the known bugs in my code, talking other Pugs hackers into adding features I needed, and implementing those I couldn&rsquo;t pawn off on others, Test::Builder works completely in Pugs right now. There is one remaining nice feature: splatty args in method calls. But I&rsquo;m ready to port <em>Test.pm</em> to the new back end and then write many, many more useful testing modules&ndash;starting with a port of Mark Fowler&rsquo;s Test::Builder::Tester written the night before this article went public!</p>
+
+<p>The singleton creation in <code>Test::Builder</code> now looks like:</p>
+
+<pre><code>  class Test::Builder-0.2.0;
+
+  use Test::Builder::Test;
+  use Test::Builder::Output;
+  use Test::Builder::TestPlan;
+
+  my  Test::Builder           $:singleton;
+  has Test::Builder::Output   $.output handles 'diag';
+  has Test::Builder::TestPlan $.testplan;
+  has                         @:results;
+
+  method new ( Test::Builder $Class: ?$plan, ?$output )
+  {
+      return $:singleton //= $Class.SUPER::new(
+          testplan =&gt; $plan, output =&gt; $output
+      );
+  }
+
+  method create ( Test::Builder $Class: ?$plan, ?$output )
+  {
+      return $Class.new( testplan =&gt; $plan, output =&gt; $output );
+  }
+
+  submethod BUILD
+  (
+      Test::Builder::TestPlan ?$.testplan,
+      Test::Builder::Output   ?$.output = Test::Builder::Output.new()
+  )
+  {}
+</code></pre>
+
+<p>Those test modules that want to use the default <code>$Test</code> object directly can call <code>Test::Builder::new()</code> to return the singleton, creating it if necessary. Test modules that need different output or plan objects should call <code>Test::Builder::create()</code>. (The test suite actually does this.)</p>
+
+<p>Having removed the <code>Test::Builder</code> code from <code>Test::Builder::Test</code>, I revised the latter, as well:</p>
+
+<pre><code>  class Test::Builder::Test-0.2.0
+  {
+      method new (
+          $number,     
+          ?$passed      = 1,
+          ?$skip        = 0,
+          ?$todo        = 0,
+          ?$reason      = '', 
+          ?$description = '',
+      )
+      {
+          return ::Test::Builder::Test::TODO.new(
+              description =&gt; $description, passed =&gt; $passed, reason =&gt; $reason
+          ) if $todo;
+
+          return ::Test::Builder::Test::Skip.new(
+              description =&gt; $description, passed =&gt;       1, reason =&gt; $reason
+          ) if $skip;
+
+          return ::Test::Builder::Test::Pass.new(
+              description =&gt; $description, passed =&gt;       1,
+          ) if $passed;
+
+          return ::Test::Builder::Test::Fail.new(
+              description =&gt; $description, passed =&gt;       0,
+          );
+      }
+  }
+</code></pre>
+
+<p>That&rsquo;s it. I moved the object attributes into roles. <code>Test::Builder::Test::Base</code> is the basis for all tests, encapsulating all of the attributes that tests share and providing the important methods:</p>
+
+<pre><code>  role Test::Builder::Test::Base
+  {
+      has Bool $.passed;
+      has Int  $.number;
+      has Str  $.diagnostic;
+      has Str  $.description;
+
+      submethod BUILD (
+          $.description,
+          $.passed,
+          ?$.number     =     0,
+          ?$.diagnostic = '???',
+      ) {}
+
+      method status returns Hash
+      {
+          return
+          {
+              passed      =&gt; $.passed,
+              description =&gt; $.description,
+          };
+      }
+
+      method report returns Str
+      {
+          my $ok          = $.passed ?? 'ok' :: 'not ok';
+          my $description = &quot;- $.description&quot;;
+          return join( ' ', $ok, $.number, $description );
+      }
+
+  }
+
+  class Test::Builder::Test::Pass does Test::Builder::Test::Base {}
+  class Test::Builder::Test::Fail does Test::Builder::Test::Base {}
+</code></pre>
+
+<p><code>Test::Builder::Test::WithReason</code> forms the basis for <code>TODO</code> and <code>SKIP</code> tests, adding the reason why the developer marked the test as either:</p>
+
+<pre><code>  role Test::Builder::Test::WithReason does Test::Builder::Test::Base
+  {
+      has Str $.reason;
+
+      submethod BUILD ( $.reason ) {}
+
+      method status returns Hash ( $self: )
+      {
+          my $status        = $self.SUPER::status();
+          $status{&quot;reason&quot;} = $.reason;
+          return $status;
+      }
+  }
+
+  class Test::Builder::Test::Skip does Test::Builder::Test::WithReason { ... }
+  class Test::Builder::Test::TODO does Test::Builder::Test::WithReason { ... }
+</code></pre>
+
+<h4 id="what-s-hard">What&rsquo;s Hard</h4>
+
+<p>The two greatest difficulties I encountered in this porting effort were in mapping my design to the new Perl 6 way of thinking and in working around Pugs bugs and unsupported features. The former is interesting; it may suggest places where other people will run into difficulties.</p>
+
+<p>One of the trickiest parts of Perl 6&rsquo;s OO model to understand is the interaction of the <code>new()</code>, <code>BUILD()</code>, and <code>BUILDALL()</code> methods. Perl 5 provides very little in the way of object support beyond <code>bless</code>. Though having finer-grained control over object creation, initialization, and initializer dispatch will be very useful, remembering the purposes of each method is very important, lest you override the wrong one and end up with an infinite loop or partially initialized object.</p>
+
+<p>From rereading the design documents, experimenting, picking the brains of other @Larry members, and thinking hard, my rules are:</p>
+
+<ul>
+<li><p>Leave <code>new()</code> alone.</p>
+
+<p>This method creates the opaque object. Override it when you don&rsquo;t want to return a new object of this class every time. Don&rsquo;t do initialization here. Don&rsquo;t forget to call <code>SUPER::new()</code> if you actually want an object.</p></li>
+
+<li><p>Override <code>BUILD()</code> to add initialize attributes for objects of <em>this</em> class.</p>
+
+<p>Think of this as an initializer, not a constructor.</p></li>
+
+<li><p>Override <code>BUILDALL()</code> when you want to change the order of initialization.</p>
+
+<p>I haven&rsquo;t needed this yet and don&rsquo;t expect to.</p></li>
+</ul>
+
+<p>Pugs-wise, find a good Haskell tutorial, find a really fast machine that can run GHC 6.4, and look for lambdacamel mentors on <em>#pugs</em>. (My productivity increased when Autrijus told me about Haskell&rsquo;s <code>trace</code> function. He called it a refreshing desert in the oasis of referential transparency.)</p>
+
+<h4 id="what-s-easy">What&rsquo;s Easy</h4>
+
+<p>Was this exercise valuable? Absolutely! It reinforced my belief that Perl 6 is not only Perlish, but that it&rsquo;s a fantastic revolution of Perl 5 in several ways:</p>
+
+<ul>
+<li>The object system is much better. Attributes and accessors require almost no syntax, and that only in their declarations. Using attributes feels Perlish, even if it&rsquo;s not manipulating hash keys.</li>
+<li>Function signatures eliminate a lot of code. My initializers do a lot of work, but they don&rsquo;t take much code. Some even have empty method bodies. This is a big win, except for the poor souls who had to implement the underlying binding code in Pugs. (That took a while.)</li>
+<li>Roles are fantastic. Sure, I believed in them already, but being able to use them without the hacks required in Perl 5 was even better.</li>
+</ul>
+
+<h4 id="final-thoughts">Final Thoughts</h4>
+
+<p>Schwern and I did put a lot of thought into the Perl 5 redesign we never really did, and my code here really benefits from the lessons I learned from the previous version. Still, even though I wrote code to a moving project that didn&rsquo;t yet support all of the features I wanted, it was a great exercise. <code>Test::Builder</code> is simpler, shorter, cleaner, and more flexible; it&rsquo;s ready for everything the Perl 6 QA group can throw at it.</p>
+
+<p><code>Test::Builder</code> isn&rsquo;t the only Perl 5 module being ported to Perl 6. Other modules include ports of HTTP::Server::Simple, Net::IRC, LWP, and <code>CGI</code>. There are even ports underway for Catalyst and Maypole.</p>
+
+<p>Perl 6 isn&rsquo;t ready yet, but it&rsquo;s closer every day. Now&rsquo;s a great time to port some of your code to see how Perl 6 is still Perlish, but a revolutionary step in refreshing new directions.</p>
+
+<p><em>chromatic is the author of <a href="http://onyxneon.com/books/modern_perl/">Modern Perl</a>. In his spare time, he has been working on <a href="http://trendshare.org/how-to-invest/">helping novices understand stocks and investing</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/perl-6">perl-6</a></div>
+                
+                  <div class="tag"><a href="/tags/parrot">parrot</a></div>
+                
+                  <div class="tag"><a href="/tags/perl-6">perl-6</a></div>
+                
+                  <div class="tag"><a href="/tags/perl-6-modules">perl-6-modules</a></div>
+                
+                  <div class="tag"><a href="/tags/porting-to-perl-6">porting-to-perl-6</a></div>
+                
+                  <div class="tag"><a href="/tags/pugs">pugs</a></div>
+                
+                  <div class="tag"><a href="/tags/refactoring">refactoring</a></div>
+                
+                  <div class="tag"><a href="/tags/test-driven-design-of-perl-6">test-driven-design-of-perl-6</a></div>
+                
+                  <div class="tag"><a href="/tags/test-builder">test-builder</a></div>
+                
+                  <div class="tag"><a href="/tags/porting">porting</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-chromatic">
+  <div class="col-sm-2">
+    
+    <a href="/authors/chromatic/"><div class="circle-avatar" style="background-image:url(/images/author/chromatic.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/chromatic/"><h3>chromatic</h3></a>
+    <p></p>
+    <h5><a href="/authors/chromatic/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2005_07_28_test_builder_p6.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

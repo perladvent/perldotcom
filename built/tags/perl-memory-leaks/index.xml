@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Memory Leaks on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-memory-leaks/</link>
+    <description>Recent content in Perl Memory Leaks on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 07 Jun 2007 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-memory-leaks/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Better Code Through Destruction</title>
+      <link>http://localhost:1313/pub/2007/06/07/better-code-through-destruction.html/</link>
+      <pubDate>Thu, 07 Jun 2007 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2007/06/07/better-code-through-destruction.html/</guid>
+      <description>
+
+&lt;p&gt;Larry Wall said that Perl makes easy things easy and hard things possible. Perl is good both for writing a two-line script that saves the world at the last minute (well, at least it saves you and your project) and for robust projects. However, good Perl programming techniques can be quite different between small and complex applications. Consider, for example, Perl&amp;rsquo;s garbage collector. It frees a programmer from memory management issues most of the time&amp;hellip;until the programmer creates circular references.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s garbage collector counts references. When the count reaches zero (which means that no one has a reference), Perl reclaims the entity. The approach is simple and effective. However, circular references (when object A has a reference to object B, and object B has a reference to object A) present a problem. Even if nothing else in the program has a reference to either A or B, the reference count can never reach zero. Objects A and B do not get destroyed. If the code creates them again and again (perhaps in a loop), you get a memory leak. The amount of memory allocated by the program increases without a sensible reason and can never decrease. This effect may be acceptable for simple run-and-exit scripts, but it&amp;rsquo;s not acceptable for programs running 24x365, such as in a mod_perl or FastCGI environment or as standalone servers.&lt;/p&gt;
+
+&lt;p&gt;Circular references are sometimes too useful to avoid. A common example is a tree-like data structure. To navigate both directions&amp;ndash;from root to leaves and vice versa&amp;ndash;a parent node has a list of children and a child node has a reference to its parent. Here are the circular references. Many CPAN modules implement their data models this way, including &lt;a href=&#34;https://metacpan.org/pod/HTML::Tree&#34;&gt;HTML::Tree&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/XML::DOM&#34;&gt;XML::DOM&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Text::PDF::File&#34;&gt;Text::PDF::File&lt;/a&gt;. All these modules provide a method to release the memory. The client application must call the method when it no longer needs an object. However, the requirement of an explicit call is not very appealing and can result in unsafe code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ##
+    ## Code with a memory leak
+    #
+    use HTML::TreeBuilder;
+
+    foreach my $filename (@ARGV) {
+        my $tree = HTML::TreeBuilder-&amp;gt;new;
+        $tree-&amp;gt;parse_file($filename);
+
+        next unless $tree-&amp;gt;look_down(&#39;_tag&#39;, &#39;img&#39;);
+        ##
+        ## Do the actual work (say, extract images) here
+        ## ...
+        ## and release the memory
+        ##
+        $tree-&amp;gt;delete;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The problem in the code is the &lt;code&gt;next&lt;/code&gt; statement; HTML documents with no &lt;code&gt;&amp;lt;img ...&lt;/code&gt; tags will not be released. Actually, any call of &lt;code&gt;next&lt;/code&gt;, &lt;code&gt;last&lt;/code&gt;, &lt;code&gt;return&lt;/code&gt; (inside a subroutine), or &lt;code&gt;die&lt;/code&gt; (inside an &lt;code&gt;eval {}&lt;/code&gt; block) is unsafe and will lead to a memory leak. Of course, it is possible to move the release code into a &lt;code&gt;continue&lt;/code&gt; block for &lt;code&gt;last&lt;/code&gt; or &lt;code&gt;next&lt;/code&gt;, or to write code to delete the tree before every &lt;code&gt;return&lt;/code&gt; or &lt;code&gt;die&lt;/code&gt;, but the code easily becomes messy.&lt;/p&gt;
+
+&lt;p&gt;There is a better solution&amp;ndash;the paradigm of &amp;ldquo;resource acquisition is initialization (and destruction is resource relinquishment).&amp;rdquo; (Ironically, the second half of its name is often omitted, even though it&amp;rsquo;s probably the most important part). The idea is simple. Create a special guard object (of another class) whose sole responsibility is to release the resource. When the guard object gets destroyed, its destructor deletes the tree. The code may look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ##
+    ## A special sentry object is employed
+    ##
+    use HTML::TreeBuilder;
+
+    foreach my $filename (@ARGV) {
+        my $tree = HTML::TreeBuilder-&amp;gt;new;
+        $tree-&amp;gt;parse_file($filename);
+
+        my $sentry = Sentry-&amp;gt;new($tree);
+
+        next unless $tree-&amp;gt;look_down(&#39;_tag&#39;, &#39;img&#39;);
+        ##
+        ## next, last or return are safe here.
+        ## Tree will be deleted automatically.
+        ##
+    }
+
+    package Sentry;
+
+    sub new {
+        my $class = shift;
+        my $tree  = shift;
+        return bless {tree =&amp;gt; $tree}, $class;
+    }
+
+    sub DESTROY {
+        my $self = shift;
+        $self-&amp;gt;{tree}-&amp;gt;delete;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that now there is no need to call &lt;code&gt;$tree-&amp;gt;delete&lt;/code&gt; explicitly at the end of the loop. The magic is simple. When program flow leaves the scope, &lt;code&gt;$sentry&lt;/code&gt; is reclaimable because it participates in no circular references. The code of &lt;code&gt;DESTROY&lt;/code&gt; method of the &lt;code&gt;Sentry&lt;/code&gt; package calls, in turn, the method &lt;code&gt;delete&lt;/code&gt; of the &lt;code&gt;$tree&lt;/code&gt; object. This is one solution for all means; memory will be released however you leave the block.&lt;/p&gt;
+
+&lt;p&gt;Finally, there is no need to code your own &lt;code&gt;Sentry&lt;/code&gt; class. Use &lt;a href=&#34;https://metacpan.org/pod/Object::Destroyer&#34;&gt;Object::Destroyer&lt;/a&gt;, originally written by Adam Kennedy. As you may guess by its name, it is the object to destroy other objects:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ##
+    ## An of-the-CPAN solution with Object::Destroyer
+    ##
+    use HTML::TreeBuilder;
+    use Object::Destroyer 2.0;
+
+    foreach my $filename (@ARGV) {
+        my $tree   = HTML::TreeBuilder-&amp;gt;new;
+        my $sentry = Object::Destroyer-&amp;gt;new($tree, &#39;delete&#39;);
+        $tree-&amp;gt;parse_file($filename);
+
+        next unless $tree-&amp;gt;look_down(&#39;_tag&#39;, &#39;img&#39;);
+        ##
+        ## You can safely return, die, next or last here.
+        ##
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because the name of the release method may vary between modules, it is the constructor&amp;rsquo;s second argument.&lt;/p&gt;
+
+&lt;p&gt;Finally, you can destroy any data structure, not just objects, if you provide code to do so. Pass in a subroutine reference or an anonymous subroutine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ##
+    ## An unblessed data structure with circular references
+    ## that cannot untangle itself.
+    ##
+    use Object::Destroyer 2.0;
+    while (1) {
+        my (%a, %b);
+        $a{b}      = \%b;
+        $b{a}      = \%a;
+        my $sentry = Object::Destroyer-&amp;gt;new( sub { undef $a{b} } );
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Just for fun, comment out the line with the &lt;code&gt;$sentry&lt;/code&gt; object and watch the memory consumption of the running script.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-object-destroyer-as-a-wrapper&#34;&gt;Using Object::Destroyer As a Wrapper&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;Object::Destroyer&lt;/code&gt; can make life easier for module authors, too.&lt;/p&gt;
+
+&lt;p&gt;If you have written a library with circular references, you may ask your clients to explicitly call a disposal method or use a new feature of Perl (stable since 5.8; see &lt;a href=&#34;https://metacpan.org/pod/Scalar::Util&#34;&gt;Scalar::Util&lt;/a&gt;)&amp;ndash;weak references. Weak references do not increment reference counts of the objects to which they refer, so the Perl garbage collector can collect the referents. In the tree example, all references from leaves to parents (but not vice versa, or the tree will be lost!) may be weak. When the final reference to the root node goes away, Perl will dispose of it, which will remove its references to all of its children recursively. They will all reach zero, and Perl will reclaim them all down the branches of the tree to every leaf.&lt;/p&gt;
+
+&lt;p&gt;Indeed, some CPAN modules use this approach (&lt;a href=&#34;https://metacpan.org/pod/XML::Twig&#34;&gt;XML::Twig&lt;/a&gt;). However, this solution works only if weak refs are available; this is certainly not the case for older Perl. Secondly, this may require quite a bit of rewriting (there are nine calls to &lt;code&gt;weaken&lt;/code&gt; throughout the code of &lt;code&gt;XML::Twig&lt;/code&gt; 3.26).&lt;/p&gt;
+
+&lt;p&gt;Alternatively, you may use &lt;code&gt;Object::Destroyer&lt;/code&gt; internally in your library code. It can work as an almost transparent wrapper around your object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ##
+    ## Object::Destroyer as a wrapper
+    ##
+    package My::Tree;
+    use Object::Destroyer 2.0;
+
+    sub new {
+        my $class = shift;
+        my $self  = bless {}, $class;
+        $self-&amp;gt;populate;
+
+        return Object::Destroyer-&amp;gt;new( $self, &#39;release&#39; );
+    }
+
+    sub release{
+        ## actual memory release code
+    }
+
+    sub say_hello{
+        my $self = shift;
+        print &amp;quot;Hello, I&#39;m object of class &amp;quot;, ref($self), &amp;quot;\n&amp;quot;;
+    }
+
+    package main;
+    {
+        my $tree = My::Tree-&amp;gt;new;
+        $tree-&amp;gt;say_hello;
+        ##
+        ## $tree-&amp;gt;release will be called by Object::Destroyer;
+        ##
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The object &lt;code&gt;$tree&lt;/code&gt; in the client code is actually an &lt;code&gt;Object::Destroyer&lt;/code&gt; object that dispatches all invoked methods to the underlying object of class &lt;code&gt;My::Tree&lt;/code&gt;. The method &lt;code&gt;say_hello&lt;/code&gt; sees no difference at all&amp;ndash;it receives an original &lt;code&gt;$self&lt;/code&gt; object. Changes to code are minimal and well localized.&lt;/p&gt;
+
+&lt;p&gt;The approach has a limitation, too: clients must not access attributes of the object directly (such as &lt;code&gt;$tree-&amp;gt;{age}&lt;/code&gt;). This is a bad practice in client code anyway. Additionally, there is a small time penalty for method calls by client-side code. Calls made from the library code itself are not affected.&lt;/p&gt;
+
+&lt;h3 id=&#34;exceptions-and-resource-deallocation&#34;&gt;Exceptions and Resource Deallocation&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization&#34;&gt;Resource acquisition is initialization&lt;/a&gt; is a powerful technique to apply to the management of various critical resources, not only memory. It is most useful when using exceptions to handle errors. This combination makes code quite reliable: exceptions separate normal execution logic and error handling, and RAII sentries guarantee the correct release of every sensitive resource.&lt;/p&gt;
+
+&lt;p&gt;Consider alarms as an example. Assume that you have to call some potentially long-running (or even never-ending) code. You don&amp;rsquo;t want your script to hang up, and prefer to break its execution. Alarms are just right for the task. However, the first attempt at good code might be awkward:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ##
+    ## Alarm example 1. Naive.
+    ##
+    eval{
+        local $SIG{ALRM} = sub { die &amp;quot;Timed out\n&amp;quot; };
+        alarm(5);
+        long_running_code();
+        ## Cancel the alarm if code returned within 5 sec.
+        alarm(0);
+    };
+    if ($@ &amp;amp;&amp;amp; $@ eq &amp;quot;Timed out\n&amp;quot;) {
+        ## Process the error here
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code will work fine until &lt;code&gt;long_running_code()&lt;/code&gt; dies. In this case, the &lt;code&gt;eval&lt;/code&gt; block will catch the &lt;code&gt;die&lt;/code&gt;, but not the alarm. If this occurred in a program that must run 24 hours a day, the program would end in 5 seconds.&lt;/p&gt;
+
+&lt;p&gt;This next example is much better; actually it is real-world code. It is enough for many applications. However, it&amp;rsquo;s not completely bulletproof either:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ##
+    ## Alarm example 2. A standard solution.
+    ##
+    eval{
+        local $SIG{ALRM} = sub { die &amp;quot;Timed out\n&amp;quot; };
+        alarm(5);
+        long_running_code();
+        ## Cancel the alarm if long_running_code() returns within 5 sec.
+        alarm(0);
+    };
+    ## Cancel the alarm if the long_running_code() died.
+    alarm(0);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How many times will the alarm be cancelled in the following example?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ##
+    ## Alarm example 3. Malicious code.
+    ##
+    LOOP:
+    foreach my $arg (1..3) {
+        eval{
+            local $SIG{ALRM} = sub { die &amp;quot;Timed out\n&amp;quot; };
+            alarm(5);
+            long_running_code($arg);
+            alarm(0);
+        };
+        alarm(0);
+    }
+    sub long_running_code{ last LOOP; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Oops, none.&lt;/p&gt;
+
+&lt;p&gt;The RAII solution is more reliable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ##
+    ## Alarm example 4.
+    ## Resource is under control of Object::Destroyer
+    ##
+    eval{
+        local $SIG{ALRM} = sub { die &amp;quot;Timed out\n&amp;quot; };
+        alarm(5);
+        my $sentry = Object::Destroyer-&amp;gt;new( sub {alarm(0)} );
+        long_running_code();
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;No matter how the code exits the &lt;code&gt;eval&lt;/code&gt; block, Perl will destroy the &lt;code&gt;$sentry&lt;/code&gt; object. That destruction will call &lt;code&gt;alarm(0)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;You can manage many sensitive resources this way, including file locks, semaphores, and even locks of database tables.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ##
+    ## File lock.
+    ##
+    use Fcntl &#39;:flock&#39;;
+
+    open my($fh), &amp;quot;&amp;gt;$filename.lock&amp;quot;;
+    eval{
+        flock($fh, LOCK_EX);
+        my $sentry = Object::Destroyer-&amp;gt;new( sub {flock($fh, LOCK_UN)} );
+        ##
+        ## Actual lock-sensitive code is here.
+        ## It is safe to die.
+        ##
+    };
+
+    ##
+    ## Semaphore
+    ##
+    use Thread::Semaphore;
+    use Object::Destroyer;
+
+    my $s = Thread::Semaphore-&amp;gt;new();
+    eval{
+        $s-&amp;gt;down;
+        my $sentry = Object::Destroyer-&amp;gt;new( sub { $s-&amp;gt;up } );
+        ##
+        ## Critical code is here, die is safe
+        ##
+    };
+
+    ##
+    ## MySQL database table lock.
+    ##
+    use DBI;
+
+    my $dbh = DBI-&amp;gt;connect(&amp;quot;dbi:mysql:...&amp;quot;, &amp;quot;&amp;quot;, &amp;quot;&amp;quot;);
+    eval{
+        $dbh-&amp;gt;do(&amp;quot;LOCK TABLE table1 READ&amp;quot;);
+        my $sentry = Object::Destroyer-&amp;gt;new(
+            sub { $dbh-&amp;gt;do(&amp;quot;UNLOCK TABLES&amp;quot;); }
+        );
+        ##
+        ## Again, actual code must be here
+        ##
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code is clean, simple, and quite self-explanatory.&lt;/p&gt;
+
+&lt;h3 id=&#34;simple-transactions&#34;&gt;Simple Transactions&lt;/h3&gt;
+
+&lt;p&gt;Everyone who works with relational databases knows how useful transactions are. One of the features of transactions is atomicity: either all modifications of data are committed at once, or all of them are ignored. Your data is always consistent; it&amp;rsquo;s not possible to leave it in an inconsistent state. The same effect is possible in Perl code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Object::Destroyer 2.0;
+
+    my ($account1, $account2) = (15, 15);
+
+    printf(&amp;quot;Account1=%d, Account2=%d, Total=%d\n&amp;quot;,
+        $account1, $account2, $account1+$account2);
+
+    eval {
+        my $coderef = create_savepoint(\$account1, \$account2);
+        my $sentry  = Object::Destroyer-&amp;gt;new($coderef);
+
+        die &amp;quot;before changes&amp;quot; if rand &amp;gt; 0.7;
+        $account1 += 3;
+        die &amp;quot;after account 1 was modified&amp;quot; if rand &amp;gt; 0.7;
+        $account2 -= 3;
+        die &amp;quot;after account 2 was modified&amp;quot; if rand &amp;gt; 0.7;
+
+        ##
+        ## The transaction is considered to be committed here
+        ## and $sentry can be dismissed.
+        ## $coderef-&amp;gt;() will not be called.
+        ##
+        $sentry-&amp;gt;dismiss;
+
+        die &amp;quot;after transaction is committed&amp;quot; if rand &amp;gt; 0.7;
+    };
+    print &amp;quot;Died $@&amp;quot; if $@;
+    printf(&amp;quot;Account1=%d, Account2=%d, Total=%d\n&amp;quot;,
+        $account1, $account2, $account1+$account2);
+
+    sub create_savepoint {
+        ## Save references to variables and their current values
+        my @vars;
+        foreach my $ref (@_) {
+            die &amp;quot;Can remember only scalar values&amp;quot; unless ref($ref) eq &#39;SCALAR&#39;;
+            push @vars, { ref =&amp;gt; $ref, value =&amp;gt; $$ref };
+        }
+
+        ## A closure to restore their values
+        return sub {
+            foreach my $var (@vars) {
+                ${ $var-&amp;gt;{ref} } = $var-&amp;gt;{value};
+            }
+        };
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Run the script several times. Due to &lt;code&gt;rand&lt;/code&gt;, it will break on varying lines, but it is not possible to get a Total value other than 30.&lt;/p&gt;
+
+&lt;h3 id=&#34;see-also&#34;&gt;See Also&lt;/h3&gt;
+
+&lt;p&gt;RAII is by no means a new technique. It is very popular in the world of C++ programming. If you are not afraid of C++, you may find interesting the standard container &lt;a href=&#34;http://en.wikipedia.org/wiki/Auto_ptr&#34;&gt;auto_ptr&lt;/a&gt; and &lt;a href=&#34;http://www.gotw.ca/publications/using_auto_ptr_effectively.htm&#34;&gt;effective auto_ptr usage&lt;/a&gt;. The non-standard &lt;a href=&#34;http://www.ddj.com/dept/cpp/184403758&#34;&gt;ScopeGuard&lt;/a&gt; class provides lexically scoped resource management in C++.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/Devel::Monitor&#34;&gt;Devel::Monitor&lt;/a&gt; module has guidelines on how to design data structures with weak and circular references. Its primary goal, by the way, is to trace the memory consumption of a running script.&lt;/p&gt;
+
+&lt;p&gt;There are several modules for lexically scoped resource management on CPAN, but the &lt;a href=&#34;https://metacpan.org/pod/Object::Destroyer&#34;&gt;Object::Destroyer&lt;/a&gt; is my favorite. You may also look at &lt;a href=&#34;https://metacpan.org/pod/Hook::Scope&#34;&gt;Hook::Scope&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Scope::Guard&#34;&gt;Scope::Guard&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Sub::ScopeFinalizer&#34;&gt;Sub::ScopeFinalizer&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, &lt;a href=&#34;http://localhost:1313/pub/2002/11/14/exception.html&#34;&gt;Object Oriented Exception Handling in Perl&lt;/a&gt; discusses why exceptions are invaluable for big projects.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

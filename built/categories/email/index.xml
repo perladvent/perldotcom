@@ -1,0 +1,1958 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Email on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/categories/email/</link>
+    <description>Recent content in Email on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 10 Jun 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/categories/email/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The Evolution of Perl Email Handling</title>
+      <link>http://localhost:1313/pub/2004/06/10/email.html/</link>
+      <pubDate>Thu, 10 Jun 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/06/10/email.html/</guid>
+      <description>
+
+&lt;p&gt;I spend the vast majority of my time at a computer working with email, whether it&amp;rsquo;s working through the ones I send and receive each day, or working on my interest in analyzing, indexing, organizing, and mining email content. Naturally, Perl helps out with this.&lt;/p&gt;
+
+&lt;p&gt;There are many modules on the CPAN for slicing and dicing email, and we&amp;rsquo;re going to take a whistlestop tour of the major ones. We&amp;rsquo;ll also concentrate on an effort started by myself, Richard Clamp, Simon Wistow, and others, called the Perl Email Project, to produce simple, efficient and accurate mail handling modules.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-message-handling-message-handling-span&#34;&gt;&lt;span id=&#34;Message_handling&#34;&gt;Message Handling&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ll begin with those modules that represent an individual message, giving you access to the headers and body, and usually allowing you to modify these.&lt;/p&gt;
+
+&lt;p&gt;The granddaddy of these modules is &lt;a href=&#34;https://metacpan.org/pod/Mail::Internet&#34;&gt;&lt;code&gt;Mail::Internet&lt;/code&gt;&lt;/a&gt;, originally created by Graham Barr and now maintained by Mark Overmeer. This module offers a constructor that takes either an array of lines or a filehandle, reads a message, and returns a &lt;code&gt;Mail::Internet&lt;/code&gt; object representing the message. Throughout these examples, we&amp;rsquo;ll use the variable &lt;code&gt;$rfc2822&lt;/code&gt; to represent a mail message as a string.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $obj = Mail::Internet-&amp;gt;new( [ split /\n/, $rfc2822 ] );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Internet&lt;/code&gt; splits a message into a header object in the &lt;a href=&#34;https://metacpan.org/pod/Mail::Header&#34;&gt;&lt;code&gt;Mail::Header&lt;/code&gt;&lt;/a&gt; class, plus a body. You can get and set individual headers through this object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $subject = $obj-&amp;gt;head-&amp;gt;get(&amp;quot;Subject&amp;quot;);
+    $obj-&amp;gt;head-&amp;gt;replace(&amp;quot;Subject&amp;quot;, &amp;quot;New subject&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reading and editing the body is done through the &lt;code&gt;body&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $old_body = $obj-&amp;gt;body;
+    $obj-&amp;gt;body(&amp;quot;Wasn&#39;t worth reading anyway.&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;ve not said anything about MIME yet. &lt;code&gt;Mail::Internet&lt;/code&gt; is reasonably handy for simple tasks, but it doesn&amp;rsquo;t handle MIME at all. Thankfully, &lt;a href=&#34;https://metacpan.org/pod/MIME::Entity&#34;&gt;&lt;code&gt;MIME::Entity&lt;/code&gt;&lt;/a&gt; is a MIME-aware subclass of &lt;code&gt;Mail::Internet&lt;/code&gt;; it allows you to read individual parts of a MIME message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $num_parts = $obj-&amp;gt;parts;
+    for (0..$num_parts) {
+        my $part = $obj-&amp;gt;parts($_);
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If &lt;code&gt;Mail::Internet&lt;/code&gt; and &lt;code&gt;MIME::Entity&lt;/code&gt; don&amp;rsquo;t cut it for you, you can try Mark Overmeer&amp;rsquo;s own &lt;a href=&#34;https://metacpan.org/pod/Mail::Message&#34;&gt;&lt;code&gt;Mail::Message&lt;/code&gt;&lt;/a&gt;, part of the impressive &lt;a href=&#34;https://metacpan.org/pod/Mail::Box&#34;&gt;&lt;code&gt;Mail::Box&lt;/code&gt;&lt;/a&gt; suite. &lt;code&gt;Mail::Message&lt;/code&gt; is extremely featureful and comprehensive, but that is not always meant as a compliment.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Message&lt;/code&gt; objects are usually constructed by &lt;code&gt;Mail::Box&lt;/code&gt; as part of reading in an email folder, but can also be generated from an email using the &lt;code&gt;read&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj = Mail::Message-&amp;gt;read($rfc2822);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Like &lt;code&gt;Mail::Internet&lt;/code&gt;, messages are split into headers and bodies; unlike &lt;code&gt;Mail::Internet&lt;/code&gt;, the body of a &lt;code&gt;Mail::Message&lt;/code&gt; object is also an object. We read headers like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj-&amp;gt;head-&amp;gt;get(&amp;quot;Subject&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or, for &lt;code&gt;Subject&lt;/code&gt; and other common headers:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj-&amp;gt;subject;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I couldn&amp;rsquo;t find a way to set headers directly, and ended up doing this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj-&amp;gt;head-&amp;gt;delete($header);
+    $obj-&amp;gt;head-&amp;gt;add($header, $_) for @data;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reading the body as a string is only marginally more difficult:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj-&amp;gt;decoded-&amp;gt;string
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;While setting the body is an absolute nightmare&amp;ndash;we have to create a new &lt;code&gt;Mail::Message::Body&lt;/code&gt; object and replace our current one with it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $obj-&amp;gt;body(Mail::Message::Body-&amp;gt;new(data =&amp;gt; [split /\n/, $body]));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Message&lt;/code&gt; may be slow, but it&amp;rsquo;s certainly hard to use. It&amp;rsquo;s also rather complex; the operations we&amp;rsquo;ve looked at so far involved the use of 16 classes (&lt;code&gt;Mail::Address&lt;/code&gt;, &lt;code&gt;Mail::Box::Parser&lt;/code&gt;, &lt;code&gt;Mail::Box::Parser::Perl&lt;/code&gt;, &lt;code&gt;Mail::Message&lt;/code&gt;, &lt;code&gt;Mail::Message::Body&lt;/code&gt;, &lt;code&gt;Mail::Message::Body::File&lt;/code&gt;, &lt;code&gt;Mail::Message::Body::Lines&lt;/code&gt;, &lt;code&gt;Mail::Message::Body::Multipart&lt;/code&gt;, &lt;code&gt;Mail::Message::Body::Nested&lt;/code&gt;, &lt;code&gt;Mail::Message::Construct&lt;/code&gt;, &lt;code&gt;Mail::Message::Field&lt;/code&gt;, &lt;code&gt;Mail::Message::Field::Fast&lt;/code&gt;, &lt;code&gt;Mail::Message::Head&lt;/code&gt;, &lt;code&gt;Mail::Message::Head::Complete&lt;/code&gt;, &lt;code&gt;Mail::Message::Part&lt;/code&gt;, and &lt;code&gt;Mail::Reporter&lt;/code&gt;) and 4400 lines of code. It does have a lot of features, though.&lt;/p&gt;
+
+&lt;p&gt;Foolishly, I thought that email parsing shouldn&amp;rsquo;t be so complex, and so I sat down to write the simplest possible functional mail handling library. The result is &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt;, and its interface looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $obj = Email::Simple-&amp;gt;new($rfc2822);
+    my $subject = $obj-&amp;gt;header(&amp;quot;Subject&amp;quot;);
+    $obj-&amp;gt;header_set(&amp;quot;Subject&amp;quot;, &amp;quot;A new subject&amp;quot;);
+    my $old_body = $obj-&amp;gt;body;
+    $obj-&amp;gt;body_set(&amp;quot;A new body\n&amp;quot;);
+    print $obj-&amp;gt;as_string;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It doesn&amp;rsquo;t do a lot, but it does it simply and efficiently. If you need MIME handling, there&amp;rsquo;s a subclass called &lt;a href=&#34;https://metacpan.org/pod/Email::MIME&#34;&gt;&lt;code&gt;Email::MIME&lt;/code&gt;&lt;/a&gt;, which adds the &lt;code&gt;parts&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;Realistically, the choice of which mail handling library to use ought to be up to you, the end user, but this isn&amp;rsquo;t always true. Auxilliary modules, which mess about with email at a higher level, can ask for the mail to be presented in a particular representation. For instance, until recently, the wonderful &lt;code&gt;Mail::ListDetector&lt;/code&gt; module, which we&amp;rsquo;ll examine later, required mails passed in to it to be &lt;code&gt;Mail::Internet&lt;/code&gt; objects, since this gave it a known API to work with the objects. I don&amp;rsquo;t want to work with &lt;code&gt;Mail::Internet&lt;/code&gt; objects, but I want to use &lt;code&gt;Mail::ListDetector&lt;/code&gt;&amp;rsquo;s functionality. What can I do?&lt;/p&gt;
+
+&lt;p&gt;In order to enable the user to have the choice again, I wrote an abstraction layer across all of the above modules, called &lt;a href=&#34;https://metacpan.org/pod/Email::Abstract&#34;&gt;&lt;code&gt;Email::Abstract&lt;/code&gt;&lt;/a&gt;. Given any of the above objects, we can say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     my $subject = Email::Abstract-&amp;gt;get_header($obj, &amp;quot;Subject&amp;quot;);
+     Email::Abstract-&amp;gt;set_header($obj, &amp;quot;Subject&amp;quot;, &amp;quot;My new subject&amp;quot;);
+     my $body = Email::Abstract-&amp;gt;get_body($obj);
+     Email::Abstract-&amp;gt;set_body($message, &amp;quot;Hello\nTest message\n&amp;quot;);
+     $rfc2822 = Email::Abstract-&amp;gt;as_string($obj);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Email::Abstract&lt;/code&gt; knows how to perform these operations on the major types of mail representation objects. It also abstracts out the process of constructing a message, and allows you to change the interface of a message using the &lt;code&gt;cast&lt;/code&gt; class method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $obj = Email::Abstract-&amp;gt;cast($rfc2822, &amp;quot;Mail::Internet&amp;quot;);
+    my $mm = Email::Abstract-&amp;gt;cast($obj, &amp;quot;Mail::Message&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This allows module authors to write their mail handling libraries in an interface-agnostic way, and I&amp;rsquo;m grateful to Michael Stevens for taking up &lt;code&gt;Email::Abstract&lt;/code&gt; in &lt;code&gt;Mail::ListDetector&lt;/code&gt; so quickly. Now I can pass in &lt;code&gt;Email::Simple&lt;/code&gt; objects to &lt;code&gt;Mail::ListDetector&lt;/code&gt; and it will work fine.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Email::Abstract&lt;/code&gt; also gives us the opportunity to create some benchmarks for all of the above modules. Here was the benchmarking code I used:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Email::Abstract;
+    my $message = do { local $/; &amp;lt;DATA&amp;gt;; };
+    my @classes =
+        qw(Email::MIME Email::Simple MIME::Entity Mail::Internet Mail::Message);
+
+    eval &amp;quot;require $_&amp;quot; or die $@ for @classes;
+
+    use Benchmark;
+    my %h;
+    for my $class (@classes) {
+        $h{$class} = sub {
+            my $obj = Email::Abstract-&amp;gt;cast($message, $class);
+            Email::Abstract-&amp;gt;get_header($obj, &amp;quot;Subject&amp;quot;);
+            Email::Abstract-&amp;gt;get_body($obj);
+            Email::Abstract-&amp;gt;set_header($obj, &amp;quot;Subject&amp;quot;, &amp;quot;New Subject&amp;quot;);
+            Email::Abstract-&amp;gt;set_body($obj, &amp;quot;A completely new body&amp;quot;);
+            Email::Abstract-&amp;gt;as_string($obj);
+        }
+    }
+    timethese(1000, \%h);
+
+    __DATA__
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I put a short email in the &lt;code&gt;DATA&lt;/code&gt; section and ran the same simple operations a thousand times: construct a message, read a header, read the body, set the header, set the body, and return the message as a string.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Benchmark: timing 1000 iterations of Email::MIME, Email::Simple, 
+    MIME::Entity, Mail::Internet, Mail::Message...
+    Email::MIME: 10 wallclock secs ( 7.97 usr +  0.24 sys =  8.21 CPU) 
+        @ 121.80/s (n=1000)
+    Email::Simple:  9 wallclock secs ( 7.49 usr +  0.05 sys =  7.54 CPU) 
+        @ 132.63/s (n=1000)
+    MIME::Entity: 33 wallclock secs (23.76 usr +  0.35 sys = 24.11 CPU) 
+        @ 41.48/s (n=1000)
+    Mail::Internet: 24 wallclock secs (17.34 usr +  0.30 sys = 17.64 CPU) 
+        @ 56.69/s (n=1000)
+    Mail::Message: 20 wallclock secs (17.12 usr +  0.27 sys = 17.39 CPU) 
+        @ 57.50/s (n=1000)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Perl Email Project was a success: &lt;code&gt;Email::MIME&lt;/code&gt; and &lt;code&gt;Email::Simple&lt;/code&gt; were twice as fast as their nearest competitors. However, it should be stressed that they&amp;rsquo;re both very low level; if you&amp;rsquo;re doing anything more complex than the operations we&amp;rsquo;ve seen, you might consider one of the older &lt;code&gt;Mail::&lt;/code&gt; modules.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mailbox-handling-mailbox-handling-span&#34;&gt;&lt;span id=&#34;Mailbox_handling&#34;&gt;Mailbox Handling&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So much for individual messages; let&amp;rsquo;s move on to handling groups of messages, or folders. We&amp;rsquo;ve mentioned &lt;code&gt;Mail::Box&lt;/code&gt; already, and this is truly the king of folder handling, supporting local and remote folders, editing folders, and all sorts of other things besides. To use it, we first need a &lt;code&gt;Mail::Box::Manager&lt;/code&gt;, which is a factory object for creating &lt;code&gt;Mail::Box&lt;/code&gt;es.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Mail::Box::Manager
+    my $mgr = Mail::Box::Manager-&amp;gt;new;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, we need to open the folder using the manager:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $folder = $mgr-&amp;gt;open(folder =&amp;gt; $folder_file);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now we can get at the individual messages as &lt;code&gt;Mail::Message&lt;/code&gt; objects:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for ($folder-&amp;gt;messages) {
+        print $_-&amp;gt;subject,&amp;quot;\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With its more minimalist approach, my favorite mail box manager until recently was &lt;code&gt;Mail::Util&lt;/code&gt;&amp;rsquo;s &lt;code&gt;read_mbox&lt;/code&gt; function, which takes the name of a Unix &lt;code&gt;mbox&lt;/code&gt; file, and returns a list of array references; each reference is the array of lines of a message, suitable for feeding to &lt;code&gt;Mail::Internet-&amp;gt;new&lt;/code&gt; or similar:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (read_mbox($folder_file)) {
+        my $obj = Mail::Internet-&amp;gt;new($_);
+        print $_-&amp;gt;head-&amp;gt;get(&amp;quot;Subject&amp;quot;),&amp;quot;\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These two are both really handy, but there seemed to be room for something in between the simplicity of &lt;code&gt;Mail::Util&lt;/code&gt; and the functionality of &lt;code&gt;Mail::Box&lt;/code&gt;, and so the Email Project struck again with &lt;a href=&#34;https://metacpan.org/pod/Email::Folder&#34;&gt;&lt;code&gt;Email::Folder&lt;/code&gt;&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Email::LocalDelivery&#34;&gt;&lt;code&gt;Email::LocalDelivery&lt;/code&gt;&lt;/a&gt;. &lt;code&gt;Email::Folder&lt;/code&gt; handles mbox and maildir folders, with more types planned, and has a reasonably simple interface:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $folder = Email::Folder-&amp;gt;new($folder_file);
+    for ($folder-&amp;gt;messages) {
+        print $_-&amp;gt;header(&amp;quot;Subject&amp;quot;),&amp;quot;\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default it returns &lt;code&gt;Email::Simple&lt;/code&gt; objects for the messages, but this can be changed by subclassing. For instance, if we want raw RFC2822 strings, we can do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Email::Folder::Raw; use base &#39;Email::Folder&#39;;
+    sub bless_message { my ($self, $rfc2822) = @_; return $rfc2822; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Perhaps in the future, we will change &lt;code&gt;bless_message&lt;/code&gt; to use &lt;code&gt;Email::Abstract-&amp;gt;cast&lt;/code&gt; to make the representation of messages easier to select without necessarily having to subclass.&lt;/p&gt;
+
+&lt;p&gt;The other side of folder handling is writing to a folder, or &amp;ldquo;local delivery&amp;rdquo;. &lt;a href=&#34;https://metacpan.org/pod/Email::LocalDelivery&#34;&gt;&lt;code&gt;Email::LocalDelivery&lt;/code&gt;&lt;/a&gt; was written to assist &lt;code&gt;Email::Filter&lt;/code&gt;, of which more later. The problem is harder than it sounds, as it has to deal with locking, escaping mail bodies, and specific problems due to mailbox and maildir formats. &lt;code&gt;LocalDelivery&lt;/code&gt; hides all of these things beneath a simple interface:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Email::LocalDelivery-&amp;gt;deliver($rfc2822, @mailboxes);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Both &lt;code&gt;Email::LocalDelivery&lt;/code&gt; and &lt;code&gt;Email::Folder&lt;/code&gt; use the &lt;a href=&#34;https://metacpan.org/pod/Email::FolderType&#34;&gt;&lt;code&gt;Email::FolderType&lt;/code&gt;&lt;/a&gt; helper module to determine the type of a folder based on its filename.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-address-handling-address-handling-span&#34;&gt;&lt;span id=&#34;Address_handling&#34;&gt;Address Handling&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;To come down to a lower level of abstraction again, there are a number of modules for handling email addresses. The old favorite is &lt;a href=&#34;https://metacpan.org/pod/Mail::Address&#34;&gt;&lt;code&gt;Mail::Address&lt;/code&gt;&lt;/a&gt;. A mail address appearing in the fields of an email can be made up of several elements: the actual address, a phrase or name, and a comment. For instance:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Example user &amp;lt;example@example.com&amp;gt; (Not a real user)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Address&lt;/code&gt; parses these addresses, separating out the phrase and comments, allowing you to get at the individual components:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    for (Mail::Address-&amp;gt;parse($from_line)) {
+        print $_-&amp;gt;name, &amp;quot;\t&amp;quot;, $_-&amp;gt;address, &amp;quot;\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unfortunately, like many of the mail modules, it tries really hard to be helpful.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my ($addr) = Mail::Address-&amp;gt;parse(&#39;&amp;quot;eBay, Inc.&amp;quot; &amp;lt;support@ebay.com&amp;gt;&#39;);
+    print $addr-&amp;gt;name # Inc. eBay
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which, while better than the &amp;ldquo;Inc Ebay&amp;rdquo; that previous versions would produce, isn&amp;rsquo;t really acceptable. Casey West joined our merry band of renegades and produced &lt;a href=&#34;https://metacpan.org/pod/Email::Address&#34;&gt;&lt;code&gt;Email::Address&lt;/code&gt;&lt;/a&gt;. It has exactly the same interface as &lt;code&gt;Mail::Address&lt;/code&gt;, but it works, and is about twice to three times as fast.&lt;/p&gt;
+
+&lt;p&gt;One thing we often want to do when handling mail addresses is to make sure that they&amp;rsquo;re valid. If, for instance, a user is registering for content at a web site, we need to check that the address they&amp;rsquo;ve given is capable of receiving mail. &lt;a href=&#34;https://metacpan.org/pod/Email::Valid&#34;&gt;&lt;code&gt;Email::Valid&lt;/code&gt;&lt;/a&gt;, the original inhabitant of the &lt;code&gt;Email::&lt;/code&gt; namespace before our bunch of disaffected squatters moved in, does just this. In its most simple use, we can say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if (not Email::Valid-&amp;gt;address(&#39;test@example.com&#39;)) {
+        die &amp;quot;Not a valid address&amp;quot;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can turn on additional checks, such as ensuring there&amp;rsquo;s a valid MX record for the domain, correcting common AOL and Compuserve addressing mistakes, on so on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if (not Email::Valid-&amp;gt;address(-address =&amp;gt; &#39;test@example.com&#39;,
+                                  -mxcheck =&amp;gt; 1)) {
+        die &amp;quot;Not a valid address&amp;quot;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-mail-munging-mail-munging-span&#34;&gt;&lt;span id=&#34;Mail_munging&#34;&gt;Mail Munging&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Once we have our emails, what are we going to do with them? A lot of what I&amp;rsquo;ve been looking at has been textual analysis of email, and there are three modules that particularly help with this.&lt;/p&gt;
+
+&lt;p&gt;This first is &lt;code&gt;Text::Quoted&lt;/code&gt;; it takes the body text of an email message, or any other text really, and tries to figure out which parts of the message are quotations from other messages. It then separates these out into a nested data structure. For instance, if we have&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $message = &amp;lt;&amp;lt;EOF
+    &amp;gt; foo
+    &amp;gt; # Bar
+    &amp;gt; baz
+
+    quux
+    EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then running &lt;code&gt;extract($message)&lt;/code&gt; will return a data structure like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [
+      [
+        { text =&amp;gt; &#39;foo&#39;, quoter =&amp;gt; &#39;&amp;gt;&#39;, raw =&amp;gt; &#39;&amp;gt; foo&#39; },
+        [ 
+            { text =&amp;gt; &#39;Bar&#39;, quoter =&amp;gt; &#39;&amp;gt; #&#39;, raw =&amp;gt; &#39;&amp;gt; # Bar&#39; } 
+        ],
+        { text =&amp;gt; &#39;baz&#39;, quoter =&amp;gt; &#39;&amp;gt;&#39;, raw =&amp;gt; &#39;&amp;gt; baz&#39; }
+      ],
+
+      { empty =&amp;gt; 1 },
+      { text =&amp;gt; &#39;quux&#39;, quoter =&amp;gt; &#39;&#39;, raw =&amp;gt; &#39;quux&#39; }
+    ];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is extremely useful for highlighting different levels of quoting in different colors when displaying a message. A similar concept is &lt;a href=&#34;https://metacpan.org/pod/Text::Original&#34;&gt;&lt;code&gt;Text::Original&lt;/code&gt;&lt;/a&gt;, which looks for the start of original, non-quoted content in an email. It knows about many kinds of attribution lines, so with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $message = &amp;lt;&amp;lt;EOF
+    You wrote:
+    &amp;gt; Why are there so many different mail modules?
+
+    There&#39;s more than one way to do it! Different modules have different
+    focuses, and operate at different levels; some lower, some higher.
+    EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;the &lt;code&gt;first_sentence($message)&lt;/code&gt; would be &lt;code&gt;There&#39;s more than one way to do it!&lt;/code&gt;. The Mariachi mailing list archiver uses this technique to give a &amp;ldquo;prompt&amp;rdquo; for each message in a thread.&lt;/p&gt;
+
+&lt;p&gt;And speaking of threads, the &lt;a href=&#34;https://metacpan.org/pod/Mail::Thread&#34;&gt;&lt;code&gt;Mail::Thread&lt;/code&gt;&lt;/a&gt; module is a Perl implementation of Jamie Zawinski&amp;rsquo;s mail threading algorithm, as used by Mozilla as well as many other mail clients since then. It&amp;rsquo;s also used by Mariachi, and has recently been updated to use &lt;code&gt;Email::Abstract&lt;/code&gt; to handle any kind of mail object you want to throw at it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $threader = Mail::Thread-&amp;gt;new(@mails);
+    $threader-&amp;gt;thread; # Compute threads
+    for ($threader-&amp;gt;rootset) { # Original mails in a thread
+        dump_thread($_);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-mail-filtering-mail-filtering-span&#34;&gt;&lt;span id=&#34;Mail_filtering&#34;&gt;Mail Filtering&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The classic Perl mail filtering tool is &lt;a href=&#34;https://metacpan.org/pod/Mail::Audit&#34;&gt;&lt;code&gt;Mail::Audit&lt;/code&gt;&lt;/a&gt;, and I&amp;rsquo;ve written articles here about using Mail::Audit on its own (&lt;a href=&#34;http://www.perl.com/pub/2001/07/17/mailfiltering.html&#34;&gt;http://www.perl.com/pub/2001/07/17/mailfiltering.html&lt;/a&gt;) and using it in conjunction with &lt;a href=&#34;https://metacpan.org/pod/Mail::SpamAssassin&#34;&gt;&lt;code&gt;Mail::SpamAssassin&lt;/code&gt;&lt;/a&gt; (&lt;a href=&#34;http://www.perl.com/pub/2002/03/06/spam.html&#34;&gt;http://www.perl.com/pub/2002/03/06/spam.html&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ve mentioned &lt;a href=&#34;https://metacpan.org/pod/Mail::ListDetector&#34;&gt;&lt;code&gt;Mail::ListDetector&lt;/code&gt;&lt;/a&gt; a couple of times already, and I use this with &lt;code&gt;Mail::Audit&lt;/code&gt; to do most of the filtering automatically for me. The &lt;code&gt;Mail::Audit::List&lt;/code&gt; plugin uses &lt;code&gt;ListDetector&lt;/code&gt; to look for mailing list headers in a message; these are things like &lt;code&gt;List-Id&lt;/code&gt;, &lt;code&gt;X-Mailman-Version&lt;/code&gt;, and the like, which identify a mail as having come through a mailing list. This means I can filter out all mailing list posts to their own folders, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $list = Mail::ListDetector-&amp;gt;new($obj);
+    if ($list) {
+        my $name = $list-&amp;gt;listname;
+        $item-&amp;gt;accept(&amp;quot;mail/$name.-$date&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, &lt;code&gt;Mail::Audit&lt;/code&gt; itself is getting a little long in the tooth, and so new installations are encouraged to use the Email Project&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Email::Filter&#34;&gt;&lt;code&gt;Email::Filter&lt;/code&gt;&lt;/a&gt; instead; it has the same interface for the most part, although not all of the same features, and it uses the new-fangled &lt;code&gt;Email::Simple&lt;/code&gt; mail representation for speed and cleanliness.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mail-mining-mail-mining-span&#34;&gt;&lt;span id=&#34;Mail_mining&#34;&gt;Mail Mining&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Finally, the most high-level thing I do with email is develop frameworks to automatically categorize, organize, and index mail into a database, and attempt to analyze it for interesting nuggets of information.&lt;/p&gt;
+
+&lt;p&gt;My first module to do this with was &lt;a href=&#34;https://metacpan.org/pod/Mail::Miner&#34;&gt;&lt;code&gt;Mail::Miner&lt;/code&gt;&lt;/a&gt;, which consists of three major parts. The first part takes an email, removes any attachments, and stores the lot in a database. The second looks over the email and runs a set of &amp;ldquo;Recogniser&amp;rdquo; modules on it; these find addresses, phone numbers, keywords and phrases, and so on, and store them in a separate database table. The third part is a command-line tool to query the database for mail and information.&lt;/p&gt;
+
+&lt;p&gt;For instance, if I need to find Tim O&amp;rsquo;Reilly&amp;rsquo;s postal address, I ask the query tool, &lt;code&gt;mm&lt;/code&gt;, to find addresses in emails from him:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; % mm --from &amp;quot;Tim O&amp;quot; --address              
+ Address found in message 1835 from &amp;quot;Tim O&#39;Reilly&amp;quot; &amp;lt;tim@oreilly.com&amp;gt;:
+ Tim O&#39;Reilly @ O&#39;Reilly &amp;amp; Associates, Inc.
+ 1005 Gravenstein Highway North, Sebastopol, CA 95472
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To retrieve the whole email, I&amp;rsquo;d say&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; % mm --id 1835
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And if it originally contained an attachment, we&amp;rsquo;d see something like this as part of the email:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; [ text/xml attachment something.xml detached - use
+   mm --detach 208
+   to recover ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I paste that middle line &lt;code&gt;mm --detach 208&lt;/code&gt; into a shell, and hey presto, &lt;em&gt;something.xml&lt;/em&gt; is written to disk.&lt;/p&gt;
+
+&lt;p&gt;Now &lt;code&gt;Mail::Miner&lt;/code&gt; is all very well, but having the three ideas in one tight package&amp;ndash;filing mail, mining mail, and interfacing to the database&amp;ndash;makes it difficult to develop and extend any one of them. And of course, it uses the old-school &lt;code&gt;Mail::&lt;/code&gt; modules.&lt;/p&gt;
+
+&lt;p&gt;This brings us to our final module on the mail modules tour, and the most recently released: &lt;a href=&#34;https://metacpan.org/pod/Email::Store&#34;&gt;&lt;code&gt;Email::Store&lt;/code&gt;&lt;/a&gt;. This is a framework, based on &lt;a href=&#34;https://metacpan.org/pod/Class::DBI&#34;&gt;&lt;code&gt;Class::DBI&lt;/code&gt;&lt;/a&gt;, for storing email in a database and indexing it in various ways:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   use Email::Store &#39;dbi:SQLite:mail.db&#39;;
+   Email::Store-&amp;gt;setup;
+   Email::Store::Mail-&amp;gt;store($rfc2822);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then later&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   my ($name) = Email::Store::Name-&amp;gt;search( name =&amp;gt; &amp;quot;Simon Cozens&amp;quot; )
+   @mails_from_simon = $name-&amp;gt;addressings( role =&amp;gt; &amp;quot;From&amp;quot; )-&amp;gt;mails;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It can be used to build a mailing list archive tool such as Mariachi, or a data mining setup like &lt;code&gt;Mail::Miner&lt;/code&gt;. It&amp;rsquo;s still very much in development, and makes use of a new idea in module extensibility.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll be bringing more information when we&amp;rsquo;ve written the first mail archiving and searching tool using &lt;code&gt;Email::Store&lt;/code&gt;, which I&amp;rsquo;m going to be doing as a new interface to the Perl mailing lists at &lt;code&gt;perl.org&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;Conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ve looked at the major modules for mail handling on CPAN, and there are many more. I am obviously biased towards those which I wrote, and particularly the Perl Email Project modules in the &lt;code&gt;Email::*&lt;/code&gt; namespace. These modules are specifically designed to be simple, efficient, and correct, but may not always be a good substitute for the more thorough &lt;code&gt;Mail::*&lt;/code&gt; modules, particularly &lt;code&gt;Mail::Box&lt;/code&gt;. However, I hope you&amp;rsquo;re now a little more aware of the diversity of mail handling tools out there, and know where to look next time you need to manipulate email with Perl.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Mail to WAP Gateways</title>
+      <link>http://localhost:1313/pub/2004/02/13/mbox2wap.html/</link>
+      <pubDate>Fri, 13 Feb 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/02/13/mbox2wap.html/</guid>
+      <description>
+
+&lt;p&gt;It&amp;rsquo;s coming up to Valentine&amp;rsquo;s day again, and invariably my thoughts turn back to last year&amp;rsquo;s rather memorable weekend-break to Stockholm, in which I learned two things:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Stockholm makes a great Valentine&amp;rsquo;s destination.&lt;/li&gt;
+&lt;li&gt;My girlfriend of the time was not happy with me cracking out my iBook and checking my email halfway into the break.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The relationship, predictably, didn&amp;rsquo;t last much longer, but it did occur to me that a quick and easy way to check my email when away from my computer would be very useful. One of the items that travels everywhere with me, and has some limited Internet access is my phone &amp;ndash; although admittedly this has only WAP access. WAP access, it seemed, would have to do&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;The tool I ended up building fills &lt;strong&gt;my&lt;/strong&gt; needs very well, but possibly won&amp;rsquo;t be such a great match for others. This article looks at considerations when rendering email for display online, especially when space is very limited.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-overview-of-messages-overview-of-messages-span&#34;&gt;&lt;span id=&#34;Overview_of_messages&#34;&gt;Overview of Messages&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The first challenge is reading the contents of our target mailbox. For this, we turn to the Perl Email Project&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Email::Folder&#34;&gt;&lt;code&gt;Email::Folder&lt;/code&gt;&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Email::Folder;
+
+ my $folder = Email::Folder-&amp;gt;new( &#39;/home/sheriff/mbox&#39; );
+
+ for my $message ( $folder-&amp;gt;messages ) {
+
+        ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Email::Folder&#34;&gt;&lt;code&gt;Email::Folder&lt;/code&gt;&lt;/a&gt;&amp;rsquo;s messages() function returns &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt; objects. For my folder-view, I chose to group messages by date, and use the sender&amp;rsquo;s &amp;ldquo;real name&amp;rdquo; as the subject. Something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 30 Jan 2004
+    Michael Roberts
+  * Paul Makepeace
+    Uri Guttman
+ 29 Jan 2004
+    Kate Pugh
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Extracting header fields from &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt; objects couldn&amp;rsquo;t be simpler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $from = $message-&amp;gt;header(&#39;from&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But people familiar with the various email RFCs will know that since email headers have to use only printable US-ASCII, they&amp;rsquo;re very often encoded: your header field might well look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  =?iso-8859-1?q?Pete=20Sergeant?= &amp;lt;pete@clueball.com&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will not look pretty if you use it literally. Thankfully, &lt;a href=&#34;https://metacpan.org/pod/MIME::WordDecoder&#34;&gt;&lt;code&gt;MIME::WordDecoder&lt;/code&gt;&lt;/a&gt; exports the function &lt;code&gt;unmime&lt;/code&gt; &amp;ndash; rendering the above as &amp;ldquo;Pete Sergeant &amp;lt;pete@clueball.com&amp;gt;.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Getting the date from an email is also somewhat nontrivial &amp;ndash; an example &amp;ldquo;Date&amp;rdquo; header looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Fri, 30 Jan 2004 14:09:51 -0000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that&amp;rsquo;s if you&amp;rsquo;re lucky, and it&amp;rsquo;s well-formed, without starting to think about time zones. If we want to do anything useful with dates, we&amp;rsquo;re going to want the date as an epoch time. Luckily, &lt;a href=&#34;https://metacpan.org/pod/DateTime::Format::Mail&#34;&gt;&lt;code&gt;DateTime::Format::Mail&lt;/code&gt;&lt;/a&gt; steps in, and not only parses our date, but returns a highly useful &lt;a href=&#34;https://metacpan.org/pod/DateTime&#34;&gt;&lt;code&gt;DateTime&lt;/code&gt;&lt;/a&gt; object, allowing us to do all kinds of fun date stuff. To simply reformat the date as Day/Month/Year:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $datetime = DateTime::Format::Mail-&amp;gt;new( loose =&amp;gt; 1 );
+ my $time = $datetime-&amp;gt;parse_datetime( $message-&amp;gt;header(&#39;date&#39;) );
+ my $day_month_year = $time-&amp;gt;dmy;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, we&amp;rsquo;re going to want to know if an email is new or not. Luckily, most MUAs will set/edit an email&amp;rsquo;s status header. Rather than checking if an email is new, we check if it&amp;rsquo;s been read &amp;ndash; denoted by a &lt;code&gt;R&lt;/code&gt; in the status header:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; $new_flag++ if $message-&amp;gt;header(&#39;Status&#39;) !~ m/R/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s put this all together to produce a listing of a folder. We&amp;rsquo;ll use the well-known Schwartzian transform to make the sorting efficient, but unlike the usual practice, we keep the array reference around, as we&amp;rsquo;ll be using the date as well.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use Email::Folder;
+ use MIME::WordDecoder qw( unmime );
+ use DateTime::Format::Mail;
+
+ my $folder = Email::Folder-&amp;gt;new( &#39;/home/sheriff/mbox&#39; );
+ my @to_sort;
+ my $prev_date = &amp;quot;&amp;quot;;
+ for (sort { $a-&amp;gt;[1] cmp $b-&amp;gt;[1]    }
+      map  { [$_, message2dmy($_) ] } 
+      $folder-&amp;gt;messages) {
+     my ($message, $date) = @$_;
+     if ($date ne $prev_date) { print $date, &amp;quot;\n&amp;quot;; $prev_date = $date; }
+     print $message-&amp;gt;header(&#39;Status&#39;) =~ m/R/ ? &amp;quot;   &amp;quot; : &amp;quot; * &amp;quot;;
+     print unmime($message-&amp;gt;header(&#39;from&#39;)), &amp;quot;\n&amp;quot;;
+ }
+
+ sub message2dmy {
+     my $message = shift;
+     my $datetime = DateTime::Format::Mail-&amp;gt;new( loose =&amp;gt; 1 );
+     my $time = $datetime-&amp;gt;parse_datetime( $message-&amp;gt;header(&#39;date&#39;) );
+     my $day_month_year = $time-&amp;gt;dmy;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-displaying-individual-messages-displaying-individual-messages-span&#34;&gt;&lt;span id=&#34;Displaying_individual_messages&#34;&gt;Displaying Individual Messages&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Those are the main challenges of a folder-view. Viewing an individual message presents a different set of challenges.&lt;/p&gt;
+
+&lt;p&gt;First and foremost is the appalling habit people have of sending each other HTML-&amp;ldquo;enriched&amp;rdquo; emails, with all sorts of attachments. If you&amp;rsquo;re trying to read the email on a cell phone over a slow connection, you don&amp;rsquo;t want to be battling with this &amp;ndash; you want a nice plain-text representation of the email. So, &lt;a href=&#34;https://metacpan.org/pod/Email::StripMIME&#34;&gt;&lt;code&gt;Email::StripMIME&lt;/code&gt;&lt;/a&gt; is your friend. Assuming we have an &lt;a href=&#34;https://metacpan.org/pod/Email::Simple&#34;&gt;&lt;code&gt;Email::Simple&lt;/code&gt;&lt;/a&gt; object, we can simply:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $string = $email_simple_object-&amp;gt;as_string();
+ $string = Email::StripMIME::strip_mime( $string );
+ $email_simple_object = Email::Simple-&amp;gt;new( $string );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, if we really wanted to cut down on the amount of content we&amp;rsquo;re receiving, and we&amp;rsquo;re only using this tool to get an overview of our messages, we can cut out quoted text, remnants of the email that the sender was replying to, and so on. &lt;a href=&#34;https://metacpan.org/pod/Text::Original&#34;&gt;&lt;code&gt;Text::Original&lt;/code&gt;&lt;/a&gt; does just this for us, as well as stripping out attribution lines:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; my $body = $email_simple_object-&amp;gt;body();
+ $body = first_lines( $body, 20);
+ $email_simple_object-&amp;gt;body( $body );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The final problem is in creating actual real WML. Sadly, this is nontrivial, and in the past, I&amp;rsquo;ve tended to resort to outputting it by hand. But it doesn&amp;rsquo;t have to be that way &amp;ndash;; &lt;a href=&#34;https://metacpan.org/pod/CGI::WML&#34;&gt;&lt;code&gt;CGI::WML&lt;/code&gt;&lt;/a&gt; just about handles the task for us. &lt;a href=&#34;https://metacpan.org/pod/CGI::WML&#34;&gt;&lt;code&gt;CGI::WML&lt;/code&gt;&lt;/a&gt; is a subclass of &lt;a href=&#34;https://metacpan.org/pod/CGI&#34;&gt;&lt;code&gt;CGI&lt;/code&gt;&lt;/a&gt;, with methods specific to WAP.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;Conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There is no fully working demo at the end of this article. My personal tool works in a way that&amp;rsquo;s probably a little too specific for most people&amp;rsquo;s needs. Hopefully however, it&amp;rsquo;s introduced you to one or more modules you didn&amp;rsquo;t know existed, and given you some inspiration to tinker around with Perl and email-handling.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Siesta Mailing List Manager</title>
+      <link>http://localhost:1313/pub/2004/02/05/siesta.html/</link>
+      <pubDate>Thu, 05 Feb 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/02/05/siesta.html/</guid>
+      <description>
+
+&lt;p&gt;Sometime around July 2002 there was another of the seemingly inevitable and interminable threads about mailing list managers that pop up with regrettable frequency on the London Perl Mongers mailing list.&lt;/p&gt;
+
+&lt;p&gt;It almost certainly contained references to Reply To munging, missing features, and why we, a Perl mailing list, were running off Python software, namely Mailman.&lt;/p&gt;
+
+&lt;p&gt;It was pointed out that even though Mailman has its limitations, it&amp;rsquo;s still arguably the best MLM out there. Of course, rational argument is never something that gets in the way of a good thread and the debate continued until Richard Clamp brought his own unique brand of pragmatism to bear &amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; From: Richard Clamp &amp;lt;richardc@unixbeard.net&amp;gt;
+ To: london.pm
+ Subject: Re: for those who were looking for reason to better mailman in perl
+ Date: Tue Jul 30 00:53:03 2002
+
+ On Mon, Jul 29, 2002 at 03:06:44PM +0100, Nicholas Clark wrote:
+ &amp;gt; Note that I have no intention of actually finding the time to 
+ &amp;gt; actively help anyone re-write mailman (or majordomo) or anything 
+ &amp;gt; else,
+
+ I must say that I&#39;m actively bored of this subject now.  I do, however,
+ have a short proposal, which will hopefully lead to this recurring
+ thread going the fsck away.
+
+ To: Those that care
+ From: Someone who doesn&#39;t
+
+       Go form a sourceforge/savannah project, which will give you
+       suboptimal mailing lists and a CVS repository.
+
+       Let the world know you have done this so they can find you. 
+
+       Write code and argue it out amongst yourselves.
+
+       Let the world know when you get as far as being self-hosting.
+
+ I&#39;m sorry it&#39;s not a catchy 3-step plan, but try it out anyway.
+
+ -- 
+ Richard Clamp &amp;lt;richardc@unixbeard.net&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In response to which, precisely nothing happened. So it goes.&lt;/p&gt;
+
+&lt;p&gt;Until mid-August.&lt;/p&gt;
+
+&lt;p&gt;By some quirk of fate Greg McCarroll, Richard, and I were all simultaneously &amp;lsquo;resting&amp;rsquo; between jobs. Being fun-loving, crazy people we decided that the most constructive use of time was to congregate at Greg&amp;rsquo;s, drink his booze, and watch Kevin Smith films.&lt;/p&gt;
+
+&lt;p&gt;Instead, we wrote a mailing list manager. Well, I say &amp;ldquo;instead&amp;rdquo;, but we managed to do the other stuff too, which explains the Jay-and-Bob-themed test suite.&lt;/p&gt;
+
+&lt;p&gt;By the end of the day we had a whiteboard full of diagrams, a load of code in a CVS repository, a self-hosting mailing list (with hard-coded subscribers list, natch) and a sense of impending hangovers. Then disaster struck. We all got jobs. And Siesta, as we&amp;rsquo;d decided to call our nascent MLM, lay dormant.&lt;/p&gt;
+
+&lt;p&gt;For about 6 months she lay sleeping.&lt;/p&gt;
+
+&lt;p&gt;Then, for whatever reason, in about March the dev team, bolstered by a couple of new member-cum-agitprops, began to churn out the patches again. The project was re-housed from SourceForge to siesta.unixbeard.net &amp;ndash; entailing a move to Subversion along the way.&lt;/p&gt;
+
+&lt;p&gt;The code was cleaned up, ported to &lt;code&gt;Class::DBI&lt;/code&gt; and the &lt;code&gt;Email::*&lt;/code&gt; hierarchy of modules and various &lt;a href=&#34;http://www.ai.mit.edu/lab/gsb/gsb-archive/gsb2000%2D02%2D11.html&#34;&gt;yaks were shaved&lt;/a&gt; along the way, features were added, and a new &lt;code&gt;Template::Toolkit&lt;/code&gt;-based mail archiver (named Mariachi) was written.&lt;/p&gt;
+
+&lt;p&gt;The first release of Siesta went onto CPAN on July 24, just in time for Richard to give his talk at YAPC Europe in Paris &amp;ndash; an event that involved, somewhat inexplicably, several members of the audience drinking a shot of tequila whenever the word &amp;lsquo;Siesta&amp;rsquo; was mentioned and then giving 50 Euros to YAS. Needless to say, much fun was had by all.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-so-why-should-i-use-siesta-so-why-should-i-use-siesta-span&#34;&gt;&lt;span id=&#34;So_why_should_I_use_Siesta?&#34;&gt;So Why Should I Use Siesta?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Good question. Mailman, Majordomo, or a host of other MLMs usually suffice.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, competition is always good and Siesta was designed from the ground up to be easily understandable and easily extensible.&lt;/p&gt;
+
+&lt;p&gt;In short, Siesta will almost certainly be able to do anything you want, although you may have to write the plug-in in to do it.&lt;/p&gt;
+
+&lt;p&gt;Writing something to check whether an incoming email address is valid is a matter of about 10 lines, most of which are boilerplate. A SpamAssassin plug-in would be of similar length. Writing something that required all mails to the list to be PGP-signed and encrypted with the list&amp;rsquo;s public key, and then which signed and encrypted all outgoing mail, would be relatively trivial.&lt;/p&gt;
+
+&lt;p&gt;And with the concept of user preferences you never have to put up with incessant whining about Reply-To munging since the list members can configure it (or any other plug-in you deem fit) however they want.&lt;/p&gt;
+
+&lt;p&gt;Bliss.&lt;/p&gt;
+
+&lt;p&gt;As an example of how customizable Siesta is, Richard Clamp runs a mailing list called Hates-Software for people who, err, hate software.&lt;/p&gt;
+
+&lt;p&gt;Running on subclassed versions of Mariachi (the mailing list archiver) Hates-Software has archives for the whole list and also for every single member so my rants are archived at &lt;a href=&#34;http://muttley.hates-software.com&#34;&gt;http://muttley.hates-software.com/&lt;/a&gt;, but are also part of the seething maelstrom of hate that is &lt;a href=&#34;http://we.hates-software.com/&#34;&gt;http://we.hates-software.com/&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-running-a-list-running-a-list-span&#34;&gt;&lt;span id=&#34;Running_a_list&#34;&gt;Running a List&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There are currently two ways of administering your Siesta installation (not including fiddling around with the DB manually, of course), and these are with the web interface and with the command line tool &lt;em&gt;nacho&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now, to be frank, the web interface sucks at the moment and needs an overhaul, some prettification, and a whole lot of usability work. But it&amp;rsquo;s all open source and written in Template Toolkit, so you can fix it up, skin it however you want, and then send us the patches. Ah, the magic of the free software movement.&lt;/p&gt;
+
+&lt;p&gt;Instead, we&amp;rsquo;ll concentrate on &lt;em&gt;nacho&lt;/em&gt;; it&amp;rsquo;s surprisingly powerful and just a shell prompt away.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;nacho&lt;/em&gt; has full documentation embedded as POD, but the version checked into the repository will also, handily, provide a list of commands by doing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho help
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or the syntax of a specific command by doing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho help &amp;lt;command&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho help set-plugins
+
+  set-plugins list_id queue [ plugin [ plugin... ] ]
+  -
+  Set the list plugins to be the ones specified.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Anyway &amp;hellip; first things first.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-setting-up-the-database-setting-up-the-database-span&#34;&gt;&lt;span id=&#34;Setting_up_the_database&#34;&gt;Setting up the Database&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The first thing you need to do is create a database.&lt;/p&gt;
+
+&lt;p&gt;Fortunately this is easy. Running:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % nacho create-database
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;should do everything for you (providing the config in your siesta.conf is OK).&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-migrating-a-list-from-mailman-migrating-a-list-from-mailman-span&#34;&gt;&lt;span id=&#34;Migrating_a_list_from_Mailman&#34;&gt;Migrating a List from Mailman&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Use the &lt;em&gt;bandito&lt;/em&gt; tool shipped with Siesta to steal the config of your existing Mailman configuration &amp;ndash; given the path to a mailman list config database, it should automatically create a new Siesta list, subscribe any necessary users, set up configs, and generally &amp;ldquo;just work.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;It will even migrate your archives across for you.&lt;/p&gt;
+
+&lt;p&gt;How handy.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-creating-a-list-by-hand-creating-a-list-by-hand-span&#34;&gt;&lt;span id=&#34;Creating_a_list_by_hand&#34;&gt;Creating a List by Hand&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Run this command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho create-list myfirstlist admin@thegestalt.org \
+                     myfirstlist@thegestalt.org \ 
+             myfirstlist-bounce@thegestalt.org
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which will print out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Created the new list &#39;myfirstlist&#39; &amp;lt;myfirstlist@thegestalt.org&amp;gt; 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Paste this into your alias file to activate the list:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  ## myfirstlist mailing list
+  ## created: 06-Sep-2002 nacho (the siesta config tool)
+  myfirstlist:       &amp;quot;/usr/bin/tequila myfirstlist&amp;quot;
+  myfirstlist-sub:   &amp;quot;/usr/bin/tequila myfirstlist sub&amp;quot;
+  myfirstlist-unsub: &amp;quot;/usr/bin/tequila myfirstlist unsub&amp;quot;
+  myfirstlist-admin:  admin@thegestalt.org 
+  myfirstlist-bounce: admin@thegestalt.org
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This prints out the appropriate aliases to put in your &lt;code&gt;/etc/alias&lt;/code&gt; (or equivalent) file. This can be printed out again at anytime by doing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho show-alias myfirstlist
+
+  ## myfirstlist mailing list
+  ## created: 06-Sep-2002 nacho (the siesta config tool)
+  myfirstlist:       &amp;quot;/usr/bin/tequila myfirstlist&amp;quot;
+  myfirstlist-sub:   &amp;quot;/usr/bin/tequila myfirstlist sub&amp;quot;
+  myfirstlist-unsub: &amp;quot;/usr/bin/tequila myfirstlist unsub&amp;quot;
+  myfirstlist-admin:  admin@thegestalt.orb
+  myfirstlist-bounce: admin@thegestalt.orb
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At which point you probably want to add some plug-ins.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho set-plugins myfirstlist post Debounce ListHeaders Send     
+  % nacho set-plugins myfirstlist sub Subscribe
+  % nacho set-plugins myfirstlist unsub UnSubscribe
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This means that for the &lt;code&gt;myfirstlist&lt;/code&gt; list, when it sees a post, it should first remove bounces, then add list headers, then call the &lt;code&gt;Send&lt;/code&gt; plug-in to send it out. Similarly, subscribes and unsubscribes go through the normal &lt;code&gt;Subscribe&lt;/code&gt; and &lt;code&gt;UnSubscribe&lt;/code&gt; plug-ins.&lt;/p&gt;
+
+&lt;p&gt;If you want to find all the lists on the system you just do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho show-lists
+  myfirstlist
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then to look at the information for a list, do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho describe-list myfirstlist
+  owner = 1
+  return_path = myfirstlist-bounce@thegestalt.orb
+  post_address = myfirstlist@thegestalt.orb
+  name = myfirstlist
+  id = 2
+  post plugins : MembersOnly ListHeaders Send 
+  sub plugins: Subscribe
+  unsub plugins: UnSubscribe
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or to modify that information:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho modify-list myfirstlist name somenewname
+  Property &#39;name&#39; set to &#39;somenewname&#39; for list myfirstlist
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;TIP: If you modify the id then what will actually happen is that a new list will be created with that id, but with information exactly the same as the details for the previous list.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-creating-members-creating-members-span&#34;&gt;&lt;span id=&#34;Creating_Members&#34;&gt;Creating Members&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;You can either subscribe members manually by creating them and inserting them using nacho:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho create-member simon@thegestalt.orb
+  Member simon@thegestalt.orb added    
+
+  % nacho add-member myfirstlist simon@thegestalt.orb
+  Member &#39;simon@thegestalt.orb&#39; added to list &#39;myfirstlist&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or, nacho will automatically create members if they don&amp;rsquo;t exist.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho add-member myfirstlist newmember@notexists.orb
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can add multiple people at the same time. Que Conveniente!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho add-member myfirstlist richardc@unibeard.not greg@mccarroll.demon.com
+  Member &#39;richardc@unixbeard.not&#39; added to list &#39;myfirstlist&#39;
+  Member &#39;greg@mccarroll.demon.com&#39; added to list &#39;myfirstlist&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally a person can subscribe by mailing to the:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    myfirstlist-sub@yourdomainhere.orb 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;address, or by going through the web interface.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-managing-members-managing-members-span&#34;&gt;&lt;span id=&#34;Managing_members&#34;&gt;Managing Members&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;You can get a list of every member that&amp;rsquo;s on the system:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho show-members
+  greg@mccarroll.demon.com
+  richardc@unixbeard.not
+  simon@thegestalt.orb
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or just the members subbed to a particular list:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho show-members myfirstlist
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To find out all about a member, use the describe command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho describe-member simon@thegestalt.orb
+
+    email = simon@thegestalt.orb
+    lastbounce =
+    bouncing =
+    password = bar
+    nomail =
+    id = 36
+    Subscribed to : myfirstlist, somerandomlist
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To modify information about that information:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho modify-member simon@thegestalt.orb password foo
+  Property &#39;password&#39; set to &#39;foo&#39; for member simon@thegestalt.org
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Again, just changing the id will copy the member:&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-managing-plugins-managing-plug-ins-span&#34;&gt;&lt;span id=&#34;Managing_Plugins&#34;&gt;Managing Plug-ins&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;You can list all the plug-ins installed on the system:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho show-plugins
+  Archive
+   -
+   save messages to maildirs
+  ...
+  UnSubscribe
+   -
+   A system plugin used for unsubscribing a member to the list.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since plug-ins are &amp;ldquo;just&amp;rdquo; normal Perl modules, you can write your own or download plug-ins other people have written and install them like any other module. Siesta will automatically detect them.&lt;/p&gt;
+
+&lt;p&gt;To set the plug-in order explicity, do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho set-plugins myfirstlist post Debounce SimpleSig SubjectTag Send
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &amp;ldquo;post&amp;rdquo; part is the queue you want these attached to. By default here are three: &amp;ldquo;post,&amp;rdquo; &amp;ldquo;sub,&amp;rdquo; and &amp;ldquo;unsub,&amp;rdquo; but there can be as many as you want. They serve to differentiate the different modes the list might run in. So, for example, you could have a &amp;ldquo;help&amp;rdquo; queue that responds to help requests, or a &amp;ldquo;FAQ&amp;rdquo; queue that tries to answer questions.&lt;/p&gt;
+
+&lt;p&gt;To delete all the plug-ins, just pass an empty list&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho set-plugins myfirstlist post
+  Deleted plugins from siesta-dev
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It should be noted that you probably always want to have the Send plug-in (or a replacement plug-in) as the last plug-in.&lt;/p&gt;
+
+&lt;p&gt;To get more information about a plug-in, you can either:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perldoc Siesta::Plugin::ReplyTo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or &amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho describe-plugin ReplyTo
+  The plugin ReplyTo has the following options :
+  - munge : should we munge the reply-to address of the 
+    message to be the list post address
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To find out what the current config for a list is, just add the list name.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho describe-plugin ReplyTo myfirstlist
+  Preferences for list myfirstlist
+  - munge : 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And to find out a member&amp;rsquo;s config options, add his or her email address:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho describe-plugin ReplyTo myfirstlist simon@thegestalt.orb
+  Personal preferences for member simon@thegestalt.orb on list myfirstlist
+  - munge : 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To modify configuration for any of these:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % $ nacho modify-plugin ReplyTo box munge 0                     
+  Preferences for list box
+  - munge : 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, you can also set a preference on a per-member basis:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho modify-plugin ReplyTo box munge 1 simon@thegestalt.org
+  Personal preferences for member simon@thegestalt.org on list box
+  - munge : 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-removing-members-removing-members-span&#34;&gt;&lt;span id=&#34;Removing_Members&#34;&gt;Removing Members&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Occasionally a member will want to leave (or will need to be pushed) and you&amp;rsquo;ll need to do this by hand. To remove a member from a list just do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho remove-member myfirstlist greg@mccarroll.demon.com
+  Member &#39;greg@mccarroll.demon.com&#39; removed from list &#39;myfirstlist&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-deleting-members-deleting-members-span&#34;&gt;&lt;span id=&#34;Deleting_Members&#34;&gt;Deleting Members&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Deleting members from the system will remove them from all the lists they&amp;rsquo;re subscribed to, and then delete them from the system.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho delete-member richardc@unixbeard.net 
+  Member &#39;richardc@unixbeard.not&#39; deleted.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-handling-deferred-messages-handling-deferred-messages-span&#34;&gt;&lt;span id=&#34;Handling_deferred_messages&#34;&gt;Handling Deferred Messages&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Deferred messages are ones being held for approval, or that contain administrative tasks.&lt;/p&gt;
+
+&lt;p&gt;You can see how many deferred messages there are by doing this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % nacho show-deferred
+
+    Deferred-Id: 1
+    Reason: the hell of it
+    Owner: test@foo
+
+     From: simon@thegestalt.org
+     To: people@somewhere.org
+     Subject: some subject lin
+     Date: Wed, 13 Aug 2003 15:49:30 +0100  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or you can view an individual message by supplying the id:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % nacho show-deferred 1
+    From: simon@thegestalt.org
+    To: people@somewhere.org
+    Subject: some subject line
+    Date: Wed, 13 Aug 2003 15:49:30 +0100  
+
+    Hello people
+
+    Simon
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To resume a message simply do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % nacho resume-deferred 1
+    Successfully resumed message 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Alternatively, to delete a deferred message do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % nacho delete-deferred 1
+    Message deleted from deferral queue
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-deleting-lists-deleting-lists-span&#34;&gt;&lt;span id=&#34;Deleting_Lists&#34;&gt;Deleting Lists&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Similarly deleting a list will unsub all members from that list and then remove it from the system.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % nacho delete-list myfirstlist
+  List &#39;myfirstlist&#39; deleted
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-making-backups-making-backups-span&#34;&gt;&lt;span id=&#34;Making_backups&#34;&gt;Making Backups&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Running the command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % nacho create-backup 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will print a shell script to STDOUT.&lt;/p&gt;
+
+&lt;p&gt;This shell script consists of nacho commands to restore your system to its glorious past should anything go wrong.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % nacho create-backup myfirstlist
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will do the same, but for only one list.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-upgrading-upgrading-span&#34;&gt;&lt;span id=&#34;Upgrading&#34;&gt;Upgrading&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Upgrading is easy &amp;ndash; simply make a backup as described above, install the latest version from CPAN, and then run the nacho-generated script to restore your system. Most of the time, however, unless the database has changed format, even that won&amp;rsquo;t be necessary, and simply installing from CPAN should just be OK.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-writing-a-plugin-writing-a-plug-in-span&#34;&gt;&lt;span id=&#34;Writing_a_plugin&#34;&gt;Writing a Plug-in&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Writing a plug-in for Siesta is easy. Say, for example, we wanted to take any supercited mails to the list and reform them into a less GNUSish format. First off, we start with the standard boilerplate:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Siesta::Plugin::DeSupercite;
+    use strict;
+    use Siesta::Plugin;
+    use base &#39;Siesta::Plugin&#39;;
+    use Siesta;
+
+    sub description {
+        &#39;&#39;;
+    } 
+
+
+    sub process {
+        my $self = shift;
+        my $mail = shift;
+        my $list = $self-&amp;gt;list;
+
+        return 0;
+    };
+
+
+    sub options {
+        +{
+         }
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Add in the existing DeSuperciting module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Text::DeSupercite qw/desupercite/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Fill in the description:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub description {
+        &#39;Strip superciting from emails&#39;;
+    } 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And the options:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub options {
+        +{
+            harsh =&amp;gt;
+            {
+               description =&amp;gt;
+               &#39;should we be draconian about desuperciting?&#39;,
+               type    =&amp;gt; &#39;boolean&#39;,
+               default =&amp;gt; 0,
+            },
+        };
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And finally, fill in the body of the process method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub process {
+        my $self = shift;
+        my $mail = shift;
+        my $list = $self-&amp;gt;list;
+
+        # automatically works out if this is user 
+        # setable or not 
+        my $harsh = $self-&amp;gt;pref( &#39;harsh&#39; );
+
+        # get the body text
+        my $text = desupercite($mail-&amp;gt;body(), $harsh);
+
+        # set it back again
+        $mail-&amp;gt;body_set($text);
+
+        # indicate success
+        return 0;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Et voila&lt;/em&gt;, one plug-in, ready to go. Now all you need to do is package it up and install it in your @INC and it&amp;rsquo;ll get picked up automagically and will be ready to be added to any list on the system.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mariachi-mariachi-span&#34;&gt;&lt;span id=&#34;Mariachi&#34;&gt;Mariachi&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Whilst completely independent of Siesta, our mailing list archiver Mariachi is still entwined with the whole project, if only because it gives us something to noodle around as a distraction from the mailing list manager. As such it deserves at least a quick mention here.&lt;/p&gt;
+
+&lt;p&gt;Apart from being easily subclassable, Mariachi has another couple of nice features. For a start, all the output templates are done in Template Toolkit, making it easy to customize to fit in with the look and feel of your site without having to delve around in the code.&lt;/p&gt;
+
+&lt;p&gt;It also allows you to display mail in a couple of nifty ways. The first is the classic Jwz-style message threading as used in Netscape and Mutt, complete with indentation, which makes following threads much easier. The second is the so-called Lurker view, named after the &lt;a href=&#34;http://lurker.sourceforge.net/&#34;&gt;Lurker application&lt;/a&gt;, which appears to be the first application to use this chronological view of mail.&lt;/p&gt;
+
+&lt;p&gt;These both include the option to extract either the first original sentence or paragraph from a mail, meaning that many threads can be easily skimmed without having to open up individual messages.&lt;/p&gt;
+
+&lt;p&gt;In addition, Richard has already written a module that will generate an SVG of a mail thread in the Arc form described &lt;a href=&#34;http://www.research.ibm.com/remail/&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Perhaps Mariachi&amp;rsquo;s only problem is that because it does not split mail up over arbitrary boundaries (although there&amp;rsquo;s nothing to stop the users from doing this themselves), generating archives from a massive mail box (such as every London.pm mail from the last 5 years) can be slow, even if it is done incrementally.&lt;/p&gt;
+
+&lt;p&gt;However, work is being done to overcome this.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;Conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Although unfinished, we believe that Siesta is already a hugely powerful mailing list manager with almost unrivalled extensibility.&lt;/p&gt;
+
+&lt;p&gt;Breathless superlatives aside, and irrespective of whether it ever gets widely used, it will forever shut up those who whine on mailing lists that there&amp;rsquo;s no good Perl MLM or that they wish there was an MLM that had plug-ins. Perhaps most importantly, you have somewhere to point anybody whoever complains about Reply-To munging, since with Siesta, each user can choose whether or not they want Reply-To munging applied.&lt;/p&gt;
+
+&lt;p&gt;In a more practical sense, while working on Siesta the team has written or patched nearly 20 modules outside the ones distributed with Mariachi and Siesta. So something for everybody.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re interested in getting involved with the project, just install the programs (they should work from your favorite CPAN shell), make notes on anything you find irritating, join the mailing list, and tell us about it. Then start patching, writing plug-ins or, and if you&amp;rsquo;re the kind of person who likes doing web page stuff, fix the web interface. We&amp;rsquo;ll love you forever. And you&amp;rsquo;ll get to drink tequila at Perl conferences like all the cool kids.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;References&#34;&gt;References&lt;/span&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://siesta.unixbeard.net&#34;&gt;The Siesta home page&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://hates-software.com&#34;&gt;Hates-Software&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://london.pm.org/pipermail/london.pm/Week-of-Mon-20020701/011937.html&#34;&gt;*That* thread&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://london.pm.org/pipermail/london.pm/Week-of-Mon-20020729/012366.html&#34;&gt;And *again*&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://simon-cozens.org/draft-articles/email.html&#34;&gt;The philosophy of the Email::* project&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Mail Filtering</title>
+      <link>http://localhost:1313/pub/2002/08/27/filtering.html/</link>
+      <pubDate>Tue, 27 Aug 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/08/27/filtering.html/</guid>
+      <description>
+
+&lt;p&gt;There are many ways to filter your e-mail with Perl. Two of the more popular and interesting ways are to use &lt;code&gt;PerlMx&lt;/code&gt; or &lt;code&gt;Mail::Audit&lt;/code&gt;. I took a long look at both, and this is what I thought of them.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-perlmx-perlmx-span&#34;&gt;&lt;span id=&#34;perlmx&#34;&gt;&lt;code&gt;PerlMx&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; is a server product from ActiveState that uses the milter support in recent versions of sendmail to hook in at almost every stage of the mail-handling process.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; comes with its own copy of Perl, and all the supporting modules it needs - it can&amp;rsquo;t run from a normal Perl, as it needs Perl to be built with various options such as ithreads support and multiplicity. This means you need to install any modules you want to use with &lt;code&gt;PerlMx&lt;/code&gt; twice if you already have them installed somewhere else on your system.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; provides a persistent daemon that processes e-mail for an entire mail-server - it avoids the overhead of starting a Perl process to handle each e-mail by running forever, and by using threads to ensure it can service more than one e-mail at a time.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; ships with two main filters - the Spam and Virus filters. The Virus filtering looks interesting, but ultimately I don&amp;rsquo;t receive that many viruses in e-mail, so I was unable to test it beyond establishing that it didn&amp;rsquo;t mangle my e-mail.&lt;/p&gt;
+
+&lt;p&gt;The Spam filtering in PerlMX is much more interesting - it seems to be based on &lt;a href=&#34;http://www.spamassassin.org/&#34;&gt;Mail::SpamAssassin&lt;/a&gt;, a popular spam filtering module often used with Mail::Audit, procmail, or other ways of processing e-mail.&lt;/p&gt;
+
+&lt;p&gt;In two weeks of testing with &lt;code&gt;PerlMx&lt;/code&gt;, using it to process a copy of all my personal e-mail, I found a lot useful functionality, and a few minor problems.&lt;/p&gt;
+
+&lt;p&gt;The first hassles were setup - I don&amp;rsquo;t normally use sendmail, but &lt;code&gt;PerlMx&lt;/code&gt; requires it for the milter API, so I installed sendmail, set it up, and hooked it into &lt;code&gt;PerlMx&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once you have sendmail setup, and built with milter support (as the default build from Debian Linux I used was), it&amp;rsquo;s easy to add a connection to &lt;code&gt;PerlMx&lt;/code&gt; with one line in your sendmail.mc file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;INPUT_MAIL_FILTER(`C&amp;lt;PerlMx&amp;gt;&#39;, `S=inet:3366@localhost, F=T,
+     T=S:3m;R:3m;E:8m&#39;&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; essentially works out of the box - it asks a number of simple questions when you install and set it up, and assuming you get these right, no further configuration will be required.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;INPUT_MAIL_FILTER&lt;/code&gt; line also sets several key options, including the timeouts for communication between sendmail and &lt;code&gt;PerlMx&lt;/code&gt; - I had to raise these significantly to deal with a problem I found where &lt;code&gt;PerlMx&lt;/code&gt; was taking too much time to process spam (it appear to be doing DNS lookups), sendmail was timing out the connection to &lt;code&gt;PerlMx&lt;/code&gt;, and refusing to accept mail.&lt;/p&gt;
+
+&lt;p&gt;In &lt;code&gt;PerlMx&lt;/code&gt; 2.1, it even ships with its own sendmail install, pre-configured for use with &lt;code&gt;PerlMx&lt;/code&gt;, but you can choose to ignore this and use an existing system sendmail.&lt;/p&gt;
+
+&lt;p&gt;Once you&amp;rsquo;ve done this, suddenly all the mail that goes through your mail-server is spam filtered, and virus checked. Mail that looks likely to be spam, or that contains a virus is stopped and held in a quarantine queue, the rest are sent to the user, possibly with a spam header added to indicate a score representing how likely to be spam they are. The quarantine queue is a systemwide collection of messages which, for one reason or another, weren&amp;rsquo;t appropriate to deliver to the user - this will be normally as they are either suspected to contain viruses or spam.&lt;/p&gt;
+
+&lt;p&gt;If the filters supplied with &lt;code&gt;PerlMx&lt;/code&gt; aren&amp;rsquo;t to your tastes, then it comes supplied with an extension API, and extensive documentation and samples to allow you to write your own.&lt;/p&gt;
+
+&lt;p&gt;While testing &lt;code&gt;PerlMx&lt;/code&gt;, I never managed to bounce or accidentally lose my e-mail - I made many configuration errors, which meant mail wasn&amp;rsquo;t processed and a lot of stuff was somewhat over-enthusiastically marked as spam when it was actually valid. But as far as I can tell, nothing bounced or disappeared into the system - this is pretty impressive, as when configuring most new bits of e-mail I usually manage to delete everything I send to it in the first few attempts, or, worse, make myself look stupid by sending errors back to random people unfortunate enough to be on the same mailing list as me.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mail-audit-mail-audit-span&#34;&gt;&lt;span id=&#34;mail::audit&#34;&gt;&lt;code&gt;Mail::Audit&lt;/code&gt;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Audit&lt;/code&gt; is very different from &lt;code&gt;PerlMx&lt;/code&gt;. For starters, once you&amp;rsquo;ve installed it, by default it doesn&amp;rsquo;t do anything. &lt;code&gt;Mail::Audit&lt;/code&gt; is just a Perl module - it&amp;rsquo;s a powerful tool for implementing mail filters, but mostly you have to write them yourself. &lt;code&gt;PerlMx&lt;/code&gt; ships with spam filtering and virus checking configured by default, &lt;code&gt;Mail::Audit&lt;/code&gt; provides duplicate killing, a mailing list processing module (based on Mail::ListDetector), and a few simple spam filtering options based on Realtime Blackhole Lists or Vipul&amp;rsquo;s Razor.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Audit&lt;/code&gt; is not designed to be used with an entire mail-server in the same way as &lt;code&gt;PerlMx&lt;/code&gt;. Instead, it allows you to easily write little e-mail filter programs that can be triggered from the &lt;em&gt;.forward&lt;/em&gt; file of a particular user. &lt;code&gt;Mail::Audit&lt;/code&gt; can be easily configured and used on a per-user basis, whereas &lt;code&gt;PerlMx&lt;/code&gt; takes over an entire mail-server and is an all-or-nothing choice.&lt;/p&gt;
+
+&lt;p&gt;The default &lt;code&gt;Mail::Audit&lt;/code&gt; configuration starts one Perl process for each mail handled - normally this won&amp;rsquo;t be a problem, but if you&amp;rsquo;re processing large volumes of mail, or have a system which is already at or near capacity, it may be enough to tip the balance and cause performance problems (Translation: Long ago I installed &lt;code&gt;Mail::Audit&lt;/code&gt; on an old, spare machine I was using as a mail-server, received 200 e-mails in less than a minute, and spent quite a while waiting for the system to stop gazing at its navel and start responding to the outside world again). If your mail comes to you via POP3, or can be made to do so (possibly by installing a POP3 daemon if you do not have one already), then a simple script supplied with &lt;code&gt;Mail::Audit&lt;/code&gt; called &lt;em&gt;popread&lt;/em&gt; provides a base you can use to feed articles from a POP3 server into &lt;code&gt;Mail::Audit&lt;/code&gt; in a single Perl process, improving performance. I didn&amp;rsquo;t do this myself, as I wanted to use what appeared to be the &amp;lsquo;recommended&amp;rsquo; approach to &lt;code&gt;Mail::Audit&lt;/code&gt; setup - the one that is, if not actively promoted in the documentation, most strongly suggested by it, of running a &lt;code&gt;Mail::Audit&lt;/code&gt; script from a user&amp;rsquo;s .forward file.&lt;/p&gt;
+
+&lt;p&gt;A popular &lt;code&gt;Mail::Audit&lt;/code&gt; addition is SpamAssassin (the same codebase as &lt;code&gt;PerlMx&lt;/code&gt;&amp;rsquo;s mail processing is loosely based on) - this comes as a &lt;code&gt;Mail::Audit&lt;/code&gt; plugin, among other forms.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Audit&lt;/code&gt; makes it easy to write mail filters that work on a per-user basis, whereas &lt;code&gt;PerlMx&lt;/code&gt; by default applies to all mail processed on a given mailserver.&lt;/p&gt;
+
+&lt;p&gt;If you wanted to install &lt;code&gt;Mail::Audit&lt;/code&gt; systemwide, then many mail-servers (such as exim) provide a way to configure a custom local delivery agent on flexible criteria. For example, &lt;a href=&#34;http://web.archive.org/web/20050323053241/http://bogmog.sourceforge.net/&#34;&gt;this article&lt;/a&gt; (&lt;i&gt;archived site&lt;/i&gt;) provides some documentation on how to do this with exim.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-testing-1-2-3-testing-1-2-3-span&#34;&gt;&lt;span id=&#34;testing... 1... 2... 3...&#34;&gt;Testing &amp;hellip; 1 &amp;hellip; 2 &amp;hellip; 3 &amp;hellip;&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I decided to do an extended comparison of both &lt;code&gt;PerlMx&lt;/code&gt; and &lt;code&gt;Mail::Audit&lt;/code&gt;. As one of the most common applications of mail filtering tools is for spam filtering, I set up recent versions of both the tools on my personal e-mail, by various nefarious means, ran them for a week, and compared the results on two main criteria:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;False positives (legitimate email recognized as spam)&lt;/li&gt;
+&lt;li&gt;False negatives (spam not recognized as spam)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code&gt;Mail::Audit&lt;/code&gt; doesn&amp;rsquo;t come with much spam filtering technology by default, so I decided to add SpamAssassin (&lt;a href=&#34;http://www.spamassassin.org/&#34;&gt;http://www.spamassassin.org/&lt;/a&gt;) to the testing, as it can be used as a &lt;code&gt;Mail::Audit&lt;/code&gt; extension.&lt;/p&gt;
+
+&lt;p&gt;I used procmail to copy all my incoming e-mail to two pop3 mailboxes setup for the purposes of testing - one would contain mail to be processed by &lt;code&gt;Mail::Audit&lt;/code&gt;, the other mail to be processed by &lt;code&gt;PerlMx&lt;/code&gt;&amp;rsquo;s spam filtering. fetchmail was used to pull the mail down into the domain of &lt;code&gt;Mail::Audit&lt;/code&gt; and &lt;code&gt;PerlMx&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once I had &lt;code&gt;Mail::Audit&lt;/code&gt; and SpamAssassin setup, I started feeding mail into the test box with fetchmail, and was reminded that as the &lt;code&gt;Mail::Audit&lt;/code&gt; approach of setting up a perl program to run from a .forward file has &amp;hellip; unpleasant effects if you receive more than a few e-mails in quick succession. As my test mail-server collapsed under the load, I checked the &lt;code&gt;PerlMx&lt;/code&gt; machine, started at roughly the same time, and found that while it was working through the e-mail more slowly, it hadn&amp;rsquo;t put any serious load on the machine.&lt;/p&gt;
+
+&lt;p&gt;Due to a &lt;code&gt;PerlMx&lt;/code&gt; configuration error on my part, of the first 171 messages processed, 10 were quarantined as spam AND delivered to the inbox of my test user. &lt;code&gt;PerlMx&lt;/code&gt; runs by default in &amp;lsquo;training mode&amp;rsquo; when processing spam - in this mode, mail is spamchecked as normal, but even if it is found to be spam and quarantined, it is also delivered to the user.&lt;/p&gt;
+
+&lt;p&gt;I decided to keep track of any mail lost or mislaid during initial setup problems, so I could see what problems could arise from the tools being misconfigured. An important aspect of any software is not only how it behaves when configured right, but how much it punishes you when you get the configuration wrong.&lt;/p&gt;
+
+&lt;p&gt;Waking up the next morning, I found I&amp;rsquo;d bounced several hundred e-mails back to the account from which I was forwarding all the test e-mails, someone of which appeared to have gone back and forth, or found their way into the &lt;code&gt;PerlMx&lt;/code&gt; test mailbox. Most of the problems appeared to be internal errors from within SpamAssassin. My mail-server still hadn&amp;rsquo;t recovered.&lt;/p&gt;
+
+&lt;p&gt;I later found this was because of an compatibility issue with SpamAssassin / &lt;code&gt;Mail::Audit&lt;/code&gt;, and there was a recommended fix in the SpamAssassin FAQ involving the &lt;em&gt;nomime&lt;/em&gt; option to &lt;code&gt;Mail::Audit&lt;/code&gt; (but not, sadly, in the documentation for the Mail::SpamAssassin module itself).&lt;/p&gt;
+
+&lt;p&gt;The SpamAssassin / &lt;code&gt;Mail::Audit&lt;/code&gt; script I ended up using in the end was:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/local/bin/perl -w
+
+  use strict;
+  use C&amp;lt;Mail::Audit&amp;gt;;
+  use Mail::SpamAssassin;
+
+  # create C&amp;lt;Mail::Audit&amp;gt; object, log to /tmp, disable mime processing
+  # for SpamAssassin compatibility, and store mail in ~/emergency_mbox
+  # if processing fails
+  my $mail = C&amp;lt;Mail::Audit&amp;gt;-&amp;gt;new(emergency=&amp;gt;&amp;quot;~/emergency_mbox&amp;quot;,
+                              log =&amp;gt; &#39;/tmp/audit.log&#39;,
+                              loglevel =&amp;gt; 4, nomime =&amp;gt; 1);
+
+  my $spamtest = Mail::SpamAssassin-&amp;gt;new;
+
+  # check mail with SpamAssassin
+  my $status = $spamtest-&amp;gt;check($mail);
+
+  # if it was spam, rewrite to indicate what the problem was, and
+  # store in the file ass-spam in our home directory
+  if ($status-&amp;gt;is_spam) {
+          $status-&amp;gt;rewrite_mail;
+          $mail-&amp;gt;accept(&amp;quot;/home/spam1/ass-spam&amp;quot;);
+  # if if wasn&#39;t spam, accept it as normal mail
+  } else {
+          $mail-&amp;gt;accept;
+  }
+
+  exit 0;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After clearing down all my mail, and losing two days of testing, I started again. It was only the nature of the testing setup that meant the bounce mail went to me and not the original sender. So, at 23:25 on Tuesday, I had another go. This time I knew enough to limit SpamAssassin to receiving messages in batches of five (using fetchmail) - something I could do in testing, but wouldn&amp;rsquo;t be an easy option in most production setups. This meant my test machine could just about cope with delivering mail using SpamAssassin.&lt;/p&gt;
+
+&lt;p&gt;At 10 p.m. Sunday, I declared the testing closed, and examined the accuracy or otherwise of each system.&lt;/p&gt;
+
+&lt;p&gt;During the testing between Aug. 6 and 11, &lt;code&gt;Mail::Audit&lt;/code&gt; marked 16 pieces of e-mail as spam. Seven of these e-mails proved to be false positives - mail that I had actually solicited and would have liked to have received. Six spam emails were accepted into my Inbox. There were 874 e-mails received in all. &lt;code&gt;Mail::Audit&lt;/code&gt; appeared to receive 15 pieces of spam mail in total.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;PerlMx&lt;/code&gt; marked 14 e-mails as spam. Two of these e-mails proved to be false positives - mail that was not spam. Impressively, it received 886 e-mails in the same period that &lt;code&gt;Mail::Audit&lt;/code&gt; received 874 e-mails. I was unable to work out the exact cause of this, although the power-cut in the middle of the testing period will always be a major suspect. Eleven spam messages were incorrectly allowws through into my Inbox. &lt;code&gt;PerlMx&lt;/code&gt; appeared to receive 23 pieces of spam mail in total.&lt;/p&gt;
+
+&lt;p&gt;The sample was small, as all I had was my own personal e-mail to work with, and I get what I&amp;rsquo;m told is surprisingly little spam, but it shows that &lt;code&gt;Mail::Audit&lt;/code&gt; / SpamAssassin seems to decide more mail is spam than &lt;code&gt;PerlMx&lt;/code&gt; does, but is also wrong more of the time. &lt;code&gt;PerlMx&lt;/code&gt; marked slightly less e-mail as spam, and let more spam through, but when it did claim e-mail was spam it was right more of the time.&lt;/p&gt;
+
+&lt;p&gt;These tests would benefit significantly from being re-run during a long period of time on a larger mail-server, but I had neither the time nor the mail-server available.&lt;/p&gt;
+
+&lt;p&gt;Both tools can be extensively configured in terms of what is considered spam, and are likely to need regular updating to ensure they keep up to date with new tricks of the spammers. Here I only considered the behavior with the default configuration of the latest release at the time I ran my tests.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-feature-comparison-feature-comparison-span&#34;&gt;&lt;span id=&#34;feature comparison&#34;&gt;Feature Comparison&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;To help you choose, I&amp;rsquo;ve summarized the basic characteristics of both systems below. Some of the points are quite subjective and are more my impressions of the tools rather than hard facts - these are marked separately.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;PerlMX&lt;/td&gt;
+&lt;td&gt;Mail::Audit&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Scalable&lt;/td&gt;
+&lt;td&gt;Yes - persistent server&lt;/td&gt;
+&lt;td&gt;Maybe - depends on config - obvious default configurations scale poorly&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Ships with wide range of existing filtering functionality&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;Limited range, more available from third-parties&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Target use&lt;/td&gt;
+&lt;td&gt;System-wide mail filtering for mailservers&lt;/td&gt;
+&lt;td&gt;Per-use mail filtering as a replacement for programs like procmail&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Extensible?&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Licensing&lt;/td&gt;
+&lt;td&gt;Commercial&lt;/td&gt;
+&lt;td&gt;Open-source&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Mail Server Compatibility&lt;/td&gt;
+&lt;td&gt;Sendmail&lt;/td&gt;
+&lt;td&gt;Almost any mail server&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Spam filtering&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;Third-party extension&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Virus filtering&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Easy to setup&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;Not so easy, requires custom code&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Efficient and Scalable&lt;/td&gt;
+&lt;td&gt;Very scalable - easily separated from the mailserver, and no noticable performance impact during testing&lt;/td&gt;
+&lt;td&gt;Performance problems during testing in default configuration&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&#34;span-id-conclusions-conclusions-span&#34;&gt;&lt;span id=&#34;conclusions&#34;&gt;Conclusions&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;During testing, &lt;code&gt;PerlMx&lt;/code&gt; was significantly more reliable, both in terms of the amount of mail bounced due to configuration problems (none), and in terms of the load put in the mailserver (minimal) than &lt;code&gt;Mail::Audit&lt;/code&gt;. Although &lt;code&gt;Mail::Audit&lt;/code&gt; appears able to be setup for good performance, the obvious suggested configuration showed extremely poor scalability during testing. Also, as &lt;code&gt;Mail::Audit&lt;/code&gt; requires writing some filtering code, bugs, mostly in this code, resulted in nontrivial quantities of mail being bounced during testing due to code/configuration errors, a problem that simply didn&amp;rsquo;t occur with &lt;code&gt;PerlMx&lt;/code&gt;&amp;rsquo;s more pre-supplied, configuration file based system.&lt;/p&gt;
+
+&lt;p&gt;Both &lt;code&gt;PerlMx&lt;/code&gt; and &lt;code&gt;Mail::Audit&lt;/code&gt; provide good mail filtering solutions using Perl, but are targeted at entirely different markets. &lt;code&gt;PerlMx&lt;/code&gt; is a systemwide solution providing drop-in functionality on mailservers, with Perl extensibility as well, whereas &lt;code&gt;Mail::Audit&lt;/code&gt; is a more low-level tool, mostly focused on use by individuals, designed to let users build their own mail processing tools more easily.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Stopping Spam with SpamAssassin</title>
+      <link>http://localhost:1313/pub/2002/03/06/spam.html/</link>
+      <pubDate>Wed, 06 Mar 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/03/06/spam.html/</guid>
+      <description>
+
+&lt;p&gt;I receive a lot of spam; an absolute massive bucket load of spam. I received more than 100 pieces of spam in the first three days of this month. I receive so much spam that &lt;a href=&#34;http://www.spam.com/&#34;&gt;Hormel Foods&lt;/a&gt; sends trucks to take it away. And I&amp;rsquo;m convinced that things are getting worse. We&amp;rsquo;re all being bombarded with junk mail more than ever these days.&lt;/p&gt;
+
+&lt;p&gt;Well, a couple of days ago, I reached my breaking point, and decided that the &lt;a href=&#34;http://localhost:1313/pub/2001/07/17/mailfiltering.html&#34;&gt;simple mail filtering&lt;/a&gt; I had in place up until now just wasn&amp;rsquo;t up to the job. It was time to call in an assassin.&lt;/p&gt;
+
+&lt;h3 id=&#34;spamassassin&#34;&gt;SpamAssassin&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.spamassassin.org&#34;&gt;SpamAssassin&lt;/a&gt; is a rule-based spam identification tool. It&amp;rsquo;s written in Perl, and there are several ways of using it: You can call a client program, &lt;code&gt;spamassassin&lt;/code&gt;, and have it determine whether a given message is likely to be spam; you can do essentially the same thing but use a client/server approach so that your client isn&amp;rsquo;t always loading and parsing the rules each time mail comes; or, finally, you can use a Perl module interface to filter spam from a Perl program.&lt;/p&gt;
+
+&lt;p&gt;SpamAssassin is extremely configurable; you can select which rules you want to use, change the way the rules contribute to a piece of mail&amp;rsquo;s &amp;ldquo;spam score,&amp;rdquo; and add your own rules. We&amp;rsquo;ll look at some of these features later in the article. First, how do we get SpamAssassin installed and start using it?&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re using Debian Linux or one of the BSDs, then this couldn&amp;rsquo;t be easier: just install the appropriate package using &lt;code&gt;apt&lt;/code&gt; or the ports tree respectively. (The BSD port is called &lt;code&gt;p5-Mail-SpamAssassin&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;Those less fortunate will have to &lt;a href=&#34;http://www.spamassassin.org/released/Mail-SpamAssassin-2.11.tar.gz&#34;&gt;download&lt;/a&gt; the latest version of SpamAssassin, and install it themselves.&lt;/p&gt;
+
+&lt;h3 id=&#34;vipul-s-razor&#34;&gt;Vipul&amp;rsquo;s Razor&lt;/h3&gt;
+
+&lt;p&gt;SpamAssassin uses a variety of ways for testing whether an e-mail is spam, ranging from simple textual checks on the headers or body and detecting missing or misleading headers to network-based checks such as &lt;a href=&#34;http://www.orbz.org&#34;&gt;relay blackhole lists&lt;/a&gt; and an interesting distributed system called &lt;a href=&#34;http://razor.sourceforge.net/&#34;&gt;Vipul&amp;rsquo;s Razor&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Vipul&amp;rsquo;s Razor takes advantage of the fact that spam is, by its nature, distributed in bulk. Hence, a lot of the spam that you see, I&amp;rsquo;m also going to see at some point. If there were a big clearing-house where you could report spam and I could see if my incoming mail matches what you&amp;rsquo;ve already reported, then I could have a guaranteed way of determining whether a given mail is spam. Vipul&amp;rsquo;s Razor is that clearing-house.&lt;/p&gt;
+
+&lt;p&gt;Why is it a Razor? Because it&amp;rsquo;s a collaborative system, its strength is directly derived from the quality of its database, which comes back to the way it&amp;rsquo;s used by the likes of you and me. If end-users report lots of real spam, the Razor gets better; if the database gets &amp;ldquo;poisoned&amp;rdquo; by lots of false or misleading reports, then the efficiency of the whole system drops.&lt;/p&gt;
+
+&lt;p&gt;Just like any other spam detection mechanism, Razor isn&amp;rsquo;t perfect. There are two points particularly worth noting. First, while it tries to completely avoid false positives (saying something&amp;rsquo;s spam when it isn&amp;rsquo;t) by requiring that spam be reported, it doesn&amp;rsquo;t do anything about false negatives (saying something&amp;rsquo;s not spam when it is) because it only knows about the mail in its database.&lt;/p&gt;
+
+&lt;p&gt;Second, spammers, like all other primitive organisms, are constantly evolving. Vipul&amp;rsquo;s Razor only works for spam that is delivered in bulk without modification. Spam that is &amp;ldquo;personalized&amp;rdquo; by the addition of random spaces, letters or the name of the recipient, will produce a different signature that won&amp;rsquo;t match similar spam messages in the Razor database.&lt;/p&gt;
+
+&lt;p&gt;Nevertheless, the Razor is an excellent addition to the spam fighter&amp;rsquo;s arsenal, since when it marks something as spam, you can be almost positive it&amp;rsquo;s correct. And just like SpamAssassin, it&amp;rsquo;s all pure Perl. &lt;code&gt;Mail::Audit&lt;/code&gt; has long supported a Razor plugin, but now we can move to calling Razor as part of a more comprehensive mail filtering system based on SpamAssasin and &lt;code&gt;Mail::Audit&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Installing Vipul&amp;rsquo;s Razor is similar to installing SpamAssassin. Debian and BSD users have packages called &amp;ldquo;razor&amp;rdquo; and &amp;ldquo;razor-clients,&amp;rdquo; respectively; and the rest of the world can download and install from the &lt;a href=&#34;http://razor.sourceforge.net&#34;&gt;home page&lt;/a&gt;. SpamAssassin will detect whether Razor is available and, by default, use it if so.&lt;/p&gt;
+
+&lt;h3 id=&#34;assassinating-spam-with-mail-audit-the-easy-way&#34;&gt;Assassinating Spam With Mail::Audit : The Easy Way&lt;/h3&gt;
+
+&lt;p&gt;So this is the part you&amp;rsquo;ve all been waiting for. How do we use these things to trap spam? For those of you who aren&amp;rsquo;t familiar with &lt;code&gt;Mail::Audit&lt;/code&gt;, the idea is simple: just like with &lt;code&gt;procmail&lt;/code&gt;, you write recipes that determine what happens to your mail. However, in the case of &lt;code&gt;Mail::Audit&lt;/code&gt;, you specify the recipe in Perl. For instance, here&amp;rsquo;s a recipe to move all mail sent to &lt;code&gt;perl5-porters@perl.org&lt;/code&gt; to another folder:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Mail::Audit;
+    my $mail = Mail::Audit-&amp;gt;new();
+    if ($mail-&amp;gt;from =~ /perl5-porters\@perl.org/) {
+        $mail-&amp;gt;accept(&amp;quot;p5p&amp;quot;);
+    }
+    $mail-&amp;gt;accept();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For more details on how to construct mail filters with &lt;code&gt;Mail::Audit&lt;/code&gt;, see my &lt;a href=&#34;http://localhost:1313/pub/2001/07/17/mailfiltering.html&#34;&gt;previous article&lt;/a&gt;.
+Plugging SpamAssassin into your filters couldn&amp;rsquo;t be simpler. First of all, you absolutely need the latest version of &lt;a href=&#34;https://metacpan.org/pod/Mail::Audit&#34;&gt;Mail::Audit&lt;/a&gt;. Nothing earlier than 2.1 will do! Now write a filter like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Mail::Audit;
+    use Mail::SpamAssassin;
+    my $mail = Mail::Audit-&amp;gt;new();
+
+    ... the rest of your rules here ...
+
+    my $spamtest = Mail::SpamAssassin-&amp;gt;new();
+    my $status = $spamtest-&amp;gt;check($mail);
+
+    if ($status-&amp;gt;is_spam ()) {
+        $status-&amp;gt;rewrite_mail() };
+        $mail-&amp;gt;accept(&amp;quot;spam&amp;quot;);
+    }
+    $mail-&amp;gt;accept();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you might be able to guess, the important thing here is the calls to &lt;code&gt;check&lt;/code&gt; and &lt;code&gt;is_spam&lt;/code&gt;. &lt;code&gt;check&lt;/code&gt; produces a &amp;ldquo;status object&amp;rdquo; that we can query and use to manipulate the e-mail. &lt;code&gt;is_spam&lt;/code&gt; tells us whether the mail has exceeded the number of &amp;ldquo;spam points&amp;rdquo; required to flag an e-mail as spam.
+The &lt;code&gt;rewrite_mail&lt;/code&gt; method adds some headers and rewrites the subject line to include the distinctive string &amp;ldquo;*****SPAM******&amp;rdquo;. The additional headers explain why the e-mail was flagged as spam. For instance:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;X-Spam-Status: Yes, hits=6.1 required=5.0
+tests=SUBJ_HAS_Q_MARK,REPLY_TO_EMPTY,SUBJ_ENDS_IN_Q_MARK version=2.1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This message had a question mark in the subject, an empty reply-to, and the subject ended in a question mark. The mail wasn&amp;rsquo;t actually spam, but this goes to prove that the technique isn&amp;rsquo;t perfect. Nevertheless, since installing the spam filter, I&amp;rsquo;ve only seen about 10 false positives, and zero false negatives. I&amp;rsquo;m happy enough with this solution.
+One important point to remember, however, is where in the course of your filtering you should call SpamAssassin&amp;rsquo;s checks. For instance, you want to do so after your mailing list filtering, because mail sent to mailing lists may have munged headers that might confuse SpamAssassin. However, this means that spam sent to mailing lists might slip through the net. Experiment, and find the best solution for your own e-mail patterns.&lt;/p&gt;
+
+&lt;h3 id=&#34;assassinating-spam-without-mail-audit&#34;&gt;Assassinating Spam Without Mail::Audit&lt;/h3&gt;
+
+&lt;p&gt;Of course, there are times when it might not be suitable to use &lt;code&gt;Mail::Audit&lt;/code&gt; or you may not want to. Since SpamAssassin is provided as a command line tool as well as a set of Perl modules, it&amp;rsquo;s easy enough to integrate it in whatever mail filtering solution you use.&lt;/p&gt;
+
+&lt;p&gt;For instance, here&amp;rsquo;s a procmail recipe that calls out to &lt;code&gt;spamassassin&lt;/code&gt; to filter out spam:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;:0fw
+| spamassassin -P
+
+:0:
+* ^X-Spam-Status: Yes
+spambox
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For the speed-conscious, you can run the &lt;code&gt;spamd&lt;/code&gt; daemon and replace calls to &lt;code&gt;spamassassin&lt;/code&gt; with &lt;code&gt;spamc&lt;/code&gt;; be aware that this is a TCP/IP daemon that you may want to firewall from the rest of the world.
+Another approach is to call &lt;code&gt;spamassassin&lt;/code&gt; in your mail transport agent, meaning that spam is filtered out before it even attempts to be delivered to you. There&amp;rsquo;s a Sendmail &lt;a href=&#34;http://savannah.gnu.org/projects/spamass-milt/&#34;&gt;milter&lt;/a&gt; library available that allows you to use SpamAssassin, and similar tricks for Exim and other MTAs are available.&lt;/p&gt;
+
+&lt;h3 id=&#34;assassinating-spam-with-mail-audit-more-complex-operations&#34;&gt;Assassinating Spam With Mail::Audit : More Complex Operations&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;Mail::SpamAssassin&lt;/code&gt; module has many other methods you can use to manipulate e-mail. For instance, if you&amp;rsquo;ve identified something as definitely being spam, then you can use&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $spamtest-&amp;gt;report_as_spam($mail);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to report it to Vipul&amp;rsquo;s Razor. (Take note of this: As we&amp;rsquo;ve mentioned above, the efficiency of the Razor database comes from the fact that e-mails in it are confirmed as spam by a human. Adding false positives to the database would degrade its usefulness for everyone. Only submit mail that you&amp;rsquo;ve confirmed personally.)
+If you&amp;rsquo;re finding that mail checking is taking too long because SpamAssassin is having to contact the various network-based blacklists and databases, then you can instruct it to only perform &amp;ldquo;local&amp;rdquo; checking:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $spamtest = Mail::SpamAssassin-&amp;gt;new({local_tests_only =&amp;gt; 1});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is a wealth of other options available. See the &lt;code&gt;Mail::SpamAssassin&lt;/code&gt; documentation for more details, and happy assassinating!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>My Life With Spam: Part 3</title>
+      <link>http://localhost:1313/pub/2000/03/spam3.html/</link>
+      <pubDate>Wed, 15 Mar 2000 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2000/03/spam3.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-how-i-caught-the-spam-and-what-i-how-i-caught-the-spam-and-what-i-did-with-it-when-i-caught-it-span&#34;&gt;&lt;span id=&#34;How_I_Caught_the_Spam_and_What_I&#34;&gt;How I Caught the Spam and What I Did With it When I Caught it&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This article is the third in a series; you may want to read &lt;a href=&#34;http://www.plover.com/~mjd/perl/lp/Spam.html&#34;&gt;Part 1&lt;/a&gt; and &lt;a href=&#34;http://localhost:1313/pub/2000/02/spamfilter.html&#34;&gt;Part 2&lt;/a&gt; if you haven&amp;rsquo;t yet. Here&amp;rsquo;s a short summary to refresh your memory:&lt;/p&gt;
+
+&lt;p&gt;I get a lot of spam mail, and I don&amp;rsquo;t like that. I used to get upset every time I read my mail and had to throw out a bunch of spam, so I decided to put some effort into writing a program that would filter my email and discard spam automatically. Then my blood pressure would stay low.&lt;/p&gt;
+
+&lt;p&gt;I decided that it was most important that nothing be thrown away for good, because I knew that no filter was perfect, and I was afraid that important business mail from a client might be silently discarded and I would lose my job. I also decided I wasn&amp;rsquo;t smart enough to filter on the actual content of messages&amp;mdash;the touchstone example is that if someone sends me a letter &lt;em&gt;complaining&lt;/em&gt; about spam, and they say ``Gosh, these Green Card Lottery messages are driving me crazy!&amp;rdquo; I don&amp;rsquo;t want to reject the message just because it mentions green card lotteries. I couldn&amp;rsquo;t figure out how to avoid that, so I resolved that I would filter on header lines only.&lt;/p&gt;
+
+&lt;p&gt;My main strategy is to maintain a blacklist of `bad domains&amp;rsquo; that send a lot of spam, such as &lt;code&gt;eastmail.com&lt;/code&gt;. Mail from these domains is presumed to be spam. Mail from anyone I don&amp;rsquo;t know in one of these domains is returned to the sender, with an apology, requesting them to re-send the message to a different address. Mail to that address is forwarded directly into my mailbox, and also into a program that adds their `From&amp;rsquo; address to the list of `people I know&amp;rsquo;, so that next time they send me mail, it gets through the filter. The `people I know&amp;rsquo; list is called a `whitelist&amp;rsquo;, and it&amp;rsquo;s just a DBM file. The code is very simple. After reading the message and parsing the header, as I described in Part 1, I look to see if the subject contains a secret password. If so, I add the message senders to my whitelist. Senders can also get on the whitelist by sending a message to a special address; this address invokes the program with a command-line argument that automatically enables whitelisting. The code looks something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        if ($ARGV{Mode} eq &#39;Whitelist&#39;
+         || $H{Subject} =~ /$PASSWORD/) {
+          foreach $s (senders()) {
+            $db{lc $s} = time;
+          }
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-drawbacks-of-this-approach-drawbacks-of-this-approach-span&#34;&gt;&lt;span id=&#34;Drawbacks_of_This_Approach&#34;&gt;Drawbacks of This Approach&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;People occasionally ask what would happen if the spammers added the special whitelisting address to their mailing lists. This has never happened, but if they did, I would deal with it easily enough; I&amp;rsquo;d just change the address. Nobody ever needs to send more than one message to the whitelisting address, because once you&amp;rsquo;re on the whitelist, you&amp;rsquo;re on forever. So I wouldn&amp;rsquo;t be inconveniencing anyone by changing this address.&lt;/p&gt;
+
+&lt;p&gt;Of course, in the meantime, the spammer is still on the whitelist, and even if they don&amp;rsquo;t add the whitelist address to their address list, they might get the apology back in the mail and just add themselves to the whitelist. This has only happened a few times since I first started in late 1996&amp;mdash;most spammers don&amp;rsquo;t provide valid return addresses, and those that do don&amp;rsquo;t read the replies to their mail.&lt;/p&gt;
+
+&lt;p&gt;For the couple of dedicated spammers who &lt;em&gt;did&lt;/em&gt; try to add themselves to my whitelist, I have a special super-blacklist called the `losers list&amp;rsquo;. The filter rejects mail from losers no matter what address it comes to. It returns the message to the sender, with a note that says&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        Hello.  I am an automatic reply.
+
+        Your message is not welcome at this address.
+        The recipient is not interested in hearing what
+        you have to say.  Your mail being returned unread.
+
+        Please do not send mail to this address in the future.
+
+                Sincerely,
+
+                The answering machine.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This has a side benefit: If I get really sick of someone I can add them to my loser list even if they&amp;rsquo;re not a spammer. It would probably be more mature to just have the filter throw away the message, rather than returning a note that says `I am ingoring you&amp;rsquo;, but I&amp;rsquo;m a spiteful guy.&lt;/p&gt;
+
+&lt;p&gt;So the logic in the filter program looks something like this:&lt;/p&gt;
+
+&lt;p&gt;if the message is from a loser&lt;br /&gt;
+send it back with an `I am ignoring you&amp;rsquo; note&lt;/p&gt;
+
+&lt;p&gt;else if the message is from someone on the whitelist&lt;br /&gt;
+accept it&lt;/p&gt;
+
+&lt;p&gt;else if the message is from someone in a blacklisted domain&lt;br /&gt;
+send it back with instructions about how to get whitelisted&lt;/p&gt;
+
+&lt;p&gt;else&lt;br /&gt;
+accept it&lt;/p&gt;
+
+&lt;p&gt;The first two tests, for loserhood or whitelisting, are fast. The filter program keeps one big DBM file for both lists. The keys are `From:&amp;rsquo; addresses, and the value is &lt;code&gt;loser&lt;/code&gt; if the user is a loser, and the date of whitelisting if they user is on the whitelist. I keep the dates as an ASCII-formatted number of seconds since 1970, so the actual code looks something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        if ($DB{$from} eq &#39;loser&#39;) {
+          # they are a loser; reject mail
+        } elsif ($DB{$from} &amp;gt; 0) {
+          # they are on the whitelist; accept
+        } elsif (domain_is_bad()) {
+          # reject
+        } else { 
+          # accept
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;domain_is_bad()&lt;/code&gt; takes longer, because it does many pattern matches. I discussed it in &lt;a href=&#34;http://localhost:1313/pub/2000/02/spamfilter.html&#34;&gt;Part 2.&lt;/a&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-a-few-more-heuristics-a-few-more-heuristics-span&#34;&gt;&lt;span id=&#34;A_Few_More_Heuristics&#34;&gt;A Few More Heuristics&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;Checking the &lt;code&gt;From:&lt;/code&gt;, &lt;code&gt;Reply-To:&lt;/code&gt;, and &lt;code&gt;Received:&lt;/code&gt; lines for the presence of domains that are `bad&amp;rsquo; is the main part of the program. But there are a few extra miscellaneous rules I&amp;rsquo;ve put in that have worked really well. The function &lt;code&gt;misc_bad_header&lt;/code&gt; checks these rules, returning true if it sees something bad, and false otherwise. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  return &#39;Addressed To: &amp;quot;you&amp;quot; or &amp;quot;friend&amp;quot;&#39; 
+    if $H{To} =~ /(you|friend)/i;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This line looks at the &lt;code&gt;To:&lt;/code&gt; line; if it&amp;rsquo;s addressed to &lt;code&gt;you&lt;/code&gt; or to &lt;code&gt;friend&lt;/code&gt;, it&amp;rsquo;s bad. &lt;code&gt;Friend@public.com&lt;/code&gt; was particularly common in Spam for a while. The string returned by &lt;code&gt;misc_bad_header&lt;/code&gt; is eventually entered in the log file as the reason for rejection.&lt;/p&gt;
+
+&lt;p&gt;At the end of the previous article, I asked what was wrong with the following &lt;code&gt;Received:&lt;/code&gt; line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        Received: from login_2961.sayme2.net (mail.sayme2.net[103.12.210.92])
+          by sayme2.net (8.8.5/8.7.3) with SMTP id XAA02040
+          for creditc@aoI.net;  Thu, 28 August 1997 15:51:23 -0700 (EDT)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;People found all sorts of things wrong that hadn&amp;rsquo;t occurred to me! For example, underscores are not allowed in domain names, so the name &lt;code&gt;login_2961.sayme2.net&lt;/code&gt; is illegal. However, many hosts do have illegal characters in their names, so this is probably not a good reason to reject the message.&lt;/p&gt;
+
+&lt;p&gt;Some people pointed out that the &lt;code&gt;Received:&lt;/code&gt; line contains the dubious host name &lt;code&gt;aoI.net&lt;/code&gt;, perhaps in hopes of fooling me into thinking that it actually said &lt;code&gt;aol.net&lt;/code&gt;. Of course, they don&amp;rsquo;t look similar to the computer at all.&lt;/p&gt;
+
+&lt;p&gt;Jan-Pieter Cornet pointed out that the date is in the wrong format: It&amp;rsquo;s illegal to spell out &lt;code&gt;August&lt;/code&gt;. It would be interesting to correlate the incidence of this sort of error with the incidence of Spam, but I haven&amp;rsquo;t done the analysis.&lt;/p&gt;
+
+&lt;p&gt;For me, the really interesting thing about this line is the time zone. &lt;code&gt;EDT&lt;/code&gt; usually stands for `Eastern Daylight Time&amp;rsquo;, and the -0700 means that it&amp;rsquo;s the time zone seven hours behind Universal Coordinated Time. Guess what? EDT is &lt;em&gt;four&lt;/em&gt; hours behind UTC, not seven. Similarly, &lt;code&gt;EST&lt;/code&gt; is `Eastern Standard Time&amp;rsquo;, which is -0500. When messages like this started to show up, I added these lines to &lt;code&gt;misc_bad_header()&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  return &#39;Mangled time zone&#39; if $H{Received} =~ /-0600 \(EST\)/
+           || $H{Received} =~ /-0[57]00 \(EDT\)/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I don&amp;rsquo;t know what caused the errors in the first place, but for a long time they were extremely reliable spam detectors. Neither one has come by in almost a year though, which is a shame; I miss them.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-yet-more-heuristics-yet-more-heuristics-span&#34;&gt;&lt;span id=&#34;Yet_More_Heuristics&#34;&gt;Yet More Heuristics&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;Here are some good ones:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          return &#39;X-PMFLAGS header&#39; if exists $H{&#39;X-PMFLAGS&#39;};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I don&amp;rsquo;t know what an &lt;code&gt;X-PMFLAGS&lt;/code&gt; line is, but it only seems to appear in spam.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          return &#39;Message was handled by bulk.mail&#39; 
+            if $H{Received} =~ /bulk.mail/i ;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s a bulk mailing program called &lt;code&gt;bulk_mailer&lt;/code&gt; that identifies itself in the &lt;code&gt;Received:&lt;/code&gt; line.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          return &#39;Subject contains &amp;quot;ad&amp;quot;/&amp;quot;adv&amp;quot;&#39;
+            if $H{Subject} =~ /\badv?\b/i;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some spammers actually put a string like &lt;code&gt;ADV:&lt;/code&gt; into the subject line of their message. Of course, the law of evolution by natural selection says that this trait will be selected against, and the next generation of spammers won&amp;rsquo;t do it as much. In the meantime, it works well.&lt;/p&gt;
+
+&lt;p&gt;The next one is obvious:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          return &#39;Subject: line contains $$$ &#39;
+            if $H{Subject} =~ /\${3}/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next one isn&amp;rsquo;t so obvious:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          return &#39;Username is all digits&#39;
+            if $H{From} =~ /^\d+\@/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You&amp;rsquo;d be surprised at how often this comes up. Spammers seem to be moving away from it, though; now I&amp;rsquo;m more likely to get spam mail from an address like &lt;code&gt;23gfgd4@iperbole.bologna.it&lt;/code&gt;. I&amp;rsquo;d like to add a heuristic to throw away messages from unlikely-sounding usernames, but I don&amp;rsquo;t feel confident that I will be able to identify them reliably.&lt;/p&gt;
+
+&lt;p&gt;Finally, here&amp;rsquo;s a big heuristic that works well: Make a list of `bad&amp;rsquo; words, and reject any message that includes any of the `bad&amp;rsquo; words in any of the X-headers:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          my $pat = join &#39;|&#39;, @bad_words;
+          foreach $h (keys %H) {
+            next unless $h =~ /^X-/;
+            return &amp;quot;Header `$h&#39; contains bad word $1&amp;quot;
+              if $H{$h} =~ /($pat)/io;
+          }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What words are `bad&amp;rsquo;? Oh, the usual naughtiness. `Cyberpromo&amp;rsquo; heads the list. (Am I allowed to say that on a public web site?) `stealth&amp;rsquo; is a good one.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s a trick here that you might not have seen before. You have a bunch of patterns, in this case the items in &lt;code&gt;@bad_words&lt;/code&gt;, and a bunch of strings, in this case the values of &lt;code&gt;%H&lt;/code&gt;, and you want to see if any of the strings match any of the patterns. The obvious technique is to use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        foreach $string (values %H) { 
+          foreach $pattern (@bad_words) {
+            if ($string =~ /$pattern/) {
+              return &amp;quot;String $string matches pattern $pattern&amp;quot;
+            }
+          }
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a mistake. Why? Because a regex ie like a little computer program: It must to be compiled, and then it can be executed and given an input, which is the string that you want to match against it. Compiling a regex is relatively slow, but you only need to do it once, and then you can give it many strings and see if any of them match, without recompiling.&lt;/p&gt;
+
+&lt;p&gt;Perl normally compiles your regexes at the same time as it compiles the rest of your program. But if the regexes change at run time, it can&amp;rsquo;t do that. Instead, it compiles each one just as it is about to be used. If there are 42 strings in the string list, each regex gets compiled 42 times.&lt;/p&gt;
+
+&lt;p&gt;Just reversing the order of the &lt;code&gt;foreach&lt;/code&gt; loops speeds this up by a factor of 18, because each pattern is compiled only once, and then used for all the strings:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        foreach $pattern (@bad_words) {
+          foreach $string (values %H) { 
+            if ($string =~ /$pattern/) {
+              return &amp;quot;String $string matches pattern $pattern&amp;quot;
+            }
+          }
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(I ran a simple test with 16 strings and nine patterns. If there were more patterns, the speedup would be greater.)&lt;/p&gt;
+
+&lt;p&gt;If &lt;code&gt;misc_bad_header()&lt;/code&gt; is called only once, then compiling each pattern once is the best you can do. But if the loop just above is run twice, then all the patterns have to be compiled again the second time around; this is wasteful.&lt;/p&gt;
+
+&lt;p&gt;The solution is to construct &lt;em&gt;one&lt;/em&gt; pattern that never varies at all, and compile it exactly once. We can construct one pattern by joining the real patterns together with &lt;code&gt;|&lt;/code&gt;s in between. That&amp;rsquo;s what&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;          my $pat = join &#39;|&#39;, @bad_words;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;does; it takes a &lt;code&gt;@bad_words&lt;/code&gt; list that looks like &lt;code&gt;(&#39;cyberpromo&#39;, &#39;stealth&#39;, ...)&lt;/code&gt; and turns it into a pattern that looks like &lt;code&gt;cyberpromo|stealth|...&lt;/code&gt;. Then we match against this pattern:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;         return &amp;quot;Header `$h&#39; contains bad word $1&amp;quot;
+           if $H{$h} =~ /($pat)/io;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;/o&lt;/code&gt; modifier tells Perl that even though &lt;code&gt;$pat&lt;/code&gt; looks like a variable, we&amp;rsquo;re really using it as a constant. We promise perl that &lt;code&gt;$pat&lt;/code&gt; will never change, and in return, Perl compiles the regex once, the first time it is needed, and never compiles it again.&lt;/p&gt;
+
+&lt;p&gt;In this program, this clever hack is probably not worth doing, because the filter program gets invoked once to handle one mail message, calls &lt;code&gt;misc_bad_headers()&lt;/code&gt; exactly once, and then exits. If I were doing it over, I would have left out the trick&amp;mdash;it comes under the heading of `premature optimization&amp;rsquo;, and premature optimization is the root of all evil. But the trick can be useful in other contexts.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-heuristics-that-didn-t-work-heuristics-that-didn-t-work-span&#34;&gt;&lt;span id=&#34;Heuristics_that_Didn_t_Work&#34;&gt;Heuristics that Didn&amp;rsquo;t Work&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;I got tired of getting mail titled &lt;code&gt;RE: BIOTECH BARGAIN!&lt;/code&gt; and &lt;code&gt;**LET YOUR COMPUTER MAKE MONEY WHILE YOU SLEEP!**&lt;/code&gt;, so I thought I&amp;rsquo;d try putting in a filter to reject mail whose &lt;code&gt;Subject:&lt;/code&gt; line was in all capitals:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;             my $s = $H{Subject};
+             # subject contains no lowercase letters
+             return &#39;Subject: all capitals&#39; if $s !~ /[a-z]/ ;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The very next email message I received was titled &lt;code&gt;FYI&lt;/code&gt;. It was from my brother-in-law. The spam filter rejected it. I commented out the `all capitals&amp;rsquo; test.&lt;/p&gt;
+
+&lt;p&gt;A few months later, I was ready for more abuse. I tried this::&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;             $s = tr/A-Za-z//cd;
+             return &#39;Subject: all capitals&#39; if $s !~ /[a-z]/ ;
+               &amp;amp;&amp;amp; length($s) &amp;gt; 6;  # and at least six capitals
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This removes non-letters from the subject, then rejects the message if the subject is all capitals and is at least seven letters long. Soon after I tried this, I got mail from one of my clients titled &lt;code&gt;URGENT FIX!!!&lt;/code&gt;. That was the end of that experiment.&lt;/p&gt;
+
+&lt;p&gt;The all-capitals subject line does not hold the record for the biggest spam filtering failure. That honor goes to this line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        return &#39;no To: line&#39; if $H{To} eq &#39;&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This seemed fairly innoccuous, and still does&amp;mdash;In fact, I&amp;rsquo;m still using it. Last November, when I was away in London, I received a bulk mail that fell afoul of this test and was sent to the spam file. All spam goes into a file so that I can glance over it later, just in case it turns out to be something important. The subject lines are logged separately. Usually I glance over the subject line log (which is short) looking for messages that might be interesting; if I see any, I go look in the spam file to see if it really is interesting.&lt;/p&gt;
+
+&lt;p&gt;When I got back from London, I glanced over the subject log, and saw that&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        Subject: A message from VA Linux Systems (Mostly in English)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;had been rejected because there was no &lt;code&gt;To:&lt;/code&gt; line. I peeked at the message in the spam file, but I didn&amp;rsquo;t look at it closely, because I had a ton of unanswered mail to get to. I forgot about it until a couple of months later when I ran into Chris DiBona at a conference. ``Did you get the letter?&amp;rdquo; he asked.&lt;/p&gt;
+
+&lt;p&gt;``What letter?&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;My spam filter had discarded VA Linux&amp;rsquo;s extremely lucrative IPO announcement.&lt;/p&gt;
+
+&lt;p&gt;Oops.&lt;/p&gt;
+
+&lt;p&gt;Why haven&amp;rsquo;t I taken out the &lt;code&gt;To:&lt;/code&gt; line rule? Because it worked! It was supposed to detect bulk mail, and that&amp;rsquo;s just what it did do. The moral here is that there&amp;rsquo;s some bulk mail that you actually want to receive.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-notes-from-last-time-notes-from-last-time-span&#34;&gt;&lt;span id=&#34;Notes_From_Last_Time&#34;&gt;Notes From Last Time&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;I got a lot of interesting mail about the last article in this series. Several people wrote to me to suggest a different filtering strategy: Simply throw away mail unless one of your own addresses is in the &lt;code&gt;To:&lt;/code&gt; line.&lt;/p&gt;
+
+&lt;p&gt;A lot of people wrote in about this, so it must work well for some people, but it won&amp;rsquo;t work for me. As I mentioned in &lt;a href=&#34;http://www.plover.com/~mjd/perl/lp/Spam.html&#34;&gt;Part 1&lt;/a&gt;, I had considered this back in 1996. I decided that it would probably result in a lot of false positives, where non-spam mail was discarded. (For example, the IPO mail would still have been rejected under this regime.) And then I went through my archive of spam and discovered that about 20% of it actually &lt;em&gt;was&lt;/em&gt; addressed to me, so I would have a 20% false negative rate also, where spam would get through to me because it was addressed to me. With the system I do use, the false positive rate is well below 10%, and the false negative rate is much lower.&lt;/p&gt;
+
+&lt;p&gt;Someone also wrote to suggest that whenever I got spam, I could send an automatic complaint letter to the relevant ISP, demanding revocation of the sender&amp;rsquo;s account.&lt;/p&gt;
+
+&lt;p&gt;This is a perfectly terrible idea, for several reasons. Most obviously, most spam I get these days has a fake return address anyway, and complaining to the owners of &lt;code&gt;hapless.com&lt;/code&gt; isn&amp;rsquo;t going to accomplish anything if the mail wasn&amp;rsquo;t actually sent from &lt;code&gt;hapless.com&lt;/code&gt;, except to harass the hapless owners. So it&amp;rsquo;s at best useless and at worst a serious nuisance to people who are already trying to deal with a huge number of bogus bounced messages.&lt;/p&gt;
+
+&lt;p&gt;But the real reason I hate this idea so much is that it makes even a small false positive rate into a disaster. I can&amp;rsquo;t reliably identify all the non-spam messages I get; even with three layers of backup, I still lost out on the VA Linux IPO because I thought it was spam. But I can live with that; I knew when I set up the filter that I might one day miss something important because of it. I made an informed decision to take that risk.&lt;/p&gt;
+
+&lt;p&gt;But my correspondents, the people who write to me, did not make an informed decision. They are stuck with my policy whether they like it or not, and I owe it to them to inconvenience them as little as possible. A legitimate person who sends me mail and falls afoul of the spam filter has to send their message to me again, and even though they only have to do it once, it&amp;rsquo;s inconvenient and annoying. That inconvenience and annoyance to innocent people who have never done anything wrong other than to try to communicate with me is the biggest problem with the whole filtering strategy.&lt;/p&gt;
+
+&lt;p&gt;But if inconveniencing my correspondent by forcing them to re-send a message is a selfish thing to do, how much more selfish is it to inconvenience them by mailing their ISP to demand that their account be shut down? I can apologize to someone for making them send a second message. How could I apologize for demanding that their internet access be revoked? I just don&amp;rsquo;t have that much gall.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-notes-from-next-time-notes-from-next-time-span&#34;&gt;&lt;span id=&#34;Notes_From_Next_Time&#34;&gt;Notes From Next Time&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;Coming next month, the last article in this series: Why I got 85 spam messages last Wednesday, why I&amp;rsquo;m not happy with filtering, and what I&amp;rsquo;m doing about it. This involves, of all things, a hack to the Apache web server.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>My Life With Spam</title>
+      <link>http://localhost:1313/pub/2000/02/spamfilter.html/</link>
+      <pubDate>Wed, 09 Feb 2000 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2000/02/spamfilter.html/</guid>
+      <description>
+
+&lt;p&gt;or&lt;/p&gt;
+
+&lt;p&gt;I wrote Part 1 of this series back in October 1999 for the LinuxPlanet web site, but the editors decided not to publish the rest of the series. Since then, many people have asked for the continuation. This article is Part 2.&lt;/p&gt;
+
+&lt;p&gt;Part 1 of the series discussed my early experiences with the spam problem, first on Usenet and then in my e-mail box. I talked about how to set up a mail filter program and how to have it parse incoming messages. I discussed splitting up the header into logical lines and why this is necessary. For the details and the Perl code, you can read &lt;a href=&#34;http://www.plover.com/~mjd/perl/lp/Spam.html&#34;&gt;the original article&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I also talked about my filtering philosophy, which is to blacklist the domains that send me a lot of spam, and reject mail from those domains.&lt;/p&gt;
+
+&lt;h1 id=&#34;span-id-domain-pattern-matching-domain-pattern-matching-span&#34;&gt;&lt;span id=&#34;Domain_Pattern_Matching&#34;&gt;Domain Pattern Matching&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;One way to handle domains might have been to take the &lt;code&gt;To:&lt;/code&gt; address in the message and strip off the host name. However, this is impossible because a host name &lt;em&gt;is&lt;/em&gt; a domain. &lt;code&gt;perl.com&lt;/code&gt; is both a host name and a domain; &lt;code&gt;www.perl.com&lt;/code&gt; is both a host name and a domain, and so is &lt;code&gt;chocolaty-goodness.www.perl.com&lt;/code&gt;. In practice, though, it&amp;rsquo;s easy to use a simple heuristic:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Split the host name into components.&lt;/li&gt;
+&lt;li&gt;If the last component is &lt;code&gt;com&lt;/code&gt;, &lt;code&gt;edu&lt;/code&gt;, &lt;code&gt;gov&lt;/code&gt;, &lt;code&gt;net&lt;/code&gt;, or &lt;code&gt;org&lt;/code&gt;, then the domain name is the last two components.&lt;/li&gt;
+&lt;li&gt;Otherwise, the domain name is the last three components&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The theory is that if the final component is not a generic top-level domain like &lt;code&gt;com&lt;/code&gt;, it is probably a two-letter country code. Most countries imitate the generic space at the second level of their domain. For example, the United Kingdom has &lt;code&gt;ac.uk&lt;/code&gt;, &lt;code&gt;co.uk&lt;/code&gt;, and &lt;code&gt;org.uk&lt;/code&gt; corresponding to &lt;code&gt;edu&lt;/code&gt;, &lt;code&gt;com&lt;/code&gt;, and &lt;code&gt;org&lt;/code&gt;, so when I get mail from &lt;code&gt;someone@thelonious.new.ox.ac.uk&lt;/code&gt;, I want to recognize the domain as &lt;code&gt;ox.ac.uk&lt;/code&gt; (Oxford University), not &lt;code&gt;ac.uk&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, this is a heuristic, which is a fancy way of saying that it doesn&amp;rsquo;t work. Many top-level domains aren&amp;rsquo;t divided up at the third level the way I assumed. For example, the &lt;code&gt;to&lt;/code&gt; domain has no organization at all, the same as the &lt;code&gt;com&lt;/code&gt; domain. If I get mail from &lt;code&gt;hot.spama.to&lt;/code&gt;, my program will blacklist that domain only, not realizing that it&amp;rsquo;s part of the larger &lt;code&gt;spama.to&lt;/code&gt; domain owned by the same people. So far, however, this has never come up.&lt;/p&gt;
+
+&lt;p&gt;And I didn&amp;rsquo;t include &lt;code&gt;mil&lt;/code&gt; in my list of exceptions. However, I&amp;rsquo;ve never gotten spam from a &lt;code&gt;mil&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Eventually the domain registration folks will introduce a batch of new generic top-level domains, such as &lt;code&gt;.firm&lt;/code&gt; and &lt;code&gt;.web&lt;/code&gt;. But they&amp;rsquo;ve been getting ready for it since 1996; they&amp;rsquo;re still working up to it; and I might grow old and die waiting for it to happen. (See &lt;a href=&#34;http://www.gtld-mou.org/&#34;&gt;http://www.gtld-mou.org/&lt;/a&gt; for more information.)&lt;/p&gt;
+
+&lt;p&gt;For all its problems, this method has worked just fine for a long time because hardly any of the problems ever actually come up. There&amp;rsquo;s a moral here: The world is full of terrifically over-engineered software. Sometimes you can waste a lot of time trying to find the perfect solution to a problem that only needs to be partially solved. Or as my friends at MIT used to say, ``Good enough for government work!&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the code for extracting the domain:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 1    my ($user, $site) = $s =~ /(.*)@(.*)/;
+ 2    next unless $site;
+ 3    my @components =  split(/\./, $site);
+ 4    my $n_comp = ($components[-1] =~ /^edu|com|net|org|gov$/) ? 2 : 3;
+ 5    my $domain = lc(join &#39;.&#39;, @components[-$n_comp .. -1]);
+ 6    $domain =~ s/^\.//;  # Remove leading . if there is one.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The sender&amp;rsquo;s address is in &lt;code&gt;$s&lt;/code&gt;. I extract the site name from the address with a simple pattern match, which is also a wonderful example of the &amp;ldquo;good enough&amp;rdquo; principle. Messages appear in the &lt;code&gt;comp.lang.perl.misc&lt;/code&gt; newsgroup every week asking for a pattern that matches an e-mail address. The senders get a lot of very long complicated answers, or are told that it can&amp;rsquo;t be done. And yet there it is. Sure, it doesn&amp;rsquo;t work. Of course, if you get mail addressed to ``@&amp;ldquo;@plover.com, it&amp;rsquo;s going to barf. Of course, if you get source-routed mail with an address like &amp;lt;@send.here.first:joe@send.here.afterwards,&amp;gt; it isn&amp;rsquo;t going to work.&lt;/p&gt;
+
+&lt;p&gt;But guess what? Those things never happen. A production mail server has to deal with these sorts of fussy details, but if my program fails to reject some message as spam because it made an overly simple assumption about the format of the mail addresses, there&amp;rsquo;s no harm done.&lt;/p&gt;
+
+&lt;p&gt;On line 2, we skip immediately to the next address if there&amp;rsquo;s no site name, since it now appears that this wasn&amp;rsquo;t an address at all. Line 3 breaks the site name up into components; &lt;code&gt;thelonious.new.ox.ac.uk&lt;/code&gt; is broken into &lt;code&gt;thelonious&lt;/code&gt;, &lt;code&gt;new&lt;/code&gt;, &lt;code&gt;ox&lt;/code&gt;, &lt;code&gt;ac&lt;/code&gt;, and &lt;code&gt;uk&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Line 4 is the nasty heuristic: It peeks at the last component, in this case &lt;code&gt;uk&lt;/code&gt;, and if it&amp;rsquo;s one of the magic five (&lt;code&gt;edu&lt;/code&gt;, &lt;code&gt;com&lt;/code&gt;, &lt;code&gt;net&lt;/code&gt;, &lt;code&gt;org&lt;/code&gt;, or &lt;code&gt;gov&lt;/code&gt;), it sets &lt;code&gt;$n_comp&lt;/code&gt; to 2; otherwise to 3. &lt;code&gt;$n_comp&lt;/code&gt; is going to be the number of components that are part of the domain, so the domain of &lt;code&gt;saul.cis.upenn.edu&lt;/code&gt; is &lt;code&gt;upenn.edu&lt;/code&gt;, and the domain of &lt;code&gt;thelonious.new.ox.ac.uk&lt;/code&gt; is &lt;code&gt;ox.ac.uk&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;To get the last component, we subscript the component array &lt;code&gt;@components&lt;/code&gt; with &lt;code&gt;-1&lt;/code&gt;. &lt;code&gt;-1&lt;/code&gt; as an array subscript means to get the last element of the array. Similarly, -2 means to get the next-to-last element. In this case, the last component is &lt;code&gt;uk&lt;/code&gt;, which doesn&amp;rsquo;t match the pattern, so &lt;code&gt;$n_comp&lt;/code&gt; is 3.&lt;/p&gt;
+
+&lt;p&gt;On line 5, &lt;code&gt;-$n_comp .. -1&lt;/code&gt; is really &lt;code&gt;-3 .. -1&lt;/code&gt;, which is the list &lt;code&gt;-3, -2, -1&lt;/code&gt;. We use a Perl feature called a &amp;ldquo;list slice&amp;rdquo; to extract just the elements -3, -2, and -1 from the &lt;code&gt;@components&lt;/code&gt; array. The syntax&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        @components[(some list)]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;invokes this feature. The list is taken to be a list of subscripts, and the elements of &lt;code&gt;@components&lt;/code&gt; with those subscripts are extracted, in order. This is why you can write&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        ($year, $month, $day) = (localtime)[5,4,3];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to extract the year, month, and day from &lt;code&gt;localtime&lt;/code&gt;, in that order&amp;ndash;it&amp;rsquo;s almost the same feature. Here we&amp;rsquo;re extracting elements -3 (the third-to-last), -2 (the second-to-last), and -1 (the last) and joining them together again. If &lt;code&gt;$n_comp&lt;/code&gt; had been 2, we would have gotten elements -2 and -1 only.&lt;/p&gt;
+
+&lt;p&gt;Finally, line 6 takes care of a common case in which the heuristic doesn&amp;rsquo;t work. If we get mail from &lt;code&gt;alcatel.at&lt;/code&gt;, and try to select the last three components, we&amp;rsquo;ll get one undefined component&amp;ndash;because there were really only two there&amp;ndash;and the result of the join will be &lt;code&gt;.alcatel.at&lt;/code&gt;, with a bogus null component on the front. Line 6 looks to see if there&amp;rsquo;s an extra period on the front of the domain, and if so, it chops it off.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-now-that-you-have-it-what-do-yo-now-that-you-have-it-what-do-you-do-with-it-span&#34;&gt;&lt;span id=&#34;Now_That_You_Have_it_What_Do_Yo&#34;&gt;Now That You Have it, What Do You Do With it?&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;I&amp;rsquo;ve extracted the domain name. The obvious thing to do is to have a big hash with every bad domain in it, and to look this domain up in the hash to see if it&amp;rsquo;s there. Looking things up in a hash is very fast.&lt;/p&gt;
+
+&lt;p&gt;However, that&amp;rsquo;s not what I decided to do. Instead, I have a huge file with a &lt;em&gt;regex&lt;/em&gt; in it for every bad domain, and I take the domain in question and match it against all the patterns in the file. That&amp;rsquo;s a lot slower. A &lt;em&gt;lot&lt;/em&gt; slower. Instead of looking up the domain instantaneously, it takes 0.24 seconds to match the patterns.&lt;/p&gt;
+
+&lt;p&gt;Some people might see that and complain that it was taking a thousand times as long as it should. And maybe that&amp;rsquo;s true. But the patterns are more flexible, and what&amp;rsquo;s a quarter of a second more or less? The mail filter handled 2,211 messages in the month of January. At 0.24 seconds each, the pattern matching is costing me less than 9 minutes per month.&lt;/p&gt;
+
+&lt;p&gt;So much for the downside. What&amp;rsquo;s the upside? I get to use patterns. That&amp;rsquo;s a big upside.&lt;/p&gt;
+
+&lt;p&gt;I have a pattern in my pattern file that rejects any mail from anyone who claims that their domain is all digits, such as 12345.com. That would have been impossible with a hash. I have a pattern that rejects mail from anyone with &amp;ldquo;casino&amp;rdquo; in their domain. That took care of spam from Planetrockcasino.com and Romancasino.com before I had ever heard of those places. Remember that I only do the pattern matching on the domain, so if someone sent me mail from &lt;code&gt;casino.ox.ac.uk&lt;/code&gt;, it would get through.&lt;/p&gt;
+
+&lt;p&gt;The regexes actually do have a potential problem: The patterns are in the file, one pattern per line. Suppose I&amp;rsquo;m adding patterns to the file and I leave a blank line by mistake. Then some mail arrives. The filter extracts the domain name of the sender and starts working through the pattern file. 0.24 seconds later, it gets to the blank line.&lt;/p&gt;
+
+&lt;p&gt;What happens when you match a string against the empty pattern? It matches, that&amp;rsquo;s what. Every string matches the empty pattern. Since the patterns are assumed to describe mail that I &lt;em&gt;don&amp;rsquo;t&lt;/em&gt; want to receive, the letter is rejected. So is the next letter. So is every letter. Whoops.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s tempting to say that I should just check for blank patterns and skip them if they&amp;rsquo;re there, but that won&amp;rsquo;t protect me against a line that has only a period and nothing else&amp;ndash;that will also match any string.&lt;/p&gt;
+
+&lt;p&gt;Instead, here&amp;rsquo;s what I&amp;rsquo;ve done:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $MATCHLESS = &amp;quot;qjdhqhd1!&amp;amp;@^#^*&amp;amp;!@#&amp;quot;;
+
+        if ($MATCHLESS =~ /$badsite_pat/i) {
+          &amp;amp;defer(&amp;quot;The bad site pattern matched `$MATCHLESS&#39;, 
+                  so I assume it would match anything.  Deferring...\n&amp;quot;);
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since the patterns are designed to identify bad domain names, none of them should match &lt;code&gt;qjdhqhd1!&amp;amp;@^#^*&amp;amp;!@#&lt;/code&gt;. If a pattern &lt;em&gt;does&lt;/em&gt; match that string, it probably also matches a whole lot of other stuff that it shouldn&amp;rsquo;t. In that case, the program assumes that the pattern file is corrupt, and defers the delivery. This means that it tells &lt;code&gt;qmail&lt;/code&gt; that it isn&amp;rsquo;t prepared to deliver the mail at the present time, and that &lt;code&gt;qmail&lt;/code&gt; should try again later on. &lt;code&gt;qmail&lt;/code&gt; will keep trying until it gets through or until five days have elapsed, at which point it gives up and bounces the message back to the sender. Chances are that I&amp;rsquo;ll notice that I&amp;rsquo;m not getting any mail sometime before five days have elapsed, look in the filter log file, and fix the pattern file. As &lt;code&gt;qmail&lt;/code&gt; retries delivery, the deferred messages will eventually arrive.&lt;/p&gt;
+
+&lt;p&gt;Deferring a message is easy when your mailer is &lt;code&gt;qmail&lt;/code&gt;. Here&amp;rsquo;s the &lt;code&gt;defer&lt;/code&gt; subroutine in its entirety:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        sub defer {
+          my $msg = shift;
+          carp $msg;
+          exit 111;
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When &lt;code&gt;qmail&lt;/code&gt; sees the 111 exit status from the filter program, it interprets it as a request to defer delivery. (Similarly, 100 tells &lt;code&gt;qmail&lt;/code&gt; that there was a permanent failure and it should bounce the message back to the sender immediately. The normal status of 0 means that delivery was successful.)&lt;/p&gt;
+
+&lt;p&gt;I would still be in trouble if I installed &lt;code&gt;com&lt;/code&gt; as a pattern in the pattern file, because it matches more domains than it should, but the &lt;code&gt;MATCHLESS&lt;/code&gt; test doesn&amp;rsquo;t catch it. But unlike the blank line problem, it&amp;rsquo;s never come up, so I&amp;rsquo;ve decided to deal with it when it arises.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-c-received-lines-received-lines-span&#34;&gt;&lt;span id=&#34;C_Received_Lines&#34;&gt;&amp;lsquo;Received:&amp;rsquo; Lines&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;In addition to filtering the &lt;code&gt;From:&lt;/code&gt;, &lt;code&gt;Reply-To:&lt;/code&gt;, and envelope sender addresses, I also look through the list of forwarding hosts for bad domains. The &lt;code&gt;From:&lt;/code&gt; and &lt;code&gt;Reply-To:&lt;/code&gt; headers are easy to forge: The sender can put whatever they want in those fields and spammers usually do. But the &lt;code&gt;Received:&lt;/code&gt; fields are a little different. When computer A sends a message to computer B, the &lt;em&gt;receiving&lt;/em&gt; computer B adds a &lt;code&gt;Received:&lt;/code&gt; header to the message, recording who it is, when it received the message, and from whom. If the message travels through several computers, there will be several received lines, with the earliest one at the bottom of the header and the later ones added above it. Here&amp;rsquo;s a typical set of &lt;code&gt;Received:&lt;/code&gt; lines:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;1   Received: (qmail 7131 invoked by uid 119); 22 Feb 1999 22:01:59 -0000
+
+2   Received: (qmail 7124 invoked by uid 119); 22 Feb 1999 22:01:58 -0000
+
+3   Received: (qmail 7119 invoked from network); 22 Feb 1999 22:01:53 -0000
+
+4   Received: from renoir.op.net (root@209.152.193.4)
+
+5   by plover.com with SMTP; 22 Feb 1999 22:01:53 -0000
+
+6   Received: from pisarro.op.net (root@pisarro.op.net [209.152.193.22]) 
+    by renoir.op.net (o1/$Revision:1.18 $) with ESMTP id RAA24909 
+    for &amp;lt;mjd@mail.op.net&amp;gt;; Mon, 22 Feb 1999 17:01:48 -0500 (EST)
+
+7   Received: from linc.cis.upenn.edu (LINC.CIS.UPENN.EDU [158.130.12.3])
+    by pisarro.op.net 
+   (o2/$Revision: 1.1 $) with ESMTP id RAA12310 for 
+   &amp;lt;mjd@op.net&amp;gt;; Mon, 22 Feb 1999 17:01:45 -0500(EST)
+
+8   Received: from saul.cis.upenn.edu (SAUL.CIS.UPENN.EDU [158.130.12.4])
+
+9   by linc.cis.upenn.edu (8.8.5/8.8.5) with ESMTP id QAA15020
+
+10  for &amp;lt;mjd@op.net&amp;gt;; Mon, 22 Feb 1999 16:56:20 -0500 (EST)
+
+11  Received: from mail.cucs.org (root@cucs-a252.cucs.org [207.25.43.252])
+
+12  by saul.cis.upenn.edu (8.8.5/8.8.5) with ESMTP id QAA09203
+13  for &amp;lt;mjd@saul.cis.upenn.edu&amp;gt;; Mon, 22 Feb 1999 16:56:19 -0500 (EST)
+
+14  Received: from localhost.cucs.org ([192.168.1.223])
+
+15  by mail.cucs.org (8.8.5/8.8.5) with SMTP id QAA06332
+
+16  for &amp;lt;mjd@saul.cis.upenn.edu&amp;gt;; Mon, 22 Feb 1999 16:54:11 -0500
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is from a message that someone sent to &lt;code&gt;mjd@saul.cis.upenn.edu&lt;/code&gt;, an old address of mine. Apparently the sender&amp;rsquo;s mail client, in &lt;code&gt;localhost.cucs.org&lt;/code&gt;, initially passed the message to the organization&amp;rsquo;s mail server, &lt;code&gt;mail.cucs.org&lt;/code&gt;. The mail server then added the lines 14-16 to the message header.&lt;/p&gt;
+
+&lt;p&gt;The mail server then delivered the message to &lt;code&gt;saul.cis.upenn.edu&lt;/code&gt; over the Internet. &lt;code&gt;saul&lt;/code&gt; added lines 11-13. Notice that the time on line 13 is 128 seconds after the time on line 13. This might mean that the message sat on &lt;code&gt;mail.cucs.org&lt;/code&gt; for 128 seconds before it was delivered to &lt;code&gt;saul&lt;/code&gt;, or it might mean that the two computers&amp;rsquo; clocks are not properly synchronized.&lt;/p&gt;
+
+&lt;p&gt;When the mail arrived on &lt;code&gt;saul&lt;/code&gt;, the mailer there discovered that I have a &lt;code&gt;.forward&lt;/code&gt; file there directing delivery to &lt;code&gt;mjd@op.net&lt;/code&gt;. &lt;code&gt;saul&lt;/code&gt; needed to forward the message to &lt;code&gt;mjd@op.net&lt;/code&gt;. However, most machines in the University of Pennsylvania CIS department do not deliver Internet mail themselves. Instead, they forward all mail to a departmental mail hub, &lt;code&gt;linc&lt;/code&gt;, which takes care of delivering all the mail outside the organization. Lines 8-10 were added by &lt;code&gt;linc&lt;/code&gt; when the mail was delivered to it by &lt;code&gt;saul&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;linc&lt;/code&gt; looked up &lt;code&gt;op.net&lt;/code&gt; in the domain name service and discovered that the machine &lt;code&gt;pisarro.op.net&lt;/code&gt; was receiving mail for the &lt;code&gt;op.net&lt;/code&gt; domain. Line 7 was added by &lt;code&gt;pisarro&lt;/code&gt; when it received the mail from &lt;code&gt;linc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I don&amp;rsquo;t know why &lt;code&gt;pisarro&lt;/code&gt; then delivered the message to &lt;code&gt;renoir&lt;/code&gt;, but we know that it did, because line 6 says so.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;qmail&lt;/code&gt; on &lt;code&gt;plover.com&lt;/code&gt; added lines 4-5 when the mail was delivered from &lt;code&gt;renoir&lt;/code&gt;. Then the final three lines, 1-3, were added by &lt;code&gt;qmail&lt;/code&gt; for various local deliveries to &lt;code&gt;mjd&lt;/code&gt;, then &lt;code&gt;mjd-filter&lt;/code&gt; (which runs my spam filter), and finally, &lt;code&gt;mjd-filter-deliver&lt;/code&gt;, which is the address that actually leads to my mailbox.&lt;/p&gt;
+
+&lt;p&gt;What can we learn from all this? The &lt;code&gt;Received:&lt;/code&gt; lines have a record of every computer that the message passed through on its way to being delivered. And unlike the &lt;code&gt;From:&lt;/code&gt; and &lt;code&gt;Reply-To:&lt;/code&gt; lines, it really does record where the message has been.&lt;/p&gt;
+
+&lt;p&gt;Suppose the original sender, at &lt;code&gt;localhost.cucs.org&lt;/code&gt; had wanted to disguise the message&amp;rsquo;s origin. Let&amp;rsquo;s call him Bob. Bob cannot prevent &lt;code&gt;cucs.org&lt;/code&gt; from being mentioned in the message header. Why? Because there it is in line 11. Line 11 was put there by &lt;code&gt;saul.cis.upenn.edu&lt;/code&gt;, not by Bob, who has no control over computers in the &lt;code&gt;upenn.edu&lt;/code&gt; domain.&lt;/p&gt;
+
+&lt;p&gt;Bob can try to confuse the issue by &lt;em&gt;adding&lt;/em&gt; spurious &lt;code&gt;Received:&lt;/code&gt; lines, but he can&amp;rsquo;t prevent the other computers from adding the correct ones.&lt;/p&gt;
+
+&lt;p&gt;Now, when spammers send spam, they often forge the &lt;code&gt;From:&lt;/code&gt; and the &lt;code&gt;Reply-To:&lt;/code&gt; lines so that people don&amp;rsquo;t know who they are and can&amp;rsquo;t come and kill them. But they can&amp;rsquo;t forge the &lt;code&gt;Received:&lt;/code&gt; lines because it&amp;rsquo;s another computer that puts those in. So when we&amp;rsquo;re searching for domains to check against the list of bad domain patterns, we should look through the &lt;code&gt;Received:&lt;/code&gt; lines too.&lt;/p&gt;
+
+&lt;p&gt;The difficulty with that is that there&amp;rsquo;s no standard for what a &lt;code&gt;Received:&lt;/code&gt; line should look like or what should be in it, and every different mailer does its own thing. You can see this in the example above. We need a way to go over the &lt;code&gt;Received:&lt;/code&gt; lines and look for things that might be domains. This is just the sort of thing that Perl regexes were designed for.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;1  sub forwarders { 2    return @forwarders if @forwarders; 3    4     @forwarders =  5  grep { /[A-Za-z]/ } ($H{&#39;Received&#39;} =~ m/(?:[\w-]+\.)+[\w-]+/g); 6  7   @forwarders = grep      { !/(\bplover\.com|\bcis\.upenn\.edu|\bpobox\.com|\bop\.net)$/i }     @forwarders; 8  9   foreach $r (@forwarders) { 10    $r{lc $r} = 1; 11     } 12  13   @forwarders = keys %r; 14  15   return @forwarders; 16     }&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;The message header has already been parsed and placed into the &lt;code&gt;%H&lt;/code&gt; hash. &lt;code&gt;$H{Received}&lt;/code&gt; contains the concatenation of all the &lt;code&gt;Received&lt;/code&gt; lines in the whole message. The purpose of the &lt;code&gt;forwarders()&lt;/code&gt; function is to examine &lt;code&gt;$H{Received}&lt;/code&gt;, extract all the domain names it can find, and place them in the array &lt;code&gt;@forwarders&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Lines 4-5 are the heart of this process. Let&amp;rsquo;s look a little more closely.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        $H{&#39;Received&#39;} =~ m/(?:[\w-]+\.)+[\w-]+/g
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This does a pattern match in the &lt;code&gt;Received:&lt;/code&gt; lines. &lt;code&gt;[\w-]&lt;/code&gt; looks for a single letter, digit, underscore, or hyphen, while &lt;code&gt;[\w-]+&lt;/code&gt; looks for a sequence of such characters, such as &lt;code&gt;saul&lt;/code&gt; or &lt;code&gt;apple-gunkies&lt;/code&gt;. This is a domain component. &lt;code&gt;[\w-]+\.&lt;/code&gt; looks for a domain component followed by a period, like &lt;code&gt;saul.&lt;/code&gt; or &lt;code&gt;apple-gunkies.&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Ignore the &lt;code&gt;?:&lt;/code&gt; for the time being. Without it, the pattern is &lt;code&gt;([\w-]+\.)+[\w-]+&lt;/code&gt;, which means a domain component followed by a period, then another domain component followed by another period, and so on, and ending with a domain component and no period. So this is a pattern that will match something that looks like a domain.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;/g&lt;/code&gt; modifier on the match instructs Perl to find &lt;em&gt;all&lt;/em&gt; matching substrings and to return a list of them. Perl will look through the &lt;code&gt;Received:&lt;/code&gt; headers, pulling out all the things that look like domains, making them into a list, and returning the list of domains.&lt;/p&gt;
+
+&lt;p&gt;Another example of this feature:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$s = &amp;quot;Timmy is 7 years old and he lives at 350 Beacon St. 
+Boston, MA 02134&amp;quot; @numbers = ($s =~ m/\d+/g);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now &lt;code&gt;@numbers&lt;/code&gt; contains (7, 350, 02134).&lt;/p&gt;
+
+&lt;p&gt;I still haven&amp;rsquo;t explained that &lt;code&gt;?:&lt;/code&gt;. I have to confess to a lie. Perl only returns the list of matching substrings if the pattern contains no parentheses. If the pattern contains parentheses, the parentheses cause part of the string to be captured into the special &lt;code&gt;$1&lt;/code&gt; variable, and the match returns a list of the &lt;code&gt;$1&lt;/code&gt;s instead of a list of the entire matching substrings. If I&amp;rsquo;d done&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;quot;saul.cis.upenn.edu plover.com&amp;quot; =~ m/([\w-]+\.)+[\w-]+/g
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;instead, I would have gotten the list &lt;code&gt;(&amp;quot;saul.cis.upenn.&amp;quot;,    &amp;quot;plover.&amp;quot;)&lt;/code&gt;, which are the &lt;code&gt;$1&lt;/code&gt;&amp;rsquo;s, because the &lt;code&gt;com&lt;/code&gt; parts match the final &lt;code&gt;[\w-]+&lt;/code&gt;, which is not in parentheses. The &lt;code&gt;?:&lt;/code&gt; in the real pattern is nothing more than a switch to tell Perl not to use &lt;code&gt;$1&lt;/code&gt;; . Since &lt;code&gt;$1&lt;/code&gt; isn&amp;rsquo;t being used, we get the default behavior, and the match returns a list of everything that matched.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  4   @forwarders = 
+  5   grep { /[A-Za-z]/ } ($H{&#39;Received&#39;} =~ m/(?:[\w-]+\.)+[\w-]+/g);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The pattern match generates a list of things that might be domains. The list initially looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  renoir.op.net 209.152.193.4
+  plover.com
+  pisarro.op.net pisarro.op.net 209.152.193.22 renoir.op.net 1.18 mail.op.net
+  linc.cis.upenn.edu LINC.CIS.UPENN.EDU 158.130.12.3 pisarro.op.net 1.1 op.net
+  saul.cis.upenn.edu SAUL.CIS.UPENN.EDU 158.130.12.4
+  linc.cis.upenn.edu 8.8.5 8.8.5
+  op.net
+  mail.cucs.org cucs-a252.cucs.org 207.25.43.252
+  saul.cis.upenn.edu 8.8.5 8.8.5
+  saul.cis.upenn.edu
+  localhost.cucs.org 192.168.1.223
+  mail.cucs.org 8.8.5 8.8.5
+  saul.cis.upenn.edu
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, it contains a lot of junk. Most notably, it contains several occurrences of &lt;code&gt;8.8.5&lt;/code&gt;, because the &lt;code&gt;upenn.edu&lt;/code&gt; mailer was Sendmail version 8.8.5. There are also some IP addresses that we won&amp;rsquo;t be able to filter, and some other things that look like version numbers. The &lt;code&gt;grep&lt;/code&gt; filters this list of items and passes through only those that contain at least one letter, discarding the entirely numeric ones.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;@forwarders&lt;/code&gt; is now&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  renoir.op.net
+  plover.com
+  pisarro.op.net pisarro.op.net renoir.op.net mail.op.net
+  linc.cis.upenn.edu LINC.CIS.UPENN.EDU pisarro.op.net op.net
+  saul.cis.upenn.edu SAUL.CIS.UPENN.EDU
+  linc.cis.upenn.edu
+  op.net
+  mail.cucs.org cucs-a252.cucs.org
+  saul.cis.upenn.edu
+  saul.cis.upenn.edu
+  localhost.cucs.org
+  mail.cucs.org
+  saul.cis.upenn.edu
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The rest of the function is just a little bit of cleanup. Line 7 discards several domain names that aren&amp;rsquo;t worth looking at because they appear so often:&lt;/p&gt;
+
+&lt;p&gt;``&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;7  @forwarders = grep { !/(\bplover\.com|\bcis\.upenn\.edu|\bpobox\.com|\bop\.net)$/i }
+   @forwarders;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Plover.com is my domain, and it&amp;rsquo;s going to appear in all my mail, so there&amp;rsquo;s no point in checking it. I worked at the University of Pennsylvania for four and a half years, and I get a lot of mail forwarded from there, so there&amp;rsquo;s no point in checking &lt;code&gt;cis.upenn.edu&lt;/code&gt; domains either. Similarly, I subscribe to the Pobox.com lifetime e-mail forwarding service, and I get a lot of mail forwarded through there. &lt;code&gt;op.net&lt;/code&gt; is my ISP domain name, which handles mail for me when Plover is down. Line 7 discards all these domains from the &lt;code&gt;@forwarders&lt;/code&gt; list, leaving only the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;       mail.cucs.org cucs-a252.cucs.org
+       localhost.cucs.org
+       mail.cucs.org
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Lines 9-13 now discard duplicate items, using a common Perl idiom:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 9     foreach $r (@forwarders) {
+ 10       $r{lc $r} = 1;
+ 11     }
+ 12
+ 13     @forwarders = keys %r;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We use the remaining items as keys in a hash. Since a hash can&amp;rsquo;t have the same key twice, the duplicate &lt;code&gt;mail.cucs.org&lt;/code&gt; has no effect on the hash, which ends up with the keys, &lt;code&gt;mail.cucs.org&lt;/code&gt;, &lt;code&gt;cucs-a252.cucs.org&lt;/code&gt; and &lt;code&gt;localhost.cucs.org&lt;/code&gt;. The values associated with these keys are each &amp;ldquo;1,&amp;rdquo; which doesn&amp;rsquo;t matter. When we ask Perl for a list of keys on line 13, we get each key exactly once.&lt;/p&gt;
+
+&lt;p&gt;Finally, line 15 returns the list of forwarders to whomever needed it.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s one little thing I didn&amp;rsquo;t discuss:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  2       return @forwarders if @forwarders;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first thing the function does is check to see if it&amp;rsquo;s already processed the &lt;code&gt;Received:&lt;/code&gt; lines and the computer &lt;code&gt;@forwarders&lt;/code&gt;. If so, it returns the list without computing it over again. That way I can just call &lt;code&gt;forwarders()&lt;/code&gt; anywhere in my program that I need a list of forwarders, without worrying that I might be doing the same work more than once; the &lt;code&gt;forwarders()&lt;/code&gt; function guarantees to return immediately after the first time I call it.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-more-to-come-more-to-come-span&#34;&gt;&lt;span id=&#34;More_to_Come&#34;&gt;More to Come&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;Because of the long delay, I&amp;rsquo;ll repeat the quiz from the first article: What&amp;rsquo;s wrong with this header line?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Received: from login_2961.sayme2.net (mail.sayme2.net[103.12.210.92])
+by sayme2.net (8.8.5/8.7.3) with SMTP id XAA02040
+for creditc@aoI.net;  Thu, 28 August 1997 15:51:23 -0700 (EDT)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The story&amp;rsquo;s not over. In the next article, I&amp;rsquo;ll talk about some other rules I used to filter the spam; one of them would have thrown out messages when it saw a line like the one above. Another one throws out mail when there&amp;rsquo;s no &lt;code&gt;To:&lt;/code&gt; line in the message&amp;ndash;a likely sign of bulk mail.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll also tell a cautionary tale of how I might have lost a lot of money because my system worked too well, and how I found out that sometimes, you &lt;em&gt;want&lt;/em&gt; to get unsolicited bulk mail.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

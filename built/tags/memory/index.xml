@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Memory on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/memory/</link>
+    <description>Recent content in Memory on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 15 Sep 2016 17:40:12 +0000</lastBuildDate>
+    <atom:link href="/tags/memory/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Using bit arrays with large integers</title>
+      <link>http://localhost:1313/article/using-bitmasks-with-large-integers/</link>
+      <pubDate>Thu, 15 Sep 2016 17:40:12 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/using-bitmasks-with-large-integers/</guid>
+      <description>
+
+&lt;p&gt;A few weeks ago I wrote &lt;a href=&#34;http://perltricks.com/article/save-space-with-bit-arrays/&#34;&gt;Save space with bit arrays&lt;/a&gt; and employed some hand-waving around maximum bitmask lengths. Specifically, I said:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;using a module like bigint may not work because of addressable memory limitations&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Now I&amp;rsquo;m not sure exactly where the &amp;ldquo;addressable memory limitation&amp;rdquo; line is, but this was something that I&amp;rsquo;d read elsewhere, and believed to be true, but didn&amp;rsquo;t have time to research. The more I thought about it, the less sense that sentence made. The amount of memory a system can address is controlled by &lt;a href=&#34;https://superuser.com/questions/168114/how-much-memory-can-a-64bit-machine-address-at-a-time#168121&#34;&gt;many factors&lt;/a&gt;, but I don&amp;rsquo;t believe you&amp;rsquo;d ever want to create a bit array using all the addressable memory just for storing bitmasks. I decided to test bit arrays with large integers and see if they behaved correctly under &lt;a href=&#34;https://metacpan.org/pod/bigint&#34;&gt;bigint&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;testing-large-bitmasks&#34;&gt;Testing large bitmasks&lt;/h3&gt;
+
+&lt;p&gt;For these tests I wanted to check the typical operations that a bit array would be used for: setting / unsetting a bitmask and converting the bit array into a binary string. I came up with the follow test script:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; bigint;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test::More tests &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $shift_size (&lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;512&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2048&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bitmask  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; ($shift_size &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bit_array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+  ok &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;($bit_array &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; $bitmask),  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bitmask is not set&amp;#39;&lt;/span&gt;;
+  ok $bit_array &lt;span style=&#34;color:#f92672&#34;&gt;|=&lt;/span&gt; $bitmask,    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;set bitmask&amp;#39;&lt;/span&gt;;
+  ok $bit_array  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; $bitmask,    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bitmask is set&amp;#39;&lt;/span&gt;;
+  ok &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;($bit_array &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;$bitmask),&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bitmask is unset&amp;#39;&lt;/span&gt;;
+  ok &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;($bit_array &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; $bitmask),  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bitmask is not set&amp;#39;&lt;/span&gt;;
+
+  cmp_ok length(sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%b&amp;#34;&lt;/span&gt;, $bitmask), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;==&amp;#39;&lt;/span&gt;, $shift_size,
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bitmask string is correct length&amp;#39;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This script loops over numbers of increasing size, creating bitmasks with them, and then testing the bit array against the bitmask. The bitwise operations were explained in my previous &lt;a href=&#34;http://perltricks.com/article/save-space-with-bit-arrays/&#34;&gt;article&lt;/a&gt;. Finally the script uses &lt;code&gt;sprintf&lt;/code&gt; to convert the bitmask to a binary string, and check its length is correct. Running this script I got some interesting failures. Here&amp;rsquo;s a snippet of the output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;...
+not ok 24 - bitmask string is correct length
+#   Failed test &#39;bitmask string is correct length&#39;
+#   at ./bigint-test line 18.
+#          got: 64
+#     expected: 128
+ok 25 - bitmask is not set
+ok 26 - set bitmask
+ok 27 - bitmask is set
+ok 28 - bitmask is unset
+ok 29 - bitmask is not set
+not ok 30 - bitmask string is correct length
+#   Failed test &#39;bitmask string is correct length&#39;
+#   at ./bigint-test line 18.
+#          got: 64
+#     expected: 256
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whilst all of the bitwise operations passed, the string length test failed as soon as the bitmask size was larger than 64 bits (my machine is 64 bit, I expect on a 32 bit compiled Perl it would fail after 32 bits). So what to do about this? Is it that &lt;code&gt;sprintf&lt;/code&gt; cannot print integers larger than 64 bit? After trying a bunch of different functions, I tried the simplest: including a length argument to &lt;code&gt;sprintf&lt;/code&gt;. So this line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;cmp_ok length(sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%b&amp;#34;&lt;/span&gt;, $bitmask), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;==&amp;#39;&lt;/span&gt;, $shift_size,&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Became:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;cmp_ok length(sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%0${shift_size}b&amp;#34;&lt;/span&gt;, $bitmask), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;==&amp;#39;&lt;/span&gt;, $shift_size,&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;m pleased to report that the change worked, and all tests passed (on Perl 5.10 and higher). Here is the finished script:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; bigint;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test::More tests &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $shift_size (&lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;512&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2048&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bitmask  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; ($shift_size &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bit_array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+
+  ok &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;($bit_array &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; $bitmask),  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bitmask is not set&amp;#39;&lt;/span&gt;;
+  ok $bit_array &lt;span style=&#34;color:#f92672&#34;&gt;|=&lt;/span&gt; $bitmask,    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;set bitmask&amp;#39;&lt;/span&gt;;
+  ok $bit_array  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; $bitmask,    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bitmask is set&amp;#39;&lt;/span&gt;;
+  ok &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;($bit_array &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;$bitmask),&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bitmask is unset&amp;#39;&lt;/span&gt;;
+  ok &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;($bit_array &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; $bitmask),  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bitmask is not set&amp;#39;&lt;/span&gt;;
+
+  cmp_ok length(sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%0${shift_size}b&amp;#34;&lt;/span&gt;, $bitmask), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;==&amp;#39;&lt;/span&gt;, $shift_size,
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;bitmask string is correct length&amp;#39;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;m not sure at what point you would hit &amp;ldquo;addressable memory limitations&amp;rdquo;, but a 4096 bit integer is a huge number. This suggests to me that you &lt;em&gt;could&lt;/em&gt; use a 4096 bit array with Perl, although whether you &lt;em&gt;should&lt;/em&gt; is another question, TIMTOWTDI.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

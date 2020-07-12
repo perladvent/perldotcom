@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Mac Apps on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-mac-apps/</link>
+    <description>Recent content in Perl Mac Apps on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 23 Jan 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-mac-apps/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Introducing Mac::Glue</title>
+      <link>http://localhost:1313/pub/2004/01/23/macglue.html/</link>
+      <pubDate>Fri, 23 Jan 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/01/23/macglue.html/</guid>
+      <description>
+
+&lt;p&gt;Thanks to the popularity of Mac OS X, the new iBook, and the PowerBook G4, it&amp;rsquo;s no longer uncool to talk about owning an Apple. Longtime Mac devotees have now been joined by longtime Unix devotees and pretty much anyone who wants computers to be shiny, and speakers at conferences such as the &lt;a href=&#34;http://conferences.oreillynet.com/os2004/&#34;&gt;Open Source Convention&lt;/a&gt; are beginning to get used to looking down over a sea of Apple laptops.&lt;/p&gt;
+
+&lt;p&gt;One of the great features about Apple&amp;rsquo;s Mac OS is its support for flexible inter-process communication (IPC), which Apple calls inter-application communication (IAC). One of the components of IAC is called Apple events, and allows applications to command each other to perform various tasks. On top of the raw Apple events layer, Apple has developed the &lt;strong&gt;Open Scripting Architecture&lt;/strong&gt;, an architecture for scripting languages such as Apple&amp;rsquo;s own AppleScript.&lt;/p&gt;
+
+&lt;p&gt;But this is &lt;code&gt;perl.com&lt;/code&gt;, and we don&amp;rsquo;t need inferior scripting languages! The &lt;code&gt;Mac::Glue&lt;/code&gt; module provides OSA compatibility and allows us to talk to Mac applications with Perl code. Let&amp;rsquo;s take a look at how to script Mac tools at a high level in Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-pre-history-of-mac-glue&#34;&gt;The Pre-History of &lt;code&gt;Mac::Glue&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;In the beginning, there was &lt;code&gt;Mac::AppleEvents&lt;/code&gt;. This module wrapped the raw Apple events API, with its cryptic four-character codes to describe applications and their capabilities, and its collection of awkward constants. You had to find out the four-character identifiers yourself, you had to manage and dispose of memory yourself, but at least it got you talking Apple events. Here&amp;rsquo;s some &lt;code&gt;Mac::AppleEvents&lt;/code&gt; code to open your System Folder in the Finder::&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::AppleEvents;
+
+my $evt = AEBuildAppleEvent(&#39;aevt&#39;, &#39;odoc&#39;, typeApplSignature, 
+             &#39;MACS&#39;, kAutoGenerateReturnID, kAnyTransactionID,
+             &amp;quot;&#39;----&#39;: obj{want:type(prop), from:&#39;null&#39;(),&amp;quot; .
+                &amp;quot;form:prop, seld:type(macs)}&amp;quot;
+          );
+my $rep = AESend($evt, kAEWaitReply);
+
+AEDisposeDesc($evt);
+AEDisposeDesc($rep);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Obviously this isn&amp;rsquo;t putting the computer to its full use; in a high-level language like Perl, we shouldn&amp;rsquo;t have to concern ourselves with clearing up descriptors when they&amp;rsquo;re no longer in use, or providing low-level flags. We just want to send the message to the Finder. So along came &lt;code&gt;Mac::AppleEvents::Simple&lt;/code&gt;, which does more of the work:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::AppleEvents::Simple;
+do_event(qw(aevt odoc MACS),
+     &amp;quot;&#39;----&#39;: obj{want:type(prop), from:&#39;null&#39;(),&amp;quot; .
+     &amp;quot;form:prop, seld:type(macs)}&amp;quot;
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a bit better; at least we&amp;rsquo;re just talking the IAC language now, instead of having to emulate the raw API. But those troublesome identifiers &amp;ndash; &amp;ldquo;aevt&amp;rdquo; for the Finder, &amp;ldquo;odoc&amp;rdquo; to open a document, and &amp;ldquo;MACS&amp;rdquo; for the System folder.&lt;/p&gt;
+
+&lt;p&gt;Maybe we&amp;rsquo;d be better off in AppleScript after all &amp;ndash; the AppleScript code for the same operation looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;tell application &amp;quot;Finder&amp;quot; to open folder &amp;quot;System Folder&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And before &lt;code&gt;Mac::Glue&lt;/code&gt; was ported to Mac OS X, this is exactly what we had to do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::AppleScript qw(RunAppleScript);
+RunAppleScript(&#39;tell application &amp;quot;Finder&amp;quot; to open folder &amp;quot;System Folder&amp;quot;&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is considerably easier to understand, but it&amp;rsquo;s just not Perl. &lt;code&gt;Mac::Glue&lt;/code&gt; uses the same magic that allows AppleScript to use names instead of identifiers, but wraps it in Perl syntax:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::Glue;
+my $finder = Mac::Glue-&amp;gt;new(&#39;Finder&#39;);
+$finder-&amp;gt;open( $finder-&amp;gt;prop(&#39;System Folder&#39;) );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;setting-up-and-creating-glues&#34;&gt;Setting Up and Creating Glues&lt;/h3&gt;
+
+&lt;p&gt;On Mac OS 9, MacPerl comes with &lt;code&gt;Mac::Glue&lt;/code&gt;. However, OS X users will need to install it themselves. &lt;code&gt;Mac::Glue&lt;/code&gt; requires several other CPAN modules to be installed, including the &lt;code&gt;Mac-Carbon&lt;/code&gt; distribution.&lt;/p&gt;
+
+&lt;p&gt;Because this in turn requires the Carbon headers to be available, you need to install the correct Apple developer kits; if you don&amp;rsquo;t have the Developer Tools installed already, you can download them from &lt;a href=&#34;https://connect.apple.com/&#34;&gt;the ADC site&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once you have the correct headers installed, the best way to get &lt;code&gt;Mac::Glue&lt;/code&gt; up and running is through the CPAN or CPANPLUS modules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;% perl -MCPAN -e &#39;install &amp;quot;Mac::Glue&amp;quot;&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This should download and install all the prerequisites and then the &lt;code&gt;Mac::Glue&lt;/code&gt; module itself.&lt;/p&gt;
+
+&lt;p&gt;When it installs itself, &lt;code&gt;Mac::Glue&lt;/code&gt; also creates &amp;ldquo;glue&amp;rdquo; files for the core applications &amp;ndash; Finder, the System Events library, and so on. A glue file is used to describe the resources available to an application and what can be done to the properties that it has.&lt;/p&gt;
+
+&lt;p&gt;If you try to use &lt;code&gt;Mac::Glue&lt;/code&gt; to control an application for which it doesn&amp;rsquo;t currently have a glue file, it will say something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;No application glue for &#39;JEDict&#39; found in 
+&#39;/Library/Perl/5.8.1/Mac/Glue/glues&#39; at -e line 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To create glues for additional applications that are not installed by default, you can drop them onto the Mac OS 9 droplet &amp;ldquo;macglue.&amp;rdquo; On Mac OS X, run the &lt;code&gt;gluemac&lt;/code&gt; command.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-s-a-property&#34;&gt;What&amp;rsquo;s a Property?&lt;/h3&gt;
+
+&lt;p&gt;Once you have all your glues set up, you can start scripting Mac applications in Perl. It helps if you already have some knowledge of how AppleScript works before doing this, because sometimes &lt;code&gt;Mac::Glue&lt;/code&gt; doesn&amp;rsquo;t behave the way you expect it to.&lt;/p&gt;
+
+&lt;p&gt;For instance, we want to dump all the active to-do items from iCal. To-dos are associated with calendars, so first we need a list of all the calendars:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::Glue;
+my $ical = new Mac::Glue(&amp;quot;iCal&amp;quot;);
+
+my @cals = $ical-&amp;gt;prop(&amp;quot;calendars&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The problem we face immediately is that &lt;code&gt;$ical-&amp;gt;prop(&amp;quot;calendars&amp;quot;)&lt;/code&gt; doesn&amp;rsquo;t give us the calendars. Instead, it gives us a way to talk about the calendars&amp;rsquo; property. It&amp;rsquo;s an object. To get the value of that property, we call its &lt;code&gt;get&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @cals = $ical-&amp;gt;prop(&amp;quot;calendars&amp;quot;)-&amp;gt;get;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This returns a list of objects that allow us to talk about individual calendars. We can get their titles like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for my $cal (@cals) {
+    my $name = $cal-&amp;gt;prop(&amp;quot;title&amp;quot;)-&amp;gt;get;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now we want to get the to-dos in each calendar that haven&amp;rsquo;t yet been completed or have no completion date:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @todos = grep { !$_-&amp;gt;prop(&amp;quot;completion_date&amp;quot;)-&amp;gt;get }
+                       $cal-&amp;gt;prop(&amp;quot;todos&amp;quot;)-&amp;gt;get;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we then store the summary for each of the to-do items in a hash keyed by the calendar name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $todos{$name} = [ map { $_-&amp;gt;prop(&amp;quot;summary&amp;quot;)-&amp;gt;get } @todos ]
+    if @todos;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we can print out the summary of all the outstanding to-do items in each calendar:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for my $cal(keys %todo) {
+    print &amp;quot;$cal:\n&amp;quot;;
+    print &amp;quot;\t$_\n&amp;quot; for @{$todo{$cal}};
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Putting it all together, the code looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::Glue;
+my $ical = new Mac::Glue(&amp;quot;iCal&amp;quot;);
+
+my @cals = $ical-&amp;gt;prop(&amp;quot;calendars&amp;quot;)-&amp;gt;get;
+for my $cal (@cals) {
+    my $name = $cal-&amp;gt;prop(&amp;quot;title&amp;quot;)-&amp;gt;get;
+    my @todos = map  { $_-&amp;gt;prop(&amp;quot;summary&amp;quot;)-&amp;gt;get }
+                grep { !$_-&amp;gt;prop(&amp;quot;completion_date&amp;quot;)-&amp;gt;get }
+                       $cal-&amp;gt;prop(&amp;quot;todos&amp;quot;)-&amp;gt;get;
+    $todo{$name} = \@todos if @todos;
+}
+
+for my $cal(keys %todo) {
+    print &amp;quot;$cal:\n&amp;quot;;
+    print &amp;quot;\t$_\n&amp;quot; for @{$todo{$cal}};
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The question is, where did we get the property names like &lt;code&gt;summary&lt;/code&gt; and &lt;code&gt;completion_date&lt;/code&gt; from? How did we know that the calendars had &lt;code&gt;titles&lt;/code&gt; but the to-do items had &lt;code&gt;summaries&lt;/code&gt;, and so on?&lt;/p&gt;
+
+&lt;p&gt;There are two answers to this: the first is to use the documentation created when the glue is installed. Typing &lt;code&gt;gluedoc iCal&lt;/code&gt; on Mac OS X or using Shuck on Mac OS 9, you will find the verbs, properties, and objects that the application supports. For instance, under the calendar class, you should see:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;This class represents a calendar&lt;/p&gt;
+
+&lt;p&gt;Properties:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    description (wr12/utxt): This is the calendar
+description. (read-only)
+    inheritance (c@#^/item): All of the properties of the
+superclass. (read-only)
+    key (wr03/utxt): An unique calendar key (read-only)
+    tint (wr04/utxt): The calendar color (read-only)
+    title (wr02/utxt): This is the calendar title.
+    writable (wr05/bool): If this calendar is writable
+(read-only)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Elements:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    event, todo
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This tells us that we can ask a calendar for its &lt;code&gt;title&lt;/code&gt; property, and also for the &lt;code&gt;events&lt;/code&gt; or &lt;code&gt;todos&lt;/code&gt; contained within it.&lt;/p&gt;
+
+&lt;p&gt;Similarly, when we get the events back, we can look up the &amp;ldquo;event&amp;rdquo; class in the documentation and see what properties are available on it.&lt;/p&gt;
+
+&lt;p&gt;The second, and perhaps easier, way to find out what you can do with an application is to open the AppleScript Script Editor application, select Open Dictionary from the File menu, and choose the application you want to script. Now you can browse a list of the classes and commands associated with the application:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_01_23_macglue/glue.jpg&#34; width=&#34;450&#34; height=&#34;343&#34; /&gt;
+When you need to know how to translate those back into Perl, you can then consult the glue documentation. It takes a few attempts to get used to the way &lt;code&gt;Mac::Glue&lt;/code&gt; works, but once you&amp;rsquo;ve done that, you&amp;rsquo;ll find that you can translate between the AppleScript documentation and a &lt;code&gt;Mac::Glue&lt;/code&gt; equivalent in your head.&lt;/p&gt;
+
+&lt;h3 id=&#34;some-examples&#34;&gt;Some Examples&lt;/h3&gt;
+
+&lt;p&gt;In a couple of weeks, we&amp;rsquo;ll be presenting a &amp;ldquo;Mac::Glue Hacks&amp;rdquo; article in the spirit of the O&amp;rsquo;Reilly &lt;a href=&#34;http://hacks.oreilly.com&#34;&gt;hacks books&lt;/a&gt; series, with several simple &lt;code&gt;Mac::Glue&lt;/code&gt;-based application scripting tricks to whet your appetite and explore what &lt;code&gt;Mac::Glue&lt;/code&gt; can do. But to get you started, here&amp;rsquo;s a couple we found particularly useful.&lt;/p&gt;
+
+&lt;p&gt;First, iTunes allows you to give a rating to your favorite songs, on the scale of zero to five stars. Actually, internally, this is stored in the iTunes database as a number between 0 and 100. Simon keeps iTunes playing randomly over his extensive music collection, and every time an interesting track comes up, he runs this script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $itunes = Mac::Glue-&amp;gt;new(&amp;quot;iTunes&amp;quot;);
+exit unless $itunes-&amp;gt;prop(&amp;quot;player state&amp;quot;)-&amp;gt;get eq &amp;quot;playing&amp;quot;;
+
+my $rating = $itunes-&amp;gt;prop(&amp;quot;current track&amp;quot;)-&amp;gt;prop(&amp;quot;rating&amp;quot;);
+$rating-&amp;gt;set(to =&amp;gt; ($rating-&amp;gt;get + 20))
+  if $rating-&amp;gt;get &amp;lt; 81;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As well as getting properties from &lt;code&gt;Mac::Glue&lt;/code&gt;, we can also set them back with the &lt;code&gt;set&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;One more complex example is the &lt;a href=&#34;http://dev.macperl.org/files/scripts/happening&#34;&gt;happening&lt;/a&gt; script Chris uses to publish details of what&amp;rsquo;s going on at his computer. As well as simply reporting the current foremost application, it dispatches based on that application to report more information. For instance, if Safari has the focus, it reports what web page is being looked at; if it&amp;rsquo;s the Terminal, what program is currently being run. It also contacts iTunes to see what song is playing, and if there&amp;rsquo;s nothing playing on a local iTunes, asks likely other computers on the network if they&amp;rsquo;re playing anything.&lt;/p&gt;
+
+&lt;p&gt;Once &lt;code&gt;happening&lt;/code&gt; has discovered what&amp;rsquo;s going on, it checks to see if the iChat status is set to &amp;ldquo;Available,&amp;rdquo; and if so, resets itself it to report this status. Let&amp;rsquo;s break down &lt;code&gt;happening&lt;/code&gt; and see how it accomplishes each of these tasks.&lt;/p&gt;
+
+&lt;p&gt;First, to work out the name of the currently focused application:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $system = get_app(&#39;System Events&#39;) or return;
+$app    ||= $system-&amp;gt;prop(name =&amp;gt; item =&amp;gt; 1,
+    application_process =&amp;gt; whose(frontmost =&amp;gt; equals =&amp;gt; 1)
+);
+
+$app-&amp;gt;get;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;get_app&lt;/code&gt; is just a utility function that memorizes the process of calling &lt;code&gt;Mac::Glue-&amp;gt;new($app_name)&lt;/code&gt;; since loading up the glue file is quite expensive, keeping around application glue objects is a big speed-saving approach.&lt;/p&gt;
+
+&lt;p&gt;The next incantation shows you how natural &lt;code&gt;Mac::Glue&lt;/code&gt; programming can look, but also how much you need to know about how the Apple environment works. We&amp;rsquo;re asking the System Events library to tell us about the application process that matches a certain condition. &lt;code&gt;Mac::Glue&lt;/code&gt; exports the &lt;code&gt;whose&lt;/code&gt; function to create conditions.&lt;/p&gt;
+
+&lt;p&gt;The important thing about this is the fact that we use &lt;code&gt;$app ||= ...&lt;/code&gt;. The construction that we saved in &lt;code&gt;$app&lt;/code&gt; does not give us &amp;ldquo;the name of the front-most application at this moment,&amp;rdquo; but it represents the whole concept of &amp;ldquo;the name of the front-most application.&amp;rdquo; At any time in the future, we can call &lt;code&gt;get&lt;/code&gt; on it, and it will find out and return the name of the front-most application at that time, even if it has changed since the last time you called &lt;code&gt;get&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now that we know what the front-most application is, we can look it up in a hash that contains subroutines returning information specific to that application. For instance, here&amp;rsquo;s the entry for Safari:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Safari =&amp;gt; sub { my ($glue) = @_;
+                my $obj = $glue-&amp;gt;prop(url =&amp;gt; document =&amp;gt; 1 =&amp;gt; window =&amp;gt; 1);
+                my $url = $obj-&amp;gt;get;
+                return URI-&amp;gt;new($url)-&amp;gt;host if $url;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This returns the host part of the URL in the first document in the first window. For &lt;code&gt;ircle&lt;/code&gt;, an IRC client, this code will get the channel and server name for the current connection:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ircle       =&amp;gt; sub { sprintf(&amp;quot;%s:%s&amp;quot;,
+               $_[0]-&amp;gt;prop(&#39;currentchannel&#39;)-&amp;gt;get,
+               $_[0]-&amp;gt;prop(servername =&amp;gt; connection =&amp;gt;
+                   $_[0]-&amp;gt;prop(&#39;currentconnection&#39;)-&amp;gt;get
+               )-&amp;gt;get
+              )
+            },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A decent default action is to return the window title:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;default     =&amp;gt; sub { my($glue) = @_;
+                     my $obj = $objs{$glue-&amp;gt;{APPNAME}} ||=
+                               $glue-&amp;gt;prop(name =&amp;gt; window =&amp;gt; 1);
+                     $obj-&amp;gt;get;
+                   },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As before, we cache the concept of &amp;ldquo;the name of the current window&amp;rdquo; and only create it when we don&amp;rsquo;t have one already.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s look at the &amp;ldquo;Now playing in iTunes&amp;rdquo; part:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$state  ||= $itunes-&amp;gt;prop(&#39;player state&#39;);
+return unless $state-&amp;gt;get eq &amp;quot;playing&amp;quot;;
+
+$track  ||= $itunes-&amp;gt;prop(&#39;current track&#39;);
+%props    = map { $_ =&amp;gt; $track-&amp;gt;prop($_) } qw(name artist)
+            unless keys %props;
+
+my %info;
+for my $prop (keys %props) {
+    $info{$prop} = $props{$prop}-&amp;gt;get;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This first checks to see if iTunes is playing, and returns unless it is. Next, we look for the current track, and get handles to the name and artist properties of that track, as in our previous iTunes example.&lt;/p&gt;
+
+&lt;p&gt;Finally, when we&amp;rsquo;ve set up all the handles we need, we call &lt;code&gt;get&lt;/code&gt; to turn them into real data. This populates &lt;code&gt;%info&lt;/code&gt; with the name and artist of the currently playing track.&lt;/p&gt;
+
+&lt;p&gt;Now that we have the current application name, the extra information, and the current track, we can publish them as the iChat status, with this subroutine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Mac::Apps::Launch qw(IsRunning);
+
+sub ichat {
+    my($output) = @_;
+
+    my $ichat = get_app(&#39;iChat&#39;) or return;
+    return unless IsRunning($ichat-&amp;gt;{ID});
+
+    $status  ||= $ichat-&amp;gt;prop(&#39;status&#39;);
+    return unless $status-&amp;gt;get eq &#39;available&#39;;
+
+    $message ||= $ichat-&amp;gt;prop(&#39;status message&#39;);
+    $message-&amp;gt;set(to =&amp;gt; $output);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, we have the &lt;code&gt;IsRunning&lt;/code&gt; subroutine from &lt;code&gt;Mac::AppleEvents::Simple&lt;/code&gt;, which takes the old-style four-character ID of the application we want to ask about. The &lt;code&gt;ID&lt;/code&gt; slot of the glue object will tell us this ID, and so we can immediately give up setting the iChat status if iChat isn&amp;rsquo;t even running. Then we use &lt;code&gt;set&lt;/code&gt; as before to change the status to whatever we want.&lt;/p&gt;
+
+&lt;p&gt;Finally, we mentioned that &lt;code&gt;happening&lt;/code&gt; can also ask other hosts what&amp;rsquo;s playing on their iTunes as well. This is because, if &amp;ldquo;Remote Apple Events&amp;rdquo; is turned on in the Sharing preferences, Macs support passing these Apple events between machines. Of course, this often requires authentication, so when it first contacts a host to send an Event, &lt;code&gt;happening&lt;/code&gt; will pop-up a login box to ask for credentials &amp;ndash; this is all handled internally by the operating system. Here&amp;rsquo;s the code that &lt;code&gt;happening&lt;/code&gt; actually uses:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $found = 0;
+if (IsRunning($itunes-&amp;gt;{ID})) {
+    $itunes-&amp;gt;ADDRESS;
+    $found = 1 if $state-&amp;gt;get eq &#39;playing&#39;;
+}
+
+unless ($found) {
+    for my $host (@hosts) {
+        next unless $hosts{$host} + 60 &amp;lt; time();
+        $itunes-&amp;gt;ADDRESS(eppc =&amp;gt; iTunes =&amp;gt; $host);
+        $found = 1, last if $state-&amp;gt;get eq &#39;playing&#39;;
+        $hosts{$host} = time();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first paragraph checks to see if iTunes is running locally. If so, we&amp;rsquo;re done. If not, we&amp;rsquo;re going to have to ask the hosts specified in the &lt;code&gt;@hosts&lt;/code&gt; array about it. The first and last lines inside the &lt;code&gt;for&lt;/code&gt; loop simple ensure that hosts are only tried every minute at most. The second line in there is the interesting one, though:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$itunes-&amp;gt;ADDRESS(eppc =&amp;gt; iTunes =&amp;gt; $host);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This changes the &lt;code&gt;iTunes&lt;/code&gt; glue handle from being a local one to being one that contacts the &amp;ldquo;iTunes&amp;rdquo; application on host &lt;code&gt;$host&lt;/code&gt; over EPPC, the remote Apple events transport.&lt;/p&gt;
+
+&lt;p&gt;Because &lt;code&gt;$state&lt;/code&gt; is the player status of &lt;code&gt;$itunes&lt;/code&gt;, it will now return the correct status even though &lt;code&gt;$itunes&lt;/code&gt; now refers to an application on a different computer! Similarly, all the handles we have to the artist and name of the current track will correctly refer to &lt;code&gt;$itunes&lt;/code&gt;, no matter which iTunes instance that means.&lt;/p&gt;
+
+&lt;p&gt;We hope you&amp;rsquo;ll join us next time for more &lt;code&gt;Mac::Glue&lt;/code&gt; tips and tricks, as we look at real-life applications of scripting Mac applications in Perl.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

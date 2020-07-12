@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Philipp Janert on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/philipp-janert/</link>
+    <description>Recent content in Philipp Janert on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 01 Feb 2007 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/philipp-janert/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Advanced HTML::Template: Widgets</title>
+      <link>http://localhost:1313/pub/2007/02/02/htmltemplate-widgets.html/</link>
+      <pubDate>Thu, 01 Feb 2007 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2007/02/02/htmltemplate-widgets.html/</guid>
+      <description>
+
+&lt;p&gt;My previous article, looked at &lt;a href=&#34;http://localhost:1313/pub/2006/11/30/html-template-filters.html&#34;&gt;extending &lt;code&gt;HTML::Template&lt;/code&gt; through custom tags and filters&lt;/a&gt;. This article looks at ways to manage large, more complex pages, by bundling &lt;a href=&#34;https://metacpan.org/pod/HTML::Template&#34;&gt;HTML::Template&lt;/a&gt; into something like GUI &amp;ldquo;widgets&amp;rdquo; (or &amp;ldquo;controls&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;Imagine you have a basic page layout following the standard setup, with a header, a lefthand navbar, and the main body in the bottom right. The header and navbar are the same for all pages of the site, but of course the main body differs from page to page:&lt;/p&gt;
+
+&lt;p&gt;Header
+Navbar
+Body&lt;/p&gt;
+
+&lt;p&gt;Naturally, you don&amp;rsquo;t want to repeat the information for the header and the navbar explicitly on each page. Furthermore, if the HTML for the navbar changes, you don&amp;rsquo;t want to have to modify each and every page. The &lt;code&gt;&amp;lt;TMPL_INCLUDE&amp;gt;&lt;/code&gt; tag can help in this situation.&lt;/p&gt;
+
+&lt;p&gt;Create separate files for header and navbar, then include them in the template for each page (by convention, I use the filename extension &lt;em&gt;.tpf&lt;/em&gt; for page *f*ragments, to distinguish them from full-page templates: &lt;em&gt;.tpl&lt;/em&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=navbar.tpf&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;
+        &amp;lt;!-- Body goes here! --&amp;gt;
+        ...
+      &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now &lt;code&gt;HTML::Template&lt;/code&gt; will include the page fragments for the header and navbar in the page when it evaluates the template. Changes to either of the fragments will affect the entire site immediately.&lt;/p&gt;
+
+&lt;p&gt;(For simplicity of presentation, I am going to use the old familiar &lt;code&gt;&amp;lt;table&amp;gt;&lt;/code&gt; method to fix the layout&amp;ndash;this article is about &lt;code&gt;HTML::Template&lt;/code&gt;, not CSS positioning!)&lt;/p&gt;
+
+&lt;p&gt;Note that both the header and the navbar may include other &lt;code&gt;HTML::Template&lt;/code&gt; tags, such as &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt;: file fragment inclusion occurs &lt;em&gt;before&lt;/em&gt; tag substitution. If you need dynamic content in either header or navbar, all you need to do is set the value of the corresponding parameter using the &lt;code&gt;param()&lt;/code&gt; function before evaluating the template.&lt;/p&gt;
+
+&lt;h3 id=&#34;better-encapsulation-through-widgets&#34;&gt;Better Encapsulation through Widgets&lt;/h3&gt;
+
+&lt;p&gt;If there are only a few dynamic parameters in header and navbar, you can simply assign values to them together with the parameters required by the main body of the page. However, if the header and navbar themselves become sufficiently complicated, you probably don&amp;rsquo;t want to repeat their parameter-setting logic with the actual Perl code managing the main business logic for each page of our site. Instead, you can control them through an API.&lt;/p&gt;
+
+&lt;p&gt;To establish a Perl API for a page fragment, hide the entire template handling, including parameter setting and template substitution, in a subroutine. The subroutine takes several parameters and returns a string containing the fully expanded HTML code corresponding to the page fragment. You can then include this string in the current page through a simple &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tag.&lt;/p&gt;
+
+&lt;p&gt;As an example, consider a navbar that contains the username of the currently logged-in user.&lt;/p&gt;
+
+&lt;p&gt;Here is the page-fragment template for the navbar:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Current User: &amp;lt;TMPL_VAR NAME=login&amp;gt;
+&amp;lt;br /&amp;gt;
+&amp;lt;ul&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page1.html&amp;quot;&amp;gt;Page 1&amp;lt;/a&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page2.html&amp;quot;&amp;gt;Page 2&amp;lt;/a&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page3.html&amp;quot;&amp;gt;Page 3&amp;lt;/a&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For this example, the corresponding subroutine is very simple. It&amp;rsquo;s easy to imagine a situation where the navbar requires some complex logic that you are glad to hide behind a function call&amp;ndash;for instance, when the selection of links depends on the permissions (found through a DB call) of the logged-in user.&lt;/p&gt;
+
+&lt;p&gt;Demonstrating the principle is straightforward; find the template fragment, set the required parameter, and render the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub navbar {
+  my ( $login ) = shift;
+
+  my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;navbar.tpf&#39; );
+  $tpl-&amp;gt;param( login =&amp;gt; $login );
+  return $tpl-&amp;gt;output();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The master-page template then includes the navbar string using a &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tag. (Note the header inclusion through a &lt;code&gt;&amp;lt;TMPL_INCLUDE&amp;gt;&lt;/code&gt; tag.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=navbar&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;
+        &amp;lt;!-- Body goes here! --&amp;gt;
+        ...
+      &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach provides pretty good encapsulation: the code calling the &lt;code&gt;navbar()&lt;/code&gt; routine does not need to know anything about its implementation&amp;ndash;in fact, the subroutine can be in a separate module entirely. It is not far-fetched to imagine a shared module for all reusable page fragments used on the site.&lt;/p&gt;
+
+&lt;h3 id=&#34;building-pages-inside-out&#34;&gt;Building Pages Inside Out&lt;/h3&gt;
+
+&lt;p&gt;This development model still uses a separate, top-level template file for each page. All shared parts of the page are then included in this master template.&lt;/p&gt;
+
+&lt;p&gt;The widget approach can go a step further to do away entirely with the notion of having a separate master template for each page, by turning even the &lt;em&gt;main body&lt;/em&gt; of the page into a widget or a collection of widgets. At this point, there may be only a single top-level template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=navbar&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=mainbody&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A central Perl &amp;ldquo;controller&amp;rdquo; component dispatches page requests to the appropriate main-body widget (assuming you specify destination pages through a request parameter called &lt;code&gt;action&lt;/code&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use CGI;
+use HTML::Template;
+
+my $q = CGI-&amp;gt;new;
+my $action = $q-&amp;gt;param( &#39;action&#39; );
+
+# Dispatch to the desired main function
+my $body_string = &#39;&#39;;
+if(    $action eq &#39;act1&#39; ) { $body_string = act1( $q ); }
+elsif( $action eq &#39;act2&#39; ) { $body_string = act2( $q ); }
+elsif( $action eq &#39;act3&#39; ) { $body_string = act3( $q ); }
+
+# Pull the current user from the query object and pass to the navbar
+my $navbar_string = navbar( $q-&amp;gt;param( &#39;login&#39; ) );
+
+# Set the rendered navbar and mainbody in the master template
+my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;tmpl3.tpl&#39; );
+$tpl-&amp;gt;param( mainbody =&amp;gt; $body_string );
+$tpl-&amp;gt;param( navbar   =&amp;gt; $navbar_string );
+
+print $q-&amp;gt;header(), $tpl-&amp;gt;output;
+
+sub navbar { ... }
+
+sub act1{ ... }
+sub act2{ ... }
+sub act3{ ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;a-drop-down-widget&#34;&gt;A Drop-down Widget&lt;/h3&gt;
+
+&lt;p&gt;At this point, you may ask why you still need a template for the page fragment at all. Well, you don&amp;rsquo;t&amp;ndash;unless you find it convenient, of course.&lt;/p&gt;
+
+&lt;p&gt;There are two reasons to use a template: as a more suitable method of generating HTML than having to program a whole bunch of &lt;code&gt;print&lt;/code&gt; statements, and to ensure separation of presentation from behavior. By encapsulating the nitty-gritty of HTML generation behind an API, you achieve the latter. How you go about the former depends entirely on the context. If you need to generate a lot of straight up HTML, with lots of &lt;code&gt;&amp;lt;table&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt;, and &lt;code&gt;&amp;lt;form&amp;gt;&lt;/code&gt; tags, a template fragment makes perfect sense. But if it is actually easier to program the &lt;code&gt;print&lt;/code&gt; statements yourself, there is nothing wrong with that&amp;ndash;by encapsulating the HTML generation in a subroutine, you still achieve separation of presentation and main control flow and business logic.&lt;/p&gt;
+
+&lt;p&gt;As a classic example for something that is hard to express as a template, consider a drop-down menu with a default that has to be set programmatically. Attempting to do this using a template leads to a mess of template loops and conditionals. However, doing it in a widget subroutine is clean and easy, in particular if you use the appropriate functions from the standard &lt;code&gt;CGI&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub color_select {
+  my ( $default_color ) = @_;
+
+  my @colors = qw( red green blue yellow cyan magenta );
+
+  return popup_menu( &#39;color_select&#39;, \@colors, $default_color );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Include the string returned by this subroutine in a page template using &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tags as discussed previously.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;This concludes a brief overview of some useful techniques for using &lt;code&gt;HTML::Template&lt;/code&gt; that go beyond straight up variable replacement. I hope you enjoyed the trip.&lt;/p&gt;
+
+&lt;p&gt;There remains the question of when all of this is useful and suitable. To me, the beauty of &lt;code&gt;HTML::Template&lt;/code&gt; is its utter simplicity. There isn&amp;rsquo;t much in the way of creature comforts or &amp;ldquo;framework&amp;rdquo; features (such as forms processing or automated request dispatch). On the other hand, there is virtually &lt;em&gt;no&lt;/em&gt; overhead: it&amp;rsquo;s possible to understand the basic ideas of &lt;code&gt;HTML::Template&lt;/code&gt; in five minutes or fewer, and it&amp;rsquo;s easy to add to any simple CGI script. You don&amp;rsquo;t need to design the project around the framework (as is often the case with more powerful but inevitably more complex toolsets). In fact, &lt;code&gt;HTML::Template&lt;/code&gt; is so trivial to use that I use it in any CGI script that produces more than, say, 10 to 15 lines of HTML output. It&amp;rsquo;s just convenient.&lt;/p&gt;
+
+&lt;p&gt;Filters and &amp;ldquo;widgets&amp;rdquo; as described in this series are easy ways to add some convenience features that are missing from &lt;code&gt;HTML::Template&lt;/code&gt;. By bundling some repetitive code segments into a custom tag or a widget, you can keep both the code and template cleaner and simpler while at the same time continuing to enjoy the low overhead of &lt;code&gt;HTML::Template&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;However, there is only so much lipstick you can put on a pig. When you find ourselves building extensive libraries of custom tags or specific widgets, maybe you want to look more deeply into one of the existing frameworks for Perl web development, such as &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;the Template Toolkit&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, as long as you are happy with &lt;code&gt;HTML::Template&lt;/code&gt; and it works for you, there is no reason to change. It works for me&amp;ndash;and very well indeed.&lt;/p&gt;
+
+&lt;h4 id=&#34;sidebar-three-hidden-gems&#34;&gt;Sidebar: Three Hidden Gems&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;HTML::Template&lt;/code&gt; has several useful and often overlooked minor features and options, (despite being clearly documented in POD). I want to point out three of the ones that are most commonly useful&amp;ndash;all of which, by default, are (unfortunately, I think) turned &lt;em&gt;off&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h5 id=&#34;permit-unused-parameters&#34;&gt;Permit Unused Parameters&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, die_on_bad_params =&amp;gt; 0 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;HTML::Template will die when it encounters an unused parameter in the template. In other words, if you set a parameter with &lt;code&gt;$tpl-&amp;gt;param()&lt;/code&gt;, but there is no corresponding &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; in the template, template processing will fail by default. Setting the option &lt;code&gt;die_on_bad_params&lt;/code&gt; to &lt;code&gt;0&lt;/code&gt; disables this behavior.&lt;/p&gt;
+
+&lt;h5 id=&#34;make-global-variables-visible-in-loops&#34;&gt;Make Global Variables Visible In Loops&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, global_vars =&amp;gt; 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default, template loops open up a new scope, which makes all template parameters from outside the loop invisible within the loop. In particular, code like this will (by default) not work as expected:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Verbosity level: &amp;lt;TMPL_VAR NAME=isVerbose&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;TMPL_LOOP NAME=rows&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=rowitem&amp;gt;
+    &amp;lt;TMPL_IF NAME=isVerbose&amp;gt;
+      ... &amp;lt;!-- print additional, &#39;verbose&#39; info --&amp;gt;
+    &amp;lt;/TMPL_IF&amp;gt;
+&amp;lt;/TMPL_LOOP&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;verbose&lt;/code&gt; parameter, defined &lt;em&gt;outside&lt;/em&gt; the loop scope will by default &lt;em&gt;not&lt;/em&gt; be visible within the loop. Change this by setting the option &lt;code&gt;global_vars&lt;/code&gt; to &lt;code&gt;1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h5 id=&#34;special-loop-variables&#34;&gt;Special Loop Variables&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, loop_context_vars =&amp;gt; 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, enable a very useful little feature by setting &lt;code&gt;loop_context_vars&lt;/code&gt; to &lt;code&gt;1&lt;/code&gt;. This defines several Boolean variables within each loop; they take on the appropriate value for each row:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;__first__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__inner__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__last__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__odd__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__even__&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There is also an integer variable &lt;code&gt;__counter__&lt;/code&gt;, which is incremented for each row. Note that &lt;code&gt;__counter__&lt;/code&gt; starts at &lt;code&gt;1&lt;/code&gt;, in contrast to Perl arrays!&lt;/p&gt;
+
+&lt;p&gt;These variables are extremely useful in a variety of ways. For example, they make it easy to give every other row in a table a different background color to improve legibility. Together with filters (as described in my previous article), this allows for rather elegant template code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+  &amp;lt;style type=&amp;quot;text/css&amp;quot;&amp;gt;
+    .odd  { background-color: yellow }
+    .even { background-color: cyan }
+  &amp;lt;/style&amp;gt;
+&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+  &amp;lt;table&amp;gt;
+  &amp;lt;TMPL_LOOP NAME=rows&amp;gt;
+    &amp;lt;CSTM_ROW EVEN=even ODD=odd&amp;gt;
+      &amp;lt;td&amp;gt; &amp;lt;TMPL_VAR NAME=__counter__&amp;gt; Cell contents... &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+  &amp;lt;/TMPL_LOOP&amp;gt;
+  &amp;lt;/table&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The appropriate filter for the new custom tag is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cstmrow_filter {
+  my $text_ref = shift;
+  $$text_ref =~ s/&amp;lt;CSTM_ROW\s+EVEN=(.+)\s+ODD=(.*)\s*&amp;gt;
+                 /&amp;lt;TMPL_IF NAME=__odd__&amp;gt;
+                    &amp;lt;tr class=&amp;quot;$1&amp;quot;&amp;gt;
+                  &amp;lt;TMPL_ELSE&amp;gt;
+                    &amp;lt;tr class=&amp;quot;$2&amp;quot;&amp;gt;
+                  &amp;lt;\/TMPL_IF&amp;gt;
+                 /gx;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that, as implemented, the &lt;code&gt;EVEN&lt;/code&gt; attribute must precede the &lt;code&gt;ODD&lt;/code&gt; attribute in the &lt;code&gt;&amp;lt;CSTM_ROW&amp;gt;&lt;/code&gt; tag.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Advanced HTML::Template: Filters</title>
+      <link>http://localhost:1313/pub/2006/11/30/html-template-filters.html/</link>
+      <pubDate>Thu, 30 Nov 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/11/30/html-template-filters.html/</guid>
+      <description>
+
+&lt;p&gt;The CPAN module &lt;a href=&#34;https://metacpan.org/pod/HTML::Template&#34;&gt;&lt;code&gt;HTML::Template&lt;/code&gt;&lt;/a&gt; is a very simple, yet extremely useful module to achieve true separation of presentation and logic when programming CGI scripts. The basic idea is that, rather than having &lt;code&gt;print&lt;/code&gt; statements scattered all through your code (the &amp;ldquo;classic&amp;rdquo; CGI approach), or mixing logic in with HTML (as in JSP, ASP, and Perl Mason), you maintain &lt;em&gt;two&lt;/em&gt; files. One is the actual Perl script containing the business logic and the other one is a &lt;em&gt;template&lt;/em&gt; file, containing exclusively presentation layer statements.&lt;/p&gt;
+
+&lt;p&gt;The template is straight-up HTML, augmented by a small set of special tags. The templating system replaces these tags by dynamic content. The dynamic content comes from a Perl data structure that you have built in your code.&lt;/p&gt;
+
+&lt;p&gt;Here is a minimal template and the corresponding script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;h1&amp;gt;&amp;lt;TMPL_VAR NAME=title&amp;gt;&amp;lt;/h1&amp;gt;
+
+    &amp;lt;ul&amp;gt;
+      &amp;lt;TMPL_LOOP NAME=rows&amp;gt;
+        &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=item&amp;gt;
+      &amp;lt;/TMPL_LOOP&amp;gt;
+    &amp;lt;/ul&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+
+#!/usr/bin/perl -w
+use HTML::Template;
+
+# Create the template object
+my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;tmpl1.tpl&#39; );
+
+# Set the parameter values
+$tpl-&amp;gt;param( title =&amp;gt; &amp;quot;Useful Books&amp;quot; );
+$tpl-&amp;gt;param( rows =&amp;gt; [ { item =&amp;gt; &amp;quot;Learning Perl&amp;quot; },
+                       { item =&amp;gt; &amp;quot;Programming Perl&amp;quot; },
+                       { item =&amp;gt; &amp;quot;Perl Cookbook&amp;quot; } ] );
+
+# Print
+print &amp;quot;Content-Type: text/html\n\n&amp;quot;, $tpl-&amp;gt;output;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s really all there is to it.&lt;/p&gt;
+
+&lt;h3 id=&#34;as-simple-as-possible-but-not-simpler&#34;&gt;As Simple as Possible, but Not Simpler?&lt;/h3&gt;
+
+&lt;p&gt;One of the nice things about &lt;code&gt;HTML::Template&lt;/code&gt; is that doesn&amp;rsquo;t try to do too much. It is a templating system for HTML, period. That keeps it simple and avoids complementary features, which could get in the way.&lt;/p&gt;
+
+&lt;p&gt;In this spirit, the module only offers a very, very limited set of tags, and no obvious way to extend this selection. Here is the complete list:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_IF&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_ELSE&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_UNLESS&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_INLCUDE&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;All of these tags do pretty much what you might expect: &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; expands to dynamic text; &lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt; loops over an array; &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;TMPL_ELSE&amp;gt;&lt;/code&gt;, and &lt;code&gt;&amp;lt;TMPL_UNLESS&amp;gt;&lt;/code&gt; provide a mechanism for conditional display; and &lt;code&gt;&amp;lt;TMPL_INLCUDE&amp;gt;&lt;/code&gt; allows you to include pieces of other documents (such as a shared page header).&lt;/p&gt;
+
+&lt;p&gt;Most of the time, this is precisely what you want. All the facilities are there to control the &lt;em&gt;display&lt;/em&gt;, but there is no danger in mixing general-purpose code in with the HTML template.&lt;/p&gt;
+
+&lt;p&gt;Yet, sometimes things can become unnecessarily clumsy&amp;ndash;in particular, concerning the conditional display of information. A typical example concerns &lt;em&gt;optional information&lt;/em&gt;. Suppose that you want to display a list of library books with their due dates, but should display the due date &lt;em&gt;only&lt;/em&gt; if the book is currently checked out. (This is a surprisingly common pattern. Think of items with an optional sales price, accounts with an optional bad account status, a flight schedule with optional delay information, etc.)&lt;/p&gt;
+
+&lt;p&gt;Sometimes you can simply leave the corresponding variable blank:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;ul&amp;gt;
+  &amp;lt;TMPL_LOOP NAME=books&amp;gt;
+    &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=title&amp;gt;   &amp;lt;TMPL_VAR NAME=duedate&amp;gt;
+  &amp;lt;/TMPL_LOOP&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and use the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tpl-&amp;gt;param( books =&amp;gt; [ { title =&amp;gt; &#39;Learning Perl&#39;, duedate =&amp;gt; &#39;&#39; },
+                        { title =&amp;gt; &#39;Programming Perl&#39;, duedate =&amp;gt; &#39;29. Feb. 2008&#39; } ] );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will work. There will be no output for the due date if there is no due date. However, what if you want to have some additional text, in addition to the actual due date? That template might resemble:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;ul&amp;gt;
+  &amp;lt;TMPL_LOOP NAME=books&amp;gt;
+    &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=title&amp;gt;
+        &amp;lt;TMPL_IF NAME=duedate&amp;gt;
+          Date due: &amp;lt;TMPL_VAR NAME=duedate&amp;gt;
+        &amp;lt;/TMPL_IF&amp;gt;
+  &amp;lt;/TMPL_LOOP&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Do this a lot, and you will start looking for a better solution! (The main problem here is not actually the additional typing, but the fact that the template itself is becoming increasingly unwieldy and its structure harder to follow.)&lt;/p&gt;
+
+&lt;p&gt;One solution is to put the additional text in code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tpl-&amp;gt;param( books =&amp;gt; [ { title =&amp;gt; &#39;Learning Perl&#39;, duedate =&amp;gt; &#39;&#39; },
+                        { title =&amp;gt; &#39;Programming Perl&#39;, duedate =&amp;gt; &#39;Date due: 29. Feb. 2008&#39; } ] );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, this is clumsy: it breaks the separation of presentation and behavior, as there is now strictly presentational material such as &amp;ldquo;Date due: &amp;ldquo; in the Perl code, and it makes the parameter less generally useful. If you want the plain date somewhere else in the template, it now comes bundled with a string that you may not want.&lt;/p&gt;
+
+&lt;p&gt;Wouldn&amp;rsquo;t it be nice if you could bundle the entire optional part of each list entry (&amp;ldquo;encapsulate it,&amp;rdquo; if you will) and simply call it by name? To put it in other words, what if you had the ability to define a custom tag?&lt;/p&gt;
+
+&lt;h3 id=&#34;enabling-custom-tags-using-filters&#34;&gt;Enabling Custom Tags Using Filters&lt;/h3&gt;
+
+&lt;p&gt;This is where &lt;em&gt;filters&lt;/em&gt; come in. A filter is a subroutine called on the template text before tag substitution takes place. A filter can do anything. In particular, it can modify the template programmatically.&lt;/p&gt;
+
+&lt;p&gt;A filter is precisely the hook into the template processing that is necessary to enable custom tags. Write your template in terms of standard template tags and your own custom tags. Then provide a filter (or filters) to replace these custom tags with the appropriate combinations of standard tags. The &lt;code&gt;HTML::Template&lt;/code&gt; &amp;ldquo;engine&amp;rdquo; then does the final substitutions and renders the ultimate output.&lt;/p&gt;
+
+&lt;p&gt;For the library example, suppose that you have chosen to use a custom tag &lt;code&gt;&amp;lt;CSTM_DUEDATE&amp;gt;&lt;/code&gt; to display the optional due date. This makes the template look very clean and simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;ul&amp;gt;
+  &amp;lt;TMPL_LOOP NAME=books&amp;gt;
+    &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=title&amp;gt;   &amp;lt;CSTM_DUEDATE&amp;gt;
+  &amp;lt;/TMPL_LOOP&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code to set the template parameter values does not change, but you now need to define the filter (and note that you need to escape the slash in the &lt;code&gt;&amp;lt;/TMPL_IF&amp;gt;&lt;/code&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub duedate_filter {
+  my $text_ref = shift;
+  $$text_ref =~ s/&amp;lt;CSTM_DUEDATE&amp;gt;/&amp;lt;TMPL_IF NAME=duedate&amp;gt;Date due: &amp;lt;TMPL_VAR NAME=duedate&amp;gt;&amp;lt;\/TMPL_IF&amp;gt;/g;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, you need to register this filter, so that the module will call it before tag substitution takes place. Filters are options to the template object, so registration takes place when you construct the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;books.tpl&#39;,
+                            filter =&amp;gt; \&amp;amp;duedate_filter );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s the basic idea. If you wanted to, you could register a sequential collection of filters (one filter per custom tag?) or you can put all required substitutions into a single routine. I can certainly perceive of the possibility of developing reusable &amp;ldquo;tag libraries&amp;rdquo; as Perl modules with filter definitions. Interestingly (and in contrast to JSP), the template files themselves do not need to know about the definitions and behavior of the &amp;ldquo;custom tags.&amp;rdquo; I think this is exactly right: the templates are plain (&amp;ldquo;dumb&amp;rdquo;) text files, which define the presentation layer. All the &lt;em&gt;behavior&lt;/em&gt; is in the Perl code, where it belongs.&lt;/p&gt;
+
+&lt;h3 id=&#34;data-sensitive-displays-and-data-filters&#34;&gt;Data-Sensitive Displays and Data Filters&lt;/h3&gt;
+
+&lt;p&gt;Consider another example application. Rather than dealing with optional information, this one uses &lt;em&gt;conditional formatting&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Assume that you have a list of accounts, and each account has a various state: &amp;ldquo;Good,&amp;rdquo; &amp;ldquo;Bad,&amp;rdquo; and &amp;ldquo;Canceled.&amp;rdquo; You would like to display the account number in a different color, depending on the state: green for &amp;ldquo;Good,&amp;rdquo; yellow for &amp;ldquo;Bad,&amp;rdquo; and red for &amp;ldquo;Canceled.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;If you tried to do this using &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;&lt;/code&gt; tags, this would be a real mess, for two reasons: You have more than two choices, so that we can&amp;rsquo;t use a &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;...&amp;lt;TMPL_ELSE&amp;gt;...&amp;lt;/TMPL_IF&amp;gt;&lt;/code&gt; construct; instead you would have to use a sequence of individual conditionals: &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;...&amp;lt;/TMPL_IF&amp;gt;&amp;lt;TMPL_IF&amp;gt;...&amp;lt;/TMPL_IF&amp;gt;&amp;lt;TMPL_IF&amp;gt;...&amp;lt;/TMPL_IF&amp;gt;&lt;/code&gt;. Moreover, &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;&lt;/code&gt; does not allow for arbitrary conditional expressions (such as &lt;code&gt;$status eq &#39;good&#39;&lt;/code&gt;). All it does is test a Boolean variable. The classic approach is to introduce three Boolean dummy variables: &lt;code&gt;$isGood&lt;/code&gt;, &lt;code&gt;$isBad&lt;/code&gt;, and &lt;code&gt;$isCancelled&lt;/code&gt; to use in these tests. There&amp;rsquo;s certainly a better way!&lt;/p&gt;
+
+&lt;p&gt;Instead, introduce a custom tag that allows for configurable formatting:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;CSTM_SPAN NAME=...&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is the associated filter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub span_filter {
+  my $text_ref = shift;
+  $$text_ref =~ s/&amp;lt;CSTM_SPAN\s+NAME=(.*?)\s*&amp;gt;
+                 /&amp;lt;span class=&#39;&amp;lt;TMPL_VAR NAME=$1_class&amp;gt;&#39;&amp;gt;
+                    &amp;lt;TMPL_VAR NAME=$1&amp;gt;
+                  &amp;lt;\/span&amp;gt;
+                 /gx;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you use this custom tag in your template as &lt;code&gt;&amp;lt;CSTM_SPAN NAME=account&amp;gt;&lt;/code&gt;, then the template in the intermediate state, &lt;em&gt;after&lt;/em&gt; filter application, but &lt;em&gt;before&lt;/em&gt; template parameter substitution, will look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;span class=&#39;&amp;lt;TMPL_VAR NAME=account_class&amp;gt;&#39;&amp;gt;
+  &amp;lt;TMPL_VAR NAME=account&amp;gt;
+&amp;lt;/span&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The original single custom tag has expanded into an HTML &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt; tag wrapping the actual dynamic content. The &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt; defines a CSS class to provide formatting to the dynamic content. The &lt;em&gt;name&lt;/em&gt; of the CSS class itself is dynamic, too&amp;ndash;so that you can select the classes &lt;code&gt;.bad&lt;/code&gt; or &lt;code&gt;.good&lt;/code&gt; depending on the value of the account status. The name of the CSS class comes from the name of the displayed parameter. If this class is defined in a stylesheet or within the HTML document itself, a CSS-capable client will apply it to the dynamic text as expected.&lt;/p&gt;
+
+&lt;p&gt;In other words, the innocuous &lt;code&gt;&amp;lt;CSTM_SPAN&amp;gt;&lt;/code&gt; tag actually requires &lt;em&gt;two&lt;/em&gt; parameters: one containing the text to display and the other specifying the CSS class to apply. All you need to do is to set the &lt;code&gt;account_class&lt;/code&gt; parameter to the appropriate value in Perl code (and, of course, define the CSS classes somewhere in the stylesheet.)&lt;/p&gt;
+
+&lt;p&gt;Here is a slick way to stay in control doing this. You can call the &lt;code&gt;param()&lt;/code&gt; function either with individual name/value-pairs (as I have shown before), or with a hash-ref: &lt;code&gt;$tpl-&amp;gt;param( { key1 =&amp;gt; value1, key2 =&amp;gt; value2 } )&lt;/code&gt;. In other words, rather than calling &lt;code&gt;param()&lt;/code&gt; repeatedly throughout your code, setting individual parameters, you can build up one large hash, containing &lt;em&gt;all&lt;/em&gt; parameters, and then pass it to the template in a single call.&lt;/p&gt;
+
+&lt;p&gt;Now you can apply the filter trick that worked so well for the template itself, on the &lt;em&gt;parameters&lt;/em&gt; as well! In other words, before calling &lt;code&gt;$tpl-&amp;gt;param( \%parameter_hash)&lt;/code&gt;, pass the hash to a subroutine, which performs data filtering operations on the parameters. In this case, it adds the CSS class appropriate for the account status for each account in the data structure.&lt;/p&gt;
+
+&lt;p&gt;This approach centralizes all data-dependent display decisions in a single subroutine. If you add further status codes, or if you want to change the display class, there is only a single location to edit.&lt;/p&gt;
+
+&lt;p&gt;Here is a Perl program demonstrating these concepts:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl -w
+use HTML::Template;
+
+# Create the template object
+my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;tmpl4.tpl&#39;,
+                               filter =&amp;gt; \&amp;amp;span_filter );
+
+# Build a data structure containing all the parameters
+my %params = ( title =&amp;gt; &amp;quot;Accounts&amp;quot;,
+               accounts =&amp;gt; [ { account =&amp;gt; &#39;Good&#39; }, { account =&amp;gt; &#39;Bad&#39; } ] );
+
+apply_display_logic( \%params );
+
+# Set all parameters for the template at once
+$tpl-&amp;gt;param( \%params );
+
+# Print
+print &amp;quot;Content-Type: text/html\n\n&amp;quot;, $tpl-&amp;gt;output;
+
+# ---
+
+sub span_filter {
+  my $text_ref = shift;
+  $$text_ref =~ s/&amp;lt;CSTM_SPAN\s+NAME=(.*?)\s*&amp;gt;
+                 /&amp;lt;span class=&#39;&amp;lt;TMPL_VAR NAME=$1_class&amp;gt;&#39;&amp;gt;
+                    &amp;lt;TMPL_VAR NAME=$1&amp;gt;
+                  &amp;lt;\/span&amp;gt;
+                 /gx;
+}
+
+sub apply_display_logic {
+  my $hash_ref = shift;
+
+  my %account_classes = ( Good =&amp;gt; &#39;good&#39;, Bad =&amp;gt; &#39;bad&#39; );
+
+  foreach my $acc ( @{ $hash_ref-&amp;gt;{ accounts } } ) {
+    $acc-&amp;gt;{account_class} = $account_classes{ $acc-&amp;gt;{account} };
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;happens&#34;&gt;#%@$! Happens&lt;/h3&gt;
+
+&lt;p&gt;When I first explained this idea to a colleague, his reaction was: &amp;ldquo;Great. You go down that path and you are going to end up with JSP. Is that what you want?&amp;rdquo; To which my response was: &amp;ldquo;Well, &lt;em&gt;fertilizer&lt;/em&gt; happens.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;GUI development is a pain. Always. You cannot avoid all issues regarding the separation of presentation and logic in GUI development. The challenge in my opinion is therefore not to find the &lt;em&gt;ideal&lt;/em&gt; web development framework, but the &lt;em&gt;optimal&lt;/em&gt; one for the task at hand.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;HTML::Template&lt;/code&gt; is very, very good for rather simple, minimum fuss, straightforward websites (of which there are significantly more than anyone might want to admit). It is particularly well-suited for reports and stats. In this application domain, the ability to the define custom tags to take care of formatting and special presentation issues is a distinct advantage.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;In the second part of this series, I will take these ideas a step further and explore how to use &lt;code&gt;HTML::Template&lt;/code&gt; to create GUI-like &lt;em&gt;widgets&lt;/em&gt; in a web/CGI situation.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Embedded Databases</title>
+      <link>http://localhost:1313/pub/2004/09/12/embedded.html/</link>
+      <pubDate>Thu, 16 Sep 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/09/12/embedded.html/</guid>
+      <description>
+
+&lt;p&gt;The expression &amp;ldquo;Embedded Database&amp;rdquo; requires an explanation. A &amp;ldquo;database&amp;rdquo; is an application that allows the targeted retrieval of stored data &amp;ndash; a log-file is not a database. By &amp;ldquo;embedded&amp;rdquo; I mean a database that does not run in a separate process, but instead is directly linked (&amp;ldquo;embedded&amp;rdquo;) into the application requiring access to the stored data. This is in contrast to more conventional database management systems (such as Postgres or Oracle), which run as a separate process, and to which the application connects using some form of Inter Process Communication (such as TCP/IP sockets, for instance).&lt;/p&gt;
+
+&lt;p&gt;The prime advantage of embedded database systems lies in their availability and ease of administration. Since the data is kept in ordinary files in the user&amp;rsquo;s space, there is no need to obtain special permissions to connect to the database process or to obtain a database account. Furthermore, since embedded databases require nothing more than a normal library, they can be useful in constrained environments (think shared web hosting), where no &amp;ldquo;proper&amp;rdquo; database is available. They can even be linked to an application and shipped with it.&lt;/p&gt;
+
+&lt;h3 id=&#34;sequential-access-tie-file&#34;&gt;Sequential Access: &lt;code&gt;Tie::File&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;The simplest database is still a flat file of records, separated by a record separator. If the separator is chosen to be the new line character &lt;code&gt;&amp;quot;\n&amp;quot;&lt;/code&gt;, as it usually is, then a record corresponds to a line.&lt;/p&gt;
+
+&lt;p&gt;Flat files allow only sequential access. This can be both a blessing and a curse: if the application primarily requires the lookup of individual records in arbitrary order, then flat files become impractical once the number of records becomes too large. On the other hand, if the typical access pattern is sequential for at least a substantial subset of records, then a flat file can be very practical.&lt;/p&gt;
+
+&lt;p&gt;Here is a typical (if a little construed) example: Assume that we have several thousand very long strings (say, each string having more than one million characters) and we want to determine whether any two strings are equal. To do so, we have to compare each string to all remaining ones, using two nested loops. However, the total amount of data is too large to be all kept in memory. On the other hand, we access &lt;em&gt;all&lt;/em&gt; the records in a predictable, sequential order.&lt;/p&gt;
+
+&lt;p&gt;The Perl module &lt;code&gt;Tie::File&lt;/code&gt; allows us to do so in a particularly convenient fashion: it &lt;code&gt;tie&lt;/code&gt;s a Perl array to the file in such a way that each record corresponds to an element of the array.&lt;/p&gt;
+
+&lt;p&gt;Here then is a code snippet that demonstrates the use of &lt;code&gt;Tie::File&lt;/code&gt; to our string comparison problem introduced above:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Tie::File;
+
+tie @array, &#39;Tie::File&#39;, &#39;data.txt&#39; or die &amp;quot;Could not tie to file: $!&amp;quot;;
+
+$len = scalar( @array );
+
+for( $i=0; $i&amp;lt;$len; $i++ ) {
+  $string1 = $array[$i];
+
+  for( $j=$i; $j&amp;lt;$len; $j++ ) {
+    $string2 = $array[$j];
+
+    compare_strings( $string1, $string2 );
+  }
+}
+
+untie @array;
+
+sub compare_strings {
+  my ( $s1, $s2 ) = @_;
+
+  # do something smart...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is no question that this program requires heavy disk access, and if we had additional information about the data in question, we should try hard to use it and avoid the brute force approach of comparing &amp;ldquo;everything to everything&amp;rdquo;. However, if we have no choice, then &lt;code&gt;Tie::File&lt;/code&gt; makes code like the above as efficient as can be: It does not attempt to load the entire file into memory, so that arbitrarily large files can be processed. The first time we iterate over the file, &lt;code&gt;Tie::File&lt;/code&gt; builds up an index containing the offset of each record from the beginning of the file, so that subsequent accesses can go directly to the proper position in the file using &lt;code&gt;seek()&lt;/code&gt;. Finally, accessed records are cached in memory and the cache size can be adjusted passing the &lt;code&gt;memory&lt;/code&gt; option to the &lt;code&gt;tie&lt;/code&gt; command.&lt;/p&gt;
+
+&lt;p&gt;However, any changes to the array (and its underlying file), in particular insertions and deletions in the middle, will always be slow, since all the subsequent records will have to be moved. If your application requires such capabilities, don&amp;rsquo;t use &lt;code&gt;Tie::File&lt;/code&gt;, use a Berkeley DB!&lt;/p&gt;
+
+&lt;h3 id=&#34;fast-lookup-berkeley-db&#34;&gt;Fast Lookup: Berkeley DB&lt;/h3&gt;
+
+&lt;p&gt;A Berkeley DB is almost the exact opposite of a flat file in regards to the access patterns it supports. Scanning through a large number of successive records is difficult if not entirely impossible, but reading, inserting, updating, and deleting random records is very, very fast!&lt;/p&gt;
+
+&lt;p&gt;Conceptually, a Berkeley DB is a hash, saved to a file. Each record is found by its key, and the value of the record is treated as a string. It is up to the application to interpret this string - for instance, to break it up into parts, representing different fields.&lt;/p&gt;
+
+&lt;p&gt;The following code opens a Berkeley DB (creating a new file, if necessary) and writes a single record, containing information suitable for the &lt;code&gt;/etc/passwd&lt;/code&gt; file. We then look up the same record, using the login name as key, and &lt;code&gt;split&lt;/code&gt; the data into its constituent fields.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use BerkeleyDB;
+
+$login = &#39;root&#39;;
+@info  = ( 0, 0, &#39;SuperUser&#39;, &#39;/root&#39;, &#39;/bin/tcsh&#39; );
+
+$db = new BerkeleyDB::Hash( -Filename =&amp;gt; &#39;data.dbm&#39;,
+                -Flags =&amp;gt; DB_CREATE ) or die &amp;quot;Cannot open file: $!&amp;quot;;
+
+$db-&amp;gt;db_put( $login, join(&#39;:&#39;, @info) );
+
+$db-&amp;gt;db_get( $login, $val );
+
+( $uid, $gid, $name, $home, $shell ) = split &#39;:&#39;, $val;
+
+print &amp;quot;$login:\t$uid|$gid $name \t$home\t$shell\n&amp;quot;;
+
+$db-&amp;gt;db_close();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code above uses the Perl interface to the Berkeley DB modelled after its C API. The &lt;code&gt;BerkeleyDB&lt;/code&gt; module also supports a &lt;code&gt;tie&lt;/code&gt; interface, tying the database file to a Perl hash, making code like the following possible: &lt;code&gt;$hash{ $login } = join( &#39;:&#39;, @info );&lt;/code&gt;. The API-style interface, on the other hand, follows the native interface of the Berkeley DB quite closely, which means that most of the (quite extensive) original C API documentation also applies when programming Perl - which is good, since the perldoc for &lt;code&gt;BerkeleyDB&lt;/code&gt; is a bit sketchy in places. Try &lt;code&gt;man db_intro&lt;/code&gt; to get started on the native Berkeley DB interface, or visit the Berkeley DB&amp;rsquo;s homepage.&lt;/p&gt;
+
+&lt;p&gt;Complex data structures can be stored in a Berkeley DB provided they have been serialized properly. If a simple solution using &lt;code&gt;join&lt;/code&gt; and &lt;code&gt;split&lt;/code&gt; as demonstrated above is not sufficient, we can use modules such as &lt;code&gt;Data::Dumper&lt;/code&gt; or (better) &lt;code&gt;Storable&lt;/code&gt; to obtain a flat string representation suitable for storage in the Berkeley DB. There is also the &lt;code&gt;MLDBM&lt;/code&gt; (&amp;ldquo;Mulit-Level DBM&amp;rdquo;) module, which provides a convenient wrapper interface, bundling serialization and storage.&lt;/p&gt;
+
+&lt;p&gt;For suitable problems, solutions based on Berkeley DBs can work very well. However, there are a couple of problems. One is that the Berkeley DB must be available - it has to be installed separately (usually as &lt;code&gt;/usr/lib/libdb.so&lt;/code&gt;). The bigger limitation is that although there are quite a few problems out there for which a single-key lookup is sufficient, for many applications such a simple access pattern will not work. This is when we require a relational database &amp;ndash; such as SQLite.&lt;/p&gt;
+
+&lt;h3 id=&#34;complex-queries-sqlite&#34;&gt;Complex Queries: SQLite&lt;/h3&gt;
+
+&lt;p&gt;There are situations when neither of the aforementioned straightforward access patterns applies. Berkeley DBs are great if we know the key for the record - but what happens if we only know part of the key, or we are interested in a set of records, all matching some pattern or logical expression? Alas, the Berkeley DB does not allow wildcard searches. Another frequently arising problem occurs when each record has several fields or attributes and we want to be able to look up records by either one of them (such as being able to search a list of books by author as well as title). This can be achieved in a Berkeley DB using multiple lookups, but one can&amp;rsquo;t help thinking that there &lt;em&gt;got&lt;/em&gt; to be a better way! Finally, the simple key/value mapping of the Berkeley DB occasionally forces duplication of data, since all the relevant information has to be present in each record - this both wastes storage space and creates maintenance problems.&lt;/p&gt;
+
+&lt;p&gt;Relational databases address all these points. They permit wildcard and logical expression searches, multiple searchable columns, and joins to represent relationships. Unfortunately, search capabilities such as these used to be restricted to big, standalone relational database engines (such as Postgres or Oracle), often making them unavailable for the quick-and-dirty Perl project.&lt;/p&gt;
+
+&lt;p&gt;This is where the SQLite project comes in: Founded in 2000, SQLite tries to combine the convenience of the Berkeley DB architecture with the power of a relational (SQL) database. Its latest release is version 2.8.14, with the next major revision, version 3.0, currently in beta. SQLite implements most of standard SQL (with some exceptions, such as correlated subqueries).&lt;/p&gt;
+
+&lt;p&gt;However, with added power comes additional complexity: a relational database no longer &lt;code&gt;tie&lt;/code&gt;s neatly to one of Perl&amp;rsquo;s built-in data structures. Instead, one has to use the &lt;code&gt;DBI&lt;/code&gt; (DataBaseInterface) module and code the queries in SQL. Furthermore, since the structure of the data is no longer predetermined, the programmer has to define and construct the required tables explicitly.&lt;/p&gt;
+
+&lt;p&gt;This is not the place for a full discussion of the Perl-DBI, but the example below is enough to get started. First, SQLite has to be installed on the system. Conveniently, the DBI-driver for SQLite, &lt;code&gt;DBD::SQLite&lt;/code&gt;, already contains the database engine itself as part of the module - so installing this module is all that is required to be able to use SQLite from Perl.&lt;/p&gt;
+
+&lt;p&gt;We begin by &lt;code&gt;connecting&lt;/code&gt; to the SQLite database contained in the file &amp;ldquo;&lt;code&gt;data.dbl&lt;/code&gt;&amp;rdquo;. Note that the &lt;code&gt;connect&lt;/code&gt; method loads the appropriate database driver - all we need to do is specify &lt;code&gt;use DBI;&lt;/code&gt;. We create and populate two tables, and then run a query joining the two tables and using an SQL wildcard. The results are returned as a reference to an array. Each array element is an array itself, containing the column values in its elements.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use DBI;
+
+$dbh = DBI-&amp;gt;connect( &amp;quot;dbi:SQLite:data.dbl&amp;quot; ) || die &amp;quot;Cannot connect: $DBI::errstr&amp;quot;;
+
+
+$dbh-&amp;gt;do( &amp;quot;CREATE TABLE authors ( lastname, firstname )&amp;quot; );
+$dbh-&amp;gt;do( &amp;quot;INSERT INTO authors VALUES ( &#39;Conway&#39;, &#39;Damian&#39; ) &amp;quot; );
+$dbh-&amp;gt;do( &amp;quot;INSERT INTO authors VALUES ( &#39;Booch&#39;, &#39;Grady&#39; ) &amp;quot; );
+
+$dbh-&amp;gt;do( &amp;quot;CREATE TABLE books ( title, author )&amp;quot; );
+$dbh-&amp;gt;do( &amp;quot;INSERT INTO books VALUES ( &#39;Object Oriented Perl&#39;,
+                                          &#39;Conway&#39; ) &amp;quot; );
+$dbh-&amp;gt;do( &amp;quot;INSERT INTO books VALUES ( &#39;Object-Oriented Analysis and Design&#39;,
+                                          &#39;Booch&#39; ) &amp;quot;);
+$dbh-&amp;gt;do( &amp;quot;INSERT INTO books VALUES ( &#39;Object Solutions&#39;, &#39;Booch&#39; ) &amp;quot; );
+
+
+$res = $dbh-&amp;gt;selectall_arrayref( q( SELECT a.lastname, a.firstname, b.title
+                    FROM books b, authors a
+                    WHERE b.title like &#39;%Orient%&#39;
+                    AND a.lastname = b.author ) );
+
+foreach( @$res ) {
+  print &amp;quot;$_-&amp;gt;[0], $_-&amp;gt;[1]:\t$_-&amp;gt;[2]\n&amp;quot;;
+}
+
+$dbh-&amp;gt;disconnect;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;books&lt;/code&gt; table references the &lt;code&gt;authors&lt;/code&gt; table via a foreign key. This is a one-to-many relationship: each book has only a single author, but an author can have written multiple books. What would we have done if books could have been co-authored by multiple writers? We would have used a cross-reference table to represent the resulting many-to-many relationship. Try &lt;em&gt;that&lt;/em&gt; with Berkeley DBs!&lt;/p&gt;
+
+&lt;p&gt;SQLite shares with the Berkeley DB the approach of being mostly typeless and treating data as simple strings. In our table definitions above, we did not specify the data types of any of the columns, as would be required by Oracle or Postgres. SQLite provides a bit more structure, in that it provides separate columns, so that distinct values do not have to be glued together to form a string, as was required when using a Berkeley DB. Furthermore, SQLite will try to convert strings to floating point numbers if numerical comparisons or operations (such as &lt;code&gt;SUM&lt;/code&gt; or &lt;code&gt;AVG&lt;/code&gt;) are performed on them.&lt;/p&gt;
+
+&lt;p&gt;Since SQLite is a relational database, the data architecture (the &amp;ldquo;schema&amp;rdquo;) can be arbitrarily complex, with data distributed across multiple tables and with foreign keys to represent relationships. This is a big topic &amp;ndash; any book on the relational model will provide plenty of information, including issues such as database normalization and tools such as Entity/Relationship-Models.&lt;/p&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;In this paper, we considered three ways to add database capabilities to a Perl program, without requiring major external database installations or administrative support. Depending on the typical access patterns, flat files or Berkeley DBs may be suitable choices. For more complex queries, the SQLite project provides all the power of relational database architecture in a single Perl DBD module.&lt;/p&gt;
+
+&lt;h3 id=&#34;resources&#34;&gt;Resources&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://perl.plover.com/TieFile&#34;&gt;&lt;code&gt;Tie::File&lt;/code&gt; Home Page&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.sleepycat.com/&#34;&gt;Berkeley DB Home Page&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.sqlite.org/&#34;&gt;SQLite Home Page&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/DBD::SQLite&#34;&gt;Perl DBI Driver for SQLite on CPAN&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www-106.ibm.com/developerworks/web/library/wa-dbdsgn2.html&#34;&gt;Practical Database Design&lt;/a&gt; A brief introduction to the representation of relationships in relational DBs and to DB Normalization.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

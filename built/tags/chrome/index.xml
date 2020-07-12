@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Chrome on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/chrome/</link>
+    <description>Recent content in Chrome on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 13 Jan 2019 20:31:37 +0000</lastBuildDate>
+    <atom:link href="/tags/chrome/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Spidering websites with Headless Chrome and Selenium</title>
+      <link>http://localhost:1313/article/spidering-websites-with-headless-chrome-and-selenium/</link>
+      <pubDate>Sun, 13 Jan 2019 20:31:37 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/spidering-websites-with-headless-chrome-and-selenium/</guid>
+      <description>
+
+&lt;p&gt;Over the holidays I was working on a project that needed to download content from different websites. I needed a web spider, but the typical Perl options like &lt;a href=&#34;https://metacpan.org/pod/WWW::Mechanize&#34;&gt;WWW:Mechanize&lt;/a&gt; wouldn&amp;rsquo;t cut it, as with JavaScript controlling the content on many websites, I needed a JavaScript-enabled browser. But browsers consume lots of memory - what to do?&lt;/p&gt;
+
+&lt;p&gt;The answer was to use headless Chrome, which works exactly like normal except it has no graphical display, reducing its memory footprint. I can control it using &lt;a href=&#34;https://metacpan.org/pod/Selenium::Remote::Driver&#34;&gt;Selenium::Remote::Driver&lt;/a&gt; and Selenium server. Here&amp;rsquo;s how I did it.&lt;/p&gt;
+
+&lt;h2 id=&#34;non-perl-setup&#34;&gt;Non-Perl Setup&lt;/h2&gt;
+
+&lt;p&gt;Obviously I needed to install the Chrome browser. On Linux that usually involves adding the Chrome repo, and then installing the Chrome package. On Fedora it was as easy as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo dnf install fedora-workstation-repositories
+sudo dnf config-manager --set-enabled google-chrome
+sudo dnf install google-chrome-stable
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I also needed ChromeDriver, which implements WebDriver&amp;rsquo;s wire protocol for Chrome. In other words, it&amp;rsquo;s the means by which Selenium talks with Chrome:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;wget https://chromedriver.storage.googleapis.com/2.41/chromedriver_linux64.zip
+unzip chromedriver_linux64.zip
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I put it under &lt;code&gt;/usr/bin&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo chown root:root chromedriver
+sudo chmod 755 chromedriver
+sudo mv chromedriver /usr/bin/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I downloaded Selenium server:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;wget https://selenium-release.storage.googleapis.com/3.14/selenium-server-standalone-3.14.0.jar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This version of Selenium requires Java version 8, which I installed via its package:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo dnf install java-1.8.0-openjdk
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally I launched Selenium server:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;java -Dwebdriver.chrome.driver=/usr/bin/chromedriver -jar selenium-server-standalone-3.14.0.jar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This must be running in order for Perl to communicate with Chrome using Selenium.&lt;/p&gt;
+
+&lt;h2 id=&#34;a-basic-spider&#34;&gt;A basic spider&lt;/h2&gt;
+
+&lt;p&gt;I wrote a basic spider script, here&amp;rsquo;s a simplified version:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/env perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Selenium::Remote::Driver;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Encode &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;encode&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $driver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Selenium::Remote::Driver&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(
+  browser_name &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;chrome&amp;#39;&lt;/span&gt;,
+  extra_capabilities &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; { chromeOptions &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {args &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;window-size=1920,1080&amp;#39;&lt;/span&gt;,
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;headless&amp;#39;&lt;/span&gt;,
+  ]}},
+);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %visited &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ();
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $depth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;https://example.com&amp;#39;&lt;/span&gt;;
+
+spider_site($driver, $url, $depth);
+
+$driver&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;quit();&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This script initializes a &lt;code&gt;Selenium::Remote::Driver&lt;/code&gt; object. Note how it passes options to Chrome: the &lt;code&gt;window-size&lt;/code&gt; option is an example of a key-pair option, whereas &lt;code&gt;headless&lt;/code&gt; is a boolean. Chrome accepts a &lt;em&gt;lot&lt;/em&gt; of &lt;a href=&#34;https://peter.sh/experiments/chromium-command-line-switches/&#34;&gt;options&lt;/a&gt;. Some others which were useful for me:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;allow-running-insecure-content&lt;/code&gt; - let Chrome load websites with invalid security certificates&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;disable-infobars&lt;/code&gt; - disable the &amp;ldquo;Chrome is being controlled by software&amp;rdquo; notification&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;no-sandbox&lt;/code&gt; - disable the sandbox security feature, lets you run headless Chrome as root&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The script initializes a &lt;code&gt;%visited&lt;/code&gt; hash to store URLs the browser visits, to avoid requesting the same URL twice. The &lt;code&gt;$depth&lt;/code&gt; variable determines how many levels deep the spider should go: with a value of 1 it will visit all links on the first page it loads, but none after that. The &lt;code&gt;$url&lt;/code&gt; variable determines the starting web page to visit.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;spider_site&lt;/code&gt; function is recursive:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;spider_site&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($driver, $url, $depth) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;fetching $url\n&amp;#34;&lt;/span&gt;;
+  $driver&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get($url);
+  $visited{$url}&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $text &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $driver&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_body;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; encode(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;UTF-8&amp;#39;&lt;/span&gt;, $text);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($depth &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @links &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $driver&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;find_elements(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;a&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tag_name&amp;#39;&lt;/span&gt;);
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @urls &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ();
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $l (@links) {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $link_url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; eval { $l&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_attribute(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;href&amp;#39;&lt;/span&gt;) };
+      push @urls, $link_url &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $link_url;
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $u (@urls) {
+      spider_site($driver, $u, $depth &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; ($visited{$u});
+    }
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It fetches the given &lt;code&gt;$url&lt;/code&gt;, printing the text content of the webpage to STDOUT. It encodes the output before printing it: I found this was necessary to avoid multibyte encoding issues. If the spider hasn&amp;rsquo;t reached full depth, it gets all links on the page, and spiders each one that it hasn&amp;rsquo;t already visited. I wrapped the &lt;code&gt;get_attribute&lt;/code&gt; method call in &lt;code&gt;eval&lt;/code&gt; because it can fail if the link disappears from the website after it was found.&lt;/p&gt;
+
+&lt;h2 id=&#34;an-improved-spider&#34;&gt;An improved spider&lt;/h2&gt;
+
+&lt;p&gt;The spider script shown above is functional but rudimentary. I wrote a more &lt;a href=&#34;https://gist.github.com/dnmfarrell/5dde6d3957bf9ae037e170cdb44f75a5&#34;&gt;advanced&lt;/a&gt; one that has some nice features:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Pings Selenium server on startup and quits if it&amp;rsquo;s not responding&lt;/li&gt;
+&lt;li&gt;Restricts the links followed to those which match the domain of the starting URL to avoid downloading content from unrelated websites&lt;/li&gt;
+&lt;li&gt;Converts static variables like &lt;code&gt;$depth&lt;/code&gt; into command line options&lt;/li&gt;
+&lt;li&gt;Adds a debugging mode to print out the decisions made by the spider&lt;/li&gt;
+&lt;li&gt;Accepts a list of URLs instead of just one at a time&lt;/li&gt;
+&lt;li&gt;Spiders URLs in parallel using &lt;a href=&#34;https://metacpan.org/pod/Parallel::ForkManager&#34;&gt;Parallel::ForkManager&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Prints website content as gzipped files to separate content from different starting URLs &lt;em&gt;and&lt;/em&gt; save disk space&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There are other improvements I&amp;rsquo;d like to make, but those were enough to get the job done.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Real World Perl: Analyze Chrome&#39;s heap</title>
+      <link>http://localhost:1313/article/real-world-perl-analyze-chrome-s-heap/</link>
+      <pubDate>Mon, 19 Feb 2018 18:37:45 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/real-world-perl-analyze-chrome-s-heap/</guid>
+      <description>&lt;p&gt;Welcome to Real World Perl, a series that aims to showcase everyday uses of Perl. Got a suggestion for a Real World Perl example? &lt;a href=&#34;mailto:perl-com-editor@perl.org&#34;&gt;email me&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;When ordinary tools fail, many programmers reach for Perl. Matthew Hodgson ran into trouble analyzing the Chrome Browser&amp;rsquo;s heap dump file: the programs he used kept running out of memory for large (&amp;gt; 2GB) files. So he whipped up a &amp;ldquo;quick and dirty&amp;rdquo; Perl &lt;a href=&#34;https://github.com/ara4n/heapanalyser/blob/master/heap-analyser.pl&#34;&gt;script&lt;/a&gt; to do it. Instead of parsing the entire heap dump into memory, it saves resources by processing the data one line at a time.&lt;/p&gt;
+
+&lt;p&gt;To use the script, you first need a Chrome heap dump file. To get one, launch Chrome, go to Developer tools -&amp;gt; Memory -&amp;gt; Take heap snapshot. Save the file locally.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ ./heap-analyser.pl /path/to.heapsnapshot &amp;gt; heap-stats.csv
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will save the statistics in a tab separated format in the file &lt;code&gt;heap-stats.csv&lt;/code&gt;. From there you can import the file into your favorite spreadsheet software, for further investigation. Matthew has an example of this in the project &lt;a href=&#34;https://github.com/ara4n/heapanalyser&#34;&gt;repo&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+Cover image from &lt;a href=&#34;https://pixabay.com/en/planet-earth-cosmos-continents-1457453/&#34;&gt;pixabay&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>What&#39;s new on CPAN - June 2017</title>
+      <link>http://localhost:1313/article/what-s-new-on-cpan---june-2017/</link>
+      <pubDate>Tue, 18 Jul 2017 09:27:21 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/what-s-new-on-cpan---june-2017/</guid>
+      <description>
+
+&lt;p&gt;Welcome to &amp;ldquo;What&amp;rsquo;s new on CPAN&amp;rdquo;, a curated look at last month&amp;rsquo;s new CPAN uploads for your reading and programming pleasure. The Perl Conference NA was held in June and the talks are on &lt;a href=&#34;https://www.youtube.com/playlist?list=PLA9_Hq3zhoFxdSVDA4v9Af3iutQxLI14m&#34;&gt;YouTube&lt;/a&gt;. Enjoy!&lt;/p&gt;
+
+&lt;h3 id=&#34;apis-apps&#34;&gt;APIs &amp;amp; Apps&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/App::BorgRestore&#34;&gt;App::BorgRestore&lt;/a&gt; restores paths from borg backups&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Net::Async::Slack&#34;&gt;Net::Async::Slack&lt;/a&gt; provides async Slack messaging&lt;/li&gt;
+&lt;li&gt;Trade bitcoin, ether et al using &lt;a href=&#34;https://metacpan.org/pod/WebService::CoinSpot&#34;&gt;WebService::CoinSpot&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Use the Globus research data sharing service with &lt;a href=&#34;https://metacpan.org/pod/Acme::Globus&#34;&gt;Acme::Globus&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Build and sign GDAX REST request using &lt;a href=&#34;https://metacpan.org/pod/Finance::GDAX::API&#34;&gt;Finance::GDAX::API&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;REST integration with icinga2 using &lt;a href=&#34;https://metacpan.org/pod/Monitoring::Icinga2::Client::REST&#34;&gt;Monitoring::Icinga2::Client::REST&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/WWW::Zotero::Write&#34;&gt;WWW::Zotero::Write&lt;/a&gt; provides a Perl interface to the Zotero Write API&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;config-devops&#34;&gt;Config &amp;amp; Devops&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Send messages over serial ports using &lt;a href=&#34;https://metacpan.org/pod/IPC::Serial&#34;&gt;IPC::Serial&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;List out of date author prereqs with &lt;a href=&#34;https://metacpan.org/pod/Module::CheckDep::Version&#34;&gt;Module::CheckDep::Version&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/PPIx::Utils&#34;&gt;PPIx::Utils&lt;/a&gt; has been separated from PPI&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Win32::Ldd&#34;&gt;Win32::Ldd&lt;/a&gt; tracks dependencies for Windows EXE and DLL files&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/lib::relative&#34;&gt;lib::relative&lt;/a&gt; adds paths relative to the current file to @INC&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;data&#34;&gt;Data&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/List::Flat&#34;&gt;List::Flat&lt;/a&gt; provides functions to flatten array references&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/List::Haystack&#34;&gt;List::Haystack&lt;/a&gt; an immutable list utility to find elements&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Data::Dx&#34;&gt;Data::Dx&lt;/a&gt; can dump data structures with name and point-of-origin&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Hash::GuavaRing&#34;&gt;Hash::GuavaRing&lt;/a&gt; get consistent ring hashing using guava hash (explained &lt;a href=&#34;https://github.com/google/guava/wiki/HashingExplained&#34;&gt;here&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;development-version-control&#34;&gt;Development &amp;amp; Version Control&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Asynchronously process stream data with &lt;a href=&#34;https://metacpan.org/pod/Async::Stream&#34;&gt;Async::Stream&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Interesting: use names beginning with control for punctuation variables using &lt;a href=&#34;https://metacpan.org/pod/English::Control&#34;&gt;English::Control&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/PPR&#34;&gt;PPR&lt;/a&gt; Pattern-based Perl Recognizer - Damian&amp;rsquo;s PPI alternative&lt;/li&gt;
+&lt;li&gt;Get a pure Perl method keyword; &lt;a href=&#34;https://metacpan.org/pod/Method::Signatures::PP&#34;&gt;Method::Signatures::PP&lt;/a&gt; (uses PPR)&lt;/li&gt;
+&lt;li&gt;Not another Moose clone, &lt;a href=&#34;https://metacpan.org/pod/Moxie&#34;&gt;Moxie&lt;/a&gt; is Stevan Little&amp;rsquo;s new OO system&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/TAP::Harness::BailOnFail&#34;&gt;TAP::Harness::BailOnFail&lt;/a&gt; bail&amp;rsquo;s on remaining tests after first failure&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Test::Compiles&#34;&gt;Test::Compiles&lt;/a&gt; tests if perl can compile a string of code&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Test::Expr&#34;&gt;Test::Expr&lt;/a&gt; test an expression with better error messages&lt;/li&gt;
+&lt;li&gt;Output the lines of code that resulted in a failure using &lt;a href=&#34;https://metacpan.org/pod/Test2::Plugin::SourceDiag&#34;&gt;Test2::Plugin::SourceDiag&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;hardware&#34;&gt;Hardware&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Perl Interface to HIDAPI with &lt;a href=&#34;https://metacpan.org/pod/Device::HID&#34;&gt;Device::HID&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Interface to the I2C bus on the Raspberry Pi using &lt;a href=&#34;https://metacpan.org/pod/RPi::I2C&#34;&gt;RPi::I2C&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;other&#34;&gt;Other&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Rdirect Printer::ESCPOS output to a PDF file instead of a printer with &lt;a href=&#34;https://metacpan.org/pod/Printer::ESCPOS::PDF&#34;&gt;Printer::ESCPOS::PDF&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/SPVM&#34;&gt;SPVM&lt;/a&gt; Fast calculation, GC, static typing, VM with perlish syntax&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;science-mathematics&#34;&gt;Science &amp;amp; Mathematics&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Recognize passphrases using Tarsnap&amp;rsquo;s scrypt algorithm using &lt;a href=&#34;https://metacpan.org/pod/Authen::Passphrase::Scrypt&#34;&gt;Authen::Passphrase::Scrypt&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Get blind signatures via &lt;a href=&#34;https://metacpan.org/pod/Crypt::RSA::Blind&#34;&gt;Crypt::RSA::Blind&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Crypt::ECDSA::Blind&#34;&gt;Crypt::ECDSA::Blind&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Cuckoo::Filter&#34;&gt;Cuckoo::Filter&lt;/a&gt; is a Cuckoo Filter implementation in perl&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Geo::Compass::Variation&#34;&gt;Geo::Compass::Variation&lt;/a&gt; can accurately calculate magnetic declination and inclination&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;web&#34;&gt;Web&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Don&amp;rsquo;t get banned! Throttle requests to a site with &lt;a href=&#34;https://metacpan.org/pod/LWP::UserAgent::Throttled&#34;&gt;LWP::UserAgent::Throttled&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Get JSON Web token auth with Plack using &lt;a href=&#34;https://metacpan.org/pod/Plack::Middleware::Auth::JWT&#34;&gt;Plack::Middleware::Auth::JWT&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Store sessions in Redis using &lt;a href=&#34;https://metacpan.org/pod/Plack::Session::Store::RedisFast&#34;&gt;Plack::Session::Store::RedisFast&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Rapi::Blog&#34;&gt;Rapi::Blog&lt;/a&gt; is a RapidApp-powered blog. Also see Henry&amp;rsquo;s TPC NA &lt;a href=&#34;https://www.youtube.com/watch?v=5s_eSYwXDwM&amp;amp;list=PLA9_Hq3zhoFxdSVDA4v9Af3iutQxLI14m&amp;amp;index=36&#34;&gt;talk&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Template::Compiled&#34;&gt;Template::Compiled&lt;/a&gt; compiles templates into coderefs&lt;/li&gt;
+&lt;li&gt;Automate the Chrome browser using &lt;a href=&#34;https://metacpan.org/pod/WWW::Mechanize::Chrome&#34;&gt;WWW::Mechanize::Chrome&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

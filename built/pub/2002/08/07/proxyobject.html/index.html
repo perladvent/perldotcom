@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Proxy Objects </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" In your time as a Perl programmer, it becomes almost inevitable that at some point you will have to manage in-memory tree structures of some sort. When you do this, it becomes important to be aware of how Perl..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2002/08/07/proxyobject.html/" />
+<meta property="og:title" content="Proxy Objects" />
+<meta property="og:description" content=" In your time as a Perl programmer, it becomes almost inevitable that at some point you will have to manage in-memory tree structures of some sort. When you do this, it becomes important to be aware of how Perl...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2002-08-08T08:08:08Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2002_08_07_proxyobject/111-proxy_objects.gif" />
+<meta property="og:article:tag" content="proxy-objects-pattern-circular-references" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Proxy Objects</h1>
+              <p class="blog-post-meta">Aug 7, 2002 by
+              
+              
+                
+                
+                <a href="#author-bio-matt-sergeant">Matt Sergeant</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>In your time as a Perl programmer, it becomes almost inevitable that at some point you will have to manage in-memory tree structures of some sort. When you do this, it becomes important to be aware of how Perl manages memory, and when you might come up against a situation where Perl will not free its memory &ndash; a situation that can happen easily &hellip; as we&rsquo;ll see below.</p>
+
+<p>In writing the <a href="https://metacpan.org/pod/XML::XPath"><code>XML::XPath</code></a> module, (a library that implements some of the XML Document Object Model, or DOM) I came across a particular problem with Perl&rsquo;s memory-management mechanism. In this article, I will detail the problem and demonstrate a technique for building data structures that do not exhibit this problem.</p>
+
+<p>The problem is circular references.</p>
+
+<h4 id="span-id-what-is-a-circular-reference-what-is-a-circular-reference-span"><span id="What is a circular reference?">What Is a Circular Reference?</span></h4>
+
+<p>Circular references are simply self-referential data structures &ndash; a complex data structure that at some point contains a reference to a part of itself further up in the hierarchy. They are a useful idiom when you need two parts of a structure to be able to refer to each other &ndash; often we see them used in parent/child relationships, where a child object might need access to the methods in the parent:</p>
+
+<p><img src="/images/_pub_2002_08_07_proxyobject/circular_ref.png" alt="figure 1" />
+The case we&rsquo;re concerned with here is an XML tree, where we have a root node, and each node can have one or more children. In an XML DOM, the child nodes need the ability to refer back to their parents:</p>
+
+<pre><code>my $parent_name = $node-&gt;getParentNode()-&gt;getNodeName();
+</code></pre>
+
+<p>While it is often extremely useful to encode this type of relationship in your code, it is rather problematic for Perl.</p>
+
+<h4 id="span-id-reference-counting-reference-counting-span"><span id="Reference Counting">Reference Counting</span></h4>
+
+<p>Before we see why circular references are problematic, first we need to understand how Perl&rsquo;s memory management works. In order to return memory for use by other parts of your program when it becomes available, Perl uses a technique called &ldquo;reference counted garbage collection&rdquo;.</p>
+
+<p>By using a count on each variable within Perl of the number of references to that variable (the number of other things in your program that refer to it), Perl&rsquo;s garbage collector can ensure timely destruction of lexical variables (those created with <code>my</code>). Each time the Perl interpreter sees something referencing that variable, it increments the variable&rsquo;s internal reference count. When the reference count goes down to zero, that variable&rsquo;s memory is freed, and its destructor is called.</p>
+
+<p>You can see the reference count of a variable using the <code>Devel::Peek</code> module:</p>
+
+<pre><code>use Devel::Peek;
+my $x = &quot;Hello&quot;;
+my $y = \$x;
+Dump($x);
+</code></pre>
+
+<p>Which outputs:</p>
+
+<pre><code>SV = PV(0x804b85c) at 0x8057620
+  REFCNT = 2
+  FLAGS = (PADBUSY,PADMY,POK,pPOK)
+  PV = 0x805d800 &quot;Hello&quot;\0
+  CUR = 5
+  LEN = 6
+</code></pre>
+
+<p>The important field for these purposes is the REFCNT field, which shows us there are two references to our variable - one for the <em>main</em> copy of the variable (the one we see as <code>$x</code>) and one for the <em>reference</em> that <code>$y</code> holds.</p>
+
+<h4 id="span-id-reference-counting-with-circular-references-reference-counting-with-circular-references-span"><span id="Reference Counting with Circular References">Reference Counting with Circular References</span></h4>
+
+<p>Reference counting works well until you need to build self-referencing data structures. Let&rsquo;s look again at the design of our XML DOM library, where children need access to their parent nodes. The DOM specification requires you to maintain a two-way relationship between the parent and the child nodes. This leads to our <em>circular reference</em> &ndash; the parent holds a reference to the child, and the child holds a reference to the parent.</p>
+
+<h5 id="span-id-circular-references-in-detail-circular-references-in-detail-span"><span id="Circular References in Detail">Circular References in Detail</span></h5>
+
+<p>Circular references occur when a variable either directly or indirectly refers to itself somehow. We can easily show this using hash references and Devel::Peek again:</p>
+
+<pre><code>use Devel::Peek;
+for (1..1) { # enter scope here
+  my %x = ();
+  my %y = ();
+  $x{child} = \%y;
+  $y{parent} = \%x;
+  Dump(\%x);
+} # leave scope here
+</code></pre>
+
+<p>Now we can see that both variables have a refcount of 2 (the 3 for %x is because we have to take an extra reference in order to <code>Dump()</code> it):</p>
+
+<pre><code>...
+SV = PVHV(0x8060b40) at 0x805702c
+  REFCNT = 3               ### This is %x
+  ...
+  Elt &quot;child&quot; HASH = 0x77420b6
+  SV = RV(0x8063008) at 0x804b494
+    REFCNT = 1
+    FLAGS = (ROK)
+    RV = 0x8056fe4
+    SV = PVHV(0x8060ba0) at 0x8056fe4
+      REFCNT = 2           ### This is %y
+      ...
+      Elt &quot;parent&quot; HASH = 0xcc03940
+      SV = RV(0x806300c) at 0x8056f84
+        REFCNT = 1
+        FLAGS = (ROK)
+        RV = 0x805702c
+</code></pre>
+
+<p>Now problems arise. When <code>%y</code> goes out of scope, it cannot be completely garbage collected, because its reference count was 2, not 1. <code>%x</code> also cannot be garbage collected (if it could, then it would free the extra reference to <code>%y</code>) for the same reason. So we end up with two zombie variables, which can neither be garbage collected nor freed back to the system. This is why we get what appears to be memory leaks when we use circular references. Had we modified our <code>for ()</code> loop to repeat more than once, we would see our memory usage steadily growing.</p>
+
+<p>Rather than proving this by watching our memory grow though, we can demonstrate what his happening with <em>objects</em>. We can create a simple object and output something in its <code>DESTROY</code> method:</p>
+
+<pre><code>package CircObj;
+sub new { bless {}, shift }
+sub parent { my $self = shift; @_ ? $self-&gt;{parent} =
+    shift : $self-&gt;{parent} }
+sub child { my $self = shift; @_ ? $self-&gt;{child} =
+    shift : $self-&gt;{child} }
+sub DESTROY { warn(&quot;CircObj::DESTROY\n&quot;) }
+</code></pre>
+
+<p>Now a normal instance of this will output the destroy method as soon as its scope exits:</p>
+
+<pre><code>{
+  my $x = CircObj-&gt;new();
+  warn(&quot;Leaving scope\n&quot;);
+}
+warn(&quot;Scope left\n&quot;);
+</code></pre>
+
+<p>Results in the following output:</p>
+
+<pre><code>Leaving scope
+CircObj::DESTROY
+Scope left
+</code></pre>
+
+<p>However, if we fill in our circular references, then we get a different result:</p>
+
+<pre><code>for (1..1) {
+  my $parent = CircObj-&gt;new;
+  my $child = CircObj-&gt;new;
+  $parent-&gt;child($child);
+  $child-&gt;parent($parent);
+  warn(&quot;Leaving scope\n&quot;);
+}
+warn(&quot;Scope left\n&quot;);
+</code></pre>
+
+<p>And we see the output:</p>
+
+<pre><code>Leaving scope
+Scope left
+CircObj::DESTROY
+CircObj::DESTROY
+</code></pre>
+
+<p>What this means is our variables are only getting <code>DESTROY</code>ed when the Perl interpreter does its global cleanup &ndash; at the time our program exits, not in the timely manner we are used to with normal objects. This may not be too problematic for some scripts, but if you&rsquo;re running any sort of large program, or a long-running persistent interpreter like <code>mod_perl</code>, then you will see your memory steadily grow as you do this repeatedly.</p>
+
+<p>A common way to &ldquo;fix&rdquo; this problem is to use a manual destructor &ndash; a method or function call that breaks the circle somehow. In our original hashes example, this is as simple as adding <code>delete $x{child}</code> to our code (deleting <code>$y{parent}</code> is optional then, as the circle is already broken), and in the object example we can supply a <code>destroy()</code> method that the user can call before exiting the scope. But neither of those options is terribly user friendly, and I believe in letting people who use my modules to expect it to &ldquo;just work&rdquo;.</p>
+
+<h3 id="span-id-fixing-circular-references-with-perl-5-6-fixing-circular-references-with-perl-5-6-span"><span id="Fixing Circular References - with Perl 5.6+">Fixing Circular References - with Perl 5.6+</span></h3>
+
+<p>Perl 5.6.0 introduced a new feature to &ldquo;fix&rdquo; all of the problems with circular references. This feature is called <em>weakrefs</em>. The basic idea is to flag a reference as <em>weakened</em>, so as to not include it in the reference counting. In order to use weakrefs, you need to install the <a href="https://metacpan.org/pod/Scalar::Util">Scalar::Util</a> module (which is included with Perl 5.8.0). It is simple to use. Let&rsquo;s see what happens with our example above:</p>
+
+<pre><code>package CircObj;
+  use Scalar::Util qw(weaken);
+  sub new { bless {}, shift }
+  sub parent { my $self = shift; @_ ? weaken($self-&gt;{parent} =
+       shift) : $self-&gt;{parent} }
+  sub child { my $self = shift; @_ ? $self-&gt;{child} =
+       shift : $self-&gt;{child}
+  }
+  sub DESTROY { warn(&quot;CircObj::DESTROY\n&quot;) }
+
+  for (1..1) {
+    my $parent = CircObj-&gt;new;
+     my $child = CircObj-&gt;new;
+     $parent-&gt;child($child);
+     $child-&gt;parent($parent);
+     warn(&quot;Leaving scope\n&quot;);
+  }
+warn(&quot;Scope left\n&quot;);
+</code></pre>
+
+<p>It&rsquo;s important to note that we only need to weaken our parent reference &ndash; since one reference is OK. But this time, it outputs the expected:</p>
+
+<pre><code>Leaving scope
+CircObj::DESTROY
+CircObj::DESTROY
+Scope left
+</code></pre>
+
+<p>The <code>weaken</code> method is well-proven, and is a stable way to ensure that circular references don&rsquo;t mess up the operation of Perl&rsquo;s garbage collector. You should definitely use them if you can &ndash; for example in your in-house code.</p>
+
+<p>However, that still leaves CPAN module authors and those stuck with Perl 5.005 with a problem: what do we do with older versions of Perl?</p>
+
+<h3 id="span-id-fixing-circular-references-with-perl-5-00503-and-lower-fixing-circular-references-with-perl-5-00503-and-lower-span"><span id="Fixing Circular References - with Perl 5.00503 and lower">Fixing Circular References - with Perl 5.00503 and Lower</span></h3>
+
+<p>Anyone who works for a large company, or who puts out open-source Perl modules, will know that there are still an awful lot of people using Perl 5.00503 &ndash; upgrading takes time, and many people are running older OS&rsquo;s that only come with Perl 5.00503.</p>
+
+<p>So we have to get inventive &ndash; we need some proxy objects.</p>
+
+<p>Proxy objects are a way to access objects indirectly via another object. The term proxy object is from the Design Patterns book (<a href="http://hillside.net/patterns/DPBook/DPBook.html">http://hillside.net/patterns/DPBook/DPBook.html</a>). A proxy object works by being an intermediary between an object and its methods &ndash; passing all communication on to the real object, perhaps after doing something based on the method called. We can implement a basic proxy object in Perl using AUTOLOAD:</p>
+
+<pre><code>package ProxyObject;
+
+sub new {
+  my $class = shift;
+  my $real_obj = shift;
+  my $self = { real_obj =&gt; $real_obj };
+  return bless $self, $class;
+}
+
+sub AUTOLOAD {
+  my $self = shift;
+  my $method = $AUTOLOAD;
+  $method =~ s/.*:://;
+  warn(&quot;Proxying: $method\n&quot;);
+  $self-&gt;{real_obj}-&gt;$method(@_);
+}
+
+1;
+</code></pre>
+
+<p>And we can use that as follows:</p>
+
+<pre><code>use ProxyObject;
+use Time::localtime;
+my $time = localtime();
+### Create a localtime object
+my $proxy = ProxyObject-&gt;new($time);
+### Create a proxy to that object
+print $time-&gt;hour, &quot; is the same as &quot;, $proxy-&gt;hour, &quot;\n&quot;;
+</code></pre>
+
+<p>Which gives us the output:</p>
+
+<pre><code>Proxying: hour
+14 is the same as 14
+Proxying: DESTROY
+</code></pre>
+
+<p>So, this all looks very interesting, but you&rsquo;re probably wondering how that helps with circular references. Well, let&rsquo;s look at a circular-reference example that uses ProxyObject:</p>
+
+<pre><code>package CircObj;
+sub new { bless {}, shift }
+sub parent { my $self = shift; @_ ? $self-&gt;{parent} =
+     shift : $self-&gt;{parent} }
+sub child { my $self = shift; @_ ? $self-&gt;{child} =
+     shift : $self-&gt;{child} }
+sub DESTROY { warn(&quot;CircObj::DESTROY\n&quot;) }
+
+use ProxyObject;
+for (1..1) {
+  my $parent = CircObj-&gt;new;
+  my $child = CircObj-&gt;new;
+  my $proxy = ProxyObject-&gt;new($parent);
+  $parent-&gt;child($child);
+  $child-&gt;parent($parent);
+  warn(&quot;Leaving scope\n&quot;);
+}
+warn(&quot;Scope left\n&quot;);
+</code></pre>
+
+<p>Now what we see from our output is:</p>
+
+<pre><code>Leaving scope
+Proxying: DESTROY
+CircObj::DESTROY
+Scope left
+CircObj::DESTROY
+CircObj::DESTROY
+</code></pre>
+
+<p>So we have made some progress; the DESTROY method on our <code>$parent</code> variable is now called, albeit twice. But what we can do now is use that call to DESTROY to break our reference loop. To do this, we implement a small DESTROY method in our class that clears out the circular reference:</p>
+
+<pre><code>package CircObj;
+...
+sub DESTROY {
+  my $self = shift;
+  warn(&quot;CircObj::DESTROY\n&quot;);
+  if ($self-&gt;{child}) {
+    $self-&gt;{child}-&gt;parent(undef);
+    # set child's parent to undef, breaking the loop
+  }
+}
+</code></pre>
+
+<p>Which finally leads to the desired output:</p>
+
+<pre><code>Leaving scope
+Proxying: DESTROY
+CircObj::DESTROY
+CircObj::DESTROY
+CircObj::DESTROY
+Scope left
+</code></pre>
+
+<p>Of course, this being Perl, it is possible to wrap all of this up into a fairly simple class, which I&rsquo;ll demonstrate in the next section.</p>
+
+<h4 id="span-id-problems-with-this-technique-problems-with-this-technique-span"><span id="Problems With This Technique">Problems With This Technique</span></h4>
+
+<p>There is one major problem with this technique: It&rsquo;s possible to confuse the garbage collector with it. The easiest way to see this happen is if you build a tree using the above technique, and then hold onto a sub-tree while letting the root of the tree go out of scope. All of a sudden you&rsquo;ll find your data structure has become untangled, like so much wool from a snagged jumper. Unfortunately, there&rsquo;s little you can do about this, except perhaps for allowing the use of a proxy object as an option, and providing a method for freeing the tree that manually breaks the links. This is what XML::XPath does: By specifying <code>$XML::XPath::SafeMode = 1</code> at runtime, you can switch this behavior on and off.</p>
+
+<p>Another problem is that every property access now needs to go through method calls. If you have the proxy object (which is just a simple hash ref in this example, but could be a scalar ref), then you can&rsquo;t try and access the hash entries directly and expect to get those in the object we are proxying to. You may be able to get this working via the TIE mechanism, but it doesn&rsquo;t come for free. So we potentially lose some speed this way, though you should be using methods anyway for the sake of encapsulation.</p>
+
+<h3 id="span-id-doing-the-right-thing-doing-the-right-thing-span"><span id="Doing The Right Thing">Doing the Right Thing</span></h3>
+
+<p>What we can now do (in true Blue Peter fashion) is create a module that has totally transparent weak-references support on Perl 5.6, while still allowing garbage collection on lower Perl versions. This is a little more complex than the scenario above, but here&rsquo;s how it works. First, we create a base class that our complex data-structure classes can subclass:</p>
+
+<pre><code># base class for all circular reffing classes
+# rename this before use
+package BaseClass;
+use strict;
+</code></pre>
+
+<p>In that class we do some compile-time checking for Scalar::Util:</p>
+
+<pre><code>BEGIN {
+  eval &quot;use Scalar::Util qw(weaken);&quot;;
+  if ($@) {
+    $BaseClass::WeakRefs = 0;
+  }
+  else {
+    $BaseClass::WeakRefs = 1;
+  }
+}
+</code></pre>
+
+<p>Next, we create a clever constructor. This constructor turns our class name (e.g. &ldquo;XML::MyDOM::Node&rdquo;) into an implementation class name (&ldquo;XML::MyDOM::NodeImpl&rdquo;), and constructs an object of that type. Then if weak refs are available, then it returns that object, otherwise it constructs a proxy object that proxies to that object, and returns the proxy object instead:</p>
+
+<pre><code>sub new {
+  my $class = shift;
+  no strict 'refs';
+  my $impl = $class . &quot;Impl&quot;;
+  my $this = $impl-&gt;new(@_);
+  if ($BaseClass::WeakRefs) {
+    return $this;
+  }
+  my $self = \$this;
+  return bless $self, $class;
+}
+</code></pre>
+
+<p>Finally, we have a more advanced version of our proxy object&rsquo;s AUTOLOAD method. This does some error checking to ensure that unknown methods are detected correctly, and that methods on this class are executed in the correct way. But otherwise it&rsquo;s doing exactly the same job as our original:</p>
+
+<pre><code>sub AUTOLOAD {
+  my $method = $AUTOLOAD;
+  $method =~ s/.*:://; # strip the package name
+  no strict 'refs';
+  *{$AUTOLOAD} = sub {
+    my $self = shift;
+    my $olderror = $@; # store previous exceptions
+    my $obj = eval { $$self };
+    if ($@) {
+      if ($@ =~ /Not a SCALAR reference/) {
+        croak(&quot;No such method $method in &quot; . ref($self));
+      }
+      croak $@;
+    }
+    if ($obj) {
+      # make sure $@ propogates if this method call was the result
+      # of losing scope because of a die().
+      if ($method =~ /^(DESTROY|del_parent_link)$/) {
+        $obj-&gt;$method(@_);
+        $@ = $olderror if $olderror;
+        return;
+      }
+      return $obj-&gt;$method(@_);
+    }
+  };
+  goto &amp;$AUTOLOAD;
+}
+
+package BaseClassImpl; # Implementation class
+
+sub new { die &quot;Virtual base class&quot; }
+
+# All base class methods go below here
+
+1;
+</code></pre>
+
+<p>Now, all classes derived from that need to look like this:</p>
+
+<pre><code>package CircRefClass;
+@ISA = ('BaseClass');
+
+package CircRefClassImpl;
+@ISA = ('BaseClassImpl', 'CircRefClass');
+
+sub new {
+  my $class = shift;
+  # ordinary constructor here
+  my $self = bless {}, $class;
+  # ... yada yada yada
+  return $self;
+}
+
+sub DESTROY {
+  my $self = shift;
+  # Break child's link to me here
+  $self-&gt;child-&gt;del_parent_link();
+}
+
+sub set_parent {
+  my $self = shift;
+  if ($BaseClass::WeakRefs) {
+    Scalar::Util::weaken($self-&gt;{parent} = shift);
+  }
+  else {
+    $self-&gt;{parent} = shift;
+  }
+}
+
+sub del_parent_link {
+  my $self = shift;
+  $self-&gt;{parent} = undef;
+}
+
+# All class methods here
+
+1;
+</code></pre>
+
+<p>And that&rsquo;s about all you need to change. The rest of your methods can remain the same, as long as they are moved to the <code>PackageImpl</code> class, rather than the <code>Package</code> class. And this will auto-detect the presence of Scalar::Util&rsquo;s <code>weakref()</code> method and use it accordingly if it&rsquo;s available.</p>
+
+<p>The complicated work is in the <code>AUTOLOAD</code> class in the <code>BaseClass</code> package. The reason it looks so complex is because it implements a method cache for autoloaded methods, ensuring that this implementation won&rsquo;t slow down your program.</p>
+
+<p>Also note that you can rename the <code>del_parent_link</code> and <code>set_parent</code> methods if those names aren&rsquo;t appropriate for your application. They just happen to work for a tree structure.</p>
+
+<h3 id="span-id-conclusions-conclusions-span"><span id="Conclusions">Conclusions</span></h3>
+
+<p>Circular references are a useful tool, and sometimes a neccessary evil. By using methods available to Perl 5.6 and up, combined with a custom proxying technique, we can create classes that implement circular references while still managing to be garbage collected on all versions of Perl. This is a powerful design to add to your Perl programmer&rsquo;s toolbox.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/proxy-objects-pattern-circular-references">proxy-objects-pattern-circular-references</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-matt-sergeant">
+  <div class="col-sm-2">
+    
+    <a href="/authors/matt-sergeant/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/matt-sergeant/"><h3>Matt Sergeant</h3></a>
+    <p></p>
+    <h5><a href="/authors/matt-sergeant/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2002_08_07_proxyobject.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bitwise on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/bitwise/</link>
+    <description>Recent content in Bitwise on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 23 Aug 2016 08:58:54 +0000</lastBuildDate>
+    <atom:link href="/tags/bitwise/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Save space with bit arrays</title>
+      <link>http://localhost:1313/article/save-space-with-bit-arrays/</link>
+      <pubDate>Tue, 23 Aug 2016 08:58:54 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/save-space-with-bit-arrays/</guid>
+      <description>
+
+&lt;p&gt;&amp;ldquo;Big data&amp;rdquo; is an overused term, but when you&amp;rsquo;re actually working with big data, every bit can count. Shaving several bits from data structure used billions of times can save a lot of space. A few months ago I was working on a job distribution system; it would send millions of jobs out every day. We wanted to capture every decision made by the system, so that a user could later query the system to understand &lt;em&gt;why&lt;/em&gt; a job had or hadn&amp;rsquo;t been sent to a partner.&lt;/p&gt;
+
+&lt;p&gt;The problem was that the system was making billions of decisions a day, so we needed a way to pack those decisions as efficiently as possible. A colleague of mine had the bright idea to use a &lt;a href=&#34;https://en.wikipedia.org/wiki/Bit_array&#34;&gt;bit array&lt;/a&gt;, and it worked very well - we were able to compress the data by a factor of 18 or more. If you&amp;rsquo;re not familiar with bit arrays, or a little rusty on the code, keep reading and I&amp;rsquo;ll show you how to use them with Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;bit-array-basics&#34;&gt;Bit array basics&lt;/h3&gt;
+
+&lt;p&gt;Bit arrays are a way of storing multiple booleans in single number. Consider the number 0 as a byte/octet represented as bits:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;00000000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instead of treating it like a number, using &lt;a href=&#34;https://en.wikipedia.org/wiki/Bitwise_operation&#34;&gt;bitwise operators&lt;/a&gt; we can treat each bit as a separate column. As this is an 8 bit number, we can store up to 8 booleans in it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;0|0|0|0|0|0|0|0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To store a boolean in the first bit of the array, we can use bitwise or equals (&lt;code&gt;|=&lt;/code&gt;). Here&amp;rsquo;s how that looks in C pseudocode:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;short bit_array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+bit_array &lt;span style=&#34;color:#f92672&#34;&gt;|=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let&amp;rsquo;s take this one step at a time. First I initialize an 8 bit integer called &lt;code&gt;bit_array&lt;/code&gt;. Next, I create a binary number with the bit set that I wish to set in &lt;code&gt;bit_array&lt;/code&gt;. I do this with the left bitshift code &lt;code&gt;1 &amp;lt;&amp;lt; 6&lt;/code&gt;. This means, &amp;ldquo;shift the bits in the number on the left, 6 places to the left&amp;rdquo;, which does this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;00000001 &amp;lt;&amp;lt; 6;
+01000000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is called a bitmask. Next I use or equals to update &lt;code&gt;bit_array&lt;/code&gt; with the bitmask &lt;code&gt;01000000&lt;/code&gt;. Bitwise or (&lt;code&gt;|&lt;/code&gt;) works by setting any bit to 1 in its left operand that is set to 1 in its right operand. Adding a equals sign on the end simply assigns the resulting value to &lt;code&gt;bit_array&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If we wanted to store a boolean in the fourth bit, we&amp;rsquo;d do this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;bit_array &lt;span style=&#34;color:#f92672&#34;&gt;|=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So now the &lt;code&gt;bit_array&lt;/code&gt; looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;01001000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To test if a particular bit is set, I can use bitwise and (&lt;code&gt;&amp;amp;&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (bit_array &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;)) {
+  &lt;span style=&#34;color:#e6db74&#34;&gt;/* the seventh column is true */&lt;/span&gt;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Bitwise and returns a number with every bit set to 0 in its left operand which is 0 in its right operand. So the code &lt;code&gt;1 &amp;lt;&amp;lt; 6&lt;/code&gt; bitshifts a number that only has one particular bit set to 1 (&lt;code&gt;01000000&lt;/code&gt;). This is the bitmask. If the bit array has that bit set to 1, it will return non-zero (true), else it returns zero (false).&lt;/p&gt;
+
+&lt;h3 id=&#34;bit-arrays-in-perl&#34;&gt;Bit arrays in Perl&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m going to use a contrived example to show how bit arrays work in Perl. Imagine we&amp;rsquo;re working on an ordering system at a pizza restaurant. We need to store all the toppings required for the pizza. In Perl we store numbers in scalars, which are usually 32 or 64 bits long; that&amp;rsquo;s a lot of toppings we can pack into a single number!&lt;/p&gt;
+
+&lt;p&gt;Here is the class:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Pizza::Order;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; utf8;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %toppings &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+  tomato        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+  cheese        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+  onion         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,
+  sausage       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,
+  pepperoni     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;,
+  ham           &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;,
+  chicken       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;,
+  bbq_chicken   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;,
+  olives        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;,
+  vegetables    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;,
+  jalapeńo      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;,
+  ranch         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;,
+  eggplant      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;,
+  garlic        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;,
+);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;new&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $class &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; bless &lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;$self, $class;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;print_state&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%014b\n&amp;#34;&lt;/span&gt;, $$self;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;available_toppings&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; keys %toppings;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;add_topping&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $topping) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# bitwise OR equals to set a bit field&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $$self &lt;span style=&#34;color:#f92672&#34;&gt;|=&lt;/span&gt; $toppings{ $topping };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;remove_topping&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($self, $topping) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+  &lt;span style=&#34;color:#75715e&#34;&gt;# bitwise NOT to invert a field and bitwise AND equals to unset it&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $$self &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;$toppings{ $topping };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;get_toppings&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @ordered_toppings &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ();
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $topping (keys %toppings) {
+    push @ordered_toppings, $topping
+      &lt;span style=&#34;color:#75715e&#34;&gt;# bitwise AND to test if this bit is set&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $$self &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; $toppings{ $topping };
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; @ordered_toppings;
+}
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I create a class called &lt;code&gt;Pizza::Order&lt;/code&gt;. The &lt;code&gt;%toppings&lt;/code&gt; hash stores names of pizza toppings and their associated bitmask. I could only think of 14 toppings, leaving 18 spare slots for the future (if we want to stick to 32 bit integers). The &lt;code&gt;new&lt;/code&gt; subroutine is a constructor which creates a blessed scalar as the &lt;code&gt;Pizza::Order&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;print_state&lt;/code&gt; method uses &lt;a href=&#34;https://perldoc.perl.org/functions/printf.html&#34;&gt;printf&lt;/a&gt; to print the Pizza::Order object state as a binary number. This is a really useful feature of &lt;code&gt;printf&lt;/code&gt; which many other languages don&amp;rsquo;t have (C &amp;amp; Python for example). Both &lt;code&gt;add_topping&lt;/code&gt; and &lt;code&gt;get_toppings&lt;/code&gt; use the techniques described earlier to set and check for set bits.&lt;/p&gt;
+
+&lt;p&gt;More interesting perhaps, is the &lt;code&gt;remove_topping&lt;/code&gt; method. This uses bitwise not (&lt;code&gt;~&lt;/code&gt;) to invert a bitmask and then bitwise and (&lt;code&gt;&amp;amp;&lt;/code&gt;) equals to unset it. Pretty nifty, huh? Here&amp;rsquo;s a quick script to test it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Pizza::Order;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $order &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Pizza::Order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;();
+$order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add_topping(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;cheese&amp;#39;&lt;/span&gt;);
+$order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add_topping(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;eggplant&amp;#39;&lt;/span&gt;);
+$order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;remove_topping(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;cheese&amp;#39;&lt;/span&gt;);
+$order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add_topping(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tomato&amp;#39;&lt;/span&gt;);
+$order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;print_state();
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$_\n&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; $order&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;get_toppings();&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This prints:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;01000000000001&lt;/span&gt;
+eggplant
+tomato&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The first line is the current state of the &lt;code&gt;$order&lt;/code&gt; object. It shows the first, and second-to-last bits set, which correspond to the tomato and eggplant bitmasks. It then prints out those toppings. Yay, it works!&lt;/p&gt;
+
+&lt;h3 id=&#34;bit-array-limitations&#34;&gt;Bit array limitations&lt;/h3&gt;
+
+&lt;p&gt;One thing to watch out for when storing bit arrays on disk is code change. Imagine if I had several years&amp;rsquo; worth of pizza orders saved in a database. Then one day, we stopped offering bbq chicken. It would be tempting to update the toppings hash like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %toppings &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+  tomato        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+  cheese        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+  onion         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,
+  sausage       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,
+  pepperoni     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;,
+  ham           &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;,
+  chicken       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;,
+  olives        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;, &lt;span style=&#34;color:#75715e&#34;&gt;# deleted bbq_chicken&lt;/span&gt;
+  vegetables    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;,
+  jalapeńo      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;,
+  ranch         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;,
+  eggplant      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;,
+  garlic        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;,
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I deleted the &lt;code&gt;bbq_chicken&lt;/code&gt; entry and bumped up the remaining toppings bitmasks. The problem is compatibility: in all the historical pizza orders, &lt;code&gt;olives&lt;/code&gt; (for example) had a bitmask of &lt;code&gt;00000010000000&lt;/code&gt; but in the new code, its bitmask is one lower. So if I tried to load a historical order with this class, the toppings data would be wrong. One way to handle this is remove, but not reuse, the bitmask for the deleted entry.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %toppings &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (
+  tomato        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+  cheese        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+  onion         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,
+  sausage       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,
+  pepperoni     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;,
+  ham           &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;,
+  chicken       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;,
+  &lt;span style=&#34;color:#75715e&#34;&gt;# reserved&lt;/span&gt;
+  olives        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;,
+  vegetables    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;,
+  jalapeńo      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;,
+  ranch         &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;11&lt;/span&gt;,
+  eggplant      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;,
+  garlic        &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;,
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This limitation makes bitmasks less useful for long-term storage of data, unless the existing bitmasks are unlikely to change. Note that it&amp;rsquo;s fine to add additional toppings and bitmasks, it&amp;rsquo;s just re-using existing bitmasks that causes issues.&lt;/p&gt;
+
+&lt;p&gt;Another thing to consider is upper limits (update - see &lt;a href=&#34;http://perltricks.com/article/using-bitmasks-with-large-integers/&#34;&gt;using bit arrays with large integers&lt;/a&gt;). If you want your Perl code to be compatible with 32 bit and 64 bit Perls, you should probably stick to a maximum of 32 bitmasks (using a module like &lt;a href=&#34;https://metacpan.org/pod/bigint&#34;&gt;bigint&lt;/a&gt; may &lt;em&gt;not&lt;/em&gt; work because of addressable memory limitations). You can see the settings your Perl has been compiled with by typing &lt;code&gt;perl -V | grep longsize&lt;/code&gt; at the command line. The longsize value is the number of bytes your Perl can store in an integer natively.&lt;/p&gt;
+
+&lt;p&gt;Finally, in order to get the data back out of a bit array it needs to be tested with all the available bitmasks. Consider the &lt;code&gt;get_toppings&lt;/code&gt; method in &lt;code&gt;Pizza::Order&lt;/code&gt;. To find out what toppings are set, the code has to check every topping&amp;rsquo;s bitmask. This is pretty inefficient. So bitmasks are good for compact data storage, but not fast access.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Wikipedia has useful entries on &lt;a href=&#34;https://en.wikipedia.org/wiki/Bit_array&#34;&gt;bit arrays&lt;/a&gt; and &lt;a href=&#34;https://en.wikipedia.org/wiki/Bitwise_operation&#34;&gt;bitwise operators&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Perl&amp;rsquo;s official &lt;a href=&#34;https://perldoc.perl.org/perlop.html&#34;&gt;operator documentation&lt;/a&gt; covers the bitwise operators. You can read it in the terminal with the command &lt;code&gt;perldoc perlop&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Use Perl&amp;rsquo;s builtin functions &lt;a href=&#34;https://perldoc.perl.org/functions/sprintf.html&#34;&gt;sprintf&lt;/a&gt; (&lt;code&gt;perldoc -f sprintf&lt;/code&gt;) and &lt;a href=&#34;https://perldoc.perl.org/functions/printf.html&#34;&gt;printf&lt;/a&gt; (&lt;code&gt;perldoc -f printf&lt;/code&gt;) to inspect binary values&lt;/li&gt;
+&lt;li&gt;Stringifying / printing numbers as binary isn&amp;rsquo;t the only nice binary feature Perl has over other languages. Another is the ability to write binary numbers inline, just like octal and hexadecimal numbers, for example: &lt;code&gt;0b00001000&lt;/code&gt;. This is great for comparing binary numbers&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/bigint&#34;&gt;bigint&lt;/a&gt; is one of several modules on CPAN for working with large integers, see &lt;a href=&#34;http://perltricks.com/article/using-bitmasks-with-large-integers/&#34;&gt;using bit arrays with large integers&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

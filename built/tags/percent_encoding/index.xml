@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Percent_encoding on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/percent_encoding/</link>
+    <description>Recent content in Percent_encoding on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 14 Jun 2016 20:54:51 +0000</lastBuildDate>
+    <atom:link href="/tags/percent_encoding/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The road to a 55x speedup with XS</title>
+      <link>http://localhost:1313/article/the-road-to-a-55x-speedup-with-xs/</link>
+      <pubDate>Tue, 14 Jun 2016 20:54:51 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/the-road-to-a-55x-speedup-with-xs/</guid>
+      <description>
+
+&lt;p&gt;Lately my client has been concerned with improving their application speed, so naturally I started to think about XS, Perl&amp;rsquo;s C macro language. With XS you can write C code and call it from Perl.&lt;/p&gt;
+
+&lt;p&gt;To test the waters I wrote a simple URI encoder/decoder in C and with some trial-and-error managed to make &lt;a href=&#34;https://metacpan.org/pod/URI::Encode::XS&#34;&gt;URI::Encode::XS&lt;/a&gt;, a module that used it. &amp;ldquo;This is easy!&amp;rdquo; I thought and excitedly typed out a benchmarking &lt;a href=&#34;https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench&#34;&gt;script&lt;/a&gt;. I benchmarked my module against &lt;a href=&#34;https://metacpan.org/pod/URI::Escape&#34;&gt;URI::Escape&lt;/a&gt; a venerable but rather slow &lt;em&gt;pure-Perl&lt;/em&gt; URI encoder/decoder. You can imagine how crestfallen I was when I read the benchmark results to find that all of my effort only netted a 20% speedup. I wondered if Perl&amp;rsquo;s string routines are so fast they&amp;rsquo;re hard to improve upon.&lt;/p&gt;
+
+&lt;h3 id=&#34;renewed-hope&#34;&gt;Renewed hope&lt;/h3&gt;
+
+&lt;p&gt;Enter &lt;a href=&#34;https://metacpan.org&#34;&gt;URI::XSEscape&lt;/a&gt;, a &amp;ldquo;quick and dirty&amp;rdquo; (the authors&amp;rsquo; words) XS implementation of URI::Escape. It was uploaded to CPAN last month. You can see the authors&amp;rsquo; &lt;a href=&#34;https://metacpan.org/pod/URI::XSEscape#BENCHMARKS&#34;&gt;benchmarks&lt;/a&gt; for yourself, but in my testing it appeared to be about 18.5 times faster than URI::Escape. That&amp;rsquo;s not a misprint - on my laptop it encoded 2.75m strings per second, compared to 138k for URI::Escape. So how did they do it?&lt;/p&gt;
+
+&lt;p&gt;First let&amp;rsquo;s look at my naive C encode implementation:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;void &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;uri_encode (char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;uri, const char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;special_chars, char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;buffer)
+{
+  int i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+  &lt;span style=&#34;color:#e6db74&#34;&gt;/* \0 is null, end of the string */&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (uri[i] &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;)
+  {
+    int encode_char &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+    int j &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (special_chars[j] &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;)
+    {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (uri[i] &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; special_chars[j])
+      {
+        &lt;span style=&#34;color:#e6db74&#34;&gt;/* do not encode char as it is in the special_chars set */&lt;/span&gt;
+        encode_char &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+        break;
+      }
+      j&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (encode_char &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+    {
+      char code[&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;];
+      sprintf(code, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%%%02X&amp;#34;&lt;/span&gt;, uri[i]);
+      strcat(buffer, code);
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+    {
+      char code[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;];
+      code[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; uri[i];
+      code[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;;
+      strcat(buffer, code);
+    }
+    i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Basically what this does is loop through the &lt;code&gt;uri&lt;/code&gt; string, looking characters that are in the &lt;code&gt;special_chars&lt;/code&gt; string, and if it finds a match, it percent encodes the character with &lt;code&gt;sprintf&lt;/code&gt; and appends the result to &lt;code&gt;buffer&lt;/code&gt; which is the encoded string. Compare this with the encode function from &lt;code&gt;URI::XSEscape&lt;/code&gt; (I&amp;rsquo;ve simplified it slightly):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Buffer&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; uri_encode(Buffer&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; src, int length,
+                   Buffer&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; tgt)
+{
+    int s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; src&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;pos;
+    int t &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; tgt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;pos;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (s &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; (src&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;pos &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; length)) {
+        unsigned char u &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (unsigned char) src&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;data[s];
+        char&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; v &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; uri_encode_tbl[(int)u];
+
+        &lt;span style=&#34;color:#f92672&#34;&gt;/*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; current source character doesn&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;t need to be encoded,
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;           just copy it to target*/
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        if (!v) {
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            tgt-&amp;gt;data[t++] = src-&amp;gt;data[s++];
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;            continue;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        }
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        /* copy encoded character from our table */
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        tgt-&amp;gt;data[t+0] = &amp;#39;&lt;/span&gt;%&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;;&lt;/span&gt;
+        tgt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;data[t&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; v[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];
+        tgt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;data[t&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; v[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;];
+
+        &lt;span style=&#34;color:#f92672&#34;&gt;/*&lt;/span&gt; we used up &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; characters (%XY) in target
+         &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;and&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; character from source &lt;span style=&#34;color:#f92672&#34;&gt;*/&lt;/span&gt;
+        t &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;;
+        &lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;s;
+    }
+    &lt;span style=&#34;color:#e6db74&#34;&gt;/* null-terminate target and return src as was left */&lt;/span&gt;
+    src&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;pos &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; s;
+    tgt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;pos &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; t;
+    buffer_terminate(tgt);
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; src;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code loops through the input string but instead of comparing the current character to another string of special characters, it does a table lookup. This is much faster than looping through another string. Note how it doesn&amp;rsquo;t use &lt;code&gt;sprintf&lt;/code&gt; either - all the hex codes are pre-computed in &lt;code&gt;uri_encode_tbl&lt;/code&gt;. Finally, instead of creating a new string and concatenating it to the output string, this code simply copies the output directly to the output string&amp;rsquo;s memory location.&lt;/p&gt;
+
+&lt;p&gt;This code also avoid a subtle bug with my implementation: Perl strings can contain null characters, but in C null is used to terminate strings. Because URI::XSEscape&amp;rsquo;s encode function accepts a length argument, it can encode strings will nulls and my version can&amp;rsquo;t.&lt;/p&gt;
+
+&lt;h3 id=&#34;going-faster&#34;&gt;Going faster&lt;/h3&gt;
+
+&lt;p&gt;At this point I updated the encode/decode functions in URI::Encode::XS to be table based like URI::XSEscape and saw huge gains in performance, making URI::Encode::XS about 25 times faster than URI::Escape (URI::Encode::XS doesn&amp;rsquo;t support user-defined escape values, so it&amp;rsquo;s simpler than URI::XSEscape). I thought a 25x improvement was as good as it got, and was about done with the module, when I was contacted by &lt;a href=&#34;https://metacpan.org/author/CHANSEN&#34;&gt;Christian Hansen&lt;/a&gt; (author of &lt;a href=&#34;https://metacpan.org/release/Time-Moment&#34;&gt;Time::Moment&lt;/a&gt;). Christian overhauled my simple XS code to make it safer and faster. This is what became of the &lt;code&gt;uri_encode&lt;/code&gt; C function:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;size_t uri_encode (const char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;src, const size_t len, char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;dst)
+{
+  size_t i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, j &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; len
+  {
+    const char &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; code &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; uri_encode_tbl[ (unsigned char)src[i] ];
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (code)
+    {
+      memcpy(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;dst[j], code, &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;);
+      j &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;;
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+    {
+      dst[j] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; src[i];
+      j&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+    }
+    i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+  }
+  dst[j] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; j;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This version looks up the character value in a pre-computed table and then uses &lt;code&gt;memcpy&lt;/code&gt; to append it to the output string (avoiding 3 separate assignments). It also returns the length of encoded string, which is useful. After Christian&amp;rsquo;s optimizations, my benchmarking &lt;a href=&#34;https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench&#34;&gt;script&lt;/a&gt; showed URI::Encode::XS&amp;rsquo;s encoding function to be 55 times faster than URI::Escape (about 8m encoded strings per second). Much of the gains came from optimizing the &lt;a href=&#34;https://github.com/dnmfarrell/URI-Encode-XS/blob/df8009e9d7af4cf243fa29ca8aaa23982feeba58/XS.xs#L143&#34;&gt;xsub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-power-of-c-the-pleasure-of-perl&#34;&gt;The power of C, the pleasure of Perl&lt;/h3&gt;
+
+&lt;p&gt;To me the most magical thing about XS code is you call it from Perl:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; URI::Encode::XS &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;uri_encode&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $encoding &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; uri_encode($some_string); &lt;span style=&#34;color:#75715e&#34;&gt;# super fast&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So the user has the convenience of writing Perl code, but the benefit of the faster implementation. Perl is already pretty fast, but there are certain operations that are expensive. If you work on a Perl application, how much faster would it be if you could make all of the bottlenecks 55 times faster?&lt;/p&gt;
+
+&lt;h3 id=&#34;learning-xs&#34;&gt;Learning XS&lt;/h3&gt;
+
+&lt;p&gt;If you&amp;rsquo;d like to learn more about XS, I&amp;rsquo;d strongly recommend this &lt;a href=&#34;http://world.std.com/~swmcd/steven/perl/pm/xs/intro/index.html&#34;&gt;series&lt;/a&gt; by Steven W McDougall. It&amp;rsquo;s the best introduction I know of.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/xsawyerx/xs-fun&#34;&gt;XS is Fun&lt;/a&gt; is a more modern introduction to XS programming that takes you through the steps of writing an XS module and importing a C library.&lt;/p&gt;
+
+&lt;p&gt;Chapter 18 &amp;ldquo;Extending Perl: A First Course&amp;rdquo; in &lt;a href=&#34;http://shop.oreilly.com/product/9781565922204.do&#34;&gt;Advanced Perl Programming&lt;/a&gt; first edition has a good introduction to XS. It covers the most common macros for scalars, arrays and hashes which is useful (the second edition doesn&amp;rsquo;t cover XS). &lt;a href=&#34;https://www.manning.com/books/extending-and-embedding-perl&#34;&gt;Extending and Embedding Perl&lt;/a&gt; goes further, with several tutorials on the different ways to call and receive data from XS. Both books are a bit dated but I found them valuable and an easier read than the official docs.&lt;/p&gt;
+
+&lt;p&gt;The official Perl documentation has useful reference sources: &lt;a href=&#34;https://perldoc.perl.org/perlxs.html&#34;&gt;perlxs&lt;/a&gt;, &lt;a href=&#34;https://perldoc.perl.org/perlapi.html&#34;&gt;perlapi&lt;/a&gt; and &lt;a href=&#34;https://perldoc.perl.org/perlxs.html&#34;&gt;perlguts&lt;/a&gt;. There is also &lt;a href=&#34;https://perldoc.perl.org/perlxs.html&#34;&gt;perlxstut&lt;/a&gt; but I would skip that in favor of the above resources.&lt;/p&gt;
+
+&lt;p&gt;Several times I&amp;rsquo;ve found XS macros used in Perl code that are not explained in any documentation (e.g. &lt;code&gt;dXSTARG&lt;/code&gt;). In those cases it pays to have a copy of the Perl &lt;a href=&#34;https://www.perl.org/get.html&#34;&gt;source code&lt;/a&gt; - just grep the source and you&amp;rsquo;ll find its definition with a comment (typically in &lt;code&gt;pp.h&lt;/code&gt;).&lt;/p&gt;
+
+&lt;h3 id=&#34;a-note-on-the-benchmarks&#34;&gt;A note on the benchmarks&lt;/h3&gt;
+
+&lt;p&gt;The benchmarks in this article were all run on my laptop, a Dell XPS 13 with 8GB RAM running Fedora 23. Different hardware will yield different results (Christian&amp;rsquo;s benchmark showed URI::Encode::XS to be 90x (!) faster than URI::Escape).&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench&#34;&gt;script&lt;/a&gt; counts how many times each module can encode a string per second. But a string of a different length, or with a different number of reserved characters will yield a different benchmark. For example benchmarking an empty string shows URI::Encode::XS to be just 9x times faster on my laptop.&lt;/p&gt;
+
+&lt;p&gt;The module versions were URI::Encode::XS v0.08 and URI::Escape v3.31. The Perl version was 5.22.&lt;/p&gt;
+
+&lt;h3 id=&#34;thanks&#34;&gt;Thanks&lt;/h3&gt;
+
+&lt;p&gt;A big thank you to Christian Hansen and Jesse DuMond for your help with URI::Encode::XS. The module would not be half of what it is without your contributions.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

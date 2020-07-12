@@ -18,7 +18,7 @@
 
 ### Memoizing callers - Paul Boyd
 
-Paul submitted a solution for [memoizing](http://en.wikipedia.org/wiki/Memoization) calling subroutines using Perl's [caller](http://perldoc.perl.org/functions/caller.html) function. Paul's demo script is below. The "aggressively\_memoize" subroutine will memoize the results of the calling function so that when it is called repeatedly with the same arguments, the memoizer returns the stored result rather than re-calculating it. Cool huh?
+Paul submitted a solution for [memoizing](http://en.wikipedia.org/wiki/Memoization) calling subroutines using Perl's [caller]({{</* perlfunc "caller" */>}}) function. Paul's demo script is below. The "aggressively\_memoize" subroutine will memoize the results of the calling function so that when it is called repeatedly with the same arguments, the memoizer returns the stored result rather than re-calculating it. Cool huh?
 
 To see this in action, just copy and save the script below as "memoizer.pl". Open up the terminal and type:
 
@@ -67,12 +67,12 @@ sub aggressively_memoize {
         #}
 
         return $cache{$key};
-    };  
-    {   
+    };
+    {
         no strict 'refs';
         no warnings 'redefine';
         *{$caller} = $new_sub;
-    }   
+    }
     return;
 }
 

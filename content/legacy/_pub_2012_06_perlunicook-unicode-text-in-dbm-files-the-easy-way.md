@@ -18,7 +18,7 @@
 ℞ 43: Unicode text in DBM hashes, the easy way
 ----------------------------------------------
 
-[Some Perl libraries require you to jump through hoops to handle Unicode data](/pub/2012/06/perlunicook-unicode-text-in-stubborn-libraries.html). Would that everything worked as easily as Perl's [open](http://perldoc.perl.org/open.html) pragma!
+[Some Perl libraries require you to jump through hoops to handle Unicode data](/pub/2012/06/perlunicook-unicode-text-in-stubborn-libraries.html). Would that everything worked as easily as Perl's [open]({{</* perldoc "open" */>}}) pragma!
 
 For DBM files, here's how to implicitly manage the translation; all encoding and decoding is done automatically, just as with streams that have a particular encoding attached to them. The [DBM\_Filter]({{<mcpan "DBM_Filter" >}}) module allows you to apply filters to keys and values to manipulate their contents before storing or fetching. The module includes a "utf8" filter. Use it like:
 

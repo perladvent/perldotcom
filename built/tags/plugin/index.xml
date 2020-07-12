@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Plugin on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/plugin/</link>
+    <description>Recent content in Plugin on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 10 Jan 2020 13:37:00 +0000</lastBuildDate>
+    <atom:link href="/tags/plugin/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Porting a Dancer plugin to Dancer2</title>
+      <link>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</link>
+      <pubDate>Fri, 10 Jan 2020 13:37:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</guid>
+      <description>
+
+&lt;p&gt;In my &lt;a href=&#34;https://metacpan.org/pod/Dancer2&#34;&gt;Dancer2&lt;/a&gt; web application, I want to know which requests come from smartphones.  There’s a plugin for that — but only in the older &lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer (v1)&lt;/a&gt; framework.  I’m no expert, but even I was easily able to port the Dancer plugin, &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::MobileDevice&#34;&gt;Dancer::Plugin::MobileDevice&lt;/a&gt;, to Dancer2!  In this article, we’ll explore Dancer2 and the way it handles plugins.  We’ll get our hands dirty working with the framework, and examine the main changes I made to port the plugin from Dancer to Dancer2.  By the end of this article, you’ll be ready to rock &lt;em&gt;and&lt;/em&gt; you’ll have a handy reference to use when porting plugins yourself.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-dancer2-web-framework&#34;&gt;The Dancer2 web framework&lt;/h2&gt;
+
+&lt;p&gt;Dancer2 applications run on a Web server and process requests from a browser.  The application’s Perl code uses keywords in Dancer2’s domain-specific language (DSL) to access information about a request.&lt;/p&gt;
+
+&lt;p&gt;Try it out: Install &lt;a href=&#34;https://metacpan.org/pod/Task::Dancer2&#34;&gt;Task::Dancer2&lt;/a&gt;.  Then, save this as &lt;code&gt;app.psgi&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hello, &amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; (query_parameters&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;world&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;!&amp;#39;&lt;/span&gt;;
+};
+to_app;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and run &lt;code&gt;plackup&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Enter the URL &lt;code&gt;http://localhost:5000&lt;/code&gt; in a browser and you will see “Hello, world!”, or visit &lt;code&gt;http://localhost:5000/?name=genius&lt;/code&gt; to see “Hello, genius!”.  The “genius” comes from &lt;code&gt;query_parameters&lt;/code&gt;, a DSL keyword that returns the values after the &lt;code&gt;?&lt;/code&gt; in the URL.  You can use those values when building a response to a request.&lt;/p&gt;
+
+&lt;h2 id=&#34;dancer-and-dancer2-plugins&#34;&gt;Dancer and Dancer2 plugins&lt;/h2&gt;
+
+&lt;p&gt;Dancer and Dancer2 plugins define new DSL keywords for the plugin’s users.  They also install “hooks,” subroutines that run while Dancer processes a request.  The hooks collect information for the DSL keywords to access.&lt;/p&gt;
+
+&lt;p&gt;For example, a hook in Dancer::Plugin::MobileDevice detects whether a request is coming from a mobile device.  The plugin defines the &lt;code&gt;is_mobile_device&lt;/code&gt; DSL keyword so your code can react appropriately. To port the plugin, I changed code for the keyword, the hooks, and the test suite.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-keywords&#34;&gt;Porting keywords&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins use the Dancer DSL and a &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin&#34;&gt;plugin-specific DSL&lt;/a&gt; to define DSL keywords. In Dancer (v1), the &lt;code&gt;is_mobile_device&lt;/code&gt; keyword is created with the &lt;code&gt;register&lt;/code&gt; plugin-DSL function (code examples simplified to focus on the porting):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;register &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+};
+register_plugin;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 plugins are &lt;a href=&#34;https://metacpan.org/pod/Moo&#34;&gt;Moo&lt;/a&gt; objects, and new DSL keywords are member functions on those objects.  Therefore, I changed &lt;code&gt;is_mobile_device()&lt;/code&gt; to a member function:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;is_mobile_device&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;       &lt;span style=&#34;color:#75715e&#34;&gt;# get the plugin’s object instance&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ($self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; ;
+}
+plugin_keywords &lt;span style=&#34;color:#e6db74&#34;&gt;qw(is_mobile_device)&lt;/span&gt;;   &lt;span style=&#34;color:#75715e&#34;&gt;# replaces register_plugin()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the body of the function, the Dancer plugin directly accessed the DSL keyword &lt;code&gt;request&lt;/code&gt;.  The Dancer2 plugin instead accesses the request via &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;request&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-hooks&#34;&gt;Porting hooks&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins add hooks using the DSL &lt;code&gt;hook&lt;/code&gt; keyword.  For example, this &lt;code&gt;before_template&lt;/code&gt; hook makes &lt;code&gt;is_mobile_device&lt;/code&gt; available in templates:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;hook before_template &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; is_mobile_device();
+};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 handles hooks very differently.  The plugin’s Moo constructor, &lt;code&gt;BUILD&lt;/code&gt;, is called when a plugin instance is created.  In &lt;code&gt;BUILD&lt;/code&gt;, the plugin registers the hook.  I added &lt;code&gt;BUILD&lt;/code&gt; and called
+&lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; to add the hook:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;BUILD&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;hook( before_template_render &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+        $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{is_mobile_device} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $plugin&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;is_mobile_device;
+    });
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If your hook functions are too long to move into &lt;code&gt;BUILD&lt;/code&gt;, you can leave them where they are and say &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook( hook_name =&amp;gt; \&amp;amp;sub_name );&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-the-tests&#34;&gt;Porting the tests&lt;/h2&gt;
+
+&lt;p&gt;Dancer::Plugin::MobileDevice has a full test suite.  These tests are extremely useful to developers, as they allow you to to see if a Dancer2 port behaves the same as the Dancer original. That said, you have to port the tests themselves before you can use them to test your ported plugin! We’ll look at the Dancer way, then I’ll show you the Dancer2 changes.&lt;/p&gt;
+
+&lt;p&gt;The Dancer tests define a simple Web application using the plugin.  They exercise that application using helpers in &lt;a href=&#34;https://metacpan.org/pod/Dancer::Test&#34;&gt;Dancer::Test&lt;/a&gt;.  For example (simplified from &lt;code&gt;t/01-is-mobile-device.t&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;{   &lt;span style=&#34;color:#75715e&#34;&gt;# The simple application&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Plugin::MobileDevice;
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Test;
+
+$ENV{HTTP_USER_AGENT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dancer_response GET &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;# dancer_response() is from Dancer::Test&lt;/span&gt;
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{content}, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2, on the other hand, uses the &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt; ecosystem for testing instead of its own helpers.  To work in that ecosystem, I changed the
+above test as described in the
+&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Manual#TESTING&#34;&gt;Dancer2 manual’s “testing” section&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Plack::Test;                        &lt;span style=&#34;color:#75715e&#34;&gt;# Additional testing modules&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; HTTP::Request::Common;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; TestApp;     &lt;span style=&#34;color:#75715e&#34;&gt;# Still a simple application, but now with a name&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2::Plugin::MobileDevice;
+
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dut &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Plack::Test&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;create(TestApp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_app);     &lt;span style=&#34;color:#75715e&#34;&gt;# a fake Web server&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $dut&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request(GET &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;User-Agent&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;);
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;content, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 tests use more boilerplate than Dancer tests, but Dancer2 tests are more modular and flexible than Dancer tests.  With Plack, you don’t have to use the global state (&lt;code&gt;%ENV&lt;/code&gt;) any more, and you can test more than one application or use case per &lt;code&gt;.t&lt;/code&gt; file.  Seeing the tests pass is good indication that your porting job is done.&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;I am a newbie at Dancer2, and have never used Dancer.  But I was able to port Dancer::Plugin::MobileDevice to Dancer2 in less than a day — including time to read the documentation and figure out how!  When you need a Dancer function in Dancer2, grab the quick reference below and you’ll be off and running!&lt;/p&gt;
+
+&lt;h2 id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/h2&gt;
+
+&lt;p&gt;My thanks to Kelly Deltoro-White for her insights, and to the authors of Dancer::Plugin::MobileDevice and Dancer2 for a strong foundation to build on.&lt;/p&gt;
+
+&lt;h2 id=&#34;more-information-on-dancer2-plugins&#34;&gt;More information on Dancer2 plugins&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;“&lt;a href=&#34;http://advent.perldancer.org/2016/22&#34;&gt;The new Dancer2 plugin system&lt;/a&gt;” by Sawyer X, for an overview&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Plugin&#34;&gt;Dancer2::Plugin&lt;/a&gt;, for details&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;quick-reference-porting-plugins-from-dancer-to-dancer2&#34;&gt;Quick reference: porting plugins from Dancer to Dancer2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Port keywords:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Make keywords freestanding &lt;code&gt;sub&lt;/code&gt;s, not arguments of &lt;code&gt;register&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Access data through &lt;code&gt;$self&lt;/code&gt; rather than DSL keywords&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;register_plugin&lt;/code&gt; to &lt;code&gt;plugin_keywords&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port hooks:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Add a &lt;code&gt;BUILD&lt;/code&gt; function&lt;/li&gt;
+&lt;li&gt;Move the hook functions into &lt;code&gt;BUILD&lt;/code&gt;, or refer to them from &lt;code&gt;BUILD&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Wrap each hook function in a &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; call&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port tests:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Import &lt;a href=&#34;https://metacpan.org/pod/Plack::Test&#34;&gt;Plack::Test&lt;/a&gt; and
+&lt;a href=&#34;https://metacpan.org/pod/HTTP::Request::Common&#34;&gt;HTTP::Request::Common&lt;/a&gt;
+instead of Dancer::Test&lt;/li&gt;
+&lt;li&gt;Give the application under test a &lt;code&gt;package&lt;/code&gt; statement&lt;/li&gt;
+&lt;li&gt;Create a Plack::Test instance representing the application&lt;/li&gt;
+&lt;li&gt;Create requests using HTTP::Request::Common methods&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;$response-&amp;gt;{content}&lt;/code&gt; to &lt;code&gt;$response-&amp;gt;content&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

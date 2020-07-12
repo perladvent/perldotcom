@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mod Parrot on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/mod-parrot/</link>
+    <description>Recent content in Mod Parrot on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 22 Dec 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/mod-parrot/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Introducing mod_parrot</title>
+      <link>http://localhost:1313/pub/2004/12/22/mod_parrot.html/</link>
+      <pubDate>Wed, 22 Dec 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/12/22/mod_parrot.html/</guid>
+      <description>
+
+&lt;p&gt;It&amp;rsquo;s been almost nine years since the first release of &lt;a href=&#34;http://perl.apache.org/&#34;&gt;mod_perl&lt;/a&gt;, and it remains a very powerful tool for writing web applications and extending the capabilities of the Apache web server. However, lurking around the corner is Perl 6, which gives us not only a new version of Perl to embed in Apache but an entirely new runtime engine called &lt;a href=&#34;http://www.parrotcode.org/&#34;&gt;Parrot&lt;/a&gt;. If there is ever going to be a Perl 6 version of mod_perl, Apache must first be able to run Parrot bytecode. This article introduces &lt;a href=&#34;http://www.smashing.org/mod_parrot&#34;&gt;mod_parrot&lt;/a&gt;, an Apache module that allows the execution of Parrot bytecode from within the web server. Like mod_perl, it also gives your code direct access to the Apache API so you can write your own handlers.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-is-parrot&#34;&gt;What is Parrot?&lt;/h3&gt;
+
+&lt;p&gt;Parrot is a virtual machine (VM) optimized for dynamic languages like Perl, Python, PHP, and Ruby. Source code written in each of these languages eventually compiles down to bytecode (after some optimizations), which subsequently runs in a virtual machine. Currently, each language runs bytecode with its own VM, but one of Parrot&amp;rsquo;s goals is to provide a single common VM for all dynamic languages. This makes implementing a new language much easier because there&amp;rsquo;s no need to worry about writing a new VM, and this also makes it possible for code in one language to call code or access data structures from another language.&lt;/p&gt;
+
+&lt;p&gt;Parrot code comes in three distinct flavors:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Bytecode: This is the file format natively interpreted by Parrot.&lt;/li&gt;
+&lt;li&gt;PASM: Parrot assembler (PASM) is the low-level language that compiles down to bytecode. It has very simple operations to perform functions such as setting registers, adding numbers, and printing strings. PASM is very straightforward, but it operates at such a low level that it can be quite cumbersome.&lt;/li&gt;
+&lt;li&gt;PIR: Parrot Intermediate Representation (PIR) solves many of the problems encountered when programming in PASM. It provides more user-friendly and compiler-friendly constructs and optimizations and feels more like a traditional high-level programming language. Parrot eventually breaks down PIR into PASM before compiling to bytecode (you can even include PASM blocks in PIR). All of the examples in this article use PIR.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For more information on Parrot, including PASM and PIR syntax, visit the &lt;a href=&#34;http://www.parrotcode.org&#34;&gt;Parrot website&lt;/a&gt;. It will provide a good background for understanding the code in this article.&lt;/p&gt;
+
+&lt;h3 id=&#34;why-mod-parrot&#34;&gt;Why mod_parrot?&lt;/h3&gt;
+
+&lt;p&gt;Before discussing the details, you should know a little about mod_parrot&amp;rsquo;s history. Ask Björn Hansen and Robert Spier originally wrote mod_parrot in 2002, later turning it over to Kevin Falcone. This version of mod_parrot targeted Apache 1.3 and had very limited functionality due to Parrot&amp;rsquo;s immaturity at the time. In August 2004, with Parrot and its API much more mature, people suggested that the development on mod_parrot continue. This is where I picked up the project. However, instead of picking up where Ask, Robert, and Kevin left off, I started from scratch, coding for Apache 2 and focusing on access to the Apache API.&lt;/p&gt;
+
+&lt;p&gt;The new mod_parrot project has three primary goals:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Provide access to the Apache API through Parrot objects&lt;/li&gt;
+&lt;li&gt;Provide a common Apache layer for Parrot-based languages&lt;/li&gt;
+&lt;li&gt;Support for new languages should require little or no C coding&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;rsquo;s discuss each of these in more detail.&lt;/p&gt;
+
+&lt;h4 id=&#34;provide-access-to-the-apache-api-through-parrot&#34;&gt;Provide Access to the Apache API Through Parrot&lt;/h4&gt;
+
+&lt;p&gt;Much of mod_perl&amp;rsquo;s power comes from direct access to the Apache API. Rather than restrict your code to content generation, mod_perl provides hooks for things such as authentication handlers and output filters and gives you access to Apache&amp;rsquo;s internal structures, all in Perl. Once you have this functionality, it is easy to implement other useful features including script caching and persistent database connections.&lt;/p&gt;
+
+&lt;p&gt;mod_parrot shares this approach, providing access to the Apache API from Parrot. It does this using Parrot objects, mimicking mod_perl&amp;rsquo;s use of &lt;code&gt;$r&lt;/code&gt;. There will eventually be hooks for all phases of the Apache lifecycle, though the current version supports only content handlers and authentication handlers.&lt;/p&gt;
+
+&lt;h4 id=&#34;provide-a-common-apache-layer-for-parrot-based-languages&#34;&gt;Provide a Common Apache Layer for Parrot-based Languages&lt;/h4&gt;
+
+&lt;p&gt;There are several different languages that can run inside Apache today. The major players here are mod_perl and PHP, but Python, Ruby, and even LISP have modules embedding them into Apache. Each of these implementations comes with its own Apache module, which makes sense for languages with different runtime engines. This is where Parrot changes the landscape dramatically-all languages targeted to the Parrot VM now have a &lt;em&gt;common&lt;/em&gt; runtime engine, so they need only one Apache module: mod_parrot.&lt;/p&gt;
+
+&lt;h4 id=&#34;support-for-new-languages-should-require-little-or-no-c-coding&#34;&gt;Support for New Languages Should Require Little or No C Coding&lt;/h4&gt;
+
+&lt;p&gt;mod_parrot will provide all of the infrastructure for accessing the Apache API. The actual Apache module will already be written. Hooks for calling Parrot code for each stage of the Apache lifecycle will exist. Parrot objects will provide access to the Apache API. With all of this already done, and assuming our language compiles down to Parrot bytecode, we should be able to write the &amp;ldquo;glue&amp;rdquo; between Apache and our language in the language itself. mod_perl could be written in Perl; mod_python could be written in Python, and so on. Very little C code, if any, would be necessary. Each language community could maintain its own language-specific code while sharing the mod_parrot module.&lt;/p&gt;
+
+&lt;h3 id=&#34;architecture&#34;&gt;Architecture&lt;/h3&gt;
+
+&lt;p&gt;mod_parrot is written for Apache 2, with no plans to back-port it to Apache 1.3. The reason behind this decision is to code for the future, not the past or present; after all, Perl 6 is still a few years down the road. It&amp;rsquo;s also much easier to write a module for Apache 2 than it is for 1.3! In addition to the Apache 2 decision, there are several other interesting aspects of the mod_parrot architecture.&lt;/p&gt;
+
+&lt;h4 id=&#34;nci&#34;&gt;NCI&lt;/h4&gt;
+
+&lt;p&gt;The most significant design decision is the use of NCI (native call interface) to access the Apache API. mod_perl accesses most of the Apache API functions through individual XS wrappers (basically a bunch of C macros), themselves compiled into mod_perl itself or its supporting modules. This is a tried and true method, used for many Perl modules as well. Now, Parrot gives us NCI, which eliminates the need for these wrappers, letting you call arbitrary C functions without having to write any C code. Here&amp;rsquo;s an example of a Parrot program that calls the C function &lt;code&gt;getpid()&lt;/code&gt;, which returns the current process ID:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;.sub _main
+    # load libc.so, where getpid() is defined, and assign it to $P0
+    $P0 = loadlib &#39;/lib/libc.so.6&#39;
+
+    # find the function in the library and assign it to $P1
+    # &#39;iv&#39; means that getpid() returns an integer and takes no arguments
+    $P1 = dlfunc $P0, &#39;getpid&#39;, &#39;iv&#39;
+
+    # call getpid() and place result in $I0
+    $I0 = $P1( )
+
+    # print the PID
+    print $I0
+    print &amp;quot;\n&amp;quot;
+.end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s it&amp;ndash;there is no C code to write, no recompilation, and no relinking. However, the Apache API functions do not come from a loadable shared library; they&amp;rsquo;re in the Apache executable, &lt;code&gt;httpd&lt;/code&gt;. Fortunately, NCI can run C functions contained in the running process image, solving that problem. For more information on NCI, see the &lt;a href=&#34;http://www.parrotcode.org/docs/pdd/pdd16_native_call.html&#34;&gt;Parrot NCI Documentation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-apache-requestrec-object&#34;&gt;The Apache::RequestRec Object&lt;/h4&gt;
+
+&lt;p&gt;All access to the Apache API goes through Parrot objects. Because mod_parrot borrows heavily from mod_perl, it made sense to base the primary object class in mod_parrot on Apache&amp;rsquo;s &lt;code&gt;request_rec&lt;/code&gt; structure. Just as in mod_perl, the class is &lt;code&gt;Apache::RequestRec&lt;/code&gt;. This name is subject to change, however, as Parrot&amp;rsquo;s namespace nomenclature becomes clearer.&lt;/p&gt;
+
+&lt;p&gt;Every method is written in Parrot, with NCI calls to their corresponding Apache API functions. For example, here is the Parrot method for the &lt;code&gt;ap_rputs&lt;/code&gt; function (&lt;code&gt;$r-&amp;gt;puts&lt;/code&gt; in mod_perl):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;.sub puts method, prototyped
+    .param string data
+    .local pmc r
+    .local pmc ap_rputs
+    .local int offset
+
+    classoffset offset, self, &#39;Apache::RequestRec&#39;
+    getattribute r, self, offset
+
+    # find NCI object for ap_rputs
+    find_global ap_rputs, &#39;Apache::NCI&#39;, &#39;ap_rputs&#39;
+
+    # use NCI to call out to Apache&#39;s ap_rputs
+    ap_rputs( data, r )
+.end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Currently, &lt;code&gt;Apache::RequestRec&lt;/code&gt; is the only class implemented in mod_parrot. Other classes to support the API will eventually appear, including classes to support Apache&amp;rsquo;s &lt;code&gt;conn_rec&lt;/code&gt; and &lt;code&gt;server_rec&lt;/code&gt; structures.&lt;/p&gt;
+
+&lt;h3 id=&#34;installing-mod-parrot&#34;&gt;Installing mod_parrot&lt;/h3&gt;
+
+&lt;p&gt;You can download mod_parrot from the &lt;a href=&#34;http://www.smashing.org/mod_parrot&#34;&gt;mod_parrot home page&lt;/a&gt;. Additionally, you&amp;rsquo;ll need the following prerequisites (as of version 0.1):&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Parrot 0.1.1 (Poicephalus)&lt;/li&gt;
+&lt;li&gt;Apache 2.0.50 or later&lt;/li&gt;
+&lt;li&gt;Perl 5.6.0 or later (for configuration only)&lt;/li&gt;
+&lt;li&gt;Apache::Test 1.13 or later (for the test suite)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Once you have all the prerequisite software, run the &lt;code&gt;Configure.pl&lt;/code&gt; script. The arguments to this script will most certainly change in future releases, but for now, there are only two arguments:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;--parrot-build-dir=path-to-parrot-source&lt;/code&gt;, the path to the top-level Parrot directory&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--apxs=path-to-apxs&lt;/code&gt;, the path to Apache&amp;rsquo;s &lt;code&gt;apxs&lt;/code&gt; script, usually found in the &lt;em&gt;bin&lt;/em&gt; directory under the Apache installation directory&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- --&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl Configure.pl --parrot-build-dir=../parrot \
+  --apxs=/usr/local/apache2/bin/apxs
+
+Generating Makefile...done.
+Creating testing infrastructure...done.
+
+Type &#39;make&#39; to build mod_parrot.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When configuration completes, type &lt;code&gt;make&lt;/code&gt; to build mod_parrot, then &lt;code&gt;make test&lt;/code&gt; to run the tests. To install, become root and type &lt;code&gt;make install&lt;/code&gt;. This will install the mod_parrot module into your Apache installation and activate the module in &lt;code&gt;httpd.conf&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-a-mod-parrot-handler&#34;&gt;Writing a mod_parrot Handler&lt;/h3&gt;
+
+&lt;p&gt;While there are currently no languages targeted to Parrot that have the object support to use mod_parrot (though Parakeet in the Parrot source looks promising), we can still write Apache handlers. In what language? In Parrot, of course! Well, actually, PIR. Here&amp;rsquo;s a simple content handler that displays &amp;ldquo;Hello World,&amp;rdquo; or if you pass it an query string in the URL, &amp;ldquo;Hello &lt;em&gt;name&lt;/em&gt;,&amp;rdquo; where &lt;em&gt;name&lt;/em&gt; is the string you pass.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# this namespace is used to identify the handler
+.namespace [ &#39;HelloWorld&#39; ]
+
+# the actual handler
+.sub _handler
+    # our Apache::RequestRec object
+    .local pmc r
+
+    # this will contain Apache constants
+    .local pmc ap_constants
+
+    # instantiate the Apache::RequestRec object
+    find_type $I0, &#39;Apache::RequestRec&#39;
+    r = new $I0
+
+    # who should we say hello to?
+    $S0 = r.&#39;args&#39;( )
+    $I0 = length $S0
+    if $I0 &amp;gt; 0 goto say_hello
+    $S0 = &#39;world&#39;
+
+say_hello:
+    # call the puts method to send some output
+    $S1 = &#39;Hello &#39; . $S0
+    r.&#39;puts&#39;( $S1 )
+
+    # tell Apache that we&#39;re finished with this phase
+    find_global ap_constants, &#39;Apache::Constants&#39;, &#39;ap_constants&#39;
+    $I0 = ap_constants[&#39;OK&#39;]
+    .pcc_begin_return
+        .return $I0
+    .pcc_end_return
+.end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you are at all familiar with mod_perl or the Apache API, this should look familiar to you, even if you don&amp;rsquo;t know any Parrot. Let&amp;rsquo;s go through the code to see how it works. Because this is not an article about Parrot itself, I&amp;rsquo;ll glaze over the syntax and concentrate on what the code actually does.&lt;/p&gt;
+
+&lt;p&gt;The first line of code in the handler declares the namespace in which this handler exists. In this case, it is &lt;code&gt;HelloWorld&lt;/code&gt;. This is important because namespaces differentiate one handler from another in &lt;code&gt;httpd.conf&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Next comes the actual handler subroutine, which should always be named &lt;code&gt;_handler&lt;/code&gt;. The first thing the subroutine does is to declare some locally scoped &amp;ldquo;variables.&amp;rdquo; These are actually registers in Parrot, but PIR can abstract them with named variables as it were a higher level language. And &lt;code&gt;ap_constants&lt;/code&gt;, a hash that will give access to Apache constants including &lt;code&gt;OK&lt;/code&gt; and &lt;code&gt;DECLINED&lt;/code&gt;, come next. Both are PMCs, or &lt;em&gt;Parrot Magic Cookie&lt;/em&gt;, a special data type that implements the more complex data types of higher-level languages such as Perl or Python.&lt;/p&gt;
+
+&lt;p&gt;The code now checks for a query string using the &lt;code&gt;args&lt;/code&gt; method of the &lt;code&gt;Apache::RequestRec&lt;/code&gt; object and, if one exists, assigns it to the temporary string register &lt;code&gt;$S0&lt;/code&gt;. If there is no query string, &lt;code&gt;$S0&lt;/code&gt; will contain &lt;code&gt;world&lt;/code&gt;. Next, the code creates the output string, instantiates the &lt;code&gt;Apache::RequestRec&lt;/code&gt; object, and calls the &lt;code&gt;puts&lt;/code&gt; method to output &amp;ldquo;Hello World&amp;rdquo; or &amp;ldquo;Hello &lt;em&gt;name&lt;/em&gt;&amp;rdquo;. By default, the content type is &lt;code&gt;text/html&lt;/code&gt;, so there&amp;rsquo;s no need to set it here.&lt;/p&gt;
+
+&lt;p&gt;This is the end of the handler, so it&amp;rsquo;s time to tell Apache that we&amp;rsquo;re done and that it no longer needs to handle this phase of the request. This requires returning the Apache constant &lt;code&gt;OK&lt;/code&gt; from the &lt;code&gt;ap_constants&lt;/code&gt; hash in the &lt;code&gt;Apache::Constants&lt;/code&gt; namespace.&lt;/p&gt;
+
+&lt;p&gt;To compile the handler into Parrot bytecode, save it in a file with a &lt;em&gt;.imc&lt;/em&gt; extension (IMC is short for Intermediate Compiler). Then, compile it into Parrot bytecode (PBC) as follows (this step will be automatic in a future release):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ parrot -o HelloWorld.pbc HelloWorld.imc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;configuring-apache-to-use-a-handler&#34;&gt;Configuring Apache to Use A Handler&lt;/h3&gt;
+
+&lt;p&gt;Writing the handler was the hard part. Configuring Apache to use it is easy. The first thing to do is to initialize mod_parrot and load some bytecode libraries:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# mod_parrot initialization
+ParrotInit /path/to/lib/ModParrot/init.pbc
+ParrotLoad /path/to/lib/Apache/RequestRec.pbc
+ParrotLoad /path/to/lib/Apache/Constants.pbc
+
+# our handler
+ParrotLoad /path/to/HelloWorld.pbc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;ParrotInit&lt;/code&gt; tells mod_parrot where to find its initialization bytecode. A future release will probably handle this automatically, but for now explicitly set the path in &lt;code&gt;httpd.conf&lt;/code&gt;. &lt;code&gt;ParrotLoad&lt;/code&gt; tells mod_parrot to load a bytecode file. In this case, it loads the code that implements the &lt;code&gt;Apache::RequestRec&lt;/code&gt; object and the constants hash, as well as the bytecode for the new handler.&lt;/p&gt;
+
+&lt;p&gt;Next, Apache needs a location for the handler to, well, handle. How about the location &lt;code&gt;/hello&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Location /hello&amp;gt;
+    SetHandler parrot-code
+    ParrotHandler HelloWorld
+&amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, this sets the Apache handler for the location to &lt;code&gt;parrot-code&lt;/code&gt;. This is the official name of the mod_parrot handler. Then it sets the actual Parrot handler, which, as discussed in the previous section, is the namespace of the handler subroutine, &lt;code&gt;HelloWorld&lt;/code&gt;. That&amp;rsquo;s it. Save the configuration, restart Apache, point your browser to &lt;code&gt;http://yourserver/hello&lt;/code&gt; (replacing &lt;code&gt;yourserver&lt;/code&gt; with the name of your server), and you should see the &amp;ldquo;Hello World&amp;rdquo; message. Add a query string to see the output change: &lt;code&gt;http://yourserver/hello?Joe&lt;/code&gt; should produce &amp;ldquo;Hello Joe.&amp;rdquo;&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-an-authentication-handler&#34;&gt;Writing an Authentication Handler&lt;/h3&gt;
+
+&lt;p&gt;Apache handlers do more than just generate content, of course, and this applies to mod_parrot as well. Here&amp;rsquo;s an example of using an authentication handler to protect a private directory. It will use the HTTP basic authentication scheme, but instead of using a standard password file, it will accept any username as long as the password is &amp;ldquo;squawk.&amp;rdquo; Here&amp;rsquo;s the handler PIR code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# this namespace is used to identify the handler
+.namespace [ &#39;TestAuthHandler&#39;]
+
+# the actual handler
+.sub _handler
+    # our Apache::RequestRec object
+    .local pmc r
+    .local string pw
+    .local int status
+
+    # this will contain Apache constants
+    .local pmc ap_constants
+    find_global ap_constants, &#39;Apache::Constants&#39;, &#39;ap_constants&#39;
+
+    # instantiate the Apache::RequestRec object
+    find_type $I0, &#39;Apache::RequestRec&#39;
+    r = new $I0
+
+    # check the password, ignoring the username
+    (status, pw) = r.&#39;get_basic_auth_pw&#39;( )
+    if pw != &#39;squawk&#39; goto auth_failure
+    $I0 = ap_constants[&#39;OK&#39;]
+    goto auth_return_status
+
+# authentication failed
+auth_failure:
+    $I0 = ap_constants[&#39;HTTP_UNAUTHORIZED&#39;]
+    goto auth_return_status
+
+# return our status code
+auth_return_status:
+    .pcc_begin_return
+        .return $I0
+    .pcc_end_return
+.end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is the corresponding configuration in &lt;code&gt;httpd.conf&lt;/code&gt;. Instead of using &lt;code&gt;SetHandler&lt;/code&gt; and &lt;code&gt;ParrotHandler&lt;/code&gt; here, set &lt;code&gt;ParrotAuthenHandler&lt;/code&gt; to the namespace of the authentication handler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Directory /usr/local/apache/htdocs/private&amp;gt;
+    ParrotAuthenHandler TestAuthHandler
+    AuthType Basic
+    AuthName Private
+    Require valid-user
+&amp;lt;/Directory&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;remembering-why-we-re-here&#34;&gt;Remembering Why We&amp;rsquo;re Here&lt;/h3&gt;
+
+&lt;p&gt;Note the low-level nature of the two handlers. There are no else clauses; goto statements appear throughout the subroutine; and return values must be assigned to registers before being used in another operation. You can plainly see that this is only one step above writing assembly here, but remember that you won&amp;rsquo;t have to worry about writing code at this level&amp;ndash;you&amp;rsquo;ll write in a high-level language such as Perl 6, and it will eventually compile down to Parrot assembler. Looking forward, the corresponding Perl 6 code for the &lt;code&gt;HelloWorld&lt;/code&gt; handler might look a lot like this (as with all things Perl 6, this is subject to change):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Apache::Constants &#39;:common&#39;;
+use Apache::RequestRec;
+
+sub handler(Apache::RequestRec $r)
+{
+    my ($status, $pw) = $r.get_basic_auth_pw();
+    return ($pw eq &#39;squawk&#39;) ? OK : HTTP_UNAUTHORIZED;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;future-directions&#34;&gt;Future Directions&lt;/h3&gt;
+
+&lt;p&gt;mod_parrot is still in its infancy. It&amp;rsquo;s quite functional, but there is still a lot of work to do before it can power any serious applications. At this point in development, the primary goal is to finish hooking into all phases of the Apache request lifecycle, including support for the relevant Apache API functions. Windows support will also become a priority as mod_parrot becomes more functional.&lt;/p&gt;
+
+&lt;p&gt;You may also wonder about CGI scripts. As of this writing, there is no support for running CGI scripts in mod_parrot. mod_perl has &lt;code&gt;Apache::Registry&lt;/code&gt; to help CGI scripts run in a persistent environment, and mod_parrot will need a similar infrastructure.&lt;/p&gt;
+
+&lt;p&gt;However, the real fun will begin when we have a high level language that we can use to write handlers. If the timelines work out as I hope they will, mod_parrot will be fully functional before the formal release of Perl 6 or any other mainstream Parrot-based language. Because the Apache/Parrot layer will have already been written, this will save quite a bit of development time for mod_perl, PHP, and other similar projects.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;d like to read more about mod_parrot, or would like to help with the project, visit the &lt;a href=&#34;http://www.smashing.org/mod_parrot&#34;&gt;mod_parrot home page&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

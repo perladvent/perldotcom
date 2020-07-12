@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Port scanning with Perl </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Building a concurrent, randomized, capable port scanner"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/183/2015/7/20/Port-scanning-with-Perl/" />
+<meta property="og:title" content="Port scanning with Perl" />
+<meta property="og:description" content="Building a concurrent, randomized, capable port scanner">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2015-07-07T07:07:07Z" />
+<meta property="og:image" content="http://localhost:1313/images/183/thumb_2714AD7A-2EE1-11E5-B064-7C659059EE40.jpeg" />
+<meta property="og:article:tag" content="tcp" />
+<meta property="og:article:tag" content="infosec" />
+<meta property="og:article:tag" content="udp" />
+<meta property="og:article:tag" content="libpcap" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Port scanning with Perl</h1>
+              <p class="blog-post-meta">Jul 20, 2015 by
+              
+              
+                
+                
+                <a href="#author-bio-david-farrell">David Farrell</a>
+              
+              </p>
+              <img alt="" src="/images/183/2714AD7A-2EE1-11E5-B064-7C659059EE40.jpeg"/>
+                
+
+<p>My recent infosec articles have focused on livehost discovery on a network. Inspired by Douglas Berdeaux&rsquo;s <a href="https://www.packtpub.com/networking-and-servers/penetration-testing-perl-raw">Penetration Testing with Perl</a>, I&rsquo;ve assembled a potent <a href="https://github.com/dnmfarrell/Penetration-Testing-With-Perl">collection</a> of livehost scanners including ARP, echo, SMB and Netbios. Each of these have different strengths and weaknesses. Regardless, once you&rsquo;ve discovered a livehost and you want to probe for vulnerabilities, a port scan is the logical next step.</p>
+
+<h3 id="port-scanning-explained">Port Scanning Explained</h3>
+
+<p>An IP address identifies the network location of a computer, but once the computer receives a UDP datagram or TCP packet it then needs to decide where to route it internally within itself. Every TCP/UDP parcel contains a &ldquo;destination port&rdquo; field, which is where the computer will attempt to deliver the packet/datagram. Every computer has 65,535 available TCP and UDP ports for services to use. Many are already assigned for common services, like 22 for SSH, 25 for SMTP and 80 for HTTP.</p>
+
+<p>Port scanning is the act of probing the ports of another computer to understand which ports are &ldquo;open&rdquo; (have services listening on them), &ldquo;filtered&rdquo; (prevented access by a firewall) and &ldquo;closed&rdquo; (have no services listening on them). Once the attacker has an idea of which ports are open, they can begin probing those services for weaknesses. For example, if I ran a port scan against a remote server and found port 25 SMTP to be open, I could try a number of attacks against it. I could telnet to the livehost&rsquo;s IP address on port 25, and attempt to discover a username on the system using the &lsquo;VRFY&rsquo; command. Once I had a username, I could proceed with a brute force password cracking attempt - possibly on port 22 or against a web application if it was running on the host. I may not even need a username and password if I succeed in a buffer overflow attack against the email service listening on port 25.</p>
+
+<h3 id="port-scanning-with-perl">Port scanning with Perl</h3>
+
+<p>A basic port scanner needs to be able to take an IP address of a livehost, enumerate a list of ports, send a packet to each port on the livehost and listen and decode the responses. Perl has a number of modules that make this easier. I&rsquo;m going to step through each requirement one by one.</p>
+
+<h4 id="parsing-command-line-arguments">Parsing command line arguments</h4>
+
+<p>We can use <a href="https://metacpan.org/pod/Getopt::Long">Getopt::Long</a> and <a href="https://metacpan.org/pod/Pod::Usage">Pod::Usage</a>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Getopt::Long;
+<span style="color:#66d9ef">use</span> Pod::Usage;
+
+GetOptions (
+  <span style="color:#e6db74">&#39;help|?&#39;</span>    <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">sub</span> { pod2usage(<span style="color:#ae81ff">2</span>) },
+  <span style="color:#e6db74">&#39;ip=s&#39;</span>      <span style="color:#f92672">=&gt;</span> <span style="color:#f92672">\</span><span style="color:#66d9ef">my</span> $target_ip,
+);
+
+<span style="color:#75715e"># validate required args are given</span>
+die <span style="color:#e6db74">&#34;Missing --ip parameter, try --help\n&#34;</span> <span style="color:#66d9ef">unless</span> $target_ip;
+
+<span style="color:#75715e">__END__
+</span><span style="color:#75715e">
+</span><span style="color:#75715e">=head1 NAME
+</span><span style="color:#75715e">
+</span><span style="color:#75715e">port_scanner - a concurrent randomized tcp/udp port scanner written in Perl
+</span><span style="color:#75715e">
+</span><span style="color:#75715e">=head1 SYNOPSIS
+</span><span style="color:#75715e">
+</span><span style="color:#75715e">port_scanner [options]
+</span><span style="color:#75715e">
+</span><span style="color:#75715e"> Options:
+</span><span style="color:#75715e">  --ip,     -i   ip address to scan e.g. 10.30.1.52
+</span><span style="color:#75715e">  --help,   -h   display this help text</span></code></pre></div>
+<p>The <code>GetOptions</code> function parses command line arguments and assigns them to variables. Getop::Long can handle shortened option names so <code>--ip 10.0.1.5</code> and <code>-i 10.0.1.5</code> will both assign the IP address to the variable <code>$target_ip</code>. If the program receives <code>--help</code>, <code>-h</code> or <code>-?</code> it will print out the documentation using <code>pod2usage</code>.</p>
+
+<h4 id="discovering-the-local-ip-and-port">Discovering the local IP and port</h4>
+
+<p>To send an IP packet, we need both the destination and the local IP address. We&rsquo;ll also need a local port.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Net::Address::IP::Local;
+<span style="color:#66d9ef">use</span> IO::Socket::INET;
+
+<span style="color:#66d9ef">my</span> $local_ip   <span style="color:#f92672">=</span> Net::Address::IP::Local<span style="color:#f92672">-&gt;</span>public;
+
+<span style="color:#75715e"># find a random free port by opening a socket using the protocol</span>
+<span style="color:#66d9ef">my</span> $local_port <span style="color:#f92672">=</span> <span style="color:#66d9ef">do</span> {
+  <span style="color:#66d9ef">my</span> $socket <span style="color:#f92672">=</span> IO::Socket::INET<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>(Proto <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;tcp&#39;</span>, LocalAddr <span style="color:#f92672">=&gt;</span> $local_ip);
+  <span style="color:#66d9ef">my</span> $socket_port <span style="color:#f92672">=</span> $socket<span style="color:#f92672">-&gt;</span>sockport();
+  $socket<span style="color:#f92672">-&gt;</span>close;
+  $socket_port;
+};</code></pre></div>
+<p>To get the local ip address, I call the <code>public</code> method provided by the <a href="https://metacpan.org/pod/Net::Address::IP::Local">Net::Address::IP::Local</a> module. Easy! Finding a local port that is available is more involved. In theory any unnamed port should be available, but there might be another service already using it. Instead I create a new socket object using <a href="https://metacpan.org/pod/IO::Socket::INET">IO::Socket::INET</a> without specifying a local port. Under the hood, this attempts to open a socket on port zero, and the operating system will then automatically assign an available port to the socket (zero is reserved). This has the added benefit of randomizing the local port used by the scanner every time it runs. I then save the port number the socket was opened on, and close the socket.</p>
+
+<h4 id="getting-a-list-of-ports-to-scan">Getting a list of ports to scan</h4>
+
+<p>For our simple scanner, I&rsquo;ll focus on scanning named ports, that is port numbers pre-assigned to services by the <a href="http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml">IANA</a>. Fortunately for us, the developers behind the popular NMAP tool have already assembled a text <a href="https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/data/nmap-services.txt">file</a> of named ports, and I&rsquo;ll use this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> List::Util <span style="color:#e6db74">&#39;shuffle&#39;</span>;
+
+<span style="color:#66d9ef">my</span> %port_directory;
+open <span style="color:#66d9ef">my</span> $port_file, <span style="color:#e6db74">&#39;&lt;&#39;</span>, <span style="color:#e6db74">&#39;data/nmap-services.txt&#39;</span>
+  <span style="color:#f92672">or</span> die <span style="color:#e6db74">&#34;Error reading data/nmap-services.txt $!\n&#34;</span>;
+
+<span style="color:#66d9ef">while</span> (<span style="color:#e6db74">&lt;$port_file&gt;</span>)
+{
+  <span style="color:#66d9ef">next</span> <span style="color:#66d9ef">if</span> <span style="color:#e6db74">/^#/</span>; <span style="color:#75715e"># skip comments</span>
+  chomp;
+  <span style="color:#66d9ef">my</span> ($name, $number_protocol, $probability, $comments) <span style="color:#f92672">=</span> split <span style="color:#e6db74">/\t/</span>;
+  <span style="color:#66d9ef">my</span> ($port, $proto) <span style="color:#f92672">=</span> split <span style="color:#e6db74">/\//</span>, $number_protocol;
+
+  $port_directory{$number_protocol} <span style="color:#f92672">=</span> {
+    port        <span style="color:#f92672">=&gt;</span> $port,
+    proto       <span style="color:#f92672">=&gt;</span> $proto,
+    name        <span style="color:#f92672">=&gt;</span> $name,
+    probability <span style="color:#f92672">=&gt;</span> $probability,
+    comments    <span style="color:#f92672">=&gt;</span> $comments,
+  };free
+}
+
+<span style="color:#66d9ef">my</span> @ports <span style="color:#f92672">=</span> shuffle <span style="color:#66d9ef">do</span> {
+    map { $port_directory{$_}<span style="color:#f92672">-&gt;</span>{port} }
+      grep { $port_directory{$_}<span style="color:#f92672">-&gt;</span>{name} <span style="color:#f92672">!~</span> <span style="color:#e6db74">/^unknown$/</span>
+             <span style="color:#f92672">&amp;&amp;</span> $port_directory{$_}<span style="color:#f92672">-&gt;</span>{proto} <span style="color:#f92672">eq</span> <span style="color:#e6db74">&#39;tcp&#39;</span> } keys %port_directory;
+};</code></pre></div>
+<p>This code starts by importing the <code>shuffle</code> function from <a href="https://metacpan.org/pod/List::Util">List::Util</a>, which I use later to randomize the order of the list of ports. I then open a filehandle to the nmap-services text file, loop through it building the <code>%port_directory</code> hash. Finally I loop through the the port directory with <code>grep</code>, extracting all the tcp ports not labeled &ldquo;unknown&rdquo;, use <code>map</code> to extract the port number from the hash, shuffling the port numbers to randomize their entry into <code>@ports</code> (shuffle may be unnecessary in newer versions of Perl as hash key order is randomized anyway).</p>
+
+<h4 id="sending-packets-and-listening-for-responses">Sending packets and listening for responses</h4>
+
+<p>We need to send packets and listen for responses simultaneously, because if we send the packets first and <em>then</em> listen for packets, we might have missed some responses in the interim. To do this I use <code>fork</code> to create child processes for sending packets, and use the parent process to listen for responses.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Net::Pcap;
+<span style="color:#66d9ef">use</span> POSIX <span style="color:#e6db74">qw/WNOHANG ceil/</span>;
+
+<span style="color:#75715e"># apportion the ports to scan between processes</span>
+<span style="color:#66d9ef">my</span> $procs <span style="color:#f92672">=</span> <span style="color:#ae81ff">50</span>;
+<span style="color:#66d9ef">my</span> $batch_size <span style="color:#f92672">=</span> ceil(@ports <span style="color:#f92672">/</span> $procs);
+<span style="color:#66d9ef">my</span> %total_ports <span style="color:#f92672">=</span> map { $_ <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">&#39;filtered&#39;</span> } @ports; <span style="color:#75715e"># for reporting</span>
+<span style="color:#66d9ef">my</span> @child_pids;
+
+<span style="color:#66d9ef">for</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">..</span>$procs)
+{
+  <span style="color:#66d9ef">my</span> @ports_to_scan <span style="color:#f92672">=</span> splice @ports, <span style="color:#ae81ff">0</span>, $batch_size;
+  <span style="color:#66d9ef">my</span> $parent <span style="color:#f92672">=</span> fork;
+  die <span style="color:#e6db74">&#34;unable to fork!\n&#34;</span> <span style="color:#66d9ef">unless</span> defined ($parent);
+
+  <span style="color:#66d9ef">if</span> ($parent)
+  {
+    push(@child_pids, $parent);
+    <span style="color:#66d9ef">next</span>;
+  }
+
+  <span style="color:#75715e"># child waits until the parent signals to continue</span>
+  <span style="color:#66d9ef">my</span> $continue <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+  local $SIG{CONT} <span style="color:#f92672">=</span> <span style="color:#66d9ef">sub</span> { $continue <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>};
+  <span style="color:#66d9ef">until</span> ($continue) {}
+
+  <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">my</span> $target_port (@ports_to_scan)
+  {
+    sleep(<span style="color:#ae81ff">1</span>);
+    send_packet($target_port);
+  }
+  exit <span style="color:#ae81ff">0</span>; <span style="color:#75715e"># exit child</span>
+}
+
+<span style="color:#75715e"># setup parent packet capture</span>
+<span style="color:#66d9ef">my</span> $device_name <span style="color:#f92672">=</span> pcap_lookupdev(<span style="color:#f92672">\</span><span style="color:#66d9ef">my</span> $err);
+pcap_lookupnet($device_name, <span style="color:#f92672">\</span><span style="color:#66d9ef">my</span> $net, <span style="color:#f92672">\</span><span style="color:#66d9ef">my</span> $mask, <span style="color:#f92672">\</span>$err);
+<span style="color:#66d9ef">my</span> $pcap <span style="color:#f92672">=</span> pcap_open_live($device_name, <span style="color:#ae81ff">1024</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1000</span>, <span style="color:#f92672">\</span>$err);
+pcap_compile(
+  $pcap,
+  <span style="color:#f92672">\</span><span style="color:#66d9ef">my</span> $filter,
+  <span style="color:#e6db74">&#34;(src net $target_ip) &amp;&amp; (dst port $local_port)&#34;</span>,
+  <span style="color:#ae81ff">0</span>,
+  $mask
+);
+pcap_setfilter($pcap,$filter);
+
+<span style="color:#75715e"># signal the child pids to start sending</span>
+kill CONT <span style="color:#f92672">=&gt;</span> $_ <span style="color:#66d9ef">for</span> @child_pids;
+
+<span style="color:#66d9ef">until</span> (waitpid(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, WNOHANG) <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#75715e"># until all children exit</span>
+{
+  <span style="color:#66d9ef">my</span> $packet_capture <span style="color:#f92672">=</span> pcap_next_ex($pcap,<span style="color:#f92672">\</span><span style="color:#66d9ef">my</span> %header,<span style="color:#f92672">\</span><span style="color:#66d9ef">my</span> $packet);
+
+  <span style="color:#66d9ef">if</span>($packet_capture <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>)
+  {
+    read_packet($packet);
+  }
+  <span style="color:#66d9ef">elsif</span> ($packet_capture <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+  {
+    warn <span style="color:#e6db74">&#34;libpcap errored while reading a packet\n&#34;</span>;
+  }
+}</code></pre></div>
+<p>This is a lot of code to process, but l&rsquo;m going to cover the broad strokes. The code forks 50 child processes and assigns a batch of ports to each child. I install a signal handler for the <code>CONT</code> signal in each child, and pause the child processes until that signal is received. This is to stop the children from going ahead and firing off packets that the parent is not ready to capture. Once all the children have been created, the parent process sets up a packet capture object using <a href="https://metacpan.org/pod/Lib::Pcap">Lib::Pcap</a>. The capture object is given a filter for the <code>$target_ip</code> and the <code>$local_port</code> which we discovered earlier.</p>
+
+<p>The parent then signals the children processes using <code>kill</code> and the children begin sending packets using <code>send_packet</code> (defined below). Finally the parent process starts a loop listening for packets using <code>waitpid</code> to determine when all of the children have finished sending their packets and exited. During the loop, the parent calls <code>read_packet</code> (defined below) every time it receives a new packet.</p>
+
+<p>You might be wondering what the constant <code>WNOHANG</code> is for. When <code>waitpid</code> is called with -1, it attempts to reap any terminated child processes. In the excellent <a href="http://www.amazon.com/Network-Programming-Perl-Lincoln-Stein/dp/0201615711">Network Programming with Perl</a>, Lincoln Stein explains there are three scenarios which can cause <code>waitpid</code> to hang or lose track of child processes; if a child process is terminated or restarted by a signal, if two child processes terminate at virtually the same time or if the parent process inadvertently creates new children via system calls. <code>WNOHANG</code> protects against these scenarios to ensure all child processes will be properly reaped by the parent process.</p>
+
+<p>Now let&rsquo;s look at the <code>send_packet</code> subroutine:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Net::RawIP;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">send_packet</span>
+{
+  <span style="color:#66d9ef">my</span> ($target_port) <span style="color:#f92672">=</span> @_;
+
+  Net::RawIP<span style="color:#f92672">-&gt;</span><span style="color:#66d9ef">new</span>({ ip <span style="color:#f92672">=&gt;</span> {
+                      saddr <span style="color:#f92672">=&gt;</span> $local_ip,
+                      daddr <span style="color:#f92672">=&gt;</span> $target_ip,
+                    },
+                    tcp <span style="color:#f92672">=&gt;</span> {
+                      source <span style="color:#f92672">=&gt;</span> $local_port,
+                      dest   <span style="color:#f92672">=&gt;</span> $target_port,
+                      syn <span style="color:#f92672">=&gt;</span> <span style="color:#ae81ff">1</span>,
+                    },
+                  })<span style="color:#f92672">-&gt;</span>send;
+}</code></pre></div>
+<p>This code uses the much under-appreciated <a href="https://metacpan.org/pod/Net::RawIP">Net::RawIP</a> module to craft TCP packets and send them to our target destination. We set the SYN flag to 1 to trigger the beginning of a three-way TCP connection which we will never complete. This is a stealthy way to discover ports - by not completing the handshake our requests will not be logged unless the target has been configured to capture this data.</p>
+
+<p>The <code>read_packet</code> subroutine is a bit more involved:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> NetPacket::Ethernet;
+<span style="color:#66d9ef">use</span> NetPacket::IP;
+<span style="color:#66d9ef">use</span> NetPacket::TCP;
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">read_packet</span>
+{
+  <span style="color:#66d9ef">my</span> ($raw_data) <span style="color:#f92672">=</span> @_;
+  <span style="color:#66d9ef">my</span> $ip_data <span style="color:#f92672">=</span> NetPacket::Ethernet::strip($raw_data);
+  <span style="color:#66d9ef">my</span> $ip_packet <span style="color:#f92672">=</span> NetPacket::IP<span style="color:#f92672">-&gt;</span>decode($ip_data);
+
+  <span style="color:#75715e"># is it TCP</span>
+  <span style="color:#66d9ef">if</span> ($ip_packet<span style="color:#f92672">-&gt;</span>{proto} <span style="color:#f92672">==</span> <span style="color:#ae81ff">6</span>)
+  {
+    <span style="color:#66d9ef">my</span> $tcp <span style="color:#f92672">=</span> NetPacket::TCP<span style="color:#f92672">-&gt;</span>decode(NetPacket::IP::strip($ip_data));
+    <span style="color:#66d9ef">my</span> $port <span style="color:#f92672">=</span> $tcp<span style="color:#f92672">-&gt;</span>{src_port};
+    <span style="color:#66d9ef">my</span> $port_name <span style="color:#f92672">=</span> exists $port_directory{<span style="color:#e6db74">&#34;$port/tcp&#34;</span>}
+      ? $port_directory{<span style="color:#e6db74">&#34;$port/tcp&#34;</span>}<span style="color:#f92672">-&gt;</span>{name}
+      : <span style="color:#e6db74">&#39;&#39;</span>;
+
+    <span style="color:#66d9ef">if</span> ($tcp<span style="color:#f92672">-&gt;</span>{flags} <span style="color:#f92672">&amp;</span> SYN)
+    {
+      printf <span style="color:#e6db74">&#34; %5d %-20s %-20s\n&#34;</span>, $port, <span style="color:#e6db74">&#39;open&#39;</span>, $port_name;
+      $total_ports{$port} <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;open&#39;</span>;
+    }
+    <span style="color:#66d9ef">elsif</span> ($tcp<span style="color:#f92672">-&gt;</span>{flags} <span style="color:#f92672">&amp;</span> RST)
+    {
+      printf <span style="color:#e6db74">&#34; %5d %-20s %-20s\n&#34;</span>, $port, <span style="color:#e6db74">&#39;closed&#39;</span>, $port_name;
+      $total_ports{$port} <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;closed&#39;</span>;
+    }
+  }
+}</code></pre></div>
+<p>I use the <a href="https://metacpan.org/pod/NetPacket">NetPacket</a> distribution to parse the incoming packets. The first check <code>if ($ip_packet-&gt;{proto} == 6)</code> is to check that we&rsquo;re processing a TCP packet (each protocol has a number - see <a href="https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers">list</a>). The code then parses the TCP packet and looks up the port name in our <code>%port_directory</code> created earlier. <code>SYN</code> and <code>RST</code> are constants exported by <a href="https://metacpan.org/pod/NetPacket::TCP">NetPacket::TCP</a>, which are ANDed against the flags value of the TCP header to identify the type of TCP packet. If we&rsquo;ve received a SYN packet, it looks like the port is open, a RST packet indicates the port is closed.</p>
+
+<h4 id="summarizing-the-results">Summarizing the results</h4>
+
+<p>Once the port scan has finished, all closed and open ports should have been printed out. But there are also the filtered ports to think about - by definition we&rsquo;ll never receive a response for those. I&rsquo;ve used the <code>%total_ports</code> hash to track the status of ports. Every port starts as &ldquo;filtered&rdquo;, and is set to &ldquo;open&rdquo; or &ldquo;closed&rdquo; as responses are received. We can then use this data to summarize the results:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">printf <span style="color:#e6db74">&#34;\n %d ports scanned, %d filtered, %d closed, %d open\n&#34;</span>,
+  scalar(keys %total_ports),
+  scalar(grep { $total_ports{$_} <span style="color:#f92672">eq</span> <span style="color:#e6db74">&#39;filtered&#39;</span> } keys %total_ports),
+  scalar(grep { $total_ports{$_} <span style="color:#f92672">eq</span> <span style="color:#e6db74">&#39;closed&#39;</span>   } keys %total_ports),
+  scalar(grep { $total_ports{$_} <span style="color:#f92672">eq</span> <span style="color:#e6db74">&#39;open&#39;</span>     } keys %total_ports);
+
+<span style="color:#66d9ef">END</span> { pcap_close($pcap) <span style="color:#66d9ef">if</span> $pcap }</code></pre></div>
+<p>The <code>END</code> block executes in the final stage of a Perl program, and closes the packet capture object. This won&rsquo;t execute if the program receives a INT or TERM signal during execution, so I can add signal handlers to ensure Perl shuts down in an orderly way, should a signal be received:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">BEGIN</span> { $SIG{INT} <span style="color:#f92672">=</span> $SIG{TERM} <span style="color:#f92672">=</span> <span style="color:#66d9ef">sub</span> { exit <span style="color:#ae81ff">0</span> } }</code></pre></div>
+<p>I can add this code near the beginning of the program, but the <code>BEGIN</code> block ensures it will execute early in the program&rsquo;s startup phase, before the main code is executed.</p>
+
+<h3 id="putting-it-together">Putting it together</h3>
+
+<p>I&rsquo;ve saved the code into a <a href="https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d">program</a>. Now I can run it on the command line:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">$ sudo $<span style="color:#960050;background-color:#1e0010">(</span>which perl) port_scanner <span style="color:#f92672">--</span>ip <span style="color:#ae81ff">10.0.1.5</span></code></pre></div>
+<p>I need to use <code>sudo</code> because the libpcap requires root privileges to run. The program emits a lot of output, here&rsquo;s a snippet:</p>
+
+<pre><code>...
+   264 closed               bgmp                
+    48 closed               auditd              
+  9100 open                 jetdirect 
+  2456 closed               altav-remmgt        
+  3914 closed               listcrt-port-2      
+    42 closed               nameserver          
+  1051 closed               optima-vnet         
+  1328 closed               ewall               
+  4200 closed               vrml-multi-use      
+    65 closed               tacacs-ds           
+  8400 closed               cvd                 
+  8042 closed               fs-agent            
+  1516 closed               vpad                
+   702 closed               iris-beep           
+  1034 closed               zincite-a           
+   598 closed               sco-websrvrmg3      
+
+ 2258 ports scanned, 25 filtered, 2229 closed, 4 open
+</code></pre>
+
+<p>Note how the order is randomized, and we&rsquo;ve found 4 open ports. If I run the program with <code>--help</code> it prints out some useful instructions:</p>
+
+<pre><code>Usage:
+    port_scanner [options]
+
+     Options:
+      --ip,     -i   ip address to scan e.g. 10.30.1.52
+      --help,   -h   display this help text
+</code></pre>
+
+<h3 id="wrap-up">Wrap-up</h3>
+
+<p>Our basic port scanner could be improved. For one thing we only scan named ports - it would be nice to accept a range of ports to scan. The supported protocols and TCP flags could also be expanded to yield better results against different machines. The user should also be able to control the number of child processes and the packet frequency to tune the scan to the sensitivities of the target. In part two I&rsquo;ll show how to incorporate these changes and more into a fully-featured port scanner.</p>
+
+<p><br />
+<em>This article was originally posted on <a href="http://perltricks.com">PerlTricks.com</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/security">security</a></div>
+                
+                  <div class="tag"><a href="/tags/tcp">tcp</a></div>
+                
+                  <div class="tag"><a href="/tags/infosec">infosec</a></div>
+                
+                  <div class="tag"><a href="/tags/udp">udp</a></div>
+                
+                  <div class="tag"><a href="/tags/libpcap">libpcap</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-david-farrell">
+  <div class="col-sm-2">
+    
+    <a href="/authors/david-farrell/"><div class="circle-avatar" style="background-image:url(/images/author/david-farrell.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/david-farrell/"><h3>David Farrell</h3></a>
+    <p>David is the editor of Perl.com. An organizer of the <a href="http://www.meetup.com/The-New-York-Perl-Meetup-Group/">New York Perl Meetup</a>, he works for ZipRecruiter as a software developer, and sometimes <a href="https://twitter.com/perltricks">tweets</a> about Perl and Open Source.</p>
+    <h5><a href="/authors/david-farrell/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/port-scanning-with-perl.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

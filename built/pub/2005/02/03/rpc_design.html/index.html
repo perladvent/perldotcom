@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Throwing Shapes </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" Sometimes data processing is better when separated into different processes that may run on the same machine or even on different ones. This is the well-known client-server technique. You can do it using a known protocol (such as http)..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2005/02/03/rpc_design.html/" />
+<meta property="og:title" content="Throwing Shapes" />
+<meta property="og:description" content=" Sometimes data processing is better when separated into different processes that may run on the same machine or even on different ones. This is the well-known client-server technique. You can do it using a known protocol (such as http)...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2005-02-02T02:02:02Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2005_02_03_rpc_design/111-shapes.gif" />
+<meta property="og:article:tag" content="algorithm-floodcontrol" />
+<meta property="og:article:tag" content="event-processing" />
+<meta property="og:article:tag" content="flood-control" />
+<meta property="og:article:tag" content="communications" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Throwing Shapes</h1>
+              <p class="blog-post-meta">Feb 3, 2005 by
+              
+              
+                
+                
+                <a href="#author-bio-vladi-belperchinov-shabanski">Vladi Belperchinov-Shabanski</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>Sometimes data processing is better when separated into different processes that may run on the same machine or even on different ones. This is the well-known client-server technique. You can do it using a known protocol (such as http) or by developing your own, specific protocol. This approach needs implementation for constructor and parser procedures for each packet type (request and response). It&rsquo;s possible for different packets to have the same structure so the constructor and parser will be always the same. Perhaps the simplest solution is to have key/value pairs packed with newline characters or with other separators inside a text block. Binary form with length encoding is another solution.</p>
+
+<p>In an attempt to simplify this client-server interaction, the <em>Remote Procedure Call</em> (RPC) technique appeared. It tries to map functions inside the client code to their counterparts inside the server. RPC hides all the details between a client function call and the server function&rsquo;s response. This includes argument serialization (to make data appropriate to transfer over the net, also known as marshaling), transport, the server function call, and returning response data back to the client (also serialized). In some implementations, RPC also tries to remove requirements for the client and the server to run on the same operating system or hardware, or to be written in the same programming language.</p>
+
+<p>In the Perl world there are several modules that offer different kinds of RPC, including <a href="https://metacpan.org/pod/RPC::Simple">RPC::Simple</a>, <a href="https://metacpan.org/pod/RPC::XML">RPC::XML</a>, <a href="https://metacpan.org/pod/DCE::RPC">DCE::RPC</a>, and more.</p>
+
+<p>In this article I&rsquo;ll explain how to use Perl-specific features to develop a compact RPC implementation that I will name <em>Perl-centric Remote Call</em> (PerlRC). As the name suggests, it will run only with Perl clients and servers.</p>
+
+<h3 id="shape">Shape</h3>
+
+<p>PerlRC needs to simulate a function call environment that seems familiar to the client. This requires handling the four key properties of a function call:</p>
+
+<ul>
+<li>Function name</li>
+<li>Function arguments</li>
+<li>Calling context</li>
+<li>Return data</li>
+</ul>
+
+<p>The design of the Perl language allows generic argument handling, which means that it is possible to handle arguments without knowing them before the function call. There are also ways to discover the calling context. Finally, the caller can handle results in the same way as the called function&rsquo;s arguments &ndash; generically, without knowing their details until the function call returns.</p>
+
+<p>With this in mind, the PerlRC code must follow these steps:</p>
+
+<ul>
+<li><p><em>Creating Transport Containers</em></p>
+
+<p>Essentially these are the request and response packets. I&rsquo;ll use hashes for both. Each one will be serialized to a scalar which the code will send to the other side with a trailing newline terminator.</p>
+
+<p>A request container resembles:</p>
+
+<pre><code># request hash
+  $req1 = {
+            'ARGS' =&gt; [          # arguments list
+                        2,
+                        8
+                      ],
+            'NAME' =&gt; 'power',   # remote function name
+            'WANTARRAY' =&gt; 0     # calling context
+          };
+
+  # result hash for scalar context
+  $res1 = {
+            'RET_SCALAR' =&gt; 256  # result scalar
+          };
+
+  # result hash for array context
+  $res2 = {
+            'RET_ARRAY' =&gt; [     # result array
+                             12,
+                             13,
+                             14,
+                             15,
+                             16,
+                             17,
+                             18,
+                           ]
+          };
+
+  # result hash for error
+  $res3 = {
+            # error description
+            'ERROR' =&gt; 'No such function: test'
+          };
+</code></pre></li>
+
+<li><p><em>Arguments</em></p>
+
+<p>To keep things simple, the first argument will represent the remote function name to call. This server must remove this argument from the list before passing on the rest to the remote function. The request container holds the name for the remote function and a separate reference to the argument list.</p></li>
+
+<li><p><em>Calling Context Discovery</em></p>
+
+<p>Find the calling context with the built-in <code>wantarray</code> function and put this value (0 for scalar and 1 for array context) in the request hash.</p></li>
+
+<li><p><em>Transfer Both to the Server</em></p>
+
+<p>Serialize the request to scalar and escape newline chars with <code>\n</code>. Append the newline terminator and send it to the server.</p></li>
+
+<li><p><em>Unpack Request Data</em></p>
+
+<p>The server takes the request scalar, removes the trailing newline terminator, and unpacks the request data into a local hash that contains the function name, the calling context, and the argument list.</p></li>
+
+<li><p><em>Server-side Function Call</em></p>
+
+<p>Find and call the required function in appropriate context. Take the result data or the error. Create a result container with separate fields for scalar and array contexts and one field for any error.</p></li>
+
+<li><p><em>Pack Result Data</em></p>
+
+<p>Serialize the result hash, escape newlines, append a terminating newline, and send the result data to the client.</p></li>
+
+<li><p><em>Client Unpack of the Result Data</em></p>
+
+<p>When the client receives the result container, remove the trailing newline char. Unescape any newline chars and unpack the data into a local result hash. Depending on the calling context, return to the caller either the scalar or array field from the result hash or die with an error description if such exists.</p></li>
+</ul>
+
+<p>The implementation uses two modules:</p>
+
+<ul>
+<li><a href="https://metacpan.org/pod/Storable"><code>Storable</code></a> handles the serialization of arbitrary data. Serializing data converts it to a string of characters suitable for saving or sending across the network and unserializable later into the form of the original. The rest of the article will also refer to this process as packing and unpacking the data.</li>
+<li><a href="https://metacpan.org/pod/IO::Socket::INET">IO::Socket::INET</a> handles the creation of Internet domain sockets.</li>
+</ul>
+
+<p>Both modules are standard in the latest Perl distribution packages.</p>
+
+<p>It is possible to use any serialization module including FreezeThaw, XML::Dumper, or even Data::Dumper + <code>eval()</code> instead of Storable.</p>
+
+<h3 id="point-of-no-return">Point of No Return</h3>
+
+<p>Enough background. Here&rsquo;s the PerlRC implementation of the server:</p>
+
+<pre><code>  use Storable qw( thaw nfreeze );
+  use IO::Socket::INET;
+
+  # function table, maps caller names to actual server subs
+  our %FUNC_MAP = (
+                  power =&gt; \&amp;power,
+                  range =&gt; \&amp;range,
+                  tree  =&gt; \&amp;tree,
+                  );                                
+
+  # create listen socket
+  my $sr = IO::Socket::INET-&gt;new( Listen    =&gt; 5,
+                                  LocalAddr =&gt; 'localhost:9999',
+                                  ReuseAddr =&gt; 1 );
+
+  while(4)
+    {
+    # awaiting connection
+    my $cl = $sr-&gt;accept() or next; # accept new connection or loop on error
+
+    while( my $req = &lt;$cl&gt; ) # read request data, exit loop on empty request
+      {
+      chomp( $req );
+      my $thaw = thaw( r_unescape( $req ) ); # 'unpack' request data (\n unescape)
+      my %req = %{ $thaw || {} };            # copy to local hash
+
+      my %res;                                # result data
+      my $func = $FUNC_MAP{ $req{ 'NAME' } }; # find required function
+      if( ! $func ) # check if function exists
+        {
+        # function name is not found, return error
+        $res{ 'ERROR' } = &quot;No such function: &quot; . $req{ 'NAME' };
+        }
+      else
+        {
+        # function exists, proceed with execution
+        my @args = @{ $req{ 'ARGS' } }; # copy to local arguments hash
+        if( $req{ 'WANTARRAY' } )       # depending on the required context...
+          {
+          my @ret = &amp;$func( @args );    # call function in array context
+          $res{ 'RET_ARRAY' } = \@ret;  # return array
+          }
+        else
+          {
+          my $ret = &amp;$func( @args );    # call function in scalar context
+          $res{ 'RET_SCALAR' } = $ret;  # return scalar
+          }  
+        }
+
+      my $res = r_escape( nfreeze( \%res ) ); # 'pack' result data (\n escape)
+      print $cl &quot;$res\n&quot;;                     # send result data to the client
+      }
+    }
+</code></pre>
+
+<p>The client side is also simple:</p>
+
+<pre><code>  use Storable qw( thaw nfreeze );
+  use IO::Socket::INET;
+
+  # connect to the server
+  my $cl = IO::Socket::INET-&gt;new(  PeerAddr =&gt; &quot;localhost:9999&quot; ) 
+       or die &quot;connect error\n&quot;;
+
+  # this is interface sub to calling server
+  sub r_call
+  {
+    my %req; # request data
+
+    $req{ 'NAME' }      = shift;             # function name to call
+    $req{ 'WANTARRAY' } = wantarray ? 1 : 0; # context hint
+    $req{ 'ARGS' }      = \@_;               # arguments
+
+    my $req = r_escape( nfreeze( \%req ) );  # 'pack' request data (\n escape)
+    print $cl &quot;$req\n&quot;;                      # send to the server
+    my $res = &lt;$cl&gt;;                         # get result line
+    chomp( $res );
+
+    my $thaw = thaw( r_unescape( $res ) );   # 'unpack' result (\n unescape)
+    my %res = %{ $thaw || {} };              # copy result data to local hash
+
+    # server error -- break execution!
+    die &quot;r_call: server error: $res{'ERROR'}\n&quot; if $res{ 'ERROR' };
+
+    # finally return result in the required context
+    return wantarray ? @{ $res{ 'RET_ARRAY' } } : $res{ 'RET_SCALAR' };
+  }
+</code></pre>
+
+<p>On both sides there are two very simple functions that escape and unescape newline chars. This is necessary to prevent serialized data that contains newline chars from breaking the chosen packet terminator. (A newline works well there because it interacts well with the <code>readline()</code> operation on the socket.)</p>
+
+<pre><code>  sub r_escape
+  {
+    my $s = shift;
+    # replace all newlines, CR and % with CGI-style encoded sequences
+    $s =~ s/([%\r\n])/sprintf(&quot;%%%02X&quot;, ord($1))/ge;
+    return $s;
+  }
+
+  sub r_unescape
+  {
+    my $s = shift;
+    # convert back escapes to the original chars
+    $s =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/ge;
+    return $s;
+  }
+</code></pre>
+
+<h3 id="waiting-in-the-wings">Waiting In The Wings</h3>
+
+<p>That&rsquo;s the client and server. Now they need to do something useful. Here&rsquo;s some code to run on the server from a client:</p>
+
+<pre><code>  =head2 power()
+
+   arguments: a number (n) and power (p)
+     returns: the number powered (n**p)
+
+  =cut
+
+  sub power
+  {
+    my $n = shift;
+    my $p = shift;
+    return $n**$p;
+  }
+
+  =head2 range( f, t )
+
+   arguments: lower (f) and upper indexes (t)
+     returns: array with number elements between the lower and upper indexes
+              ( f .. t )
+  =cut         
+
+  sub range
+  {
+    my $f = shift;
+    my $t = shift;
+    return $f .. $t;
+  }
+
+  =head2 tree()
+
+   arguments: none
+     returns: in scalar context: hash reference to data tree
+              in array  context: hash (array) of data tree
+       usage:
+              $data = tree(); $data-&gt;{ ... }
+              %data = tree(); $data{ ... }
+  =cut
+
+  sub tree
+  {
+    my $ret = {
+              this =&gt; 'is test',
+              nothing =&gt; [ qw( ever goes as planned ) ],
+              number_is =&gt; 42,
+              };
+    return wantarray ? %$ret : $ret;
+  }
+</code></pre>
+
+<p>To make these available to clients, the server must have a map of functions. It&rsquo;s easy:</p>
+
+<pre><code>  # function table, maps caller names to actual server subs
+  our %FUNC_MAP = (
+                  power =&gt; \&amp;power,
+                  range =&gt; \&amp;range,
+                  tree  =&gt; \&amp;tree,
+                  );
+</code></pre>
+
+<p>That&rsquo;s all of the setup for the server. Now you can start it.</p>
+
+<p>The client side calls functions in this way:</p>
+
+<pre><code>  r_call( 'test',  1, 2, 3, 'opa' );  # this will receive 'not found' error
+  my $r = r_call( 'power',  2,  8 );  # $r = 256
+  my @a = r_call( 'range', 12, 18 );  # @a = ( 12, 13, 14, 15, 16, 17, 18 )
+  my %t = r_call( 'tree' );           # returns data as hash
+  my $t = r_call( 'tree' );           # returns data as reference
+
+  print( &quot;Tree is:\n&quot; . Dumper( \%t ) );
+  # this will print:
+
+  Tree is:
+  $VAR1 = {
+            'number_is' =&gt; 42,
+            'nothing' =&gt; [
+                           'ever',
+                           'goes',
+                           'as',
+                           'planned'
+                         ],
+            'this' =&gt; 'is test'
+          };
+
+  # and will be the same as 
+  print( &quot;Tree is:\n&quot; . Dumper( $t ) );
+</code></pre>
+
+<h3 id="one-wish">One Wish</h3>
+
+<p>At this point everything works, but as usual, someone will want another feature. Suppose that the server and the client sides each had one wish.</p>
+
+<p>The server side wish may be to have a built-in facility to find callable functions so as to build the function map can be built automatically.</p>
+
+<p>Automatic map discovery has one major flaw which is that all functions in the current package are available to the client. This may not be always desirable. There are simple solutions to the problem. For example, all functions that need external visibility within a package could have a specific name prefix. A map discovery procedure can filter the list of all functions with this prefix and map those externally under the original names (without the prefix).</p>
+
+<p>The following code finds all defined functions in the current namespace (the one that called <code>r_map_discover()</code>) and returns a hash with function-name keys and function-code-reference values:</p>
+
+<pre><code>  sub r_map_discover
+  {
+    my ( $package ) = caller(); # get the package name of the caller
+    my $prefix = shift;         # optional prefix
+    my %map;
+
+    # disable check for symbolic references
+    no strict 'refs';
+
+    # loop over all entries in the caller package's namespace
+    while( my ( $k, $v ) = each %{ $package . '::' } ) 
+      {
+      my $sym = $package . '::' . $k; # construct the full name of each symbol
+      next unless $k =~ s/^$prefix//; # allow only entries starting with prefix
+      my $r = *{ $sym }{ 'CODE' };    # take reference to the CODE in the glob
+      next unless $r;  # reference is empty, no code under this name, skip
+      $map{ $k } = $r; # reference points to CODE, assign it to the map
+      }
+    return %map;
+  }
+</code></pre>
+
+<p>To make the use automatic discovery instead of a static function map, write:</p>
+
+<pre><code>  # function table, maps caller names to actual server subs, initially empty
+  our %FUNC_MAP;
+
+  # run the automatic discovery function
+  %FUNC_MAP = r_map_discover();
+</code></pre>
+
+<p>Now <code>%FUNC_MAP</code> has all of the externally-visible functions in the current package (namespace). That means it&rsquo;s time to modify the names in the module to work with automatic discovery. Suppose the prefix is <code>x_</code>:</p>
+
+<pre><code>  sub x_power
+  {
+    ...
+  }
+
+  sub x_range
+  {
+    ...
+  }
+</code></pre>
+
+<p>The server will discover only those functions:</p>
+
+<pre><code>%FUNC_MAP = r_map_discover( 'x_' );
+</code></pre>
+
+<p>and the client will continue to call functions under their usual names:</p>
+
+<pre><code>  my $r = r_call( 'power',  2,  8 );  # $r = 256
+  my @a = r_call( 'range', 12, 18 );  # @a = ( 12, 13, 14, 15, 16, 17, 18 )
+</code></pre>
+
+<p>That&rsquo;s it for the server&rsquo;s wish. Now it&rsquo;s time to grant the client&rsquo;s wish.</p>
+
+<p>Call remote functions transparently might be most important client wish, avoiding the use of <code>r_call()</code>.</p>
+
+<p>Perl allows the creation of anonymous function references. It&rsquo;s also possible to install that reference in a namespace under a real name. The result is a function created at run-time. If the function definition takes place in a specific lexical context, it will still have access to that context even when called later from outside that context. Those functions are closures and they are one way to avoid using <code>r_call()</code>:</p>
+
+<pre><code>  sub r_define_subs
+  {
+    my ( $package ) = caller(); # get the package name of the caller
+    for my $fn ( @_ )           # loop over the specified function names
+      {
+      my $sym = $package . '::' . $fn;    # construct the full symbol name
+      no strict;                          # turn off symbolic refs check
+      *$sym = sub { r_call( $fn, @_ ); }; # construct and tie the closure
+      use strict;                         # turn the check back on
+      }
+  }
+
+  # define/import 'range' and 'tree' functions in the current package
+  r_define_subs( 'range', 'tree' );
+
+  # now call them as they are normal functions
+  my @a = range( 12, 18 );      # @a = ( 12 .. 18 )
+  my %t = tree();               # returns data as reference
+</code></pre>
+
+<p>This approach hides the use of <code>r_call()</code> to only one place which the client doesn&rsquo;t see. Wish granted.</p>
+
+<h3 id="limits">Limits</h3>
+
+<p>The biggest limitations of PerlRC relate to serialization.</p>
+
+<p>First of all, both the client and server must have compatible serialization modules or versions. This is crucial! To avoid problems here, either you&rsquo;ll have to write your own serialization code or perform some kind of version check. If you perform this check, be sure to do it before sending a request and response, in plain text, without using serialization at all.</p>
+
+<p>Another problem is in what data you can serialize in the argument or result containers. Holding references there to something outside the same container may pull in more data than you want, if your serialization follows references, or it may not pull in enough data if your serialization process is very simple. Also there is no way to serialize file handles, compiled code, or objects (which are not in the same container really). In some cases, serializing code and objects may be possible if the serialization modules supports such features (as do Storable and FreezeThaw), if you have the required class modules on both sides, and if you trust code on either side.</p>
+
+<p>The documentation of the serialization modules explain further limitations and workarounds for both approaches.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>There is a bit more work to do on PerlRC before using it in production, but if you need simple RPC or you need to tweak the way RPC deals with data or communication, you may have good experiences writing your own implementation instead fitting your application around readymade modules. I hope this text is a good starting point.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/community">community</a></div>
+                
+                  <div class="tag"><a href="/tags/algorithm-floodcontrol">algorithm-floodcontrol</a></div>
+                
+                  <div class="tag"><a href="/tags/event-processing">event-processing</a></div>
+                
+                  <div class="tag"><a href="/tags/flood-control">flood-control</a></div>
+                
+                  <div class="tag"><a href="/tags/communications">communications</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-vladi-belperchinov-shabanski">
+  <div class="col-sm-2">
+    
+    <a href="/authors/vladi-belperchinov-shabanski/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/vladi-belperchinov-shabanski/"><h3>Vladi Belperchinov-Shabanski</h3></a>
+    <p></p>
+    <h5><a href="/authors/vladi-belperchinov-shabanski/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2005_02_03_rpc_design.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

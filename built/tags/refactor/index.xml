@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Refactor on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/refactor/</link>
+    <description>Recent content in Refactor on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 17 Aug 2016 08:38:50 +0000</lastBuildDate>
+    <atom:link href="/tags/refactor/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Identify slow code with Devel::Timer</title>
+      <link>http://localhost:1313/article/identify-slow-code-with-devel--timer/</link>
+      <pubDate>Wed, 17 Aug 2016 08:38:50 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/identify-slow-code-with-devel--timer/</guid>
+      <description>
+
+&lt;p&gt;Program speed is an important factor in programming. No one wants their program to execute more slowly. As a general purpose programming language, Perl is usually fast enough for most things, and when it isn&amp;rsquo;t, we have some great tools to help us make it faster. We can use the &lt;a href=&#34;https://metacpan.org/pod/Benchmark&#34;&gt;Benchmark&lt;/a&gt; module to compare code and &lt;a href=&#34;https://metacpan.org/pod/Devel::NYTProf&#34;&gt;Devel::NYTProf&lt;/a&gt; to produce detailed analyses of our programs.&lt;/p&gt;
+
+&lt;p&gt;This article is about &lt;a href=&#34;https://metacpan.org/pod/Devel::Timer&#34;&gt;Devel::Timer&lt;/a&gt;, another module I like to use when I want to optimize an existing subroutine, and I&amp;rsquo;m not sure how long each statement within the subroutine takes to execute. It&amp;rsquo;s very easy to setup, so if you haven&amp;rsquo;t used it before, once you&amp;rsquo;ve read this article you&amp;rsquo;ll have another tool in your toolbox for optimizing code.&lt;/p&gt;
+
+&lt;h3 id=&#34;use-devel-timer-to-get-a-timing-report&#34;&gt;Use Devel::Timer to get a timing report&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s say I have a subroutine which is far too slow, but I&amp;rsquo;m not sure what&amp;rsquo;s slowing it down. The (fictional) subroutine looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;foo&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $args &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+
+  die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;foo() requires an hashref of args&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $args &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; ref $args &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;HASH&amp;#39;&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %parsed_args &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; validate_args($args);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $user        &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; find_user($parsed_args{username});
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $location    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; get_location($parsed_args{req_address});
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bar         &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; register_request($user, $location);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $bar;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I can use Devel::Timer to time each statement in the subroutine, and tell me how long each one took:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Devel::Timer;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;foo&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $args &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $timer &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Devel::Timer&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;();
+
+  die &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;foo() requires an hashref of args&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $args &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; ref $args &lt;span style=&#34;color:#f92672&#34;&gt;eq&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;HASH&amp;#39;&lt;/span&gt;;
+  $timer&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;mark(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;check $args is hashref&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %parsed_args &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; validate_args($args);
+  $timer&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;mark(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;validate_args()&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $user        &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; find_user($parsed_args{username});
+  $timer&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;mark(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;find_user()&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $location    &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; get_location($parsed_args{req_address});
+  $timer&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;mark(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;get_location()&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bar         &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; register_request($user, $location);
+  $timer&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;mark(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;register_request()&amp;#39;&lt;/span&gt;);
+
+  $timer&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;report();
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $bar;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ve updated the code to import Devel::Timer and construct a new &lt;code&gt;$timer&lt;/code&gt; object. After every statement I want to time, I call the &lt;code&gt;mark&lt;/code&gt; method which adds an entry to the timer, like recording split times on a stopwatch. Finally I call &lt;code&gt;report&lt;/code&gt; which prints out a table listing the time spent between every &lt;code&gt;mark&lt;/code&gt; call.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Devel::Timer Report -- Total time: 0.0515 secs
+Interval  Time    Percent
+----------------------------------------------
+02 -&amp;gt; 03  0.0328  63.68%  validate_args() -&amp;gt; find_user()
+04 -&amp;gt; 05  0.0095  18.44%  get_location() -&amp;gt; register_request()
+03 -&amp;gt; 04  0.0081  15.72%  find_user() -&amp;gt; get_location()
+06 -&amp;gt; 07  0.0010   0.19%  register_request() -&amp;gt; END
+01 -&amp;gt; 02  0.0001   0.00%  check $args is hashref -&amp;gt; validate_args()
+00 -&amp;gt; 01  0.0000   0.00%  INIT -&amp;gt; check $args is hashref
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default the table is printed in descending order of duration. The output shows that the subroutine took 515ms to execute, and the time between the &lt;code&gt;validate_args()&lt;/code&gt; mark and the &lt;code&gt;find_user()&lt;/code&gt; mark took a whopping 63.68% of the runtime. So if I was going to refactor this subroutine, I would start with the &lt;code&gt;find_user()&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;p&gt;In my experience, this is a typical distribution of timings. It&amp;rsquo;s rare to find every statement in a subroutine takes the same amount of time. Usually there just are one or two culprits, and if you can refactor those, the subroutine runtime can improve by an order of magnitude or more.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-common-pitfall&#34;&gt;A common pitfall&lt;/h3&gt;
+
+&lt;p&gt;One thing to watch out for with Devel::Timer is lazy evaluation. This is when code is written to only execute when it&amp;rsquo;s required. Sometimes the first call to a subroutine may be slow, as objects are created, caches initialized or whatever. But subsequent calls are much faster. An easy way to check for this is to call the subroutine multiple times in the same process, and check the Devel::Timer reports to confirm the timings.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;This article is about &lt;a href=&#34;https://metacpan.org/pod/Devel::Timer&#34;&gt;Devel::Timer&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Benchmark::Stopwatch&#34;&gt;Benchmark::Stopwatch&lt;/a&gt; is another timer module, similar to Devel::Timer&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Devel::NYTProf&#34;&gt;Devel::NYTProf&lt;/a&gt; is a code profiler for Perl. Tim Bunce regularly gives &lt;a href=&#34;https://www.youtube.com/watch?v=SDWoCQf53Ck&#34;&gt;talks&lt;/a&gt; about it&lt;/li&gt;
+&lt;li&gt;The &lt;a href=&#34;https://metacpan.org/pod/Benchmark&#34;&gt;Benchmark&lt;/a&gt; module comes with Perl&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

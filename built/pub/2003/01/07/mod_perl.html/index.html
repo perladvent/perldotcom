@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Improving mod_perl Sites&#39; Performance: Part 6 </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" It&#39;s desirable to avoid forking under mod_perl, as when you do, you are forking the entire Apache server - lock, stock and barrel. Not only is your Perl code and Perl interpreter being duplicated, but so is mod_ssl, mod_rewrite,..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2003/01/07/mod_perl.html/" />
+<meta property="og:title" content="Improving mod_perl Sites&#39; Performance: Part 6" />
+<meta property="og:description" content=" It&#39;s desirable to avoid forking under mod_perl, as when you do, you are forking the entire Apache server - lock, stock and barrel. Not only is your Perl code and Perl interpreter being duplicated, but so is mod_ssl, mod_rewrite,...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2003-01-01T01:01:01Z" />
+<meta property="og:image" content="http://localhost:1313/images/site/avatar.png" />
+<meta property="og:article:tag" content="mod-perl-fork" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Improving mod_perl Sites&#39; Performance: Part 6</h1>
+              <p class="blog-post-meta">Jan 7, 2003 by
+              
+              
+                
+                
+                <a href="#author-bio-stas-bekman">Stas Bekman</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p>It&rsquo;s desirable to avoid forking under <code>mod_perl</code>, as when you do, you are forking the entire Apache server &ndash; lock, stock and barrel. Not only is your Perl code and Perl interpreter being duplicated, but so is <code>mod_ssl</code>, <code>mod_rewrite</code>, <code>mod_log</code>, <code>mod_proxy</code>, <code>mod_speling</code> (it&rsquo;s not a typo!) or whatever modules you have used in your server, all the core routines.</p>
+
+<p>Modern operating systems come with a light version of fork, which adds a little overhead when called, since it was optimized to do the absolute minimum of memory pages duplications. The <em>copy-on-write</em> technique is what allows it to do so. The gist of this technique is as follows: The parent process&rsquo; memory pages aren&rsquo;t immediately copied to the child&rsquo;s space on fork(); this is done only when the child or the parent modifies the data in some memory pages. Before the pages get modified, they get marked as dirty and the child has no choice but to copy the pages that are to be modified since they cannot be shared any more.</p>
+
+<p>If you need to call a Perl program from your <code>mod_perl</code> code, then it&rsquo;s better to try to covert the program into a module and call it as a function without spawning a special process to do that. Of course, if you cannot do that or the program is not written in Perl, then you have to call via <code>system()</code> or its equivalent, which spawns a new process. If the program is written in C, then you can try to write a Perl glue code with help of XS or SWIG architectures, and then the program will be executed as a Perl subroutine.</p>
+
+<p>Also, by trying to spawn a sub-process, you might be trying to do the <em>&ldquo;wrong thing&rdquo;</em>. If what you really want is to send information to the browser and then do some post-processing, then look into the <code>PerlCleanupHandler</code> directive. The latter allows you to tell the child process after request has been processed and user has received the response. This doesn&rsquo;t release the <code>mod_perl</code> process to serve other requests, but it allows you to send the response to the client faster. If this is the situation and you need to run some cleanup code, then you may want to register this code during the request processing stage like so:</p>
+
+<pre><code>  my $r = shift;
+  $r-&gt;register_cleanup(\&amp;do_cleanup);
+  sub do_cleanup{ #some clean-up code here }
+</code></pre>
+
+<p>But when a long-term process needs to be spawned, there is not much choice but to use fork(). We cannot just run this process within the Apache process because it&rsquo;ll keep the Apache process busy, instead of allowing it to do the job it was designed to do. Also, if Apache stops, then the long-term process might be terminated as well unless coded properly to detach from Apache&rsquo;s process group.</p>
+
+<p>In the following sections, I&rsquo;m going to discuss how to properly spawn new processes under <code>mod_perl</code>.</p>
+
+<h3 id="span-id-forking-a-new-process-forking-a-new-process-span"><span id="forking_a_new_process">Forking a New Process</span></h3>
+
+<p>This is a typical way to call <code>fork()</code> under <code>mod_perl</code>:</p>
+
+<pre><code>  defined (my $kid = fork) or die &quot;Cannot fork: $!\n&quot;;
+  if ($kid) {
+    # Parent runs this block
+  } else {
+    # Child runs this block
+    # some code comes here
+    CORE::exit(0);
+  }
+  # possibly more code here usually run by the parent
+</code></pre>
+
+<p>When using fork(), you should check its return value, because if it returns <code>undef</code>, it means that the call was unsuccessful and no process was spawned; something that can happen when the system is running too many processes and cannot spawn new ones.</p>
+
+<p>When the process is successfully forked, the parent receives the PID of the newly spawned child as a returned value of the <code>fork()</code> call and the child receives 0. Now the program splits into two. In the above example, the code inside the first block after <em>if</em> will be executed by the parent and the code inside the first block after <em>else</em> will be executed by the child process.</p>
+
+<p>It&rsquo;s important not to forget to explicitly call <code>exit()</code> at the end of the child code when forking - if you don&rsquo;t and there is some code outside the <em>if/else block</em>, then the child process will execute it as well. But under <code>mod_perl</code> there is another nuance: You must use <code>CORE::exit()</code> and not <code>exit()</code>, which would be automatically overriden by <code>Apache::exit()</code> if used in conjunction with <code>Apache::Registry</code> and similar modules. We actually do want the spawned process to quit when its work is done, otherwise, it&rsquo;ll just stay alive, use resources and do nothing.</p>
+
+<p>The parent process usually completes its execution path and enters the pool of free servers to wait for a new assignment. If the execution path is to be aborted earlier for some reason, then one should use Apache::exit() or die(). In the case of <code>Apache::Registry</code> or <code>Apache::PerlRun</code> handlers, a simple <code>exit()</code> will do the correct thing.</p>
+
+<p>The child shares with parent its memory pages until it has to modify some of them, which triggers a <em>copy-on-write</em> process that copies these pages to the child&rsquo;s domain before the child is allowed to modify them. But this all happens afterward. At the moment the <code>fork()</code> call is executed, the only work to be done before the child process goes on its separate way is to set up the page tables for the virtual memory, which imposes almost no delay at all.</p>
+
+<h3 id="span-id-freeing-the-parent-process-freeing-the-parent-process-span"><span id="freeing_the_parent_process">Freeing the Parent Process</span></h3>
+
+<p>In the child code, you must also close all pipes to the connection socket that were opened by the parent process (i.e. <code>STDIN</code> and <code>STDOUT</code>) and inherited by the child, so the parent will be able to complete the request and free itself for serving other requests. If you need the <code>STDIN</code> and/or <code>STDOUT</code> streams, then you should reopen them. You may need to close or reopen the <code>STDERR</code> filehandle. It&rsquo;s opened to append to the <em>error_log</em> file as inherited from its parent, so chances are that you will want to leave it untouched.</p>
+
+<p>Under <code>mod_perl</code>, the spawned process also inherits a file descriptor that&rsquo;s tied to the socket through which all communication between the server and the client occur. Therefore, we need to free this stream in the forked process. If we don&rsquo;t do that, then the server cannot be restarted while the spawned process is still running. If an attempt is made to restart the server, then you will get the following error:</p>
+
+<pre><code>  [Mon Dec 11 19:04:13 2000] [crit]
+  (98)Address already in use: make_sock:
+    could not bind to address 127.0.0.1 port 8000
+</code></pre>
+
+<p><code>Apache::SubProcess</code> comes to our aid and provides a method <code>cleanup_for_exec()</code>, which takes care of closing this file descriptor.</p>
+
+<p>So the simplest way to free the parent process is to close all three <code>STD*</code> streams if we don&rsquo;t need them, and untie the Apache socket. In addition, you may want to change the process&rsquo; current directory to <em>/</em> so the forked process won&rsquo;t keep the mounted partition busy, if this is to be unmounted at a later time. To summarize all this issues, here is an example of the fork that takes care of freeing the parent process.</p>
+
+<pre><code>  use Apache::SubProcess;
+  defined (my $kid = fork) or die &quot;Cannot fork: $!\n&quot;;
+  if ($kid) {
+    # Parent runs this block
+  } else {
+    # Child runs this block
+      $r-&gt;cleanup_for_exec(); # untie the socket
+      chdir '/' or die &quot;Can't chdir to /: $!&quot;;
+      close STDIN;
+      close STDOUT;
+      close STDERR;
+
+    # some code comes here
+
+      CORE::exit(0);
+  }
+  # possibly more code here usually run by the parent
+</code></pre>
+
+<p>Of course, between the freeing-parent code and child-process termination, the real code is to be placed.</p>
+
+<h3 id="span-id-detaching-the-forked-process-detaching-the-forked-process-span"><span id="detaching_the_forked_process">Detaching the Forked Process</span></h3>
+
+<p>Now what happens if the forked process is running and we decide that we need to restart the Web server? This forked process will be aborted, since when the parent process dies during the restart, it&rsquo;ll kill its child processes as well. In order to avoid this, we need to detach the process from its parent session by opening a new session. We do this with help of <code>setsid()</code> system call, provided by the <code>POSIX</code> module:</p>
+
+<pre><code>  use POSIX 'setsid';
+
+  defined (my $kid = fork) or die &quot;Cannot fork: $!\n&quot;;
+  if ($kid) {
+    # Parent runs this block
+  } else {
+    # Child runs this block
+      setsid or die &quot;Can't start a new session: $!&quot;;
+      ...
+  }
+</code></pre>
+
+<p>Now the spawned child process has a life of its own, and it doesn&rsquo;t depend on the parent any longer.</p>
+
+<h3 id="span-id-avoiding-zombie-processes-avoiding-zombie-processes-span"><span id="avoiding_zombie_processes">Avoiding Zombie Processes</span></h3>
+
+<p>Now let&rsquo;s talk about zombie processes.</p>
+
+<p>Normally, every process has its parent. Many processes are children of the <code>init</code> process, whose <code>PID</code> is <code>1</code>. When you fork a process, you must <code>wait()</code> or <code>waitpid()</code> for it to finish. If you don&rsquo;t <code>wait()</code> for it, then it becomes a zombie.</p>
+
+<p>A zombie is a process that doesn&rsquo;t have a parent. When the child quits, it reports the termination to its parent. If no parent wait()s to collect the exit status of the child, then it gets <em>&ldquo;confused&rdquo;</em> and becomes a ghost process. This process can be seen as a process, but not killed. It will be killed only when you stop the parent process that spawned it!</p>
+
+<p>Generally, the <code>ps(1)</code> utility displays these processes with the <code>&lt;defunct&gt;</code> tag, and you will see the zombies counter increment when doing top(). These zombie processes can take up system resources and are generally undesirable.</p>
+
+<p>So the proper way to do a fork is:</p>
+
+<pre><code>  my $r = shift;
+  $r-&gt;send_http_header('text/plain');
+
+  defined (my $kid = fork) or die &quot;Cannot fork: $!&quot;;
+  if ($kid) {
+    waitpid($kid,0);
+    print &quot;Parent has finished\n&quot;;
+  } else {
+      # do something
+      CORE::exit(0);
+  }
+</code></pre>
+
+<p>In most cases, the only reason you would want to fork is when you need to spawn a process that will take a long time to complete. So if the Apache process that spawns this new child process has to wait for it to finish, then you have gained nothing. You can neither wait for its completion (because you don&rsquo;t have the time to), nor continue because you will get yet another zombie process. This is called a blocking call, since the process is blocked to do anything else before this call gets completed.</p>
+
+<p>The simplest solution is to ignore your dead children. Just add this line before the <code>fork()</code> call:</p>
+
+<pre><code>  $SIG{CHLD} = 'IGNORE';
+</code></pre>
+
+<p>When you set the <code>CHLD</code> (<code>SIGCHLD</code> in C) signal handler to <code>'IGNORE'</code>, all the processes will be collected by the <code>init</code> process and are therefore prevented from becoming zombies. This doesn&rsquo;t work everywhere, however. It proved to work at least on the Linux OS.</p>
+
+<p>Note that you cannot localize this setting with <code>local()</code>. If you do, then it won&rsquo;t have the desired effect.</p>
+
+<p>So now the code would look like this:</p>
+
+<pre><code>  my $r = shift;
+  $r-&gt;send_http_header('text/plain');
+
+  $SIG{CHLD} = 'IGNORE';
+
+  defined (my $kid = fork) or die &quot;Cannot fork: $!\n&quot;;
+  if ($kid) {
+    print &quot;Parent has finished\n&quot;;
+  } else {
+      # do something time-consuming
+      CORE::exit(0);
+  }
+</code></pre>
+
+<p>Note that <code>waitpid()</code> call is gone. The $SIG{CHLD} = &rsquo;IGNORE&rsquo;; statement protects us from zombies, as explained above.</p>
+
+<p>Another, more portable but slightly more expensive solution, is to use a double fork approach.</p>
+
+<pre><code>  my $r = shift;
+  $r-&gt;send_http_header('text/plain');
+
+  defined (my $kid = fork) or die &quot;Cannot fork: $!\n&quot;;
+  if ($kid) {
+    waitpid($kid,0);
+  } else {
+    defined (my $grandkid = fork) or die &quot;Kid cannot fork: $!\n&quot;;
+    if ($grandkid) {
+      CORE::exit(0);
+    } else {
+      # code here
+      # do something long lasting
+      CORE::exit(0);
+    }
+  }
+</code></pre>
+
+<p><code>$grandkid</code> becomes a <em>&ldquo;child of init&rdquo;</em>, i.e. the child of the process whose PID is 1.</p>
+
+<p>Note that the previous two solutions do allow you to know the exit status of the process, but in my example I didn&rsquo;t care about it.</p>
+
+<p>Another solution is to use a different <em>SIGCHLD</em> handler:</p>
+
+<pre><code>  use POSIX 'WNOHANG';
+  $SIG{CHLD} = sub { while( waitpid(-1,WNOHANG)&gt;0 ) {} };
+</code></pre>
+
+<p>This is useful when you <code>fork()</code> more than one process. The handler could call <code>wait()</code> as well, but for a variety of reasons involving the handling of stopped processes and the rare event when two children exit at nearly the same moment, the best technique is to call <code>waitpid()</code> in a tight loop with a first argument of <code>-1</code> and a second argument of <code>WNOHANG</code>. Together, these arguments tell <code>waitpid()</code> to reap the next child that&rsquo;s available, and prevent the call from blocking if there happens to be no child ready for reaping. The handler will loop until <code>waitpid()</code> returns a negative number or zero, indicating that no additional reapable children remain.</p>
+
+<p>While you test and debug your code that uses one of the above examples, you might want to write some debug information to the error_log file so you know what happens.</p>
+
+<p>Read <em>perlipc</em> manpage for more information about signal handlers.</p>
+
+<h3 id="span-id-a-complete-fork-example-a-complete-fork-example-span"><span id="a_complete_fork_example">A Complete Fork Example</span></h3>
+
+<p>Now let&rsquo;s put all the bits of code together and show a well-written fork code that solves all the problems discussed so far. I will use an &lt;Apache::Registry&gt; script for this purpose:</p>
+
+<pre><code>  proper_fork1.pl
+  ---------------
+  use strict;
+  use POSIX 'setsid';
+  use Apache::SubProcess;
+
+  my $r = shift;
+  $r-&gt;send_http_header(&quot;text/plain&quot;);
+
+  $SIG{CHLD} = 'IGNORE';
+  defined (my $kid = fork) or die &quot;Cannot fork: $!\n&quot;;
+  if ($kid) {
+    print &quot;Parent $$ has finished, kid's PID: $kid\n&quot;;
+  } else {
+      $r-&gt;cleanup_for_exec(); # untie the socket
+      chdir '/'                or die &quot;Can't chdir to /: $!&quot;;
+      open STDIN, '/dev/null'  or die &quot;Can't read /dev/null: $!&quot;;
+      open STDOUT, '&gt;/dev/null'
+          or die &quot;Can't write to /dev/null: $!&quot;;
+      open STDERR, '&gt;/tmp/log' or die &quot;Can't write to /tmp/log: $!&quot;;
+      setsid or die &quot;Can't start a new session: $!&quot;;
+
+      select STDERR;
+      local $| = 1;
+      warn &quot;started\n&quot;;
+      # do something time-consuming
+      sleep 1, warn &quot;$_\n&quot; for 1..20;
+      warn &quot;completed\n&quot;;
+
+      CORE::exit(0); # terminate the process
+  }
+</code></pre>
+
+<p>The script starts with the usual declaration of the strict mode, loading the <code>POSIX</code> and <code>Apache::SubProcess</code> modules and importing of the <code>setsid()</code> symbol from the <code>POSIX</code> package.</p>
+
+<p>The HTTP header is sent next, with the <em>Content-type</em> of <em>text/plain</em>. The gets ready to ignore the child, to avoid zombies and the fork is called.</p>
+
+<p>The program gets its personality split after <code>fork</code> and the <code>if</code> conditional evaluates to a true value for the parent process, and to a false value for the child process; the first block is executed by the parent and the second by the child.</p>
+
+<p>The parent process announces his PID and the PID of the spawned process and finishes its block. If there will be any code outside, then it will be executed by the parent as well.</p>
+
+<p>The child process starts its code by disconnecting from the socket, changing its current directory to <code>/</code>, opening the STDIN and STDOUT streams to <em>/dev/null</em>, which in effect closes them both before opening. In fact, in this example we don&rsquo;t need neither of these, so I could just <code>close()</code> both. The child process completes its disengagement from the parent process by opening the STDERR stream to <em>/tmp/log</em>, so it could write there, and creating a new session with help of setsid(). Now the child process has nothing to do with the parent process and can do the actual processing that it has to do. In our example, it performs a simple series of warnings, which are logged into <em>/tmp/log</em>:</p>
+
+<pre><code>      select STDERR;
+      local $|=1;
+      warn &quot;started\n&quot;;
+      # do something time-consuming
+      sleep 1, warn &quot;$_\n&quot; for 1..20;
+      warn &quot;completed\n&quot;;
+</code></pre>
+
+<p>The localized setting of <code>$|=1</code> is there, so we can see the output generated by the program immediately. In fact, it&rsquo;s not required when the output is generated by warn().</p>
+
+<p>Finally, the child process terminates by calling:</p>
+
+<pre><code>      CORE::exit(0);
+</code></pre>
+
+<p>which makes sure that it won&rsquo;t get out of the block and run some code that it&rsquo;s not supposed to run.</p>
+
+<p>This code example will allow you to verify that indeed the spawned child process has its own life, and its parent is free as well. Simply issue a request that will run this script, watch that the warnings are started to be written into the <em>/tmp/log</em> file and issue a complete server stop and start. If everything is correct, then the server will successfully restart and the long-term process will still be running. You will know that it&rsquo;s still running if the warnings will still be printed into the <em>/tmp/log</em> file. You may need to raise the number of warnings to do above 20, to make sure that you don&rsquo;t miss the end of the run.</p>
+
+<p>If there are only five warnings to be printed, then you should see the following output in this file:</p>
+
+<pre><code>  started
+  1
+  2
+  3
+  4
+  5
+  completed
+</code></pre>
+
+<h3 id="span-id-starting-a-long-running-external-program-starting-a-long-running-external-program-span"><span id="starting_a_long_running_external_program">Starting a Long-Running External Program</span></h3>
+
+<p>But what happens if we cannot just run a Perl code from the spawned process and we have a compiled utility, i.e. a program written in C. Or we have a Perl program that cannot be easily converted into a module, and thus called as a function. Of course, in this case, we have to use system(), exec(), <code>qx()</code> or <code>``</code> (back ticks) to start it.</p>
+
+<p>When using any of these methods and when the <em>Taint</em> mode is enabled, we must at least add the following code to untaint the <em>PATH</em> environment variable and delete a few other insecure environment variables. This information can be found in the <em>perlsec</em> manpage.</p>
+
+<pre><code>  $ENV{'PATH'} = '/bin:/usr/bin';
+  delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+</code></pre>
+
+<p>Now all we have to do is to reuse the code from the previous section.</p>
+
+<p>First, we move the core program into the <em>external.pl</em> file, add the shebang first line so the program will be executed by Perl, tell the program to run under <em>Taint</em> mode (-T) and possibly enable the <em>warnings</em> mode (-w) and make it executable:</p>
+
+<pre><code>  external.pl
+  -----------
+  #!/usr/bin/perl -Tw
+
+  open STDIN, '/dev/null'  or die &quot;Can't read /dev/null: $!&quot;;
+  open STDOUT, '&gt;/dev/null'
+      or die &quot;Can't write to /dev/null: $!&quot;;
+  open STDERR, '&gt;/tmp/log' or die &quot;Can't write to /tmp/log: $!&quot;;
+
+  select STDERR;
+  local $|=1;
+  warn &quot;started\n&quot;;
+  # do something time-consuming
+  sleep 1, warn &quot;$_\n&quot; for 1..20;
+  warn &quot;completed\n&quot;;
+</code></pre>
+
+<p>Now we replace the code that moved into the external program with <code>exec()</code> to call it:</p>
+
+<pre><code>  proper_fork_exec.pl
+  -------------------
+  use strict;
+  use POSIX 'setsid';
+  use Apache::SubProcess;
+
+  $ENV{'PATH'} = '/bin:/usr/bin';
+  delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+
+  my $r = shift;
+  $r-&gt;send_http_header(&quot;text/html&quot;);
+
+  $SIG{CHLD} = 'IGNORE';
+
+  defined (my $kid = fork) or die &quot;Cannot fork: $!\n&quot;;
+  if ($kid) {
+    print &quot;Parent has finished, kid's PID: $kid\n&quot;;
+  } else {
+      $r-&gt;cleanup_for_exec(); # untie the socket
+      chdir '/'                or die &quot;Can't chdir to /: $!&quot;;
+      open STDIN, '/dev/null'  or die &quot;Can't read /dev/null: $!&quot;;
+      open STDOUT, '&gt;/dev/null'
+          or die &quot;Can't write to /dev/null: $!&quot;;
+      open STDERR, '&gt;&amp;STDOUT'  or die &quot;Can't dup stdout: $!&quot;;
+      setsid or die &quot;Can't start a new session: $!&quot;;
+
+      exec &quot;/home/httpd/perl/external.pl&quot; or die &quot;Cannot execute exec: $!&quot;;
+  }
+</code></pre>
+
+<p>Notice that <code>exec()</code> never returns unless it fails to start the process. Therefore, you shouldn&rsquo;t put any code after exec()&ndash;it will be not executed in the case of success. Use <code>system()</code> or back-ticks instead if you want to continue doing other things in the process. But then you probably will want to terminate the process after the program has finished. So you will have to write:</p>
+
+<pre><code>      system &quot;/home/httpd/perl/external.pl&quot; or die &quot;Cannot execute system: $!&quot;;
+      CORE::exit(0);
+</code></pre>
+
+<p>Another important nuance is that we have to close all <code>STD*</code> streams in the forked process, even if the called program does that.</p>
+
+<p>If the external program is written in Perl, then you may pass complicated data structures to it using one of the methods to serialize Perl data and then to restore it. The <code>Storable</code> and <code>FreezeThaw</code> modules come handy. Let&rsquo;s say that we have program <em>master.pl</em> calling program <em>slave.pl</em>:</p>
+
+<pre><code>  master.pl
+  ---------
+  # we are within the C&lt;mod_perl&gt; code
+  use Storable ();
+  my @params = (foo =&gt; 1, bar =&gt; 2);
+  my $params = Storable::freeze(\@params);
+  exec &quot;./slave.pl&quot;, $params or die &quot;Cannot execute exec: $!&quot;;
+
+  slave.pl
+  --------
+  #!/usr/bin/perl -w
+  use Storable ();
+  my @params = @ARGV ? @{ Storable::thaw(shift)||[] } : ();
+  # do something
+</code></pre>
+
+<p>As you can see, <em>master.pl</em> serializes the <code>@params</code> data structure with <code>Storable::freeze</code> and passes it to <em>slave.pl</em> as a single argument. <em>slave.pl</em> restores it with <code>Storable::thaw</code>, by shifting the first value of the <code>ARGV</code> array if available. The <code>FreezeThaw</code> module does a similar thing.</p>
+
+<h3 id="span-id-starting-a-short-running-external-program-starting-a-short-running-external-program-span"><span id="starting_a_short_running_external_program">Starting a Short-Running External Program</span></h3>
+
+<p>Sometimes you need to call an external program and you cannot continue before this program completes its run and optionally returns some result. In this case, the fork solution doesn&rsquo;t help. But we have a few ways to execute this program. First using system():</p>
+
+<pre><code>  system &quot;perl -e 'print 5+5'&quot;
+</code></pre>
+
+<p>We believe that you will never call the Perl interperter for doing this simple calculation, but for the sake of a simple example it&rsquo;s good enough.</p>
+
+<p>The problem with this approach is that we cannot get the results printed to <code>STDOUT</code>, and that&rsquo;s where back-ticks or <code>qx()</code> help. If you use either:</p>
+
+<pre><code>  my $result = `perl -e 'print 5+5'`;
+</code></pre>
+
+<p>or:</p>
+
+<pre><code>  my $result = qx{perl -e 'print 5+5'};
+</code></pre>
+
+<p>the whole output of the external program will be stored in the <code>$result</code> variable.</p>
+
+<p>Of course, you can use other solutions, such as opening a pipe (<code>|</code> to the program) if you need to submit many arguments and more evolved solutions provided by other Perl modules like <code>IPC::Open2</code>, which allows to open a process for both reading and writing.</p>
+
+<h3 id="span-id-executing-system-or-exec-in-the-right-way-executing-system-or-exec-in-the-right-way-span"><span id="executing_system()_or_exec()_in_the_right_way">Executing <code>system()</code> or <code>exec()</code> in the Right Way</span></h3>
+
+<p>The <code>exec()</code> and <code>system()</code> system calls behave identically in the way they spawn a program. For example, let&rsquo;s use <code>system()</code>. Consider the following code:</p>
+
+<pre><code>  system(&quot;echo&quot;,&quot;Hi&quot;);
+</code></pre>
+
+<p>Perl will use the first argument as a program to execute, find <code>/bin/echo</code> along the search path, invoke it directly and pass the <em>Hi</em> string as an argument.</p>
+
+<p>Perl&rsquo;s <code>system()</code> is <strong>not</strong> the <code>system(3)</code> call (from the C-library). This is how the arguments to <code>system()</code> get interpreted. When there is a single argument to system(), it&rsquo;ll be checked for having shell metacharacters first (like <code>*</code>,<code>?</code>), and if there are any&ndash;Perl interpreter invokes a real shell program (/bin/sh -c on Unix platforms). If you pass a list of arguments to system(), then they will be not checked for metacharacters, but split into words if required and passed directly to the C-level <code>execvp()</code> system call, which is more efficient. That&rsquo;s a <em>very</em> nice optimization. In other words, only if you do:</p>
+
+<pre><code>  system &quot;sh -c 'echo *'&quot;
+</code></pre>
+
+<p>will the operating system actually <code>exec()</code> a copy of <code>/bin/sh</code> to parse your command. But even then, since <em>sh</em> is almost certainly already running somewhere, the system will notice that (via the disk inode reference) and replace your virtual memory page table with one pointing to the existing program code plus your data space, thus will not create this overhead.</p>
+
+<h3 id="span-id-references-references-span"><span id="references">References</span></h3>
+
+<ul>
+<li>The <code>mod_perl</code> site&rsquo;s URL: <a href="http://perl.apache.org/">http://perl.apache.org/</a></li>
+<li><a href="https://metacpan.org/pod/Apache::SubProcess">Apache-SubProcess</a></li>
+<li><a href="https://metacpan.org/pod/Storable">Storable</a></li>
+</ul>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/web">web</a></div>
+                
+                  <div class="tag"><a href="/tags/mod-perl-fork">mod-perl-fork</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-stas-bekman">
+  <div class="col-sm-2">
+    
+    <a href="/authors/stas-bekman/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/stas-bekman/"><h3>Stas Bekman</h3></a>
+    <p></p>
+    <h5><a href="/authors/stas-bekman/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2003_01_07_mod_perl.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

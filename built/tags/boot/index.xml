@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Boot on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/boot/</link>
+    <description>Recent content in Boot on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 30 Apr 2018 20:34:45 +0000</lastBuildDate>
+    <atom:link href="/tags/boot/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>XS utility routines that are good to know</title>
+      <link>http://localhost:1313/article/xs-utility-routines-that-are-good-to-know/</link>
+      <pubDate>Mon, 30 Apr 2018 20:34:45 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/xs-utility-routines-that-are-good-to-know/</guid>
+      <description>
+
+&lt;p&gt;In the previous &lt;a href=&#34;http://localhost:1313/article/writing-your-own-xs-functions/&#34;&gt;tutorial&lt;/a&gt;, we learned how to write our own functions in XS, how to process multiple arguments, and return different values, including &lt;code&gt;undef&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In this tutorial I&amp;rsquo;m going to cover some useful routines for common cases you&amp;rsquo;ll encounter when programming in XS. One that you&amp;rsquo;ve already seen is &lt;code&gt;SvOK&lt;/code&gt; which can tell you if a scalar is defined or not. Here are the new areas I&amp;rsquo;ll discuss:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Scheduling XS code to run at startup&lt;/li&gt;
+&lt;li&gt;Handling tied variables&lt;/li&gt;
+&lt;li&gt;Unicode tools&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;When writing XS code, these are things you&amp;rsquo;ll often want to be aware of, and know how to handle.&lt;/p&gt;
+
+&lt;h3 id=&#34;module-code&#34;&gt;Module Code&lt;/h3&gt;
+
+&lt;p&gt;As before, we&amp;rsquo;ll define the module code to load our XS. This is all that&amp;rsquo;s required:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package XS::Tutorial::Three;
+require XSLoader;
+
+XSLoader::load();
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That should be saved as &lt;code&gt;lib/XS/Tutorial/Three.pm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;xs-code&#34;&gt;XS Code&lt;/h3&gt;
+
+&lt;p&gt;The top of the XS file will look similar to the previous chapter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#define PERL_NO_GET_CONTEXT // we&#39;ll define thread context if necessary (faster)
+#include &amp;quot;EXTERN.h&amp;quot;         // globals/constant import locations
+#include &amp;quot;perl.h&amp;quot;           // Perl symbols, structures and constants definition
+#include &amp;quot;XSUB.h&amp;quot;           // xsubpp functions and macros
+
+MODULE = XS::Tutorial::Three  PACKAGE = XS::Tutorial::Three
+PROTOTYPES: ENABLE
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember to append any XS code after the &lt;code&gt;PROTOTYPES&lt;/code&gt; line. This should be saved as &lt;code&gt;lib/XS/Tutorial/Three.xs&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;scheduling-xs-code-to-run-at-startup&#34;&gt;Scheduling XS code to run at startup&lt;/h3&gt;
+
+&lt;p&gt;Sometimes you&amp;rsquo;ll need to run some code before your XS functions can work. For example, &lt;a href=&#34;https://github.com/openvenues/libpostal&#34;&gt;libpostal&lt;/a&gt; has startup routines which populate data structures that must be called before the library can be used.&lt;/p&gt;
+
+&lt;p&gt;You could code this in a &amp;ldquo;lazy&amp;rdquo; way, that is, inside the XS function, check to see if the init code has been run, and if not, run it before executing the rest of the function code.&lt;/p&gt;
+
+&lt;p&gt;However XS offers another way to do it by using the &lt;code&gt;BOOT&lt;/code&gt; keyword. Any C code included below the keyword, will be executed during the startup process:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;BOOT:
+printf(&amp;quot;We&#39;re starting up!\n&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The boot section is terminated by the first empty line after the keyword.&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-tied-variables&#34;&gt;Handling tied variables&lt;/h3&gt;
+
+&lt;p&gt;Tied variables are special variables that execute custom code when they are interacted with. But you never use them, so why worry about them? The
+thing is if you&amp;rsquo;re writing code to be used by others, you can&amp;rsquo;t be sure that a caller won&amp;rsquo;t pass a tied variable to one of your XS functions. And unlike
+regular Perl, XS does &lt;strong&gt;not&lt;/strong&gt; execute tied code automatically.&lt;/p&gt;
+
+&lt;p&gt;XS does provide &lt;a href=&#34;https://perldoc.perl.org/perlapi.html#Magical-Functions&#34;&gt;functions&lt;/a&gt; for working with tied variables though. One you&amp;rsquo;ll see in a lot of XS code is &lt;code&gt;SvGETMAGIC&lt;/code&gt;. Imagine your function is passed a tied variable; it&amp;rsquo;s value will be undefined in XS, until you call &lt;code&gt;mg_get&lt;/code&gt; (&amp;ldquo;magic get&amp;rdquo;) on it, which calls &lt;code&gt;FETCH&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, &lt;code&gt;mg_get&lt;/code&gt; can only be called on tied scalars so you don&amp;rsquo;t want to call it on a regular scalar. That&amp;rsquo;s where &lt;code&gt;SvGETMAGIC&lt;/code&gt; comes in: if the scalar is
+tied, it will call &lt;code&gt;mg_get&lt;/code&gt;, if not, nothing will happen.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s how you might use it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SV*
+get_tied_value(SV *foo)
+
+PPCODE:
+  /* call FETCH() if it&#39;s a tied variable to populate the sv */
+  SvGETMAGIC(foo);
+  PUSHs(sv_2mortal(foo));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code declares an XS function called &lt;code&gt;get_tied_value&lt;/code&gt;, which accepts a scalar variable, and calls &lt;code&gt;SvGETMAGIC&lt;/code&gt; on it, returning the value, by pushing it onto the stack.&lt;/p&gt;
+
+&lt;h4 id=&#34;magic&#34;&gt;Magic?&lt;/h4&gt;
+
+&lt;p&gt;You might be wondering why functions dealing with tied variables are named &amp;ldquo;magic&amp;rdquo; or &amp;ldquo;mg&amp;rdquo;. The reason is that tied behavior for each variable is implemented via a pointer to a &lt;a href=&#34;https://perldoc.perl.org/perlguts.html#Magic-Virtual-Tables&#34;&gt;magic virtual table&lt;/a&gt; which is a structure containing function pointers to the tied behavior.&lt;/p&gt;
+
+&lt;p&gt;Often the Perl C API will provide &lt;code&gt;mg&lt;/code&gt; (&amp;ldquo;magic&amp;rdquo;) and &lt;code&gt;nomg&lt;/code&gt; (&amp;ldquo;non magic&amp;rdquo;) variants of functions, so you can decide if you want to trigger the tied behavior.&lt;/p&gt;
+
+&lt;h3 id=&#34;utf-8-tools&#34;&gt;UTF-8 tools&lt;/h3&gt;
+
+&lt;p&gt;Perl has loads of tools for managing UTF-8 encoded text, but with XS you&amp;rsquo;re working in C, which does not. Start thinking about basic types like &lt;code&gt;char&lt;/code&gt;
+and common assumptions in C code, and you&amp;rsquo;ll realize that multibyte characters can wreak havoc unless you handle them correctly.&lt;/p&gt;
+
+&lt;p&gt;Fortunately, the Perl C API does provide &lt;a href=&#34;https://perldoc.perl.org/perlapi.html#Unicode-Support&#34;&gt;functions&lt;/a&gt; for managing UTF-8 data that
+can help. Here are a couple of examples.&lt;/p&gt;
+
+&lt;p&gt;Perl scalars have a UTF-8 flag, which is turned on when the scalar contains decoded UTF-8 data. We can detect it with &lt;code&gt;SvUTF8&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SV*
+is_utf8(SV *foo)
+PPCODE:
+  /* if the UTF-8 flag is set return 1 &amp;quot;true&amp;quot; */
+  if (SvUTF8(foo)) {
+    PUSHs(sv_2mortal(newSViv(1)));
+  }
+  /* else return undef &amp;quot;false&amp;quot; */
+  else {
+    PUSHs(sv_newmortal());
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This declares an XS function called &lt;code&gt;is_utf8&lt;/code&gt; which accepts a scalar and returns true if the UTF-8 flag is set, or false if it isn&amp;rsquo;t.&lt;/p&gt;
+
+&lt;p&gt;Imagine you have some C code that only works with ASCII text, that is, single byte characters. You can detect incoming scalars that have the UTF-8 flag turned on
+with &lt;code&gt;SvUTF8&lt;/code&gt;, but what do you do about ones that have the flag?&lt;/p&gt;
+
+&lt;p&gt;You could &lt;code&gt;croak&lt;/code&gt; immediately, throwing an exception. Or you could try to &lt;em&gt;downgrade&lt;/em&gt; the scalar to be non UTF-8 as the string may be marked as UTF-8 but only contain ASCII compatible characters (decimal values 0-127).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SV*
+is_downgradeable(SV *foo)
+PPCODE:
+  /* if the UTF-8 flag is set and the scalar is not downgrade-able return
+     undef */
+  if (SvUTF8(foo) &amp;amp;&amp;amp; !sv_utf8_downgrade(foo, TRUE)) {
+    PUSHs(sv_newmortal());
+  }
+  /* else return 1 */
+  else {
+    PUSHs(sv_2mortal(newSViv(1)));
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This function returns false if the scalar contains data that is not downgrade-able to ASCII, otherwise it returns true. It does that by using the &lt;code&gt;sv_utf8_downgrade&lt;/code&gt; function, which accepts the scalar and a boolean value indicating if it&amp;rsquo;s ok to fail. As the second argument is &lt;code&gt;TRUE&lt;/code&gt;, the function simply returns false if the scalar is not downgrade-able (otherwise it would &lt;code&gt;croak&lt;/code&gt;).&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Parts &lt;a href=&#34;http://localhost:1313/article/getting-started-with-xs/&#34;&gt;one&lt;/a&gt; and &lt;a href=&#34;http://localhost:1313/article/writing-your-own-xs-functions/&#34;&gt;two&lt;/a&gt; in this series contain the background information necessary to understand this one&lt;/li&gt;
+&lt;li&gt;This series is also on CPAN (&lt;a href=&#34;https://metacpan.org/pod/XS::Tutorial&#34;&gt;XS::Tutorial&lt;/a&gt;) complete with all the code&lt;/li&gt;
+&lt;li&gt;The &lt;a href=&#34;https://perldoc.perl.org/perlxs.html#The-BOOT%3a-Keyword&#34;&gt;BOOT&lt;/a&gt; keyword&lt;/li&gt;
+&lt;li&gt;Tied variable &lt;a href=&#34;https://perldoc.perl.org/perlapi.html#Magical-Functions&#34;&gt;functions&lt;/a&gt; and the &lt;a href=&#34;https://perldoc.perl.org/perlguts.html#Magic-Virtual-Tables&#34;&gt;magic virtual table&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perlapi.html#Unicode-Support&#34;&gt;Perl UTF-8 functions&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+Cover image &amp;copy; &lt;a href=&#34;https://pixabay.com/en/plumbing-pipe-wrench-plumber-840835/&#34;&gt;Steve Buissinne&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

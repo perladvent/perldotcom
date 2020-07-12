@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> DBIx::Recordset VS DBI </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" Problems Using DBI at Application-Level Intolerance to Table and Data Mutation Error-Prone and Tedious Query Construction Manual and Complex Mapping of Database Data to Perl Data Structures Succint CGI-SQL Interaction (Database Control via ``CGI One-Liners&#39;&#39;) Control and Monitoring of..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2001/02/dbix.html/" />
+<meta property="og:title" content="DBIx::Recordset VS DBI" />
+<meta property="og:description" content=" Problems Using DBI at Application-Level Intolerance to Table and Data Mutation Error-Prone and Tedious Query Construction Manual and Complex Mapping of Database Data to Perl Data Structures Succint CGI-SQL Interaction (Database Control via ``CGI One-Liners&#39;&#39;) Control and Monitoring of...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2001-02-02T02:02:02Z" />
+<meta property="og:image" content="http://localhost:1313/images/site/avatar.png" />
+<meta property="og:article:tag" content="database" />
+<meta property="og:article:tag" content="dbi" />
+<meta property="og:article:tag" content="dbix-recordset" />
+<meta property="og:article:tag" content="interface" />
+<meta property="og:article:tag" content="perl" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">DBIx::Recordset VS DBI</h1>
+              <p class="blog-post-meta">Feb 27, 2001 by
+              
+              
+                
+                
+                <a href="#author-bio-terrence-monroe-brannon">Terrence Monroe Brannon</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<p><a href="#problems%20using%20dbi%20at%20applicationlevel">Problems Using DBI at Application-Level</a>
+-   <a href="#intolerance%20to%20table%20and%20data%20mutation">Intolerance to Table and Data Mutation</a>
+-   <a href="#errorprone%20and%20tedious%20query%20construction">Error-Prone and Tedious Query Construction</a>
+-   <a href="#manual%20and%20complex%20mapping%20of%20database%20data%20to%20perl%20data%20structures">Manual and Complex Mapping of Database Data to Perl Data Structures</a></p>
+
+<p><a href="#succint%20cgisql%20interaction%20(database%20control%20via%20cgi%20oneliners)">Succint CGI-SQL Interaction (Database Control via ``CGI One-Liners&rdquo;)</a>
+-   <a href="#control%20and%20monitoring%20of%20table%20access">Control and Monitoring of Table Access</a>
+-   <a href="#scalability">Scalability</a>
+-   <a href="#form%20data%20variations">Form Data Variations</a>
+-   <a href="#table%20splits">Table Splits</a></p>
+
+<p><a href="#sample%20code">Sample Code</a>
+-   <a href="#dbix::recordset%20version%20of%20code">DBIx::Recordset Version of Code</a>
+-   <a href="#dbi%20version%20of%20code">DBI Version of Code</a>
+-   <a href="#empirical%20results">Empirical Results</a></p>
+
+<p><a href="#conclusion">Conclusion</a>
+<a href="#acknowledgements">Acknowledgements</a></p>
+
+<h3 id="introduction">Introduction</h3>
+
+<p>Writing this article was pure hell. No, actually, writing most of it was quite fun - it was just when I had to write the functional equivalent of my DBIx::Recordset code in DBI that I began to sweat profusely. It was only when I had finished writing the mountain of DBI code to do the same thing as my molehill of DBIx::Recordset that I could heave a sigh of relief. Since starting to use DBIx::Recordset, I have been loath to work on projects where the required database API was DBI. While it may seem like a play on words, it is crucial to understand that DBI is the standard database interface for Perl but it should not be the interface for most Perl applications requiring database functionality.</p>
+
+<p>The key way to determine whether a particular module/library is matched to the level of a task is to count the number of lines of ``prep code&rdquo; you must write before you can do what you want. In other words, can the complex operations and data of your domain be dealt with in a unitary fashion by this module? In the case of DBI, we can say that it has made the tasks of connection, statement preparation, and data fetching tractable by reducing them to single calls to the DBI API. However, real-life applications have much larger and more practical complex units and it is in these respects that the DBI API falls short. To me, it comes as no surprise that DBI, a module whose only design intent was to present a uniform API to the wide variety of available databases, would lack such high-level functionality. But it does surprise me to no end that hoards of Perl programmers, some of whom may have had a software engineering course at some point in their careers, would make such errant judgment. Thus the fault lies with the judgment of the programmers, not DBI.</p>
+
+<p>In most cases the gap between DBI&rsquo;s API and Perl applications has been bridged by indiscriminately mixing generic application-level functionality with the specifics of the current application. This makes it difficult to reuse the generic routines in another part of the application or in an altogether different application. Another maladaptive way that the DBI API has been extended for application-level databasing is by developing a collection of generic application-level tools but not publishing them. Thus, as larger scale tools are built from two camps using differing generic application-level APIs, amends for discrepancies in calling conventions must be duct-taped between the code bodies. The final way to misuse DBI in an application is to use it directly.</p>
+
+<p>However, an unsung module, publicly available on CPAN that bridges the gap between DBI and application-level programming robustly and conveniently is DBIx::Recordset. It is built on top of DBI and is so well-matched to the level at which database-driven applications are conceived that in most cases one sentence in an application design specification equates to one line of DBIx::Recordset.</p>
+
+<h3 id="span-id-problems-using-dbi-at-applicationlevel-problems-using-dbi-at-application-level-span"><span id="problems using dbi at applicationlevel">Problems Using DBI at Application-Level</span></h3>
+
+<h4 id="span-id-intolerance-to-table-and-data-mutation-intolerance-to-table-and-data-mutation-span"><span id="intolerance to table and data mutation">Intolerance to Table and Data Mutation</span></h4>
+
+<p>Table mutation - the addition, deletion or rearrangement of fields from a table or data mutation - the addition, removal or rearrangement of portions of the input sources intended for database commission, can break a large number of calls to the DBI API. This is due to the fact that most routines expect and return arrays or array references and thus fail when the expected arrays shrink or grow. For example, the following DBI code:</p>
+
+<pre><code> $dbh-&gt;do(&quot;INSERT INTO students (id,name) VALUES (1,$name)&quot;);
+</code></pre>
+
+<p>would break once fields were removed from the table students. However, the equivalent DBIx::Recordset code<a href="#1">(1)</a>:</p>
+
+<pre><code> DBIx::Recordset-&gt;Insert({%dsn,'!Table'=&gt;'students',%dbdata});
+</code></pre>
+
+<p>would work regardless of constructive or destructive mutations of the students table or %dbdata. If there are fewer field-value pairs in %dbdata than in the table, then the insert will be performed with the corresponding fields. If there are irrelevant fields in %dbdata, then the extra fields are by default silently ignored.</p>
+
+<p>Now, the import of this intolerance for DBI usage is that changes in either the tables or the input data require changes in the source. For some, such rigidity is of merit because it forces both the source and target of database commission to be made explicitly manifest within the source code. However, for other Perl programmers, such rigidity is nothing more than an imposition on their highly cultivated sense of Laziness.</p>
+
+<h4 id="span-id-errorprone-and-tedious-query-construction-error-prone-and-tedious-query-construction-span"><span id="errorprone and tedious query construction">Error-Prone and Tedious Query Construction</span></h4>
+
+<p>A query string is presented to the DBI API in placeholder or literal notation. An example of DBI placeholder usage is shown below:</p>
+
+<pre><code> $sql='insert into uregisternew
+        (country, firstname, lastname, userid, password, address1, city,
+        state, province, zippostal, email, phone, favorites, remaddr,
+        gender, income, dob, occupation, age)
+        values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+
+ my @data=($formdata{country}, $formdata{firstname}, $formdata{lastname},
+        $formdata{email}, $formdata{password}, $formdata{address},
+        $formdata{city},  $formdata{state},  $formdata{province},
+        $formdata{zippostal}, $formdata{email}, $formdata{phone},
+        $formdata{favorites}, $formdata{remaddr}, $formdata{gender},
+        $formdata{income}, $formdata{date}, $formdata{occupation},
+ $formdata{age});
+
+        $sth2 = $dbh-&gt;prepare($sql);
+        $sth2-&gt;execute(@data);
+        $sth2-&gt;finish();
+</code></pre>
+
+<p>This is a slightly modified version of a minefield I had to tiptoe through during a recent contract I was on. This code has several accidents waiting to happen. For one you must pray that the number of question-mark placeholders is the same as the number of fields you are inserting. Secondly, you must manually insure that the field names in the insert statement correspond with the data array in both position and number.</p>
+
+<p>If one were developing the same query using DBI&rsquo;s literal notation, one would have the same issues and would in addition devote more lines of code to manually quoting the data and embedding it in the query string.</p>
+
+<p>In contrast, DBIx::Recordset&rsquo;s <code>Insert()</code> function takes a hash in which the keys are database field names and the values are the values to be inserted. Using such a data structure eliminates the correspondence difficulties mentioned above. Also, DBIx::Recordset generates the placeholder notation when it calls the DBI API.</p>
+
+<p>Thus, with no loss of functionality<a href="#2">(2)</a>, the entire body of code above could be written as:</p>
+
+<pre><code> DBIx::Recordset-&gt;Insert({%dsn,%formdata});
+</code></pre>
+
+<p>In fact, the DBI code is not equivalent to the DBIx::Recordset code because connection and database operations are always separate calls to the DBI API. The additional work required to use DBI has been omitted for brevity.</p>
+
+<h4 id="span-id-manual-and-complex-mapping-of-database-data-to-perl-data-structures-manual-and-complex-mapping-of-database-data-to-perl-data-structures-span"><span id="manual and complex mapping of database data to perl data structures">Manual and Complex Mapping of Database Data to Perl Data Structures</span></h4>
+
+<table>
+<colgroup>
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>operation</td>
+<td>DBI</td>
+<td>DBIx::Recordset</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Single row fetch</td>
+<td><pre><code>selectrow_array
+selectrow_arrayref</code></pre></td>
+<td><pre><code>$set[0]</code></pre></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Multiple row fetch</td>
+<td><pre><code>fetchall_arrayref  
+selectall_arrayref 
+fetchrow_array     
+fetchrow_arrayref  
+fetchrow_hashref</code></pre></td>
+<td><pre><code> for $row (@set) {...}
+       OR    
+while ($href=$set-&gt;Next())</code></pre></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<p>In DBI, database record retrieval is manual, complex and in most cases intolerant to table mutation. By manual, we mean that performing the query does not automatically map the query results onto any native Perl data structures. By complex, we mean that DBI can return the data in a multiplicity of ways: array, array reference and hash reference.</p>
+
+<p>In DBIx::Recordset, however, retrieval of selected recordsets can be <a href="#3">(3)</a> automatic, simple and field-mutation tolerant. By automatic, we mean that requesting the records leads to an automatic tie of the result set to a hash.<a href="#4">(4)</a> No functions need be called for this transfer to take place. The retrieval process is simple because the only way to receive results is via a hash reference. Because DBIx::Recordset returns a hash, fields are referred to by name as opposed to position. This strategy is robust to all table mutations.</p>
+
+<p>Having seen DBIx::Recordset&rsquo;s solution to some of the more troublesome aspects of DBI use, we now move on to explore the wealth of application-level benefits that DBIx::Recordset offers in the following areas:</p>
+
+<ol>
+<li>Succinct CGI to SQL transfer</li>
+<li>Control and monitoring of table access</li>
+<li>Scalability</li>
+</ol>
+
+<p>As impressive as these topics may sound, DBIx::Recordset is designed to achieve each of them in one line of Perl<img src="#5" alt="(5)" /></p>
+
+<h3 id="span-id-succint-cgisql-interaction-database-control-via-cgi-oneliners-succint-cgi-sql-interaction-database-control-via-cgi-one-liners-span"><span id="succint cgisql interaction (database control via cgi oneliners)">Succint CGI-SQL Interaction (Database Control via ``CGI One-Liners&rdquo;)</span></h3>
+
+<p>Assuming that the keys in the query string match the field names in the target database table, DBIx::Recordset can shuttle form data from a query string into a database in one line of Perl code:</p>
+
+<pre><code> DBIx::Recordset-&gt;Insert({%formdata,%dsn});
+</code></pre>
+
+<p>One line of DBIx::Recordset can also drive recordset retrieval via form data as well as iterate through the results:</p>
+
+<pre><code> # here we: SELECT * FROM sales and automatically tie
+ # the selected records to @result
+
+ *result = DBIx::Recordset-&gt;Search({
+        %dsn,'!Table'=&gt;'sales',%formdata
+        });
+
+ # here we iterate across our results...
+ map { 
+  printf (&quot;&lt;TR&gt;Sucker # %d purchased item # %s on %s&lt;/TR&gt;&quot;, 
+        $_-&gt;{customer_id}, $_-&gt;{item_id}, $_-&gt;{purchase_date}) 
+ } @result;
+</code></pre>
+
+<p>The above code is automatically quoted and requires no tiresome connect, prepare and execute ritual.</p>
+
+<p>DBIx::Recordset also has helper functions which create the HTML for ``previous-next-first-last&rdquo; navigation of recordsets:</p>
+
+<pre><code> $nav_html = $::result -&gt; PrevNextForm ({
+        -first =&gt; 'First',  -prev =&gt; '&lt;&lt;Back', 
+        -next  =&gt; 'Next&gt;&gt;', -last =&gt; 'Last',
+                -goto  =&gt; 'Goto #'}, 
+        \%formdata);
+</code></pre>
+
+<p>In this case, we use the scalar aspect of the typeglob, which provides object-oriented access to the methods of the created recordset.</p>
+
+<p>A final CGI nicety has to do with the fact that browsers send empty form fields as empty strings. While in some cases you may want this empty string to propagate into the database as a SQL null, it is also sometimes desirable to have empty form fields ignored. It is possible to specify which behavior you prefer through the DBIx::Recordset &lsquo;!IgnoreEmpty&rsquo; hash field of the <code>Insert()</code> and <code>Update()</code> function.</p>
+
+<h4 id="span-id-control-and-monitoring-of-table-access-control-and-monitoring-of-table-access-span"><span id="control and monitoring of table access">Control and Monitoring of Table Access</span></h4>
+
+<p>A database handle in DBI is a carte blanche to add, retrieve, or remove anything from a database that one can do with a console interface to the database with the same login. The problem with this is that the semantics and volatility of an application&rsquo;s database code is not self-consistent but instead varies as a function of database permission alteration.<a href="#6">(6)</a> Au contraire, a DBIx::Recordset handle is much more structured. A handle is created and configured with a number of attributes: table write modes, accessible tables, and the method of logging database usage to name a few.</p>
+
+<p>The first form of much-needed table access control that DBIx::Recordset offers is specification of the manners in which a particular database connection will be allowed to alter database tables. By the use of a binary-valued string, one specifies the subset of write operations (specifically none/insert/update/delete/clear) that are allowable. Such facilities are often needed when defining access levels to a database for various parties. For example, it is conceivable for a corporate intranet database to give insert access to sales employees, update access to customer service, delete access to processing and complete access to technical support. To implement such constraints in plain DBI would yield a confusing maelstrom of if-thens and 2-3 suicide attempts. With DBIx::Recordset, one simply creates a properly configured connection for each corporate intranet sector.</p>
+
+<p>Tangential to the issue of write permission is the issue of which tables can be accessed at all. Control of table access is simply one more key-value pair to the connection setup hash. Finally to monitor the use of database handles, one only need setup a debug file for each handle.</p>
+
+<p>Thus, assuming the package company::database has a hash %write_mode which contains the write modes for the intranet, a hash %log_file with the log files for each handle, and a hash %table_access which contains the tables for each member of the intranet, one would specify the tables and their mode of access and usage logs for the entire intranet as follows:</p>
+
+<pre><code>{ 
+  package company::database; 
+
+  for (keys %write_mode) {
+
+  *{$handle{$_}} = 
+        DBIx::Recordset-&gt;Setup({%dsn, 
+        '!Writemode' =&gt; $write_mode{$_}, 
+        '!Tables'    =&gt; $table_access{$_}
+        });
+
+   DBIx::Recordset-&gt;Debug({
+                '!Level' =&gt; 4,
+                '!File'  =&gt; $log_file{$_},
+                '!Mode'  =&gt; '&gt;'
+                });
+   }
+}
+</code></pre>
+
+<h4 id="span-id-scalability-scalability-span"><span id="scalability">Scalability</span></h4>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><strong>Operation</strong></td>
+<td><strong>Code changes needed (DBI)</strong></td>
+<td><strong>Code changes (DBIx::Recordset)</strong></td>
+</tr>
+
+<tr>
+<td>Adding or removing form elements from a webpage but still having the database code commit the generated query string properly.</td>
+<td>For each change of the form (and hence the query string), the database code would have to be modified.</td>
+<td>None</td>
+</tr>
+
+<tr>
+<td>Taking an un-normalized main table and splitting it into a number of &ldquo;satellite&rdquo; tables with foreign keys in the main table to reference the satellite tables.</td>
+<td>For each table split, additional terms would have to added to the WHERE or JOIN clause.</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+
+<p>Regardless of how well one plans a project, prototyping and early development are often evolutionary processes. Significant development time can be saved if database-processing routines remain invariant in the face of HTML and database re-design. It is in this regard that DBIx::Recordset dwarfs DBI, making it far more viable during the prototyping phases of a project. Having already shown DBIx::Recordset&rsquo;s scalability in the face of table mutations, this section will demonstrate DBIx::Recordset&rsquo;s scalability in the face of form data variations as well as database table splits.</p>
+
+<h4 id="span-id-form-data-variations-form-data-variations-span"><span id="form data variations">Form Data Variations</span></h4>
+
+<p>Let&rsquo;s assume you were developing a user registration form that submitted it&rsquo;s form data to db-commit.cgi for insertion into a database:</p>
+
+<pre><code>#!/usr/bin/perl
+use CGI (:standard);
+$formdata{$_} = param{$_} for param();
+if ($#(DBIx::Recordset-&gt;Search(
+ { %dsn,
+  '!Table'  =&gt; user_registration,
+  'username' =&gt; $formdata{username}
+ })) &gt;= 0) {
+ &amp;username_taken_error;
+} else {
+ DBIx::Recordset-&gt;Insert(
+ { %dsn,
+  '!Table'  =&gt; user_registration,
+  %formdata
+ }
+}
+</code></pre>
+
+<p>Now assume that you decided to add a new field called AGE to a table and a corresponding form. Under DBI, the insert query would have to be modified to account for the change. Because DBIx::Recordset takes a hash reference for its inserts, no code modification is required. Now of course, I can hear the DBI users squawking: ``I can develop a library that converts form data to hashes and turns this into query strings.&rdquo; And of course my hot retort is: ``But don&rsquo;t you see this is a homegrown, non-standard <a href="#7">(7)</a>API that will have to be duct-taped to other people&rsquo;s homegrown, non-standard solutions?&rdquo;</p>
+
+<h4 id="span-id-table-splits-table-splits-span"><span id="table splits">Table Splits</span></h4>
+
+<p>For another example of DBIx::Recordset&rsquo;s flexibility to architecture changes, consider the case where a table is split, perhaps for reasons of normalization. Thus, in the core table where you once explicitly coded a user&rsquo;s name into a field user_name you now have a foreign key titled user_name_id which points to a table called user_name which has a field titled id. Assume that you also later decided to do the same sort of normalization for other fields such as age-bracket or salary-bracket. With plain DBI, each time that a query was supposed to retrieve all fields from each of the associated tables, the query would have to be rewritten to accommodate the splitting of the main table. With DBIx::Recordset, no query would have to be rewritten because the tables were described in a format recognizable by DBIx::Recordset&rsquo;s database meta-analysis.</p>
+
+<h3 id="span-id-sample-code-sample-code-span"><span id="sample code">Sample Code</span></h3>
+
+<p>On a recent contract I had to copy a user registration table (named uregister) to a new table (called uregisternew) which had all of the fields of the old table plus a few new fields designed to store profile information on the users.</p>
+
+<p>The key thing to note about the DBIx::Recordset version of this code is that it is highly definitional: very little database mechanics clutters the main logic of the code, allowing one to focus on recordset migration from one table to another.</p>
+
+<h4 id="span-id-dbix-recordset-version-of-code-dbix-recordset-version-of-code-span"><span id="dbix::recordset version of code">DBIx::Recordset Version of Code</span></h4>
+
+<pre><code> #!/usr/bin/perl
+
+ =head1
+
+ uregisternew is a table with all the fields of uregister plus a few
+ profile fields (ie, salary bracket, occupation, age) which contain a
+ positive integer which serves as index into the array for that
+ particular profile field.
+
+ The purpose of this script is to copy over the same fields and
+ generate a valid array index for the new profile fields.
+
+ =cut
+
+ use Angryman::Database;
+ use Angryman::User;
+ use DBIx::Recordset;
+ use Math::Random;
+ use strict;
+
+ $::table{in}  = 'uregister';
+ $::table{out} = 'uregisternew';
+
+
+ # connect to database and SELECT * FROM uregister
+ *::uregister = DBIx::Recordset-&gt;Search ({            
+        %Angryman::Database::DBIx::Recordset::Connect, 
+        '!Table' =&gt; $::table{in}  
+        });
+
+
+ # because we will re-use the target table many times, we separate the 
+ # connection and insert steps with this recordset
+ *::uregisternew = DBIx::Recordset-&gt;Setup({  
+        %Angryman::Database::DBIx::Recordset::Connect, 
+        '!Table' =&gt; $::table{out} 
+        });
+
+
+ # iterate through the recordsets from the old table:
+ for my $uregister (@::uregister) {
+     &amp;randomize_user_profile;
+     # INSERT 
+        # the old table data into the new table and
+        # the computed hash of profile data
+    $::uregisternew-&gt;Insert({%{$uregister},%::profile});
+ }
+
+ # Angryman::User::Profile is a hash in which each key is a reference 
+ # to an array of profile choices. For example:
+ # $Angryman::User::Profile{gender} = [ 'male', 'female' ];
+ # $Angryman::User::Profile{age} = ['under 14', '14-19', '20-25', ... ];
+ # Because we don't have the actual data for the people in uregister,
+ # we randomly assign user profile data over a normal distribution.
+ # when copying it to uregisternew.
+ sub randomize_user_profile {
+    for (keys %Angryman::User::Profile) {
+        my @tmp=@{$Angryman::User::Profile{$_}};
+        $::profile{$_} = random_uniform_integer(1,0,$#tmp);
+        $::profile{dob}='1969-05-11';
+    }
+ }
+</code></pre>
+
+<h4 id="span-id-dbi-version-of-code-dbi-version-of-code-span"><span id="dbi version of code">DBI Version of Code</span></h4>
+
+<pre><code> #!/usr/bin/perl
+
+
+ =head1
+ uregisternew is a table with all the fields of uregister plus a few
+ profile fields (ie, salary bracket, occupation, age) which contain
+ a positive integer which serves as index into the array for that
+ particular profile field.
+
+
+ The purpose of this script is to copy over the same fields and
+ generate a valid array index for the new profile fields.
+
+
+ This file is twice as long as the DBIx::Recordset version and it 
+ easily took me 5 times longer to write.
+ =cut 
+
+
+ use Angryman::Database;
+ use Angryman::User;
+ use DBI;
+ use Math::Random;
+ use strict;
+
+
+ $::table{in}  = 'uregister';
+ $::table{out} = 'uregisternew';
+
+
+ # connect to database and SELECT * FROM uregister
+ my $dbh = DBI-&gt;connect($Angryman::Database::DSN, 
+                        $Angryman::Database::Username, 
+                        $Angryman::Database::Password);
+ my $sth = $dbh-&gt;prepare('SELECT * FROM uregister');
+ my $ret = $sth-&gt;execute;
+
+
+ &amp;determine_target_database_field_order;
+
+
+ # because we will re-use the target table many times, we separate the 
+ # connection and insert steps with this recordset
+
+
+ # iterate through the recordsets from the old table:
+ while ($::uregister = $sth-&gt;fetchrow_hashref) {
+
+
+     &amp;randomize_user_profile;
+     &amp;fiddle_with_my_data_to_get_it_to_work_with_the_DBI_API();
+
+
+     # INSERT 
+         # the old table data into the new table and
+         # the computed hash of profile data
+     my $sql = &quot;INSERT into $::table{out}($::sql_field_term) values($::INSERT_TERM)&quot;;
+     $dbh-&gt;do($sql);
+ }
+
+
+ # Angryman::User::Profile is a hash in which each key is a reference 
+ # to an array of profile choices. For example:
+ # $Angryman::User::Profile{gender} = [ 'male', 'female' ];
+ # $Angryman::User::Profile{age} = ['under 14', '14-19', '20-25',  ];
+ # Because we don't have the actual data for the people in uregister,
+ # we randomly assign user profile data over a normal distribution.
+ # when copying it to uregisternew.
+ sub randomize_user_profile {
+     for (keys %Angryman::User::Profile) {
+         my @tmp=@{$Angryman::User::Profile{$_}};
+         $::profile{$_} = random_uniform_integer(1,0,$#tmp);
+     }
+
+
+     $::profile{dob}='';
+ }
+
+
+ # Hmm, I cant just give DBI my data and have it figure out the order
+ # of the database fields... So here he we go getting the field
+ # order dynamically so this code doesnt break with the least little
+ # switch of field position.
+ sub determine_target_database_field_order {
+
+
+     my $order_sth = $dbh-&gt;prepare(&quot;SELECT * FROM $::table{out} LIMIT 1&quot;);
+     $order_sth-&gt;execute;
+
+
+ # In DBIx::Recordset, I would just say $handle-&gt;Names()... but here we 
+ # must iterate through the fields manually and get their names.
+
+
+     for (my $i = 0; $i &lt; $order_sth-&gt;{NUM_OF_FIELDS}; $i++) {
+         push @::order_data, $order_sth-&gt;{NAME}-&gt;[$i];
+     }
+
+
+     $::sql_field_term = join ',',  @::order_data;
+
+
+ }
+
+
+ # As ubiquitous as hashes are in Perl, the DBI API does not
+ # offer a way to commit hashes to disk.
+ sub fiddle_with_my_data_to_get_it_to_work_with_the_DBI_API {
+
+
+     my @output_data;
+     for (@::order_data) {
+         push @output_data, $dbh-&gt;quote
+             (
+              defined($::uregister-&gt;{$_}) 
+              ? $::uregister-&gt;{$_} 
+              : $::profile{$_}
+              );
+    }
+
+
+    $::INSERT_TERM=join ',', @output_data;
+ }
+</code></pre>
+
+<h4 id="span-id-empirical-results-empirical-results-span"><span id="empirical results">Empirical Results</span></h4>
+
+<table>
+<thead>
+<tr>
+<th>DBI</th>
+<th>DBIx::Recordset</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1.4 seconds (1,2)</td>
+<td>3.7 seconds (3,4)</td>
+</tr>
+</tbody>
+</table>
+
+<p>The average, minimum, and maximum number of seconds required to execute the sample code under DBI and DBIx::Recordset. The code was run on a database of 250 users.</p>
+
+<h3 id="span-id-conclusion-conclusion-span"><span id="conclusion">Conclusion</span></h3>
+
+<p>DBI accelerated past the ODBC API for database interface because it was simpler and more portable. Because DBIx::Recordset is built on top of DBI, it maintains these advantages and improves upon DBI&rsquo;s simplicity. Because it also adds much-needed application-level features to DBI, it is a clear choice for database driven Perl applications.</p>
+
+<p>A strong contender for an improvement of DBI is the recent effort by Simon Matthews to simplify DBI use via a Template Toolkit plugin. Many of the advantages of DBIx::Recordset are available to the DBI plugin either intrinsically or due to the context in which it was developed. For example, DBIx::Recordset allows filtering of recordsets through the !Filter key to its database processing functions. The plugin did not have to provide filtering because there are several generic, widely useful filters (e.g., HTML, date, etc.) already available for Template Toolkit. However, Matthew&rsquo;s DBI plugin uses the same level of abstraction as DBI. This shortcoming, along with the plug-in&rsquo;s lack of application-level databasing conveniences, lands the plugin in the same functional boat as DBI with only nicer syntax to pad the same troublesome ride.</p>
+
+<p>That being said, DBI is preferable to DBIx::Recordset when speed is of utmost importance. DBI&rsquo;s speed advantage is due to several factors <a href="#8">(8)</a>. First DBIx::Recordset is built on the DBI API and thus one has the overhead of at least one additional function call per application-level database command. Secondly, it takes time for DBIx::Recordset to decode its compact input algebra and produce well-formed SQL.</p>
+
+<p>All theory aside, my experience and the timing results show that you don&rsquo;t lose more than a second or two when you reach for DBIx::Recordset instead of DBI. Such a slowdown is acceptable in light of what DBIx::Recordset offers over DBI: speed of development, power of expression and availability of standard and necessary application-level functionality.</p>
+
+<p>Even if time constraints do lead one to decide that DBIx::Recordset is inappropriate for a finished product because it is slightly slower than DBI, it can prove especially handy during early prototyping or when one is solving a complex problem and wants to focus on the flow of recordsets as opposed to the mechanics of managing this flow.</p>
+
+<h4 id="span-id-acknowledgements-acknowledgements-span"><span id="acknowledgements">Acknowledgements</span></h4>
+
+<p>I would like to thank Gerald Richter (<a href="mailto:richter@ecos.de">richter@ecos.de</a>) for authoring DBIx::Recordset, commenting on an early version of this manuscript as well as providing me and others with free help on his great tool.</p>
+
+<h4 id="footnotes">Footnotes</h4>
+
+<ol>
+<li><span id="1">Actually, the DBI code is not equivalent to the DBIx::Recordset code because connection and database operations are always separate calls to the DBI API. The additional work required to use DBI has been omitted for brevity.</span></li>
+<li><span id="2">The DBIx::Recordset code is also more accurate because it uses database metadata to determine which data to quote, while DBI uses string-based heuristics.</span></li>
+<li><span id="3">DBIx::Recordset can be automatic and simple, but, you can also operate in a more manual mode to afford yourself time/space efficiency on the same order as DBI.</span></li>
+<li><span id="4">More precisely, each row in the recordset is an anonymous hash which is referred to by one element of an array whose name is determined by the typeglob bound during the call to the Search() function.</span></li>
+<li><span id="5">I can&rsquo;t wait to see the next generation of obfuscated Perl now that major database operations only take one line!</span></li>
+<li><span id="6">Be this alteration done by friend or foe.</span></li>
+<li><span id="7">Now admittedly, the transfer of a CGI query string into a hash is non-standard as well, but, most high-end web application frameworks for Perl (e.g. HTML::Embperl and HTML::Mason) provide this transfer automatically as part of their application-level API to web site development.</span></li>
+<li><span id="8">Maybe that&rsquo;s why there&rsquo;s a cheetah on the front of the DBI book</span>.</li>
+</ol>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/data">data</a></div>
+                
+                  <div class="tag"><a href="/tags/database">database</a></div>
+                
+                  <div class="tag"><a href="/tags/dbi">dbi</a></div>
+                
+                  <div class="tag"><a href="/tags/dbix-recordset">dbix-recordset</a></div>
+                
+                  <div class="tag"><a href="/tags/interface">interface</a></div>
+                
+                  <div class="tag"><a href="/tags/perl">perl</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-terrence-monroe-brannon">
+  <div class="col-sm-2">
+    
+    <a href="/authors/terrence-monroe-brannon/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/terrence-monroe-brannon/"><h3>Terrence Monroe Brannon</h3></a>
+    <p></p>
+    <h5><a href="/authors/terrence-monroe-brannon/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2001_02_dbix.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

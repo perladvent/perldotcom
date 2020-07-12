@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Documentation on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-documentation/</link>
+    <description>Recent content in Perl Documentation on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 30 Jun 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-documentation/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Annotating CPAN</title>
+      <link>http://localhost:1313/pub/2005/06/30/annocpan.html/</link>
+      <pubDate>Thu, 30 Jun 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/06/30/annocpan.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;http://annocpan.org/&#34;&gt;AnnoCPAN&lt;/a&gt; is a new website that shows the documentation for every Perl module available on &lt;a href=&#34;http://www.cpan.org/&#34;&gt;CPAN&lt;/a&gt; and allows anyone to post annotations in the margins of the documents. The notes are public, so everyone can read and reuse them under the same terms as Perl itself (the entire note database is available as an XML dump). The inspiration came from other open source documentation websites such as those for PHP and MySQL, but the implementation has adapted to the idiosyncrasies of Perl documentation regarding document length and versioning. This article discusses the origins and the ideas behind this project and how I implemented them.&lt;/p&gt;
+
+&lt;h3 id=&#34;how-it-all-started&#34;&gt;How it All Started&lt;/h3&gt;
+
+&lt;p&gt;People often complain about Perl documentation. This is not entirely fair, given the prodigious amount of available documents. Although the quality of the documentation for Perl modules outside of the core distribution ranges from excellent to non-existent, I believe that it is, overall, pretty good. But there will always be some minor niggling details, inaccuracies, or omissions in the documents. I know that, as a programmer writing documentation, it is easy to forget what should actually go in there for the benefit of the user, because I have the advantage (or disadvantage?) of knowing too much about the product. Often the users themselves are in the best position to point out the gaps in the documentation.&lt;/p&gt;
+
+&lt;p&gt;A typical response when a user complains about the documentation of an open source project is &amp;ldquo;send a patch!&amp;rdquo; However, this is often not practical, whether because the user doesn&amp;rsquo;t know how to do it or doesn&amp;rsquo;t want to spend the time, or the maintainer is unresponsive. Even under ideal conditions it often takes too long for the patch to make it to the official documentation, and too long a delay in gratification discourages further participation. Several projects allow users to modify the documentation directly, perhaps by using a wiki or by letting the users post comments. Notable examples include &lt;a href=&#34;http://dev.mysql.com/doc/mysql/en/&#34;&gt;MySQL&lt;/a&gt; and &lt;a href=&#34;http://www.php.net/manual/en/&#34;&gt;PHP&lt;/a&gt;. On more than one occasion, people have asked why Perl didn&amp;rsquo;t have something like that, and most agreed that it would be good if &lt;em&gt;someone&lt;/em&gt; did something about it. Well, I decided to try to do the dirty job.&lt;/p&gt;
+
+&lt;p&gt;Note: While I was working on this project, &lt;a href=&#34;http://cpanforum.com/&#34;&gt;CPAN::Forum&lt;/a&gt; appeared. It shares some of the goals of AnnoCPAN but has some differences, as well. Both have the goal of providing a place for discussion about Perl modules that have no other discussion venues, but only AnnoCPAN shows that discussion right next to the relevant parts of the documentation.&lt;/p&gt;
+
+&lt;h3 id=&#34;where-to-put-the-notes&#34;&gt;Where to Put the Notes?&lt;/h3&gt;
+
+&lt;p&gt;One of the first things I noticed when analyzing the problem was that documentation pages for PHP and MySQL are usually fairly small&amp;ndash;the sites have split the manual into small chunks, which allows the comments to remain close to the relevant part of the documentation. (It wouldn&amp;rsquo;t be as helpful to add a footnote at the end of a 50-page-long document saying &amp;ldquo;By the way, the first paragraph is wrong!&amp;rdquo;). The problem is that Perl documentation usually comes in fairly long documents&amp;ndash;just look at the PODs for CGI, DBI, or &lt;code&gt;perlfunc&lt;/code&gt;! Splitting these documents into &amp;ldquo;reasonably sized&amp;rdquo; chunks is not trivial, because there&amp;rsquo;s little standardization of the organization of the documents: for some documents I might find that &lt;code&gt;=head1&lt;/code&gt; sections are short enough, while for others I have to split at the &lt;code&gt;=head3&lt;/code&gt; or &lt;code&gt;=item&lt;/code&gt; level. While this is an interesting and maybe even tractable problem, I decided to take a different approach: rather than splitting the document, I decided to attach the user comments to specific paragraphs and show them right on the margin or between the paragraphs (depending on a user-configurable stylesheet).&lt;/p&gt;
+
+&lt;p&gt;The decision of attaching the notes to specific paragraphs opened another can of worms: if someone adds a note to paragraph 42 of My::Module version 0.10, where should that note go (if at all) in the documentation for My::Module version 0.20?&lt;/p&gt;
+
+&lt;p&gt;To prepare the AnnoCPAN site, first I had to create a full CPAN mirror. That wasn&amp;rsquo;t hard, but it requires quite a bit of space (2.5GB). Then I pre-parsed it using a module derived from &lt;a href=&#34;https://metacpan.org/pod/Pod::Parser&#34;&gt;Pod::Parser&lt;/a&gt; (discussed later) and loaded each paragraph into a database. The database schema underwent several revisions, due to the difficulties in modeling CPAN.&lt;/p&gt;
+
+&lt;h3 id=&#34;cpan-is-a-wild-jungle&#34;&gt;CPAN is a Wild Jungle!&lt;/h3&gt;
+
+&lt;p&gt;Something that anyone who tries to parse anything out of the full CPAN archive quickly finds out is that it is a maze of exceptions and corner cases. While most distributions, prepared with &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker&#34;&gt;ExtUtils::MakeMaker&lt;/a&gt; or something similar, share certain structural and naming conventions, some authors deviate from the convention and package their distribution in strange ways. The first hurdle is how to figure out the distribution name and version number from the distribution filename. Luckily, Graham Barr (from &lt;em&gt;search.cpan.org&lt;/em&gt;) has already worked on that, so I just used his module &lt;a href=&#34;https://metacpan.org/pod/CPAN::DistnameInfo&#34;&gt;CPAN::DistnameInfo&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The next hurdle is the structure of the package itself. Most packages are .tar.gz files that unwrap to a directory with the same name as the distribution filename (sans the .tar.gz extension). Some packages are .zip files, and a few are .ppm files, or something else. Even for the .tar files there are inconsistencies, depending on the version of the program used to create them. I couldn&amp;rsquo;t even open some of them correctly! Then there are files that don&amp;rsquo;t unwrap to a single directory. I decided to deal only with reasonably clean .tar.gz and .zip packages and ignore everything else.&lt;/p&gt;
+
+&lt;p&gt;After unwrapping the distribution, my program had to figure out which files were significant for documentation purposes. I wanted to include only the modules, scripts, and standalone POD documents, excluding test files, examples, and bundled modules that belong to some other distribution. First the program filters based on the filename, to exclude some obvious negatives such as &lt;em&gt;MANIFEST&lt;/em&gt; and &lt;em&gt;META.yml&lt;/em&gt;, and include some likely positives such as .pm and .pod files. In uncertain cases, it opens the file and sees if it has some POD, such as a &lt;code&gt;=head1&lt;/code&gt; line.&lt;/p&gt;
+
+&lt;p&gt;Having decided that a file has documentation in POD format and should be included, the program has to figure out the title of the document. This is not as easy as it seems. I decided to use this rule, which seems to work most of the time: if the first POD paragraph is &lt;code&gt;=head1 NAME&lt;/code&gt;, take the first word from the second paragraph and use it as the title. If not, guess the name from the pathname of the file. This is easy with &amp;ldquo;modern-style&amp;rdquo; packages; for example, &lt;em&gt;My-Module-0.10/lib/My/Module.pm&lt;/em&gt; turns into &lt;code&gt;My::Module&lt;/code&gt;. &amp;ldquo;Old-style&amp;rdquo; distributions are a bit trickier: &lt;em&gt;My-Module-0.10/Module.pm&lt;/em&gt; also turns into &lt;code&gt;My::Module&lt;/code&gt;. A third option that I haven&amp;rsquo;t used is to look for the first &lt;code&gt;package&lt;/code&gt; declaration in .pm files, but that wouldn&amp;rsquo;t work for most .pod and .pl files, and that&amp;rsquo;s without even considering that some .pm files have zero or more than one package declaration!&lt;/p&gt;
+
+&lt;p&gt;All of the above leads me to wish that, if someone were to start CPAN from scratch again, it would be a bit more strict in the structure required for distributions, especially with the filename of the distribution package. The way things are now, it is impossible to know for sure if distribution A has a &amp;ldquo;higher&amp;rdquo; version number than distribution B. (It&amp;rsquo;s possible to compare the dates, but what if there is more than one active branch?) Luckily, there is already work in that direction; having a way of measuring &lt;a href=&#34;http://cpants.dev.zsi.at/kwalitee.html&#34;&gt;kwalitee&lt;/a&gt; may encourage authors to pack their modules in standard ways.&lt;/p&gt;
+
+&lt;h3 id=&#34;ontological-questions&#34;&gt;Ontological Questions&lt;/h3&gt;
+
+&lt;p&gt;OK, so my program has produced a nicely unwrapped distribution with some PODs. What is a distribution and what is a POD, though? These may seem silly questions to ask, but they are very important. Is this POD a different version of some other POD? Is this distribution just a different version of some other distribution, or is it a completely different distribution? For distributions, I&amp;rsquo;ve assumed that if it has the same filename, except for the version part, they are indeed two different version of the same distribution (for example, &lt;em&gt;DBI-1.47.tar.gz&lt;/em&gt; and &lt;em&gt;DBI-1.48.tar.gz&lt;/em&gt;). This is a reasonable assumption, but unfortunately, there&amp;rsquo;s no guarantee that it will always be true, because anyone could upload a file called &lt;em&gt;DBI-1.49.tar.gz&lt;/em&gt; with completely unrelated contents (luckily, I haven&amp;rsquo;t seen that happen yet). Note that a distribution can have more than one author, with various versions in each author&amp;rsquo;s directory.&lt;/p&gt;
+
+&lt;p&gt;The problem becomes more complicated for modules, because unfortunately, there are many known cases of modules that appear in more than one distribution. The most common situation is when an author maintains a module as a separate CPAN distribution that is also part of the Perl core (that is, the &lt;code&gt;perl&lt;/code&gt; distribution). A common example is the CGI module. However, there&amp;rsquo;s no guarantee that two documents with the same name are indeed versions of the same module. The most dramatic example is the number of &lt;em&gt;Install&lt;/em&gt; or &lt;em&gt;Tutorial&lt;/em&gt; documents that have no relationship to each other. Luckily, this is not as common for real modules as it is for other documents, but I decided to play it safe and assume by default that two documents are the same only if they have the same name and belong to distributions with the same name. There is a manual override, however. For example, I can tell the system that CGI in the &lt;code&gt;perl&lt;/code&gt; distribution is the same as CGI in the &lt;em&gt;CGI.pm&lt;/em&gt; distribution.&lt;/p&gt;
+
+&lt;h3 id=&#34;loading-the-database&#34;&gt;Loading the Database&lt;/h3&gt;
+
+&lt;p&gt;Because I wanted to have paragraph granularity for attaching notes to modules, I loaded all of the CPAN documentation into my database, one row per paragraph. To parse the POD, I created a very simple subclass of &lt;a href=&#34;https://metacpan.org/pod/Pod::Parser&#34;&gt;Pod::Parser&lt;/a&gt; (which comes with &lt;code&gt;perl&lt;/code&gt;). The subclass only overrides the paragraph-level methods and uses them to store the POD in the database without any further processing.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package AnnoCPAN::PodParser;
+
+use base qw(Pod::Parser);
+
+sub verbatim {
+    my ($self, $text, $line_num, $pod_para) = @_;
+    $self-&amp;gt;store_section(VERBATIM, $text);
+}
+
+sub textblock {
+    my ($self, $text, $line_num, $pod_para) = @_;
+    $self-&amp;gt;store_section(TEXTBLOCK, $text);
+}
+
+sub command {
+    my ($self, $cmd, $text, $line_num, $pod_para)  = @_;
+    $self-&amp;gt;store_section(COMMAND, $pod_para-&amp;gt;raw_text);
+}
+
+sub store_section {
+    my ($self, $type, $content) = @_;
+    # ...
+    # load $content into database
+    # ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here again I encountered problems with some of the modules that exist in the wild. Pod::Parser generally works very well, but it becomes extremely slow when a document has a very long paragraph (with thousands of lines). Most modules don&amp;rsquo;t have paragraphs with more than a hundred lines, so the problem had likely never surfaced before, but I found a few modules that appear to contain lots of machine-generated data. They took about ten minutes each to parse. I went into the code of Pod::Parser and found that by deleting one line (an apparently unnecessary line!), the scaling problem goes away and parsing takes under a second.&lt;/p&gt;
+
+&lt;p&gt;For the database access itself, I used &lt;a href=&#34;https://metacpan.org/pod/Class::DBI&#34;&gt;Class::DBI&lt;/a&gt;, which simplifies things enormously. For example, this is the code for creating a section (i.e., a paragraph):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$section = AnnoCPAN::DBI::Section-&amp;gt;create({
+    podver  =&amp;gt; $podver,
+    type    =&amp;gt; $type,
+    content =&amp;gt; $content,
+    pos     =&amp;gt; $pos,
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;translating-the-notes&#34;&gt;Translating the Notes&lt;/h3&gt;
+
+&lt;p&gt;By translating, I mean &amp;ldquo;figuring out where the note goes in a different version of the same document,&amp;rdquo; not &amp;ldquo;translating into a different language.&amp;rdquo; Suppose that someone adds a note next to some paragraph of My::Module 0.10. To figure out where to put the note in the POD for My::Module 0.20, I decided to place it next to the paragraph in 0.20 that is most &amp;ldquo;similar&amp;rdquo; to the reference paragraph in 0.10. To decide which paragraph is most similar, I used the &lt;a href=&#34;https://metacpan.org/pod/String::Similarity&#34;&gt;String::Similarity&lt;/a&gt; module by Marc Lehmann. The essential code is something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package AnnoCPAN::DBI::Note;
+use String::Similarity &#39;similarity&#39;;
+
+sub guess_section {
+    my ($self, $podver) = @_;
+    # $podver is a specific version of a pod
+
+    my $ref_section = $self-&amp;gt;section;
+    my $orig_cont   = $ref_section-&amp;gt;content;
+
+    my $max_sim = AnnoCPAN::Config-&amp;gt;option(&#39;min_similarity&#39;);
+    my $best_sect;
+    for my $sect ($podver-&amp;gt;raw_sections) {
+        # don&#39;t attach notes to commands
+        next if $sect-&amp;gt;{type} &amp;amp; COMMAND;
+        my $sim = similarity($orig_cont,
+            $sect-&amp;gt;{content}, $max_sim);
+        if ($sim &amp;gt; $max_sim) {
+            $max_sim   = $sim;
+            $best_sect = $sect;
+        }
+    }
+    if ($best_sect) {
+        AnnoCPAN::DBI::NotePos-&amp;gt;create({ note =&amp;gt; $self,
+            section =&amp;gt; $best_sect-&amp;gt;{id},
+            score =&amp;gt; int($max_sim * SCALE),
+            status =&amp;gt; CALCULATED });
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;adding-a-web-interface&#34;&gt;Adding a Web Interface&lt;/h3&gt;
+
+&lt;p&gt;The web interface combines the strengths of Class::DBI and the &lt;a href=&#34;http://www.template-toolkit.org/&#34;&gt;Template Toolkit&lt;/a&gt;, using the methods discussed in &amp;ldquo;&lt;a href=&#34;http://localhost:1313/pub/2003/07/15/nocode.html&#34;&gt;How to Avoid Writing Code&amp;ndash;Using Template Toolkit and Class::DBI&lt;/a&gt;,&amp;rdquo; by Kake Pugh. The only thing remaining, besides writing the templates, was to provide a controller module (called as a part of the &lt;a href=&#34;http://c2.com/cgi-bin/wiki?ModelViewController&#34;&gt;Model-View-Controller&lt;/a&gt; (MVC) design pattern. The controller module has to parse the CGI parameters and cookies, decide what to do with them, authenticate the user if necessary, fetch something from the database, choose the template to use, and pass all of the required information to the Template Toolkit rendering engine. Some people advocate using modules such as &lt;a href=&#34;https://metacpan.org/pod/CGI::Application&#34;&gt;CGI::Application&lt;/a&gt; as a base class for the controller module, but I found that writing it by hand was simple enough for my purposes.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;In this article, I have discussed some of the logic and technical problems behind the design and implementation of AnnoCPAN. What remains to be done is to ensure that people use the site so that it becomes a valuable resource. That depends on users (which means you!) adding helpful annotations. Please take a look at &lt;a href=&#34;http://annocpan.org/&#34;&gt;annocpan.org&lt;/a&gt;!&lt;/p&gt;
+
+&lt;h3 id=&#34;acknowledgments&#34;&gt;Acknowledgments&lt;/h3&gt;
+
+&lt;p&gt;I thank &lt;a href=&#34;http://www.perlfoundation.org&#34;&gt;The Perl Foundation&lt;/a&gt; for a grant for working on this project and &lt;a href=&#34;http://perlmonks.org/index.pl?node_id=154315&#34;&gt;BUU&lt;/a&gt; for hosting the website.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

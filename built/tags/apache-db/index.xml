@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Apache Db on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/apache-db/</link>
+    <description>Recent content in Apache Db on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 09 Feb 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/apache-db/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Debugging and Profiling mod_perl Applications</title>
+      <link>http://localhost:1313/pub/2006/02/09/debug_mod_perl.html/</link>
+      <pubDate>Thu, 09 Feb 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/02/09/debug_mod_perl.html/</guid>
+      <description>
+
+&lt;p&gt;Because of the added complexity of being &lt;em&gt;inside&lt;/em&gt; of the Apache web server, debugging &lt;a href=&#34;http://perl.apache.org/&#34;&gt;&lt;code&gt;mod_perl&lt;/code&gt;&lt;/a&gt; applications is often not as straightforward as it is with regular Perl programs or CGIs. Is the problem with your code, Apache, a CPAN module you are using, or within &lt;code&gt;mod_perl&lt;/code&gt; itself? How do you tell? Sometimes traditional debugging techniques will not give you enough information to find your problem.&lt;/p&gt;
+
+&lt;p&gt;Perhaps, instead, you&amp;rsquo;re baffled as to why some code you just wrote is running so slow. You&amp;rsquo;re probably asking yourself, &amp;ldquo;Isn&amp;rsquo;t this &lt;code&gt;mod_perl&lt;/code&gt; stuff supposed to improve my code&amp;rsquo;s performance?&amp;rdquo; Don&amp;rsquo;t worry, slow code happens even to the best of us. How do you profile your code to find the problem?&lt;/p&gt;
+
+&lt;p&gt;This article shows how to use the available CPAN modules to debug and profile your &lt;code&gt;mod_perl&lt;/code&gt; applications.&lt;/p&gt;
+
+&lt;h3 id=&#34;traditional-debugging-methods&#34;&gt;Traditional Debugging Methods&lt;/h3&gt;
+
+&lt;p&gt;The tried-and-true &lt;code&gt;print&lt;/code&gt; statement is the debugger&amp;rsquo;s best friend. Used wisely this, can be the easiest and fastest way of figuring out what is amiss in your program. Can&amp;rsquo;t figure out why your sales tax subroutine is always off by 14 cents? Add several &lt;code&gt;print&lt;/code&gt; statements just before, just after, and all around inside of that particular subroutine. Use them to show the value of key variables at each step in the process. You can direct the output straight onto the page in your browser, or if you prefer, into hidden HTML comments. Typically this is all that you need to spot your problems. It&amp;rsquo;s flexible and easy to implement and understand.&lt;/p&gt;
+
+&lt;p&gt;Another common approach is to place &lt;code&gt;die()&lt;/code&gt; and/or &lt;code&gt;warn()&lt;/code&gt; statements as you trace through your code, isolating the problem. &lt;code&gt;die()&lt;/code&gt; is especially useful if you do not want your program to continue executing, possibly because the errors will corrupt your otherwise valid testing data. The main benefit of using &lt;code&gt;warn&lt;/code&gt; over a simple &lt;code&gt;print&lt;/code&gt; statement is that the output goes instead to the appropriate Apache &lt;em&gt;error_log&lt;/em&gt;. This keeps your debugging information out of the user interface and gives you the ability to log and spot errors long after they occurred for the user. Simply &lt;code&gt;tail&lt;/code&gt; your &lt;em&gt;error_log&lt;/em&gt; in another window and you can watch it all day long. If you&amp;rsquo;re into that sort of thing.&lt;/p&gt;
+
+&lt;p&gt;For example, if you had some code like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub handler {
+    my $r   =   shift;
+
+    # Set content type
+    $r-&amp;gt;content_type( &#39;text/html&#39; );
+
+    my $req = Apache2::Request-&amp;gt;new($r);
+
+    # Compute sales tax if we are told to do so
+    my $tax = 0;
+    if( $req-&amp;gt;param(&#39;compute_sales_tax&#39;) ) {
+        my $tax = compute_sales_tax($r, $req-&amp;gt;param(&#39;total_amount&#39;);
+    }
+
+    # Code to display results to the browser....
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; you might find a problem during testing. Your initial search leads you to believe that either the code never calls the &lt;code&gt;compute_sales_tax()&lt;/code&gt; function or the function always returns zero. You can add some simple debugging statements:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub handler {
+    my $r   =   shift;
+
+    # Set content type
+    $r-&amp;gt;content_type( &#39;text/html&#39; );
+
+    my $req = Apache2::Request-&amp;gt;new($r);
+
+    # Compute sales tax if we are told to do so
+    my $tax = 0;
+
+    # Debugging statements
+    warn(&amp;quot;Tax at start &#39;$tax&#39;&amp;quot;);
+    warn(&#39;compute_sales_tax &#39; . $req-&amp;gt;param(&#39;compute_sales_tax&#39;) );
+
+    if( $req-&amp;gt;param(&#39;compute_sales_tax&#39;) ) {
+
+        # Debugging
+        warn(&amp;quot;Tax before sub &#39;$tax&#39;&amp;quot;);
+        my $tax = compute_sales_tax($r, $req-&amp;gt;param(&#39;total_amount&#39;);
+        warn(&amp;quot;Tax after sub &#39;$tax&#39;&amp;quot;);
+    }
+
+    warn(&amp;quot;Tax after if &#39;$tax&#39;&amp;quot;);
+
+    # Code to display results to the browser....
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Assuming that the page that directs the user to this code has set &lt;code&gt;compute_sales_tax&lt;/code&gt; to a &lt;code&gt;true&lt;/code&gt; value, you will see something similar to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Tax at start &#39;0&#39; at line 5
+compute_sales_tax 1 at line 6
+Tax before sub &#39;0&#39; at line 12
+Tax after sub &#39;1.36&#39; at line 14
+Tax after if &#39;0&#39; at line 17
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you read through this, you see that &lt;code&gt;compute_sales_tax()&lt;/code&gt; is indeed being called, otherwise you would not see the &amp;ldquo;Tax before/after&amp;rdquo; &lt;code&gt;warn&lt;/code&gt; outputs. Directly after the subroutine call you can see that &lt;code&gt;$tax&lt;/code&gt; holds a suitable value. However, after the &lt;code&gt;if&lt;/code&gt; block, &lt;code&gt;$tax&lt;/code&gt; reverts back to zero. Upon closer examination, you might find that the bug is the &lt;code&gt;my&lt;/code&gt; before the call to &lt;code&gt;compute_sales_tax()&lt;/code&gt;. This creates a locally scoped variable named &lt;code&gt;$tax&lt;/code&gt; and does not assign it to the &lt;code&gt;$tax&lt;/code&gt; variable in the outer block, which causes it to stay zero and makes it seem that &lt;code&gt;compute_sales_tax()&lt;/code&gt; was never called.&lt;/p&gt;
+
+&lt;h3 id=&#34;when-to-use-apache-db&#34;&gt;When to Use &lt;code&gt;Apache::DB&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;Using &lt;code&gt;print&lt;/code&gt;, &lt;code&gt;die&lt;/code&gt;, and &lt;code&gt;warn&lt;/code&gt; statements in your code will help you find and fix 99 percent of the bugs you may run across when building &lt;code&gt;mod_perl&lt;/code&gt; applications. Too bad there is still that pesky remaining 1 percent that will make you tear your hair out in clumps and wish you had gone into selling insurance instead of programming. Luckily there is &lt;a href=&#34;https://metacpan.org/pod/Apache::DB&#34;&gt;Apache::DB&lt;/a&gt; to help keep the glare off our collective heads at next year&amp;rsquo;s Perl conference to a minimum.&lt;/p&gt;
+
+&lt;p&gt;Sometime, despite all of your attempts to see what is going wrong, you will find yourself in a situation where:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Your code causes Apache to segfault and you can&amp;rsquo;t for the life of you figure out why.&lt;/li&gt;
+&lt;li&gt;It appears that your code segfaults inside of a subroutine or method you are calling in a CPAN module you are using.&lt;/li&gt;
+&lt;li&gt;You have more debugging statements than actual code.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You could spend time hacking up your other installed modules, such as those from CPAN, with debugging statements&amp;ndash;but this only means you will have to return later and remove all of it. You could take an easier route and debug your &lt;code&gt;mod_perl&lt;/code&gt; application with a real source debugger.&lt;/p&gt;
+
+&lt;p&gt;Using the Perl debugger allows you to see directly into what is happening to your code and data. You can step through your code line by line, as Perl executes it. Because you are following the same &lt;em&gt;flow&lt;/em&gt;, there is no chance that you are making any bad assumptions. You might even consider it WYSIWYG, albeit without a GUI.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-apache-db&#34;&gt;Using &lt;code&gt;Apache::DB&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;While &lt;code&gt;Apache::DB&lt;/code&gt; works with both &lt;code&gt;mod_perl&lt;/code&gt; 1.x and &lt;code&gt;mod_perl&lt;/code&gt; 2.x, all of the examples in this article use &lt;code&gt;mod_perl&lt;/code&gt; 2.0. Once you have installed &lt;code&gt;Apache::DB&lt;/code&gt; from CPAN, using it is fairly simple. It does, however, require that you make a few Apache configuration changes. Assuming you have a &lt;code&gt;mod_perl&lt;/code&gt; handler installed at &lt;code&gt;/modperl/&lt;/code&gt; on your system, your configuration needs to resemble this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Location /modperl&amp;gt;
+  SetHandler perl-script
+  PerlResponseHandler My::Modperl::Handler
+  PerlFixupHandler +Apache::DB
+&amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You also need to modify either the appropriate &lt;code&gt;&amp;lt;Perl&amp;gt;&amp;lt;/Perl&amp;gt;&lt;/code&gt; section or your &lt;em&gt;startup.pl&lt;/em&gt; file to include:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use APR::Pool ();
+use Apache::DB ();
+Apache::DB-&amp;gt;init();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you are working in a &lt;code&gt;mod_perl&lt;/code&gt; 1.0 environment, the only change is that you should not include the &lt;code&gt;use APR::Pool ();&lt;/code&gt; directive.&lt;/p&gt;
+
+&lt;p&gt;Note that you must call &lt;code&gt;Apache::DB-&amp;gt;init();&lt;/code&gt; prior to whatever code you are attempting to debug. To be safe, I always just put it as the very first thing in my &lt;em&gt;startup.pl&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once you have modified your configuration, the last step is to launch your Apache server with the &lt;code&gt;-X&lt;/code&gt; command-line option. This option tells Apache to launch only one back-end process and to not fork into the background. If you don&amp;rsquo;t use this option, you can&amp;rsquo;t guarantee that your debugger has connected to same Apache child as your browser.&lt;/p&gt;
+
+&lt;p&gt;With this Apache daemon tying up your command prompt, simply browse to your application. As you will see, the shell running &lt;code&gt;httpd&lt;/code&gt; has been replaced with a Perl debugging session. This debugging session is tied directly to your application and browser. If you look at your browser it will appear to hang waiting for a response; this is due to the fact your Apache server is waiting on you to work with the debugger.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s debugger is very similar to other debuggers you may have used. You can step through your code line by line, skip entire subroutines, set break points, and display and/or change the value of variables with it.&lt;/p&gt;
+
+&lt;p&gt;It might be useful to read through &lt;a href=&#34;https://perldoc.perl.org/perldebtut.html&#34;&gt;&lt;code&gt;man perldebtut&lt;/code&gt;&lt;/a&gt;, a introductory tutorial on using the debugger. For a more complete reference to all of the available commands, see &lt;a href=&#34;https://perldoc.perl.org/perldebug.html&#34;&gt;&lt;code&gt;man perldebug&lt;/code&gt;&lt;/a&gt;. This list should be just enough to get you started:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Command&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;p expression&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;This prints out the value of an expression or variable, just like the &lt;code&gt;print&lt;/code&gt; directive in Perl.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;x expression&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;This evaluates an expression and prettily prints it for you. Use it to make complex data structures readable.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;s&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;This tells the debugger to take a single &lt;em&gt;step&lt;/em&gt;. A step is a single statement. If the next statement is a subroutine, the debugger will treat it as only one statement; you will not be able to step through each statement of that subroutine and the flow will continue without descending into it.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;n&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;This tells the debugger to go to the next statement. If the next statement is a subroutine, you will descend into it and be able to step through each line of that subroutine.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;l line&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Display a particular line of source code.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;M&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Display all loaded modules.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&#34;code-profiling-with-apache-dprof&#34;&gt;Code Profiling with &lt;code&gt;Apache::DProf&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Apache::DProf&#34;&gt;&lt;code&gt;Apache::DProf&lt;/code&gt;&lt;/a&gt; provides the necessary hooks for you to get some coarse profiling information about your code. By coarse, I mean only information on a subroutine level. It will show you the number of times a subroutine is called along with duration information.&lt;/p&gt;
+
+&lt;p&gt;Essentially, &lt;code&gt;Apache::DProf&lt;/code&gt; wraps &lt;a href=&#34;https://metacpan.org/pod/Devel::DProf&#34;&gt;&lt;code&gt;Devel::DProf&lt;/code&gt;&lt;/a&gt; for you, making your life much easier. It is &lt;em&gt;possible&lt;/em&gt; to use &lt;code&gt;Devel::DProf&lt;/code&gt; by itself, but it assumes that you are running a normal Perl program from the command line and not in a persistent &lt;code&gt;mod_perl&lt;/code&gt; environment. This isn&amp;rsquo;t optimal, because while you can shoehorn &lt;code&gt;Devel::DProf&lt;/code&gt; into working, you&amp;rsquo;ll end up profiling all of the code used at server startup when you really only care about the runtime code.&lt;/p&gt;
+
+&lt;p&gt;Using &lt;code&gt;Apache::DProf&lt;/code&gt; is relatively straightforward. All you need to do is include &lt;code&gt;PerlModule Apache::DProf&lt;/code&gt; in your &lt;em&gt;httpd.conf&lt;/em&gt; and restart your server.&lt;/p&gt;
+
+&lt;p&gt;As an example, here&amp;rsquo;s a small application to profile. This code, while not all that useful, will help illustrate the major differences between these two profiling modules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package PerlTest;
+
+sub handler {
+    my $r = shift;
+
+    $r-&amp;gt;content_type( &#39;text/plain&#39; );
+
+    handle_request($r);
+
+    return( Apache2::Const::OK );
+}
+
+sub handle_request {
+    my $r = shift;
+
+    $r-&amp;gt;print( &amp;quot;Handling request....\n&amp;quot; );
+
+    cleanup_request($r);
+
+}
+
+sub cleanup_request {
+    my $r = shift;
+
+    $r-&amp;gt;print( &amp;quot;Cleaning up request....\n&amp;quot; );
+
+    sleep(5);     # Take some time in this section
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you profile a module with &lt;code&gt;Apache::Dprof&lt;/code&gt;, it will create a directory named &lt;em&gt;dprof/&lt;/em&gt; in your server&amp;rsquo;s &lt;em&gt;logs/&lt;/em&gt; directory. Under this directory will be subdirectories named after the PID of each Apache child your server has. This allows you to profile code over a long period of time on a production system to see where your real bottlenecks are. Often, &lt;em&gt;faking&lt;/em&gt; a typical user session does not truly represent how your users interact with your application and having the real data is beneficial.&lt;/p&gt;
+
+&lt;p&gt;After your server has run for a while, you need to stop it and revert your configuration, removing the &lt;code&gt;PerlModule Apache::DProf&lt;/code&gt; you just inserted. This is due to the fact that &lt;code&gt;Apache::DProf&lt;/code&gt; does not write its data to disk until the server child ends.&lt;/p&gt;
+
+&lt;p&gt;Viewing the profiling data is exactly the same as with &lt;code&gt;Devel::DProf&lt;/code&gt;. Choose a particular Apache child directory in &lt;em&gt;$SERVER_ROOT/logs/dprof/&lt;/em&gt; and run &lt;code&gt;dprofpp&lt;/code&gt; on the corresponding &lt;em&gt;tmon.out&lt;/em&gt; file.&lt;/p&gt;
+
+&lt;p&gt;After beating on the code sample above for awhile with &lt;code&gt;ab&lt;/code&gt;, here are the results &lt;code&gt;Apache::DProf&lt;/code&gt; gave me:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Total Elapsed Time = 1082.402 Seconds
+  User+System Time =        0 Seconds
+Exclusive Times
+%Time ExclSec CumulS #Calls sec/call Csec/c  Name
+ 0.00   0.004  0.001    687   0.0000 0.0000  RevSys::PerlTest::cleanup_request
+ 0.00       - -0.000      1        -      -  warnings::import
+ 0.00       - -0.000      1        -      -  APR::Pool::DESTROY
+ 0.00       - -0.000      1        -      -  strict::import
+ 0.00       - -0.000      1        -      -  Apache2::XSLoader::load
+ 0.00       - -0.000      3        -      -  Apache2::RequestIO::BEGIN
+ 0.00       - -0.000      2        -      -  RevSys::PerlTest::BEGIN
+ 0.00       - -0.003    687        -      -  Apache2::RequestRec::content_type
+ 0.00       - -0.006   1374        -      -  Apache2::RequestRec::print
+ 0.00       - -0.012    687        -      -  RevSys::PerlTest::handle_request
+ 0.00       - -0.024    687        -      -  RevSys::PerlTest::handler
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As expected, &lt;code&gt;cleanup_request()&lt;/code&gt; shows the most time used per call. The report also shows stats for the other function calls you would expect as well as the ones that happen &lt;em&gt;behind the scenes&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;code-profiling-with-apache-smallprof&#34;&gt;Code Profiling with &lt;code&gt;Apache::SmallProf&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;While &lt;code&gt;Apache::DProf&lt;/code&gt; will show you which subroutines use the most system resources, sometimes that is not enough information. &lt;a href=&#34;https://metacpan.org/pod/Apache::SmallProf&#34;&gt;&lt;code&gt;Apache::SmallProf&lt;/code&gt;&lt;/a&gt; gives you fine-grained details in a line-by-line profile of your code.&lt;/p&gt;
+
+&lt;p&gt;Setup is similar to both of two previous modules. Add into a &lt;code&gt;&amp;lt;Perl&amp;gt;&lt;/code&gt; section or your &lt;em&gt;startup.pl&lt;/em&gt; file the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use APR::Pool ();
+use Apache::DB ();
+Apache::DB-&amp;gt;init();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You also need to add &lt;code&gt;PerlFixupHandler Apache::SmallProf&lt;/code&gt; into the &lt;code&gt;&amp;lt;Directory&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;Location&amp;gt;&lt;/code&gt; block that refers to your &lt;code&gt;mod_perl&lt;/code&gt; code.&lt;/p&gt;
+
+&lt;p&gt;Like &lt;code&gt;Apache::DProf&lt;/code&gt;, &lt;code&gt;Apache::SmallProf&lt;/code&gt; writes all of the profiling data into &lt;em&gt;$SERVER_ROOT/logs/smallprof/&lt;/em&gt;. One interesting difference between &lt;code&gt;Apache::DProf&lt;/code&gt; and &lt;code&gt;Apache::SmallProf&lt;/code&gt; is that the latter writes a profile for each module in use. This is helpful because you already know which subroutines are slow and which packages they are in, from your first round of profiling with &lt;code&gt;Apache::DProf&lt;/code&gt;. By focusing on those modules you can find your troubled code much faster.&lt;/p&gt;
+
+&lt;p&gt;Viewing &lt;code&gt;Apache::SmallProf&lt;/code&gt; data is, however, a little different from &lt;code&gt;Apache::DProf&lt;/code&gt;. A module profile looks like this:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;number&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;wall time&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;cpu time&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;line number&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;source line&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;code&gt;&amp;lt;number&amp;gt;&lt;/code&gt; is the number of times this particular line was executed, &lt;code&gt;&amp;lt;wall time&amp;gt;&lt;/code&gt; is the actual time passed, and &lt;code&gt;&amp;lt;cpu time&amp;gt;&lt;/code&gt; is the amount of time the CPU spent working on that line. The remaining two pieces of data are the line number in the file and the actual source on that line.&lt;/p&gt;
+
+&lt;p&gt;You can just open up the profiles generated by &lt;code&gt;Apache::SmallProf&lt;/code&gt; and look at the results. However, this doesn&amp;rsquo;t get to the heart of the matter very quickly. Sorting the profile by the amount of time spent on each line gets you where you want to go:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sort -nrk 2 logs/smallprof/MyHandler.pm | more
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This command sorts the profile for &lt;code&gt;MyHandler.pm&lt;/code&gt; by the wall time of each line. If you use this same sort on the output from &lt;code&gt;Apache::SmallProf&lt;/code&gt; on the example code, you will see something similar to this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# sort -nrk 2 PerlTest.pm.prof | more
+    1 5.000785 0.000000         29:    sleep( 5 );
+    1 0.008177 0.000000         13:    return( Apache2::Const::OK );
+    1 0.007431 0.010000         21:    cleanup_request( $r );
+    3 0.001343 0.000000          4:use Apache2::RequestIO;
+    1 0.000176 0.000000         33:1;
+    3 0.000164 0.000000          3:use Apache2::RequestRec;
+    1 0.000093 0.000000         19:    $r-&amp;gt;print( &amp;quot;Handling request......\n&amp;quot; );
+    1 0.000067 0.000000         11:    handle_request( $r );
+    1 0.000058 0.000000          9:    $r-&amp;gt;content_type( &#39;text/plain&#39; );
+    1 0.000058 0.000000         28:    $r-&amp;gt;print( &amp;quot;Cleaning up request......\n&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, &lt;code&gt;Apache::SmallProf&lt;/code&gt; has zeroed right in on our &lt;code&gt;sleep()&lt;/code&gt; call as the source of our performance problems.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Hopefully, this article has given you enough of an introduction to these modules that you can begin using them in your development efforts. The next time you face a seemingly unsolvable bug or performance issue, you have a few more weapons in your arsenal.&lt;/p&gt;
+
+&lt;p&gt;If you have trouble getting any of these three modules to work, please don&amp;rsquo;t hesitate to contact me directly. If you need &lt;code&gt;mod_perl&lt;/code&gt; help in general, I strongly suggest you join the &lt;code&gt;mod_perl&lt;/code&gt; mailing list. You can often get an answer to your &lt;code&gt;mod_perl&lt;/code&gt; question in a few hours, if not minutes.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

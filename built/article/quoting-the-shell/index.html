@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Quoting the Shell </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Escaping program arguments in all the wrong ways"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/quoting-the-shell/" />
+<meta property="og:title" content="Quoting the Shell" />
+<meta property="og:description" content="Escaping program arguments in all the wrong ways">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2019-06-06T06:06:06Z" />
+<meta property="og:image" content="http://localhost:1313/images/quoting-the-shell/thumb_cracked_shell.jpg" />
+<meta property="og:article:tag" content="macos" />
+<meta property="og:article:tag" content="pathfinder" />
+<meta property="og:article:tag" content="tag" />
+<meta property="og:article:tag" content="shell" />
+<meta property="og:article:tag" content="quoting" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Quoting the Shell</h1>
+              <p class="blog-post-meta">Jun 17, 2019 by
+              
+              
+                
+                
+                <a href="#author-bio-brian-d-foy">brian d foy</a>
+              
+              </p>
+              <img alt="" src="/images/quoting-the-shell/cracked_shell.jpg"/>
+                
+
+<p>By some alignment of the stars, lately I&rsquo;ve run into the same problem in different contexts and in different projects this year. What happens in an external command when an argument has spaces or other special characters?</p>
+
+<p>Ever wonder why web forms have weird restrictions on whitespace? It&rsquo;s probably because the backend can&rsquo;t deal with values with whitespace or other special characters. Or, at some point the programmer dealt with such a system and it scarred them for life; they are spacephobic. The mechanics of some underlying mechanism leak through and infect the application-level experience.</p>
+
+<p>We tend to assume that we can interpolate strings into a command line and everything will be fine, even if we actually know how that can be dangerous. I explain some of those dangers in <a href="https://www.masteringperl.org">Mastering Perl</a> when I write about Perl&rsquo;s taint checking. You can also read about some of that in <a href="https://perldoc.perl.org/perlsec.html">perlsec</a>. I&rsquo;ll ignore all that for this short article.</p>
+
+<p>My example here uses a macOS command that I have been playing with, but this applies to just about any Unix-ish external command. On Windows, you have additional concerns because you have to know what <code>cmd</code> is going to do as well has a particular program will handle its own argument string.</p>
+
+<h2 id="doing-it-the-wrong-way">Doing it the wrong way</h2>
+
+<p>Consider this slightly contrived snippet. I&rsquo;m using James Berry&rsquo;s <a href="https://github.com/jdberry/tag">tag</a>. It&rsquo;s a command-line tool that can reliably set and retrieve the names of file labels. Run it with a filename and it returns the filename and a list of labels:</p>
+
+<pre><code>$ tag vicunas.txt
+vicunas.txt                    	Orange
+</code></pre>
+
+<p>Here&rsquo;s what that directory looks like in <a href="https://cocoatech.com/#/">Path Finder</a>, my favorite Finder replacement.</p>
+
+<p><img src="/images/quoting-the-shell/first_finder_window.png" alt="" /></p>
+
+<p>My task involved lots of files. Like most people, I&rsquo;d like the capture of text from command-line tools to be effortless. I&rsquo;ll often reach for backticks and a simple construction of a command:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	<span style="color:#66d9ef">my</span> $result <span style="color:#f92672">=</span> <span style="color:#e6db74">`tag $file`</span>;
+	<span style="color:#66d9ef">print</span> $result;
+	}</code></pre></div>
+<p>Even though I know intellectually that this won&rsquo;t always work, I wrote it that way initially because it&rsquo;s easy. I took a shortcut and it ended up biting. When I run my program, some of the calls have problems:</p>
+
+<pre><code>$ perl shellwords.pl *
+alpaca.pl
+butterfly.p6
+camel.txt                      	Green
+sh: -c: line 0: syntax error near unexpected token `('
+sh: -c: line 0: `tag has (parens).txt'
+
+tag: The file “has” couldn’t be opened because there is no such file.
+
+llama.pl
+shellwords.pl
+vicunas.txt                    	Orange
+</code></pre>
+
+<p>We tend to write the easiest thing first even though we know it will have problems later. Some people call this <a href="https://www.martinfowler.com/bliki/TechnicalDebt.html">technical debt</a>; I call it being lazy. And we all do it.</p>
+
+<p>Consider what those failing commands look like. The &ldquo;weird&rdquo; filenames don&rsquo;t look like a single argument to the command. One of them is even suspicious. And I think I have many more parens in filenames than anyone ever envisioned:</p>
+
+<pre><code>$ tag has spaces.txt
+$ has (parens).txt
+</code></pre>
+
+<h2 id="naive-fixes">Naive fixes</h2>
+
+<p>There&rsquo;s an easy fix; I&rsquo;ll just put quotes around it. That works for a while because I&rsquo;m really just playing the odds that the edge cases will be rare:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	<span style="color:#66d9ef">my</span> $result <span style="color:#f92672">=</span> <span style="color:#e6db74">`tag &#34;$file&#34;`</span>;
+	<span style="color:#66d9ef">print</span> $result;
+	}</code></pre></div>
+<p>But it fails again when I have a file with a quote in the filename. That&rsquo;s also much less rare than people imagine. For example, I tend to save webpages in a way where their title becomes the file name. How many times am I going to fix this problem?</p>
+
+<p><img src="/images/quoting-the-shell/second_finder_window.png" alt="" /></p>
+
+<pre><code>alpaca.pl
+butterfly.p6
+camel.txt                      	Green
+sh: -c: line 0: unexpected EOF while looking for matching `&quot;'
+sh: -c: line 1: syntax error: unexpected end of file
+
+has (parens).txt
+has spaces.txt                 	Blue
+llama.pl
+shellwords.pl
+vicunas.txt                    	Orange
+</code></pre>
+
+<p>At one point I figured that I&rsquo;d just <a href="https://perldoc.perl.org/functions/quotemeta.html">quotemeta</a> the whole thing even though I knew that was designed to protect strings in regular expressions:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	<span style="color:#66d9ef">my</span> $result <span style="color:#f92672">=</span> <span style="color:#e6db74">`tag &#34;\Q$file\E&#34;`</span>;
+	<span style="color:#66d9ef">print</span> $result;
+	}</code></pre></div>
+<p>That doesn&rsquo;t work either. Now none of the files match:</p>
+
+<pre><code>tag: The file “alpaca\.pl” couldn’t be opened because there is no such file.
+tag: The file “butterfly\.p6” couldn’t be opened because there is no such file.
+tag: The file “camel\.txt” couldn’t be opened because there is no such file.
+...
+</code></pre>
+
+<p>The better fix is to escape only the delimiter. This uses a separate statement to do that:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	<span style="color:#66d9ef">my</span> $quoted_file <span style="color:#f92672">=</span> $file <span style="color:#f92672">=~</span> <span style="color:#e6db74">s/&#34;/\\&#34;/g</span>r;
+	<span style="color:#66d9ef">my</span> $result <span style="color:#f92672">=</span> <span style="color:#e6db74">`tag &#34;$quoted_file&#34;`</span>;
+	<span style="color:#66d9ef">print</span> $result;
+	}</code></pre></div>
+<p>It looks like it works (although I wouldn&rsquo;t bet my life on it based on my performance with this task so far):</p>
+
+<pre><code>alpaca.pl
+butterfly.p6
+camel.txt                      	Green
+has &quot; quote.txt
+has (parens).txt
+has spaces.txt                 	Blue
+llama.pl
+shellwords.pl
+vicunas.txt                    	Orange
+</code></pre>
+
+<p>I could put that inline with the command, although it&rsquo;s a bit ugly. I get the modified string in an anonymous array reference (the square braces) and dereference that immediately in the string:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	<span style="color:#66d9ef">my</span> $result <span style="color:#f92672">=</span> <span style="color:#e6db74">`tag &#34;@{[ $file =~ s/&#34;/\\&#34;/gr ]}&#34;`</span>;
+	<span style="color:#66d9ef">print</span> $result;
+	}</code></pre></div>
+<p>Blerg. That works in this case but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). And it probably misses some other special cases, such as <code>$</code> for shell interpolation and shell backticks. Single quotes might fix that in Unix but won&rsquo;t in Windows. I&rsquo;ll show <a href="https://metacpan.org/pod/String::ShellQuote">String::ShellQuote</a> later.</p>
+
+<p>I can open a pipe to the command and specify the command and its arguments as a list. This requires neither quoting nor escaping anything because each argument in Perl is one argument in the command (like <a href="https://perldoc.perl.org/functions/system.html">system</a> in its list form):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	open <span style="color:#66d9ef">my</span> $fh, <span style="color:#e6db74">&#39;-|&#39;</span>, <span style="color:#e6db74">&#39;tag&#39;</span>, $file;
+	<span style="color:#66d9ef">my</span> $result <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;$fh&gt;</span>;
+	<span style="color:#66d9ef">print</span> $result;
+	}</code></pre></div>
+<p>How much work was this to get right? Hardly any. It&rsquo;s annoying to do this little bit more, but it&rsquo;s much less painful than a bunch of support tickets or angry mobs at your desk.</p>
+
+<p>If I didn&rsquo;t need the output, I could have used <code>system</code> (or <code>exec</code>) in  list forms. In that case, the <code>system</code> completely bypasses the shell:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	system <span style="color:#e6db74">&#39;tag&#39;</span>, $file;
+	}</code></pre></div>
+<p>Be careful with an array, though! An array of one element is not the list form! There&rsquo;s a slightly weird syntax to get around this. But the first array element in braces followed by the array. I explain this more in the &ldquo;Secure Programming Techniques&rdquo; chapter of <a href="https://www.masteringperl.org">Mastering Perl</a>, but the <a href="https://perldoc.perl.org/functions/exec.html">exec docs</a> explain it too:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">my</span> @array <span style="color:#f92672">=</span> ( <span style="color:#e6db74">&#34;tag $file&#34;</span> );
+system @array;  <span style="color:#75715e"># not list form!</span>
+
+<span style="color:#66d9ef">my</span> @array <span style="color:#f92672">=</span> ( <span style="color:#e6db74">&#39;tag&#39;</span>, $file );
+system @array;  <span style="color:#75715e"># now it&#39;s the list form!</span>
+
+system { $array[<span style="color:#ae81ff">0</span>] } @array</code></pre></div>
+<p>Remember, it doesn&rsquo;t matter as much how rare the edge case is; it matters how damaging it is. Some things I can&rsquo;t control, but this situation is not one of those things. A couple minutes here saves lots of time and money later.</p>
+
+<h2 id="using-modules">Using modules</h2>
+
+<p>There are some modules that can do this sort of stuff for you (with the risk of an additional dependency). Dan Book suggested this example with <a href="https://metacpan.org/pod/String::ShellQuote">String::ShellQuote</a>. which handles Bourne shell issues (sorry zsh):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> String::ShellQuote;
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	<span style="color:#66d9ef">my</span> $quoted_file <span style="color:#f92672">=</span> shell_quote $file;
+	<span style="color:#66d9ef">my</span> $result <span style="color:#f92672">=</span> <span style="color:#e6db74">`tag $quoted_file`</span>;
+	<span style="color:#66d9ef">print</span> $result;
+	}</code></pre></div>
+<p>He also suggested <a href="https://metacpan.org/pod/IPC::ReadpipeX">IPC::ReadpipeX</a>. Look under the hood and you&rsquo;ll find that pipe open again:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> IPC::ReadpipeX;
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	<span style="color:#66d9ef">my</span> $result <span style="color:#f92672">=</span>  readpipex <span style="color:#e6db74">&#39;tag&#39;</span>, $quoted_file<span style="color:#960050;background-color:#1e0010">`</span>;
+	<span style="color:#66d9ef">print</span> $result;
+	}</code></pre></div>
+<h2 id="capturing-output-with-modules">Capturing output with modules</h2>
+
+<p>I can run external commands with arguments with the core module <a href="https://metacpan.org/pod/IPC::Open3">IPC::Open3</a>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> IPC::Open3;
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	<span style="color:#66d9ef">my</span> $pid <span style="color:#f92672">=</span> open3(
+		undef, <span style="color:#66d9ef">my</span> $out, <span style="color:#66d9ef">my</span> $err,
+		 <span style="color:#e6db74">&#39;tag&#39;</span>, $file
+		);
+	<span style="color:#66d9ef">my</span> $result <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;$out&gt;</span>;
+	waitpid( $pid, <span style="color:#ae81ff">0</span> );
+	<span style="color:#66d9ef">print</span> $result;
+	}</code></pre></div>
+<p>The CPAN module <a href="https://metacpan.org/pod/Capture::Tiny">Capture::Tiny</a> can do the same thing with a slightly more pleasing interface (at the cost of an external dependency):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> Capture::Tiny <span style="color:#e6db74">qw(capture_stdout)</span>;
+<span style="color:#66d9ef">foreach</span> <span style="color:#66d9ef">my</span> $file ( @ARGV ) {
+	<span style="color:#66d9ef">my</span> $result <span style="color:#f92672">=</span> capture_stdout { system <span style="color:#e6db74">&#39;tag&#39;</span>, $file };
+	<span style="color:#66d9ef">print</span> $result;
+	}</code></pre></div>
+<h2 id="a-dream">A dream</h2>
+
+<p>I&rsquo;ve always wanted an even simpler way to construct these strings. I&rsquo;d love to have <a href="https://perldoc.pl/functions/sprintf">sprintf</a>-like syntax to interpolate strings in all sorts of special ways. I even have maintainership of <a href="https://metacpan.org/pod/String::Sprintf">String::Sprintf</a> although I&rsquo;ve done nothing with it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#75715e"># some fictional world</span>
+<span style="color:#66d9ef">my</span> $command <span style="color:#f92672">=</span> sprintf <span style="color:#e6db74">&#39;%C @a&#39;</span>, $command, @args;</code></pre></div>
+<p><br />
+Cover image © <a href="https://www.flickr.com/photos/psyberartist/6686826117/in/photolist-bbTJrt-28sUivg-4pmCYD-9mdKd7-7VxQhR-4CVtdx-6vrn8j-4z5Bhr-4z9Nv5-my">psyberartist</a></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/data">data</a></div>
+                
+                  <div class="tag"><a href="/tags/macos">macos</a></div>
+                
+                  <div class="tag"><a href="/tags/pathfinder">pathfinder</a></div>
+                
+                  <div class="tag"><a href="/tags/tag">tag</a></div>
+                
+                  <div class="tag"><a href="/tags/shell">shell</a></div>
+                
+                  <div class="tag"><a href="/tags/quoting">quoting</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-brian-d-foy">
+  <div class="col-sm-2">
+    
+    <a href="/authors/brian-d-foy/"><div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/brian-d-foy/"><h3>brian d foy</h3></a>
+    <p><a href="http://www.pair.com/~comdog/">brian d foy</a> is a Perl trainer and writer, and a senior editor at Perl.com. He&rsquo;s the author of <a href="https://www.masteringperl.org">Mastering Perl</a>, <a href="https://leanpub.com/mojo_web_clients">Mojolicious Web Clients</a>, <a href="https://leanpub.com/learning_perl_exercises">Learning Perl Exercises</a>, and co-author of <a href="https://www.programmingperl.org">Programming Perl</a>, <a href="https://www.learning-perl.com">Learning Perl</a>, <a href="https://www.intermediateperl.com">Intermediate Perl</a> and <a href="https://www.effectiveperlprogramming.com">Effective Perl Programming</a>.</p>
+    <h5><a href="/authors/brian-d-foy/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/quoting-the-shell.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tree on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/tree/</link>
+    <description>Recent content in Tree on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 07 May 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/tree/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Where Wizards Fear To Tread</title>
+      <link>http://localhost:1313/pub/2002/05/07/optree.html/</link>
+      <pubDate>Tue, 07 May 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/05/07/optree.html/</guid>
+      <description>
+
+&lt;p&gt;So you&amp;rsquo;re a Perl master. You&amp;rsquo;ve got XS sorted. You know how the internals work. Hey, there&amp;rsquo;s nothing we can teach you on perl.com that you don&amp;rsquo;t already know. You think? Where Wizards Fear To Tread brings you the information you won&amp;rsquo;t find anywhere else concerning the very top level of Perl hackery.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-putting-down-your-roots-putting-down-your-roots-span&#34;&gt;&lt;span id=&#34;putting down your roots&#34;&gt;Putting Down Your Roots&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This month, we look at the Perl op tree. Every Perl program is compiled into an internal representation before it is executed. Functions, subroutine calls, variable accesses, control structures, and all that makes up a Perl program, are converted into a series of different fundamental operations (&lt;em&gt;ops&lt;/em&gt;) and these ops are strung together into a tree data structure.&lt;/p&gt;
+
+&lt;p&gt;For more on the different types of ops available, how they fit together, and how to manipulate them with the &lt;a href=&#34;https://metacpan.org/pod/B&#34;&gt;B&lt;/a&gt; compiler module, look at the &lt;a href=&#34;https://web.archive.org/web/20050205214309/http://www.netthink.co.uk:80/downloads/internals/&#34;&gt;Perl 5 internals tutorial&lt;/a&gt;. Right now, though, we&amp;rsquo;re going to take things a step further.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-b-and-beyond-with-b-utils-b-and-beyond-with-b-utils-span&#34;&gt;&lt;span id=&#34;b and beyond with b::utils&#34;&gt;B and Beyond With B::Utils&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;B&lt;/code&gt; module allows us to get at a wealth of information about an op, but it can become incredibly frustrating to know which op you want to deal with, and to perform simple manipulation on a range of ops. It also offers limited functionality for navigating around the op tree, meaning that you need to hold onto a load of additional state about which op is where. This gets complicated quickly. Finally, it&amp;rsquo;s not easy to get at the op trees for particular subroutines, or indeed, all subroutines both named and anonymous.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/B::Utils&#34;&gt;B::Utils&lt;/a&gt; was created at the request of Michael Schwern to address these issues. It offers much more high-level functionality for navigating through the tree, such as the ability to move &amp;ldquo;upward&amp;rdquo; or &amp;ldquo;backward&amp;rdquo;, to return the old name of an op that has currently been optimized away, to get a list of the op&amp;rsquo;s children, and so on. It can return arrays of anonymous subroutines, and hashes of subroutine op roots and starts. It also contains functions for walking through the op tree from various starting points in various orders, optionally filtering out ops that don&amp;rsquo;t match certain conditions; while performing actions on ops, &lt;code&gt;B::Utils&lt;/code&gt; provides &lt;code&gt;carp&lt;/code&gt; and &lt;code&gt;croak&lt;/code&gt; routines which perform error reporting from the point of view of the original source code.&lt;/p&gt;
+
+&lt;p&gt;But one of the most useful functions provided by &lt;code&gt;B::Utils&lt;/code&gt; is the &lt;code&gt;opgrep&lt;/code&gt; routine. This allows you to filter a series of ops based on a pattern that represents their attributes and their position in a tree. The major advantage over doing it yourself is that &lt;code&gt;opgrep&lt;/code&gt; takes care of making sure that the attributes are present before testing them - the seasoned &lt;code&gt;B&lt;/code&gt; user is likely to be accustomed to the carnage that results from accidentally trying to call &lt;code&gt;name&lt;/code&gt; on a &lt;code&gt;B::NULL&lt;/code&gt; object.&lt;/p&gt;
+
+&lt;p&gt;For instance, we can find all the subroutine calls in a program with&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;walkallops_filtered (
+    sub { opgrep( { name =&amp;gt; &amp;quot;entersub&amp;quot; }, @_) },
+    sub { print &amp;quot;Found one: $_[0]\n&amp;quot;; }
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;opgrep&lt;/code&gt; supports alternation and negation of attribute queries. For instance, here are all the scalar variable accesses, whether to globals or lexicals:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@svs = opgrep ( { name =&amp;gt; [&amp;quot;padsv&amp;quot;, &amp;quot;gvsv&amp;quot;] }, @ops)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And as for checking an op&amp;rsquo;s position in the tree, here are all the &lt;code&gt;exec&lt;/code&gt; ops followed by a &lt;code&gt;nextstate&lt;/code&gt; and then followed by something other than &lt;code&gt;exit&lt;/code&gt;, &lt;code&gt;warn&lt;/code&gt; or &lt;code&gt;die&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;walkallops_filtered(
+    sub { opgrep( {
+                      name =&amp;gt; &amp;quot;exec&amp;quot;,
+                      next =&amp;gt; {
+                         name    =&amp;gt; &amp;quot;nextstate&amp;quot;,
+                         sibling =&amp;gt; {
+                                       name =&amp;gt; [qw(! exit warn die)]
+                                    }
+                              }
+                  }, @_)},
+    sub {
+          carp(&amp;quot;Statement unlikely to be reached&amp;quot;);
+          carp(&amp;quot;\t(Maybe you meant system() when you said exec()?)\n&amp;quot;);
+    }
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-don-t-do-that-do-this-don-t-do-that-do-this-span&#34;&gt;&lt;span id=&#34;don&#39;t do that, do this&#34;&gt;Don&amp;rsquo;t Do That, Do This&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So, what can we do with all this? The answer is, of course, &amp;ldquo;anything we want&amp;rdquo;. If you can mess about with the op tree, then you have complete control over Perl&amp;rsquo;s operation. Let&amp;rsquo;s take an example.&lt;/p&gt;
+
+&lt;p&gt;Damian Conway recently released the &lt;a href=&#34;https://metacpan.org/pod/Acme::Don::t&#34;&gt;Acme::Don&amp;rsquo;t&lt;/a&gt; module, which doesn&amp;rsquo;t do anything:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;don&#39;t { print &amp;quot;Something\n&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;doesn&amp;rsquo;t print anything. Very clever. But not clever enough. You see, I like double negatives:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $x = 1;
+don&#39;t { print &amp;quot;Something\n&amp;quot; } unless $x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;doesn&amp;rsquo;t print anything either, and if you like double negatives, then you might agree that it should print something. But how on earth are we going to get Perl to do something when a test proves false? By messing about with the op tree, of course.&lt;/p&gt;
+
+&lt;p&gt;The way to solve any problem like this is to think about the op tree that we&amp;rsquo;ve currently got, work out what we&amp;rsquo;d rather do instead, and work out the differences between the op trees. Then, we write something that looks for a given pattern in a program&amp;rsquo;s op tree and modifies it to be what we want.&lt;/p&gt;
+
+&lt;p&gt;There are several ways of achieving what we actually want to get but the simplest one is this: add a second parameter to &lt;code&gt;don&#39;t&lt;/code&gt; which, if set, actually &lt;em&gt;does&lt;/em&gt; do the code. This allows us to replace any occurrence of&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;don&#39;t { print &amp;quot;Something\n&amp;quot; } if (condition);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;with&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;don&#39;t(sub { print &amp;quot;Something\n&amp;quot; }, 1) unless (condition);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s now look at this in terms of op trees. Here&amp;rsquo;s the relevant part of the op tree for &lt;code&gt;don&#39;t { ... } if $x&lt;/code&gt;, produced by running &lt;code&gt;perl -MO=Terse&lt;/code&gt; and then using &lt;code&gt;sed&lt;/code&gt; to trim out to unsightly hex addresses:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    UNOP  null
+        LOGOP  and
+            UNOP  null [15]
+                SVOP  *x
+            UNOP  entersub [2]
+                UNOP  null [141]
+                    OP  pushmark
+                    UNOP  refgen
+                        UNOP  null [141]
+                            OP  pushmark
+                            SVOP  anoncode  SPECIAL #0 Nullsv
+                    UNOP  null [17]
+                        SVOP  *don::t
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As we can see, the &lt;code&gt;if&lt;/code&gt; is represented as an &lt;code&gt;and&lt;/code&gt; op internally, which makes sense if you think about it. The two &amp;ldquo;legs&amp;rdquo; of the &lt;code&gt;and&lt;/code&gt;, called &amp;ldquo;first&amp;rdquo; and &amp;ldquo;other&amp;rdquo; are a call to fetch the value of &lt;code&gt;$c&lt;/code&gt;, and a subroutine call. Look at the subroutine call closely: the ops &amp;ldquo;inside&amp;rdquo; this set up a mark to say where the parameters start, push a reference to anonymous code (that&amp;rsquo;s our &lt;code&gt;{ ... }&lt;/code&gt;) onto the stack, and then push the glob for &lt;code&gt;*don::t&lt;/code&gt; on there.&lt;/p&gt;
+
+&lt;p&gt;So, we need to do two things: We need to insert another parameter between &lt;code&gt;refgen&lt;/code&gt; and the &lt;code&gt;null&lt;/code&gt; attached to &lt;code&gt;*don::t&lt;/code&gt;, and we need to invert the sense of the test.&lt;/p&gt;
+
+&lt;p&gt;Now we know what we&amp;rsquo;ve got to do, let&amp;rsquo;s start doing it - remember our solution: stage one, write code to find the pattern.&lt;/p&gt;
+
+&lt;p&gt;This is actually pretty simple: We&amp;rsquo;re looking for either an &lt;code&gt;and&lt;/code&gt; or an &lt;code&gt;or&lt;/code&gt; op, and the &amp;ldquo;other&amp;rdquo; leg of the op is going to be a call to &lt;code&gt;*don::t&lt;/code&gt;. However, we have to be a bit clever here, since Perl internally performs a few optimizations on the op tree that even the &lt;code&gt;B::*&lt;/code&gt; reporting modules don&amp;rsquo;t tell you about. When Perl threads the &lt;code&gt;next&lt;/code&gt; pointers around an op tree, it does something special for a short-circuiting binary op like &lt;code&gt;and&lt;/code&gt; or &lt;code&gt;or&lt;/code&gt; - it sets the &lt;code&gt;other&lt;/code&gt; pointer to be not the first sibling in the tree, but the first op in execution order. In this case, that&amp;rsquo;s &lt;code&gt;pushmark&lt;/code&gt;, as we can see from running &lt;code&gt;B::Terse,exec&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    LOGOP (0x80fa008) and
+    AND =&amp;gt; {
+        OP (0x80f9f88) pushmark
+        OP (0x80f9f20) pushmark
+        SVOP (0x80f9ec0) anoncode  SPECIAL #0 Nullsv
+        ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With this knowledge, we can create a pattern to pass to &lt;code&gt;opgrep&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    {
+        name =&amp;gt; [&amp;quot;and&amp;quot;, &amp;quot;or&amp;quot;],
+        other =&amp;gt; {
+            name =&amp;gt; &amp;quot;pushmark&amp;quot;,
+            sibling =&amp;gt; { next =&amp;gt; { name =&amp;gt; &amp;quot;gv&amp;quot; }}
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unfortunately, this doesn&amp;rsquo;t tell us the whole story, since we actually need to check that the subroutine call &lt;strong&gt;is&lt;/strong&gt; to &lt;code&gt;don&#39;t&lt;/code&gt;, rather than to any other given subroutine that might be called conditionally. Hence, our filter looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub {
+    my $op = shift;
+    opgrep(
+        {
+            name =&amp;gt; [&amp;quot;and&amp;quot;, &amp;quot;or&amp;quot;],
+            other =&amp;gt; {
+                name =&amp;gt; &amp;quot;pushmark&amp;quot;,
+                sibling =&amp;gt; { next =&amp;gt; { name =&amp;gt; &amp;quot;gv&amp;quot; }}
+            }
+        }, $op) or return;
+    my $gv = $op-&amp;gt;other-&amp;gt;sibling-&amp;gt;next-&amp;gt;gv;
+    return unless $gv-&amp;gt;STASH-&amp;gt;NAME eq &amp;quot;don&amp;quot; and $gv-&amp;gt;NAME eq &amp;quot;t&amp;quot;;
+    return 1;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We grab the GV (we know exactly where it&amp;rsquo;s going to be because of our pattern!) and test that it&amp;rsquo;s in the &lt;code&gt;don&lt;/code&gt; stash and is called &lt;code&gt;t&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Part one done - we have located the ops that we want to change. Now how on earth do we change ops in an op tree?&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-fixing-it-up-with-b-generate-fixing-it-up-with-b-generate-span&#34;&gt;&lt;span id=&#34;fixing it up with b::generate&#34;&gt;Fixing It Up With B::Generate&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;B::Generate&lt;/code&gt; was written to allow users to create their own ops and insert them into the op tree. The original intent was to be able to create bytecode for other languages to be run on the Perl virtual machine, but it&amp;rsquo;s found plenty of use manipulating existing Perl op trees.&lt;/p&gt;
+
+&lt;p&gt;It provides &amp;ldquo;constructor&amp;rdquo; methods in all of the &lt;code&gt;B::*OP&lt;/code&gt; classes, and makes many of the accessor methods read-write instead of read-only. Let&amp;rsquo;s see how we can apply it to this problem. Remember that we want to negate the sense of the test, and then to add another argument to the call to &lt;code&gt;don&#39;t&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;For the first of these tasks, &lt;code&gt;B::Generate&lt;/code&gt; provides the handy &lt;code&gt;mutate&lt;/code&gt; and &lt;code&gt;convert&lt;/code&gt; methods on each &lt;code&gt;B::OP&lt;/code&gt;-derived object to change one op&amp;rsquo;s type into another. The decision as to which of them use is slightly complex: &lt;code&gt;mutate&lt;/code&gt; can only be used for ops of the same type - for instance, you cannot use it to mutate a binary op into a unary op. However, &lt;code&gt;convert&lt;/code&gt; produces a completely new op, which needs to be threaded back into the op tree. So &lt;code&gt;convert&lt;/code&gt; is much more powerful, but &lt;code&gt;mutate&lt;/code&gt; is much more convenient. In this case, since we&amp;rsquo;re just flipping between &lt;code&gt;and&lt;/code&gt; and &lt;code&gt;or&lt;/code&gt;, we can get away with using &lt;code&gt;mutate&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;require B::Generate;
+my $op = shift;
+if ($op-&amp;gt;name eq &amp;quot;and&amp;quot;) {
+    $op-&amp;gt;mutate(&amp;quot;or&amp;quot;);
+} else {
+    $op-&amp;gt;mutate(&amp;quot;and&amp;quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now to insert the additional parameter. For this, remember that &lt;code&gt;entersub&lt;/code&gt; works by popping off the top entry in the stack and calling that as a subroutine, and the remaining stack entries become parameters to the subroutine. So we want to add a &lt;code&gt;const&lt;/code&gt; op to put a constant on the stack. We use the &lt;code&gt;B::SVOP-&amp;gt;new&lt;/code&gt; constructor to create a new one, and then thread the &lt;code&gt;next&lt;/code&gt; pointers so that Perl&amp;rsquo;s main loop will call it between &lt;code&gt;$op-&amp;gt;other-&amp;gt;sibling&lt;/code&gt; (the &lt;code&gt;refgen&lt;/code&gt; op) and the op after it. (the GV which represents &lt;code&gt;*don::t&lt;/code&gt;)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $to_insert = $op-&amp;gt;other-&amp;gt;sibling;
+my $newop = B::SVOP-&amp;gt;new(&amp;quot;const&amp;quot;, 0, 1);
+$newop-&amp;gt;next($to_insert-&amp;gt;next);
+$to_insert-&amp;gt;next($newop);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;All that&amp;rsquo;s left is to replace the definition of &lt;code&gt;don&#39;t&lt;/code&gt; so that, depending on the parameters, it sometimes &lt;code&gt;do&lt;/code&gt;es:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub don&#39;t (&amp;amp;;$) { $_[0]-&amp;gt;() if $_[1] }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And there we have it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Acme::Don&#39;t;
+CHECK {
+    use B::Utils qw(opgrep walkallops_filtered);
+    walkallops_filtered(
+        sub {
+            my $op = shift;
+            opgrep(
+            {
+                name =&amp;gt; [&amp;quot;and&amp;quot;, &amp;quot;or&amp;quot;],
+                other =&amp;gt; {
+                    name =&amp;gt; &amp;quot;pushmark&amp;quot;,
+                    sibling =&amp;gt; { next =&amp;gt; { name =&amp;gt; &amp;quot;gv&amp;quot; }}
+                }
+            }, $op) or return;
+            my $gv = $op-&amp;gt;other-&amp;gt;sibling-&amp;gt;next-&amp;gt;gv;
+            return unless $gv-&amp;gt;STASH-&amp;gt;NAME eq &amp;quot;don&amp;quot; and $gv-&amp;gt;NAME eq &amp;quot;t&amp;quot;;
+            return 1;
+        },
+        sub {
+            require B::Generate;
+            my $op = shift;
+            if ($op-&amp;gt;name eq &amp;quot;and&amp;quot;) {
+                $op-&amp;gt;mutate(&amp;quot;or&amp;quot;);
+            } else {
+                $op-&amp;gt;mutate(&amp;quot;and&amp;quot;);
+            }
+
+            my $to_insert = $op-&amp;gt;other-&amp;gt;sibling;
+            my $newop = B::SVOP-&amp;gt;new(&amp;quot;const&amp;quot;, 0, 1);
+            $newop-&amp;gt;next($to_insert-&amp;gt;next);
+            $to_insert-&amp;gt;next($newop);
+        }
+   );
+}
+
+sub don&#39;t (&amp;amp;;$) { $_[0]-&amp;gt;() if $_[1] }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will turn&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$false = 0; $true = 1;
+
+don&#39;t { print &amp;quot;Testing&amp;quot; } if $false;
+don&#39;t { print &amp;quot;Testing again&amp;quot; } unless $true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;into&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$false = 0; $true = 1;
+
+don&#39;t(sub { print &amp;quot;Testing&amp;quot; }, 1) unless $false;
+don&#39;t(sub { print &amp;quot;Testing again&amp;quot; }, 1) if $true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;setting off the conditions and making &lt;code&gt;don&#39;t&lt;/code&gt; do the code. A neat trick? We think so.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-where-to-from-here-where-to-from-here-span&#34;&gt;&lt;span id=&#34;where to from here&#34;&gt;Where To From Here?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;But that&amp;rsquo;s not all! And, of course, this doesn&amp;rsquo;t cater for some of the more complex constructions people can create, such as&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($x) {
+    do_something();
+    don&#39;t { do_the_other_thing() };
+    do_something_else();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or even&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($x) {
+    do_that();
+    don&#39;t { do_this() }
+} else {
+    do_the_other();
+    don&#39;t { do_something_else() }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But this can be solved in just the same way. For instance, you want to turn the first one into&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($x) {
+    do_something();
+    do_something_else();
+} else {
+    don&#39;t(sub { do_the_other_thing() }, 1);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the second into&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($x) {
+    do_that();
+    don&#39;t(sub { do_something_else() }, 1);
+} else {
+    do_the_other();
+    don&#39;t(sub { do_this() }, 1);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Both of these transformations can be done by applying the method above: compare the op trees, work out the difference, find the pattern you want to look for, then write some code to manipulate the op tree into the desired output. An easy task for the interested reader &amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;And we really haven&amp;rsquo;t scratched the surface of what can be done with &lt;code&gt;B::Generate&lt;/code&gt; and &lt;code&gt;B::Utils&lt;/code&gt;; the &lt;code&gt;B::Generate&lt;/code&gt; test suite shows what sort of mayhem can be caused to existing Perl programs, and there have been experiments using &lt;code&gt;B::Generate&lt;/code&gt; to generate op trees for other languages - a &lt;code&gt;B::Generate&lt;/code&gt; port of Leon Brocard&amp;rsquo;s &lt;a href=&#34;http://www.sourceforge.net/projects/shiny&#34;&gt;shiny&lt;/a&gt; Ruby interpreter could produce Perl bytecode for simple Ruby programs; &lt;code&gt;chromatic&lt;/code&gt; is working on an idea to turn Perl programs into XML, manipulate them and use &lt;code&gt;B::Generate&lt;/code&gt; to turn them back into Perl op trees.&lt;/p&gt;
+
+&lt;p&gt;Later in our &amp;ldquo;Where Wizards Fear To Tread&amp;rdquo; series, we&amp;rsquo;ll have articles about Perl and Java interaction, &lt;code&gt;iThreads&lt;/code&gt;, and more.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

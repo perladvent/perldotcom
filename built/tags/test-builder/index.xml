@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Test Builder on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/test-builder/</link>
+    <description>Recent content in Test Builder on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 08 Dec 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/test-builder/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Testing Files and Test Modules</title>
+      <link>http://localhost:1313/pub/2005/12/08/test_files.html/</link>
+      <pubDate>Thu, 08 Dec 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/12/08/test_files.html/</guid>
+      <description>
+
+&lt;p&gt;For the last several years, there has been more and more emphasis on automated testing. No self-respecting CPAN author can post a distribution without tests. Yet some things are hard to test. This article explains how writing &lt;code&gt;Test::Files&lt;/code&gt; gave me a useful tool for validating one module&amp;rsquo;s output and taught me a few things about the current state of Perl testing.&lt;/p&gt;
+
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
+
+&lt;p&gt;My boss put me to work writing a moderately large suite in Perl. Among many other things, it needed to perform check out and commit operations on CVS repositories. In a quest to build quality tests for that module, I wrote &lt;a href=&#34;https://metacpan.org/pod/Test::Files&#34;&gt;&lt;code&gt;Test::Files&lt;/code&gt;&lt;/a&gt;, which is now on CPAN. This article explains how to use that module and, perhaps more importantly, how it tests itself.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-test-files&#34;&gt;Using &lt;code&gt;Test::Files&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;To use &lt;code&gt;Test::Files&lt;/code&gt;, first use &lt;a href=&#34;https://metacpan.org/pod/Test::More&#34;&gt;&lt;code&gt;Test::More&lt;/code&gt;&lt;/a&gt; and tell it how many tests you want to run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use strict;
+use warnings;
+use Test::More tests =&amp;gt; 5;
+use Test::Files;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After you use the module, there are four things it can help you do:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Compare one file to a string or to another file.&lt;/li&gt;
+&lt;li&gt;Make sure that directories have the files you expect them to have.&lt;/li&gt;
+&lt;li&gt;Compare all the files in one directory to all the files in another directory.&lt;/li&gt;
+&lt;li&gt;Exclude some things from consideration.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;single-files&#34;&gt;Single Files&lt;/h3&gt;
+
+&lt;p&gt;In the simplest case, you have written a file. Now it is time to validate it. That could look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;file_ok($file_name, &amp;quot;This is the\ntext\n&amp;quot;,
+    &amp;quot;file one contents&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;file_ok&lt;/code&gt; function takes two (or optionally, and preferably, three) arguments. The first is the name of the file you want to validate. The second is a text string containing the text that should be in the file. The third is the name of the test. In the rush of writing, I&amp;rsquo;m likely to fail to mention the test names at some point, so let me say up front that all of the tests shown here take a name argument. Including a name makes finding the test easier.&lt;/p&gt;
+
+&lt;p&gt;If the file agrees with the string, the test passes with only an OK message. Otherwise, the test will fail and diagnostic messages will show where the two differed. The diagnostic output is really the reason to use &lt;code&gt;Test::Files&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Some, including myself, prefer to check one file against another. I put one version in the distribution. The other one, my tests write. To compare two files, use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;compare_ok($file1, $file2, $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As with &lt;code&gt;file_ok&lt;/code&gt;, if the files are the same, &lt;code&gt;Test::Files&lt;/code&gt; only reports an OK message. Failure shows where the files differ.&lt;/p&gt;
+
+&lt;h3 id=&#34;directory-structures&#34;&gt;Directory Structures&lt;/h3&gt;
+
+&lt;p&gt;Sometimes, you need to validate that certain files are present in a directory. Other times, you need to make that check exclusive so that only known files are present. Finally, you might want to know that not only is the directory structure is the same, but that the files contain the same data.&lt;/p&gt;
+
+&lt;p&gt;To look for some files in a directory by name, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;dir_contains_ok($dir, [qw(list files here)], $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will succeed, even if the directory has some other files you weren&amp;rsquo;t looking for.&lt;/p&gt;
+
+&lt;p&gt;To ensure that your list is exclusive, add only to the function name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;dir_only_contains_ok($dir, [qw(list all files here)], $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Both of these report a list of absent files if they fail due to them. The exclusive form also reports a list of unexpected files, if it sees any.&lt;/p&gt;
+
+&lt;h3 id=&#34;directory-contents&#34;&gt;Directory Contents&lt;/h3&gt;
+
+&lt;p&gt;If knowing that certain file names are present is not enough, use the &lt;code&gt;compare_dirs_ok&lt;/code&gt; function to check the contents of all files in one directory against files in another directory. A typical module might build one directory during &lt;code&gt;make test&lt;/code&gt;, with the other built ahead of time and shipped with the distribution.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;compare_dirs_ok($test_built, $shipped, $name);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will generate a separate diagnostic &lt;code&gt;diff&lt;/code&gt; output for each pair of files that differs, in addition to listing files that are missing from either distribution. (If you need to know which files are missing from the built directory, either reverse the order of the directories or use &lt;code&gt;dir_only_contains_ok&lt;/code&gt; in addition to &lt;code&gt;compare_dirs_ok&lt;/code&gt;. This is a bug and might eventually be fixed.) Even though this could yield many diagnostic reports, all of those separate failures only count as one failed test.&lt;/p&gt;
+
+&lt;p&gt;There are many times when testing &lt;em&gt;all&lt;/em&gt; files in the directories is just wrong. In these cases, it is best to use &lt;a href=&#34;https://metacpan.org/pod/File::Find&#34;&gt;&lt;code&gt;File::Find&lt;/code&gt;&lt;/a&gt; or an equivalent, putting an exclusion criterion at the top of your wanted function and a call to &lt;code&gt;compare_ok&lt;/code&gt; at the bottom. This probably requires you to use &lt;code&gt;no_plan&lt;/code&gt; with &lt;code&gt;Test::More&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Test::More qw(no_plan);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Test::More&lt;/code&gt; wants to know the exact number of tests you are about to run. If you tell it the wrong number, the test harness will think something is wrong with your test script, causing it to report failures. To avoid this confusion, use &lt;code&gt;no_plan&lt;/code&gt;&amp;ndash;but keep in mind that plans are there for a reason. If your test dies, the plan lets the harness know how many tests it missed. If you have &lt;code&gt;no_plan&lt;/code&gt;, the harness doesn&amp;rsquo;t always have enough information to keep score. Thus, you should put such tests in separate scripts, so that the harness can count your other tests properly.&lt;/p&gt;
+
+&lt;h3 id=&#34;filtering&#34;&gt;Filtering&lt;/h3&gt;
+
+&lt;p&gt;While the above list of functions seemed sufficient during planning, reality set in as soon as I tried it out on my CVS module. I wanted to compare two CVS repositories: one ready for shipment with the distribution, the other built during testing. As soon as I tried the test it failed, not because the operative parts of the module were not working, but because the CVS timestamps differed between the two versions.&lt;/p&gt;
+
+&lt;p&gt;To deal with cosmetic differences that should not count as failures, I added two functions to the above list: one for single files and the other for directories. These new functions accept a code reference that receives each line prior to comparison. It performs any needed alterations, and then returns a line suitable for comparison. My example function below redacts the offending timestamps. With the filtered versions in place, the tests pass and fail when they should.&lt;/p&gt;
+
+&lt;p&gt;My final tests for the CVS repository directories look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;compare_dirs_filter_ok(
+    &#39;t/cvsroot/CVSROOT&#39;,
+    &#39;t/sampleroot/CVSROOT&#39;,
+    \&amp;amp;chop_dates,
+    &amp;quot;make repo&amp;quot;
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code reference argument comes between the directory names and the test name. The &lt;code&gt;chop_dates&lt;/code&gt; function is not particularly complex. It removes two kinds of dates favored by CVS, as shown in its comments.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub chop_dates {
+    my $line =  shift;
+
+    #  2003.10.15.13.45.57 (year month day hour minute sec)
+    $line    =~ s/\d{4}(.\d\d){5}//;
+
+    #  Thu Oct 16 18:00:28 2003
+    $line    =~ s/\w{3} \w{3} \d\d? \d\d:\d\d:\d\d \d{4}//;
+
+    return $line;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This shows the general behavior of filters. They receive a line of input which they must not directly change. Instead, they must return a new, corrected line.&lt;/p&gt;
+
+&lt;p&gt;In addition to &lt;code&gt;compare_dirs_filter_ok&lt;/code&gt; for whole directory structures, there is also &lt;code&gt;compare_filter_ok&lt;/code&gt;, which works similarly for single file comparisons. (There is no &lt;code&gt;file_filter_ok&lt;/code&gt;, but maybe there should be.)&lt;/p&gt;
+
+&lt;h3 id=&#34;testing-a-test-module&#34;&gt;Testing a Test Module&lt;/h3&gt;
+
+&lt;p&gt;The most interesting part of writing &lt;code&gt;Test::Files&lt;/code&gt; was learning how to test it. Thanks to Schwern, I learned about &lt;a href=&#34;https://metacpan.org/pod/Test::Builder::Tester&#34;&gt;&lt;code&gt;Test::Builder::Tester&lt;/code&gt;&lt;/a&gt;, which eases the problems inherent in testing a Perl test module.&lt;/p&gt;
+
+&lt;p&gt;The difficulty with testing Perl tests has to do with how they normally run. The venerable test harness scheme expects test scripts to produce pass and fail data on standard out and diagnostic help on standard error. This is a great design. The simplicity is exactly what you would expect from a Unix-inspired tool. Yet, it poses a problem for testing test modules.&lt;/p&gt;
+
+&lt;p&gt;When eventual users use the test module, their harness expects it to write quite specific things to standard out and standard error. Among the things that must go to standard out are a sequence of lines such as &lt;code&gt;ok 1&lt;/code&gt;. When you write a test of the test module, its harness also expects to see this sort of data on standard out and standard error. Having two different sources of &lt;code&gt;ok 1&lt;/code&gt; is highly confusing, not least to the harness, which chokes on such duplications.&lt;/p&gt;
+
+&lt;p&gt;Test module writers need a scheme to trap the output from the module being tested, check it for correct content, and report that result onto the actual standard channels for the harness to see. This is tricky, requiring care in diversion of file handles at the right moments without the knowledge of the module whose output is diverted. Doing this by hand is inelegant and prone to error. Further, multiple test scripts might have to recreate home-rolled solutions (introducing the oldest of known coding sins: duplication of code). Finally, the diagnostic output, in the event of failure, from homemade diverters is unlikely to be helpful when tests of the test module fail.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Enter &lt;code&gt;Test::Builder::Tester&lt;/code&gt;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To help us test testers, Mark Fowler collected some code from Schwern, and used it to make &lt;code&gt;Test::Builder::Tester&lt;/code&gt;. With it, tests of test modules are relatively painless and their failure diagnostics are highly informative. Here are two examples from the &lt;code&gt;Test::Files&lt;/code&gt; test suite. The first shows a file comparison that should pass:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;test_out(&amp;quot;ok 1 - passing file&amp;quot;);
+compare_ok(&amp;quot;t/ok_pass.dat&amp;quot;, &amp;quot;t/ok_pass.same.dat&amp;quot;,
+    &amp;quot;passing file&amp;quot;);
+test_test(&amp;quot;passing file&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This test should work, generating &lt;code&gt;ok 1 - passing file&lt;/code&gt; on standard output. To tell &lt;code&gt;Test::Builder::Tester&lt;/code&gt; what the standard output should be, I called &lt;code&gt;test_out&lt;/code&gt;. After the test, I called &lt;code&gt;test_test&lt;/code&gt; with only the name of my test. (To avoid confusion, I made the test names the same.)&lt;/p&gt;
+
+&lt;p&gt;Between the call to &lt;code&gt;test_out&lt;/code&gt; and the one to &lt;code&gt;test_test&lt;/code&gt;, &lt;code&gt;Test::Builder::Tester&lt;/code&gt; diverted the regular output channels so the harness won&amp;rsquo;t see them.&lt;/p&gt;
+
+&lt;p&gt;The second example shows a failed test and how to check both standard out and standard error. The later contains the diagnostic data the module should generate.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;test_out(&amp;quot;not ok 1 - failing file&amp;quot;);
+$line = line_num(+9);
+test_diag(&amp;quot;    Failed test (t/03compare_ok.t at line $line)&amp;quot;,
+&#39;+---+--------------------+-------------------+&#39;,
+&#39;|   |Got                 |Expected           |&#39;,
+&#39;| Ln|                    |                   |&#39;,
+&#39;+---+--------------------+-------------------+&#39;,
+&#39;|  1|This file           |This file          |&#39;,
+&#39;*  2|is for 03ok_pass.t  |is for many tests  *&#39;,
+&#39;+---+--------------------+-------------------+&#39;  );
+compare_ok(&amp;quot;t/ok_pass.dat&amp;quot;, &amp;quot;t/ok_pass.diff.dat&amp;quot;,
+    &amp;quot;failing file&amp;quot;);
+test_test(&amp;quot;failing file&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Two new functions appear here. First, &lt;code&gt;line_num&lt;/code&gt; returns the current line number plus or minus an offset. Because failing tests report the line number of the failure, checking standard error for an exact match requires matching that number. Yet, no one wants his tests to break because he inserted a new line at the top of the script. With &lt;code&gt;line_num&lt;/code&gt;, you can obtain the line number of the test relative to where you are. Here, there are nine lines between the call to &lt;code&gt;line_num&lt;/code&gt; and the actual test.&lt;/p&gt;
+
+&lt;p&gt;The other new function is &lt;code&gt;test_diag&lt;/code&gt;. It allows you to check the standard error output, where diagnostic messages appear. The easiest way to use it is to provide each line of output as a separate parameter.&lt;/p&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;Now you know how to use &lt;code&gt;Test::Files&lt;/code&gt; and how to test modules that implement tests. There is one final way I use &lt;code&gt;Test::Files&lt;/code&gt;. I use it outside of module testing any time I want to know how the contents of text files in two directory hierarchies compare. With this, I can quickly locate differences in archives, for example, enabling me to debug builders of those archives. In one example, I used it compare more than 400 text files in two WebSphere .ear archives. My program had only about 30 operative lines (there were also comments and blank lines) and performed the comparison in under five seconds. This is testament to the leverage of Perl and CPAN.&lt;/p&gt;
+
+&lt;p&gt;(Since doing that comparison, I have moved to a new company. In the process I exchanged WebSphere for &lt;code&gt;mod_perl&lt;/code&gt; and am generally happier with the latter.)&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Porting Test::Builder to Perl 6</title>
+      <link>http://localhost:1313/pub/2005/07/28/test_builder_p6.html/</link>
+      <pubDate>Thu, 28 Jul 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/07/28/test_builder_p6.html/</guid>
+      <description>
+
+&lt;p&gt;Perl 6 development now proceeds in two directions. The first is from the bottom up, with the creation and evolution of &lt;a href=&#34;http://www.parrotcode.org/&#34;&gt;Parrot&lt;/a&gt; and underlying code, including the Parrot Grammar Engine. The goal there is to build the structure Perl 6 will need. The second direction is from the top down, with the &lt;a href=&#34;http://www.pugscode.org/&#34;&gt;Pugs&lt;/a&gt; project implementing Perl 6 initially separate from Parrot, though recent additions allow an embedded Parrot to run the parsed code and to emit valid Parrot PIR code.&lt;/p&gt;
+
+&lt;p&gt;Both projects are important and both help the design of Perl 6 and its implementation. Parrot is valuable in that it demonstrates a solid foundation for Perl 6 (and other similar languages); a far better foundation than the internals of Perl 5 have become. Pugs is important because it allows people to use Perl 6 productively now, with more features every day.&lt;/p&gt;
+
+&lt;h3 id=&#34;motivation-and-design&#34;&gt;Motivation and Design&lt;/h3&gt;
+
+&lt;p&gt;Perl culture values testing very highly. Several years ago, at the suggestion of Michael Schwern, I extracted the code that would become &lt;a href=&#34;https://metacpan.org/pod/Test::Builder&#34;&gt;Test::Builder&lt;/a&gt; from &lt;a href=&#34;https://metacpan.org/pod/Test::More&#34;&gt;Test::More&lt;/a&gt; and unified &lt;a href=&#34;https://metacpan.org/pod/Test::Simple&#34;&gt;Test::Simple&lt;/a&gt; and Test::More to share that back end. Now dozens of other testing modules, built upon Test::Builder, work together seamlessly.&lt;/p&gt;
+
+&lt;p&gt;Pugs culture also values testing. However, there was no corresponding Test::Builder for Perl 6 yet&amp;ndash;there was only a single &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test/lib/Test.pm&#34;&gt;&lt;em&gt;Test.pm&lt;/em&gt;&lt;/a&gt; module that did most of what the early version of Test::More did in Perl 5.&lt;/p&gt;
+
+&lt;p&gt;Schwern and I have discussed updates and refactorings of Test::Builder for the past couple of years. We made some mistakes in the initial design. As Perl 6 offers the chance to clean up Perl 5, so does a port of Test::Builder to Perl 6 offer the chance to clean up some of the design decisions we would make differently now.&lt;/p&gt;
+
+&lt;p&gt;Internally, Test::Builder provides a few testing and reporting functions and keeps track of some test information. Most importantly, it contains a plan consisting of the number of tests expected to run. It also holds a list of details of every test it has seen. The testing and reporting functions add information to this list of test details. Finally, the module contains functions to report the test details in the standard &lt;a href=&#34;https://metacpan.org/pod/TAP::Base&#34;&gt;TAP&lt;/a&gt; format, so that tools such as &lt;a href=&#34;https://metacpan.org/pod/Test::Harness&#34;&gt;Test::Harness&lt;/a&gt; can interpret the results correctly.&lt;/p&gt;
+
+&lt;p&gt;Test::Builder needs to do all of these things, but there are several ways to design the module&amp;rsquo;s internals. Some ways are better than others.&lt;/p&gt;
+
+&lt;p&gt;The original Perl 5 version mashed all of this behavior together into one object-oriented module. To allow the use of multiple testing modules without confusing the count or the test details, &lt;code&gt;Test::Builder::new()&lt;/code&gt; always returns a singleton. All test modules call the constructor to receive the singleton object and call the test reporting methods to add details of the tests they handle.&lt;/p&gt;
+
+&lt;p&gt;This works, but it&amp;rsquo;s a little inelegant. In particular, modules that test test modules have to go to a lot of trouble to work around the design. A more flexible design would make things like &lt;a href=&#34;https://metacpan.org/pod/Test::Builder::Tester&#34;&gt;Test::Builder::Tester&lt;/a&gt; much easier to write.&lt;/p&gt;
+
+&lt;p&gt;The biggest change that Schwern and I have discussed is to separate the varying responsibilities into separate modules. The &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder.pm&#34;&gt;new Test::Builder object in Perl 6&lt;/a&gt; itself contains a &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/TestPlan.pm&#34;&gt;Test::Builder::TestPlan&lt;/a&gt; object that represents the plan (the number of tests to run), a &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/Output.pm&#34;&gt;Test::Builder::Output&lt;/a&gt; object that contains the filehandles to which to write TAP and diagnostic output, and an array of tests&amp;rsquo; results (all &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/Test.pm&#34;&gt;Test::Builder::Test&lt;/a&gt; instances).&lt;/p&gt;
+
+&lt;p&gt;The default constructor, &lt;code&gt;new()&lt;/code&gt;, still returns a singleton by default. However, modules that use Test::Builder can create their own objects, which perform the Test::Builder::TestPlan or Test::Builder::Output roles and pass them to the constructor to override the default objects created internally for the singleton. If a test module really needs a separate Test::Builder object, the alternate &lt;code&gt;create()&lt;/code&gt; method creates a new object that no other module will share.&lt;/p&gt;
+
+&lt;p&gt;This strategy allows the Perl 6 version of &lt;a href=&#34;http://svn.openfoundry.org/pugs/ext/Test-Builder/lib/Test/Builder/Tester.pm&#34;&gt;Test::Builder::Tester&lt;/a&gt; to create its own Test::Builder object that reports tests as normal and then creates the shared singleton with output going to filehandles it can read instead of &lt;code&gt;STDOUT&lt;/code&gt; and &lt;code&gt;STDERR&lt;/code&gt;. The design appears to be sound; it took less than two hours to go from the idea of T::B::T to a fully working implementation&amp;ndash;counting a break to eat ice cream.&lt;/p&gt;
+
+&lt;h3 id=&#34;first-attempts&#34;&gt;First Attempts&lt;/h3&gt;
+
+&lt;p&gt;Translating Perl 5 OO code into Perl 6 OO code was mostly straightforward, despite my never having written any runnable Perl 6 OO code. (Also, Pugs was not far enough along that objects worked.)&lt;/p&gt;
+
+&lt;h4 id=&#34;what-went-right&#34;&gt;What Went Right&lt;/h4&gt;
+
+&lt;p&gt;One nice revelation is that opaque objects are actually easier to work with than blessed references. Even better, Perl 6&amp;rsquo;s improved function signatures reduce the necessity to write lots of boring boilerplate code.&lt;/p&gt;
+
+&lt;p&gt;Breaking Test::Builder into separate pieces gave the opportunity for several other refactorings. One of my favorite is &amp;ldquo;Replace Condititional with Polymorphism&amp;rdquo;. There are four different types of tests that have different reporting styles: &lt;code&gt;pass&lt;/code&gt;, &lt;code&gt;fail&lt;/code&gt;, &lt;code&gt;SKIP&lt;/code&gt;, and &lt;code&gt;TODO&lt;/code&gt;. It made sense to create separate classes for each of those, giving each the responsibility and knowledge to produce the correct TAP output. Thus I wrote Test::Builder::Test, a façade factory class with a very smart constructor that creates and returns the correct test object based on the given arguments. When Test::Builder receives one of these test objects, it asks it to return the TAP string, passes that message to its contained Test::Builder::TestOutput object, and stores the test object in the list of run tests.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://conferences.oreillynet.com/os2005/&#34;&gt;&lt;img src=&#34;http://conferences.oreillynet.com/images/os2005/banners/468x60.gif&#34; alt=&#34;O&amp;#39;Reilly Open Source Convention 2005.&#34; width=&#34;468&#34; height=&#34;60&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;what-went-wrong&#34;&gt;What Went Wrong&lt;/h4&gt;
+
+&lt;p&gt;Writing the base for all (or at least many) possible test modules is tricky. In this case, it was trebly so. Not only was this the first bit of practical OO Perl 6 code I&amp;rsquo;d written, but I had no way to test it, either by hand (how I tested the Perl 5 version, before Schwern and I worked out a way to write automated tests for it), or with automated tests. Pugs didn&amp;rsquo;t even have object support when I wrote this, though checking in this code pushed OO support higher on the schedule.&lt;/p&gt;
+
+&lt;h5 id=&#34;infinite-loops-in-construction&#34;&gt;Infinite Loops in Construction&lt;/h5&gt;
+
+&lt;p&gt;Originally, I thought all test classes would inherit from Test::Builder::Test. As Damian Conway pointed out, my technique created an infinite loop. (He suggested that &amp;ldquo;Don&amp;rsquo;t make a façade factory class an ancestor of the instantiable classes&amp;rdquo; is a design mistake akin to &amp;ldquo;Don&amp;rsquo;t get involved in a land war in Asia&amp;rdquo; and mumbled something else about battles of wits and Sicilians.) The code looked something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  class Test::Builder::Test
+  {
+      my Test::Builder::Test $:singleton is rw;
+
+      has Bool $.passed;
+      has Int  $.number;
+      has Str  $.diagnostic;
+      has Str  $.description;
+
+      method new (Test::Builder::Test $class, *@args)
+      {
+          return $:singleton if $:singleton;
+          $:singleton = $class.create( @args );
+          return $:singleton;
+      }
+
+      method create(
+          $number, 
+          $passed       =  1,
+          ?$skip        =  0,
+          ?$todo        =  0,
+          ?$reason      = &#39;&#39;,
+          ?$description = &#39;&#39;,
+      )
+      {
+          return Test::Builder::Test::TODO.new(
+              description =&amp;gt; $description, reason =&amp;gt; $reason, passed =&amp;gt; $passed,
+          ) if $todo;
+
+          return Test::Builder::Test::Skip.new(
+              description =&amp;gt; $description, reason =&amp;gt; $reason, passed =&amp;gt; 1,
+          ) if $skip;
+
+          return Test::Builder::Test::Pass.new(
+              description =&amp;gt; $description, passed =&amp;gt; 1,
+          ) if $passed;
+
+          return Test::Builder::Test::TODO.new(
+              description =&amp;gt; $description, passed =&amp;gt; 0,
+          ) if $todo;
+      }
+  }
+
+  class Test::Builder::Test::Pass is Test::Builder::Test {}
+  class Test::Builder::Test::Fail is Test::Builder::Test {}
+  class Test::Builder::Test::Skip is Test::Builder::Test { ... }
+  class Test::Builder::Test::TODO is Test::Builder::Test { ... }
+
+  # ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Why is this a singleton? I have no idea; I typed that code into the &lt;em&gt;wrong&lt;/em&gt; module and continued writing code a few minutes later, thinking that I knew what I was doing. The infinite loop stands out in my mind very clearly now. Because all of the concrete test classes inherit from Test::Builder::Test, they inherit its &lt;code&gt;new()&lt;/code&gt; method; none of them override it. Thus, they&amp;rsquo;ll all call &lt;code&gt;create()&lt;/code&gt; again (and none of them override &lt;em&gt;that&lt;/em&gt; either).&lt;/p&gt;
+
+&lt;h5 id=&#34;confusing-initialization&#34;&gt;Confusing Initialization&lt;/h5&gt;
+
+&lt;p&gt;I also struggled with the various bits and pieces of creating and building objects in Perl 6. There are a lot of hooks and overrides available, making the object system very flexible. However, without any experience or examples or guidance, choosing between &lt;code&gt;new()&lt;/code&gt;, &lt;code&gt;BUILD()&lt;/code&gt;, and &lt;code&gt;BUILDALL()&lt;/code&gt; is difficult.&lt;/p&gt;
+
+&lt;p&gt;I realized I had no idea how to handle the singleton in Test::Builder. At least, when I realized that (for now) Test::Builder could remain a singleton, I didn&amp;rsquo;t know how or where to create it.&lt;/p&gt;
+
+&lt;p&gt;I finally settled on putting it in &lt;code&gt;new()&lt;/code&gt;, with code much like that in the broken version of Test::Builder::Test previously. &lt;code&gt;new()&lt;/code&gt; eventually allocates space for, creates, and returns an opaque object. &lt;code&gt;BUILD()&lt;/code&gt; initializes it. This led me to write code something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  class Test::Builder;
+
+  # ...
+
+  has Test::Builder::Output   $.output;
+  has Test::Builder::TestPlan $.plan;
+
+  has @:results;
+
+  submethod BUILD ( Test::Builder::Output ?$output, ?$TestPlan )
+  {
+      $.plan   = $TestPlan if $TestPlan;
+      $.output = $output ?? $output :: Test::Builder::Output.new();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s a difference here because most uses of Test::Builder set the test plan explicitly later, after receiving the Test::Builder object. I added a &lt;code&gt;plan()&lt;/code&gt; method, too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  method plan ( $self:, Str ?$explanation, Int ?$num )
+  {
+      die &amp;quot;Plan already set!&amp;quot; if $self.plan;
+
+      if ($num)
+      {
+          $self.plan = Test::Builder::TestPlan.new( expect =&amp;gt; $num );
+      }
+      elsif $explanation ~~ &#39;no_plan&#39;
+      {
+          $self.plan = Test::Builder::NullPlan.new();
+      }
+      else
+      {
+          die &amp;quot;Unknown plan&amp;quot;;
+      }
+
+      $self.output.write( $self.plan.header() );
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are some stylistic errors in the previous code. First, when declaring an invocant, there&amp;rsquo;s a colon but no comma. Second, &lt;code&gt;fail&lt;/code&gt; is much better than &lt;code&gt;die&lt;/code&gt; (an assertion Damian made that I take on faith, having researched more serious issues instead). Third, the parenthesization of the cases in the &lt;code&gt;if&lt;/code&gt; statement is inconsistent.&lt;/p&gt;
+
+&lt;h3 id=&#34;final-ha-version&#34;&gt;Final (Ha!) Version&lt;/h3&gt;
+
+&lt;p&gt;Shortly after I checked in the example code, Stevan Little began work on a test suite (using &lt;em&gt;Test.pm&lt;/em&gt;). I knew that Pugs didn&amp;rsquo;t support many of the necessary language constructs, but this allowed Pugs hackers to identify necessary features and me to identify legitimate bugs and mistakes in the code. (It&amp;rsquo;s tricky to bootstrap test-driven development.)&lt;/p&gt;
+
+&lt;p&gt;After filling out the test suite, fixing all of the known bugs in my code, talking other Pugs hackers into adding features I needed, and implementing those I couldn&amp;rsquo;t pawn off on others, Test::Builder works completely in Pugs right now. There is one remaining nice feature: splatty args in method calls. But I&amp;rsquo;m ready to port &lt;em&gt;Test.pm&lt;/em&gt; to the new back end and then write many, many more useful testing modules&amp;ndash;starting with a port of Mark Fowler&amp;rsquo;s Test::Builder::Tester written the night before this article went public!&lt;/p&gt;
+
+&lt;p&gt;The singleton creation in &lt;code&gt;Test::Builder&lt;/code&gt; now looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  class Test::Builder-0.2.0;
+
+  use Test::Builder::Test;
+  use Test::Builder::Output;
+  use Test::Builder::TestPlan;
+
+  my  Test::Builder           $:singleton;
+  has Test::Builder::Output   $.output handles &#39;diag&#39;;
+  has Test::Builder::TestPlan $.testplan;
+  has                         @:results;
+
+  method new ( Test::Builder $Class: ?$plan, ?$output )
+  {
+      return $:singleton //= $Class.SUPER::new(
+          testplan =&amp;gt; $plan, output =&amp;gt; $output
+      );
+  }
+
+  method create ( Test::Builder $Class: ?$plan, ?$output )
+  {
+      return $Class.new( testplan =&amp;gt; $plan, output =&amp;gt; $output );
+  }
+
+  submethod BUILD
+  (
+      Test::Builder::TestPlan ?$.testplan,
+      Test::Builder::Output   ?$.output = Test::Builder::Output.new()
+  )
+  {}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Those test modules that want to use the default &lt;code&gt;$Test&lt;/code&gt; object directly can call &lt;code&gt;Test::Builder::new()&lt;/code&gt; to return the singleton, creating it if necessary. Test modules that need different output or plan objects should call &lt;code&gt;Test::Builder::create()&lt;/code&gt;. (The test suite actually does this.)&lt;/p&gt;
+
+&lt;p&gt;Having removed the &lt;code&gt;Test::Builder&lt;/code&gt; code from &lt;code&gt;Test::Builder::Test&lt;/code&gt;, I revised the latter, as well:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  class Test::Builder::Test-0.2.0
+  {
+      method new (
+          $number,     
+          ?$passed      = 1,
+          ?$skip        = 0,
+          ?$todo        = 0,
+          ?$reason      = &#39;&#39;, 
+          ?$description = &#39;&#39;,
+      )
+      {
+          return ::Test::Builder::Test::TODO.new(
+              description =&amp;gt; $description, passed =&amp;gt; $passed, reason =&amp;gt; $reason
+          ) if $todo;
+
+          return ::Test::Builder::Test::Skip.new(
+              description =&amp;gt; $description, passed =&amp;gt;       1, reason =&amp;gt; $reason
+          ) if $skip;
+
+          return ::Test::Builder::Test::Pass.new(
+              description =&amp;gt; $description, passed =&amp;gt;       1,
+          ) if $passed;
+
+          return ::Test::Builder::Test::Fail.new(
+              description =&amp;gt; $description, passed =&amp;gt;       0,
+          );
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s it. I moved the object attributes into roles. &lt;code&gt;Test::Builder::Test::Base&lt;/code&gt; is the basis for all tests, encapsulating all of the attributes that tests share and providing the important methods:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  role Test::Builder::Test::Base
+  {
+      has Bool $.passed;
+      has Int  $.number;
+      has Str  $.diagnostic;
+      has Str  $.description;
+
+      submethod BUILD (
+          $.description,
+          $.passed,
+          ?$.number     =     0,
+          ?$.diagnostic = &#39;???&#39;,
+      ) {}
+
+      method status returns Hash
+      {
+          return
+          {
+              passed      =&amp;gt; $.passed,
+              description =&amp;gt; $.description,
+          };
+      }
+
+      method report returns Str
+      {
+          my $ok          = $.passed ?? &#39;ok&#39; :: &#39;not ok&#39;;
+          my $description = &amp;quot;- $.description&amp;quot;;
+          return join( &#39; &#39;, $ok, $.number, $description );
+      }
+
+  }
+
+  class Test::Builder::Test::Pass does Test::Builder::Test::Base {}
+  class Test::Builder::Test::Fail does Test::Builder::Test::Base {}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Test::Builder::Test::WithReason&lt;/code&gt; forms the basis for &lt;code&gt;TODO&lt;/code&gt; and &lt;code&gt;SKIP&lt;/code&gt; tests, adding the reason why the developer marked the test as either:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  role Test::Builder::Test::WithReason does Test::Builder::Test::Base
+  {
+      has Str $.reason;
+
+      submethod BUILD ( $.reason ) {}
+
+      method status returns Hash ( $self: )
+      {
+          my $status        = $self.SUPER::status();
+          $status{&amp;quot;reason&amp;quot;} = $.reason;
+          return $status;
+      }
+  }
+
+  class Test::Builder::Test::Skip does Test::Builder::Test::WithReason { ... }
+  class Test::Builder::Test::TODO does Test::Builder::Test::WithReason { ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;what-s-hard&#34;&gt;What&amp;rsquo;s Hard&lt;/h4&gt;
+
+&lt;p&gt;The two greatest difficulties I encountered in this porting effort were in mapping my design to the new Perl 6 way of thinking and in working around Pugs bugs and unsupported features. The former is interesting; it may suggest places where other people will run into difficulties.&lt;/p&gt;
+
+&lt;p&gt;One of the trickiest parts of Perl 6&amp;rsquo;s OO model to understand is the interaction of the &lt;code&gt;new()&lt;/code&gt;, &lt;code&gt;BUILD()&lt;/code&gt;, and &lt;code&gt;BUILDALL()&lt;/code&gt; methods. Perl 5 provides very little in the way of object support beyond &lt;code&gt;bless&lt;/code&gt;. Though having finer-grained control over object creation, initialization, and initializer dispatch will be very useful, remembering the purposes of each method is very important, lest you override the wrong one and end up with an infinite loop or partially initialized object.&lt;/p&gt;
+
+&lt;p&gt;From rereading the design documents, experimenting, picking the brains of other @Larry members, and thinking hard, my rules are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Leave &lt;code&gt;new()&lt;/code&gt; alone.&lt;/p&gt;
+
+&lt;p&gt;This method creates the opaque object. Override it when you don&amp;rsquo;t want to return a new object of this class every time. Don&amp;rsquo;t do initialization here. Don&amp;rsquo;t forget to call &lt;code&gt;SUPER::new()&lt;/code&gt; if you actually want an object.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Override &lt;code&gt;BUILD()&lt;/code&gt; to add initialize attributes for objects of &lt;em&gt;this&lt;/em&gt; class.&lt;/p&gt;
+
+&lt;p&gt;Think of this as an initializer, not a constructor.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Override &lt;code&gt;BUILDALL()&lt;/code&gt; when you want to change the order of initialization.&lt;/p&gt;
+
+&lt;p&gt;I haven&amp;rsquo;t needed this yet and don&amp;rsquo;t expect to.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Pugs-wise, find a good Haskell tutorial, find a really fast machine that can run GHC 6.4, and look for lambdacamel mentors on &lt;em&gt;#pugs&lt;/em&gt;. (My productivity increased when Autrijus told me about Haskell&amp;rsquo;s &lt;code&gt;trace&lt;/code&gt; function. He called it a refreshing desert in the oasis of referential transparency.)&lt;/p&gt;
+
+&lt;h4 id=&#34;what-s-easy&#34;&gt;What&amp;rsquo;s Easy&lt;/h4&gt;
+
+&lt;p&gt;Was this exercise valuable? Absolutely! It reinforced my belief that Perl 6 is not only Perlish, but that it&amp;rsquo;s a fantastic revolution of Perl 5 in several ways:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The object system is much better. Attributes and accessors require almost no syntax, and that only in their declarations. Using attributes feels Perlish, even if it&amp;rsquo;s not manipulating hash keys.&lt;/li&gt;
+&lt;li&gt;Function signatures eliminate a lot of code. My initializers do a lot of work, but they don&amp;rsquo;t take much code. Some even have empty method bodies. This is a big win, except for the poor souls who had to implement the underlying binding code in Pugs. (That took a while.)&lt;/li&gt;
+&lt;li&gt;Roles are fantastic. Sure, I believed in them already, but being able to use them without the hacks required in Perl 5 was even better.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h4&gt;
+
+&lt;p&gt;Schwern and I did put a lot of thought into the Perl 5 redesign we never really did, and my code here really benefits from the lessons I learned from the previous version. Still, even though I wrote code to a moving project that didn&amp;rsquo;t yet support all of the features I wanted, it was a great exercise. &lt;code&gt;Test::Builder&lt;/code&gt; is simpler, shorter, cleaner, and more flexible; it&amp;rsquo;s ready for everything the Perl 6 QA group can throw at it.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Test::Builder&lt;/code&gt; isn&amp;rsquo;t the only Perl 5 module being ported to Perl 6. Other modules include ports of HTTP::Server::Simple, Net::IRC, LWP, and &lt;code&gt;CGI&lt;/code&gt;. There are even ports underway for Catalyst and Maypole.&lt;/p&gt;
+
+&lt;p&gt;Perl 6 isn&amp;rsquo;t ready yet, but it&amp;rsquo;s closer every day. Now&amp;rsquo;s a great time to port some of your code to see how Perl 6 is still Perlish, but a revolutionary step in refreshing new directions.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;chromatic is the author of &lt;a href=&#34;http://onyxneon.com/books/modern_perl/&#34;&gt;Modern Perl&lt;/a&gt;. In his spare time, he has been working on &lt;a href=&#34;http://trendshare.org/how-to-invest/&#34;&gt;helping novices understand stocks and investing&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

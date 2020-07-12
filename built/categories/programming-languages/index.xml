@@ -1,0 +1,1060 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Programming Languages on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/categories/programming-languages/</link>
+    <description>Recent content in Programming Languages on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 27 Oct 2019 12:07:00 +0000</lastBuildDate>
+    <atom:link href="/categories/programming-languages/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>My Perl Wishlist: Invariant Sigils (Part 1)</title>
+      <link>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</link>
+      <pubDate>Sun, 27 Oct 2019 12:07:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</guid>
+      <description>
+
+&lt;p&gt;Pop quiz!  Q: What was my mistake in this line?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is %HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;A: I had the answer right, but I messed up the sigil on &lt;code&gt;HASH&lt;/code&gt;.  It
+should be:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is $HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;#  ^ $, not %&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Unfortunately, on Perl v5.20+, both statements work the same way!  I
+didn&amp;rsquo;t catch the problem until I shipped this code and
+&lt;a href=&#34;http://matrix.cpantesters.org/?dist=vars-i+1.08-TRIAL&#34;&gt;cpantesters&lt;/a&gt;
+showed me my mistake.  It was an easy fix, but it reminded me that Perl&amp;rsquo;s
+&lt;a href=&#34;http://modernperlbooks.com/books/modern_perl/chapter_03.html#variablenamesandsigils&#34;&gt;variant sigils&lt;/a&gt;
+can trip up programmers at any level.  If I could change one thing about
+Perl 5, I would change to invariant sigils.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-current-situation&#34;&gt;The current situation&lt;/h2&gt;
+
+&lt;p&gt;In Perl, the sigil tells you
+&lt;a href=&#34;https://perldoc.perl.org/perlintro.html#Perl-variable-types&#34;&gt;how many things to expect&lt;/a&gt;.
+Scalars such as &lt;code&gt;$foo&lt;/code&gt; are single values.  Any single value in an array
+&lt;code&gt;@foo&lt;/code&gt; or hash &lt;code&gt;%foo&lt;/code&gt;, since it is only one thing,
+&lt;a href=&#34;https://perldoc.perl.org/perldata.html#Variable-names&#34;&gt;also uses &lt;code&gt;$&lt;/code&gt;&lt;/a&gt;,
+so &lt;code&gt;$foo&lt;/code&gt;, &lt;code&gt;@foo&lt;/code&gt;, and &lt;code&gt;%foo&lt;/code&gt; could all refer to different pieces of the
+same variable &amp;mdash; or to different variables.
+This technique of &amp;ldquo;variant sigils&amp;rdquo; works, but confuses
+new Perl users and tripped up yours truly.  To know what you
+are accessing in an array or hash, you have to look at both the sigil
+and the brackets.  As a reminder:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: the first element of array &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0, 1]&lt;/code&gt;: the list &lt;code&gt;($z[0], $z[1])&lt;/code&gt; of two elements from &lt;code&gt;@z&lt;/code&gt; (an &amp;ldquo;array slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt; of two elements from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0, 1]&lt;/code&gt;: the list &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt; of keys and two values from array &lt;code&gt;@z&lt;/code&gt; (a &amp;ldquo;hash slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt; of keys and values from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;make-the-sigils-part-of-the-name&#34;&gt;Make the sigils part of the name&lt;/h2&gt;
+
+&lt;p&gt;To save myself from repeating my errors, I&amp;rsquo;d like the sigil to be part of a
+variable&amp;rsquo;s name.  This is not a new idea; scalars work this way in Perl, bash,
+and &lt;a href=&#34;https://docs.perl6.org/language/101-basics#sigil_and_identifier&#34;&gt;Raku&lt;/a&gt;
+(&lt;a href=&#34;https://github.com/perl6/problem-solving/blob/master/solutions/language/Path-to-Raku.md&#34;&gt;formerly Perl 6&lt;/a&gt;).
+That would make the above table look like:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: the first element of &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Simpler!  Any reference to &lt;code&gt;@z&lt;/code&gt; would always be doing &lt;em&gt;something&lt;/em&gt; with
+the array named &lt;code&gt;@z&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;but-what-about-slices&#34;&gt;But what about slices?&lt;/h2&gt;
+
+&lt;p&gt;Slices such as &lt;code&gt;@z[0,1]&lt;/code&gt; and &lt;code&gt;%z{qw(hello there)}&lt;/code&gt; return multiple
+values from an array or hash.  If sigils &lt;code&gt;@&lt;/code&gt; and &lt;code&gt;%&lt;/code&gt; are no longer
+available for slicing, we need an alternative.
+The Perl family currently provides two models: postfix dereferencing
+(&amp;ldquo;postderef&amp;rdquo;) syntax and postfix adverbs.&lt;/p&gt;
+
+&lt;p&gt;Perl v5.20+ support
+&lt;a href=&#34;https://www.effectiveperlprogramming.com/2014/09/use-postfix-dereferencing/&#34;&gt;postderef&lt;/a&gt;,
+which gives us one option.  Postderef separates the name from the slice:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Valid Perl v5.20+&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{a};      &lt;span style=&#34;color:#75715e&#34;&gt;# Scalar, element at index &amp;#34;a&amp;#34; of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;%{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the key &amp;#34;a&amp;#34; and the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The type of slice comes after the reference, instead of as a sigil
+before the reference.  With non-references, that idea would give us slice
+syntax such as &lt;code&gt;@array@[1,2,3]&lt;/code&gt; or &lt;code&gt;%hash%{a}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Raku gives us another option: &amp;ldquo;adverbs&amp;rdquo; such as
+&lt;a href=&#34;https://docs.perl6.org/language/subscripts#:kv&#34;&gt;&lt;code&gt;:kv&lt;/code&gt;&lt;/a&gt;.  For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl6&#34; data-lang=&#34;perl6&#34;&gt;# Valid Raku
+%hash{&amp;#34;a&amp;#34;}          # Single value, element at index &amp;#34;a&amp;#34; of %hash
+%hash{&amp;#34;a&amp;#34;}:v;       # The same --- just the value
+%hash{&amp;#34;a&amp;#34;}:kv;      # The list including key &amp;#34;a&amp;#34; and the value of the &amp;#34;a&amp;#34; element of %hash&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The adverb (e.g., &lt;code&gt;:kv&lt;/code&gt;) goes in postfix position, immediately
+after the brackets or braces.  Following this model,
+slices would look like &lt;code&gt;@array[1,2,3]:l&lt;/code&gt; or &lt;code&gt;%hash{a}:kv&lt;/code&gt;.  (For clarity,
+I propose &lt;code&gt;:l&lt;/code&gt;, as in &lt;strong&gt;l&lt;/strong&gt;ist, instead of Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt;.  Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt; can return
+a scalar or a list.)&lt;/p&gt;
+
+&lt;p&gt;So, the choices I see are (postderef-inspired / Raku-inspired):&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;What you want&lt;/th&gt;
+&lt;th&gt;No subscript&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; access&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; access&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Scalar&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: a single value from an array&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of values&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: an array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z@[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:l&lt;/code&gt;: the list currently written &lt;code&gt;($z[0], $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z@{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:l&lt;/code&gt;: the list currently written &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of key/value pairs&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: a hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z%[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:kv&lt;/code&gt;: the list currently written &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z%{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:kv&lt;/code&gt;: the list currently written &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;you-can-t-always-get-what-you-want&#34;&gt;You can&amp;rsquo;t always get what you want&lt;/h2&gt;
+
+&lt;p&gt;I prefer the adverb syntax.  It is easy to read, and it draws on
+all the expertise that has gone into the design of Raku.
+However, my preference has to be implementable.
+I&amp;rsquo;m not convinced that it is without major surgery.&lt;/p&gt;
+
+&lt;p&gt;The Perl parser decides how to interpret what is inside the brackets
+depending on the context provided by the slice.
+The parser interprets the &lt;code&gt;...&lt;/code&gt; in &lt;code&gt;@foo[...]&lt;/code&gt; as
+a list (&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L1143-L1148&#34;&gt;ref&lt;/a&gt;).
+In &lt;code&gt;$foo[...]&lt;/code&gt;, the parser sees the &lt;code&gt;...&lt;/code&gt; as a scalar expression
+(&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L958-L960&#34;&gt;ref&lt;/a&gt;).
+For any slice syntax, the Perl parser needs to know the desired
+type of result while parsing the subscript expression.  The adverb form,
+unfortunately, leaves the parser guessing until after the subscript
+is parsed.&lt;/p&gt;
+
+&lt;p&gt;You can, in fact, hack the Perl parser to save the subscript
+until it sees a postfix adverb.  The parser can then apply the correct
+context.  I wrote a
+&lt;a href=&#34;https://github.com/Perl/perl5/compare/9786385e68f7f14df6f4dd0f04d2c72c0d9a2511...cxw42:3cd904788536b445c9c3abe9b469e1b569942051&#34;&gt;proof-of-concept&lt;/a&gt;
+for &lt;code&gt;@arr[expr]:v&lt;/code&gt;.  It doesn&amp;rsquo;t execute any code, but it does parse
+a postfix-adverb slice without crashing!  However, while writing that code,
+I ran across a surprise: new syntax isn&amp;rsquo;t tied to a &lt;code&gt;use v5.xx&lt;/code&gt;
+directive.&lt;/p&gt;
+
+&lt;p&gt;It turns out the Perl parser lets code written against any Perl version
+use the latest syntax.  Both of the following command lines work on Perl v5.30:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ perl -Mstrict -Mwarnings -E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#                           ^ -E: use all the latest features
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;$ perl -Mstrict -Mwarnings -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#75715e&#34;&gt;# (!!!)
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;#                           ^ -e: not the latest features&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The second command line does not &lt;code&gt;use v5.30&lt;/code&gt;, so you can&amp;rsquo;t use &lt;code&gt;say&lt;/code&gt;
+(introduced in v5.10).  However, you can use postderef (from v5.20)!&lt;/p&gt;
+
+&lt;p&gt;Because the parser lets old programs use new syntax, any proposed addition
+to Perl&amp;rsquo;s syntax has to be meaningless in all previous Perl versions.
+A postfix adverb fails this test.  For example, the following is a valid
+Perl program:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;kv&lt;/span&gt; { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kv&amp;#34;&lt;/span&gt; }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @arr &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ? @arr[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]:kv;
+        &lt;span style=&#34;color:#75715e&#34;&gt;# ^^^^^^^^^^^^ valid Perl 5 syntax, but not a slice :(&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;My preferred slice syntax could change the meaning of existing programs,
+so it looks like I can&amp;rsquo;t get my first choice.&lt;/p&gt;
+
+&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+
+&lt;p&gt;This is not the end of the story!  In Part 2, I will dig deeper into
+Perl&amp;rsquo;s parser and tokenizer.  I will share some surprises I discovered
+while investigating postderef.  I will then describe a possible path
+to invariant sigils and the simplicity they can provide.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>When Perl isn&#39;t fast enough</title>
+      <link>http://localhost:1313/article/when-perl-isn-t-fast-enough/</link>
+      <pubDate>Sun, 28 Jan 2018 21:50:37 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/when-perl-isn-t-fast-enough/</guid>
+      <description>
+
+&lt;p&gt;Last year at $work we held a web application &amp;ldquo;bake off&amp;rdquo; competition, in order to find a suitable technology stack for serving some important pages on our website, as fast as possible. Our developers were allowed to compete individually or in a team, and they could use any programming language they wanted.&lt;/p&gt;
+
+&lt;p&gt;The existing solution was based on Perl&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Catalyst&#34;&gt;Catalyst&lt;/a&gt; framework using &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;Template::Toolkit&lt;/a&gt;, and the code had become utterly bloated, to the point at which it took several hundred ms to serve the pages. The issue wasn&amp;rsquo;t with the technology per se: a vanilla Catalyst application can serve responses in under 10ms, the problem was that the application code was shared among several different teams, and as each team added various features and functions, performance degraded.&lt;/p&gt;
+
+&lt;p&gt;The overall aim then, was to see what we could do if we &amp;ldquo;burned it down&amp;rdquo; and started again. The bake off generated a lot of buzz: we were given carte blanche to spend as much time as needed working on it, and it was a lot of fun. We had entries in Python, Go, Java, Haskell, Lua, Node, Elixir and of course, Perl.&lt;/p&gt;
+
+&lt;h1 id=&#34;round-1&#34;&gt;Round 1&lt;/h1&gt;
+
+&lt;p&gt;The goal of the first round was to develop a web application that would respond to certain GET requests by serving a particular template. Much of the template was static, but there was some dynamic logic to it.&lt;/p&gt;
+
+&lt;p&gt;My team built a solution on top of &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt;. We created thin request and response classes in &lt;a href=&#34;https://metacpan.org/pod/Moo&#34;&gt;Moo&lt;/a&gt;, a router coded in C (&lt;a href=&#34;https://metacpan.org/pod/Router::XS&#34;&gt;Router::XS&lt;/a&gt;), and used &lt;a href=&#34;https://metacpan.org/pod/Text::XSlate&#34;&gt;Text::XSlate&lt;/a&gt; for the template. The solution kicked ass - it was able to serve over 10,000 requests per second, and we placed second overall, losing out only to a Java entry.&lt;/p&gt;
+
+&lt;h1 id=&#34;round-2&#34;&gt;Round 2&lt;/h1&gt;
+
+&lt;p&gt;In round 2 things got trickier: our solutions would be required to make several requests to other internal services, in order to formulate the response. Additionally, our solutions would be judged for a &amp;ldquo;joy&amp;rdquo; factor: &lt;em&gt;would developers love working with this stack?&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To satisfy the &amp;ldquo;joy&amp;rdquo; factor, we merged our code with another team&amp;rsquo;s entry, based on &lt;a href=&#34;https://metacpan.org/pod/Kelp&#34;&gt;Kelp&lt;/a&gt;. That gave us a real web framework to develop with, as opposed to the threadbare classes we had developed in round 1.&lt;/p&gt;
+
+&lt;p&gt;The requirement to make several requests to other services hurt us though. The kicker was, we had to make the requests concurrently &lt;em&gt;and&lt;/em&gt; compute concurrently on the responses. This was because the data needed for one request was coming from two separate data stores that could be fetched and processed and rendered concurrently. In other words, we needed threading.&lt;/p&gt;
+
+&lt;p&gt;Perl can do asynchronous programming with modules like &lt;a href=&#34;https://metacpan.org/pod/IO::Async&#34;&gt;IO::Async&lt;/a&gt; or &lt;a href=&#34;https://metacpan.org/pod/Coro&#34;&gt;Coro&lt;/a&gt;, but it&amp;rsquo;s single threaded. You &lt;em&gt;can&lt;/em&gt; compile Perl with &lt;a href=&#34;https://perldoc.perl.org/threads.html&#34;&gt;threads&lt;/a&gt;, which provide multi-threaded computing. They were developed back in the day by Microsoft to enable &lt;a href=&#34;https://perl.apache.org/&#34;&gt;mod_perl&lt;/a&gt; to run on Windows, in lieu of &lt;code&gt;fork()&lt;/code&gt;. Perl&amp;rsquo;s threads work by cloning the Perl interpreter&amp;rsquo;s internal data structures, and passing around a thread context variable to tell Perl which thread is requesting what data. These have predictable drawbacks: they require more system resources because of the cloned data, and each thread runs &lt;em&gt;slower&lt;/em&gt; than a single threaded Perl because of all the thread context checks.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s inability to multi-thread efficiently forced us to stay single-threaded and it really burnt us: the best performing Java and Go entries&amp;rsquo; throughput were within 3% of each other, but our solution was 50% slower.&lt;/p&gt;
+
+&lt;h1 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Perl is such a versatile language: from the terminal, to scripting and application programming, it excels in many areas. We were able to develop a lightning-fast application that competed with, and bested several high performance language competitors. Ultimately though, $work decided to use Go as for this solution we needed a highly scalable, performant stack.&lt;/p&gt;
+
+&lt;p&gt;Perl 6 might be a viable alternative soon. The latest 6.c &lt;a href=&#34;https://perl6.org/downloads/&#34;&gt;release&lt;/a&gt; includes a hybrid (M:N) threading model via a scheduler which comes into play when using &lt;a href=&#34;https://docs.perl6.org/language/concurrency&#34;&gt;higher level constructs&lt;/a&gt;. To bypass the scheduler and get more control, it has a &lt;a href=&#34;https://docs.perl6.org/type/Thread&#34;&gt;Thread&lt;/a&gt; class, for which each instance maps 1:1 with an OS thread. I suspect it is too slow to compete right now, but I will be watching future Perl 6 benchmarks with interest.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+Cover image from &lt;a href=&#34;http://www.psdgraphics.com/psd/rocket-icon-psd/&#34;&gt;psdgraphics.com&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Parse::RecDescent Tutorial</title>
+      <link>http://localhost:1313/pub/2001/06/13/recdecent.html/</link>
+      <pubDate>Wed, 13 Jun 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/06/13/recdecent.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;the-basics&#34;&gt;The Basics&lt;/h3&gt;
+
+&lt;p&gt;Parse::RecDescent is a combination compiler and interpreter. The language it uses can be thought of roughly as a macro language like CPP&amp;rsquo;s, but the macros take no parameters. This may seem limiting, but the technique is very powerful nonetheless. Our macro language looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  macro_name : macro_body
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A colon separates the macro&amp;rsquo;s name and body, and the body can have any combination of explicit strings (&amp;ldquo;string, with optional spaces&amp;rdquo;), a regular expression (&lt;code&gt;/typical (?=perl) expression/&lt;/code&gt;), or another macro that&amp;rsquo;s defined somewhere in the source file. It can also have alternations. So, a sample source file could look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  startrule : day  month /\d+/ # Match strings of the form &amp;quot;Sat Jun 15&amp;quot;
+
+
+  day : &amp;quot;Sat&amp;quot; | &amp;quot;Sun&amp;quot; | &amp;quot;Mon&amp;quot; | &amp;quot;Tue&amp;quot; | &amp;quot;Wed&amp;quot; | &amp;quot;Thu&amp;quot; | &amp;quot;Fri&amp;quot;
+
+
+  month : &amp;quot;Jan&amp;quot; | &amp;quot;Feb&amp;quot; | &amp;quot;Mar&amp;quot; | &amp;quot;Apr&amp;quot; | &amp;quot;May&amp;quot; | &amp;quot;Jun&amp;quot; |
+          &amp;quot;Jul&amp;quot; | &amp;quot;Aug&amp;quot; | &amp;quot;Sep&amp;quot; | &amp;quot;Oct&amp;quot; | &amp;quot;Nov&amp;quot; | &amp;quot;Dec&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Three macros make up this source file: &lt;code&gt;startrule&lt;/code&gt;, &lt;code&gt;dayrule&lt;/code&gt; and &lt;code&gt;monthrule&lt;/code&gt;. The compiler will turn these rules into its internal representation and pass it along to the interpreter. The interpreter then takes a data file and attempts to expand the macros in &lt;code&gt;startrule&lt;/code&gt; to match the contents of the data file.&lt;/p&gt;
+
+&lt;p&gt;The interpreter takes a string like &amp;ldquo;Sat Jun 15&amp;rdquo; and attempts to expand the &lt;code&gt;startrule&lt;/code&gt; macro to match it. If it matches, the interpreter returns a true value. Otherwise, it returns &lt;code&gt;undef&lt;/code&gt;;. Some sample source may be welcome at this point:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+
+
+  use Parse::RecDescent;
+
+
+  # Create and compile the source file
+  $parser = Parse::RecDescent-&amp;gt;new(q(
+    startrule : day  month /\d+/
+
+
+    day : &amp;quot;Sat&amp;quot; | &amp;quot;Sun&amp;quot; | &amp;quot;Mon&amp;quot; | &amp;quot;Tue&amp;quot; | &amp;quot;Wed&amp;quot; | &amp;quot;Thu&amp;quot; | &amp;quot;Fri&amp;quot;
+
+
+    month : &amp;quot;Jan&amp;quot; | &amp;quot;Feb&amp;quot; | &amp;quot;Mar&amp;quot; | &amp;quot;Apr&amp;quot; | &amp;quot;May&amp;quot; | &amp;quot;Jun&amp;quot; |
+            &amp;quot;Jul&amp;quot; | &amp;quot;Aug&amp;quot; | &amp;quot;Sep&amp;quot; | &amp;quot;Oct&amp;quot; | &amp;quot;Nov&amp;quot; | &amp;quot;Dec&amp;quot;
+  ));
+
+
+  # Test it on sample data
+  print &amp;quot;Valid date\n&amp;quot; if $parser-&amp;gt;startrule(&amp;quot;Thu Mar 31&amp;quot;);
+  print &amp;quot;Invalid date\n&amp;quot; unless $parser-&amp;gt;startrule(&amp;quot;Jun 31 2000&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Creating a new Parse::RecDescent instance is done just like any other OO module. The only parameter is a string containing the source file, or &lt;em&gt;grammar&lt;/em&gt;. Once the compiler has done its work, the interpreter can run as many times as necessary. The sample source tests the interpreter on valid and invalid data.&lt;/p&gt;
+
+&lt;p&gt;By the way, just because the parser knows that the string &amp;ldquo;Sat Jun 15&amp;rdquo; is valid, it has no way of knowing if the 15th of June was indeed a Saturday. In fact, the sample grammar would also match &amp;ldquo;Sat Feb 135&amp;rdquo;. The grammar describes form, not content.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-getting-data-getting-data-span&#34;&gt;&lt;span id=&#34;getting data&#34;&gt;Getting Data&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now, this is quite a bit of work to go to simply to match a string. However, much, much more can be done. One element missing from this picture is capturing data. So far the sample grammar can tell if a string matches a regular expression, but it can&amp;rsquo;t tell us what the data it&amp;rsquo;s parsed is. Well, these macros can be told to run perl code when encountered.&lt;/p&gt;
+
+&lt;p&gt;Perl code goes after the end of a rule, enclosed in braces. When the interpreter recognizes a macro such as &lt;code&gt;startrule&lt;/code&gt;, the text matched is saved and passed to the perl code embedded in the grammar.&lt;/p&gt;
+
+&lt;p&gt;Each word or &lt;em&gt;term&lt;/em&gt; of the macro (&amp;lsquo;day&amp;rsquo;, &amp;lsquo;month&amp;rsquo;&amp;hellip;) is saved by the interpreter. &lt;code&gt;dayrule&lt;/code&gt; gets saved into the &lt;code&gt;$item{day}&lt;/code&gt; hash entry, as does &lt;code&gt;monthrule&lt;/code&gt;. The &lt;code&gt;/\d+/&lt;/code&gt; term doesn&amp;rsquo;t have a corresponding name, so its data comes from the &lt;code&gt;@item&lt;/code&gt; array. &lt;code&gt;$item[0]&lt;/code&gt; is always the rule name, so &lt;code&gt;/\d+/&lt;/code&gt; gets saved into &lt;code&gt;$item[3]&lt;/code&gt;. So, code to print the parsed output from our sample &lt;code&gt;startrule&lt;/code&gt; rule looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  startrule : day month /\d+/
+            { print &amp;quot;Day: $item{day} Month: $item{month} Date: $item[3]\n&amp;quot;; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Everything in the parser is run as if it was in the Parse::RecDescent package, so when calling subroutines outside Parse::RecDescent, either qualify them as &lt;code&gt;Package::Name-&amp;gt;my_sub()&lt;/code&gt; or subclass Parse::RecDescent.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-minilanguage-a-mini-language-span&#34;&gt;&lt;span id=&#34;a minilanguage&#34;&gt;A Mini-Language&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;All of the pieces are now in place to create a miniature language, compile, and run code in it. To make matters simple, the language will only have two types of instruction: Assign and Print. A sample &amp;lsquo;Assign&amp;rsquo; instruction could look like &lt;code&gt;foo = 3 + a&lt;/code&gt;. The &amp;lsquo;Print&amp;rsquo; statement will look like &lt;code&gt;print foo / 2&lt;/code&gt;. Add the fact that &lt;code&gt;3 + a&lt;/code&gt; can be arbitrarily long (&lt;code&gt;temp = 3+a/2*4&lt;/code&gt;), and now you&amp;rsquo;ve got a non-trivial parsing problem.&lt;/p&gt;
+
+&lt;p&gt;The easiest instruction to implement is the &amp;lsquo;Print&amp;rsquo; instruction. Assuming for the moment that the right-hand side of the statement (the &lt;code&gt;foo / 2&lt;/code&gt; part of &lt;code&gt;print foo / 2&lt;/code&gt;) already has a rule associated with it (called &amp;lsquo;expression&amp;rsquo;), the &amp;lsquo;Print&amp;rsquo; instruction is very simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  print_instruction : /print/i expression
+                    { print $item{expression}.&amp;quot;\n&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &amp;lsquo;Assign&amp;rsquo; instruction is a little harder to do, because we need to implement variables. We&amp;rsquo;ll do this in a straightforward fashion, storing variable names in a hash. This will live in the main package, and for the sake of exposition we&amp;rsquo;ll call it &lt;code&gt;%VARIABLE&lt;/code&gt;. One caveat to remember is that the perl code runs inside the Parse::RecDescent package, so we&amp;rsquo;ll explicitly specify the &lt;code&gt;main&lt;/code&gt; package when writing the code.&lt;/p&gt;
+
+&lt;p&gt;More complex than the &amp;lsquo;Print&amp;rsquo; instruction, the &amp;lsquo;Assign&amp;rsquo; instruction has three parts: the variable to assign to, an &amp;ldquo;=&amp;rdquo; sign, and the expression that gets assigned to the variable. So, the instruction looks roughly like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  assign_instruction : VARIABLE &amp;quot;=&amp;quot; expression
+                     { $main::VARIABLE{$item{VARIABLE}} = $item{expression} }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Much like we did with the &lt;code&gt;dayrule&lt;/code&gt; rule in the last section, we&amp;rsquo;ll combine the &lt;code&gt;print_instruction&lt;/code&gt; and &lt;code&gt;assign_instruction&lt;/code&gt; into one &lt;code&gt;instruction&lt;/code&gt; rule. The syntax for this should be fairly simple to remember, as it&amp;rsquo;s the same as a Perl regular expression.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  instruction : print_instruction
+              | assign_instruction
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In order to make the &lt;code&gt;startrule&lt;/code&gt; expand to the &lt;code&gt;instruction&lt;/code&gt; rule, we&amp;rsquo;d ordinarily use a rule like &lt;code&gt;startrule : instruction&lt;/code&gt;. However, most languages let you enter more than one instruction in a source file. One way to do this would be to create a recursive rule that would look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  instructions : instruction &amp;quot;;&amp;quot; instructions
+               | instruction
+  startrule : instructions
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;[[JMG: I&amp;rsquo;m sorely tempted to rewrite this chunk, if only &amp;lsquo;cause there&amp;rsquo;s a lot of info here in just one paragraph]]&lt;/p&gt;
+
+&lt;p&gt;Input text like &amp;ldquo;print 32&amp;rdquo; expands as follows: &lt;code&gt;startrule&lt;/code&gt; expands to &lt;code&gt;instructions&lt;/code&gt;. &lt;code&gt;instructions&lt;/code&gt; expands to &lt;code&gt;instruction&lt;/code&gt;, which expands to &lt;code&gt;print_instruction&lt;/code&gt;. Longer input text like &amp;ldquo;a = 5; b = a + 5; print a&amp;rdquo; expands like so: &lt;code&gt;startrule&lt;/code&gt; expands to &lt;code&gt;instructions&lt;/code&gt;. The interpreter looks ahead and chooses the alternative with the semicolon, and parses &amp;ldquo;a = 5&amp;rdquo; into its first instruction. &amp;ldquo;b = a + 5; print a&amp;rdquo; is left in &lt;code&gt;instructions&lt;/code&gt;. This process gets repeated twice until each bit has been parsed into a separate &lt;code&gt;instruction&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If the above seemed complex, Parse::RecDescent has a shortcut available. The above &lt;code&gt;instructions&lt;/code&gt; rule can be collapsed into &lt;code&gt;startrule : instruction(s)&lt;/code&gt;. The &lt;code&gt;(s)&lt;/code&gt; part can simply be interpreted as &amp;ldquo;One or more &lt;code&gt;instruction&lt;/code&gt;s&amp;rdquo;. By itself this assumes only whitespace exists between the different instructionrule;s, but here again, Parse::RecDescent comes to the rescue, by allowing the user to specify a separator regular expression, like &lt;code&gt;(s /;/)&lt;/code&gt;. So, the &lt;code&gt;startrule&lt;/code&gt; actually will use the &lt;code&gt;(s /;/)&lt;/code&gt; syntax.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  startrule : instruction(s /;/)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-the-expression-rule-the-expression-rule-span&#34;&gt;&lt;span id=&#34;the expression rule&#34;&gt;The Expression Rule&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Expressions can be anything from &amp;lsquo;0&amp;rsquo; all the way through &amp;lsquo;a+bar*foo/300-75&amp;rsquo;. Ths range may seem intimidating, but we&amp;rsquo;ll try to break it down into easy-to-digest pieces. Starting simply, an expression can be as simple as a single variable or integer. This would look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  expression : INTEGER
+             | VARIABLE
+             { return $main::VARIABLE{$item{VARIABLE}} }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;VARIABLE&lt;/code&gt; rule has one minor quirk. In order to compute the value of the expression, variables have to be given a value. In order to modify the text parsed, simply have the code return the modified text. In this case, the perl code looks up the variable in &lt;code&gt;%main::VARIABLE&lt;/code&gt; and returns the value of the variable rather than the text.&lt;/p&gt;
+
+&lt;p&gt;Those two lines take care of the case of an expression with a single term. Multiple-term expressions (such as &lt;code&gt;7+5&lt;/code&gt; and &lt;code&gt;foo+bar/2&lt;/code&gt;) are a little harder to deal with. The rules for a single expression like &lt;code&gt;a+7&lt;/code&gt; would look roughly like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  expression : INTEGER OP INTEGER
+             | VARIABLE OP INTEGER
+             | INTEGER OP VARIABLE
+             | VARIABLE OP VARIABLE
+  OP : /[-+*/%]/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This introduces one new term, &lt;code&gt;OP&lt;/code&gt;. This rule simply contains the binary operators &lt;code&gt;/[-+*/%]/&lt;/code&gt;. The above approach works for two terms, and can be extended to three terms or more, but is terribly unwieldy. If you&amp;rsquo;ll remember, the &lt;code&gt;expression&lt;/code&gt; rule already is defined as &lt;code&gt;INTEGER | VARIABLE&lt;/code&gt;, so we can replace the right-hand term with &lt;code&gt;expression&lt;/code&gt;. Replacing the right-hand term with &lt;code&gt;expression&lt;/code&gt; and getting rid of redundant lines results in this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  expression : INTEGER OP expression
+             | VARIABLE OP expression
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;ll hand off the final evaluation to a function outside the Parse::RecDescent package. This function will simply take the &lt;code&gt;@item&lt;/code&gt; list from the interpreter and evaluate the expression. Since the array will look like &lt;code&gt;(3,&#39;+&#39;,5)&lt;/code&gt;. we can&amp;rsquo;t simply say &lt;code&gt;$item[1] $item[2] $item[3]&lt;/code&gt;, since &lt;code&gt;$item[2]&lt;/code&gt; is a scalar variable, not an operator. Instead we&amp;rsquo;ll take the string &lt;code&gt;&amp;quot;$item[1] $item[2] $item[3]&amp;quot;&lt;/code&gt; and evaluate that. This will evaluate the string and return the result. This then gets passed back, and becomes the value of the &lt;code&gt;expression&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  expression : INTEGER OP expression
+             { return main::expression(@item) }
+             | VARIABLE OP expression
+             { return main::expression(@item) }
+
+
+  sub expression {
+    shift;
+    my ($lhs,$op,$rhs) = @_;
+    return eval &amp;quot;$lhs $op $rhs&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That completes our grammar. Testing is fairly simple. Write some code in the new language, like &amp;ldquo;a = 3 + 5; b = a + 2; print a; print b&amp;rdquo;, and pass it to the &lt;code&gt;$parser-&amp;gt;startrule()&lt;/code&gt; method to interpret the string.&lt;/p&gt;
+
+&lt;p&gt;The file included with this article comes with several test samples. The grammar in the tutorial is very simple, so plenty of room to experiment remains. One simple modification is to change the &lt;code&gt;INTEGER&lt;/code&gt; rule to account for floating point numbers. Unary operators (single-term such as &lt;code&gt;sin()&lt;/code&gt;) can be added to the &lt;code&gt;expression&lt;/code&gt; rule, and statements other than &amp;lsquo;print&amp;rsquo; and &amp;lsquo;assign&amp;rsquo; can be added easily.&lt;/p&gt;
+
+&lt;p&gt;Other modifications might include adding strings (some experimental extensions such as &amp;lsquo;&amp;lt;perl_quotelike&amp;gt;&amp;rsquo; may help). Changing the grammar to include parentheses and proper precedence are other possible projects.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-closing-closing-span&#34;&gt;&lt;span id=&#34;closing&#34;&gt;Closing&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Parse::RecDescent is a powerful but difficult-to-undertstand module. Most of this is because parsing a language can be difficult to understand. However, as long as the language has a fairly consistent grammar (or one can be written), it&amp;rsquo;s generally possible to translate it into a grammar that Parse::RecDescent can handle.&lt;/p&gt;
+
+&lt;p&gt;Many languages have their grammars available on the Internet. Grammars can usually be found in search engines under the keyword &amp;lsquo;BNF&amp;rsquo;, standing for &amp;lsquo;Backus-Naur Form&amp;rsquo;. These grammars aren&amp;rsquo;t quite in the form Parse::RecDescent prefers, but can usually be modified to suit.&lt;/p&gt;
+
+&lt;p&gt;When writing your own grammars for Parse::RecDescent, one important rule to keep in mind is that a rule can never have itself as the first term. This makes rules such as &lt;code&gt;statement : statement &amp;quot;;&amp;quot; statements&lt;/code&gt; illegal. This sort of grammar is called &amp;ldquo;left-recursive&amp;rdquo; because a rule in the grammar expands to its left side.&lt;/p&gt;
+
+&lt;p&gt;Left-recursive grammars can usually be rewritten to right-recursive, which will parse cleanly under Parse::RecDescent, but there are classes of grammars thatcant be rewritten to be right-recursive. If a grammar can&amp;rsquo;t be done in Parse::RecDescent, then something like &lt;code&gt;Parse::Yapp&lt;/code&gt; may be more appropriate. It&amp;rsquo;s also possible to coerce &lt;code&gt;yacc&lt;/code&gt; into generating a perl skeleton, supposedly.&lt;/p&gt;
+
+&lt;p&gt;Hopefully some of the shroud of mystery over Parse::RecDescent has been lifted, and more people will use this incredibly powerful module.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; #!/usr/bin/perl -w
+
+
+ use strict;
+ use Parse::RecDescent;
+ use Data::Dumper;
+
+
+ use vars qw(%VARIABLE);
+
+
+ # Enable warnings within the Parse::RecDescent module.
+
+
+ $::RD_ERRORS = 1; # Make sure the parser dies when it encounters an error
+ $::RD_WARN   = 1; # Enable warnings. This will warn on unused rules &amp;amp;c.
+ $::RD_HINT   = 1; # Give out hints to help fix problems.
+
+
+ my $grammar = &amp;lt;&amp;lt;&#39;_EOGRAMMAR_&#39;;
+
+
+   # Terminals (macros that can&#39;t expand further)
+   #
+
+
+   OP       : m([-+*/%])      # Mathematical operators
+   INTEGER  : /[-+]?\d+/      # Signed integers
+   VARIABLE : /\w[a-z0-9_]*/i # Variable
+
+
+   expression : INTEGER OP expression
+              { return main::expression(@item) }
+              | VARIABLE OP expression
+              { return main::expression(@item) }
+              | INTEGER
+              | VARIABLE
+              { return $main::VARIABLE{$item{VARIABLE}} }
+
+
+   print_instruction  : /print/i expression
+                      { print $item{expression}.&amp;quot;\n&amp;quot; }
+   assign_instruction : VARIABLE &amp;quot;=&amp;quot; expression
+                      { $main::VARIABLE{$item{VARIABLE}} = $item{expression} }
+
+
+   instruction : print_instruction
+               | assign_instruction
+
+
+   startrule: instruction(s /;/)
+
+
+ _EOGRAMMAR_
+
+
+ sub expression {
+   shift;
+   my ($lhs,$op,$rhs) = @_;
+   $lhs = $VARIABLE{$lhs} if $lhs=~/[^-+0-9]/;
+   return eval &amp;quot;$lhs $op $rhs&amp;quot;;
+ }
+
+
+ my $parser = Parse::RecDescent-&amp;gt;new($grammar);
+
+
+ print &amp;quot;a=2\n&amp;quot;;             $parser-&amp;gt;startrule(&amp;quot;a=2&amp;quot;);
+ print &amp;quot;a=1+3\n&amp;quot;;           $parser-&amp;gt;startrule(&amp;quot;a=1+3&amp;quot;);
+ print &amp;quot;print 5*7\n&amp;quot;;       $parser-&amp;gt;startrule(&amp;quot;print 5*7&amp;quot;);
+ print &amp;quot;print 2/4\n&amp;quot;;       $parser-&amp;gt;startrule(&amp;quot;print 2/4&amp;quot;);
+ print &amp;quot;print 2+2/4\n&amp;quot;;     $parser-&amp;gt;startrule(&amp;quot;print 2+2/4&amp;quot;);
+ print &amp;quot;print 2+-2/4\n&amp;quot;;    $parser-&amp;gt;startrule(&amp;quot;print 2+-2/4&amp;quot;);
+ print &amp;quot;a = 5 ; print a\n&amp;quot;; $parser-&amp;gt;startrule(&amp;quot;a = 5 ; print a&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Avoid Byte Processing</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide23.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide23.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;C programmers often try to process strings a byte at a time. Don&amp;rsquo;t do that! Perl makes it easy to take data in big bites.&lt;/li&gt;
+&lt;li&gt;Don&amp;rsquo;t use &lt;code&gt;getc&lt;/code&gt;. Grab the whole line and operate on it all at once.&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Even operations traditionally done a char at a time in C, like lexing, should be done differently. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    @chars = split //, $input;
+    while (@chars) {
+      $c = shift @chars;
+      # State machine;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Is far too low level. Try something more like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub parse_expr {
+    local $_ = shift;
+    my @tokens = ();
+    my $paren = 0;
+    my $want_term = 1;
+
+    while (length) {
+        s/^\s*//;
+
+        if (s/^\(//) {
+        return unless $want_term;
+        push @tokens, &#39;(&#39;;
+        $paren++;
+        $want_term = 1;
+        next;
+        } 
+
+        if (s/^\)//) {
+        return if $want_term;
+        push @tokens, &#39;)&#39;;
+        if ($paren &amp;lt; 1) {
+            return;
+        } 
+        --$paren;
+        $want_term = 0;
+        next;
+        } 
+
+        if (s/^and\b//i || s/^&amp;amp;&amp;amp;?//) {
+        return if $want_term;
+        push @tokens, &#39;&amp;amp;&#39;;
+        $want_term = 1;
+        next;
+        } 
+
+        if (s/^or\b//i || s/^\|\|?//) {
+        return if $want_term;
+        push @tokens, &#39;|&#39;;
+        $want_term = 1;
+        next;
+        } 
+
+        if (s/^not\b//i || s/^~// || s/^!//) {
+        return unless $want_term;
+        push @tokens, &#39;~&#39;;
+        $want_term = 1;
+        next;
+        } 
+
+        if (s/^(\w+)//) {
+        push @tokens, &#39;&amp;amp;&#39; unless $want_term;
+        push @tokens, $1 . &#39;()&#39;;
+        $want_term = 0;
+        next;
+        } 
+
+        return;
+
+    }
+    return &amp;quot;@tokens&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide24.html&#34;&gt;Avoid Symbolic References&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide22.html&#34;&gt;Use foreach() Loops&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Avoid Gratuitous Backslashes</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide27.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide27.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Perl lets you choose your own delimiters on quotes and patterns to avoid Leaning Toothpick Syndrome. Use them.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    m#^/usr/spool/m(ail|queue)#
+
+    qq(Moms said, &amp;quot;That&#39;s all, $kid.&amp;quot;)
+
+    tr[a-z]
+      [A-Z];
+
+    s { /          }{::}gx;
+    s { \.p(m|od)$ }{}x;
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide28.html&#34;&gt;Reduce Complexity&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide26.html&#34;&gt;Avoid Testing eof&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Avoid Symbolic References</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide24.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide24.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Beginners often think they want to have a variable contain the name of a variable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $fred    = 23;
+    $varname = &amp;quot;fred&amp;quot;;
+    ++$varname;         # $fred now 24
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;This works sometimes, but is a bad idea. They &lt;strong&gt;only work on global variables&lt;/strong&gt;. Global variables are bad because they can easily collide accidentally.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;They do not work under the use strict pragma&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;They are not true references and consequently are not reference counted or garbage collected.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Use a hash or a real reference instead.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide25.html&#34;&gt;Using A Hash Instead of $$name&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide23.html&#34;&gt;Avoid Byte Processing&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Avoid Testing eof</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide26.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide26.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Don&amp;rsquo;t use this: (deadlock)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    while (!eof(STDIN)) {
+        statements;
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Use this instead:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    while (&amp;lt;STDIN&amp;gt;) {
+        statements;
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Prompting while not eof can be a hassle. Try this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   $on_a_tty = -t STDIN &amp;amp;&amp;amp; -t STDOUT;
+   sub prompt { print &amp;quot;yes? &amp;quot; if $on_a_tty }
+   for ( prompt(); &amp;lt;STDIN&amp;gt;; prompt() ) {
+        statements;
+   }
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide27.html&#34;&gt;Avoid Gratuitous Backslashes&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide25.html&#34;&gt;Using A Hash Instead of $$name&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Break Complex Tasks Up</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide31.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide31.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;Break subroutines into manageable pieces.&lt;/li&gt;
+&lt;li&gt;Don&amp;rsquo;t try to fit everything into one regex.&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Play with your ARGV:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # program expects envariables
+    @ARGV = keys %ENV       unless @ARGV;
+
+    # program  expects source code
+    @ARGV = glob(&amp;quot;*.[chyC]&amp;quot;) unless @ARGV;
+
+    # program tolerates gzipped files
+    # from PCB 16.6
+    @ARGV = map { /^\.(gz|Z)$/ ? &amp;quot;gzip -dc $_ |&amp;quot; : $_  } @ARGV;
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide32.html&#34;&gt;Break Programs into Separate Processes&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide30.html&#34;&gt;Loop Hoisting&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Break Programs into Separate Processes</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide32.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide32.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Learn how to use the special forms of &lt;code&gt;open&lt;/code&gt;. (See also &lt;em&gt;tgent&lt;/em&gt; in TSA).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # from PCB 16.5
+    head(100);
+    sub head {
+        my $lines = shift || 20;
+        return if $pid = open(STDOUT, &amp;quot;|-&amp;quot;);
+        die &amp;quot;cannot fork: $!&amp;quot; unless defined $pid;
+        while (&amp;lt;STDIN&amp;gt;) {
+            print;
+            last if --$lines &amp;lt; 0;
+        }
+        exit;
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide33.html&#34;&gt;Data-Oriented Programming&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide31.html&#34;&gt;Break Complex Tasks Up&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Changing &lt;I&gt;en passant&lt;/I&gt;</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide15.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide15.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;You can copy and change all at once:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    chomp($answer = &amp;lt;TTY&amp;gt;);
+
+    ($a += $b) *= 2;
+
+    # strip to basename
+    ($progname = $0)        =~ s!^.*/!!;
+
+    # Make All Words Title-Cased
+    ($capword  = $word)     =~ s/(\w+)/\u\L$1/g;
+
+    # /usr/man/man3/foo.1 changes to /usr/man/cat3/foo.1
+    ($catpage  = $manpage)  =~ s/man(?=\d)/cat/;
+
+    @bindirs = qw( /usr/bin /bin /usr/local/bin );
+    for (@libdirs = @bindirs) { s/bin/lib/ }
+    print &amp;quot;@libdirs\n&amp;quot;;
+  | /usr/lib /lib /usr/local/lib
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide16.html&#34;&gt;Negative Array Subscripts&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide14.html&#34;&gt;Embrace Pattern Matching&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Closures</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide36.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide36.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Clone similar functions using closures.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # from MxScreen in TSA
+    no strict &#39;refs&#39;;
+    for my $color (qw[red yellow orange green blue purple violet]) {
+        *$color = sub { qq&amp;lt;&amp;lt;FONT COLOR=&amp;quot;\U$color\E&amp;quot;&amp;gt;@_&amp;lt;/FONT&amp;gt;&amp;gt; };
+    }
+    undef &amp;amp;yellow;      # lint happiness
+    *yellow = \&amp;amp;purple; # function aliasing
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Or similarly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # from psgrep (in TSA, or PCB 1.18)
+    my %fields;
+    my @fieldnames = qw(FLAGS UID PID PPID PRI NICE SIZE
+                        RSS WCHAN STAT TTY TIME COMMAND);
+
+    for my $name (@fieldnames) {
+        no strict &#39;refs&#39;;
+        *$name = *{lc $name} = sub () { $fields{$name} };
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide37.html&#34;&gt;Learn to Switch with for&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide35.html&#34;&gt;Functions as Data&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Configuration Files</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide34.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide34.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;If you need a config file, load it with &lt;code&gt;do&lt;/code&gt;.&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;This gives you full Perl power.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # from PCB 8.16
+    $APPDFLT = &amp;quot;/usr/local/share/myprog&amp;quot;;
+    do &amp;quot;$APPDFLT/sysconfig.pl&amp;quot;;
+    do &amp;quot;$ENV{HOME}/.myprogrc&amp;quot;;
+
+    #in config file
+    $NETMASK = &#39;255.255.255.0&#39;;
+    $MTU     = 0x128;
+    $DEVICE  = &#39;cua1&#39;;
+    $RATE    = 115_200;
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide35.html&#34;&gt;Functions as Data&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide33.html&#34;&gt;Data-Oriented Programming&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Data-Oriented Programming</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide33.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide33.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;Data structures are more important than code.&lt;/li&gt;
+&lt;li&gt;Rob Pike says: `Data dominates. If you&amp;rsquo;ve chosen the right data structures and organized things well, the algorithms will almost always be self-evident. Data structures, not algorithms, are central to programming. (See Brooks p. 102.)&amp;rsquo;&lt;/li&gt;
+&lt;li&gt;Capture regularity with data, irregularity with code. (Kernighan)&lt;/li&gt;
+&lt;li&gt;If you see similar functionality in two places, unify it. That is called a `subroutine&amp;rsquo;.&lt;/li&gt;
+&lt;li&gt;Consider making a hash of function pointers to represent a state table or switch statement.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide34.html&#34;&gt;Configuration Files&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide32.html&#34;&gt;Break Programs into Separate Processes&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Defensive Programming</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide4.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide4.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;use strict&lt;/li&gt;
+&lt;li&gt;#!/usr/bin/perl -w&lt;/li&gt;
+&lt;li&gt;Check &lt;strong&gt;all&lt;/strong&gt; syscall return values, printing $!&lt;/li&gt;
+&lt;li&gt;Watch for external program failures in $?&lt;/li&gt;
+&lt;li&gt;Check $@ after &lt;code&gt;eval&amp;quot;&amp;quot;&lt;/code&gt; or &lt;code&gt;s///ee&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Parameter asserts&lt;/li&gt;
+&lt;li&gt;#!/usr/bin/perl -T&lt;/li&gt;
+&lt;li&gt;Always have an &lt;code&gt;else&lt;/code&gt; after a chain of &lt;code&gt;elsif&lt;/code&gt;s&lt;/li&gt;
+&lt;li&gt;Put commas at the end of lists to so your program won&amp;rsquo;t break if someone inserts another item at the end of the list.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide5.html&#34;&gt;The Art of Commenting Code&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide3.html&#34;&gt;Elegance&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Style: Don&#39;t Overdo `?:&#39;</title>
+      <link>http://localhost:1313/doc/FMTEYEWTK/style/slide12.html/</link>
+      <pubDate>Thu, 01 Jan 1998 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/doc/FMTEYEWTK/style/slide12.html/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Using &lt;code&gt;?:&lt;/code&gt; for control flow may get you talked about. Better to use an &lt;code&gt;if/else&lt;/code&gt;. And seldom if ever nest ?:.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # BAD
+    ($pid = fork) ? waitpid($pid, 0) : exec @ARGS;
+
+    # GOOD:
+    if ($pid = fork) {
+        waitpid($pid, 0);
+    } else {
+        die &amp;quot;can&#39;t fork: $!&amp;quot;    unless defined $pid;
+        exec @ARGS;
+        die &amp;quot;can&#39;t exec @ARGS: $!&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Best as an expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $State = (param() != 0) ? &amp;quot;Review&amp;quot; : &amp;quot;Initial&amp;quot;;
+
+    printf &amp;quot;%-25s %s\n&amp;quot;, $Date{$url}
+            ? (scalar localtime $Date{$url})
+            : &amp;quot;&amp;lt;NONE SPECIFIED&amp;gt;&amp;quot;,
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Forward to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide13.html&#34;&gt;Never define &amp;ldquo;TRUE&amp;rdquo; and &amp;ldquo;FALSE&amp;rdquo;&lt;/a&gt;
+&lt;br /&gt;
+Back to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide11.html&#34;&gt;Learn Precedence&lt;/a&gt;
+&lt;br /&gt;
+Up to &lt;a href=&#34;http://localhost:1313/doc/FMTEYEWTK/style/slide-index.html&#34;&gt;index&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Copyright © 1998, Tom Christiansen
+All rights reserved.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

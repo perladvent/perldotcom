@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Fork yeah! </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How to use concurrency safely to make your code faster"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/fork-yeah-/" />
+<meta property="og:title" content="Fork yeah!" />
+<meta property="og:description" content="How to use concurrency safely to make your code faster">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2019-04-04T04:04:04Z" />
+<meta property="og:image" content="http://localhost:1313/images/fork-yeah-/thumb_forkyeah.png" />
+<meta property="og:article:tag" content="fork" />
+<meta property="og:article:tag" content="concurrency" />
+<meta property="og:article:tag" content="parallelism" />
+<meta property="og:article:tag" content="waitpid" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Fork yeah!</h1>
+              <p class="blog-post-meta">Apr 1, 2019 by
+              
+              
+                
+                
+                <a href="#author-bio-david-farrell">David Farrell</a>
+              
+              </p>
+              <img alt="" src="/images/fork-yeah-/forkyeah.png"/>
+                
+
+<p>Recently at work I had to speed up a Perl script that processed files. Perl can spawn multiple processes with the <code>fork</code> function, but things can go awry unless you manage the subprocesses correctly. I added forking to the script and was able to improve the script&rsquo;s throughput rate nearly 10x, but it took me a few attempts to get it right. In this article I&rsquo;m going to show you how to use <code>fork</code> safely and avoid some common mistakes.</p>
+
+<p>N.B. Windows users: as the <code>fork</code> system call is unavailable on Windows, these examples may not work as described, as the behavior is <a href="https://perldoc.perl.org/perlfork.html">emulated</a> by Perl.</p>
+
+<h2 id="a-simple-example">A simple example</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#75715e">#!/usr/bin/perl</span>
+
+<span style="color:#66d9ef">my</span> $pid <span style="color:#f92672">=</span> fork;
+<span style="color:#75715e"># now two processes are executing</span>
+
+<span style="color:#66d9ef">if</span> ($pid <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+  sleep <span style="color:#ae81ff">1</span>;
+  exit;
+}
+
+waitpid $pid, <span style="color:#ae81ff">0</span>;</code></pre></div>
+<p>This script creates a child process with <code>fork</code> which returns the process id of the child to the parent process, and 0 to the (newly created) child process. At this point two processes are executing the remainder of the code, the parent and the child. The clause <code>if ($pid == 0)</code> will be only be true for the child, causing it to execute the if block. The if block simply sleeps for 1 second and the <code>exit</code> function causes the child process to terminate. Meanwhile the parent has skipped over the <code>if</code> block and calls <code>waitpid</code> which will not return until the child exits.</p>
+
+<p><em>N.B.</em> I can replace the <code>sleep</code> calls with any arbitrary processing I want the subprocesses to do, but sleep is a good stand in, as it makes analyzing the program easier.</p>
+
+<p>This is such a simple example, what could go wrong with it? Well for one thing, the <code>fork</code> call may fail if the machine doesn&rsquo;t have enough spare memory. So we need to check for that condition:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#75715e">#!/usr/bin/perl</span>
+
+<span style="color:#66d9ef">my</span> $pid <span style="color:#f92672">=</span> fork;
+die <span style="color:#e6db74">&#34;failed to fork: $!&#34;</span> <span style="color:#66d9ef">unless</span> defined $pid;
+
+<span style="color:#75715e"># now two processes are executing</span>
+
+<span style="color:#66d9ef">if</span> ($pid <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+  sleep <span style="color:#ae81ff">1</span>;
+  exit;
+}
+
+waitpid $pid, <span style="color:#ae81ff">0</span>;</code></pre></div>
+<p>I&rsquo;ve inserted a conditional die statement which will be thrown if <code>fork</code> fails. But is there a deeper problem here? What if instead of sleeping for one second, the child called a function which returned immediately? We might have a race between the parent and the child - if the child exits before the parent calls <code>waitpid</code> what could happen?</p>
+
+<p>It wouldn&rsquo;t be unreasonable to think that the operating system might reuse the child&rsquo;s process id for a different program, and our parent process would suddenly be waiting for an arbitrary process to exit. Not what we had intended at all!</p>
+
+<p>Fortunately this is not a risk: when a child process exits, the operating system is not allowed to reclaim its resources until the parent calls <code>wait</code> (or <code>waitpid</code>) on it, which &ldquo;reaps&rdquo; the child. Secondly <code>waitpid</code> only works on child processes of the calling process: if I pass a pid of a completely separate process, <code>waitpid</code> returns immediately with -1.</p>
+
+<h2 id="multiple-workers">Multiple workers</h2>
+
+<p>As far as concurrency goes, the simple example isn&rsquo;t very good. It only spawns one subprocess and we&rsquo;re unable to scale it with additional processes without re-writing the code. Here&rsquo;s my new version:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#75715e">#!/usr/bin/perl</span>
+
+<span style="color:#66d9ef">my</span> $max_workers <span style="color:#f92672">=</span> shift <span style="color:#f92672">||</span> <span style="color:#ae81ff">1</span>;
+
+<span style="color:#66d9ef">for</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">..</span>$max_workers) {
+  <span style="color:#66d9ef">my</span> $pid <span style="color:#f92672">=</span> fork;
+  die <span style="color:#e6db74">&#34;failed to fork: $!&#34;</span> <span style="color:#66d9ef">unless</span> defined $pid;
+  <span style="color:#66d9ef">next</span> <span style="color:#66d9ef">if</span> $pid;
+
+  sleep <span style="color:#ae81ff">1</span>;
+  exit;
+}
+<span style="color:#66d9ef">my</span> $kid;
+<span style="color:#66d9ef">do</span> {
+  $kid <span style="color:#f92672">=</span> waitpid <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>;
+} <span style="color:#66d9ef">while</span> ($kid <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>);</code></pre></div>
+<p>This script reads an argument for the number of workers, or defaults to 1. It then forks <code>$max_workers</code> number of child processes. Notice how <code>next if $pid</code> causes the parent to jumps to the next loop iteration, where it forks another worker over and over until it exits the loop. Meanwhile the child processes sleep for 1 second and exit.</p>
+
+<p>So whilst the child processes are sleeping, the parent process has to wait for them. Unfortunately now we have more than one child <code>$pid</code> to monitor, so which value should I pass to <code>waitpid</code>? Luckily waitpid has a shortcut for this, I can pass <code>-1</code> as the process id, and it will block until <em>any</em> child process exits, returning the pid of the exiting child. So I wrap this in a <code>do..while</code> loop, which will call <code>waitpid</code> over and over until it returns -1 or zero, both of which indicate there are no more children to reap.</p>
+
+<p>This code is better than the simple example as it can scale to an arbitrary number of worker subprocesses. But it contains (at least) two issues.</p>
+
+<p>Imagine we run this script with 5 workers, it&rsquo;s possible that the <code>fork</code> call may fail as the machine runs out of memory. The parent would then call <code>die</code> printing the error and exiting, but that would leave several child processes still running, with no parent process. These become zombie processes, given the parent process id 1 (init), which calls wait on them cleaning them up.</p>
+
+<p>The second issue is related to using <code>waitpid -1, 0</code> to catch any exiting child process. Imagine this script is run by a wrapper program, which captures its output and streams it to another process. The wrapper program forks a child, which will stream the script&rsquo;s output, then it execs the script in its own parent process, effectively injecting a child process into the script. That will cause my script to hang permanently, as the injected child won&rsquo;t exit until the script finishes.</p>
+
+<h2 id="multiple-workers-redux">Multiple workers, redux</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#75715e">#!/usr/bin/perl</span>
+<span style="color:#66d9ef">use</span> strict;
+<span style="color:#66d9ef">use</span> warnings;
+
+$SIG{INT} <span style="color:#f92672">=</span> $SIG{TERM} <span style="color:#f92672">=</span> <span style="color:#66d9ef">sub</span> { exit };
+
+<span style="color:#66d9ef">my</span> $max_workers <span style="color:#f92672">=</span> shift <span style="color:#f92672">||</span> <span style="color:#ae81ff">1</span>;
+<span style="color:#66d9ef">my</span> $parent_pid <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;$$&#34;</span>;
+
+<span style="color:#66d9ef">my</span> @children;
+<span style="color:#66d9ef">for</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">..</span>$max_workers) {
+  <span style="color:#66d9ef">my</span> $pid <span style="color:#f92672">=</span> fork;
+  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>defined $pid) {
+    warn <span style="color:#e6db74">&#34;failed to fork: $!&#34;</span>;
+    kill <span style="color:#e6db74">&#39;TERM&#39;</span>, @children;
+    exit;
+  }
+  <span style="color:#66d9ef">elsif</span> ($pid) {
+    push @children, $pid;
+    <span style="color:#66d9ef">next</span>;
+  }
+  sleep <span style="color:#ae81ff">1</span>;
+  exit;
+}
+wait_children();
+
+<span style="color:#66d9ef">sub</span> <span style="color:#a6e22e">wait_children</span> {
+  <span style="color:#66d9ef">while</span> (scalar @children) {
+    <span style="color:#66d9ef">my</span> $pid <span style="color:#f92672">=</span> $children[<span style="color:#ae81ff">0</span>];
+    <span style="color:#66d9ef">my</span> $kid <span style="color:#f92672">=</span> waitpid $pid, <span style="color:#ae81ff">0</span>;
+    warn <span style="color:#e6db74">&#34;Reaped $pid ($kid)\n&#34;</span>;
+    shift @children;
+  }
+}
+
+<span style="color:#66d9ef">END</span> {
+  <span style="color:#66d9ef">if</span> ($parent_pid <span style="color:#f92672">==</span> $$) {
+    wait_children();
+  }
+}</code></pre></div>
+<p>This is an improved version of my multiple workers script. I&rsquo;ve added signal handlers for INT (press Ctrl-C on the keyboard) and TERM that cause Perl to exit cleanly. If <code>fork</code> fails, the parent sends a TERM to all child processes and then exits itself. I figure that if <code>fork</code> fails, the machine is probably out of memory, and the OOM Killer can&rsquo;t be far away, so it&rsquo;s better to shutdown orderly than have processes meet an untimely end from the Grim (process) Reaper.</p>
+
+<p>The sub <code>wait_children</code> performs a blocking wait call on the pids forked by the parent. This avoids the issue of waiting for child processes not created by the script itself. Note that it doesn&rsquo;t remove any element from <code>@children</code> <em>until</em> the reap is successful. That avoids the error where the script starts running, the parent forks the child processes and shifts <code>@children</code>, starts a blocking waitpid call, then receives an INT/TERM signal, which would cause <code>wait_children</code> to return immediately, and then be called again in the <code>END</code> block, however one of of the pids will now be missing from <code>@children</code> and become a zombie process.</p>
+
+<p>The <code>END</code> block fires when every process exits. If the exiting process is the parent, it will call <code>wait_children</code> again to cleanup any resident subprocesses. In a Real World™ script, with workers that do more than <code>sleep</code>, this might be a good place to add any additional cleanup needed for the child process; such deleting any temporary files created.</p>
+
+<h2 id="wrap-up">Wrap up</h2>
+
+<p>Perl makes it easy to write concurrent code, and easy to make mistakes. If you&rsquo;re not worried about <code>fork</code> failing, I recommend using <a href="https://metacpan.org/pod/Parallel::ForkManager">Parallel::ForkManager</a>, which has a nice interface, tracks the pids it creates for you, and provides a data-sharing mechanism for subprocesses.</p>
+
+<p>If you&rsquo;re writing concurrent Perl and struggling, run your code with:</p>
+
+<pre><code>$ strace -e process,signal /path/to/your/program
+</code></pre>
+
+<p>so you can see precisely when child processes are exiting and what signals are being sent.</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/fork">fork</a></div>
+                
+                  <div class="tag"><a href="/tags/concurrency">concurrency</a></div>
+                
+                  <div class="tag"><a href="/tags/parallelism">parallelism</a></div>
+                
+                  <div class="tag"><a href="/tags/waitpid">waitpid</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-david-farrell">
+  <div class="col-sm-2">
+    
+    <a href="/authors/david-farrell/"><div class="circle-avatar" style="background-image:url(/images/author/david-farrell.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/david-farrell/"><h3>David Farrell</h3></a>
+    <p>David is the editor of Perl.com. An organizer of the <a href="http://www.meetup.com/The-New-York-Perl-Meetup-Group/">New York Perl Meetup</a>, he works for ZipRecruiter as a software developer, and sometimes <a href="https://twitter.com/perltricks">tweets</a> about Perl and Open Source.</p>
+    <h5><a href="/authors/david-farrell/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/fork-yeah-.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

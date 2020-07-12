@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Macos on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/macos/</link>
+    <description>Recent content in Macos on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 17 Jun 2019 21:00:00 +0000</lastBuildDate>
+    <atom:link href="/tags/macos/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Quoting the Shell</title>
+      <link>http://localhost:1313/article/quoting-the-shell/</link>
+      <pubDate>Mon, 17 Jun 2019 21:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/quoting-the-shell/</guid>
+      <description>
+
+&lt;p&gt;By some alignment of the stars, lately I&amp;rsquo;ve run into the same problem in different contexts and in different projects this year. What happens in an external command when an argument has spaces or other special characters?&lt;/p&gt;
+
+&lt;p&gt;Ever wonder why web forms have weird restrictions on whitespace? It&amp;rsquo;s probably because the backend can&amp;rsquo;t deal with values with whitespace or other special characters. Or, at some point the programmer dealt with such a system and it scarred them for life; they are spacephobic. The mechanics of some underlying mechanism leak through and infect the application-level experience.&lt;/p&gt;
+
+&lt;p&gt;We tend to assume that we can interpolate strings into a command line and everything will be fine, even if we actually know how that can be dangerous. I explain some of those dangers in &lt;a href=&#34;https://www.masteringperl.org&#34;&gt;Mastering Perl&lt;/a&gt; when I write about Perl&amp;rsquo;s taint checking. You can also read about some of that in &lt;a href=&#34;https://perldoc.perl.org/perlsec.html&#34;&gt;perlsec&lt;/a&gt;. I&amp;rsquo;ll ignore all that for this short article.&lt;/p&gt;
+
+&lt;p&gt;My example here uses a macOS command that I have been playing with, but this applies to just about any Unix-ish external command. On Windows, you have additional concerns because you have to know what &lt;code&gt;cmd&lt;/code&gt; is going to do as well has a particular program will handle its own argument string.&lt;/p&gt;
+
+&lt;h2 id=&#34;doing-it-the-wrong-way&#34;&gt;Doing it the wrong way&lt;/h2&gt;
+
+&lt;p&gt;Consider this slightly contrived snippet. I&amp;rsquo;m using James Berry&amp;rsquo;s &lt;a href=&#34;https://github.com/jdberry/tag&#34;&gt;tag&lt;/a&gt;. It&amp;rsquo;s a command-line tool that can reliably set and retrieve the names of file labels. Run it with a filename and it returns the filename and a list of labels:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tag vicunas.txt
+vicunas.txt                    	Orange
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here&amp;rsquo;s what that directory looks like in &lt;a href=&#34;https://cocoatech.com/#/&#34;&gt;Path Finder&lt;/a&gt;, my favorite Finder replacement.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/quoting-the-shell/first_finder_window.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;My task involved lots of files. Like most people, I&amp;rsquo;d like the capture of text from command-line tools to be effortless. I&amp;rsquo;ll often reach for backticks and a simple construction of a command:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`tag $file`&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $result;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Even though I know intellectually that this won&amp;rsquo;t always work, I wrote it that way initially because it&amp;rsquo;s easy. I took a shortcut and it ended up biting. When I run my program, some of the calls have problems:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl shellwords.pl *
+alpaca.pl
+butterfly.p6
+camel.txt                      	Green
+sh: -c: line 0: syntax error near unexpected token `(&#39;
+sh: -c: line 0: `tag has (parens).txt&#39;
+
+tag: The file “has” couldn’t be opened because there is no such file.
+
+llama.pl
+shellwords.pl
+vicunas.txt                    	Orange
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We tend to write the easiest thing first even though we know it will have problems later. Some people call this &lt;a href=&#34;https://www.martinfowler.com/bliki/TechnicalDebt.html&#34;&gt;technical debt&lt;/a&gt;; I call it being lazy. And we all do it.&lt;/p&gt;
+
+&lt;p&gt;Consider what those failing commands look like. The &amp;ldquo;weird&amp;rdquo; filenames don&amp;rsquo;t look like a single argument to the command. One of them is even suspicious. And I think I have many more parens in filenames than anyone ever envisioned:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tag has spaces.txt
+$ has (parens).txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;naive-fixes&#34;&gt;Naive fixes&lt;/h2&gt;
+
+&lt;p&gt;There&amp;rsquo;s an easy fix; I&amp;rsquo;ll just put quotes around it. That works for a while because I&amp;rsquo;m really just playing the odds that the edge cases will be rare:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`tag &amp;#34;$file&amp;#34;`&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $result;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;But it fails again when I have a file with a quote in the filename. That&amp;rsquo;s also much less rare than people imagine. For example, I tend to save webpages in a way where their title becomes the file name. How many times am I going to fix this problem?&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/quoting-the-shell/second_finder_window.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;alpaca.pl
+butterfly.p6
+camel.txt                      	Green
+sh: -c: line 0: unexpected EOF while looking for matching `&amp;quot;&#39;
+sh: -c: line 1: syntax error: unexpected end of file
+
+has (parens).txt
+has spaces.txt                 	Blue
+llama.pl
+shellwords.pl
+vicunas.txt                    	Orange
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At one point I figured that I&amp;rsquo;d just &lt;a href=&#34;https://perldoc.perl.org/functions/quotemeta.html&#34;&gt;quotemeta&lt;/a&gt; the whole thing even though I knew that was designed to protect strings in regular expressions:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`tag &amp;#34;\Q$file\E&amp;#34;`&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $result;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That doesn&amp;rsquo;t work either. Now none of the files match:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;tag: The file “alpaca\.pl” couldn’t be opened because there is no such file.
+tag: The file “butterfly\.p6” couldn’t be opened because there is no such file.
+tag: The file “camel\.txt” couldn’t be opened because there is no such file.
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The better fix is to escape only the delimiter. This uses a separate statement to do that:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $quoted_file &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $file &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/&amp;#34;/\\&amp;#34;/g&lt;/span&gt;r;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`tag &amp;#34;$quoted_file&amp;#34;`&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $result;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It looks like it works (although I wouldn&amp;rsquo;t bet my life on it based on my performance with this task so far):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;alpaca.pl
+butterfly.p6
+camel.txt                      	Green
+has &amp;quot; quote.txt
+has (parens).txt
+has spaces.txt                 	Blue
+llama.pl
+shellwords.pl
+vicunas.txt                    	Orange
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I could put that inline with the command, although it&amp;rsquo;s a bit ugly. I get the modified string in an anonymous array reference (the square braces) and dereference that immediately in the string:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`tag &amp;#34;@{[ $file =~ s/&amp;#34;/\\&amp;#34;/gr ]}&amp;#34;`&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $result;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Blerg. That works in this case but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). And it probably misses some other special cases, such as &lt;code&gt;$&lt;/code&gt; for shell interpolation and shell backticks. Single quotes might fix that in Unix but won&amp;rsquo;t in Windows. I&amp;rsquo;ll show &lt;a href=&#34;https://metacpan.org/pod/String::ShellQuote&#34;&gt;String::ShellQuote&lt;/a&gt; later.&lt;/p&gt;
+
+&lt;p&gt;I can open a pipe to the command and specify the command and its arguments as a list. This requires neither quoting nor escaping anything because each argument in Perl is one argument in the command (like &lt;a href=&#34;https://perldoc.perl.org/functions/system.html&#34;&gt;system&lt;/a&gt; in its list form):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	open &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fh, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;-|&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tag&amp;#39;&lt;/span&gt;, $file;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$fh&amp;gt;&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $result;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;How much work was this to get right? Hardly any. It&amp;rsquo;s annoying to do this little bit more, but it&amp;rsquo;s much less painful than a bunch of support tickets or angry mobs at your desk.&lt;/p&gt;
+
+&lt;p&gt;If I didn&amp;rsquo;t need the output, I could have used &lt;code&gt;system&lt;/code&gt; (or &lt;code&gt;exec&lt;/code&gt;) in  list forms. In that case, the &lt;code&gt;system&lt;/code&gt; completely bypasses the shell:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	system &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tag&amp;#39;&lt;/span&gt;, $file;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Be careful with an array, though! An array of one element is not the list form! There&amp;rsquo;s a slightly weird syntax to get around this. But the first array element in braces followed by the array. I explain this more in the &amp;ldquo;Secure Programming Techniques&amp;rdquo; chapter of &lt;a href=&#34;https://www.masteringperl.org&#34;&gt;Mastering Perl&lt;/a&gt;, but the &lt;a href=&#34;https://perldoc.perl.org/functions/exec.html&#34;&gt;exec docs&lt;/a&gt; explain it too:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tag $file&amp;#34;&lt;/span&gt; );
+system @array;  &lt;span style=&#34;color:#75715e&#34;&gt;# not list form!&lt;/span&gt;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ( &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tag&amp;#39;&lt;/span&gt;, $file );
+system @array;  &lt;span style=&#34;color:#75715e&#34;&gt;# now it&amp;#39;s the list form!&lt;/span&gt;
+
+system { $array[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] } @array&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Remember, it doesn&amp;rsquo;t matter as much how rare the edge case is; it matters how damaging it is. Some things I can&amp;rsquo;t control, but this situation is not one of those things. A couple minutes here saves lots of time and money later.&lt;/p&gt;
+
+&lt;h2 id=&#34;using-modules&#34;&gt;Using modules&lt;/h2&gt;
+
+&lt;p&gt;There are some modules that can do this sort of stuff for you (with the risk of an additional dependency). Dan Book suggested this example with &lt;a href=&#34;https://metacpan.org/pod/String::ShellQuote&#34;&gt;String::ShellQuote&lt;/a&gt;. which handles Bourne shell issues (sorry zsh):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; String::ShellQuote;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $quoted_file &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shell_quote $file;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`tag $quoted_file`&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $result;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;He also suggested &lt;a href=&#34;https://metacpan.org/pod/IPC::ReadpipeX&#34;&gt;IPC::ReadpipeX&lt;/a&gt;. Look under the hood and you&amp;rsquo;ll find that pipe open again:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IPC::ReadpipeX;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;  readpipex &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tag&amp;#39;&lt;/span&gt;, $quoted_file&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;`&lt;/span&gt;;
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $result;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&#34;capturing-output-with-modules&#34;&gt;Capturing output with modules&lt;/h2&gt;
+
+&lt;p&gt;I can run external commands with arguments with the core module &lt;a href=&#34;https://metacpan.org/pod/IPC::Open3&#34;&gt;IPC::Open3&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; IPC::Open3;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $pid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; open3(
+		undef, &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $out, &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $err,
+		 &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tag&amp;#39;&lt;/span&gt;, $file
+		);
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;$out&amp;gt;&lt;/span&gt;;
+	waitpid( $pid, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; );
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $result;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The CPAN module &lt;a href=&#34;https://metacpan.org/pod/Capture::Tiny&#34;&gt;Capture::Tiny&lt;/a&gt; can do the same thing with a slightly more pleasing interface (at the cost of an external dependency):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Capture::Tiny &lt;span style=&#34;color:#e6db74&#34;&gt;qw(capture_stdout)&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;foreach&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $file ( @ARGV ) {
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; capture_stdout { system &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;tag&amp;#39;&lt;/span&gt;, $file };
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; $result;
+	}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&#34;a-dream&#34;&gt;A dream&lt;/h2&gt;
+
+&lt;p&gt;I&amp;rsquo;ve always wanted an even simpler way to construct these strings. I&amp;rsquo;d love to have &lt;a href=&#34;https://perldoc.pl/functions/sprintf&#34;&gt;sprintf&lt;/a&gt;-like syntax to interpolate strings in all sorts of special ways. I even have maintainership of &lt;a href=&#34;https://metacpan.org/pod/String::Sprintf&#34;&gt;String::Sprintf&lt;/a&gt; although I&amp;rsquo;ve done nothing with it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# some fictional world&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $command &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%C @a&amp;#39;&lt;/span&gt;, $command, @args;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+Cover image © &lt;a href=&#34;https://www.flickr.com/photos/psyberartist/6686826117/in/photolist-bbTJrt-28sUivg-4pmCYD-9mdKd7-7VxQhR-4CVtdx-6vrn8j-4z5Bhr-4z9Nv5-my&#34;&gt;psyberartist&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

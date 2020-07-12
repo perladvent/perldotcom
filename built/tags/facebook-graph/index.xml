@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Facebook Graph on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/facebook-graph/</link>
+    <description>Recent content in Facebook Graph on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 04 Apr 2011 18:03:13 -0800</lastBuildDate>
+    <atom:link href="/tags/facebook-graph/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Writing on Walls with Facebook::Graph</title>
+      <link>http://localhost:1313/pub/2011/04/writing-on-walls-with-facebookgraph.html/</link>
+      <pubDate>Mon, 04 Apr 2011 18:03:13 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/04/writing-on-walls-with-facebookgraph.html/</guid>
+      <description>&lt;p&gt;In my first article about &lt;a href=&#34;https://metacpan.org/pod/Facebook::Graph&#34;&gt;Facebook::Graph&lt;/a&gt;, I showed you how to &lt;a href=&#34;http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html&#34;&gt;use Facebook as an authentication mechanism for your site&lt;/a&gt;. This time let me show you how to build on that authentication to post something to a user&amp;rsquo;s Facebook wall.&lt;/p&gt;
+
+&lt;p&gt;First things first. The application needs additional permissions from the user. The previous app requested only basic rights to view the most basic of information about the user. Any app that wants to post to auser&amp;rsquo;s wall needs to ask the user for permission to post to their wall. Replace the existing login method with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb
+        -&amp;gt;authorize
+        -&amp;gt;extend_permissions( qw(publish_stream) )
+        -&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only difference between this version and the original is the &lt;code&gt;extend_permissions&lt;/code&gt; line which asks for &lt;code&gt;publish_stream&lt;/code&gt; access. Facebook maintains &lt;a href=&#34;http://developers.facebook.com/docs/authentication/permissions/&#34;&gt;a table of Facebook application permissions&lt;/a&gt; and their implications.&lt;/p&gt;
+
+&lt;p&gt;When a user grants this additional permission, the application can post almost anything to the user&amp;rsquo;s wall. For example, if you have a shop of some kind, you could post something to a user&amp;rsquo;s wall after a purchase:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+$fb-&amp;gt;add_post
+  -&amp;gt;set_message(&#39;I just bought Widget X from The Cool Shop for only $4.99.&#39;)
+  -&amp;gt;publish;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or more descriptive:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$fb-&amp;gt;add_post
+  -&amp;gt;set_message(&#39;I just bought Widget X from The Cool Shop for only $4.99.&#39;)
+  -&amp;gt;set_picture_uri(&#39;http://images.coolshop.com/widgetx.jpg&#39;),
+  -&amp;gt;link_uri(&#39;http://www.coolshop.com/products/widget-x&#39;),
+  -&amp;gt;link_caption(&#39;Widget X&#39;)
+  -&amp;gt;publish;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you publish links, do yourself a favor by making sure the page you are linking uses &lt;a href=&#34;http://ogp.me/&#34;&gt;Open Graph Protocol&lt;/a&gt; meta tags. Facebook can refer to these tags, and will therefore link that metadata into your post, which means if anybody posts your link &lt;em&gt;&lt;a href=&#34;http://www.coolshop.com/products/widget-x&#34;&gt;http://www.coolshop.com/products/widget-x&lt;/a&gt;&lt;/em&gt; into a Facebook post, it will automatically pull in images, description, and other things.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Make sure whatever you post abides by &lt;a href=&#34;http://developers.facebook.com/policy/&#34;&gt;Facebook&amp;rsquo;s Platform Polices&lt;/a&gt;. If you don&amp;rsquo;t, Facebook can and will ban your application.&lt;/p&gt;
+
+&lt;p&gt;This works well for posting something to Facebook when a logged-in user performs an action in your application, but but what if you want to post something &lt;em&gt;not&lt;/em&gt; as the result of a direct user action? Maybe your site isn&amp;rsquo;t a shop. Maybe it&amp;rsquo;s a reminders site that posts stuff like &amp;ldquo;Happy Birthday Maggie!&amp;rdquo; or a random quote of the day. To post on behalf of the user even when they aren&amp;rsquo;t logged in to your site, you must request offline access. This requires another update to the login page:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb
+        -&amp;gt;authorize
+        -&amp;gt;extend_permissions( qw(offline_access publish_stream) )
+        -&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see the &lt;code&gt;offline_access&lt;/code&gt; permission in addition to &lt;code&gt;publish_stream&lt;/code&gt; this time. Another necessary change is to store the resulting access token in something more robust than a Dancer session this time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/postback/&#39; =&amp;gt; sub {
+    my $params = request-&amp;gt;params;
+    my $fb     = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;request_access_token($params-&amp;gt;{code});
+    session access_token =&amp;gt; $fb-&amp;gt;access_token;
+
+    my $user = $fb-&amp;gt;fetch(&#39;me&#39;);
+
+    database-&amp;gt;quick_insert( &#39;facebook&#39;, {
+        uid          =&amp;gt; $user-&amp;gt;{uid},=20
+        name         =&amp;gt; $user-&amp;gt;{name},=20
+        access_token =&amp;gt; $fb-&amp;gt;access_token,
+       }
+    );
+    redirect &#39;/&#39;;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In addition to storing the &lt;code&gt;access_token&lt;/code&gt; in a Dancer session, the code also stores it in a database table for future reference (using &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::Database&#34;&gt;Dancer::Plugin::Database&lt;/a&gt;, which is a wrapper around &lt;a href=&#34;https://metacpan.org/pod/DBI&#34;&gt;DBI&lt;/a&gt;). This sort of thing can be good for other reasons too. For example, Facebook recommends caching data that you fetch from it for faster response times. If you want to display the user&amp;rsquo;s name on every page, it&amp;rsquo;s much faster to pull it out of the local database based upon the access token you have in your Dancer session than it is to request it from Facebook again.&lt;/p&gt;
+
+&lt;p&gt;As you can see, &lt;code&gt;Facebook::Graph&lt;/code&gt; makes it quite easy to post to Facebook on behalf of your users. Stay tuned for Part III, where I&amp;rsquo;ll show you how to publish calendar events and RSVP to them.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Facebook Authentication with Perl and Facebook::Graph</title>
+      <link>http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html/</link>
+      <pubDate>Tue, 15 Mar 2011 10:17:51 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html/</guid>
+      <description>&lt;p&gt;Basic integration of software and web sites with Facebook, Twitter, and other social networking systems has become a litmus test for business these days. Depending on the software or site you might need to fetch some data, make a post, create events, upload photos, or use one or more of the social networking sites as a single sign-on system. This series will show you how to do exactly those things on Facebook using &lt;a href=&#34;https://metacpan.org/pod/Facebook::Graph&#34;&gt;Facebook::Graph&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This first article starts small by using Facebook as an authentication mechanism. There are certainly simpler things to do, but this is one of the more popular things people want to be able to do. Before you can do anything, you need to have a Facebook account. Then &lt;a href=&#34;http://apps.facebook.com/developer&#34;&gt;register your new application&lt;/a&gt; (Figure 1).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_03_facebook-authentication-with-perl-and-facebookgraph/register_app.png&#34; alt=&#34;registering a Facebook application&#34; width=&#34;696&#34; height=&#34;209&#34; /&gt;
+&lt;em&gt;Figure 1. Registering a Facebook application.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Then fill out the &amp;ldquo;Web Site&amp;rdquo; section of your new app (Figure 2).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_03_facebook-authentication-with-perl-and-facebookgraph/register_website.png&#34; alt=&#34;registering your application&amp;#39;s web site&#34; width=&#34;740&#34; height=&#34;224&#34; /&gt;
+&lt;em&gt;Figure 2. Registering your application&amp;rsquo;s web site.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Registering an application with Facebook gives you a unique identifier for your application as well as a secret key. This allows your app to communicate with Facebook and use its API. Without it, you can&amp;rsquo;t do much (besides screen scraping and hoping).&lt;/p&gt;
+
+&lt;p&gt;Now you&amp;rsquo;re ready to start creating your app. I&amp;rsquo;ve used the &lt;a href=&#34;http://perldancer.org/&#34;&gt;Dancer web app framework&lt;/a&gt;, but feel free to use your favorite. Start with a basic Dancer module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package MyFacebook;
+
+use strict;
+use Dancer &#39;:syntax&#39;;
+use Facebook::Graph;
+
+get &#39;/&#39; =&amp;gt; sub {
+  template &#39;home.tt&#39;
+};
+
+true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s sufficient to give the app a home page. The next step is to force people to log in if they haven&amp;rsquo;t already:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;before sub {
+    if (request-&amp;gt;path_info !~ m{^/facebook}) {
+        if (session-&amp;gt;{access_token} eq &#39;&#39;) {
+            request-&amp;gt;path_info(&#39;/facebook/login&#39;)
+        }
+    }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This little bit of Dancer magic says that if the path is not &lt;code&gt;/facebook&lt;/code&gt; and the user has no access_token attached to their session, then redirect them to our login page. Speaking of our login page, create that now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/login&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+    redirect $fb-&amp;gt;authorize-&amp;gt;uri_as_string;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This creates a page that will redirect the user to Facebook, and ask them if it&amp;rsquo;s ok for the app to use their basic Facebook information. That code passes &lt;code&gt;Facebook::Graph&lt;/code&gt; some configuration information, so remember to add a section to Dancer&amp;rsquo;s &lt;em&gt;config.yml&lt;/em&gt; to keep track of that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;facebook:
+    postback: &amp;quot;http://www.madmongers.org/facebook/postback/&amp;quot;
+    app_id: &amp;quot;XXXXXXXXXXXXXXXX&amp;quot;
+    secret: &amp;quot;XXXXXXXXXXXXXXXXXXXXXXXXXXX&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember, you get the app_id and the secret from Facebook&amp;rsquo;s developer application after you create the app. The postback tells Facebook where to post back to after the user has granted the app authorization. Note that Facebook requires a slash (/) on the end of the URL for the postback. With Facebook ready to post to a URL, it&amp;rsquo;s time to create it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/facebook/postback/&#39; =&amp;gt; sub {
+    my $authorization_code = params-&amp;gt;{code};
+    my $fb                 = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;request_access_token($authorization_code);
+    session access_token =&amp;gt; $fb-&amp;gt;access_token;
+    redirect &#39;/&#39;;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;NOTE: I know it&amp;rsquo;s called a postback, but for whatever reason Facebook does the &lt;code&gt;POST&lt;/code&gt; as a &lt;code&gt;GET&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Facebook&amp;rsquo;s postback passes an authorization code—a sort of temporary password. Use that code to ask Facebook for an access token (like a session id). An access token allows you to request information from Facebook &lt;em&gt;on behalf of the user&lt;/em&gt;, so all of those steps are, essentially, your app logging in to Facebook. However, unless you store that access token to use again in the future, the next request to Facebook will log you out. Therefore, the example shoves the access token into a Dancer session to store it for future use before redirecting the user back to the front page of the site.&lt;/p&gt;
+
+&lt;p&gt;NOTE: The access token we have will only last for two hours. After that, you have to request it again.&lt;/p&gt;
+
+&lt;p&gt;Now you can update the front page to include a little bit of information from Facebook. Replace the existing front page with this one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;get &#39;/&#39; =&amp;gt; sub {
+    my $fb = Facebook::Graph-&amp;gt;new( config-&amp;gt;{facebook} );
+
+    $fb-&amp;gt;access_token(session-&amp;gt;{access_token});
+
+    my $response = $fb-&amp;gt;query-&amp;gt;find(&#39;me&#39;)-&amp;gt;request;
+    my $user     = $response-&amp;gt;as_hashref;
+    template &#39;home.tt&#39;, { name =&amp;gt; $user-&amp;gt;{name} }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code fetches the access token back out of the session and uses it to find out some information about the current user. It passes the name of that user into the home template as a template parameter so that the home page can display the user&amp;rsquo;s name. (How do you know what to request and what responses you get? See the &lt;a href=&#34;http://developers.facebook.com/docs/reference/api/&#34;&gt;Facebook Graph API documentation&lt;/a&gt;.)&lt;/p&gt;
+
+&lt;p&gt;While there is a bit of a trick to using Facebook as an authentication system, it&amp;rsquo;s not terribly difficult. Stay tuned for Part II where I&amp;rsquo;ll show you how to post something to a user&amp;rsquo;s wall.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

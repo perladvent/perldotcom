@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ole on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/ole/</link>
+    <description>Recent content in Ole on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 11 Dec 2014 14:44:25 +0000</lastBuildDate>
+    <atom:link href="/tags/ole/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Automated Internet Explorer screenshots using Win32::OLE</title>
+      <link>http://localhost:1313/article/139/2014/12/11/Automated-Internet-Explorer-screenshots-using-Win32--OLE/</link>
+      <pubDate>Thu, 11 Dec 2014 14:44:25 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/139/2014/12/11/Automated-Internet-Explorer-screenshots-using-Win32--OLE/</guid>
+      <description>
+
+&lt;h3 id=&#34;background&#34;&gt;Background&lt;/h3&gt;
+
+&lt;p&gt;Some time ago I &lt;a href=&#34;http://blog.nu42.com/2012/06/using-win32ole-with-events-to-capture.html&#34;&gt;wrote&lt;/a&gt; about using Perl&amp;rsquo;s Win32::OLE to drive Internet Explorer in response to a &lt;a href=&#34;http://stackoverflow.com/a/11220026/100754&#34;&gt;question&lt;/a&gt; on Stackoverflow.&lt;/p&gt;
+
+&lt;p&gt;At the time I was still clinging to Windows XP. Since then, I have upgraded to Windows 8.1 Pro 64-bit, and instead of using &lt;a href=&#34;http://www.activestate.com/activeperl/ppm-perl-modules&#34;&gt;PPMs&lt;/a&gt; for &lt;a href=&#34;http://www.activestate.com/activeperl&#34;&gt;ActivePerl&lt;/a&gt;, I have been using &lt;a href=&#34;http://blog.nu42.com/2014/11/64-bit-perl-5201-with-visual-studio.html&#34;&gt;Visual Studio 2013&lt;/a&gt; to build &lt;code&gt;perl&lt;/code&gt;, and the modules I need.&lt;/p&gt;
+
+&lt;p&gt;I have been using Perl&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Win32::OLE&#34;&gt;Win32::OLE&lt;/a&gt; to drive Internet Explorer for various purposes for almost 10 years now. There is really not much to it other than having to read copious amounts of Microsoft documentation. It always amazes me how, after all these years, there is no language or environment as well documented as Perl, not just in terms of the amount of information provided, but also the ease with which you can find clear, correct, and useful information.&lt;/p&gt;
+
+&lt;p&gt;In any case, while the organization of the information leaves a lot to be desired, a good starting point for finding information on driving Internet Explorer via OLE is the InternetExplorer object &lt;a href=&#34;http://msdn.microsoft.com/en-us/library/aa752084%28v=vs.85%29&#34;&gt;documentation&lt;/a&gt; on MSDN. If you want to interact with the content within an InternetExplorer object, you can consult the MSHTML Scripting Object Interfaces &lt;a href=&#34;http://msdn.microsoft.com/en-us/library/hh801967%28v=vs.85%29.aspx&#34;&gt;topic&lt;/a&gt;. It also helps to know a little bit about the &lt;a href=&#34;http://msdn.microsoft.com/en-us/library/19z074ky.aspx&#34;&gt;OLE&lt;/a&gt; interface.&lt;/p&gt;
+
+&lt;p&gt;Reading brian d foy&amp;rsquo;s article on &lt;a href=&#34;https://perltricks.com/article/138/2014/12/7/Controlling-Firefox-from-Perl&#34;&gt;controlling Firefox from Perl&lt;/a&gt;, I noticed that Win32::IE::Mechanize has disappeared from CPAN. The &lt;a href=&#34;http://www.perlmonks.org?node_id=1061372&#34;&gt;discussion on PerlMonks&lt;/a&gt; did not make much sense to me, as I remember very clearly using Win32::OLE to drive Internet Explorer 8 for a massive scraping job.&lt;/p&gt;
+
+&lt;p&gt;I decided to look at my old screenshot utility, and see what changes were needed to get it to run on Windows 8, using Internet Explorer 10. My &lt;a href=&#34;https://gist.github.com/nanis/3dac6b386bd056095e12&#34;&gt;revised working script is available in a GitHub gist&lt;/a&gt;. Here, I am going to cover the highlights.&lt;/p&gt;
+
+&lt;h3 id=&#34;tracing-execution&#34;&gt;Tracing execution&lt;/h3&gt;
+
+&lt;p&gt;The idea is to use the &lt;a href=&#34;http://msdn.microsoft.com/en-us/library/aa768283%28v=vs.85%29.aspx&#34;&gt;DWebBrowserEvents2&lt;/a&gt; to figure out the right time to capture the browser window. I decided to see if my answer from 2012 still worked. I pointed it to my personal website, and it failed:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Win32::OLE(0.1712) error 0x80020009: &amp;quot;Exception occurred&amp;quot;
+    in METHOD/PROPERTYGET &amp;quot;StatusText&amp;quot; at iescreenshot.pl line 38.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The cause of the problem lay in accessing the &lt;code&gt;StatusText&lt;/code&gt; property of the &lt;a href=&#34;http://msdn.microsoft.com/en-us/library/aa752084%28v=vs.85%29&#34;&gt;Internet Explorer object&lt;/a&gt;. Apparently, IE10 no longer exposes this property. Well, I had only used it so as to give some idea of what was happening. I decided instead to write a quick logging function which could be used with all events:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;log_browser_event&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $event &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;uninitialized&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $args &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; eval { join(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; map valof($_), @_) };
+    say &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$event: $args&amp;#34;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Not an example of perfect code, but, I am trying to keep this short and sweet.&lt;/p&gt;
+
+&lt;h3 id=&#34;event-handling&#34;&gt;Event handling&lt;/h3&gt;
+
+&lt;p&gt;We are only interested in two events: &lt;a href=&#34;http://msdn.microsoft.com/en-us/library/aa768282%28v=vs.85%29.aspx&#34;&gt;DocumentComplete&lt;/a&gt;, so we know when to take a screenshot, and &lt;a href=&#34;http://msdn.microsoft.com/en-us/library/aa768340%28v=vs.85%29.aspx&#34;&gt;onQuit&lt;/a&gt;, so we can quit cleanly if the user closes the browser window before we get to that point.&lt;/p&gt;
+
+&lt;p&gt;You initialize OLE events using the call:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Win32::OLE&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;WithEvents(
+    $object,
+    $handler,
+    $interface
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then, presumably, your &lt;code&gt;$handler&lt;/code&gt; has some giant switch statement, dispatching on the basis of the actual events received. Instead, I opted for a dispatch table:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;const &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; %BrowserEvents &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; (
+    DocumentComplete &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        $do_take_screenshot &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+        Win32::MessageLoop&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;QuitMessageLoop;
+    },
+    OnQuit &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        $do_take_screenshot &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+        Win32::MessageLoop&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;QuitMessageLoop;
+    },
+    _ &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { },
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Notice the use of &lt;a href=&#34;https://metacpan.org/pod/Win32::MessageLoop&#34;&gt;Win32::MessageLoop-&amp;gt;QuitMessageLoop&lt;/a&gt; instead of &lt;code&gt;Win32::OLE-&amp;gt;QuitMessageLoop&lt;/code&gt; to avoid spurious sleep calls.&lt;/p&gt;
+
+&lt;p&gt;Then, I initialize the OLE events interface using:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;Win32::OLE&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;WithEvents(
+    $browser,
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { $handler&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;\&lt;/span&gt;%BrowserEvents, @_) },
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DWebBrowserEvents2&amp;#39;&lt;/span&gt;
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;$handler&lt;/code&gt; in this case just logs the event, and consults the dispatch table to see if we are interested in the event:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;WebBrowserEventHandler&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $handlers &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $browser &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $event &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+
+    log_browser_event($event, @_);
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $handler &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; exists $handlers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$event}
+                ? $handlers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$event}
+                : $handlers&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{_}
+    ;
+    $handler&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;($browser, $event, @_);
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Upon receiving either &lt;code&gt;DocumentComplete&lt;/code&gt; or &lt;code&gt;onQuit&lt;/code&gt;, we terminate the message loop, which returns control to the navigation function. At that point, the only thing left is to check if we should capture a screenshot. After that, the program terminates.&lt;/p&gt;
+
+&lt;h3 id=&#34;capturing-the-internet-explorer-window&#34;&gt;Capturing the Internet Explorer window&lt;/h3&gt;
+
+&lt;p&gt;When I ran this revised script, and tried to take screenshots using &lt;a href=&#34;https://metacpan.org/pod/Imager::Screenshot&#34;&gt;Imager::Screenshot&lt;/a&gt;, I got screenshots with only the frame of the browser, and none of the content. I am not sure what&amp;rsquo;s going on, and I will try to diagnose that issue later. For now, since I was using the venerable &lt;a href=&#34;https://metacpan.org/pod/Win32::GuiTest&#34;&gt;Win32::GuiTest&lt;/a&gt; module anyway, I decided to use the &lt;code&gt;Win32::GuiTest::DibSect&lt;/code&gt; class it provides:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;take_screenshot&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $browser &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+
+    wait_until_ready($browser);
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $hwnd &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $browser&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{HWND};
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $title &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $browser&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{Document}{title};
+    $title &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s/[^A-Za-z0-9_-]+/-/g&lt;/span&gt;;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ds &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Win32::GuiTest::DibSect&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $fgwnd &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; GetForegroundWindow();
+    SetForegroundWindow $hwnd;
+    $ds&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;CopyWindow($hwnd);
+    SetForegroundWindow $fgwnd;
+
+    $ds&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;SaveAs(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$title.bmp&amp;#34;&lt;/span&gt;);
+    $ds&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;Destroy;
+
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;waiting-for-the-document-to-be-rendered&#34;&gt;Waiting for the document to be rendered&lt;/h3&gt;
+
+&lt;p&gt;With that in place, I was still getting the occasional screenshot with a blank document area. If I understand this correctly, the fact that the &lt;code&gt;DocumentReady&lt;/code&gt; event fired does not mean the document has been fully rendered. It just means that you can manipulate the DOM. So, I added a simple spin loop for the browser to stop being &lt;a href=&#34;http://msdn.microsoft.com/en-us/library/aa752050%28v=vs.85%29&#34;&gt;busy&lt;/a&gt;. This is by no means foolproof, but it has worked for most sites have tried. Sites with a lot of AJAXy stuff tend to have issues with this. There are site-specific ways of dealing with that, but that&amp;rsquo;s beyond the scope of this article.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;wait_until_ready&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $browser &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    {
+        local $| &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; ($browser&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;Busy) {
+            &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;;
+            sleep &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+        }
+    }
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;At this point, you can run the script from the command line with a simple &lt;code&gt;perl iescreenshot.pl perltricks.com&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-webdriver-api&#34;&gt;The WebDriver API&lt;/h3&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://msdn.microsoft.com/en-us/library/ie/dn725045%28v=vs.85%29.aspx&#34;&gt;WebDriver API&lt;/a&gt; might obviate the need for using any other solution to drive Internet Explorer, but, until that is available everywhere, &lt;a href=&#34;https://metacpan.org/pod/Win32::OLE&#34;&gt;Win32::OLE&lt;/a&gt; is more than adequate.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Using &lt;a href=&#34;https://metacpan.org/pod/Win32::OLE&#34;&gt;Win32::OLE&lt;/a&gt; to drive Internet Explorer has been very helpful to me in the past. Taking a screenshot is just a simple, proof-of-concept exercise. The beauty of using Perl is that once you reach a page containing the information you want, you can use Perl&amp;rsquo;s excellent HTML parsing modules to get exactly what you want out of it, and then, say, save it to an Excel worksheet, generate PDF document, or just stuff it in a database somewhere.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

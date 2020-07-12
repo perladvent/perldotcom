@@ -40,7 +40,7 @@ if ($pid == 0) {
 waitpid $pid, 0;
 ```
 
-In this example the second argument to `waitpid` is 0, which is the flags [argument](https://perldoc.perl.org/functions/waitpid.html). But what if we wanted to do additional processing in the parent process, whilst still occasionally checking for reaped children?
+In this example the second argument to `waitpid` is 0, which is the flags [argument]({{</* perlfunc "waitpid" */>}}). But what if we wanted to do additional processing in the parent process, whilst still occasionally checking for reaped children?
 
 The [POSIX]({{< mcpan "POSIX" >}}) module includes the `WNOHANG` constant which makes the `waitpid` call non-blocking. Instead it returns immediately with an integer:
 

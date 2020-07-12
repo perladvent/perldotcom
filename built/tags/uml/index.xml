@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Uml on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/uml/</link>
+    <description>Recent content in Uml on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 03 Aug 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/uml/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Generating UML and Sequence Diagrams</title>
+      <link>http://localhost:1313/pub/2006/08/03/sequence-diagrams.html/</link>
+      <pubDate>Thu, 03 Aug 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/08/03/sequence-diagrams.html/</guid>
+      <description>
+
+&lt;p&gt;Imagine yourself in a meeting with management. You&amp;rsquo;re about to begin your third attempt to explain how to process online credit card payments. After a couple of sentences, you see some eyes glazing over. Someone says, &amp;ldquo;Perhaps you could draw us a picture.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Imagine me handling a recent request from my boss. He came in to the bat cave and said (in summary), &amp;ldquo;We want customers to sign up for email accounts without calling customer service. All the account creation code is in the customer care app.&amp;rdquo; It didn&amp;rsquo;t take long to find the relevant web screen, where the CSR presses Save to kick off the account creation, but there sure were a lot of layers between there and the final result. Keeping them in mind is hard enough when I&amp;rsquo;m deep in the problem. Three months from now, when an odd bug surfaces, it&amp;rsquo;ll be nearly impossible without the right memory aid.&lt;/p&gt;
+
+&lt;p&gt;In both of these cases, the right diagram is the sequence diagram. (I&amp;rsquo;d show you mine for the situations above, but they&amp;rsquo;re secret.) Sequence diagrams clearly show the time flow of method or function calls between modules. For complex systems, these diagrams can save a lot of time&amp;ndash;like the time you and your fellow programmers spend during initial design, the time spent explaining what&amp;rsquo;s possible to management, the time you spend remembering how things work when you revisit an old system that needs a new feature, and especially the time it takes a new programmer in your shop to get up to speed.&lt;/p&gt;
+
+&lt;p&gt;In short, sequence diagrams help with complex call stacks just as data model diagrams help with complex database schema.&lt;/p&gt;
+
+&lt;p&gt;While the sequence diagram is useful to me, I don&amp;rsquo;t like on-screen drawing tools. Therefore, I wrote the original &lt;a href=&#34;https://metacpan.org/pod/UML::Sequence&#34;&gt;&lt;code&gt;UML::Sequence&lt;/code&gt;&lt;/a&gt; to make the drawings for me. With recent help from Dean Arnold, the current version has many nice features and is closer to standards compliance (but, both Dean and I prefer a useful diagram to a compliant one). Using &lt;code&gt;UML::Sequence&lt;/code&gt;, you can quickly make proposed diagrams of systems not yet built. You can even run it against existing programs to have it diagram what they actually do.&lt;/p&gt;
+
+&lt;h3 id=&#34;reading-a-sequence-diagram&#34;&gt;Reading a Sequence Diagram&lt;/h3&gt;
+
+&lt;p&gt;If you already know how to read sequence diagrams, you can skip to the next section.&lt;/p&gt;
+
+&lt;p&gt;Because most uses of UML involve object-oriented projects, that&amp;rsquo;s where I&amp;rsquo;ve drawn my examples. Don&amp;rsquo;t think that objects are necessary for sequence diagrams. I&amp;rsquo;ve diagrammed many non-OO programs with it (including some in COBOL).&lt;/p&gt;
+
+&lt;p&gt;A simple example will work best for a first look at UML sequence diagrams, so consider rolling two dice. My over-engineered solution gives a nice diagram to discuss. In it, I made each die an object of the &lt;code&gt;Die&lt;/code&gt; class and the pair of dice an object of the &lt;code&gt;DiePair&lt;/code&gt; class. To roll the dice, I wrote a little script. Here are these pieces:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Die;
+    use strict;
+
+    sub new {
+        my $class = shift;
+        my $sides = shift || 6;
+        return bless { SIDES =&amp;gt; $sides }, $class;
+    }
+
+    sub roll {
+        my $self       = shift;
+        $self-&amp;gt;{VALUE} = int( rand * $self-&amp;gt;{SIDES} ) + 1;
+
+        return $self-&amp;gt;{VALUE};
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;Die&lt;/code&gt; constructor takes an optional number of sides for the new die object, but supplies six as a default. It bundles that number of sides into a hash reference, blesses, and returns it.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;roll()&lt;/code&gt; method makes a random number and uses it to pick a new value for the die, which it returns.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;DiePair&lt;/code&gt; is equally scintillating:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package DiePair;
+    use strict;
+
+    use Die;
+
+    sub new {
+        my $class     = shift;
+        my $self      = {};
+        $self-&amp;gt;{DIE1} = Die-&amp;gt;new( shift );
+        $self-&amp;gt;{DIE2} = Die-&amp;gt;new( shift );
+
+        return bless $self, $class;
+    }
+
+    sub roll {
+        my $self   = shift;
+        my $value1 = $self-&amp;gt;{DIE1}-&amp;gt;roll();
+        my $value2 = $self-&amp;gt;{DIE2}-&amp;gt;roll();
+
+        $self-&amp;gt;{TOTAL}   = $value1 + $value2;
+        $self-&amp;gt;{DOUBLES} = ( $value1 == $value2 ) ? 1 : 0;
+
+        return $self-&amp;gt;{TOTAL}, $self-&amp;gt;{DOUBLES};
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The constructor makes two die objects and stores them in a hash reference, which it blesses and returns.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;roll()&lt;/code&gt; method rolls each die, storing the value, then totals them and decides whether the roll was doubles. It returns both total and doubles, saving the driver from having to call back for them.&lt;/p&gt;
+
+&lt;p&gt;Rather than modeling a real game like craps, I use a small driver, which will simplify the resulting diagram.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict;
+
+    use DiePair;
+
+    my $die_pair          = DiePair-&amp;gt;new(6, 6);
+    my ($total, $doubles) = $die_pair-&amp;gt;roll();
+
+    print &amp;quot;Your total is $total &amp;quot;;
+    print &amp;quot;it was doubles&amp;quot; if $doubles;
+    print &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Figure 1 shows the sequence diagram for this driver.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2006_08_03_sequence-diagrams/roller.gif&#34; alt=&#34;the sequence diagram for the die roller&#34; /&gt;
+&lt;em&gt;Figure 1. The sequence diagram for the die roller&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Each package has a box at the top of the diagram. The script is in the &lt;code&gt;main&lt;/code&gt; package (which is always Perl&amp;rsquo;s default). Time flows from top to bottom. Arrows represent method (or function) calls.&lt;/p&gt;
+
+&lt;p&gt;The vertical boxes, or &lt;em&gt;activations&lt;/em&gt;, represent the life of a call. Between the activations are dashed lines called the &lt;em&gt;life lines&lt;/em&gt; of the objects.&lt;/p&gt;
+
+&lt;p&gt;You can see that &lt;code&gt;main&lt;/code&gt; begins first (because its first activation is higher than the others). It calls &lt;code&gt;new()&lt;/code&gt; on the &lt;code&gt;DiePair&lt;/code&gt; class. That call lasts long enough for &lt;code&gt;DiePair&lt;/code&gt;&amp;rsquo;s constructor to call &lt;code&gt;new()&lt;/code&gt; on the &lt;code&gt;Die&lt;/code&gt; class twice.&lt;/p&gt;
+
+&lt;p&gt;After making the objects, the script calls &lt;code&gt;roll()&lt;/code&gt; on the &lt;code&gt;DiePar&lt;/code&gt;, which forwards the request to the individual dice.&lt;/p&gt;
+
+&lt;p&gt;This diagram is unorthodox. The boxes at the top &lt;em&gt;should&lt;/em&gt; represent individual instances, not classes. Sometimes I prefer this style because it compacts the diagram horizontally. Figure 2 shows a more orthodox diagram (divergent only in the lack of name underlining).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2006_08_03_sequence-diagrams/rollerinst.gif&#34; alt=&#34;a more orthodox UML diagram&#34; /&gt;
+&lt;em&gt;Figure 2. A more orthodox UML diagram&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;You can see the individual &lt;code&gt;Die&lt;/code&gt; objects that the &lt;code&gt;DiePair&lt;/code&gt; instance aggregates, because there is now a box at the top for each object (use your imagination when thinking about the driver as an instance). The names do not come from the code; they are sequentially assigned from the class name.&lt;/p&gt;
+
+&lt;p&gt;Diagrams like this are especially helpful when many classes interact. For instance, many of them start with a user event (like a button press on a GUI application) and show how the view communicates with the controller and how the controller in turn communicates with the data model.&lt;/p&gt;
+
+&lt;p&gt;Another particularly useful application is for programs communicating via network sockets. In their diagrams, each program has a box, and the arrows represent writing on a socket. Note that UML sequence diagrams may also have dashed arrows, which show return values going back to callers. Unless there is something unusual about that value, there is no use to waste space on the diagram for those returns. However, in a network situation, showing the back and forth can be quite helpful. &lt;code&gt;UML::Sequence&lt;/code&gt; now has support for return arrows.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-uml-sequence&#34;&gt;Using UML::Sequence&lt;/h3&gt;
+
+&lt;p&gt;Now that you understand how to read a sequence diagram, I can show you how to make them without mouse-driven drawing tools.&lt;/p&gt;
+
+&lt;p&gt;Making diagrams with &lt;code&gt;UML::Sequence&lt;/code&gt; is a three-step process:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Create a program or a text file.&lt;/li&gt;
+&lt;li&gt;Use &lt;em&gt;genericseq.pl&lt;/em&gt; to create an XML description of the diagram.&lt;/li&gt;
+&lt;li&gt;Use a rendering script to turn the XML into an image file.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;If the image is in the wrong format for your purposes, you might need an extra step to convert to another format.&lt;/p&gt;
+
+&lt;h4 id=&#34;running-perl-programs&#34;&gt;Running Perl Programs&lt;/h4&gt;
+
+&lt;p&gt;Here is how I generated Figure 1 above by running the driver program. If your program is in Perl, you can use this approach (see the next subsection for Java programs).&lt;/p&gt;
+
+&lt;p&gt;First, create a file listing the subs you want to see in the diagram:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    DiePair::new
+    DiePair::roll
+    Die::new
+    Die::roll
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I called this file &lt;em&gt;roller.methods&lt;/em&gt; to correspond to the script&amp;rsquo;s name, &lt;em&gt;roller&lt;/em&gt;. When you make your method list, remember that sequence diagrams are visual space hogs, so pick a short list of the most important methods.&lt;/p&gt;
+
+&lt;p&gt;Then, run the program through the &lt;code&gt;genericseq.pl&lt;/code&gt; script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ genericseq.pl UML::Sequence::PerlSeq roller.methods roller &amp;gt; roller.xml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/UML::Sequence::PerlSeq&#34;&gt;&lt;code&gt;UML::Sequence::PerlSeq&lt;/code&gt;&lt;/a&gt; uses the Perl debugger&amp;rsquo;s hooks to profile the code as it runs, watching for the methods listed in &lt;em&gt;roller.methods&lt;/em&gt;. The result is an XML file describing the calls that actually happened during this run.&lt;/p&gt;
+
+&lt;p&gt;To turn this into a picture, use one of the image scripts:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ seq2svg.pl roller.xml &amp;gt; roller.svg
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Obviously, &lt;code&gt;seq2svg.pl&lt;/code&gt; makes SVG images. If you have no way to view those, get Firefox 1.5, use a tool like the batik rasterizer, or use &lt;code&gt;seq2rast.pl&lt;/code&gt;, which makes PNG images directly using the &lt;a href=&#34;https://metacpan.org/pod/GD&#34;&gt;&lt;code&gt;GD&lt;/code&gt;&lt;/a&gt; module.&lt;/p&gt;
+
+&lt;p&gt;If you want diagrams like Figure 2, use &lt;a href=&#34;https://metacpan.org/pod/UML::Sequence::PerlOOSeq&#34;&gt;&lt;code&gt;UML::Sequence::PerlOOSeq&lt;/code&gt;&lt;/a&gt; in place of &lt;code&gt;UML::Sequence::PerlSeq&lt;/code&gt; when you run &lt;code&gt;genericseq.pl&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;running-java-programs&#34;&gt;Running Java Programs&lt;/h4&gt;
+
+&lt;p&gt;I wrote &lt;code&gt;UML::Sequence&lt;/code&gt; while working as a Java programmer, so I made it work on Java (at least sometimes it works). The process is similar to the above. First, make a methods file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ALL
+    Roller
+    DiePair
+    Die
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here I use &lt;code&gt;ALL&lt;/code&gt; to mean all methods from the following classes. You can also list full signatures (but they have to be full, valid, and expressed in the internal signature format as if generated by &lt;code&gt;javap&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Then run &lt;code&gt;genericseq.pl&lt;/code&gt; with &lt;a href=&#34;https://metacpan.org/pod/UML::Sequence::JavaSeq&#34;&gt;UML::Sequence::JavaSeq&lt;/a&gt; in place of &lt;code&gt;UML::Sequence::PerlSeq&lt;/code&gt;. Of course, this requires you to have a Java development environment on your machine. In particular, it must be able to find &lt;em&gt;tools.jar&lt;/em&gt;, which provides the debugger hooks necessary to watch the calls.&lt;/p&gt;
+
+&lt;p&gt;Produce the image from the resulting XML file as shown earlier for Perl programs.&lt;/p&gt;
+
+&lt;h4 id=&#34;text-file-input&#34;&gt;Text File Input&lt;/h4&gt;
+
+&lt;p&gt;While I pat myself on the back every time I make a sequence diagram of a running program, that&amp;rsquo;s not always (or even usually) practical. For instance, you might want to show the boss what you have planned for code you haven&amp;rsquo;t written yet. Alternately, you might have a program that is so complex that no amount of tweaking the methods file will restrict the diagram enough to make it useful.&lt;/p&gt;
+
+&lt;p&gt;In these cases, there is a small text language you can use to specify the diagram. It is based on indentation and uses dot notation for method names. Here is a sample:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;At Home.Wash Car
+    Garage.retrieve bucket
+    Kitchen.prepare bucket
+        Kitchen.pour soap in bucket
+        Kitchen.fill bucket
+    Garage.get sponge
+    Garage.open door
+    Driveway.apply soapy water
+    Driveway.rinse
+    Driveway.empty bucket
+    Garage.close door
+    Garage.replace sponge
+    Garage.replace bucket
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each line will become an arrow in the final diagram (except the first line). Indentation indicates the call depth. The &amp;ldquo;class&amp;rdquo; name comes before the dot and the &amp;ldquo;method&amp;rdquo; name after it.&lt;/p&gt;
+
+&lt;p&gt;There is no need for a methods file in this case, because presumably you didn&amp;rsquo;t bother to type things you didn&amp;rsquo;t care about. You may go directly to running &lt;code&gt;genericseq.pl&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ genericseq.pl UML::Sequence::SimpleSeq inputfile &amp;gt; wash.xml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once you have the XML file, render it as before.&lt;/p&gt;
+
+&lt;h3 id=&#34;getting-fancy&#34;&gt;Getting Fancy&lt;/h3&gt;
+
+&lt;p&gt;As I mentioned earlier, Dean Arnold recently added lots of cool features to amaze and impress your bosses and/or clients. In particular, he expanded the legal syntax for text outlines. Here is his sample of car washing with the new features:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;AtHome.Wash Car
+        /* the bucket is in the garage */
+    Garage.retrieve bucket
+    Kitchen.prepare bucket
+        Kitchen.pour soap in bucket
+        Kitchen.fill bucket
+    Garage.get sponge
+    Garage.checkDoor
+            -&amp;gt; clickDoorOpener
+        [ ifDoorClosed ] Garage.open door
+    * Driveway.apply soapy water
+    ! Driveway.rinse
+    Driveway.empty bucket
+    Garage.close door
+    Garage.replace sponge
+    Garage.replace bucket
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are several new features here:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You can include UML annotations by using C-style comments, as shown on the second line of the example. Each annotation attaches to the following line as a footnote (or tooltip, if you install a third-party open source library).&lt;/li&gt;
+&lt;li&gt;There is a &lt;code&gt;-&amp;gt;&lt;/code&gt; in front of &lt;code&gt;clickDoorOpener&lt;/code&gt;. This becomes an asynchronous message arrow. When &lt;code&gt;-&amp;gt;&lt;/code&gt; comes between a method and additional text, it indicates that a regular method is returning the value on the righthand side of the arrow. The return appears as a dashed arrow from the called activation back to the caller.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ifDoorClosed&lt;/code&gt; is in brackets, which mark a conditional in UML. These appear in the diagram in front of the method name.&lt;/li&gt;
+&lt;li&gt;There is a star in front of &lt;code&gt;Driveway.apply&lt;/code&gt;, which indicates a loop construct in UML. (UML people call this &lt;em&gt;iteration&lt;/em&gt;.)&lt;/li&gt;
+&lt;li&gt;There is an exclamation point in front of &lt;code&gt;Driveway.rinse&lt;/code&gt;, indicating urgency.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In addition to these changes to the outline syntax, both &lt;code&gt;seq2svg.pl&lt;/code&gt; and &lt;code&gt;seq2rast.pl&lt;/code&gt; now support options to control appearance (including colors) and to generate HTML imagemaps for raster versions of the diagrams. The imagemaps hyperlink diagram elements&amp;ndash;columns header and method call names&amp;ndash;to supporting documents. For example, clicking on the &lt;code&gt;Garage&lt;/code&gt; header will open &lt;em&gt;Garage.html&lt;/em&gt;, while clicking on &lt;code&gt;checkDoor&lt;/code&gt; will also open &lt;em&gt;Garage.html&lt;/em&gt;, but at the &lt;code&gt;#checkDoor&lt;/code&gt; anchor.&lt;/p&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;UML Sequence diagrams are a great way to see how function or method calls (or network messages) flow through a multi-module application, whether it is object-oriented or not. Using &lt;code&gt;UML::Sequence&lt;/code&gt; and its helper scripts, you can make those diagrams without having to point and click in a drawing program.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.presicient.com/umlseq/deluxewash.html&#34;&gt;The imagemapped HTML version of car washing&lt;/a&gt; is viewable online.&lt;/p&gt;
+
+&lt;p&gt;To read more about UML diagrams, check out the aptly named &lt;em&gt;UML Distilled&lt;/em&gt;, by Martin Fowler, available from your favorite bookseller.&lt;/p&gt;
+
+&lt;p&gt;I recommend Walter Zorn&amp;rsquo;s &lt;a href=&#34;http://www.walterzorn.com/tooltip/tooltip_e.htm&#34;&gt;JavaScript, DHTML tooltips&lt;/a&gt; package to display embedded annotations.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://xml.apache.org/batik/&#34;&gt;Batik&lt;/a&gt; is an Apache project for managing and viewing SVG.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

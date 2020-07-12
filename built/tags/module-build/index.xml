@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Module Build on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/module-build/</link>
+    <description>Recent content in Module Build on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 01 Aug 2018 20:20:00 +0000</lastBuildDate>
+    <atom:link href="/tags/module-build/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How to become a CPAN contributor - part 2</title>
+      <link>http://localhost:1313/article/how-to-become-cpan-contributor-part-2/</link>
+      <pubDate>Wed, 01 Aug 2018 20:20:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/how-to-become-cpan-contributor-part-2/</guid>
+      <description>
+
+&lt;p&gt;In the previous &lt;a href=&#34;http://localhost:1313/article/how-to-become-cpan-contributor/&#34;&gt;article&lt;/a&gt; I described some typical issues that are good for first time CPAN contributors to tackle. In this article, I will go through the nitty-gritty of fixing issues, and some gotchas to watch out for. If you&amp;rsquo;re not familiar with the differences between a Perl distribution, module and package, check out this &lt;a href=&#34;http://localhost:1313/article/96/2014/6/13/Perl-distributions--modules--packages-explained/&#34;&gt;guide&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;missing-license-meta-name&#34;&gt;Missing license meta name&lt;/h3&gt;
+
+&lt;p&gt;This is where the build script is missing a license name. It should be an easy fix - just add the license name to the build script. However there is a catch and I have been bitten by it before: the license meta name depends on the build script type. For example, if the distribution document says the license is &amp;ldquo;Artistic 2&amp;rdquo; in Makefile.PL the meta name would be &amp;ldquo;artistic_2&amp;rdquo; whereas in a dist.ini it would be &amp;ldquo;Artistic_2_0&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;E.g. the Makefile.PL from my distribution &lt;a href=&#34;https://metacpan.org/release/Map-Tube&#34;&gt;Map::Tube&lt;/a&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+ABSTRACT_FROM &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;lib/Map/Tube.pm&amp;#39;&lt;/span&gt;,
+LICENSE       &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;artistic_2&amp;#39;&lt;/span&gt;,
+EXE_FILES     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [ &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;script/map-data-converter&amp;#39;&lt;/span&gt; ],
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Compared to the dist.ini from my distribution &lt;a href=&#34;https://metacpan.org/release/Map-Tube-Delhi&#34;&gt;Map::Tube::Delhi&lt;/a&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+author  &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Mohammad S Anwar &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;mohammad.anwar@yahoo.com&amp;gt;&lt;/span&gt;
+license &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Artistic_2_0
+copyright_holder &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Mohammad S Anwar
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you are adding a software license to a distribution, &lt;a href=&#34;https://metacpan.org/pod/Software::License&#34;&gt;Software::License&lt;/a&gt; is a good resource which has many different types of Open Source licenses.&lt;/p&gt;
+
+&lt;p&gt;One thing to check for is whether the distribution repository has a META.yml file or not. If it does, adding the license meta name to the build script may cause the build process to warn: &amp;ldquo;Invalid LICENSE value &amp;hellip;&amp;rdquo;. This happens because the META.yml already contains a license value of &amp;ldquo;unknown&amp;rdquo;, which conflicts with the build script. The solution here is to delete the META.yml file and build the distribution, adding the newly-generated META.yml back into the repository.&lt;/p&gt;
+
+&lt;p&gt;You might be thinking, why would you keep META.yml in the project repository as it can be easily generated? I agree it&amp;rsquo;s probably a mistake, but keep in mind your intent is to add the license meta and nothing else. The author might have a good reason for keeping the META.yml file around. One approach would be to discuss with the author if it is good idea to drop it completely.&lt;/p&gt;
+
+&lt;h3 id=&#34;missing-strict-warnings-pragma&#34;&gt;Missing strict/warnings pragma&lt;/h3&gt;
+
+&lt;p&gt;This is the easiest of all: one or more modules in the distribution are missing the [strict]](https://metacpan.org/pod/strict) or &lt;a href=&#34;https://metacpan.org/pod/warnings&#34;&gt;warnings&lt;/a&gt; pragmas. Just add the line &lt;code&gt;use strict;&lt;/code&gt; (or &lt;code&gt;use warnings;&lt;/code&gt;) at the top of the modules missing them:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; package_name;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Is it that simple? Yes and no. If the module uses Moose or Moo then &lt;code&gt;use strict;&lt;/code&gt; is enabled automatically, so the additional import is redundant. The module &lt;a href=&#34;https://metacpan.org/pod/Test::Strict&#34;&gt;Test::Strict&lt;/a&gt; has the &lt;code&gt;strict_ok&lt;/code&gt; test function to detect whether a module has enabled strict mode or not (full disclosure, I am the distribution maintainer).&lt;/p&gt;
+
+&lt;p&gt;With the warnings pragma, there can be other considerations too. I was giving talk at the German Perl Workshop 2018, during the talk I spoke about one of my pull requests being rejected by the author for adding warnings pragma. At the time I didn&amp;rsquo;t have the courage to question the author, so I apologized and moved on. Surprisingly, the very same author was sitting in the front row attending my talk! And he was none other than [Reini Urban](). At the end of the talk, he explained to me why he rejected the pull request: in some cases, adding the warnings pragma can reduce how fast Perl executes.&lt;/p&gt;
+
+&lt;p&gt;So the moral of the story is, be careful when adding use warnings; line. To be honest with you, I avoid dealing with missing warnings issues unless I know the author personally.&lt;/p&gt;
+
+&lt;h3 id=&#34;missing-meta-json&#34;&gt;Missing META.json&lt;/h3&gt;
+
+&lt;p&gt;Sometimes, you will find a distribution missing the META.json file. Recently, I have noticed many CPAN module authors have adopted &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla&#34;&gt;Dist::Zilla&lt;/a&gt; as the distribution builder. I am a big fan of this tool, however if the author is moving from a traditional distribution builder like &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker&#34;&gt;ExtUtils::MakeMaker&lt;/a&gt; then they often forget to generate this file.&lt;/p&gt;
+
+&lt;p&gt;There is an easy solution to this problem: just add &lt;code&gt;[MetaJSON]&lt;/code&gt; to the dist.ini file, and Dist::Zilla will generate it during the build process.&lt;/p&gt;
+
+&lt;h3 id=&#34;missing-a-minimum-perl-version&#34;&gt;Missing a minimum Perl version&lt;/h3&gt;
+
+&lt;p&gt;This is where the build script does not declare the minimum version of Perl it requires. I am now going to show you how to add this information depending on what distribution builder is used by the module author.&lt;/p&gt;
+
+&lt;p&gt;In case of ExtUtils::MakeMaker, it is as simple as adding the key &lt;code&gt;MIN_PERL_VERSION&lt;/code&gt; as shown below to the Makefile.PL script.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; ExtUtils::MakeMaker;
+
+WriteMakefile(
+  MIN_PERL_VERSION   &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.006&lt;/span&gt;,
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Whereas if distribution builder is Module::Build then you can do something like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Module::Build;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $builder &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Module::Builder&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(
+  requires &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;perl&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.006&lt;/span&gt;,
+  },
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If it is using Dist::Zilla then you can either explicitly set the minimum Perl version in the dist.ini as below:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+[Prereqs]
+perl &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5.006&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Or you can use the plugin &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::MinimumPerlFast&#34;&gt;MinimumPerlFast&lt;/a&gt; which will detect the minimum Perl version needed by the distribution:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+[MinimumPerlFast]
+&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you need any help getting started as a CPAN contributor, feel free to &lt;a href=&#34;mailto:mohammad.anwar@yahoo.com&#34;&gt;email me&lt;/a&gt; and if necessary, we can remote pair program to get you going.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

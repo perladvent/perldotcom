@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bloom Filters on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/bloom-filters/</link>
+    <description>Recent content in Bloom Filters on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 08 Apr 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/bloom-filters/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Using Bloom Filters</title>
+      <link>http://localhost:1313/pub/2004/04/08/bloom_filters.html/</link>
+      <pubDate>Thu, 08 Apr 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/04/08/bloom_filters.html/</guid>
+      <description>
+
+&lt;p&gt;Anyone who has used Perl for any length of time is familiar with the lookup hash, a handy idiom for doing existence tests:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;foreach my $e ( @things ) { $lookup{$e}++ }
+
+sub check {
+    my ( $key ) = @_;
+    print &amp;quot;Found $key!&amp;quot; if exists( $lookup{ $key } );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As useful as the lookup hash is, it can become unwieldy for very large lists or in cases where the keys themselves are large. When a lookup hash grows too big, the usual recourse is to move it to a database or flat file, perhaps keeping a local cache of the most frequently used keys to improve performance.&lt;/p&gt;
+
+&lt;p&gt;Many people don&amp;rsquo;t realize that there is an elegant alternative to the lookup hash, in the form of a venerable algorithm called a &lt;em&gt;Bloom filter&lt;/em&gt;. Bloom filters allow you to perform membership tests in just a fraction of the memory you&amp;rsquo;d need to store a full list of keys, so you can avoid the performance hit of having to use a disk or database to do your lookups. As you might suspect, the savings in space comes at a price: you run an adjustable risk of false positives, and you can&amp;rsquo;t remove a key from a filter once you&amp;rsquo;ve added it in. But in the many cases where those constraints are acceptable, a Bloom filter can make a useful tool.&lt;/p&gt;
+
+&lt;p&gt;For example, imagine you run a high-traffic online music store along the lines of iTunes, and you want to minimize the stress on your database by only fetching song information when you know the song exists in your collection. You can build a Bloom filter at startup, and then use it as a quick existence check before trying to perform an expensive fetching operation:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Bloom::Filter;
+
+my $filter = Bloom::Filter-&amp;gt;new( error_rate =&amp;gt; 0.01, capacity =&amp;gt; $SONG_COUNT );
+open my $fh, &amp;quot;enormous_list_of_titles.txt&amp;quot; or die &amp;quot;Failed to open: $!&amp;quot;;
+
+while (&amp;lt;$fh&amp;gt;) {
+    chomp;
+    $filter-&amp;gt;add( $_ );
+}
+
+sub lookup_song {
+    my ( $title ) = @_;
+    return unless $filter-&amp;gt;check( $title );
+    return expensive_db_query( $title ) or undef;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example, there&amp;rsquo;s a 1% chance that the test will give a false positive, which means the program will perform the expensive fetch operation and eventually return a null result. Still, you&amp;rsquo;ve managed to avoid the expensive query 99% of the time, using only a fraction of the memory you would have needed for a lookup hash. As we&amp;rsquo;ll see further on, a filter with a 1% error rate requires just under 2 bytes of storage per key. That&amp;rsquo;s far less memory than you would need for a lookup hash.&lt;/p&gt;
+
+&lt;p&gt;Bloom filters are named after Burton Bloom, who first described them in a 1970 paper entitled &lt;a href=&#34;http://portal.acm.org/citation.cfm?id=362692&amp;amp;dl=ACM&amp;amp;coll=portal&#34;&gt;Space/time trade-offs in hash coding with allowable errors&lt;/a&gt;. In those days of limited memory, Bloom filters were prized primarily for their compactness; in fact, one of their earliest applications was in spell checkers. However, there are less obvious features of the algorithm that make it especially well-suited to applications in social software.&lt;/p&gt;
+
+&lt;p&gt;Because Bloom filters use one-way hashing to store their data, it is impossible to reconstruct the list of keys in a filter without doing an exhaustive search of the keyspace. Even that is unlikely to be of much help, since the false positives from an exhaustive search will swamp the list of real keys. Bloom filters therefore make it possible to share information about what you have without broadcasting a complete list of it to the world. For that reason, they may be especially valuable in peer-to-peer applications, where both size and privacy are important constraints.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-how-bloom-filters-work-how-bloom-filters-work-span&#34;&gt;&lt;span id=&#34;how_bloom_filters_work&#34;&gt;How Bloom Filters Work&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;A Bloom filter consists of two components: a set of &lt;code&gt;k&lt;/code&gt; hash functions and a bit vector of a given length. We choose the length of the bit vector and the number of hash functions depending on how many keys we want to add to the set and how high an error rate we are willing to put up with &amp;ndash; more on that a little bit further on.&lt;/p&gt;
+
+&lt;p&gt;All of the hash functions in a Bloom filter are configured so that their range matches the length of the bit vector. For example, if a vector is 200 bits long, the hash functions return a value between 1 and 200. It&amp;rsquo;s important to use high-quality hash functions in the filter to guarantee that output is equally distributed over all possible values &amp;ndash; &amp;ldquo;hot spots&amp;rdquo; in a hash function would increase our false-positive rate.&lt;/p&gt;
+
+&lt;p&gt;To enter a key into a Bloom filter, we run it through each one of the &lt;code&gt;k&lt;/code&gt; hash functions and treat the result as an offset into the bit vector, turning on whatever bit we find at that position. If the bit is already set, we leave it on. There&amp;rsquo;s no mechanism for turning bits off in a Bloom filter.&lt;/p&gt;
+
+&lt;p&gt;As an example, let&amp;rsquo;s take a look at a Bloom filter with three hash functions and a bit vector of length 14. We&amp;rsquo;ll use spaces and asterisks to represent the bit vector, to make it easier to follow along. As you might expect, an empty Bloom filter starts out with all the bits turned off, as seen in Figure 1.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_04_08_bloom_filters/bloom_1.gif&#34; alt=&#34;an empty Bloom filter&#34; width=&#34;284&#34; height=&#34;24&#34; /&gt;
+&lt;em&gt;Figure 1. An empty Bloom filter.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s now add the string &lt;code&gt;apples&lt;/code&gt; into our filter. To do so, we hash &lt;code&gt;apples&lt;/code&gt; through each of our three hash functions and collect the output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;hash1(&amp;quot;apples&amp;quot;) = 3
+hash2(&amp;quot;apples&amp;quot;) = 12
+hash3(&amp;quot;apples&amp;quot;) = 11
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we turn on the bits at the corresponding positions in the vector &amp;ndash; in this case bits 3, 11, and 12, as shown in Figure 2.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_04_08_bloom_filters/bloom_2.gif&#34; alt=&#34;a Bloom filter with three bits enabled&#34; width=&#34;284&#34; height=&#34;24&#34; /&gt;
+&lt;em&gt;Figure 2. A Bloom filter with three bits enabled.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To add another key, such as &lt;code&gt;plums&lt;/code&gt;, we repeat the hashing procedure:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;hash1(&amp;quot;plums&amp;quot;) = 11
+hash2(&amp;quot;plums&amp;quot;) = 1
+hash3(&amp;quot;plums&amp;quot;) = 8
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And again turn on the appropriate bits in the vector, as shown with highlights in Figure 3.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_04_08_bloom_filters/bloom_3.gif&#34; alt=&#34;the Bloom filter after adding a second key&#34; width=&#34;284&#34; height=&#34;24&#34; /&gt;
+&lt;em&gt;Figure 3. The Bloom filter after adding a second key.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Notice that the bit at position 11 was already turned on &amp;ndash; we had set it when we added &lt;code&gt;apples&lt;/code&gt; in the previous step. Bit 11 now does double duty, storing information for both &lt;code&gt;apples&lt;/code&gt; and &lt;code&gt;plums&lt;/code&gt;. As we add more keys, it may store information for some of them as well. This overlap is what makes Bloom filters so compact &amp;ndash; any one bit may be encoding multiple keys simultaneously. This overlap also means that you can never take a key out of a filter, because you have no guarantee that the bits you turn off don&amp;rsquo;t carry information for other keys. If we tried to remove &lt;code&gt;apples&lt;/code&gt; from the filter by reversing the procedure we used to add it in, we would inadvertently turn off one of the bits that encodes &lt;code&gt;plums&lt;/code&gt;. The only way to strip a key out of a Bloom filter is to rebuild the filter from scratch, leaving out the offending key.&lt;/p&gt;
+
+&lt;p&gt;Checking to see whether a key already exists in a filter is exactly analogous to adding a new key. We run the key through our set of hash functions, and then check to see whether the bits at those offsets are all turned on. If any of the bits is off, we know for certain the key is not in the filter. If all of the bits are on, we know the key is probably there.&lt;/p&gt;
+
+&lt;p&gt;I say &amp;ldquo;probably&amp;rdquo; because there&amp;rsquo;s a certain chance our key might be a false positive. For example, let&amp;rsquo;s see what happens when we test our filter for the string &lt;code&gt;mango&lt;/code&gt;. We run &lt;code&gt;mango&lt;/code&gt; through the set of hash functions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;hash1(&amp;quot;mango&amp;quot;) = 8
+hash2(&amp;quot;mango&amp;quot;) = 3
+hash3(&amp;quot;mango&amp;quot;) = 12
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then examine the bits at those offsets, as shown in Figure 4.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_04_08_bloom_filters/bloom_4.gif&#34; alt=&#34;a false positive in the Bloom filter&#34; width=&#34;284&#34; height=&#34;24&#34; /&gt;
+&lt;em&gt;Figure 4. A false positive in the Bloom filter.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;All of the bits at positions 3, 8, and 12 are on, so our filter will report that &lt;code&gt;mango&lt;/code&gt; is a valid key.&lt;/p&gt;
+
+&lt;p&gt;Of course, &lt;code&gt;mango&lt;/code&gt; is &lt;strong&gt;not&lt;/strong&gt; a valid key &amp;ndash; the filter we built contains only &lt;code&gt;apples&lt;/code&gt; and &lt;code&gt;plums&lt;/code&gt;. The fact that the offsets for &lt;code&gt;mango&lt;/code&gt; point to enabled bits is just coincidence. We have found a false positive &amp;ndash; a key that seems to be in the filter, but isn&amp;rsquo;t really there.&lt;/p&gt;
+
+&lt;p&gt;As you might expect, the false-positive rate depends on the bit vector length and the number of keys stored in the filter. The roomier the bit vector, the smaller the probability that all &lt;code&gt;k&lt;/code&gt; bits we check will be on, unless the key actually exists in the filter. The relationship between the number of hash functions and the false-positive rate is more subtle. If you use too few hash functions, there won&amp;rsquo;t be enough discrimination between keys; but if you use too many, the filter will be very dense, increasing the probability of collisions. You can calculate the false-positive rate for any filter using the formula:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;c = ( 1 - e(-kn/m) )k
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Where &lt;code&gt;c&lt;/code&gt; is the false positive rate, &lt;code&gt;k&lt;/code&gt; is the number of hash functions, &lt;code&gt;n&lt;/code&gt; is the number of keys in the filter, and &lt;code&gt;m&lt;/code&gt; is the length of the filter in bits.&lt;/p&gt;
+
+&lt;p&gt;When using Bloom filters, we very frequently have a desired false-positive rate in mind and we are also likely to have a rough idea of how many keys we want to add to the filter. We need some way of finding out how large a bit vector is to make sure the false-positive rate never exceeds our limit. The following equation will give us vector length from the error rate and number of keys:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;m = -kn / ( ln( 1 - c ^ 1/k ) )
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You&amp;rsquo;ll notice another free variable here: &lt;code&gt;k&lt;/code&gt;, the number of hash functions. It&amp;rsquo;s possible to use calculus to find a minimum for &lt;code&gt;k&lt;/code&gt;, but there&amp;rsquo;s a lazier way to do it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub calculate_shortest_filter_length {
+    my ( $num_keys, $error_rate ) = @_;
+    my $lowest_m;
+    my $best_k = 1;
+
+    foreach my $k ( 1..100 ) {
+        my $m = (-1 * $k * $num_keys) /
+            ( log( 1 - ($error_rate ** (1/$k))));
+
+        if ( !defined $lowest_m or ($m &amp;lt; $lowest_m) ) {
+            $lowest_m = $m;
+            $best_k   = $k;
+        }
+    }
+    return ( $lowest_m, $best_k );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To give you a sense of how error rate and number of keys affect the storage size of Bloom filters, Table 1 lists some sample vector sizes for a variety of capacity/error rate combinations.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Error Rate&lt;/th&gt;
+&lt;th&gt;Keys&lt;/th&gt;
+&lt;th&gt;Required Size&lt;/th&gt;
+&lt;th&gt;Bytes/Key&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;1%&lt;/td&gt;
+&lt;td&gt;1K&lt;/td&gt;
+&lt;td&gt;1.87 K&lt;/td&gt;
+&lt;td&gt;1.9&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;0.1%&lt;/td&gt;
+&lt;td&gt;1K&lt;/td&gt;
+&lt;td&gt;2.80 K&lt;/td&gt;
+&lt;td&gt;2.9&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;0.01%&lt;/td&gt;
+&lt;td&gt;1K&lt;/td&gt;
+&lt;td&gt;3.74 K&lt;/td&gt;
+&lt;td&gt;3.7&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;0.01%&lt;/td&gt;
+&lt;td&gt;10K&lt;/td&gt;
+&lt;td&gt;37.4 K&lt;/td&gt;
+&lt;td&gt;3.7&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;0.01%&lt;/td&gt;
+&lt;td&gt;100K&lt;/td&gt;
+&lt;td&gt;374 K&lt;/td&gt;
+&lt;td&gt;3.7&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;0.01%&lt;/td&gt;
+&lt;td&gt;1M&lt;/td&gt;
+&lt;td&gt;3.74 M&lt;/td&gt;
+&lt;td&gt;3.7&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;0.001%&lt;/td&gt;
+&lt;td&gt;1M&lt;/td&gt;
+&lt;td&gt;4.68 M&lt;/td&gt;
+&lt;td&gt;4.7&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;0.0001%&lt;/td&gt;
+&lt;td&gt;1M&lt;/td&gt;
+&lt;td&gt;5.61 M&lt;/td&gt;
+&lt;td&gt;5.7&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;You can find further lookup tables for various combinations of error rate, filter size, and number of hash functions at &lt;a href=&#34;http://www.cs.wisc.edu/~cao/papers/summary-cache/node8.html#tab:bf-config-1&#34;&gt;Bloom Filters &amp;ndash; the math&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-building-a-bloom-filter-in-perl-building-a-bloom-filter-in-perl-span&#34;&gt;&lt;span id=&#34;building_a_bloom_filter_in_perl&#34;&gt;Building a Bloom Filter in Perl&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;To make a working Bloom filter, we need a good set of hash functions These are easy to come by &amp;ndash; there are several excellent hashing algorithms available on CPAN. For our purposes, a good choice is &lt;code&gt;Digest::SHA1&lt;/code&gt;, a cryptographically strong hash with a fast C implementation. We can use the module to create as many hash functions as we like by salting the input with a list of distinct values. Here&amp;rsquo;s a subroutine that builds a list of unique hash functions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Digest::SHA1 qw/sha1/;
+
+sub make_hashing_functions {
+    my ( $count ) = @_;
+    my @functions;
+
+    for my $salt (1..$count ) {
+        push @functions, sub { sha1( $salt, $_[0] ) };
+    }
+
+    return @functions;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To be able to use these hash functions, we have to find a way to control their range. &lt;code&gt;Digest::SHA1&lt;/code&gt; returns an embarrassingly lavish 160 bits of hashed output, useful only in the unlikely case that our vector is 2&lt;sup&gt;160&lt;/sup&gt; bits long. We&amp;rsquo;ll use a combination of bit chopping and division to scale the output down to a more usable size.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a subroutine that takes a key, runs it through a list of hash functions, and returns a bitmask of length &lt;code&gt;$FILTER_LENGTH&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub make_bitmask {
+    my ( $key ) = @_;
+    my $mask    = pack( &amp;quot;b*&amp;quot;, &#39;0&#39; x $FILTER_LENGTH);
+
+    foreach my $hash_function ( @functions ){
+
+        my $hash       = $hash_function-&amp;gt;($key);
+        my $chopped    = unpack(&amp;quot;N&amp;quot;, $hash );
+        my $bit_offset = $result % $FILTER_LENGTH;
+
+        vec( $mask, $bit_offset, 1 ) = 1;
+    }
+    return $mask;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s a dense stretch of code, so let&amp;rsquo;s look at it line by line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $mask = pack( &amp;quot;b*&amp;quot;, &#39;0&#39; x $FILTER_LENGTH);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We start by using Perl&amp;rsquo;s &lt;code&gt;pack&lt;/code&gt; operator to create a zeroed bit vector that is &lt;code&gt;$FILTER_LENGTH&lt;/code&gt; bits long. &lt;code&gt;pack&lt;/code&gt; takes two arguments, a template and a value. The &lt;code&gt;b&lt;/code&gt; in our template tells &lt;code&gt;pack&lt;/code&gt; that we want it to interpret the value as bits, and the &lt;code&gt;*&lt;/code&gt; indicates &amp;ldquo;repeat as often as necessary,&amp;rdquo; just like in a regular expression. Perl will actually pad our bit vector to make its length a multiple of eight, but we&amp;rsquo;ll ignore those superfluous bits.&lt;/p&gt;
+
+&lt;p&gt;With a blank bit vector in hand, we&amp;rsquo;re ready to start running our key through the hash functions.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $hash = $hash_function-&amp;gt;($key);
+my $chopped = unpack(&amp;quot;N&amp;quot;, $hash );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;re keeping the first 32 bits of the output and discarding the rest. This prevents us from having to require &lt;code&gt;BigInt&lt;/code&gt; support further along. The second line does the actual bit chopping. The &lt;code&gt;N&lt;/code&gt; in the template tells &lt;code&gt;unpack&lt;/code&gt; to extract a 32-bit integer in network byte order. Because we don&amp;rsquo;t provide any quantifier in the template, &lt;code&gt;unpack&lt;/code&gt; will extract just one integer and then stop.&lt;/p&gt;
+
+&lt;p&gt;If you are extra, super paranoid about bit chopping, you could split the hash into five 32-bit pieces and XOR them together, preserving all the information in the original hash:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $chopped = pack( &amp;quot;N&amp;quot;, 0 );
+my @pieces  =  map { pack( &amp;quot;N&amp;quot;, $_ ) } unpack(&amp;quot;N*&amp;quot;, $hash );
+$chopped    = $_ ^ $chopped foreach @pieces;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But this is probably overkill.&lt;/p&gt;
+
+&lt;p&gt;Now that we have a list of 32-bit integer outputs from our hash functions, all we have to do is scale them down with the modulo operator so they fall in the range (1..&lt;code&gt;$FILTER_LENGTH&lt;/code&gt;).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $bit_offset = $chopped % $FILTER_LENGTH;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we&amp;rsquo;ve turned our key into a list of bit offsets, which is exactly what we were after.&lt;/p&gt;
+
+&lt;p&gt;The only thing left to do is to set the bits using &lt;code&gt;vec&lt;/code&gt;, which takes three arguments: the vector itself, a starting position, and the number of bits to set. We can assign a value to &lt;code&gt;vec&lt;/code&gt; like we would to a variable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;vec( $mask, $bit_offset, 1 ) = 1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After we&amp;rsquo;ve set all the bits, we wind up with a bitmask that is the same length as our Bloom filter. We can use this mask to add the key into the filter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub add {
+    my ( $key, $filter ) = @_;
+
+    my $mask = make_bitmask( $key );
+    $filter  = $filter | $mask;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or we can use it to check whether the key is already present:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub check {
+    my ( $key, $filter ) = @_;
+    my $mask  = make_bitmask( $key );
+    my $found = ( ( $filter &amp;amp; $mask ) eq $mask );
+    return $found;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that those are the bitwise OR (&lt;code&gt;|&lt;/code&gt;) and AND (&lt;code&gt;&amp;amp;&lt;/code&gt;) operators, not the more commonly used logical OR (&lt;code&gt;||&lt;/code&gt;) and AND ( &lt;code&gt;&amp;amp;&amp;amp;&lt;/code&gt; ) operators. Getting the two mixed up can lead to hours of interesting debugging. The first example ORs the mask against the bit vector, turning on any bits that aren&amp;rsquo;t already set. The second example compares the mask to the corresponding positions in the filter &amp;ndash; if all of the on bits in the mask are also on in the filter, we know we&amp;rsquo;ve found a match.&lt;/p&gt;
+
+&lt;p&gt;Once you get over the intimidation factor of using &lt;code&gt;vec&lt;/code&gt;, &lt;code&gt;pack&lt;/code&gt;, and the bitwise operators, Bloom filters are actually quite straightforward. &lt;a href=&#34;http://localhost:1313/media/_pub_2004_04_08_bloom_filters/Filter.pm&#34;&gt;Listing 1&lt;/a&gt; shows a complete object-oriented implementation called &lt;code&gt;Bloom::Filter&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-bloom-filters-in-distributed-social-networks-bloom-filters-in-distributed-social-networks-span&#34;&gt;&lt;span id=&#34;bloom_filters_in_distributed_social_networks&#34;&gt;Bloom Filters in Distributed Social Networks&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One drawback of existing social network schemes is that they require participants to either divulge their list of contacts to a central server (Orkut, Friendster) or publish it to the public Internet (FOAF), in both cases sacrificing a great deal of privacy. By exchanging Bloom filters instead of explicit lists of contacts, users can participate in social networking experiments without having to admit to the world who their friends are. A Bloom filter encoding someone&amp;rsquo;s contact information can be checked to see whether it contains a given name or email address, but it can&amp;rsquo;t be coerced into revealing the full list of keys that were used to build it. It&amp;rsquo;s even possible to turn the false-positive rate, which may not sound like a feature, into a powerful tool.&lt;/p&gt;
+
+&lt;p&gt;Suppose that I am very concerned about people trying to reverse-engineer my social network by running a dictionary attack against my Bloom filter. I can build my filter with a prohibitively high false-positive rate (50%, for example) and then arrange to send multiple copies of my Bloom filter to friends, varying the hash functions I use to build each filter. The more filters my friends collect, the lower the false-positive rate they will see. For example, with five filters the false-positive rate will be (0.5)&lt;sup&gt;5&lt;/sup&gt;, or 3% &amp;ndash; and I can reduce the rate further by sending out more filters.&lt;/p&gt;
+
+&lt;p&gt;If any one of the filters is intercepted, it will register the full 50% false-positive rate. So I am able to hedge my privacy risk across several interactions, and have some control over how accurately other people can see my network. My friends can be sure with a high degree of certainty whether someone is on my contact list, but someone who manages to snag just one or two of my filters will learn almost nothing about me.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a Perl function that checks a key against a set of noisy filters:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Bloom::Filter;
+
+sub check_noisy_filters {
+    my ( $key, @filters ) = @_;
+    foreach my $filter ( @filters ) {
+        return 0 unless $filter-&amp;gt;check( $key );
+    }
+    return 1;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you and your friends agree to use the same filter length and set of hash functions, you can also use bitwise comparisons to estimate the degree of overlap between your social networks. The number of shared on bits in two Bloom filters will give a usable measure of the distance between them.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub shared_on_bits {
+    my ( $filter_1, $filter_2 ) = @_;
+    return unpack( &amp;quot;%32b*&amp;quot;,  $filter_1 &amp;amp; $filter_2 )
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Additionally, you can combine two Bloom filters that have the same length and hash functions with the bitwise OR operator to create a composite filter. For example, if you participate in a small mailing list and want to create a whitelist from the address books of everyone in the group, you can have each participant create a Bloom filter individually and then OR the filters together into a Voltron-like master list. None of the members of the group will know who the other members&amp;rsquo; contacts are, and yet the filter will exhibit the correct behavior.&lt;/p&gt;
+
+&lt;p&gt;There are sure to be other neat Bloom filter tricks with potential applications to social networking and distributed applications. The references below list a few good places to start mining.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_http_3a_2f_2fwww_2ecs_2ewisc_2eedu_2f_7ecao_2fpape&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://www.cs.wisc.edu/~cao/papers/summary-cache/node8.html&#34;&gt;Bloom Filters &amp;ndash; the math&lt;/a&gt;&lt;/strong&gt;. A good place to start for an overview of the math behind Bloom filters.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_http_3a_2f_2fwww_2ecap_2dlore_2ecom_2fcode_2fbloom&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://www.cap-lore.com/code/BloomTheory.html&#34;&gt;Some Motley Bloom Tricks&lt;/a&gt;&lt;/strong&gt;. Handy filter tricks and theory page.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_http_3a_2f_2fwww_2eeecs_2eharvard_2eedu_2f_7emicha&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://www.eecs.harvard.edu/~michaelm/NEWWORK/postscripts/BloomFilterSurvey.pdf&#34;&gt;Bloom Filter Survey&lt;/a&gt;&lt;/strong&gt;. A handy survey article on Bloom filter network applications.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_loaf&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://loaf.cantbedone.org&#34;&gt;LOAF&lt;/a&gt;&lt;/strong&gt;. Our own system for incorporating social networks onto email using Bloom filters.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href=&#34;http://www.eecs.harvard.edu/~michaelm/NEWWORK/postscripts/cbf2.pdf&#34;&gt;Compressed Bloom Filters&lt;/a&gt;&lt;/strong&gt;. If you are passing filters around a network, you will want to optimize them for minimum size; this paper gives a good overview of compressed Bloom filters.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_bloom16&#34;&gt;&lt;/span&gt;&lt;a href=&#34;https://metacpan.org/pod/Bloom16&#34;&gt;Bloom16&lt;/a&gt;.&lt;/strong&gt; A CPAN module implementing a counting Bloom filter.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_bloom&#34;&gt;&lt;/span&gt;&lt;a href=&#34;https://metacpan.org/pod/Text::Bloom&#34;&gt;Text::Bloom&lt;/a&gt;&lt;/strong&gt;. CPAN module for using Bloom filters with text collections.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;span id=&#34;item_http_3a_2f_2fwww_2eresearch_2eatt_2ecom_2f_7esmb_2&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://www.research.att.com/~smb/papers/bloom-encrypt.pdf&#34;&gt;Privacy-Enhanced Searches Using Encryted Bloom Filters&lt;/a&gt;&lt;/strong&gt;. This paper discusses how to use encryption and Bloom filters to set up a query system that prevents the search engine from knowing the query you are running.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href=&#34;http://www.cs.wisc.edu/~cao/papers/summary-cache/node9.html&#34;&gt;Bloom Filters as Summaries&lt;/a&gt;&lt;/strong&gt;. Some performance data on actually using Bloom filters as cache summaries.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href=&#34;http://www.research.att.com/~smb/papers/draft-bellovin-dnsext-bloomfilt-00.txt&#34;&gt;Using Bloom Filters for Authenticated Yes/No Answers in the DNS&lt;/a&gt;&lt;/strong&gt;. Internet draft for using Bloom filters to implement Secure DNS&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -41,7 +41,7 @@ For example, if you had some code like:
         $r->content_type( 'text/html' );
 
         my $req = Apache2::Request->new($r);
-       
+
         # Compute sales tax if we are told to do so
         my $tax = 0;
         if( $req->param('compute_sales_tax') ) {
@@ -55,12 +55,12 @@ For example, if you had some code like:
 
     sub handler {
         my $r   =   shift;
-       
+
         # Set content type
         $r->content_type( 'text/html' );
 
         my $req = Apache2::Request->new($r);
-       
+
         # Compute sales tax if we are told to do so
         my $tax = 0;
 
@@ -131,7 +131,7 @@ With this Apache daemon tying up your command prompt, simply browse to your appl
 
 Perl's debugger is very similar to other debuggers you may have used. You can step through your code line by line, skip entire subroutines, set break points, and display and/or change the value of variables with it.
 
-It might be useful to read through [`man perldebtut`](http://perldoc.perl.org/perldebtut.html), a introductory tutorial on using the debugger. For a more complete reference to all of the available commands, see [`man perldebug`](http://perldoc.perl.org/perldebug.html). This list should be just enough to get you started:
+It might be useful to read through [`man perldebtut`]({{</* perldoc "perldebtut" */>}}), a introductory tutorial on using the debugger. For a more complete reference to all of the available commands, see [`man perldebug`]({{</* perldoc "perldebug" */>}}). This list should be just enough to get you started:
 
 | Command        | Description                                                                                                                                                                                                                                                                                           |
 |----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -156,9 +156,9 @@ As an example, here's a small application to profile. This code, while not all t
 
     sub handler {
         my $r = shift;
-      
+
         $r->content_type( 'text/plain' );
-      
+
         handle_request($r);
 
         return( Apache2::Const::OK );

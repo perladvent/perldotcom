@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> The road to a 55x speedup with XS </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The power of C with the pleasure of Perl"/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/article/the-road-to-a-55x-speedup-with-xs/" />
+<meta property="og:title" content="The road to a 55x speedup with XS" />
+<meta property="og:description" content="The power of C with the pleasure of Perl">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2016-06-06T06:06:06Z" />
+<meta property="og:image" content="http://localhost:1313/images/61/thumb_EC20EEA0-FF2E-11E3-9D6C-5C05A68B9E16.png" />
+<meta property="og:article:tag" content="xs" />
+<meta property="og:article:tag" content="c" />
+<meta property="og:article:tag" content="uri_encode_xs" />
+<meta property="og:article:tag" content="uri_escape" />
+<meta property="og:article:tag" content="percent_encoding" />
+<meta property="og:article:tag" content="optimization" />
+<meta property="og:article:tag" content="benchmark" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">The road to a 55x speedup with XS</h1>
+              <p class="blog-post-meta">Jun 14, 2016 by
+              
+              
+                
+                
+                <a href="#author-bio-david-farrell">David Farrell</a>
+              
+              </p>
+              <img alt="" src="/images/61/EC20EEA0-FF2E-11E3-9D6C-5C05A68B9E16.png"/>
+                
+
+<p>Lately my client has been concerned with improving their application speed, so naturally I started to think about XS, Perl&rsquo;s C macro language. With XS you can write C code and call it from Perl.</p>
+
+<p>To test the waters I wrote a simple URI encoder/decoder in C and with some trial-and-error managed to make <a href="https://metacpan.org/pod/URI::Encode::XS">URI::Encode::XS</a>, a module that used it. &ldquo;This is easy!&rdquo; I thought and excitedly typed out a benchmarking <a href="https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench">script</a>. I benchmarked my module against <a href="https://metacpan.org/pod/URI::Escape">URI::Escape</a> a venerable but rather slow <em>pure-Perl</em> URI encoder/decoder. You can imagine how crestfallen I was when I read the benchmark results to find that all of my effort only netted a 20% speedup. I wondered if Perl&rsquo;s string routines are so fast they&rsquo;re hard to improve upon.</p>
+
+<h3 id="renewed-hope">Renewed hope</h3>
+
+<p>Enter <a href="https://metacpan.org">URI::XSEscape</a>, a &ldquo;quick and dirty&rdquo; (the authors&rsquo; words) XS implementation of URI::Escape. It was uploaded to CPAN last month. You can see the authors&rsquo; <a href="https://metacpan.org/pod/URI::XSEscape#BENCHMARKS">benchmarks</a> for yourself, but in my testing it appeared to be about 18.5 times faster than URI::Escape. That&rsquo;s not a misprint - on my laptop it encoded 2.75m strings per second, compared to 138k for URI::Escape. So how did they do it?</p>
+
+<p>First let&rsquo;s look at my naive C encode implementation:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">void <span style="color:#f92672">*</span>uri_encode (char <span style="color:#f92672">*</span>uri, const char <span style="color:#f92672">*</span>special_chars, char <span style="color:#f92672">*</span>buffer)
+{
+  int i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+  <span style="color:#e6db74">/* \0 is null, end of the string */</span>
+  <span style="color:#66d9ef">while</span> (uri[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;\0&#39;</span>)
+  {
+    int encode_char <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+    int j <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">while</span> (special_chars[j] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;\0&#39;</span>)
+    {
+      <span style="color:#66d9ef">if</span> (uri[i] <span style="color:#f92672">==</span> special_chars[j])
+      {
+        <span style="color:#e6db74">/* do not encode char as it is in the special_chars set */</span>
+        encode_char <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+        break;
+      }
+      j<span style="color:#f92672">++</span>;
+    }
+    <span style="color:#66d9ef">if</span> (encode_char <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>)
+    {
+      char code[<span style="color:#ae81ff">4</span>];
+      sprintf(code, <span style="color:#e6db74">&#34;%%%02X&#34;</span>, uri[i]);
+      strcat(buffer, code);
+    }
+    <span style="color:#66d9ef">else</span>
+    {
+      char code[<span style="color:#ae81ff">2</span>];
+      code[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> uri[i];
+      code[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+      strcat(buffer, code);
+    }
+    i<span style="color:#f92672">++</span>;
+  }
+}</code></pre></div>
+<p>Basically what this does is loop through the <code>uri</code> string, looking characters that are in the <code>special_chars</code> string, and if it finds a match, it percent encodes the character with <code>sprintf</code> and appends the result to <code>buffer</code> which is the encoded string. Compare this with the encode function from <code>URI::XSEscape</code> (I&rsquo;ve simplified it slightly):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">Buffer<span style="color:#f92672">*</span> uri_encode(Buffer<span style="color:#f92672">*</span> src, int length,
+                   Buffer<span style="color:#f92672">*</span> tgt)
+{
+    int s <span style="color:#f92672">=</span> src<span style="color:#f92672">-&gt;</span>pos;
+    int t <span style="color:#f92672">=</span> tgt<span style="color:#f92672">-&gt;</span>pos;
+
+    <span style="color:#66d9ef">while</span> (s <span style="color:#f92672">&lt;</span> (src<span style="color:#f92672">-&gt;</span>pos <span style="color:#f92672">+</span> length)) {
+        unsigned char u <span style="color:#f92672">=</span> (unsigned char) src<span style="color:#f92672">-&gt;</span>data[s];
+        char<span style="color:#f92672">*</span> v <span style="color:#f92672">=</span> uri_encode_tbl[(int)u];
+
+        <span style="color:#f92672">/*</span> <span style="color:#66d9ef">if</span> current source character doesn<span style="color:#e6db74">&#39;t need to be encoded,
+</span><span style="color:#e6db74">           just copy it to target*/
+</span><span style="color:#e6db74">        if (!v) {
+</span><span style="color:#e6db74">            tgt-&gt;data[t++] = src-&gt;data[s++];
+</span><span style="color:#e6db74">            continue;
+</span><span style="color:#e6db74">        }
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">        /* copy encoded character from our table */
+</span><span style="color:#e6db74">        tgt-&gt;data[t+0] = &#39;</span>%<span style="color:#960050;background-color:#1e0010">&#39;;</span>
+        tgt<span style="color:#f92672">-&gt;</span>data[t<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> v[<span style="color:#ae81ff">0</span>];
+        tgt<span style="color:#f92672">-&gt;</span>data[t<span style="color:#f92672">+</span><span style="color:#ae81ff">2</span>] <span style="color:#f92672">=</span> v[<span style="color:#ae81ff">1</span>];
+
+        <span style="color:#f92672">/*</span> we used up <span style="color:#ae81ff">3</span> characters (%XY) in target
+         <span style="color:#f92672">*</span> <span style="color:#f92672">and</span> <span style="color:#ae81ff">1</span> character from source <span style="color:#f92672">*/</span>
+        t <span style="color:#f92672">+=</span> <span style="color:#ae81ff">3</span>;
+        <span style="color:#f92672">++</span>s;
+    }
+    <span style="color:#e6db74">/* null-terminate target and return src as was left */</span>
+    src<span style="color:#f92672">-&gt;</span>pos <span style="color:#f92672">=</span> s;
+    tgt<span style="color:#f92672">-&gt;</span>pos <span style="color:#f92672">=</span> t;
+    buffer_terminate(tgt);
+    <span style="color:#66d9ef">return</span> src;
+}</code></pre></div>
+<p>This code loops through the input string but instead of comparing the current character to another string of special characters, it does a table lookup. This is much faster than looping through another string. Note how it doesn&rsquo;t use <code>sprintf</code> either - all the hex codes are pre-computed in <code>uri_encode_tbl</code>. Finally, instead of creating a new string and concatenating it to the output string, this code simply copies the output directly to the output string&rsquo;s memory location.</p>
+
+<p>This code also avoid a subtle bug with my implementation: Perl strings can contain null characters, but in C null is used to terminate strings. Because URI::XSEscape&rsquo;s encode function accepts a length argument, it can encode strings will nulls and my version can&rsquo;t.</p>
+
+<h3 id="going-faster">Going faster</h3>
+
+<p>At this point I updated the encode/decode functions in URI::Encode::XS to be table based like URI::XSEscape and saw huge gains in performance, making URI::Encode::XS about 25 times faster than URI::Escape (URI::Encode::XS doesn&rsquo;t support user-defined escape values, so it&rsquo;s simpler than URI::XSEscape). I thought a 25x improvement was as good as it got, and was about done with the module, when I was contacted by <a href="https://metacpan.org/author/CHANSEN">Christian Hansen</a> (author of <a href="https://metacpan.org/release/Time-Moment">Time::Moment</a>). Christian overhauled my simple XS code to make it safer and faster. This is what became of the <code>uri_encode</code> C function:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl">size_t uri_encode (const char <span style="color:#f92672">*</span>src, const size_t len, char <span style="color:#f92672">*</span>dst)
+{
+  size_t i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, j <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+  <span style="color:#66d9ef">while</span> (i <span style="color:#f92672">&lt;</span> len
+  {
+    const char <span style="color:#f92672">*</span> code <span style="color:#f92672">=</span> uri_encode_tbl[ (unsigned char)src[i] ];
+    <span style="color:#66d9ef">if</span> (code)
+    {
+      memcpy(<span style="color:#f92672">&amp;</span>dst[j], code, <span style="color:#ae81ff">3</span>);
+      j <span style="color:#f92672">+=</span> <span style="color:#ae81ff">3</span>;
+    }
+    <span style="color:#66d9ef">else</span>
+    {
+      dst[j] <span style="color:#f92672">=</span> src[i];
+      j<span style="color:#f92672">++</span>;
+    }
+    i<span style="color:#f92672">++</span>;
+  }
+  dst[j] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+  <span style="color:#66d9ef">return</span> j;
+}</code></pre></div>
+<p>This version looks up the character value in a pre-computed table and then uses <code>memcpy</code> to append it to the output string (avoiding 3 separate assignments). It also returns the length of encoded string, which is useful. After Christian&rsquo;s optimizations, my benchmarking <a href="https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench">script</a> showed URI::Encode::XS&rsquo;s encoding function to be 55 times faster than URI::Escape (about 8m encoded strings per second). Much of the gains came from optimizing the <a href="https://github.com/dnmfarrell/URI-Encode-XS/blob/df8009e9d7af4cf243fa29ca8aaa23982feeba58/XS.xs#L143">xsub</a>.</p>
+
+<h3 id="the-power-of-c-the-pleasure-of-perl">The power of C, the pleasure of Perl</h3>
+
+<p>To me the most magical thing about XS code is you call it from Perl:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-perl" data-lang="perl"><span style="color:#66d9ef">use</span> URI::Encode::XS <span style="color:#e6db74">&#39;uri_encode&#39;</span>;
+
+<span style="color:#66d9ef">my</span> $encoding <span style="color:#f92672">=</span> uri_encode($some_string); <span style="color:#75715e"># super fast</span></code></pre></div>
+<p>So the user has the convenience of writing Perl code, but the benefit of the faster implementation. Perl is already pretty fast, but there are certain operations that are expensive. If you work on a Perl application, how much faster would it be if you could make all of the bottlenecks 55 times faster?</p>
+
+<h3 id="learning-xs">Learning XS</h3>
+
+<p>If you&rsquo;d like to learn more about XS, I&rsquo;d strongly recommend this <a href="http://world.std.com/~swmcd/steven/perl/pm/xs/intro/index.html">series</a> by Steven W McDougall. It&rsquo;s the best introduction I know of.</p>
+
+<p><a href="https://github.com/xsawyerx/xs-fun">XS is Fun</a> is a more modern introduction to XS programming that takes you through the steps of writing an XS module and importing a C library.</p>
+
+<p>Chapter 18 &ldquo;Extending Perl: A First Course&rdquo; in <a href="http://shop.oreilly.com/product/9781565922204.do">Advanced Perl Programming</a> first edition has a good introduction to XS. It covers the most common macros for scalars, arrays and hashes which is useful (the second edition doesn&rsquo;t cover XS). <a href="https://www.manning.com/books/extending-and-embedding-perl">Extending and Embedding Perl</a> goes further, with several tutorials on the different ways to call and receive data from XS. Both books are a bit dated but I found them valuable and an easier read than the official docs.</p>
+
+<p>The official Perl documentation has useful reference sources: <a href="https://perldoc.perl.org/perlxs.html">perlxs</a>, <a href="https://perldoc.perl.org/perlapi.html">perlapi</a> and <a href="https://perldoc.perl.org/perlxs.html">perlguts</a>. There is also <a href="https://perldoc.perl.org/perlxs.html">perlxstut</a> but I would skip that in favor of the above resources.</p>
+
+<p>Several times I&rsquo;ve found XS macros used in Perl code that are not explained in any documentation (e.g. <code>dXSTARG</code>). In those cases it pays to have a copy of the Perl <a href="https://www.perl.org/get.html">source code</a> - just grep the source and you&rsquo;ll find its definition with a comment (typically in <code>pp.h</code>).</p>
+
+<h3 id="a-note-on-the-benchmarks">A note on the benchmarks</h3>
+
+<p>The benchmarks in this article were all run on my laptop, a Dell XPS 13 with 8GB RAM running Fedora 23. Different hardware will yield different results (Christian&rsquo;s benchmark showed URI::Encode::XS to be 90x (!) faster than URI::Escape).</p>
+
+<p>The <a href="https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench">script</a> counts how many times each module can encode a string per second. But a string of a different length, or with a different number of reserved characters will yield a different benchmark. For example benchmarking an empty string shows URI::Encode::XS to be just 9x times faster on my laptop.</p>
+
+<p>The module versions were URI::Encode::XS v0.08 and URI::Escape v3.31. The Perl version was 5.22.</p>
+
+<h3 id="thanks">Thanks</h3>
+
+<p>A big thank you to Christian Hansen and Jesse DuMond for your help with URI::Encode::XS. The module would not be half of what it is without your contributions.</p>
+
+<p><br />
+<em>This article was originally posted on <a href="http://perltricks.com">PerlTricks.com</a>.</em></p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/development">development</a></div>
+                
+                  <div class="tag"><a href="/tags/xs">xs</a></div>
+                
+                  <div class="tag"><a href="/tags/c">c</a></div>
+                
+                  <div class="tag"><a href="/tags/uri_encode_xs">uri_encode_xs</a></div>
+                
+                  <div class="tag"><a href="/tags/uri_escape">uri_escape</a></div>
+                
+                  <div class="tag"><a href="/tags/percent_encoding">percent_encoding</a></div>
+                
+                  <div class="tag"><a href="/tags/optimization">optimization</a></div>
+                
+                  <div class="tag"><a href="/tags/benchmark">benchmark</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-david-farrell">
+  <div class="col-sm-2">
+    
+    <a href="/authors/david-farrell/"><div class="circle-avatar" style="background-image:url(/images/author/david-farrell.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/david-farrell/"><h3>David Farrell</h3></a>
+    <p>David is the editor of Perl.com. An organizer of the <a href="http://www.meetup.com/The-New-York-Perl-Meetup-Group/">New York Perl Meetup</a>, he works for ZipRecruiter as a software developer, and sometimes <a href="https://twitter.com/perltricks">tweets</a> about Perl and Open Source.</p>
+    <h5><a href="/authors/david-farrell/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/article/the-road-to-a-55x-speedup-with-xs.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

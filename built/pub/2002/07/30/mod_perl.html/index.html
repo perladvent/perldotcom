@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Improving mod_perl Sites&#39; Performance: Part 4 </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" Introduction If your OS supports sharing of memory (and most sane systems do), you might save a lot of RAM by sharing it between child processes. This will allow you to run more processes and hopefully better satisfy the..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2002/07/30/mod_perl.html/" />
+<meta property="og:title" content="Improving mod_perl Sites&#39; Performance: Part 4" />
+<meta property="og:description" content=" Introduction If your OS supports sharing of memory (and most sane systems do), you might save a lot of RAM by sharing it between child processes. This will allow you to run more processes and hopefully better satisfy the...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2002-07-07T07:07:07Z" />
+<meta property="og:image" content="http://localhost:1313/images/site/avatar.png" />
+<meta property="og:article:tag" content="mod-perl-shared-memory" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Improving mod_perl Sites&#39; Performance: Part 4</h1>
+              <p class="blog-post-meta">Jul 30, 2002 by
+              
+              
+                
+                
+                <a href="#author-bio-stas-bekman">Stas Bekman</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<h3 id="span-id-introduction-introduction-span"><span id="introduction">Introduction</span></h3>
+
+<p>If your OS supports sharing of memory (and most sane systems do), you might save a lot of RAM by sharing it between child processes. This will allow you to run more processes and hopefully better satisfy the client, without investing extra money into buying more memory.</p>
+
+<p>This is only possible when you preload code at server startup. However, during a child process&rsquo; life, its memory pages tend to become unshared. There is no way we can make Perl allocate memory so that (dynamic) variables land on different memory pages from constants, so the <strong>copy-on-write</strong> effect will hit you almost at random.</p>
+
+<p>If you are pre-loading many modules, you might be able to trade off the memory that stays shared against the time for an occasional fork by tuning <code>MaxRequestsPerChild</code>. Each time a child reaches this upper limit and dies, it should release its unshared pages. The new child which replaces it will share its fresh pages until it scribbles on them.</p>
+
+<p>The ideal is a point where your processes usually restart before too much memory becomes unshared. You should take some measurements to see if it makes a real difference, and to find the range of reasonable values. If you have success with this, tuning the value of <code>MaxRequestsPerChild</code> will probably be peculiar to your situation and may change with changing circumstances.</p>
+
+<p>It is very important to understand that your goal is not to have <code>MaxRequestsPerChild</code> to be 10000. Having a child serving 300 requests on precompiled code is already a huge overall speedup, so if it is 100 or 10000 it probably does not really matter if you can save RAM by using a lower value.</p>
+
+<p>Do not forget that if you preload most of your code at server startup, the newly forked child gets ready very very fast, because it inherits most of the preloaded code and the perl interpreter from the parent process.</p>
+
+<p>During the life of the child, its memory pages (which aren&rsquo;t really its own to start with, it uses the parent&rsquo;s pages) gradually get `dirty&rsquo; - variables which were originally inherited and shared are updated or modified &ndash; and the <em>copy-on-write</em> happens. This reduces the number of shared memory pages, thus increasing the memory requirement. Killing the child and spawning a new one allows the new child to get back to the pristine shared memory of the parent process.</p>
+
+<p>The recommendation is that <code>MaxRequestsPerChild</code> should not be too large, otherwise you lose some of the benefit of sharing memory.</p>
+
+<h3 id="span-id-how-shared-is-my-memory-how-shared-is-my-memory-span"><span id="how_shared_is_my_memory">How Shared Is My Memory?</span></h3>
+
+<p>You&rsquo;ve probably noticed that the word shared is repeated many times in relation to <code>mod_perl</code>. Indeed, shared memory might save you a lot of money, since with sharing in place you can run many more servers than without it.</p>
+
+<p>How much shared memory do you have? You can see it by either using the memory utility that comes with your system or you can deploy the <code>GTop</code> module:</p>
+
+<pre><code>  use GTop ();
+  print &quot;Shared memory of the current process: &quot;,
+    GTop-&gt;new-&gt;proc_mem($$)-&gt;share,&quot;\n&quot;;
+
+  print &quot;Total shared memory: &quot;,
+    GTop-&gt;new-&gt;mem-&gt;share,&quot;\n&quot;;
+</code></pre>
+
+<p>When you watch the output of the <code>top</code> utility, don&rsquo;t confuse the <code>RES</code> (or <code>RSS</code>) columns with the <code>SHARE</code> column. <code>RES</code> is RESident memory, which is the size of pages currently swapped in.</p>
+
+<h3 id="span-id-calculating-real-memory-usage-calculating-real-memory-usage-span"><span id="calculating_real_memory_usage">Calculating Real Memory Usage</span></h3>
+
+<p>I have shown how to measure the size of the process&rsquo; shared memory, but we still want to know what the real memory usage is. Obviously this cannot be calculated simply by adding up the memory size of each process because that wouldn&rsquo;t account for the shared memory.</p>
+
+<p>On the other hand we cannot just subtract the shared memory size from the total size to get the real memory usage numbers, because in reality each process has a different history of processed requests, therefore the shared memory is not the same for all processes.</p>
+
+<p>So how do we measure the real memory size used by the server we run? It&rsquo;s probably too difficult to give the exact number, but I&rsquo;ve found a way to get a fair approximation, which was verified in the following way. I calculated the real memory used by a technique you will see in the moment, and then stopped the Apache server and saw that the memory usage report indicated that the total used memory went down by almost the same number I&rsquo;ve calculated. Note that some OSs do smart memory pages caching so you may not see the memory usage decrease as soon as it actually happens when you quit the application.</p>
+
+<p>This is a technique I&rsquo;ve used:</p>
+
+<ol>
+<li><p>For each process sum up the difference between shared and system memory. To calculate a difference for a single process use:</p>
+
+<pre><code>  use GTop;
+  my $proc_mem = GTop-&gt;new-&gt;proc_mem($$);
+  my $diff     = $proc_mem-&gt;size - $proc_mem-&gt;share;
+  print &quot;Difference is $diff bytes\n&quot;;
+</code></pre></li>
+
+<li><p>Now if we add the shared memory size of the process with maximum shared memory, we will get all the memory that actually is being used by all httpd processes, except for the parent process.</p></li>
+
+<li><p>Finally, add the size of the parent process.</p></li>
+</ol>
+
+<p>Please note that this might be incorrect for your system, so you use this number on your own risk.</p>
+
+<p>I&rsquo;ve used this technique to display real memory usage in the module <code>Apache::VMonitor</code> (see the previous article), so instead of trying to manually calculate this number you can use this module to do it automatically. In fact in the calculations used in this module there is no separation between the parent and child processes, they are all counted indifferently using the following code:</p>
+
+<pre><code>  use GTop ();
+  my $gtop = GTop-&gt;new;
+  my $total_real = 0;
+  my $max_shared = 0;
+  # @mod_perl_pids is initialized by Apache::Scoreboard,
+  # irrelevant here
+  my @mod_perl_pids = some_code();
+  for my $pid (@mod_perl_pids)
+    my $proc_mem = $gtop-&gt;proc_mem($pid);
+    my $size     = $proc_mem-&gt;size($pid);
+    my $share    = $proc_mem-&gt;share($pid);
+    $total_real += $size - $share;
+    $max_shared  = $share if $max_shared &lt; $share;
+  }
+  $total_real += $max_shared;
+</code></pre>
+
+<p>So as you see we that we accumulate the difference between the shared and reported memory:</p>
+
+<pre><code>    $total_real  += $size-$share;
+</code></pre>
+
+<p>and at the end add the biggest shared process size:</p>
+
+<pre><code>  $total_real += $max_shared;
+</code></pre>
+
+<p>So now <code>$total_real</code> contains approximately the really used memory.</p>
+
+<h3 id="span-id-are-my-variables-shared-are-my-variables-shared-span"><span id="are_my_variables_shared">Are My Variables Shared?</span></h3>
+
+<p>How do you find out if the code you write is shared between the processes or not? The code should be shared, except where it is on a memory page with variables that change. Some variables are read-only in usage and never change. For example, if you have some variables that use a lot of memory and you want them to be read-only. As you know the variable becomes unshared when the process modifies its value.</p>
+
+<p>So imagine that you have this 10Mb in-memory database that resides in a single variable, you perform various operations on it and want to make sure that the variable is still shared. For example if you do some matching regular expression (regex) processing on this variable and want to use the <code>pos()</code> function, will it make the variable unshared or not?</p>
+
+<p>The <code>Apache::Peek</code> module comes to rescue. Let&rsquo;s write a module called <em>MyShared.pm</em> which we preload at server startup, so all the variables of this module are initially shared by all children.</p>
+
+<pre><code>  MyShared.pm
+  ---------
+  package MyShared;
+  use Apache::Peek;
+
+  my $readonly = &quot;Chris&quot;;
+
+  sub match    { $readonly =~ /\w/g;               }
+  sub print_pos{ print &quot;pos: &quot;,pos($readonly),&quot;\n&quot;;}
+  sub dump     { Dump($readonly);                  }
+  1;
+</code></pre>
+
+<p>This module declares the package <code>MyShared</code>, loads the <code>Apache::Peek</code> module and defines the lexically scoped <code>$readonly</code> variable which is supposed to be a variable of large size (think about a huge hash data structure), but we will use a small one to simplify this example.</p>
+
+<p>The module also defines three subroutines: <code>match()</code> that does a simple character matching, <code>print_pos()</code> that prints the current position of the matching engine inside the string that was last matched and finally the <code>dump()</code> subroutine that calls the <code>Apache::Peek</code> module&rsquo;s <code>Dump()</code> function to dump a raw Perl data-type of the <code>$readonly</code> variable.</p>
+
+<p>Here is the script that prints the process ID (PID) and calls all three functions. The goal is to check whether <code>pos()</code> makes the variable <em>dirty</em> and therefore unshared.</p>
+
+<pre><code>  share_test.pl
+  -------------
+  use MyShared;
+  print &quot;Content-type: text/plain\r\n\r\n&quot;;
+  print &quot;PID: $$\n&quot;;
+  MyShared::match();
+  MyShared::print_pos();
+  MyShared::dump();
+</code></pre>
+
+<p>Before you restart the server, in <em>httpd.conf</em> set:</p>
+
+<pre><code>  MaxClients 2
+</code></pre>
+
+<p>for easier tracking. You need at least two servers to compare the print outs of the test program. Having more than two can make the comparison process harder.</p>
+
+<p>Now open two browser windows and issue the request for this script several times in both windows, so you get different processes PIDs reported in the two windows and each process has processed a different number of requests to the <em>share_test.pl</em> script.</p>
+
+<p>In the first window you will see something like that:</p>
+
+<pre><code>  PID: 27040
+  pos: 1
+  SV = PVMG(0x853db20) at 0x8250e8c
+    REFCNT = 3
+    FLAGS = (PADBUSY,PADMY,SMG,POK,pPOK)
+    IV = 0
+    NV = 0
+    PV = 0x8271af0 &quot;Chris&quot;\0
+    CUR = 5
+    LEN = 6
+    MAGIC = 0x853dd80
+      MG_VIRTUAL = &amp;vtbl_mglob
+      MG_TYPE = 'g'
+      MG_LEN = 1
+</code></pre>
+
+<p>And in the second window:</p>
+
+<pre><code>  PID: 27041
+  pos: 2
+  SV = PVMG(0x853db20) at 0x8250e8c
+    REFCNT = 3
+    FLAGS = (PADBUSY,PADMY,SMG,POK,pPOK)
+    IV = 0
+    NV = 0
+    PV = 0x8271af0 &quot;Chris&quot;\0
+    CUR = 5
+    LEN = 6
+    MAGIC = 0x853dd80
+      MG_VIRTUAL = &amp;vtbl_mglob
+      MG_TYPE = 'g'
+      MG_LEN = 2
+</code></pre>
+
+<p>We see that all the addresses of the supposedly big structure are the same (<code>0x8250e8c</code> and <code>0x8271af0</code>), therefore the variable data structure is almost completely shared. The only difference is in <code>SV.MAGIC.MG_LEN</code> record, which is not shared.</p>
+
+<p>So given that the <code>$readonly</code> variable is a big one, its value is still shared between the processes, while part of the variable data structure is non-shared. But it&rsquo;s almost insignificant because it takes a very little memory space.</p>
+
+<p>Now if you need to compare more than variable, doing it by hand can be quite time consuming and error prune. Therefore it&rsquo;s better to correct the testing script to dump the Perl data-types into files (e.g <em>/tmp/dump.$$</em>, where <code>$$</code> is the PID of the process) and then using <code>diff(1)</code> utility to see whether there is some difference.</p>
+
+<p>So correcting the <code>dump()</code> function to write the info to the file will do the job. Notice that I use <code>Devel::Peek</code> and not <code>Apache::Peek</code>. The both are almost the same, but <code>Apache::Peek</code> prints it output directly to the opened socket so I cannot intercept and redirect the result to the file. Since <code>Devel::Peek</code> dumps results to the STDERR stream I can use the old trick of saving away the default STDERR handler, and open a new filehandler using the STDERR. In our example when <code>Devel::Peek</code> now prints to STDERR it actually prints to our file. When I&rsquo;m done, I make sure to restore the original STDERR filehandler.</p>
+
+<p>So this is the resulting code:</p>
+
+<pre><code>  MyShared2.pm
+  ---------
+  package MyShared2;
+  use Devel::Peek;
+
+  my $readonly = &quot;Chris&quot;;
+
+  sub match    { $readonly =~ /\w/g;               }
+  sub print_pos{ print &quot;pos: &quot;,pos($readonly),&quot;\n&quot;;}
+  sub dump{
+    my $dump_file = &quot;/tmp/dump.$$&quot;;
+    print &quot;Dumping the data into $dump_file\n&quot;;
+    open OLDERR, &quot;&gt;&amp;STDERR&quot;;
+    open STDERR, &quot;&gt;&quot;.$dump_file or die &quot;Can't open $dump_file: $!&quot;;
+    Dump($readonly);
+    close STDERR ;
+    open STDERR, &quot;&gt;&amp;OLDERR&quot;;
+  }
+  1;
+</code></pre>
+
+<p>When if I modify the code to use the modified module:</p>
+
+<pre><code>  share_test2.pl
+  -------------
+  use MyShared2;
+  print &quot;Content-type: text/plain\r\n\r\n&quot;;
+  print &quot;PID: $$\n&quot;;
+  MyShared2::match();
+  MyShared2::print_pos();
+  MyShared2::dump();
+</code></pre>
+
+<p>And run it as before (with MaxClients 2), two dump files will be created in the directory <em>/tmp</em>. In our test these were created as <em>/tmp/dump.1224</em> and <em>/tmp/dump.1225</em>. When I run diff(1):</p>
+
+<pre><code>  % diff /tmp/dump.1224 /tmp/dump.1225
+  12c12
+  &lt;       MG_LEN = 1
+  ---
+  &gt;       MG_LEN = 2
+</code></pre>
+
+<p>We see that the two padlists (of the variable <code>readonly</code>) are different, as we have observed before when I did a manual comparison.</p>
+
+<p>In fact we if we think about these results again, we get to a conclusion that there is no need for two processes to find out whether the variable gets modified (and therefore unshared). It&rsquo;s enough to check the datastructure before the script was executed and after that. You can modify the <code>MyShared2</code> module to dump the padlists into a different file after each invocation and than to run the <code>diff(1)</code> on the two files.</p>
+
+<p>If you want to watch whether some lexically scoped (with <code>my())</code> variables in your <code>Apache::Registry</code> script inside the same process get changed between invocations you can use the <code>Apache::RegistryLexInfo</code> module instead. Since it does exactly this: it makes a snapshot of the padlist before and after the code execution and shows the difference between the two. This specific module was written to work with <code>Apache::Registry</code> scripts so it won&rsquo;t work for loaded modules. Use the technique I have described above for any type of variables in modules and scripts.</p>
+
+<p>Surely another way of ensuring that a scalar is readonly and therefore sharable is to either use the <code>constant</code> pragma or <code>readonly</code> pragma. But then you won&rsquo;t be able to make calls that alter the variable even a little, like in the example that I&rsquo;ve just showen, because it will be a true constant variable and you will get compile time error if you try this:</p>
+
+<pre><code>  MyConstant.pm
+  -------------
+  package MyConstant;
+  use constant readonly =&gt; &quot;Chris&quot;;
+
+  sub match    { readonly =~ /\w/g;               }
+  sub print_pos{ print &quot;pos: &quot;,pos(readonly),&quot;\n&quot;;}
+  1;
+
+  % perl -c MyConstant.pm
+
+  Can't modify constant item in match position at MyConstant.pm line
+  5, near &quot;readonly)&quot;
+  MyConstant.pm had compilation errors.
+</code></pre>
+
+<p>However this code is just right:</p>
+
+<pre><code>  MyConstant1.pm
+  -------------
+  package MyConstant1;
+  use constant readonly =&gt; &quot;Chris&quot;;
+
+  sub match { readonly =~ /\w/g; }
+  1;
+</code></pre>
+
+<h3 id="span-id-preloading-perl-modules-at-server-startup-preloading-perl-modules-at-server-startup-span"><span id="preloading_perl_modules_at_server_startup">Preloading Perl Modules at Server Startup</span></h3>
+
+<p>You can use the <code>PerlRequire</code> and <code>PerlModule</code> directives to load commonly used modules such as <code>CGI.pm</code>, <code>DBI</code> and etc., when the server is started. On most systems, server children will be able to share the code space used by these modules. Just add the following directives into <em>httpd.conf</em>:</p>
+
+<pre><code>  PerlModule CGI
+  PerlModule DBI
+</code></pre>
+
+<p>But an even better approach is to create a separate startup file (where you code in plain perl) and put there things like:</p>
+
+<pre><code>  use DBI ();
+  use Carp ();
+</code></pre>
+
+<p>Don&rsquo;t forget to prevent importing of the symbols exported by default by the module you are going to preload, by placing empty parentheses <code>()</code> after a module&rsquo;s name. Unless you need some of these in the startup file, which is unlikely. This will save you a few more memory bits.</p>
+
+<p>Then you <code>require()</code> this startup file in <em>httpd.conf</em> with the <code>PerlRequire</code> directive, placing it before the rest of the mod_perl configuration directives:</p>
+
+<pre><code>  PerlRequire /path/to/start-up.pl
+</code></pre>
+
+<p><code>CGI.pm</code> is a special case. Ordinarily <code>CGI.pm</code> autoloads most of its functions on an as-needed basis. This speeds up the loading time by deferring the compilation phase. When you use mod_perl, FastCGI or another system that uses a persistent Perl interpreter, you will want to precompile the functions at initialization time. To accomplish this, call the package function <code>compile()</code> like this:</p>
+
+<pre><code>  use CGI ();
+  CGI-&gt;compile(':all');
+</code></pre>
+
+<p>The arguments to <code>compile()</code> are a list of method names or sets, and are identical to those accepted by the <code>use()</code> and <code>import()</code> operators. Note that in most cases you will want to replace <code>':all'</code> with the tag names that you actually use in your code, since generally you only use a subset of them.</p>
+
+<p>Let&rsquo;s conduct a memory usage test to prove that preloading, reduces memory requirements.</p>
+
+<p>In order to have an easy measurement I will use only one child process, therefore I will use this setting:</p>
+
+<pre><code>  MinSpareServers 1
+  MaxSpareServers 1
+  StartServers 1
+  MaxClients 1
+  MaxRequestsPerChild 100
+</code></pre>
+
+<p>I&rsquo;m going to use the <code>Apache::Registry</code> script <em>memuse.pl</em> which consists of two parts: the first one preloads a bunch of modules (that most of them aren&rsquo;t going to be used), the second part reports the memory size and the shared memory size used by the single child process that I start. and of course it prints the difference between the two sizes.</p>
+
+<pre><code>  memuse.pl
+  ---------
+  use strict;
+  use CGI ();
+  use DB_File ();
+  use LWP::UserAgent ();
+  use Storable ();
+  use DBI ();
+  use GTop ();
+
+  my $r = shift;
+  $r-&gt;send_http_header('text/plain');
+  my $proc_mem = GTop-&gt;new-&gt;proc_mem($$);
+  my $size  = $proc_mem-&gt;size;
+  my $share = $proc_mem-&gt;share;
+  my $diff  = $size - $share;
+  printf &quot;%10s %10s %10s\n&quot;, qw(Size Shared Difference);
+  printf &quot;%10d %10d %10d (bytes)\n&quot;,$size,$share,$diff;
+</code></pre>
+
+<p>First I restart the server and execute this CGI script when none of the above modules preloaded. Here is the result:</p>
+
+<pre><code>     Size   Shared     Diff
+  4706304  2134016  2572288 (bytes)
+</code></pre>
+
+<p>Now I take all the modules:</p>
+
+<pre><code>  use strict;
+  use CGI ();
+  use DB_File ();
+  use LWP::UserAgent ();
+  use Storable ();
+  use DBI ();
+  use GTop ();
+</code></pre>
+
+<p>and copy them into the startup script, so they will get preloaded. The script remains unchanged. I restart the server and execute it again. I get the following.</p>
+
+<pre><code>     Size   Shared    Diff
+  4710400  3997696  712704 (bytes)
+</code></pre>
+
+<p>Let&rsquo;s put the two results into one table:</p>
+
+<pre><code>  Preloading    Size   Shared     Diff
+     Yes     4710400  3997696   712704 (bytes)
+      No     4706304  2134016  2572288 (bytes)
+  --------------------------------------------
+  Difference    4096  1863680 -1859584
+</code></pre>
+
+<p>You can clearly see that when the modules weren&rsquo;t preloaded the shared memory pages size, were about 1864Kb smaller relative to the case where the modules were preloaded.</p>
+
+<p>Assuming that you have had 256M dedicated to the web server, if you didn&rsquo;t preload the modules, you could have:</p>
+
+<pre><code>  268435456 = X * 2572288 + 2134016
+
+  X = (268435456 - 2134016) / 2572288 = 103
+</code></pre>
+
+<p>103 servers.</p>
+
+<p>Now let&rsquo;s calculate the same thing with modules preloaded:</p>
+
+<pre><code>  268435456 = X * 712704 + 3997696
+
+  X = (268435456 - 3997696) / 712704 = 371
+</code></pre>
+
+<p>You can have almost 4 times more servers!!!</p>
+
+<p>Remember that I have mentioned before that memory pages gets dirty and the size of the shared memory gets smaller with time? So I have presented the ideal case where the shared memory stays intact. Therefore the real numbers will be a little bit different, but not far from the numbers in our example.</p>
+
+<p>Also it&rsquo;s obvious that in your case it&rsquo;s possible that the process size will be bigger and the shared memory will be smaller, since you will use different modules and a different code, so you won&rsquo;t get this fantastic ratio, but this example is certainly helps to feel the difference.</p>
+
+<h3 id="span-id-references-references-span"><span id="references">References</span></h3>
+
+<ul>
+<li>The mod_perl site&rsquo;s URL: <a href="http://perl.apache.org/">http://perl.apache.org/</a></li>
+
+<li><p><a href="https://metacpan.org/pod/GTop">GTop</a> relies in turn on libgtop library not available for all platforms</p>
+
+<p>Visit <a href="http://home-of-linux.org/gnome/libgtop/">http://home-of-linux.org/gnome/libgtop/</a> for more information</p></li>
+
+<li><p><a href="https://metacpan.org/pod/Apache::Peek">Apache::Peek</a></p></li>
+
+<li><p><a href="https://metacpan.org/pod/Devel::Peek">Devel::Peek</a></p></li>
+</ul>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/web">web</a></div>
+                
+                  <div class="tag"><a href="/tags/mod-perl-shared-memory">mod-perl-shared-memory</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-stas-bekman">
+  <div class="col-sm-2">
+    
+    <a href="/authors/stas-bekman/"><div class="circle-avatar" style="background-image:url(/images/site/avatar.png)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/stas-bekman/"><h3>Stas Bekman</h3></a>
+    <p></p>
+    <h5><a href="/authors/stas-bekman/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2002_07_30_mod_perl.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

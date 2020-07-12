@@ -1,0 +1,958 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Jeffrey Goff on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/jeffrey-goff/</link>
+    <description>Recent content in Jeffrey Goff on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 12 Jul 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/jeffrey-goff/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Autopilots in Perl</title>
+      <link>http://localhost:1313/pub/2004/07/09/xplane.html/</link>
+      <pubDate>Mon, 12 Jul 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/07/09/xplane.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;http://www.x-plane.com&#34;&gt;X-Plane&lt;/a&gt; is an ultra-realistic flight simulator used by aviation pioneers like Burt Rutan, who uses it in his &lt;a href=&#34;http://www.popsci.com/popsci/aviation/article/0,12543,463052%2D3,00.html&#34;&gt;simulator&lt;/a&gt; for SpaceShipOne. The latest revision sports a flight model so accurate that the FAA has decided that your time spent in the simulator can count toward a pilot&amp;rsquo;s license.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll learn how to monitor and control our virtual plane, and display our virtual aircraft&amp;rsquo;s status in real-time in a &lt;code&gt;Curses&lt;/code&gt; window. Our display will be data-driven so that adding a single entry to a hash reference is all you need to display a new data element.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-software-requirements-software-requirements-span&#34;&gt;&lt;span id=&#34;Software_Requirements&#34;&gt;Software Requirements&lt;/span&gt;&lt;/h3&gt;
+
+&lt;h4 id=&#34;span-id-curses-on-os-x-curses-on-os-x-span&#34;&gt;&lt;span id=&#34;Curses_on_OS_X&#34;&gt;Curses on OS X&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Curses v1.06 seems to have some issues building on the author&amp;rsquo;s machine running OS X 10.3. Replacing &lt;code&gt;Perl_sv_isa&lt;/code&gt; with &lt;code&gt;sv_isa&lt;/code&gt; on line 275 of &lt;code&gt;Curses.c&lt;/code&gt;, along with commenting out &lt;code&gt;#define    C_LONGNAME&lt;/code&gt; and &lt;code&gt;#define C_TOUCHLINE&lt;/code&gt; in &lt;code&gt;c-config.h&lt;/code&gt; lets &lt;code&gt;Curses&lt;/code&gt; compile with enough functionality to run the monitor program.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-configuring-the-sim-configuring-the-sim-span&#34;&gt;&lt;span id=&#34;Configuring_the_Sim&#34;&gt;Configuring the Sim&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Throughout this article, we assume that you&amp;rsquo;re using X-Plane version 7.41 or higher (the demo version has all the functionality we need), and you&amp;rsquo;re flying the standard Boeing 777. This has retractable landing gears and brakes, two features we&amp;rsquo;ll eventually control from inside the monitor program, &lt;a href=&#34;http://localhost:1313/media/_pub_2004_07_09_xplane/X-Plane.pl&#34;&gt;&lt;em&gt;X-Plane.pl&lt;/em&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once you&amp;rsquo;re settled in your airplane&amp;rsquo;s cockpit, choose the Settings menu at the top of the screen and choose Data Input &amp;amp; Output under that menu. A window should open to the default tab, Data Set. This is where we tell the simulator which channels of data to transmit over the network where our monitor can listen for them.&lt;/p&gt;
+
+&lt;p&gt;Currently, &lt;em&gt;X-Plane.pl&lt;/em&gt; displays gear up/down status, throttle percentage, latitude and longitude, pitch and roll, and the simulation frame rate. To enable these channels for display, click the checkboxes just to the right of rows 12, 23, 18, 16, and 0 (respectively).&lt;/p&gt;
+
+&lt;p&gt;If you like, you can also click the checkboxes on the far right of each column to display the channel data on the plane&amp;rsquo;s windshield, as well. This is handy for debugging, especially if you&amp;rsquo;re attempting to monitor new data and don&amp;rsquo;t know what the values look like. Also, the channel numbers seem to change version to version, and if you&amp;rsquo;re using a version other than 7.41, you may need to change the code to correspond to the simulator.&lt;/p&gt;
+
+&lt;p&gt;Finally, the simulator has to be told where to send the monitoring packets. Choose the Inet2 tab, and click on the checkbox next to IP address of data receiver. Fill in the left-hand box with the IP address of the machine you&amp;rsquo;re running &lt;em&gt;X-Plane.pl&lt;/em&gt; on, and fill in the right-hand box with 49999, the UDP port on which &lt;em&gt;X-Plane.pl&lt;/em&gt; listens.&lt;/p&gt;
+
+&lt;p&gt;Incidentally, even though the monitor program acts as an instruction console, you don&amp;rsquo;t need to turn on the Instructor Console option listed here. It may be necessary, should you want to deal with more advanced communication such as triggering system failures, but for current purposes all we need to configure is the data receiver.&lt;/p&gt;
+
+&lt;p&gt;By default, &lt;em&gt;X-Plane.pl&lt;/em&gt; listens to packets sent to 127.0.0.1 over port 49999, and sends packets to the same host on port 49000. Passing command-line parameters to &lt;em&gt;X-Plane.pl&lt;/em&gt; can override these settings, but the documentation for the simulator seems to indicate that it&amp;rsquo;s hardcoded to listen on port 49000 for its commands, so be warned if you try to change this particular default.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-running-the-monitor-running-the-monitor-span&#34;&gt;&lt;span id=&#34;Running_the_monitor&#34;&gt;Running the Monitor&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Communicating at the UDP layer is a different, and much simpler, world than dealing with a full TCP/IP packet. The main differences here are that we don&amp;rsquo;t get any acknowledgement that a UDP packet is sent, and can&amp;rsquo;t even guarantee that the packet was sent at all. The practical upshot of this is that we can start and stop &lt;em&gt;X-Plane.pl&lt;/em&gt; at any time, without the need for fancy socket tear-down protocols, and we don&amp;rsquo;t need to stop the simulator every time we change &lt;em&gt;X-Plane.pl&lt;/em&gt;&amp;rsquo;s code.&lt;/p&gt;
+
+&lt;p&gt;Once we&amp;rsquo;ve started the simulator and &lt;em&gt;X-Plane.pl&lt;/em&gt; it should start displaying the plane&amp;rsquo;s position (longitude/latitude), orientation (pitch/roll), speed, and current throttle settings. If it doesn&amp;rsquo;t, switch back to the simulator window and make sure the cockpit is being displayed. The gear display mimics an indicator lamp, with &lt;code&gt;[#]&lt;/code&gt; representing a lit lamp, and &lt;code&gt;[ ]&lt;/code&gt; being a dark lamp.&lt;/p&gt;
+
+&lt;p&gt;The simulator will only send out UDP packets when the cockpit is being displayed, and if you&amp;rsquo;re running in demo mode, it decides to interrupt your flight six minutes in with two dialog boxes that effectively stop packet transmission. If it&amp;rsquo;s still displaying the cockpit, make sure that the simulator is transmitting data to the right port on the right machine, and if all else fails, watch the network with a utility such as &lt;code&gt;tcpdump&lt;/code&gt; to make sure UDP packets are being sent out. Press the &lt;code&gt;G&lt;/code&gt; key to raise and lower the gear and the &lt;code&gt;I&lt;/code&gt; and &lt;code&gt;K&lt;/code&gt; keys to advance and retard the throttles, even on the runway. Note that the gear indicator lamp on the monitor will change before the gear handle does. Also, if running the simulator on the same machine as the monitor, you may need to bring the window with the simulator to the foreground before changes are registered.&lt;/p&gt;
+
+&lt;p&gt;By the way, the Boeing 777 is equipped with thrust reversers, so negative throttle settings actually make sense. Also, the flight profile dictates running the engines up to 110% of rated power on takeoff, so throttle settings beyond 100% are also legitimate.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-talking-to-x-plane-talking-to-x-plane-span&#34;&gt;&lt;span id=&#34;Talking_to_X-Plane&#34;&gt;Talking to X-Plane&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Communicating with the simulator is done entirely via UDP packets. While the simulator can send and receive various types of packets, we&amp;rsquo;ll focus on one type of packet in particular, the &lt;code&gt;DATA&lt;/code&gt; packet. The simulator communicates using packets like that described in Figure 1. The first 4 bytes of the header are the ASCII characters naming the type of packet, and the actual data is surrounded by a zero byte on both ends.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_07_09_xplane/Figure_1.jpg&#34; width=&#34;311&#34; height=&#34;104&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In between the zero bytes, we get one 36-byte chunk for every channel the simulator sends out. Each 36-byte chunk is broken down into two sections. The first section is a four-byte index corresponding to the channel number on the &amp;ldquo;Data Set&amp;rdquo; screen, and the rest of the chunk contains eight four-byte elements.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_07_09_xplane/Figure_2.jpg&#34; width=&#34;401&#34; height=&#34;248&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The actual data types of the individual elements has changed from version to version, but 7.41 seems to have settled on one layout for inbound, and a different one for outbound. When transmitting data, the simulator sends all elements as floating-point types, but receives a mixture of floating-point and long integers.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-sending-data-sending-data-span&#34;&gt;&lt;span id=&#34;Sending_data&#34;&gt;Sending Data&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Handling the mixture of data types is largely the job of the core data structure in &lt;em&gt;X-Plane.pl&lt;/em&gt;, the &lt;code&gt;$DATA_packet&lt;/code&gt; hash reference. Starting on line 92, this data structure encapsulates everything we want to know about the simulator packet.&lt;/p&gt;
+
+&lt;p&gt;Given that there are currently 113 channels of data that the simulator can send out, and that the author is lazy, we&amp;rsquo;re not going to type in all 113 channels&amp;rsquo; worth of data. Instead, we&amp;rsquo;ll store just the channels we want to display in what computer scientists call a &amp;ldquo;sparse array,&amp;rdquo; but Perl programmers call it a &amp;ldquo;hash reference.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;One useful feature the monitoring program doesn&amp;rsquo;t have is controlling the brakes. In the simulator, brakes can be applied with a variable pressure, but for our purposes they only have two settings: &amp;ldquo;Screeching halt&amp;rdquo; and &amp;ldquo;Let it roll.&amp;rdquo; The first order of business is to find out what channel brakes are displayed on.&lt;/p&gt;
+
+&lt;p&gt;Going back to the &amp;ldquo;Data Set&amp;rdquo; tab in the simulator, we look for &amp;ldquo;brakes&amp;rdquo; on the list. In version 7.41 they&amp;rsquo;re on channel 12, &amp;ldquo;gear/brakes.&amp;rdquo; Conveniently enough, we&amp;rsquo;re already displaying the gear setting, so it shouldn&amp;rsquo;t be much work to add brakes to the list.&lt;/p&gt;
+
+&lt;p&gt;Now that we know what channel brakes are on, we need to know where in the channel they&amp;rsquo;re stored. After all, we have eight elements to look through. So, click on the checkbox on the far right of row 12 to display that channel&amp;rsquo;s contents on the windshield and close the window.&lt;/p&gt;
+
+&lt;p&gt;At the upper right-hand corner we should see the channel contents being displayed. We&amp;rsquo;re mostly curious about the &lt;code&gt;wbrak&lt;/code&gt; setting, which is element number 1 (counting from zero, of course.) The simulator also tells us that it&amp;rsquo;s of &lt;code&gt;part&lt;/code&gt; type, which means that it&amp;rsquo;s a floating point value.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll first need to display the brake setting. We do this at line 112, duplicating the block for the gear status and creating the following entry, which specifies that element 1 of channel 12 is a floating-point number representing brakes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    1 =&amp;gt; { type =&amp;gt; &#39;f&#39;, label =&amp;gt; &#39;Brakes&#39;,
+           label_x =&amp;gt; 0, label_y =&amp;gt; 4,
+           x =&amp;gt; 7, y =&amp;gt; 4 },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Restart the monitor program, and you should have a new entry for &amp;ldquo;Brakes&amp;rdquo; followed by a 0 or 1. Clicking on the &amp;ldquo;BRAKES&amp;rdquo; light in the cockpit should toggle the value. Once you&amp;rsquo;ve verified that the new brake display works, it&amp;rsquo;s time to add the code that actually sets/releases the brakes. On line 270, insert the code that transmits the new brake status to the simulator, that looks roughly like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  elsif($ch eq &#39;b&#39;) {
+    transmit_DATA(
+          $socket,
+          12,
+          -999,
+          $DATA_buffer-&amp;gt;{12}{1} ? 0 : 1,
+          (-999) x 6);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since the gear and brakes are on the same channel, we have to tell the simulator to ignore the gear while letting us set the brake value, so we use the placeholder value of -999. The old brake value is saved in &lt;code&gt;$DATA_buffer-&lt;/code&gt;{12}{1}&amp;gt;, so we set the opposite of whatever was there before.&lt;/p&gt;
+
+&lt;p&gt;Rerun the monitor program, and pressing &amp;ldquo;b&amp;rdquo; should clear and set the &amp;ldquo;brake&amp;rdquo; light on the simulator&amp;rsquo;s indicator panel. When the light is out, the aircraft should naturally start rolling, and the simulated light on the &lt;code&gt;Curses&lt;/code&gt; window should go out.&lt;/p&gt;
+
+&lt;p&gt;Of course, not all types of variable are as simple to deal with as the brakes and gears. The throttle settings should give you an idea of how to work with more advanced data types, and of course you&amp;rsquo;re not restricted to a &lt;code&gt;Curses&lt;/code&gt; display. It just happens that &lt;code&gt;Curses&lt;/code&gt; is fairly convenient and low-bandwidth, but nothing is preventing you from transplanting the code into a &lt;code&gt;GTK&lt;/code&gt; event loop.&lt;/p&gt;
+
+&lt;p&gt;While you can change values in every channel, the simulator may not react to those changes. For instance, you can&amp;rsquo;t change the latitude and longitude of the plane and expect it to teleport to the new location.&lt;/p&gt;
+
+&lt;p&gt;The values for latitude and longitude are actually computed from the values in channel 19, the X, Y and Z coordinates. Changing these will actually affect the plane&amp;rsquo;s position in space. However, there doesn&amp;rsquo;t appear to be a simple reference that will describe what values are considered read-only.&lt;/p&gt;
+
+&lt;p&gt;The official UDP documentation doesn&amp;rsquo;t contain this, and the only UDP FAQ on the &amp;lsquo;net for X-Plane appears not to have been updated since version 6. Of course, some of the channels make no sense on certain aircraft. For instance, the Cessna 172 (which the author has several hours&amp;rsquo; experience in) doesn&amp;rsquo;t have retractable gear.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-receiving-data-receiving-data-span&#34;&gt;&lt;span id=&#34;Receiving_data&#34;&gt;Receiving Data&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Receiving data is also done through the &lt;code&gt;$DATA_packet&lt;/code&gt; sparse array. In this case, the element type is just used for display purposes, as the channel is transmitted in floating point, and not the mixed format. The entry for &amp;ldquo;True Speed&amp;rdquo;, which is displayed in miles per hour, looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 104 2 =&amp;gt; {
+ 105   0 =&amp;gt; { type =&amp;gt; &#39;mph&#39;, label =&amp;gt; &#39;True Speed&#39;,
+ 106          label_x =&amp;gt; 0, label_y =&amp;gt; 1,
+ 107          x =&amp;gt; 12, y =&amp;gt; 1 },
+ 108 },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When time comes to walk the &lt;code&gt;DATA&lt;/code&gt; packet, this entry tells us to see if we&amp;rsquo;ve received data channel 2 (line 104). If we have, look at element 0, and display the element at (12,1) in the window (line 107.) Since the type is &amp;ldquo;mph&amp;rdquo; (line 105), we know that we have to format that specially.&lt;/p&gt;
+
+&lt;p&gt;Special types like &amp;ldquo;mph&amp;rdquo; and &amp;ldquo;deg&amp;rdquo; are stored in another hash reference, back on lines 81-85. When the time comes to display the actual data, we look into this hash reference to pull out the format string to use when &lt;code&gt;sprintf()&lt;/code&gt;&amp;lsquo;ing the data. The &lt;code&gt;len&lt;/code&gt; hash key gets used as well at this time, to create a mask of space characters that we use to erase the old value completely before displaying the new value.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  81 my $typedef = {
+  82   deg =&amp;gt; { format =&amp;gt; &amp;quot;%+03.3f&amp;quot;, len =&amp;gt; 8 },
+  83   mph =&amp;gt; { format =&amp;gt; &amp;quot;%03.3f&amp;quot;, len =&amp;gt; 7 },
+  84   pct =&amp;gt; { format =&amp;gt; &amp;quot;%+01.3f&amp;quot;, len =&amp;gt; 6 },
+  85 };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A special type &lt;code&gt;bool&lt;/code&gt; is used for indicator lamps (since indicator lamps are either on or off), but is handled specially. The pseudo-types &lt;code&gt;l&lt;/code&gt; and &lt;code&gt;f&lt;/code&gt; aren&amp;rsquo;t represented here, but are used when we need to return data to the simulator. While the simulator sends out only floating-point numbers, it receives a mixture of floating-point and integer values, and the mixture changes on a per-channel basis.&lt;/p&gt;
+
+&lt;p&gt;Instead of making the programmer create the format strings that we&amp;rsquo;ll use later on to &lt;code&gt;pack()&lt;/code&gt; and &lt;code&gt;unpack()&lt;/code&gt; packets, we pre-compute them in the function &lt;code&gt;create_pack_strings()&lt;/code&gt;. Since the individual elements may occur anywhere in the eight-element array, we may need to skip over elements, and that&amp;rsquo;s done with liberal use of &lt;code&gt;x4&lt;/code&gt; in the format, which tells &lt;code&gt;pack()&lt;/code&gt; and &lt;code&gt;unpack()&lt;/code&gt; to ignore 4 bytes&amp;rsquo; worth of data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; 164 sub create_pack_strings {
+ 165   for my $row (values %$DATA_packet) {
+ 166     $row-&amp;gt;{unpack} = &#39;x4&#39;;
+ 167     $row-&amp;gt;{pack} = &#39;l&#39;;
+ 168     for my $j (0..DATA_max_element) {
+ 169       if(exists $row-&amp;gt;{$j}) {
+ 170         my $col = $row-&amp;gt;{$j};
+ 171         $row-&amp;gt;{pack} .=
+ 172           (grep { $col-&amp;gt;{type} eq $_ } @float_formats) ? &#39;f&#39; : &#39;l&#39;;
+ 173         $row-&amp;gt;{unpack} .= &#39;f&#39;;
+ 174       }
+ 175       else {
+ 176         $row-&amp;gt;{pack} .= &#39;f&#39;;
+ 177         $row-&amp;gt;{unpack} .= &#39;x4&#39;;
+ ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Starting at line 164, &lt;code&gt;create_pack_strings()&lt;/code&gt; handles this tedious job for us, by walking the two-dimensional hash reference &lt;code&gt;$DATA_packet&lt;/code&gt;. Line 166 starts the unpack() string with &lt;code&gt;x4&lt;/code&gt;, which tells the &lt;code&gt;unpack()&lt;/code&gt; function to skip over the index long in the packet. We have to unpack the index beforehand in order to know how to deal with the data, so we just ignore that.&lt;/p&gt;
+
+&lt;p&gt;Line 167 starts the &lt;code&gt;pack()&lt;/code&gt; string with a long, &lt;code&gt;l&lt;/code&gt; for the inbound index. Lines 168 onward create the individual elements. The &lt;code&gt;unpack()&lt;/code&gt; strings are &lt;code&gt;f&lt;/code&gt; if the element is in use, &lt;code&gt;x4&lt;/code&gt; if it&amp;rsquo;s not. This means that the format strings only extract the data we need, which makes it easier later on when time comes to actually call &lt;code&gt;unpack()&lt;/code&gt; on the actual data.&lt;/p&gt;
+
+&lt;p&gt;Lines 171-2 and 176 create the &lt;code&gt;pack()&lt;/code&gt; format string, using &lt;code&gt;f&lt;/code&gt; for floating-point formats and &lt;code&gt;l&lt;/code&gt; for integer types. Since there&amp;rsquo;s no special way to tell the simulator what elements we&amp;rsquo;re updating, we have to send back every element. Unused elements are filled with a sentinel value of -999 to say &amp;ldquo;Do not update this value.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;In the end, we&amp;rsquo;ve added &lt;code&gt;pack&lt;/code&gt; and &lt;code&gt;unpack&lt;/code&gt; hash keys to every channel in our &lt;code&gt;$DATA_packet&lt;/code&gt; structure. Unpacking a channel structure with this format returns to us only the data we&amp;rsquo;re interested in, and skips over unused elements so we don&amp;rsquo;t have to account for empty elements in the array that &lt;code&gt;pack()&lt;/code&gt; returns to us.&lt;/p&gt;
+
+&lt;p&gt;Likewise, the &lt;code&gt;pack&lt;/code&gt; hash key gives us a string to create an entire channel&amp;rsquo;s worth of data, with the proper data types. This is important, even in what should be a simple channel like the gear and brake display. While gears get set to an integer 1 or 0, brakes have to be set to a float from 0 through 1, to account for variable pressure.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-pulling-apart-the-packet-pulling-apart-the-packet-span&#34;&gt;&lt;span id=&#34;Pulling_apart_the_packet&#34;&gt;Pulling Apart the Packet&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;All of the heavy lifting gets done in the &lt;code&gt;receive_DATA()&lt;/code&gt; function, from lines 193-234. This function accepts the message sent over the UDP port and breaks it into individual channel-sized packets. The adventure starts on line 196, after clearing a small internal buffer we use to record the last packet received.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  196   for (my $i = 0;
+  197        $i &amp;lt; (length($message)-&amp;amp;DATA_header_size-1) / DATA_element_size;
+  198        $i++) {
+  199    my $channel = substr($message,
+  200                         $i * DATA_element_size + DATA_header_size,
+  201                         DATA_element_size);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Line 197 computes the number of channels this particular message contains (we&amp;rsquo;re doing this on-the-fly in case you want to change the channel selection while the simulator is running.) The &lt;code&gt;substr()&lt;/code&gt; call breaks the message into chunks of &lt;code&gt;DATA_element_size&lt;/code&gt; bytes, and gives us back a channel&amp;rsquo;s worth of data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  203    my $index = unpack &amp;quot;l&amp;quot;, $channel;
+  204    next unless exists $DATA_packet-&amp;gt;{$index};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, we extract the index (the first byte) of the channel so that we can unpack the data appropriately. If we don&amp;rsquo;t know anything about this channel (i.e., if it isn&amp;rsquo;t present in the &lt;code&gt;$DATA_packet&lt;/code&gt; hashref), we reject it and move on. This makes us somewhat immune to changes in format.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  206    my $row = $DATA_packet-&amp;gt;{$index};
+  207    my @element = unpack $row-&amp;gt;{unpack}, $channel;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, we get back the elements we&amp;rsquo;re interested in here by &lt;code&gt;unpack&lt;/code&gt;ing with the format string that got calculated in &lt;code&gt;create_pack_strings()&lt;/code&gt;. The format string skips the index and unpacks just the elements we wanted. So, now we walk our proffered hash and extract the individual elements:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  208     my $ctr = 0;
+  209     for my $j (0..DATA_max_element) {
+  210       next unless exists $row-&amp;gt;{$j};
+  211       my $col = $row-&amp;gt;{$j};
+  212       $DATA_buffer-&amp;gt;{$index}{$j} = $element[$ctr];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Line 208 initializes a counter so that we can keep track of which element we&amp;rsquo;ve extracted. Line 209 loops through each possible element in order, so we take into account the possibility that we haven&amp;rsquo;t used a data element.&lt;/p&gt;
+
+&lt;p&gt;Lines 210-212 skip unused elements in the sparse array, and saves the content in &lt;code&gt;$DATA_buffer&lt;/code&gt;, so we can have keys like &lt;code&gt;g&lt;/code&gt; toggle the gear setting, rather than having one key to raise the gear and one key to lower them.&lt;/p&gt;
+
+&lt;p&gt;Finally, we display each element based on its type. Boolean types are displayed as either &lt;code&gt;[#]&lt;/code&gt; or &lt;code&gt;[ ]&lt;/code&gt; depending upon whether the element is a floating one or zero. They&amp;rsquo;re still written out as an integer, but displayed as floating.&lt;/p&gt;
+
+&lt;p&gt;Types such as &lt;code&gt;deg&lt;/code&gt; and &lt;code&gt;mph&lt;/code&gt; with a registered format are handled specially. We first wipe out the old data completely by overwriting with spaces. This prevents a potential issue with the old value being &amp;ldquo;3.14159&amp;rdquo;, and the new value being &amp;ldquo;2.7&amp;rdquo;. If we didn&amp;rsquo;t overwrite the old value, it would be displayed as &amp;ldquo;2.74159&amp;rdquo;, with the extra digits remaining from the old display.&lt;/p&gt;
+
+&lt;p&gt;If we&amp;rsquo;ve not been told what to do with this (which is the case with Frame Rate), simply print the value and go onward.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-data-driven-design-data-driven-design-span&#34;&gt;&lt;span id=&#34;Data-Driven_design&#34;&gt;Data-Driven Design&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In the current monitor program, each channel in a &lt;code&gt;DATA&lt;/code&gt; packet corresponds to a set of fields onscreen. Instead of creating a function to display the onscreen labels and another one to extract the information from the packets, we&amp;rsquo;ve elected to combine the label information with the channel and field, in one easy-to-use format.&lt;/p&gt;
+
+&lt;p&gt;Since the number of channels and their layout varies between versions of the simulator, we&amp;rsquo;ve chosen to represent the channels in a two-tiered hash reference. The outer tier represents a channel, and the inner tier represents the fields inside that channel.&lt;/p&gt;
+
+&lt;p&gt;This means that if a channel changes index number (as the pitch and roll channel did from version 7.1 to 7.4), we simply update the channel number in the hashref rather than cutting out a block of code and repositioning it in an array, making maintenance easier.&lt;/p&gt;
+
+&lt;p&gt;Since this data likely won&amp;rsquo;t change over the lifetime of the program, we&amp;rsquo;ll store it in a global hash reference, &lt;code&gt;$DATA_packet&lt;/code&gt; starting at line 92. We can reference a given element in an arbitrary channel with the code fragment &lt;code&gt;$DATA_packet-&lt;/code&gt;{$channel}{$element}&amp;gt;, but the code usually ends up iterating by channel and by element.&lt;/p&gt;
+
+&lt;p&gt;The sample for the gear display starts at line 109, and the entire channel/element reference looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  109  12 =&amp;gt; {
+  110    0 =&amp;gt; { type =&amp;gt; &#39;bool&#39;, label =&amp;gt; &#39;Gear&#39;,
+  111           label_x =&amp;gt; 0, label_y =&amp;gt; 3,
+  112           x =&amp;gt; 6, y =&amp;gt; 3 },
+  113  },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the only element in channel 12, and sits at element 0. Boolean types are displayed with &lt;code&gt;[#]&lt;/code&gt; and &lt;code&gt;[ ]&lt;/code&gt; representing indicator lamps, and it specifies the screen coordinates of the label (&lt;code&gt;label_x&lt;/code&gt; and &lt;code&gt;label_y&lt;/code&gt;) and where the actual indicator goes (&lt;code&gt;x&lt;/code&gt; and &lt;code&gt;y&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;After &lt;code&gt;Curses&lt;/code&gt; initializes, the &lt;code&gt;setup_display()&lt;/code&gt; function iterates over this two-tiered hash and draws the label strings that won&amp;rsquo;t change. Lines 148-156 take care of this, and show how to iterate over the data structure:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  148 sub setup_display {
+  149   for my $channel (values %$DATA_packet) {
+  150     for my $element (values %$channel) {
+  151       $win-&amp;gt;addstr($element-&amp;gt;{label_y},
+  152                    $element-&amp;gt;{label_x},
+  153                    $element-&amp;gt;{label}) if $element-&amp;gt;{label};
+  ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that &lt;code&gt;$win-&lt;/code&gt;addstr()&amp;gt; takes the Y coordinate followed by the X coordinate, in accordance with long-standing tradition. Later on, we&amp;rsquo;ll use the &lt;code&gt;type&lt;/code&gt; hash key to tell us how to display this data, but that&amp;rsquo;s handled when we receive a message.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-initialization-and-shutdown-initialization-and-shutdown-span&#34;&gt;&lt;span id=&#34;Initialization_and_Shutdown&#34;&gt;Initialization and Shutdown&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We start by handling the usual command-line options on lines 24-32, including a &lt;code&gt;-h&lt;/code&gt; option to display usage. &lt;code&gt;-x&lt;/code&gt; sets the X-Plane IP address to something other than the default of &amp;ldquo;127.0.0.1,&amp;rdquo; &lt;code&gt;-r&lt;/code&gt; changes the port the monitor listens on from 49999 to something else.&lt;/p&gt;
+
+&lt;p&gt;Incidentally, the listening port cannot be 49000, as that&amp;rsquo;s where the simulator listens for its commands. &lt;code&gt;-t&lt;/code&gt; tells the monitor to transmit on a different port than 49000, although the simulator is documented to listen to only port 49000. &lt;code&gt;-d&lt;/code&gt; is there in case this gets run with earlier versions than 7.4, where the packet format varied depending upon the operating system the simulator was running on.&lt;/p&gt;
+
+&lt;p&gt;After command-line configuration is processed and defaults overridden, we create the UDP sockets, on lines 48-65. Instead of the usual TCP protocol, we open UDP ports as that&amp;rsquo;s what the simulator communicates with. If we did this after initializing &lt;code&gt;Curses&lt;/code&gt;, our error text would be eaten by the terminal, so we place this first.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-startup-and-shutdown-of-curses-startup-and-shutdown-of-curses-span&#34;&gt;&lt;span id=&#34;Startup_and_shutdown_of_Curses&#34;&gt;Startup and Shutdown of Curses&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The Curses startup proceeds fairly normally starting on line 314, with the call to &lt;code&gt;noecho()&lt;/code&gt; and &lt;code&gt;cbreak()&lt;/code&gt; stopping the terminal from echoing key presses and suppressing carriage returns. &lt;code&gt;$win-&amp;gt;timeout(1);&lt;/code&gt; lets us read key presses without blocking, so we can display packets as they come in real-time without having to wait for key presses.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-displaying-text-displaying-text-span&#34;&gt;&lt;span id=&#34;Displaying_text&#34;&gt;Displaying Text&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Since Curses implementations vary widely in functionality, we limit ourselves to making &lt;code&gt;addstr()&lt;/code&gt; and &lt;code&gt;getch()&lt;/code&gt; calls to ensure maximum compatibility across platforms. Inside &lt;code&gt;setup_display()&lt;/code&gt; we draw the static labels such as &amp;ldquo;Gear&amp;rdquo; and &amp;ldquo;Pitch,&amp;rdquo; and do the job of displaying the actual values inside &lt;code&gt;receive_DATA()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-the-main-loop-the-main-loop-span&#34;&gt;&lt;span id=&#34;The_main_loop&#34;&gt;The Main Loop&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;This makes the main loop on lines 301-311 pretty straightforward. We poll the keyboard, and display the latest data packet if there isn&amp;rsquo;t one. Otherwise, check to see if the user pressed &amp;ldquo;q&amp;rdquo;, in which case we quit. UDP sockets don&amp;rsquo;t require any special tear down, so all that&amp;rsquo;s left is to call &lt;code&gt;endwin();&lt;/code&gt;. If the user pressed a command key, create an appropriate packet and send that out.&lt;/p&gt;
+
+&lt;p&gt;With just the &lt;code&gt;DATA&lt;/code&gt; packet, you can create your own customized cockpit display, even take this sample source and turn it into a &lt;code&gt;Gtk&lt;/code&gt; application that lets you monitor your plane graphically. The &lt;code&gt;VEHA&lt;/code&gt; packet type adds even more possibilities. You could read a friend&amp;rsquo;s virtual location and add his plane as traffic in your virtual world.&lt;/p&gt;
+
+&lt;p&gt;Even better, scrape HTML from a flight-tracker service and add real traffic to your virtual world! The &lt;code&gt;FAIL&lt;/code&gt; and &lt;code&gt;RECO&lt;/code&gt; packet types can cause simulated system failures, so you can create your own in-flight emergencies in Perl! You can even go all the way, and use the &lt;code&gt;SNAP&lt;/code&gt; packet type to completely override X-Plane&amp;rsquo;s flight model, telling X-Plane how you think the aircraft should fly.&lt;/p&gt;
+
+&lt;p&gt;Hopefully now that I&amp;rsquo;ve demystified some of X-Plane&amp;rsquo;s internal workings you&amp;rsquo;ll be inspired to create your own tools, maybe even design and build your own fly-by-wire plane, all in Perl.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Beginning PMCs</title>
+      <link>http://localhost:1313/pub/2002/01/30/pmcs.html/</link>
+      <pubDate>Wed, 30 Jan 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/01/30/pmcs.html/</guid>
+      <description>
+
+&lt;p&gt;One of the best things about Parrot is that it&amp;rsquo;s not just for Perl implementors. Parrot 0.0.3 came with support for extensible data types that can be used to implement the types used in your favorite language. The mechanism by which these types are extensible is called the &lt;strong&gt;PMC&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;The PMC, or Parrot Magic Cookie, type is a special data container for user-defined data types. Because these user-defined types are essentially implementations of a set of methods, we refer to them as PMC classes. Currently, the legal PMC classes are the &lt;code&gt;PerlInt&lt;/code&gt;, &lt;code&gt;PerlNum&lt;/code&gt;, &lt;code&gt;PerlString&lt;/code&gt;, &lt;code&gt;PerlArray&lt;/code&gt;, and &lt;code&gt;PerlHash&lt;/code&gt; types. The &lt;code&gt;PerlInt&lt;/code&gt;, &lt;code&gt;PerlNum&lt;/code&gt; and &lt;code&gt;PerlString&lt;/code&gt; data types combine to form the PerlScalar data type.&lt;/p&gt;
+
+&lt;p&gt;PMC registers, unlike the basic Integer, Number, and String registers, must be specially allocated with the &lt;code&gt;new P0, PMCType&lt;/code&gt; instruction. Other operations like &lt;code&gt;set P0,5&lt;/code&gt; are handled by special functions that are implemented by the PMC class. The rest of this article is about how to create your own PMC class implementation, alongside the &lt;code&gt;PerlInt&lt;/code&gt; and &lt;code&gt;PerlHash&lt;/code&gt; data types.&lt;/p&gt;
+
+&lt;p&gt;For our example, we&amp;rsquo;re going to implement a simple queue data structure. Our queue will be a set of integers; the queue will grow when an integer is assigned to it, and will shrink when an integer is read from it. We&amp;rsquo;ll use the &lt;code&gt;PerlInt&lt;/code&gt; class as a basis, so it may be helpful to look at some examples of operations that use it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  new P0, PerlInt  # Create a new PMC in the &#39;PerlInt&#39; class
+  set P0, 1234     # Set the value of the PMC to 1234
+  set P0, &amp;quot;4567&amp;quot;   # Set the value of the PMC to 4567
+  set P0, 12.34    # Set the value of the PMC to 12
+  set I0, P0       # Set I0 to the current value of the PMC
+  print P0
+  print &amp;quot;n&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that no special instructions like &lt;code&gt;set_string&lt;/code&gt; or &lt;code&gt;set_float&lt;/code&gt; were required to assign data of different types to the PMC. Each instruction does the Right Thing given the initial type of the PMC. This has several important consequences when designing new data types, the largest of which is that it generally isn&amp;rsquo;t necessary to add special instructions to access data contained within a PMC.&lt;/p&gt;
+
+&lt;p&gt;On the other side, this means that PMCs should attempt to behave rationally in all situations. It&amp;rsquo;s not an onerous requirement, but in some cases, rational behavior is hard to define. Queues are fairly simple to define though, in terms of behavior. A queue has one way to get data in and one way to get data out.&lt;/p&gt;
+
+&lt;p&gt;Since we can use one instruction for multiple classes, we&amp;rsquo;ll use &lt;code&gt;set Pn,In&lt;/code&gt; to add an integer to the queue, and &lt;code&gt;set In,Pn&lt;/code&gt; to get an element out of the queue. The last operation we need to perform on a queue is to determine whether the queue is empty. The PerlArray class uses &lt;code&gt;set In,Pn&lt;/code&gt; to return the length of the array into &lt;code&gt;In&lt;/code&gt;, but we&amp;rsquo;ve already decided to use that to get an integer out of the queue.&lt;/p&gt;
+
+&lt;p&gt;Instead of &lt;code&gt;set In,Pn&lt;/code&gt; to determine how many elements are in the queue, all we really need to know is whether the queue is empty or in use. For that, we can use the handy boolean operator, &lt;code&gt;if Pn,In&lt;/code&gt;. Here, the integer register is actually the number of instructions to skip over if the condition is true. We&amp;rsquo;ll have it branch if the queue is empty.&lt;/p&gt;
+
+&lt;p&gt;So, our &lt;code&gt;IntQueue&lt;/code&gt; data type will implement three instructions. First, the &lt;code&gt;set Pn,In&lt;/code&gt; instruction will add an integer to the queue. Second, when the queue is empty, &lt;code&gt;if Pn,In&lt;/code&gt; will branch to the appropriate offset. Finally, &lt;code&gt;set In,Pn&lt;/code&gt; will dequeue the last integer in the queue and place it into the appropriate integer register.&lt;/p&gt;
+
+&lt;p&gt;Some sample source using &lt;code&gt;IntQueue&lt;/code&gt; may come in handy at this time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  new P0, IntQueue   # Create the queue
+  set P0, 7          # Enqueue 7
+  set P0, -43        # Enqueue -43
+  set I0, P0         # Dequeue 7
+  print I0           # Should print &#39;7&#39;.
+  if P0, QUEUE_emPTY # Goto label &#39;QUEUE_emPTY&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;core-operations&#34;&gt;Core Operations&lt;/h3&gt;
+
+&lt;p&gt;Before forging ahead with the &lt;code&gt;IntQueue&lt;/code&gt;, let&amp;rsquo;s take a look at the core operations file. Within your CVS tarball, open &lt;em&gt;parrot/core.ops&lt;/em&gt; and search for the &lt;code&gt;set&lt;/code&gt; operations. While there are files such as &lt;em&gt;parrot/core_ops.c&lt;/em&gt; and &lt;em&gt;parrot/Parrot/OpLib/core_ops.pm&lt;/em&gt;, this is the master file. Changes in &lt;em&gt;parrot/core_ops.c&lt;/em&gt; will be overwritten the next time you build, so make your edits to &lt;em&gt;parrot/core.ops&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Having said that, let&amp;rsquo;s look at a sample PMC operation.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  inline op set(out PMC, in NUM) {
+    $1-&amp;gt;vtable-&amp;gt;set_number(interpreter,$1,$2);
+    goto NEXT();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since &lt;em&gt;core.ops&lt;/em&gt; is split into a Perl and C source file, the syntax is, of necessity, a mixture of Perl and C. The &amp;lsquo;inline&amp;rsquo; declaration is a hint to the JIT compiler, which is beyond the scope of the article. Parameters also have hints for the JIT compiler, but the most important bits here are the &lt;code&gt;PMC&lt;/code&gt; and &lt;code&gt;NUM&lt;/code&gt; tags, because these let the compiler know what types this operation can take.&lt;/p&gt;
+
+&lt;p&gt;When preprocessing into Perl, the prototype is the only piece of interest, as the assembler only needs to know the name and parameter list in order to build the assembly code.&lt;/p&gt;
+
+&lt;p&gt;C preprocessing is a bit more complicated, but still fairly straightforward. Tokens like &lt;code&gt;$2&lt;/code&gt; are replaced with the appropriate code to access the declared parameter, and a few keywords like &lt;code&gt;NEXT()&lt;/code&gt; are replaced with code to return the next instruction in the stream.&lt;/p&gt;
+
+&lt;p&gt;With the exception of those tags, the rest of the code is pure C, with access to all of the Parrot internals. Of course, you shouldn&amp;rsquo;t access such things as the register internals, but the rest of the C API is available, the most common APIs being located in &lt;em&gt;parrot/include/parrot/string.h&lt;/em&gt; and &lt;em&gt;parrot/include/parrot/key.h&lt;/em&gt;, the latter primarily being used for aggregate data structures.&lt;/p&gt;
+
+&lt;p&gt;The preprocessor, while slightly confusing, is much more flexible than the current system of nested &lt;code&gt;CPP&lt;/code&gt; macros that Perl currently uses, and hopefully easier to understand.&lt;/p&gt;
+
+&lt;h3 id=&#34;virtual-tables&#34;&gt;Virtual Tables&lt;/h3&gt;
+
+&lt;p&gt;The code above used a curious construct:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $1-&amp;gt;vtable-&amp;gt;set_number(INTERP,$1,$2);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Parameter &lt;code&gt;$1&lt;/code&gt; is a PMC, and since these are user-defined types, the code simply can&amp;rsquo;t assign &lt;code&gt;$2&lt;/code&gt; to &lt;code&gt;$1&lt;/code&gt;, as the non-PMC operations would do. Instead, each PMC has a table of function pointers assigned to it, and the interpreter calls the appropriate function.&lt;/p&gt;
+
+&lt;p&gt;For example, assuming that the &lt;code&gt;P0&lt;/code&gt; register is being initialized by the &lt;code&gt;new P0,IntQueue&lt;/code&gt; instruction, the above code would run the &lt;code&gt;set_number&lt;/code&gt; member of the &lt;code&gt;IntQueue&lt;/code&gt; class. Since the type of &lt;code&gt;P0&lt;/code&gt; is decided on at runtime, the dispatch mechanism is completely independent of the parameter type. What this means in the case of the &lt;code&gt;IntQueue&lt;/code&gt; type is that no modifications need to be made to the &lt;em&gt;parrot/core.ops&lt;/em&gt; file.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-parrot-class-files-parrot-class-files-span&#34;&gt;&lt;span id=&#34;parrot class files&#34;&gt;Parrot Class Files&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;em&gt;parrot/classes&lt;/em&gt; contains all of the PMC classes used by Parrot. Like the &lt;em&gt;parrot/core.ops&lt;/em&gt; file, this too is preprocessed before final compilation, so all edits should be made to the &lt;em&gt;parrot/classes/*.pmc&lt;/em&gt; files.&lt;/p&gt;
+
+&lt;p&gt;Creating a new class file from scratch is somewhat daunting, so we&amp;rsquo;ll use an existing class file to base &lt;code&gt;IntQueue&lt;/code&gt; on. While &lt;code&gt;IntQueue&lt;/code&gt; is an aggregate type like &lt;code&gt;PerlHash&lt;/code&gt;, the interface matches &lt;code&gt;PerlInt&lt;/code&gt; closest, in that it only deals with one element at a time.&lt;/p&gt;
+
+&lt;p&gt;Start by copying &lt;em&gt;parrot/classes/PerlInt.pmc&lt;/em&gt; to &lt;em&gt;parrot/classes/IntQueue.pmc&lt;/em&gt;, and replace all instances of &lt;code&gt;PerlInt&lt;/code&gt; with &lt;code&gt;IntQueue&lt;/code&gt;. There will be some additional C code necessary that will be available in the sample source at the end of the article, but not discussed beyond the API.&lt;/p&gt;
+
+&lt;p&gt;Registering the &lt;em&gt;parrot/classes/IntQueue.pmc&lt;/em&gt; is done in two files. Add the appropriate lines to &lt;em&gt;parrot/global_setup.c&lt;/em&gt; to initialize the new PMC type, and add the new vtable entry to &lt;em&gt;parrot/include/parrot/pmc.h&lt;/em&gt;. This is only done in the case of types that are intended to be part of Parrot itself; when Parrot has the ability to dynamically load PMC classes at runtime, a more flexible mechanism will be derived for registering classes, but for now, we&amp;rsquo;ll pretend that &lt;code&gt;IntQueue&lt;/code&gt; is going to be a core interpreter data type.&lt;/p&gt;
+
+&lt;p&gt;Within &lt;em&gt;parrot/core.ops&lt;/em&gt;, the instructions the &lt;code&gt;IntQueue&lt;/code&gt; type uses look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  op new(out PMC, in INT) {
+    PMC* newpmc;
+    if ($2 &amp;lt;0 || $2 &amp;gt;= enum_class_max) {
+      abort(); /* Deserve to lose */
+    }
+    newpmc = pmc_new(interpreter, $2);
+    $1 = newpmc;
+    goto NEXT();
+  }
+
+  inline op set(out PMC, in INT) {
+    $1-&amp;gt;vtable-&amp;gt;set_integer_native(interpreter, $1, $2);
+    goto NEXT();
+  }
+
+  inline op set(out INT, in PMC) {
+    $1 = $2-&amp;gt;vtable-&amp;gt;get_integer(interpreter, $2);
+    goto NEXT();
+  }
+
+  op if(in PMC, in INT) {
+    if ($1-&amp;gt;vtable-&amp;gt;get_bool(interpreter, $1)) {
+      goto OFFSET($2);
+    }
+    goto NEXT();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Naturally, each of these call PMC vtable entries, and each one of these has to be implemented. As of this writing, the appropriate vtable entries as they are in &lt;em&gt;parrot/classes/perlint.pmc&lt;/em&gt; look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    void init () { /* This is called from pmc_new() */
+        SELF-&amp;gt;cache.int_val = 0;
+    }
+
+    void set_integer_native (INTVAL value) {
+        SELF-&amp;gt;cache.int_val = value;
+    }
+
+    INTVAL get_integer () {
+        return SELF-&amp;gt;cache.int_val;
+    }
+
+    BOOLVAL get_bool () {
+        return pmc-&amp;gt;cache.int_val != 0;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Any code before the &lt;code&gt;pmclass&lt;/code&gt; declaration in a &lt;em&gt;parrot/classes/*.pmc&lt;/em&gt; file is literally copied into the C source, so we&amp;rsquo;ll use this area to store our data structures and APIs. In order to make matters simple, we&amp;rsquo;ll assume that the following API is available for our use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  static CONTAINER* new_container ( void );
+  static void enqueue ( CONTAINER* container, INTVAL value );
+  static INTVAL dequeue ( CONTAINER* container );
+  static INTVAL queue_length ( CONTAINER* container );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The API should be fairly straightforward to use. Initializing the container is done with &lt;code&gt;new_container&lt;/code&gt;, which returns a pointer to our new queue data type. Adding a new queue element is done with &lt;code&gt;enqueue&lt;/code&gt;, and deleting an element is done with &lt;code&gt;dequeue&lt;/code&gt;. The queue&amp;rsquo;s length can be found with &lt;code&gt;queue_length&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;CONTAINER&lt;/code&gt; data type has to be stored somewhere, and we look into &lt;em&gt;parrot/include/parrot/pmc.h&lt;/em&gt; to find out where to store it. We find the definition of the PMC structure to be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    struct PMC {
+      VTABLE *vtable;
+      INTVAL flags;
+      DPOINTER *data;
+      union {
+        INTVAL int_val;
+        FLOATVAL num_val;
+        DPOINTER *struct_val;
+      } cache;
+      SYNC *synchronize;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are two areas we can store data: &lt;code&gt;data&lt;/code&gt; is used as a general dumping ground for a data type&amp;rsquo;s internal data structures, and the &lt;code&gt;cache&lt;/code&gt; union is used for fast access to simpler data structures. &lt;code&gt;data&lt;/code&gt; is the right place to hang our &lt;code&gt;CONTAINER&lt;/code&gt; structure.&lt;/p&gt;
+
+&lt;p&gt;Like most of the other files within Parrot, the &lt;code&gt;IntQueue&lt;/code&gt; class is also preprocessed. The major preprocessing done here is to replace the &lt;code&gt;SELF&lt;/code&gt; tag with a reference to the current PMC. In the rare case that you need a reference to the current interpreter, that tag is &lt;code&gt;INTERP&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Initializing the &lt;code&gt;IntQueue&lt;/code&gt; class is done with the &lt;code&gt;init&lt;/code&gt; member. Since we&amp;rsquo;re storing our queue in the &lt;code&gt;data&lt;/code&gt;, we&amp;rsquo;ll let the &lt;code&gt;new_container&lt;/code&gt; function hand us a pointer to our new queue, and save that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    void init () {
+        SELF-&amp;gt;data = new_container();
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Getting an integer out of the queue is done with the &lt;code&gt;get_integer&lt;/code&gt; member. This isn&amp;rsquo;t meant to be production-quality, so we won&amp;rsquo;t worry about error checking. So, we&amp;rsquo;ll simply return the integer from the container.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    INTVAL get_integer () {
+        return dequeue((CONTAINER*)SELF-&amp;gt;data);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Adding an integer to the queue is done with the &lt;code&gt;set_integer_native&lt;/code&gt; member. We&amp;rsquo;ll simply use the &lt;code&gt;enqueue&lt;/code&gt; function to place the integer onto the queue like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    void set_integer_native (INTVAL value) {
+        enqueue(SELF-&amp;gt;data,value);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The final function we need to support is being able to determine whether the queue is empty, and we use the &lt;code&gt;queue_length&lt;/code&gt; function for that. The PMC member function that does this is &lt;code&gt;get_bool&lt;/code&gt;, and the code to access this is pretty straightforward:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    BOOLVAL get_bool () {
+        return queue_length(SELF-&amp;gt;data) != 0;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code has been checked in to the Parrot CVS, so feel free to look at the full version there. We&amp;rsquo;ve now walked through the major files needed to implement a Parrot Magic Cookie. Next time, we&amp;rsquo;ll explore the functions needed to implement aggregate data types like hashes and arrays, and learn about the new garbage collection system.&lt;/p&gt;
+
+&lt;p&gt;In the meantime, if you want to play with implementing your own data types for Parrot, then take a look at &lt;em&gt;docs/vtables.pod&lt;/em&gt; in the Parrot source tree for more information about the members that you can implement and how to design your own classes from scratch.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Parse::RecDescent Tutorial</title>
+      <link>http://localhost:1313/pub/2001/06/13/recdecent.html/</link>
+      <pubDate>Wed, 13 Jun 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/06/13/recdecent.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;the-basics&#34;&gt;The Basics&lt;/h3&gt;
+
+&lt;p&gt;Parse::RecDescent is a combination compiler and interpreter. The language it uses can be thought of roughly as a macro language like CPP&amp;rsquo;s, but the macros take no parameters. This may seem limiting, but the technique is very powerful nonetheless. Our macro language looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  macro_name : macro_body
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A colon separates the macro&amp;rsquo;s name and body, and the body can have any combination of explicit strings (&amp;ldquo;string, with optional spaces&amp;rdquo;), a regular expression (&lt;code&gt;/typical (?=perl) expression/&lt;/code&gt;), or another macro that&amp;rsquo;s defined somewhere in the source file. It can also have alternations. So, a sample source file could look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  startrule : day  month /\d+/ # Match strings of the form &amp;quot;Sat Jun 15&amp;quot;
+
+
+  day : &amp;quot;Sat&amp;quot; | &amp;quot;Sun&amp;quot; | &amp;quot;Mon&amp;quot; | &amp;quot;Tue&amp;quot; | &amp;quot;Wed&amp;quot; | &amp;quot;Thu&amp;quot; | &amp;quot;Fri&amp;quot;
+
+
+  month : &amp;quot;Jan&amp;quot; | &amp;quot;Feb&amp;quot; | &amp;quot;Mar&amp;quot; | &amp;quot;Apr&amp;quot; | &amp;quot;May&amp;quot; | &amp;quot;Jun&amp;quot; |
+          &amp;quot;Jul&amp;quot; | &amp;quot;Aug&amp;quot; | &amp;quot;Sep&amp;quot; | &amp;quot;Oct&amp;quot; | &amp;quot;Nov&amp;quot; | &amp;quot;Dec&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Three macros make up this source file: &lt;code&gt;startrule&lt;/code&gt;, &lt;code&gt;dayrule&lt;/code&gt; and &lt;code&gt;monthrule&lt;/code&gt;. The compiler will turn these rules into its internal representation and pass it along to the interpreter. The interpreter then takes a data file and attempts to expand the macros in &lt;code&gt;startrule&lt;/code&gt; to match the contents of the data file.&lt;/p&gt;
+
+&lt;p&gt;The interpreter takes a string like &amp;ldquo;Sat Jun 15&amp;rdquo; and attempts to expand the &lt;code&gt;startrule&lt;/code&gt; macro to match it. If it matches, the interpreter returns a true value. Otherwise, it returns &lt;code&gt;undef&lt;/code&gt;;. Some sample source may be welcome at this point:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl
+
+
+  use Parse::RecDescent;
+
+
+  # Create and compile the source file
+  $parser = Parse::RecDescent-&amp;gt;new(q(
+    startrule : day  month /\d+/
+
+
+    day : &amp;quot;Sat&amp;quot; | &amp;quot;Sun&amp;quot; | &amp;quot;Mon&amp;quot; | &amp;quot;Tue&amp;quot; | &amp;quot;Wed&amp;quot; | &amp;quot;Thu&amp;quot; | &amp;quot;Fri&amp;quot;
+
+
+    month : &amp;quot;Jan&amp;quot; | &amp;quot;Feb&amp;quot; | &amp;quot;Mar&amp;quot; | &amp;quot;Apr&amp;quot; | &amp;quot;May&amp;quot; | &amp;quot;Jun&amp;quot; |
+            &amp;quot;Jul&amp;quot; | &amp;quot;Aug&amp;quot; | &amp;quot;Sep&amp;quot; | &amp;quot;Oct&amp;quot; | &amp;quot;Nov&amp;quot; | &amp;quot;Dec&amp;quot;
+  ));
+
+
+  # Test it on sample data
+  print &amp;quot;Valid date\n&amp;quot; if $parser-&amp;gt;startrule(&amp;quot;Thu Mar 31&amp;quot;);
+  print &amp;quot;Invalid date\n&amp;quot; unless $parser-&amp;gt;startrule(&amp;quot;Jun 31 2000&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Creating a new Parse::RecDescent instance is done just like any other OO module. The only parameter is a string containing the source file, or &lt;em&gt;grammar&lt;/em&gt;. Once the compiler has done its work, the interpreter can run as many times as necessary. The sample source tests the interpreter on valid and invalid data.&lt;/p&gt;
+
+&lt;p&gt;By the way, just because the parser knows that the string &amp;ldquo;Sat Jun 15&amp;rdquo; is valid, it has no way of knowing if the 15th of June was indeed a Saturday. In fact, the sample grammar would also match &amp;ldquo;Sat Feb 135&amp;rdquo;. The grammar describes form, not content.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-getting-data-getting-data-span&#34;&gt;&lt;span id=&#34;getting data&#34;&gt;Getting Data&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now, this is quite a bit of work to go to simply to match a string. However, much, much more can be done. One element missing from this picture is capturing data. So far the sample grammar can tell if a string matches a regular expression, but it can&amp;rsquo;t tell us what the data it&amp;rsquo;s parsed is. Well, these macros can be told to run perl code when encountered.&lt;/p&gt;
+
+&lt;p&gt;Perl code goes after the end of a rule, enclosed in braces. When the interpreter recognizes a macro such as &lt;code&gt;startrule&lt;/code&gt;, the text matched is saved and passed to the perl code embedded in the grammar.&lt;/p&gt;
+
+&lt;p&gt;Each word or &lt;em&gt;term&lt;/em&gt; of the macro (&amp;lsquo;day&amp;rsquo;, &amp;lsquo;month&amp;rsquo;&amp;hellip;) is saved by the interpreter. &lt;code&gt;dayrule&lt;/code&gt; gets saved into the &lt;code&gt;$item{day}&lt;/code&gt; hash entry, as does &lt;code&gt;monthrule&lt;/code&gt;. The &lt;code&gt;/\d+/&lt;/code&gt; term doesn&amp;rsquo;t have a corresponding name, so its data comes from the &lt;code&gt;@item&lt;/code&gt; array. &lt;code&gt;$item[0]&lt;/code&gt; is always the rule name, so &lt;code&gt;/\d+/&lt;/code&gt; gets saved into &lt;code&gt;$item[3]&lt;/code&gt;. So, code to print the parsed output from our sample &lt;code&gt;startrule&lt;/code&gt; rule looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  startrule : day month /\d+/
+            { print &amp;quot;Day: $item{day} Month: $item{month} Date: $item[3]\n&amp;quot;; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Everything in the parser is run as if it was in the Parse::RecDescent package, so when calling subroutines outside Parse::RecDescent, either qualify them as &lt;code&gt;Package::Name-&amp;gt;my_sub()&lt;/code&gt; or subclass Parse::RecDescent.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-minilanguage-a-mini-language-span&#34;&gt;&lt;span id=&#34;a minilanguage&#34;&gt;A Mini-Language&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;All of the pieces are now in place to create a miniature language, compile, and run code in it. To make matters simple, the language will only have two types of instruction: Assign and Print. A sample &amp;lsquo;Assign&amp;rsquo; instruction could look like &lt;code&gt;foo = 3 + a&lt;/code&gt;. The &amp;lsquo;Print&amp;rsquo; statement will look like &lt;code&gt;print foo / 2&lt;/code&gt;. Add the fact that &lt;code&gt;3 + a&lt;/code&gt; can be arbitrarily long (&lt;code&gt;temp = 3+a/2*4&lt;/code&gt;), and now you&amp;rsquo;ve got a non-trivial parsing problem.&lt;/p&gt;
+
+&lt;p&gt;The easiest instruction to implement is the &amp;lsquo;Print&amp;rsquo; instruction. Assuming for the moment that the right-hand side of the statement (the &lt;code&gt;foo / 2&lt;/code&gt; part of &lt;code&gt;print foo / 2&lt;/code&gt;) already has a rule associated with it (called &amp;lsquo;expression&amp;rsquo;), the &amp;lsquo;Print&amp;rsquo; instruction is very simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  print_instruction : /print/i expression
+                    { print $item{expression}.&amp;quot;\n&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &amp;lsquo;Assign&amp;rsquo; instruction is a little harder to do, because we need to implement variables. We&amp;rsquo;ll do this in a straightforward fashion, storing variable names in a hash. This will live in the main package, and for the sake of exposition we&amp;rsquo;ll call it &lt;code&gt;%VARIABLE&lt;/code&gt;. One caveat to remember is that the perl code runs inside the Parse::RecDescent package, so we&amp;rsquo;ll explicitly specify the &lt;code&gt;main&lt;/code&gt; package when writing the code.&lt;/p&gt;
+
+&lt;p&gt;More complex than the &amp;lsquo;Print&amp;rsquo; instruction, the &amp;lsquo;Assign&amp;rsquo; instruction has three parts: the variable to assign to, an &amp;ldquo;=&amp;rdquo; sign, and the expression that gets assigned to the variable. So, the instruction looks roughly like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  assign_instruction : VARIABLE &amp;quot;=&amp;quot; expression
+                     { $main::VARIABLE{$item{VARIABLE}} = $item{expression} }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Much like we did with the &lt;code&gt;dayrule&lt;/code&gt; rule in the last section, we&amp;rsquo;ll combine the &lt;code&gt;print_instruction&lt;/code&gt; and &lt;code&gt;assign_instruction&lt;/code&gt; into one &lt;code&gt;instruction&lt;/code&gt; rule. The syntax for this should be fairly simple to remember, as it&amp;rsquo;s the same as a Perl regular expression.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  instruction : print_instruction
+              | assign_instruction
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In order to make the &lt;code&gt;startrule&lt;/code&gt; expand to the &lt;code&gt;instruction&lt;/code&gt; rule, we&amp;rsquo;d ordinarily use a rule like &lt;code&gt;startrule : instruction&lt;/code&gt;. However, most languages let you enter more than one instruction in a source file. One way to do this would be to create a recursive rule that would look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  instructions : instruction &amp;quot;;&amp;quot; instructions
+               | instruction
+  startrule : instructions
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;[[JMG: I&amp;rsquo;m sorely tempted to rewrite this chunk, if only &amp;lsquo;cause there&amp;rsquo;s a lot of info here in just one paragraph]]&lt;/p&gt;
+
+&lt;p&gt;Input text like &amp;ldquo;print 32&amp;rdquo; expands as follows: &lt;code&gt;startrule&lt;/code&gt; expands to &lt;code&gt;instructions&lt;/code&gt;. &lt;code&gt;instructions&lt;/code&gt; expands to &lt;code&gt;instruction&lt;/code&gt;, which expands to &lt;code&gt;print_instruction&lt;/code&gt;. Longer input text like &amp;ldquo;a = 5; b = a + 5; print a&amp;rdquo; expands like so: &lt;code&gt;startrule&lt;/code&gt; expands to &lt;code&gt;instructions&lt;/code&gt;. The interpreter looks ahead and chooses the alternative with the semicolon, and parses &amp;ldquo;a = 5&amp;rdquo; into its first instruction. &amp;ldquo;b = a + 5; print a&amp;rdquo; is left in &lt;code&gt;instructions&lt;/code&gt;. This process gets repeated twice until each bit has been parsed into a separate &lt;code&gt;instruction&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If the above seemed complex, Parse::RecDescent has a shortcut available. The above &lt;code&gt;instructions&lt;/code&gt; rule can be collapsed into &lt;code&gt;startrule : instruction(s)&lt;/code&gt;. The &lt;code&gt;(s)&lt;/code&gt; part can simply be interpreted as &amp;ldquo;One or more &lt;code&gt;instruction&lt;/code&gt;s&amp;rdquo;. By itself this assumes only whitespace exists between the different instructionrule;s, but here again, Parse::RecDescent comes to the rescue, by allowing the user to specify a separator regular expression, like &lt;code&gt;(s /;/)&lt;/code&gt;. So, the &lt;code&gt;startrule&lt;/code&gt; actually will use the &lt;code&gt;(s /;/)&lt;/code&gt; syntax.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  startrule : instruction(s /;/)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-the-expression-rule-the-expression-rule-span&#34;&gt;&lt;span id=&#34;the expression rule&#34;&gt;The Expression Rule&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Expressions can be anything from &amp;lsquo;0&amp;rsquo; all the way through &amp;lsquo;a+bar*foo/300-75&amp;rsquo;. Ths range may seem intimidating, but we&amp;rsquo;ll try to break it down into easy-to-digest pieces. Starting simply, an expression can be as simple as a single variable or integer. This would look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  expression : INTEGER
+             | VARIABLE
+             { return $main::VARIABLE{$item{VARIABLE}} }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;VARIABLE&lt;/code&gt; rule has one minor quirk. In order to compute the value of the expression, variables have to be given a value. In order to modify the text parsed, simply have the code return the modified text. In this case, the perl code looks up the variable in &lt;code&gt;%main::VARIABLE&lt;/code&gt; and returns the value of the variable rather than the text.&lt;/p&gt;
+
+&lt;p&gt;Those two lines take care of the case of an expression with a single term. Multiple-term expressions (such as &lt;code&gt;7+5&lt;/code&gt; and &lt;code&gt;foo+bar/2&lt;/code&gt;) are a little harder to deal with. The rules for a single expression like &lt;code&gt;a+7&lt;/code&gt; would look roughly like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  expression : INTEGER OP INTEGER
+             | VARIABLE OP INTEGER
+             | INTEGER OP VARIABLE
+             | VARIABLE OP VARIABLE
+  OP : /[-+*/%]/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This introduces one new term, &lt;code&gt;OP&lt;/code&gt;. This rule simply contains the binary operators &lt;code&gt;/[-+*/%]/&lt;/code&gt;. The above approach works for two terms, and can be extended to three terms or more, but is terribly unwieldy. If you&amp;rsquo;ll remember, the &lt;code&gt;expression&lt;/code&gt; rule already is defined as &lt;code&gt;INTEGER | VARIABLE&lt;/code&gt;, so we can replace the right-hand term with &lt;code&gt;expression&lt;/code&gt;. Replacing the right-hand term with &lt;code&gt;expression&lt;/code&gt; and getting rid of redundant lines results in this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  expression : INTEGER OP expression
+             | VARIABLE OP expression
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;ll hand off the final evaluation to a function outside the Parse::RecDescent package. This function will simply take the &lt;code&gt;@item&lt;/code&gt; list from the interpreter and evaluate the expression. Since the array will look like &lt;code&gt;(3,&#39;+&#39;,5)&lt;/code&gt;. we can&amp;rsquo;t simply say &lt;code&gt;$item[1] $item[2] $item[3]&lt;/code&gt;, since &lt;code&gt;$item[2]&lt;/code&gt; is a scalar variable, not an operator. Instead we&amp;rsquo;ll take the string &lt;code&gt;&amp;quot;$item[1] $item[2] $item[3]&amp;quot;&lt;/code&gt; and evaluate that. This will evaluate the string and return the result. This then gets passed back, and becomes the value of the &lt;code&gt;expression&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  expression : INTEGER OP expression
+             { return main::expression(@item) }
+             | VARIABLE OP expression
+             { return main::expression(@item) }
+
+
+  sub expression {
+    shift;
+    my ($lhs,$op,$rhs) = @_;
+    return eval &amp;quot;$lhs $op $rhs&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That completes our grammar. Testing is fairly simple. Write some code in the new language, like &amp;ldquo;a = 3 + 5; b = a + 2; print a; print b&amp;rdquo;, and pass it to the &lt;code&gt;$parser-&amp;gt;startrule()&lt;/code&gt; method to interpret the string.&lt;/p&gt;
+
+&lt;p&gt;The file included with this article comes with several test samples. The grammar in the tutorial is very simple, so plenty of room to experiment remains. One simple modification is to change the &lt;code&gt;INTEGER&lt;/code&gt; rule to account for floating point numbers. Unary operators (single-term such as &lt;code&gt;sin()&lt;/code&gt;) can be added to the &lt;code&gt;expression&lt;/code&gt; rule, and statements other than &amp;lsquo;print&amp;rsquo; and &amp;lsquo;assign&amp;rsquo; can be added easily.&lt;/p&gt;
+
+&lt;p&gt;Other modifications might include adding strings (some experimental extensions such as &amp;lsquo;&amp;lt;perl_quotelike&amp;gt;&amp;rsquo; may help). Changing the grammar to include parentheses and proper precedence are other possible projects.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-closing-closing-span&#34;&gt;&lt;span id=&#34;closing&#34;&gt;Closing&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Parse::RecDescent is a powerful but difficult-to-undertstand module. Most of this is because parsing a language can be difficult to understand. However, as long as the language has a fairly consistent grammar (or one can be written), it&amp;rsquo;s generally possible to translate it into a grammar that Parse::RecDescent can handle.&lt;/p&gt;
+
+&lt;p&gt;Many languages have their grammars available on the Internet. Grammars can usually be found in search engines under the keyword &amp;lsquo;BNF&amp;rsquo;, standing for &amp;lsquo;Backus-Naur Form&amp;rsquo;. These grammars aren&amp;rsquo;t quite in the form Parse::RecDescent prefers, but can usually be modified to suit.&lt;/p&gt;
+
+&lt;p&gt;When writing your own grammars for Parse::RecDescent, one important rule to keep in mind is that a rule can never have itself as the first term. This makes rules such as &lt;code&gt;statement : statement &amp;quot;;&amp;quot; statements&lt;/code&gt; illegal. This sort of grammar is called &amp;ldquo;left-recursive&amp;rdquo; because a rule in the grammar expands to its left side.&lt;/p&gt;
+
+&lt;p&gt;Left-recursive grammars can usually be rewritten to right-recursive, which will parse cleanly under Parse::RecDescent, but there are classes of grammars thatcant be rewritten to be right-recursive. If a grammar can&amp;rsquo;t be done in Parse::RecDescent, then something like &lt;code&gt;Parse::Yapp&lt;/code&gt; may be more appropriate. It&amp;rsquo;s also possible to coerce &lt;code&gt;yacc&lt;/code&gt; into generating a perl skeleton, supposedly.&lt;/p&gt;
+
+&lt;p&gt;Hopefully some of the shroud of mystery over Parse::RecDescent has been lifted, and more people will use this incredibly powerful module.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; #!/usr/bin/perl -w
+
+
+ use strict;
+ use Parse::RecDescent;
+ use Data::Dumper;
+
+
+ use vars qw(%VARIABLE);
+
+
+ # Enable warnings within the Parse::RecDescent module.
+
+
+ $::RD_ERRORS = 1; # Make sure the parser dies when it encounters an error
+ $::RD_WARN   = 1; # Enable warnings. This will warn on unused rules &amp;amp;c.
+ $::RD_HINT   = 1; # Give out hints to help fix problems.
+
+
+ my $grammar = &amp;lt;&amp;lt;&#39;_EOGRAMMAR_&#39;;
+
+
+   # Terminals (macros that can&#39;t expand further)
+   #
+
+
+   OP       : m([-+*/%])      # Mathematical operators
+   INTEGER  : /[-+]?\d+/      # Signed integers
+   VARIABLE : /\w[a-z0-9_]*/i # Variable
+
+
+   expression : INTEGER OP expression
+              { return main::expression(@item) }
+              | VARIABLE OP expression
+              { return main::expression(@item) }
+              | INTEGER
+              | VARIABLE
+              { return $main::VARIABLE{$item{VARIABLE}} }
+
+
+   print_instruction  : /print/i expression
+                      { print $item{expression}.&amp;quot;\n&amp;quot; }
+   assign_instruction : VARIABLE &amp;quot;=&amp;quot; expression
+                      { $main::VARIABLE{$item{VARIABLE}} = $item{expression} }
+
+
+   instruction : print_instruction
+               | assign_instruction
+
+
+   startrule: instruction(s /;/)
+
+
+ _EOGRAMMAR_
+
+
+ sub expression {
+   shift;
+   my ($lhs,$op,$rhs) = @_;
+   $lhs = $VARIABLE{$lhs} if $lhs=~/[^-+0-9]/;
+   return eval &amp;quot;$lhs $op $rhs&amp;quot;;
+ }
+
+
+ my $parser = Parse::RecDescent-&amp;gt;new($grammar);
+
+
+ print &amp;quot;a=2\n&amp;quot;;             $parser-&amp;gt;startrule(&amp;quot;a=2&amp;quot;);
+ print &amp;quot;a=1+3\n&amp;quot;;           $parser-&amp;gt;startrule(&amp;quot;a=1+3&amp;quot;);
+ print &amp;quot;print 5*7\n&amp;quot;;       $parser-&amp;gt;startrule(&amp;quot;print 5*7&amp;quot;);
+ print &amp;quot;print 2/4\n&amp;quot;;       $parser-&amp;gt;startrule(&amp;quot;print 2/4&amp;quot;);
+ print &amp;quot;print 2+2/4\n&amp;quot;;     $parser-&amp;gt;startrule(&amp;quot;print 2+2/4&amp;quot;);
+ print &amp;quot;print 2+-2/4\n&amp;quot;;    $parser-&amp;gt;startrule(&amp;quot;print 2+-2/4&amp;quot;);
+ print &amp;quot;a = 5 ; print a\n&amp;quot;; $parser-&amp;gt;startrule(&amp;quot;a = 5 ; print a&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>A Beginner&#39;s Introduction to POE</title>
+      <link>http://localhost:1313/pub/2001/01/poe.html/</link>
+      <pubDate>Wed, 17 Jan 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/01/poe.html/</guid>
+      <description>
+
+&lt;p&gt;By Dennis Taylor, with Jeff Goff&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-what-is-poe-and-why-should-i-use-it-what-is-poe-and-why-should-i-use-it-span&#34;&gt;&lt;span id=&#34;what is poe, and why should i use it&#34;&gt;What Is POE, And Why Should I Use It?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;table&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Table of Contents&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;span class=&#34;secondary&#34;&gt; •&lt;a href=&#34;#poe%20design&#34;&gt;POE Design&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+•&lt;a href=&#34;#a%20simple%20example&#34;&gt;A Simple Example&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+•&lt;a href=&#34;#that&amp;#39;s%20all%20for%20today&#34;&gt;That&#39;s All For Today&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+•&lt;a href=&#34;#related%20links&#34;&gt;Related Links&lt;/a&gt;&lt;br /&gt;
+&lt;/span&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Most of the programs we write every day have the same basic blueprint: they start up, they perform a series of actions, and then they exit. This works fine for programs that don&amp;rsquo;t need much interaction with their users or their data, but for more complicated tasks, you need a more expressive program structure.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s where POE (Perl Object Environment) comes in. POE is a framework for building Perl programs that lends itself naturally to tasks which involve reacting to external data, such as network communications or user interfaces. Programs written in POE are completely non-linear; you set up a bunch of small subroutines and define how they all call each other, and POE will automatically switch between them while it&amp;rsquo;s handling your program&amp;rsquo;s input and output. It can be confusing at first, if you&amp;rsquo;re used to procedural programming, but with a little practice it becomes second nature.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-poe-design-poe-design-span&#34;&gt;&lt;span id=&#34;poe design&#34;&gt;POE Design&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s not much of an exaggeration to say that POE is a small operating system written in Perl, with its own kernel, processes, interprocess communication (IPC), drivers, and so on. In practice, however, it just boils down to a simple system for assembling state machines. Here&amp;rsquo;s a brief description of each of the pieces that make up the POE environment:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_States&#34;&gt;States&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The basic building block of the POE program is the &lt;strong&gt;state&lt;/strong&gt;, which is a piece of code that gets executed when some event occurs &amp;ndash; when incoming data arrives, for instance, or when a session runs out of things to do, or when one session sends a message to another. Everything in POE is based around receiving and handling these events.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_The_Kernel&#34;&gt;The Kernel&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;POE&amp;rsquo;s &lt;strong&gt;kernel&lt;/strong&gt; is much like an operating system&amp;rsquo;s kernel: it keeps track of all your processes and data behind the scenes, and schedules when each piece of your code gets to run. You can use the kernel to set alarms for your POE processes, queue up states that you want to run, and perform various other low-level services, but most of the time you don&amp;rsquo;t interact with it directly.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Sessions&#34;&gt;Sessions&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Sessions&lt;/strong&gt; are the POE equivalent to processes in a real operating system. A session is just a POE program which switches from state to state as it runs. It can create ``child&amp;rdquo; sessions, send POE events to other sessions, and so on. Each session can store session-specific data in a hash called the &lt;strong&gt;heap&lt;/strong&gt;, which is accessible from every state in that session.&lt;/p&gt;
+
+&lt;p&gt;POE has a very simple cooperative multitasking model; every session executes in the same OS process without threads or forking. For this reason, you should beware of using blocking system calls in POE programs.&lt;/p&gt;
+
+&lt;p&gt;Those are the basic pieces of the Perl Object Environment, although there are a few slightly more advanced parts that we ought to explain before we go on to the actual code:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Drivers&#34;&gt;Drivers&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Drivers&lt;/strong&gt; are the lowest level of POE&amp;rsquo;s I/O layer. Currently, there&amp;rsquo;s only one driver included with the POE distribution &amp;ndash; &lt;code&gt;POE::Driver::SysRW&lt;/code&gt;, which reads and writes data from a filehandle &amp;ndash; so there&amp;rsquo;s not much to say about them. You&amp;rsquo;ll never actually use a driver directly, anyhow.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Filters&#34;&gt;Filters&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Filters&lt;/strong&gt;, on the other hand, are inordinately useful. A filter is a simple interface for converting chunks of formatted data into another format. For example, &lt;code&gt;POE::Filter::HTTPD&lt;/code&gt; converts HTTP 1.0 requests into &lt;code&gt;HTTP::Request&lt;/code&gt; objects and back, and &lt;code&gt;POE::Filter::Line&lt;/code&gt; converts a raw stream of data into a series of lines (much like Perl&amp;rsquo;s &amp;lt;&amp;gt; operator).&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Wheels&#34;&gt;Wheels&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Wheels&lt;/strong&gt; contain reusable pieces of high-level logic for accomplishing everyday tasks. They&amp;rsquo;re the POE way to encapsulate useful code. Common things you&amp;rsquo;ll do with wheels in POE include handling event-driven input and output and easily creating network connections. Wheels often use Filters and Drivers to massage and send off data. I know this is a vague description, but the code below will provide some concrete examples.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Components&#34;&gt;Components&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;A &lt;strong&gt;Component&lt;/strong&gt; is a session that&amp;rsquo;s designed to be controlled by other sessions. Your sessions can issue commands to and receive events from them, much like processes communicating via IPC in a real operating system. Some examples of Components include &lt;code&gt;POE::Component::IRC&lt;/code&gt;, an interface for creating POE-based IRC clients, or &lt;code&gt;POE::Component::Client::HTTP&lt;/code&gt;, an event-driven HTTP user agent in Perl. We won&amp;rsquo;t be using any Components in this article, but they&amp;rsquo;re a very useful part of POE nevertheless.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-simple-example-a-simple-example-span&#34;&gt;&lt;span id=&#34;a simple example&#34;&gt;A Simple Example&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;For this simple example, we&amp;rsquo;re going to make a server daemon which accepts TCP connections and prints the answers to simple arithmetic problems posed by its clients. When someone connects to it on port 31008, it will print ``Hello, client!&amp;ldquo;. The client can then send it an arithmetic expression, terminated by a newline (such as ``&lt;code&gt;6 + 3\n&lt;/code&gt;&amp;rdquo; or ``&lt;code&gt;50 / (7 - 2)\n&lt;/code&gt;&amp;rdquo;, and the server will send back the answer. Easy enough, right?&lt;/p&gt;
+
+&lt;p&gt;Writing such a program in POE isn&amp;rsquo;t terribly different from the traditional method of writing daemons in Unix. We&amp;rsquo;ll have a server session which listens for incoming TCP connections on port 31008. Each time a connection arrives, it&amp;rsquo;ll create a new child session to handle the connection. Each child session will interact with the user, and then quietly die when the connection is closed. And best of all, it&amp;rsquo;ll only take 74 lines of modular, simple Perl.&lt;/p&gt;
+
+&lt;p&gt;The program begins innocently enough:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   1  #!/usr/bin/perl -w
+   2  use strict;
+   3  use Socket qw(inet_ntoa);
+   4  use POE qw( Wheel::SocketFactory  Wheel::ReadWrite
+   5              Filter::Line          Driver::SysRW );
+   6  use constant PORT =&amp;gt; 31008;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here, we import the modules and functions which the script will use, and define a constant value for the listening port. The odd-looking &lt;code&gt;qw()&lt;/code&gt; statement after the ``&lt;code&gt;use POE&lt;/code&gt;&amp;rdquo; is just POE&amp;rsquo;s shorthand way for pulling in a lot of &lt;code&gt;POE::&lt;/code&gt; modules at once. It&amp;rsquo;s equivalent to the more verbose:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        use POE;
+        use POE::Wheel::SocketFactory;
+        use POE::Wheel:ReadWrite;
+        use POE::Filter::Line;
+        use POE::Driver::SysRW;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now for a truly cool part:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   7  new POE::Session (
+   8      _start =&amp;gt; \&amp;amp;server_start,
+   9      _stop  =&amp;gt; \&amp;amp;server_stop,
+  10  );
+  11  $poe_kernel-&amp;gt;run();
+  12  exit;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s the entire program! We set up the main server session, tell the POE kernel to start processing events, and then exit when it&amp;rsquo;s done. (The kernel is considered ``done&amp;rdquo; when it has no more sessions left to manage, but since we&amp;rsquo;re going to put the server session in an infinite loop, it&amp;rsquo;ll never actually exit that way in this script.) POE automatically exports the $poe_kernel variable into your namespace when you write ``&lt;code&gt;use POE;&lt;/code&gt;&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;new POE::Session&lt;/code&gt; call needs a word of explanation. When you create a session, you give the kernel a list of the events it will accept. In the code above, we&amp;rsquo;re saying that the new session will handle the &lt;code&gt;_start&lt;/code&gt; and &lt;code&gt;_stop&lt;/code&gt; events by calling the &lt;code&gt;&amp;amp;server_start&lt;/code&gt; and &lt;code&gt;&amp;amp;server_stop&lt;/code&gt; functions. Any other events which this session receives will be ignored. &lt;code&gt;_start&lt;/code&gt; and &lt;code&gt;_stop&lt;/code&gt; are special events to a POE session: the &lt;code&gt;_start&lt;/code&gt; state is the first thing the session executes when it&amp;rsquo;s created, and the session is put into the &lt;code&gt;_stop&lt;/code&gt; state by the kernel when it&amp;rsquo;s about to be destroyed. Basically, they&amp;rsquo;re a constructor and a destructor.&lt;/p&gt;
+
+&lt;p&gt;Now that we&amp;rsquo;ve written the entire program, we have to write the code for the states which our sessions will execute while it runs. Let&amp;rsquo;s start with (appropriately enough) &lt;code&gt;&amp;amp;server_start&lt;/code&gt;, which is called when the main server session is created at the beginning of the program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  13  sub server_start {
+  14      $_[HEAP]-&amp;gt;{listener} = new POE::Wheel::SocketFactory
+  15        ( BindPort     =&amp;gt; PORT,
+  16          Reuse        =&amp;gt; &#39;yes&#39;,
+  17          SuccessState =&amp;gt; \&amp;amp;accept_new_client,
+  18          FailureState =&amp;gt; \&amp;amp;accept_failed
+  19        );
+  20      print &amp;quot;SERVER: Started listening on port &amp;quot;, PORT, &amp;quot;.\n&amp;quot;;
+  21  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a good example of a POE state. First things first: Note the variable called &lt;code&gt;$_[HEAP]&lt;/code&gt;? POE has a special way of passing arguments around. The &lt;code&gt;@_&lt;/code&gt; array is packed with lots of extra arguments &amp;ndash; a reference to the current kernel and session, the state name, a reference to the heap, and other goodies. To access them, you index the &lt;code&gt;@_&lt;/code&gt; array with various special constants which POE exports, such as HEAP, SESSION, KERNEL, STATE, and ARG0 through ARG9 to access the state&amp;rsquo;s user-supplied arguments. Like most design decisions in POE, the point of this scheme is to maximize backwards compatibility without sacrificing speed. The example above is storing a SocketFactory wheel in the heap under the key &amp;lsquo;&lt;code&gt;listener&lt;/code&gt;&amp;rsquo;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;POE::Wheel::SocketFactory&lt;/code&gt; wheel is one of the coolest things about POE. You can use it to create any sort of stream socket (sorry, no UDP sockets yet) without worrying about the details. The statement above will create a SocketFactory that listens on the specified TCP port (with the SO_REUSE option set) for new connections. When a connection is established, it will call the &lt;code&gt;&amp;amp;accept_new_client&lt;/code&gt; state to pass on the new client socket; if something goes wrong, it&amp;rsquo;ll call the &lt;code&gt;&amp;amp;accept_failed&lt;/code&gt; state instead to let us handle the error. That&amp;rsquo;s all there is to networking in POE!&lt;/p&gt;
+
+&lt;p&gt;We store the wheel in the heap to keep Perl from accidentally garbage-collecting it at the end of the state &amp;ndash; this way, it&amp;rsquo;s persistent across all states in this session. Now, onto the &lt;code&gt;&amp;amp;server_stop&lt;/code&gt; state:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  22  sub server_stop {
+  23      print &amp;quot;SERVER: Stopped.\n&amp;quot;;
+  24  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Not much to it. I just put this state here to illustrate the flow of the program when you run it. We could just as easily have had no &lt;code&gt;_stop&lt;/code&gt; state for the session at all, but it&amp;rsquo;s more instructive (and easier to debug) this way.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s where we create new sessions to handle each incoming connection:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  25  sub accept_new_client {
+  26      my ($socket, $peeraddr, $peerport) = @_[ARG0 .. ARG2];
+  27      $peeraddr = inet_ntoa($peeraddr);
+  28      new POE::Session (
+  29          _start =&amp;gt; \&amp;amp;child_start,
+  30          _stop  =&amp;gt; \&amp;amp;child_stop,
+  31          main   =&amp;gt; [ &#39;child_input&#39;, &#39;child_done&#39;, &#39;child_error&#39; ],
+  32          [ $socket, $peeraddr, $peerport ]
+  33      );
+  34      print &amp;quot;SERVER: Got connection from $peeraddr:$peerport.\n&amp;quot;;
+  35  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our &lt;code&gt;POE::Wheel::SocketFactory&lt;/code&gt; will call this subroutine whenever it successfully establishes a connection to a client. We convert the socket&amp;rsquo;s address into a human-readable IP address (line 27) and then set up a new session which will talk to the client. It&amp;rsquo;s somewhat similar to the previous &lt;code&gt;POE::Session&lt;/code&gt; constructor we&amp;rsquo;ve seen, but a couple things bear explaining:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;@_[ARG0 .. ARG2]&lt;/code&gt; is shorthand for &lt;code&gt;($_[ARG0], $_[ARG1], $_[ARG2])&lt;/code&gt;. You&amp;rsquo;ll see array slices used like this a lot in POE programs.&lt;/p&gt;
+
+&lt;p&gt;What does line 31 mean? It&amp;rsquo;s not like any other &lt;code&gt;event_name =&lt;/code&gt; state&amp;gt; pair that we&amp;rsquo;ve seen yet. Actually, it&amp;rsquo;s another clever abbreviation. If we were to write it out the long way, it would be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  new POE::Session (
+      ...
+      child_input =&amp;gt; &amp;amp;main::child_input,
+      child_done  =&amp;gt; &amp;amp;main::child_done,
+      child_error =&amp;gt; &amp;amp;main::child_error,
+      ...
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s a handy way to write out a lot of state names when the state name is the same as the event name &amp;ndash; you just pass a package name or object as the key, and an array reference full of subroutine or method names, and POE will just do the right thing. See the &lt;code&gt;POE::Session&lt;/code&gt; docs for more useful tricks like that.&lt;/p&gt;
+
+&lt;p&gt;Finally, the array reference at the end of the &lt;code&gt;POE::Session&lt;/code&gt; constructor&amp;rsquo;s argument list (on line 32) is the list of arguments which we&amp;rsquo;re going to manually supply to the session&amp;rsquo;s &lt;code&gt;_start&lt;/code&gt; state.&lt;/p&gt;
+
+&lt;p&gt;If the &lt;code&gt;POE::Wheel::SocketFactory&lt;/code&gt; had problems creating the listening socket or accepting a connection, this happens:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  36  sub accept_failed {
+  37      my ($function, $error) = @_[ARG0, ARG2];
+  38      delete $_[HEAP]-&amp;gt;{listener};
+  39      print &amp;quot;SERVER: call to $function() failed: $error.\n&amp;quot;;
+  40  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Printing the error message is normal enough, but why do we delete the &lt;code&gt;SocketFactory&lt;/code&gt; wheel from the heap? The answer lies in the way POE manages session resources. Each session is considered ``alive&amp;rdquo; so long as it has some way of generating or receiving events. If it has no wheels and no aliases (a nifty POE feature which we won&amp;rsquo;t cover in this article), the POE kernel realizes that the session is dead and garbage-collects it. The only way the server session can get events is from its &lt;code&gt;SocketFactory&lt;/code&gt; wheel &amp;ndash; if that&amp;rsquo;s destroyed, the POE kernel will wait until all its child sessions have finished, and then garbage-collect the session. At this point, since there are no remaining sessions to execute, the POE kernel will run out of things to do and exit.&lt;/p&gt;
+
+&lt;p&gt;So, basically, this is just the normal way of getting rid of unwanted POE sessions: dispose of all the session&amp;rsquo;s resources and let the kernel clean up. Now, onto the details of the child sessions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  41  sub child_start {
+  42      my ($heap, $socket) = @_[HEAP, ARG0];
+  43      $heap-&amp;gt;{readwrite} = new POE::Wheel::ReadWrite
+  44        ( Handle =&amp;gt; $socket,
+  45          Driver =&amp;gt; new POE::Driver::SysRW (),
+  46          Filter =&amp;gt; new POE::Filter::Line (),
+  47          InputState =&amp;gt; &#39;child_input&#39;,
+  48          ErrorState =&amp;gt; &#39;child_error&#39;,
+  49        );
+  50      $heap-&amp;gt;{readwrite}-&amp;gt;put( &amp;quot;Hello, client!&amp;quot; );
+  51      $heap-&amp;gt;{peername} = join &#39;:&#39;, @_[ARG1, ARG2];
+  52      print &amp;quot;CHILD: Connected to $heap-&amp;gt;{peername}.\n&amp;quot;;
+  53  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This gets called every time a new child session is created to handle a newly connected client. We&amp;rsquo;ll introduce a new sort of POE wheel here: the &lt;code&gt;ReadWrite&lt;/code&gt; wheel, which is an event-driven way to handle I/O tasks. We pass it a filehandle, a driver which it&amp;rsquo;ll use for I/O calls, and a filter that it&amp;rsquo;ll munge incoming and outgoing data with (in this case, turning a raw stream of socket data into separate lines and vice versa). In return, the wheel will send this session a &lt;code&gt;child_input&lt;/code&gt; event whenever new data arrives on the filehandle, and a &lt;code&gt;child_error&lt;/code&gt; event if any errors occur.&lt;/p&gt;
+
+&lt;p&gt;We immediately use the new wheel to output the string ``Hello, client!&amp;rdquo; to the socket. (When you try out the code, note that the &lt;code&gt;POE::Filter::Line&lt;/code&gt; filter takes care of adding a line terminator to the string for us.) Finally, we store the address and port of the client in the heap, and print a success message.&lt;/p&gt;
+
+&lt;p&gt;We will omit discussion of the &lt;code&gt;child_stop&lt;/code&gt; state, since it&amp;rsquo;s only one line long. Now for the real meat of the program: the &lt;code&gt;child_input&lt;/code&gt; state!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  57  sub child_input {
+  58      my $data = $_[ARG0];
+  59      $data =~ tr{0-9+*/()-}{}cd;
+  60      return unless length $data;
+  61      my $result = eval $data;
+  62      chomp $@;
+  63      $_[HEAP]-&amp;gt;{readwrite}-&amp;gt;put( $@ || $result );
+  64      print &amp;quot;CHILD: Got input from peer: \&amp;quot;$data\&amp;quot; = $result.\n&amp;quot;;
+  65  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the client sends us a line of data, we strip it down to a simple arithmetic expression and eval it, sending either the result or an error message back to the client. Normally, passing untrusted user data straight to &lt;code&gt;eval()&lt;/code&gt; is a horribly dangerous thing to do, so we have to make sure we remove every non-arithmetic character from the string before it&amp;rsquo;s evaled (line 59). The child session will happily keep accepting new data until the client closes the connection. Run the code yourself and give it a try!&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;child_done&lt;/code&gt; and &lt;code&gt;child_error&lt;/code&gt; states should be fairly self-explanatory by now &amp;ndash; they each delete the child session&amp;rsquo;s &lt;code&gt;ReadWrite&lt;/code&gt; wheel, thus causing the session to be garbage-collected, and print an expository message explaining what happened. Easy enough.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-that-s-all-for-today-that-s-all-for-today-span&#34;&gt;&lt;span id=&#34;that&#39;s all for today&#34;&gt;That&amp;rsquo;s All For Today&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;And that&amp;rsquo;s all there is to it! The longest subroutine in the entire program is only 12 lines, and all the complicated parts of the server-witing process have been offloaded to POE. Now, you could make the argument that it could be done more easily as a procedural-style program, like the examples in &lt;code&gt;man perlipc&lt;/code&gt;. For a simple example program like this, that would probably be true. But the beauty of POE is that, as your program scales, it stays easy to modify. It&amp;rsquo;s easier to organize your program into discrete elements, and POE will provide all the features you would otherwise have had to hackishly reinvent yourself when the need arose.&lt;/p&gt;
+
+&lt;p&gt;So give POE a try on your next project. Anything that would ordinarily use an event loop would be a good place to start using POE. Have fun!&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2001_01_poe/poe-math3.pl&#34;&gt;Source Listing&amp;hellip;.&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-related-links-related-links-span&#34;&gt;&lt;span id=&#34;related links&#34;&gt;Related Links&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http://poe.perl.org/&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://poe.perl.org/&#34;&gt;http://poe.perl.org/&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The POE home page. All good things stem from here.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

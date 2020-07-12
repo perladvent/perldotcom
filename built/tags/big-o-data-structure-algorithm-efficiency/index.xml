@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Big O Data Structure Algorithm Efficiency on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/big-o-data-structure-algorithm-efficiency/</link>
+    <description>Recent content in Big O Data Structure Algorithm Efficiency on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 12 Feb 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/big-o-data-structure-algorithm-efficiency/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Optimizing Your Perl</title>
+      <link>http://localhost:1313/pub/2002/02/12/bigo.html/</link>
+      <pubDate>Tue, 12 Feb 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/02/12/bigo.html/</guid>
+      <description>
+
+&lt;p&gt;Is your Perl program taking too long to run? This might be because you&amp;rsquo;ve chosen a data structure or algorithm that takes a long time to run. By rethinking how you&amp;rsquo;ve implemented a function, you might be able to realize huge gains in speed.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-some-simple-complexity-theory-some-simple-complexity-theory-span&#34;&gt;&lt;span id=&#34;some simple complexity theory&#34;&gt;Some Simple Complexity Theory&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Before we can talk about speeding up something, we need a way to describe how long something takes. Because we&amp;rsquo;re talking about algorithms that may have varying amounts of input, the actual &amp;ldquo;time&amp;rdquo; to do something isn&amp;rsquo;t conclusive. Computer scientists and mathematicians use a system called big-O notation to describe the order of magnitude of how long something will take. Big-O notation represents a worst-case analysis. There are other notations to represent the magnitude of minimum and actual runtimes.&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t let the talk of computer scientists and mathematicians scare you. The next few paragraphs talk about a way to describe the difference between orders of magnitude such as a second, minute, hour or day. Or 1, 10, 100 and 1,000. You don&amp;rsquo;t need to know any fancy or scary math to understand it.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s simple. If the runtime of a function is constant, then this is written as O(1). (Note the capital or &amp;ldquo;big&amp;rdquo; O.) Constant means that no matter how much data is processed, (i.e., how much input there is) the time doesn&amp;rsquo;t change.&lt;/p&gt;
+
+&lt;p&gt;If the runtime is directly related to the amount of input (a.k.a. linear), then this is O(n). If there is twice as much input, then the algorithm will take twice as long to run. Some functions are &lt;code&gt;O(n^2)&lt;/code&gt; (quadratic) or &lt;code&gt;O(n^3)&lt;/code&gt; (cubic) or even worse.&lt;/p&gt;
+
+&lt;p&gt;Because we are only looking at orders of magnitude (is the operation going to take one minute or one hour) we can ignore constant factors and smaller terms. &lt;code&gt;O(2n)&lt;/code&gt; and &lt;code&gt;O(n)&lt;/code&gt; are equivalent. As are &lt;code&gt;O(n+1)&lt;/code&gt; and &lt;code&gt;O(n)&lt;/code&gt; or &lt;code&gt;O(n^2+n)&lt;/code&gt; and &lt;code&gt;O(n^2)&lt;/code&gt;. The smaller term is insignificant compared to the larger.&lt;/p&gt;
+
+&lt;p&gt;There are rules for analyzing code and determining its big-O, but the simplest way is to look at how many times you iterate over the data. if you don&amp;rsquo;t iterate, then it&amp;rsquo;s O(1). If you iterate over it once, then it&amp;rsquo;s O(n). If you have two nested loops, then it&amp;rsquo;s probably O(n^2).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_02_12_bigo/graph-orders.jpg&#34; alt=&#34;Orders&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-example-1-graphing-example-1-graphing-span&#34;&gt;&lt;span id=&#34;example #1: graphing&#34;&gt;Example #1: Graphing&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I developed a new graph module for a project at my day job, because the &lt;a href=&#34;https://metacpan.org/pod/Graph&#34;&gt;existing one&lt;/a&gt; was overkill, yet did not support a feature I needed. It was easy to implement and worked very well, until the graph got very big. I needed flattened subgraphs to do dependency checks, but it was taking more than two minutes to compute (on a 1Ghz P3) for a 1,000 node graph. I needed the computation to be much faster, or my users would get mad.&lt;/p&gt;
+
+&lt;p&gt;My initial Graph module looked like this. (Simplified to only show relevant parts.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; package Graph; # for Directed Graphs
+ use strict;
+ sub new {
+  my $this = { edges =&amp;gt; [],
+               vertices =&amp;gt; {} };
+  bless $this, &amp;quot;Graph&amp;quot;;
+ }
+ sub add_edge { # from x to y
+  my ($this,$x,$y) = @_;
+  $this-&amp;gt;{vertices}{$x}++;
+  $this-&amp;gt;{vertices}{$y}++;
+  push @{$this-&amp;gt;{edges}},[$x=&amp;gt;$y];
+ }
+ sub in_edges {
+  my ($this,$v) = @_;
+  grep { $_-&amp;gt;[1] eq $v } @{$this-&amp;gt;{edges}};
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The add_edge method is &lt;code&gt;O(1)&lt;/code&gt; because it will always take the same amount of time no matter how many nodes/edges are in the graph. The in_edges method is &lt;code&gt;O(n)&lt;/code&gt; because it has to iterate over each edge in the graph. (The iteration is &amp;ldquo;inside&amp;rdquo; the grep.)&lt;/p&gt;
+
+&lt;p&gt;The problematic section of the code looked like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub flat_subgraph {
+    my ($graph,$start) = @_;
+    my %seen;
+    my @worklist = ($start);
+    while (@worklist) {
+      my $x = shift @worklist;
+      push @worklist, $graph-&amp;gt;in_edges($x)
+         unless $seen{$x}++;
+    }
+    return keys %seen;
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And I actually needed to do that for multiple vertices;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my %dependencies;
+  for (keys %{$graph-&amp;gt;{vertices}}) {
+   $dependencies{$_} = [ flat_subgraph( $graph, $_ ) ];
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This would make the entire flattening operation O(n^3). ( The dependency loop is O(n), flat_subgraph is effectively O(n), and in_edges is O(n)). That means that it takes much longer to compute as the Graph becomes bigger. (Imagine a curve with the following values: 1,8,27,64&amp;hellip;, that&amp;rsquo;s the curve of relative times.)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-caching-caching-span&#34;&gt;&lt;span id=&#34;caching&#34;&gt;Caching&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;With my users expecting instant feedback, something had to be done. The first thing I tried was to cache the in_edges computation.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; sub in_edges {
+  my ($this,$v) = @_;
+  if (exists $this-&amp;gt;{cache}{in_edges}{$v}) {
+      return @{$this-&amp;gt;{cache}{in_edges}{$v}};
+  } else {
+    my @t = grep { $_-&amp;gt;[1] eq $v } @{$this-&amp;gt;{edges}};
+    $this-&amp;gt;{cache}{in_edges}{$v} = [@t];
+    return @t;
+   }
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This helped, but not as much as I had hoped. The in_edges calculation was still expensive when it wasn&amp;rsquo;t cached. It&amp;rsquo;s still &lt;code&gt;O(n)&lt;/code&gt; in the worst case, but becomes &lt;code&gt;O(1)&lt;/code&gt; when cached. On average, that means the entire flattening operation is somewhere between &lt;code&gt;O(n^2)&lt;/code&gt; and &lt;code&gt;O(n^3)&lt;/code&gt;, which is still potentially slow.&lt;/p&gt;
+
+&lt;p&gt;In situations where the same functions are called with the same arguments, caching can be useful. Mark-Jason Dominus has written a module called Memoize, which makes it easy to write caching functions. See his Web site &lt;a href=&#34;http://perl.plover.com/MiniMemoize/&#34;&gt;http://perl.plover.com/MiniMemoize/&lt;/a&gt; for more information.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-change-the-structure-change-the-structure-span&#34;&gt;&lt;span id=&#34;change the structure&#34;&gt;Change the Structure&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The next thing I tried was to change the Graph data structure. When I originally designed it, my goal was simplicity, not necessarily speed. Now speed was becoming important and I had to make changes.&lt;/p&gt;
+
+&lt;p&gt;I modified graph so that in_edges were calculated when the new edge was being added.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; package Graph; # for Directed Graphs
+ use strict;
+ sub new {
+  my $this = { edges =&amp;gt; [],
+               vertices =&amp;gt; {},
+               in_edges =&amp;gt; {} };
+  bless $this, &amp;quot;Graph&amp;quot;;
+ }
+ sub add_edge { # from x to y
+  my ($this,$x,$y) = @_;
+  $this-&amp;gt;{vertices}{$x}++;
+  $this-&amp;gt;{vertices}{$y}++;
+  push @{$this-&amp;gt;{in_edges}{$y}}, $x;
+  push @{$this-&amp;gt;{edges}},[$x=&amp;gt;$y];
+ }
+ sub in_edges {
+  my ($this,$v) = @_;
+  return @{$this-&amp;gt;{in_edges}{$v}};
+ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;add_edge remains &lt;code&gt;O(1)&lt;/code&gt; - it still executes in a constant time. in_edges is &lt;code&gt;O(1)&lt;/code&gt; as well now; its runtime will not vary based on the number of edges.&lt;/p&gt;
+
+&lt;p&gt;This was the solution I needed, getting a full flattening down from more than four minutes to only six seconds.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-importance-of-good-interfaces-the-importance-of-good-interfaces-span&#34;&gt;&lt;span id=&#34;the importance of good interfaces&#34;&gt;The Importance of Good Interfaces&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One of the things that made this fiddling possible was a good design for the Graph module&amp;rsquo;s interface. The interface hid all the details of the internals from me, so that different implementations could be plugged in. (This is actually how I did the testing, I had a regular Graph, a Graph::Cached, and a Graph::Fast. Once I decided that I liked Graph::Fast the best, I renamed it to just Graph.)&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m glad I designed Graph the way I did. I put simplicity and design first. There is a phrase you might have heard: &amp;ldquo;Premature optimization is the root of all evil.&amp;rdquo; If I had optimized the Graph module first, then I might have ended up with more complicated code that didn&amp;rsquo;t work in all cases. My initial cut of Graph was slow, but worked consistently. Optimization happened later, after I had a baseline I could return to, to guarantee proper operation.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-example-2-duplicate-message-filter-example-2-duplicate-message-filter-span&#34;&gt;&lt;span id=&#34;example #2: duplicate message filter&#34;&gt;Example #2: Duplicate Message Filter&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;You don&amp;rsquo;t always need to try and optimize code to the fullest extent. Optimizing code takes your time and energy, and it isn&amp;rsquo;t always worth it. If you spend two days to shave two seconds off a program, then it&amp;rsquo;s probably not worth it. (Unless of course, that program is running hundreds of times each day.) If a program is &amp;ldquo;fast enough&amp;rdquo;, then making it faster isn&amp;rsquo;t worth it.&lt;/p&gt;
+
+&lt;p&gt;Our second example is a duplicate message filter for e-mail. This filter is useful when you receive cc&amp;rsquo;s of messages also sent to mailing lists you are on, but you don&amp;rsquo;t want to see both.&lt;/p&gt;
+
+&lt;p&gt;The general idea behind this filter is simple.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  skip $message if seen $message-&amp;gt;id;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s only the seen function that interests us. It searches some form of cache of id&amp;rsquo;s. How we implement it can have a large effect on the speed of our mailfilter. (For more information on filtering mail with perl, take a look at &lt;a href=&#34;https://metacpan.org/pod/Mail::Audit&#34;&gt;Mail::Audit&lt;/a&gt;.)&lt;/p&gt;
+
+&lt;p&gt;The two most obvious methods that come to mind for implementing seen are a simple linear search (O(n)) or the use of a persistent database/hash table to do the lookup. O(1). I&amp;rsquo;ll ignore the cost of maintaining the database, eliminating old Message-Id&amp;rsquo;s, etc.&lt;/p&gt;
+
+&lt;p&gt;A linear approach writes out the message id&amp;rsquo;s with some sort of separator. Some programs use null bytes, others use newlines.&lt;/p&gt;
+
+&lt;p&gt;The database/hash method stores the message id&amp;rsquo;s in a binary database like a DBM or Berkeley DB file. At the expense of using more disk space, lookups are generally faster.&lt;/p&gt;
+
+&lt;p&gt;But - there&amp;rsquo;s one more factor to take into account - overhead. The linear search has little overhead, while the DB file has a large overhead. (Overhead here means time to open the file and initialize the appropriate data structures.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; TABLE: Comparison
+
+  Records | Comment
+  -----------------
+    100   | linear is 415% faster
+    250   | linear is 430% faster
+    500   | hash is 350% faster
+   1000   | hash is 690% faster
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I performed a set of timings with a rough example implementation on my P2/400, and received the above results. The hash lookup speeds remained constant, while the linear lookup dropped off rapidly after 250 items in the cache.&lt;/p&gt;
+
+&lt;p&gt;Returning to the big picture, we need to take our message-id cache size into account when determining the method to use. For this kind of cache, there&amp;rsquo;s usually not a reason to keep a huge amount of entries around, only two or three days worth should catch most duplicate messages. (And probably even one day&amp;rsquo;s worth in most cases.)&lt;/p&gt;
+
+&lt;p&gt;For this problem, an &lt;code&gt;O(1)&lt;/code&gt; solution is possible, but the constant time it takes might be higher than an &lt;code&gt;O(n)&lt;/code&gt; solution. Both cases are trivial to implement, but in some situations it will be difficult to implement &lt;code&gt;O(1)&lt;/code&gt; - and not worth it either.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Perl is a powerful language, but it doesn&amp;rsquo;t prevent the programmer from making poor decisions and shooting him/herself in the foot. One mistake is to choose the wrong data structure or algorithm for the job. By using a little bit of complexity theory, it&amp;rsquo;s possible to optimize your code and get huge speed gains.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve only touched the surface of big-O notation and complexity theory. It&amp;rsquo;s a highly researched topic that delves into the deep dark corners of math and computers. But, hopefully there&amp;rsquo;s enough here to give you a basic tool set.&lt;/p&gt;
+
+&lt;p&gt;As the second example showed, you don&amp;rsquo;t necessarily want to spend too much time thinking about optimization. Over-optimization isn&amp;rsquo;t always worth it.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-for-more-information-for-more-information-span&#34;&gt;&lt;span id=&#34;for more information&#34;&gt;For More Information&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Google&#34;&gt;Google&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; http://www.google.com/search?q=big-O+complexity
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Introduction_to_the_Theory_of_Computation&#34;&gt;Introduction to the Theory of Computation&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Part Three of Sipser, Michael. &amp;ldquo;Introduction to the Theory of Computation&amp;rdquo;. PWS Publishing Company. Boston, MA. 1997.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Algorithms_and_Complexity%2C_Internet_Edition&#34;&gt;Algorithms and Complexity, Internet Edition&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.cis.upenn.edu/%7Ewilf/AlgComp3.html&#34;&gt;http://www.cis.upenn.edu/~wilf/AlgComp3.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-special-thanks-special-thanks-span&#34;&gt;&lt;span id=&#34;special thanks&#34;&gt;Special Thanks&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Walt Mankowski&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

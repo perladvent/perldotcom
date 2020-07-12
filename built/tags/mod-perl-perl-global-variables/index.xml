@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mod Perl Perl Global Variables on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/mod-perl-perl-global-variables/</link>
+    <description>Recent content in Mod Perl Perl Global Variables on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 23 Apr 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/mod-perl-perl-global-variables/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The Perl You Need To Know</title>
+      <link>http://localhost:1313/pub/2002/04/23/mod_perl.html/</link>
+      <pubDate>Tue, 23 Apr 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/04/23/mod_perl.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-introduction-introduction-span&#34;&gt;&lt;span id=&#34;introduction&#34;&gt;Introduction&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Before I delve into the details of mod_perl programming, it&amp;rsquo;s probably a good idea to review some important Perl basics. You will discover these invaluable when you start coding for mod_perl. I will start with pure Perl notes and gradually move to explaining the peculiarities of coding for mod_perl, presenting the traps one might fall into and explaining things obvious for some of us but may be not for the others.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-using-global-variables-and-sharing-them-between-modules-packages-using-global-variables-and-sharing-them-between-modules-packages-span&#34;&gt;&lt;span id=&#34;using global variables and sharing them between modules/packages&#34;&gt;Using Global Variables and Sharing Them Between Modules/Packages&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;It helps when you code your application in a structured way, using the perl packages, but as you probably know once you start using packages it&amp;rsquo;s much harder to share the variables between the various packagings. A configuration package comes to mind as a good example of the package that will want its variables to be accessible from the other modules.&lt;/p&gt;
+
+&lt;p&gt;Of course, using the Object Oriented (OO) programming is the best way to provide an access to variables through the access methods. But if you are not yet ready for OO techniques, then you can still benefit from using the techniques I&amp;rsquo;m going to talk about.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-making-variables-global-making-variables-global-span&#34;&gt;&lt;span id=&#34;making variables global&#34;&gt;Making Variables Global&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;When you first wrote &lt;code&gt;$x&lt;/code&gt; in your code, you created a (package) global variable. It is visible everywhere in your program, although if used in a package other than the package in which it was declared (&lt;code&gt;main::&lt;/code&gt; by default), then it must be referred to with its fully qualified name, unless you have imported this variable with import(). This will work only if you do not use &lt;code&gt;strict&lt;/code&gt; pragma; but it&amp;rsquo;s important to use this pragma if you want to run your scripts under mod_perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-making-variables-global-with-strict-pragma-on-making-variables-global-with-strict-pragma-on-span&#34;&gt;&lt;span id=&#34;making variables global with strict pragma on&#34;&gt;Making Variables Global With strict Pragma On&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;First you use :&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use strict;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then you use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use vars qw($scalar %hash @array);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This declares the named variables as package globals in the current package. They may be referred to within the same file and package with their unqualified names; and in different files/packages with their fully qualified names.&lt;/p&gt;
+
+&lt;p&gt;With perl5.6 you can use the &lt;code&gt;our&lt;/code&gt; operator instead:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  our ($scalar, %hash, @array);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you want to share package global variables between packages, then here is what you can do.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-using-exporter-pm-to-share-global-variables-using-exporter-pm-to-share-global-variables-span&#34;&gt;&lt;span id=&#34;using exporter.pm to share global variables&#34;&gt;Using Exporter.pm to Share Global Variables&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Assume that you want to share the &lt;code&gt;CGI.pm&lt;/code&gt; object (I will use &lt;code&gt;$q&lt;/code&gt;) between your modules. For example, you create it in &lt;code&gt;script.pl&lt;/code&gt;, but you want it to be visible in &lt;code&gt;My::HTML&lt;/code&gt;. First, you make &lt;code&gt;$q&lt;/code&gt; global.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  script.pl:
+  ----------------
+  use vars qw($q);
+  use CGI;
+  use lib qw(.); 
+  use My::HTML qw($q); # My/HTML.pm is in the same dir as script.pl
+  $q = CGI-&amp;gt;new;
+  My::HTML::printmyheader();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that I have imported &lt;code&gt;$q&lt;/code&gt; from &lt;code&gt;My::HTML&lt;/code&gt;. And &lt;code&gt;My::HTML&lt;/code&gt; does the export of &lt;code&gt;$q&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  My/HTML.pm
+  ----------------
+  package My::HTML;
+  use strict;
+
+  BEGIN {
+    use Exporter ();
+
+    @My::HTML::ISA         = qw(Exporter);
+    @My::HTML::EXPORT      = qw();
+    @My::HTML::EXPORT_OK   = qw($q);
+
+  }
+  use vars qw($q);
+  sub printmyheader{
+    # Whatever you want to do with $q... e.g.
+    print $q-&amp;gt;header();
+  }
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So the &lt;code&gt;$q&lt;/code&gt; is shared between the &lt;code&gt;My::HTML&lt;/code&gt; package and &lt;code&gt;script.pl&lt;/code&gt;. It will work vice versa as well, if you create the object in &lt;code&gt;My::HTML&lt;/code&gt; but use it in &lt;code&gt;script.pl&lt;/code&gt;. You have true sharing, since if you change &lt;code&gt;$q&lt;/code&gt; in &lt;code&gt;script.pl&lt;/code&gt;, then it will be changed in &lt;code&gt;My::HTML&lt;/code&gt; as well.&lt;/p&gt;
+
+&lt;p&gt;What if you need to share &lt;code&gt;$q&lt;/code&gt; between more than two packages? For example you want My::Doc to share &lt;code&gt;$q&lt;/code&gt; as well.&lt;/p&gt;
+
+&lt;p&gt;You leave &lt;code&gt;My::HTML&lt;/code&gt; untouched, and modify &lt;em&gt;script.pl&lt;/em&gt; to include:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use My::Doc qw($q);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then you add the same &lt;code&gt;Exporter&lt;/code&gt; code that I used in &lt;code&gt;My::HTML&lt;/code&gt;, into &lt;code&gt;My::Doc&lt;/code&gt;, so that it also exports &lt;code&gt;$q&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;One possible pitfall is when you want to use &lt;code&gt;My::Doc&lt;/code&gt; in both &lt;code&gt;My::HTML&lt;/code&gt; and &lt;em&gt;script.pl&lt;/em&gt;. Only if you add&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use My::Doc qw($q);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;into &lt;code&gt;My::HTML&lt;/code&gt; will &lt;code&gt;$q&lt;/code&gt; be shared. Otherwise &lt;code&gt;My::Doc&lt;/code&gt; will not share &lt;code&gt;$q&lt;/code&gt; any more. To make things clear here is the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  script.pl:
+  ----------------
+  use vars qw($q);
+  use CGI;
+  use lib qw(.); 
+  use My::HTML qw($q); # My/HTML.pm is in the same dir as script.pl
+  use My::Doc  qw($q); # Ditto
+  $q = new CGI;
+
+  My::HTML::printmyheader();  
+
+  My/HTML.pm
+  ----------------
+  package My::HTML;
+  use strict;
+
+  BEGIN {
+    use Exporter ();
+    @My::HTML::ISA         = qw(Exporter);
+    @My::HTML::EXPORT      = qw();
+    @My::HTML::EXPORT_OK   = qw($q);
+  }
+  use vars     qw($q);
+  use My::Doc  qw($q);
+  sub printmyheader{
+    # Whatever you want to do with $q... e.g.
+    print $q-&amp;gt;header();
+    My::Doc::printtitle(&#39;Guide&#39;);
+  }
+  1;  
+
+  My/Doc.pm
+  ----------------
+  package My::Doc;
+  use strict;
+
+  BEGIN {
+    use Exporter ();
+    @My::Doc::ISA         = qw(Exporter);
+    @My::Doc::EXPORT      = qw();
+    @My::Doc::EXPORT_OK   = qw($q);
+  }
+  use vars qw($q);
+  sub printtitle{
+    my $title = shift || &#39;None&#39;;
+    print $q-&amp;gt;h1($title);
+  }
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-using-the-perl-aliasing-feature-to-share-global-variables-using-the-perl-aliasing-feature-to-share-global-variables-span&#34;&gt;&lt;span id=&#34;using the perl aliasing feature to share global variables&#34;&gt;Using the Perl Aliasing Feature to Share Global Variables&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;As the title says, you can import a variable into a script or module without using &lt;code&gt;Exporter.pm&lt;/code&gt;. I have found it useful to keep all the configuration variables in one module &lt;code&gt;My::Config&lt;/code&gt;. But then I have to export all the variables in order to use them in other modules, which is bad for two reasons: polluting other packages&amp;rsquo; name spaces with extra tags which increases the memory requirements; and adding the overhead of keeping track of what variables should be exported from the configuration module and what imported, for some particular package. I solve this problem by keeping all the variables in one hash &lt;code&gt;%c&lt;/code&gt; and exporting that. Here is an example of &lt;code&gt;My::Config&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package My::Config;
+  use strict;
+  use vars qw(%c);
+  %c = (
+    # All the configs go here
+    scalar_var =&amp;gt; 5,
+
+    array_var  =&amp;gt; [qw(foo bar)],
+    hash_var   =&amp;gt; {
+                   foo =&amp;gt; &#39;Foo&#39;,
+                   bar =&amp;gt; &#39;BARRR&#39;,
+                  },
+  );
+  1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now in packages that want to use the configuration variables I have either to use the fully qualified names such as &lt;code&gt;$My::Config::test&lt;/code&gt;, which I dislike, or import them as described in the previous section. But hey, since I have only one variable to handle, I can make things even simpler and save the loading of the &lt;code&gt;Exporter.pm&lt;/code&gt; package. I will use the Perl aliasing feature for exporting and saving the keystrokes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package My::HTML;
+  use strict;
+  use lib qw(.);
+    # Global Configuration now aliased to global %c
+  use My::Config (); # My/Config.pm in the same dir as script.pl
+  use vars qw(%c);
+  *c = \%My::Config::c;
+
+    # Now you can access the variables from the My::Config
+  print $c{scalar_var};
+  print $c{array_var}[0];
+  print $c{hash_var}{foo};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;
+
+&lt;a href=&#34;http://conferences.oreilly.com/oscon/&#34;&gt;O&amp;#39;Reilly Open Source Convention -- July 22-26, San Diego, CA.&lt;/a&gt;
+&lt;p&gt;&lt;strong&gt;From the Frontiers of Research to the Heart of the Enterprise&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://conferences.oreillynet.com/cs/os2002/view/e_sess/3032&#34;&gt;mod_perl 2.0, the Next Generation&lt;/a&gt; Stas Bekman will provide an overview of what&#39;s new in mod_perl 2.0 and what else is planned for the future in his talk at the upcoming &lt;a href=&#34;http://conferences.oreillynet.com/os2002/&#34;&gt;O&#39;Reilly Open Source Convention&lt;/a&gt;, this July 22-26, in San Diego.&lt;/p&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Of course, $c is global when you use it as described above, and if you change it, then it will affect any other packages you have aliased &lt;code&gt;$My::Config::c&lt;/code&gt; to.&lt;/p&gt;
+
+&lt;p&gt;Note that aliases work either with global or &lt;code&gt;local()&lt;/code&gt; vars - you cannot write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my *c = \%My::Config::c; # ERROR!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which is an error. But you can write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  local *c = \%My::Config::c;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For more information about aliasing, refer to the Camel book, second edition, pages 51-52.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-using-nonhardcoded-configuration-module-names-using-non-hardcoded-configuration-module-names-span&#34;&gt;&lt;span id=&#34;using nonhardcoded configuration module names&#34;&gt;Using Non-Hardcoded Configuration Module Names&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;You have just seen how to use a configuration module for configuration centralization and an easy access to the information stored in this module. However, there is somewhat of a chicken-and-egg problem: how to let your other modules know the name of this file? Hardcoding the name is brittle &amp;ndash; if you have only a single project, then it should be fine. If you have more projects that use different configurations and you will want to reuse their code, then you will have to find all instances of the hardcoded name and replace it.&lt;/p&gt;
+
+&lt;p&gt;Another solution could be to have the same name for a configuration module, like &lt;code&gt;My::Config&lt;/code&gt; but putting a different copy of it into different locations. But this won&amp;rsquo;t work under mod_perl because of the namespace collision. You cannot load different modules that use the same name; only the first one will be loaded.&lt;/p&gt;
+
+&lt;p&gt;Luckily, there is another solution that allows us to be flexible. &lt;code&gt;PerlSetVar&lt;/code&gt; comes to rescue. Just like with environment variables, you can set server&amp;rsquo;s global Perl variables that can be retrieved from any module and script. Those statements are placed into the &lt;em&gt;httpd.conf&lt;/em&gt; file. For example&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlSetVar FooBaseDir       /home/httpd/foo
+  PerlSetVar FooConfigModule  Foo::Config
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I &lt;code&gt;require()&lt;/code&gt; the file where the above configuration will be used.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlRequire /home/httpd/perl/startup.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the &lt;em&gt;startup.pl&lt;/em&gt; I might have the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # retrieve the configuration module path
+  use Apache:
+  my $s             = Apache-&amp;gt;server;
+  my $base_dir      = $s-&amp;gt;dir_config(&#39;FooBaseDir&#39;)      || &#39;&#39;;
+  my $config_module = $s-&amp;gt;dir_config(&#39;FooConfigModule&#39;) || &#39;&#39;;
+  die &amp;quot;FooBaseDir and FooConfigModule aren&#39;t set in httpd.conf&amp;quot; 
+    unless $base_dir and $config_module;
+
+    # build the real path to the config module
+  my $path = &amp;quot;$base_dir/$config_module&amp;quot;;
+  $path =~ s|::|/|;
+  $path .= &amp;quot;.pm&amp;quot;;
+    # I have something like &amp;quot;/home/httpd/foo/Foo/Config.pm&amp;quot;
+    # now I can pull in the configuration module
+  require $path;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I know the module name and it&amp;rsquo;s loaded, so for example if I need to use some variables stored in this module to open a database connection, then I will do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Apache::DBI-&amp;gt;connect_on_init
+  (&amp;quot;DBI:mysql:${$config_module.&#39;::DB_NAME&#39;}::${$config_module.&#39;::SERVER&#39;}&amp;quot;,
+   ${$config_module.&#39;::USER&#39;},
+   ${$config_module.&#39;::USER_PASSWD&#39;},
+   {
+    PrintError =&amp;gt; 1, # warn() on errors
+    RaiseError =&amp;gt; 0, # don&#39;t die on error
+    AutoCommit =&amp;gt; 1, # commit executes immediately
+   }
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Where variable like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  ${$config_module.&#39;::USER&#39;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In my example are really:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $Foo::Config::USER
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you want to access these variable from within your code at the run time, instead accessing to the server object &lt;code&gt;$c&lt;/code&gt;, then use the request object &lt;code&gt;$r&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $r = shift;
+  my $base_dir      = $r-&amp;gt;dir_config(&#39;FooBaseDir&#39;)      || &#39;&#39;;
+  my $config_module = $r-&amp;gt;dir_config(&#39;FooConfigModule&#39;) || &#39;&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-the-scope-of-the-special-perl-variables-the-scope-of-the-special-perl-variables-span&#34;&gt;&lt;span id=&#34;the scope of the special perl variables&#34;&gt;The Scope of the Special Perl Variables&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s talk about Special Perl Variables.&lt;/p&gt;
+
+&lt;p&gt;Special Perl variables like &lt;code&gt;$|&lt;/code&gt; (buffering), &lt;code&gt;$^T&lt;/code&gt; (script&amp;rsquo;s start time), &lt;code&gt;$^W&lt;/code&gt; (warnings mode), &lt;code&gt;$/&lt;/code&gt; (input record separator), &lt;code&gt;$\&lt;/code&gt; (output record separator) and many more are all true global variables; they do not belong to any particular package (not even &lt;code&gt;main::&lt;/code&gt;) and are universally available. This means that if you change them, then you change them anywhere across the entire program; furthermore you cannot scope them with my(). However, you can local()ize them, which means that any changes you apply will only last until the end of the enclosing scope. In the mod_perl situation where the child server doesn&amp;rsquo;t usually exit, if in one of your scripts you modify a global variable, then it will be changed for the rest of the process&amp;rsquo; life and will affect all the scripts executed by the same process. Therefore, localizing these variables is highly recommended; I&amp;rsquo;d say even mandatory.&lt;/p&gt;
+
+&lt;p&gt;I will demonstrate the case on the input record separator variable. If you undefine this variable, then the diamond operator (readline) will suck in the whole file at once if you have enough memory. Remembering this you should never write code like the example below.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $/ = undef; # BAD!
+  open IN, &amp;quot;file&amp;quot; ....
+    # slurp it all into a variable
+  $all_the_file = &amp;lt;IN&amp;gt;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The proper way is to have a &lt;code&gt;local()&lt;/code&gt; keyword before the special variable is changed, like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  local $/ = undef; 
+  open IN, &amp;quot;file&amp;quot; ....
+    # slurp it all inside a variable
+  $all_the_file = &amp;lt;IN&amp;gt;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But there is a catch. &lt;code&gt;local()&lt;/code&gt; will propagate the changed value to the code below it. The modified value will be in effect until the script terminates, unless it is changed again somewhere else in the script.&lt;/p&gt;
+
+&lt;p&gt;A cleaner approach is to enclose the whole of the code that is affected by the modified variable in a block, like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  {
+    local $/ = undef; 
+    open IN, &amp;quot;file&amp;quot; ....
+      # slurp it all inside a variable
+    $all_the_file = &amp;lt;IN&amp;gt;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That way when Perl leaves the block it restores the original value of the &lt;code&gt;$/&lt;/code&gt; variable, and you don&amp;rsquo;t need to worry elsewhere in your program about its value being changed here.&lt;/p&gt;
+
+&lt;p&gt;Note that if you call a subroutine after you&amp;rsquo;ve set a global variable but within the enclosing block, the global variable will be visible with its new value inside the subroutine.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-compiled-regular-expressions-compiled-regular-expressions-span&#34;&gt;&lt;span id=&#34;compiled regular expressions&#34;&gt;Compiled Regular Expressions&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;And finally I want to cover the pitfall many people have fallen into. Let&amp;rsquo;s talk about regular expressions use under mod_perl.&lt;/p&gt;
+
+&lt;p&gt;When using a regular expression that contains an interpolated Perl variable, if it is known that the variable (or variables) will not change during the execution of the program, a standard optimization technique is to add the &lt;code&gt;/o&lt;/code&gt; modifier to the regex pattern. This directs the compiler to build the internal table once, for the entire lifetime of the script, rather than each time the pattern is executed. Consider:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $pat = &#39;^foo$&#39;; # likely to be input from an HTML form field
+  foreach( @list ) {
+    print if /$pat/o;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;Previously in the Series&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://localhost:1313/pub/2002/04/10/mod_perl.html&#34;&gt;Installing mod_perl without superuser privileges&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;a href=&#34;http://localhost:1313/pub/2002/03/22/modperl.html&#34;&gt;mod_perl in 30 minutes&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;a href=&#34;http://localhost:1313/pub/2002/02/26/whatismodperl.html&#34;&gt;Why mod_perl?&lt;/a&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;This is usually a big win in loops over lists, or when using the &lt;code&gt;grep()&lt;/code&gt; or &lt;code&gt;map()&lt;/code&gt; operators.&lt;/p&gt;
+
+&lt;p&gt;In long-lived mod_perl scripts, however, the variable may change with each invocation and this can pose a problem. The first invocation of a fresh httpd child will compile the regex and perform the search correctly. However, all subsequent uses by that child will continue to match the original pattern, regardless of the current contents of the Perl variables the pattern is supposed to depend on. Your script will appear to be broken.&lt;/p&gt;
+
+&lt;p&gt;There are two solutions to this problem:&lt;/p&gt;
+
+&lt;p&gt;The first is to use &lt;code&gt;eval q//&lt;/code&gt;, to force the code to be evaluated each time. Just make sure that the eval block covers the entire loop of processing, and not just the pattern match itself.&lt;/p&gt;
+
+&lt;p&gt;The above code fragment would be rewritten as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $pat = &#39;^foo$&#39;;
+  eval q{
+    foreach( @list ) {
+      print if /$pat/o;
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Just saying:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  foreach( @list ) {
+    eval q{ print if /$pat/o; };
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;means that I recompile the regex for every element in the list, even though the regex doesn&amp;rsquo;t change.&lt;/p&gt;
+
+&lt;p&gt;You can use this approach if you require more than one pattern match operator in a given section of code. If the section contains only one operator (be it an &lt;code&gt;m//&lt;/code&gt; or &lt;code&gt;s///&lt;/code&gt;), then you can rely on the property of the null pattern, that reuses the last pattern seen. This leads to the second solution, which also eliminates the use of eval.&lt;/p&gt;
+
+&lt;p&gt;The above code fragment becomes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  my $pat = &#39;^foo$&#39;;
+  &amp;quot;something&amp;quot; =~ /$pat/; # dummy match (MUST NOT FAIL!)
+  foreach( @list ) {
+    print if //;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only gotcha is that the dummy match that boots the regular expression engine must absolutely, positively succeed, otherwise the pattern will not be cached, and the &lt;code&gt;//&lt;/code&gt; will match everything. If you can&amp;rsquo;t count on fixed text to ensure the match succeeds, then you have two possibilities.&lt;/p&gt;
+
+&lt;p&gt;If you can guarantee that the pattern variable contains no meta-characters (things like *, +, ^, $&amp;hellip;), then you can use the dummy match:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  $pat =~ /\Q$pat\E/; # guaranteed if no meta-characters present
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If there is a possibility that the pattern can contain meta-characters, then you should search for the pattern or the nonsearchable \377 character as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;quot;\377&amp;quot; =~ /$pat|^\377$/; # guaranteed if meta-characters present
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another approach:&lt;/p&gt;
+
+&lt;p&gt;It depends on the complexity of the regex to which you apply this technique. One common usage where a compiled regex is usually more efficient is to &amp;ldquo;&lt;em&gt;match any one of a group of patterns&lt;/em&gt;&amp;rdquo; over and over again.&lt;/p&gt;
+
+&lt;p&gt;Maybe with a helper routine, it&amp;rsquo;s easier to remember. Here is one slightly modified from Jeffery Friedl&amp;rsquo;s example in his book &amp;ldquo;&lt;em&gt;Mastering Regular Expressions&lt;/em&gt;&amp;rdquo;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #####################################################
+  # Build_MatchMany_Function
+  # -- Input:  list of patterns
+  # -- Output: A code ref which matches its $_[0]
+  #            against ANY of the patterns given in the
+  #            &amp;quot;Input&amp;quot;, efficiently.
+  #
+  sub Build_MatchMany_Function {
+    my @R = @_;
+    my $expr = join &#39;||&#39;, map { &amp;quot;\$_[0] =~ m/\$R[$_]/o&amp;quot; } ( 0..$#R );
+    my $matchsub = eval &amp;quot;sub { $expr }&amp;quot;;
+    die &amp;quot;Failed in building regex @R: $@&amp;quot; if $@;
+    $matchsub;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Example usage:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  @some_browsers = qw(Mozilla Lynx MSIE AmigaVoyager lwp libwww);
+  $Known_Browser=Build_MatchMany_Function(@some_browsers);
+
+  while (&amp;lt;ACCESS_LOG&amp;gt;) {
+    # ...
+    $browser = get_browser_field($_);
+    if ( ! &amp;amp;$Known_Browser($browser) ) {
+      print STDERR &amp;quot;Unknown Browser: $browser\n&amp;quot;;
+    }
+    # ...
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the next article, I&amp;rsquo;ll present a few other Perl basics directly related to the mod_perl programming.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;The book &amp;ldquo;&lt;em&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/regex/&#34;&gt;Mastering Regular Expressions&lt;/a&gt;&lt;/em&gt;&amp;rdquo; by Jeffrey E. Friedl.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The book &amp;ldquo;&lt;em&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/lperl3/&#34;&gt;Learning Perl&lt;/a&gt;&lt;/em&gt;&amp;rdquo; by Randal L. Schwartz (also known as the &amp;ldquo;&lt;em&gt;Llama&lt;/em&gt;&amp;rdquo; book, named after the llama picture on the cover of the book).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The book &amp;ldquo;&lt;em&gt;&lt;a href=&#34;http://www.oreilly.com/catalog/pperl3/&#34;&gt;Programming Perl&lt;/a&gt;&lt;/em&gt;&amp;rdquo; by L.Wall, T. Christiansen and J.Orwant (also known as the &amp;ldquo;&lt;em&gt;Camel&lt;/em&gt;&amp;rdquo; book, named after the camel picture on the cover of the book).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The &lt;em&gt;Exporter&lt;/em&gt;, &lt;em&gt;perlre&lt;/em&gt;, &lt;em&gt;perlvar&lt;/em&gt;, &lt;em&gt;perlmod&lt;/em&gt; and &lt;em&gt;perlmodlib&lt;/em&gt; man pages.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

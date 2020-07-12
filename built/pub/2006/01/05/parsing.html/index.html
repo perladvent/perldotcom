@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <title> Lexing Your Data </title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=" s/(?&amp;lt;!SHOOTING YOURSELF IN THE )FOOT/HEAD/g Most of us have tried at one time or another to use regular expressions to do things we shouldn&#39;t: parsing HTML, obfuscating code, washing dishes, etc. This is what the technical term &#34;showing off&#34;..."/>
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="TZowffo_LX2mmsw2DbeNNbukCMnIOA8T-6CMJPiYllI" />
+
+<meta property="twitter:card" content="summary">
+<meta property="twitter:site" content="@PerlFoundation">
+<meta property="og:url" content="http://localhost:1313/pub/2006/01/05/parsing.html/" />
+<meta property="og:title" content="Lexing Your Data" />
+<meta property="og:description" content=" s/(?&amp;lt;!SHOOTING YOURSELF IN THE )FOOT/HEAD/g Most of us have tried at one time or another to use regular expressions to do things we shouldn&#39;t: parsing HTML, obfuscating code, washing dishes, etc. This is what the technical term &#34;showing off&#34;...">
+<meta property="og:site_name" content="Perl.com" />
+
+<meta property="og:type" content="article" />
+<meta property="og:article:published_time" content="2006-01-01T01:01:01Z" />
+<meta property="og:image" content="http://localhost:1313/images/_pub_2006_01_05_parsing/111-lexing.gif" />
+<meta property="og:article:tag" content="building-parsers" />
+<meta property="og:article:tag" content="grammars" />
+<meta property="og:article:tag" content="lexing" />
+<meta property="og:article:tag" content="parsing" />
+<meta property="og:article:tag" content="regular-expressions" />
+
+
+  <link rel="icon" href="/favicon.ico">
+  <link href="/article/index.xml" rel="alternate" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/article/index.xml" rel="feed" type="application/rss+xml" title="Perl.com - programming news, code and culture" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/css/perldotcom.css"/>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-50555-22', 'auto');
+ga('create', 'UA-85734801-2', 'auto', 'editor');
+ga('send', 'pageview');
+ga('editor.send', 'pageview');
+</script>
+
+</head>
+<body>
+
+<div class="container-fluid full-wdith antonio">
+ <div class="row">
+  <div class="navbar-inverse" style="border-radius:none !important" role="navigation">
+    <div class="container-fluid">
+      <ul class="nav navbar-nav pull-right follow">
+          <li>MORE:</li>
+          <li><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a><li>
+          <li><a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a><li>
+          <li><a href="/article/index.xml" />
+              <img src="/images/site/rss_20.png" alt="rss"></a></li>
+          <li><a href="https://github.com/tpf/perldotcom" />
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></li>
+      </ul>
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+          <a class="navbar-nav" href="/">
+            <div class="header-logo">Perl.com</div>
+          </a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="/about">
+              <div class="circle">
+                <img src="/images/site/perl-camel.png" alt="" />
+              </div>
+                  &nbsp;&nbsp;ABOUT</a>
+          </li>
+          <li><a href="/authors">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-user txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;AUTHORS</a>
+          </li>
+          <li><a href="/categories">
+              <div class="circle">
+                  <span class="glyphicon glyphicon-folder-open txt-blue-major" aria-hidden="true"></span>
+              </div>
+                  &nbsp;&nbsp;CATEGORIES</a>
+          </li>
+          <li><a href="/tags">
+              <div class="circle">
+                <span class="txt-blue-major" aria-hidden="true"><strong>#</strong></span>
+              </div>
+                  &nbsp;&nbsp;TAGS</a>
+          </li>
+          <li>
+            <form class="search" name="ddg" action="https://duckduckgo.com/" method="get">
+              <input type="text" name ="q" placeholder="SEARCH" />
+              <input type="hidden" value="perl.com" name="sites" />
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+
+  <section id="content" role="main">
+    <section class="entry-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              <article class="fulltext">
+              <h1 class="blog-post-title">Lexing Your Data</h1>
+              <p class="blog-post-meta">Jan 5, 2006 by
+              
+              
+                
+                
+                <a href="#author-bio-curtis-poe">Curtis Poe</a>
+              
+              </p>
+              <img alt="" src=""/>
+                
+
+<h3 id="s-shooting-yourself-in-the-foot-head-g"><code>s/(?&lt;!SHOOTING YOURSELF IN THE )FOOT/HEAD/g</code></h3>
+
+<p>Most of us have tried at one time or another to use regular expressions to do things we shouldn&rsquo;t: parsing HTML, obfuscating code, washing dishes, etc. This is what the technical term &ldquo;showing off&rdquo; means. I&rsquo;ve done it too:</p>
+
+<pre><code>$html =~ s{
+             (&lt;a\s(?:[^&gt;](?!href))*href\s*)
+             (&amp;(&amp;[^;]+;)?(?:.(?!\3))+(?:\3)?)
+             ([^&gt;]+&gt;)
+          }
+          {$1 . decode_entities($2) .  $4}gsexi;
+</code></pre>
+
+<p>I was strutting like a peacock when I wrote that, followed quickly by eating crow when I ran it. I never did get that working right. I&rsquo;m still not sure what I was trying to do. That regular expression forced me to learn how to use <a href="https://metacpan.org/pod/HTML::TokeParser"><code>HTML::TokeParser</code></a>. More importantly, that was the regular expression that taught me how difficult regular expressions can be.</p>
+
+<h4 id="the-problem-with-regular-expressions">The Problem with Regular Expressions</h4>
+
+<p>Look at that regex again:</p>
+
+<pre><code> /(&lt;a\s(?:[^&gt;](?!href))*href\s*)(&amp;(&amp;[^;]+;)?(?:.(?!\3))+(?:\3)?)([^&gt;]+&gt;)/
+</code></pre>
+
+<p>Do you know that matches? Exactly? Are you <em>sure</em>? Even if it works, how easily can you modify it? If you don&rsquo;t know what it was trying to do (and to be fair, don&rsquo;t forget it&rsquo;s broken), how long did you spend trying to figure it out? When&rsquo;s the last time a single line of code gave you such fits?</p>
+
+<p>The problem, of course, is that this regular expression is trying to do far more work than a single line of code is likely to do. When facing with a regular expression like that, there are a few things I like to do.</p>
+
+<ul>
+<li>Document it carefully.</li>
+<li>Use the <code>/x</code> switch so I can expand it over several lines.</li>
+<li>Possibly, encapsulate it in a subroutine.</li>
+</ul>
+
+<p>Sometimes, though, there&rsquo;s a fourth option: <em>lexing</em>.</p>
+
+<h4 id="lexing">Lexing</h4>
+
+<p>When developing code, we typically take a problem and break it down into a series of smaller problems that are easier to solve. Regular expressions are code and you can break them down into a series of smaller problems that are easier to solve. One technique is to use lexing to facilitate this.</p>
+
+<p>Lexing is the act of breaking data down into discrete tokens and assigning meaning to those tokens. There&rsquo;s a bit of fudging in that statement, but it pretty much covers the basics.</p>
+
+<p>Parsing typically follows lexing to convert the tokens into something more useful. Parsing is frequently the domain of some tool that applies a well-defined grammar to the lexed tokens.</p>
+
+<p>Sometimes well-defined grammars are not practical for extracting and reporting information. There might not be a grammar available for a company&rsquo;s ad-hoc log file format. Other times you might find it easier to process the tokens manually then to spend the time writing a grammar. Still other times you might only care about part of the data you&rsquo;ve lexed, not all of it. All three of these reasons apply to some problems.</p>
+
+<h4 id="parsing-sql">Parsing SQL</h4>
+
+<p>Recently, on Perlmonks (<a href="http://perlmonks.org/index.pl?node_id=472684">parse a query string</a>), someone had some SQL to parse:</p>
+
+<pre><code>select the_date as &quot;date&quot;,
+round(months_between(first_date,second_date),0) months_old
+,product,extract(year from the_date) year
+,case
+  when a=b then 'c'
+  else 'd'
+  end tough_one
+from ...
+where ...
+</code></pre>
+
+<p>The poster needed the alias for each column from that SQL. In this case, the aliases are <code>date</code>, <code>months_old</code>, <code>product</code>, <code>year</code>, and <code>tough_one</code>. Of course, this was only one example. There&rsquo;s actually plenty of generated SQL, all with subtle variations on the column aliases, so this is not a trivial task. What&rsquo;s interesting about this, though, is that we don&rsquo;t give a fig about anything except the column aliases. The rest of the text is merely there to help us find those aliases.</p>
+
+<p>Your first thought might be to parse this with <a href="https://metacpan.org/pod/SQL::Statement"><code>SQL::Statement</code></a>. As it turns out, this module does not handle <code>CASE</code> statements. Thus, you must figure out how to patch <code>SQL::Statement</code>, submit said patch, and hope it gets accepted and released in a timely fashion. (Note that <code>SQL::Statement</code> uses <a href="https://metacpan.org/pod/SQL::Parser"><code>SQL::Parser</code></a>, so the latter is also not an option.)</p>
+
+<p>Second, many of us have worked in environments where we have problems to solve in production <em>now</em>, but we still have to wait three weeks to get the necessary modules installed, if we can get them approved at all.</p>
+
+<p>The most important reason, though, is even if <code>SQL::Statement</code> could handle this problem, this would be an awfully short article if you used it instead of a lexer.</p>
+
+<h4 id="lexing-basics">Lexing Basics</h4>
+
+<p>As mentioned earlier, lexing is essentially the task of analyzing data and breaking it down into a series of easy-to-use tokens. While the data may be in other forms, usually this means analyzing strings. To give a trivial example, consider the expression:</p>
+
+<pre><code>x = (3 + 2) / y
+</code></pre>
+
+<p>When lexed, you might get a series of tokens, such as:</p>
+
+<pre><code>my @tokens = (
+  [ OP  =&gt; 'x' ],
+  [ OP  =&gt; '=' ],
+  [ OP  =&gt; '(' ],
+  [ INT =&gt; '3' ],
+  [ VAR =&gt; '+' ],
+  [ INT =&gt; '2' ],
+  [ OP  =&gt; ')' ],
+  [ OP  =&gt; '/' ],
+  [ VAR =&gt; 'y' ],
+);
+</code></pre>
+
+<p>With a proper grammar, you could then read this series of tokens and take actions based upon their values, perhaps to build a simple language interpreter or translate this code into another programming language. Even without a grammar, you can find these tokens useful.</p>
+
+<h4 id="identifying-tokens">Identifying Tokens</h4>
+
+<p>The first step in building a lexer is identifying the tokens you wish to parse. Look again at the SQL.</p>
+
+<pre><code>select the_date as &quot;date&quot;,
+round(months_between(first_date,second_date),0) months_old
+,product,extract(year from the_date) year
+,case
+  when a=b then 'c'
+    else 'd'
+  end tough_one
+from ...
+where ...
+</code></pre>
+
+<p>There&rsquo;s nothing really to care about anything after the <code>from</code> keyword. In looking at this closer, everything you do care about is immediately prior to a comma or the <code>from</code> keyword. However, splitting on commas isn&rsquo;t enough, as there are some commas embedded in function parentheses.</p>
+
+<p>The first thing to do is to identify the various things you can match with simple regular expressions.</p>
+
+<p>These &ldquo;things&rdquo; appear to be parentheses, commas, operators, keywords, and random text. A first pass at it might look something like this:</p>
+
+<pre><code>my $lparen  = qr/\(/;
+my $rparen  = qr/\)/;
+my $keyword = qr/(?i:select|from|as)/; # this is all this problem needs
+my $comma   = qr/,/;
+my $text    = qr/(?:\w+|'\w+'|&quot;\w+&quot;)/;
+my $op      = qr{[-=+*/&lt;&gt;]};
+</code></pre>
+
+<p>The text matching is somewhat naive and you might want <a href="https://metacpan.org/pod/Regexp::Common"><code>Regexp::Common</code></a> for some of the regular expressions, but keep this simple for now.</p>
+
+<p>The operators are a bit more involved. Assume that some SQL might have math statements embedded in them.</p>
+
+<p>Now create the actual lexer. One way to do this is to make your own. It might look something like this:</p>
+
+<pre><code>sub lexer {
+    my $sql = shift;
+    return sub {
+        LEXER: {
+            return ['KEYWORD', $1] if $sql =~ /\G ($keyword) /gcx;
+            return ['COMMA',   ''] if $sql =~ /\G ($comma)   /gcx;
+            return ['OP',      $1] if $sql =~ /\G ($op)      /gcx;
+            return ['PAREN',    1] if $sql =~ /\G $lparen    /gcx;
+            return ['PAREN',   -1] if $sql =~ /\G $rparen    /gcx;
+            return ['TEXT',    $1] if $sql =~ /\G ($text)    /gcx;
+            redo LEXER             if $sql =~ /\G \s+        /gcx;
+        }
+    };
+}
+
+my $lexer = lexer($sql);
+
+while (defined (my $token = $lexer-&gt;())) {
+    # do something with the token
+}
+</code></pre>
+
+<p>Without going into the detail of how that works, it&rsquo;s fair to say that this is not the best solution. By looking at <a href="http://perlmonks.org/index.pl?node_id=472701">the original Perlmonks post</a>, you should find that you need to make two passes through the data to extract what you want. I&rsquo;ve left the explanation an exercise for the reader.</p>
+
+<p>To make this simpler, use the <a href="https://metacpan.org/pod/HOP::Lexer"><code>HOP::Lexer</code></a> module from the CPAN. This module, described by Mark Jason Dominus in his book <em>Higher Order Perl</em>, makes creating lexers a rather trivial task and makes them a bit more powerful than the example. Here&rsquo;s the new code:</p>
+
+<pre><code>use HOP::Lexer 'make_lexer';
+my @sql   = $sql;
+my $lexer = make_lexer(
+    sub { shift @sql },
+    [ 'KEYWORD', qr/(?i:select|from|as)/          ],
+    [ 'COMMA',   qr/,/                            ],
+    [ 'OP',      qr{[-=+*/]}                      ],
+    [ 'PAREN',   qr/\(/,      sub { [shift,  1] } ],
+    [ 'PAREN',   qr/\)/,      sub { [shift, -1] } ],
+    [ 'TEXT',    qr/(?:\w+|'\w+'|&quot;\w+&quot;)/, \&amp;text  ],
+    [ 'SPACE',   qr/\s*/,     sub {}              ],
+);
+
+sub text {
+    my ($label, $value) = @_;
+    $value =~ s/^[&quot;']//;
+    $value =~ s/[&quot;']$//;
+    return [ $label, $value ];
+}
+</code></pre>
+
+<p>This certainly doesn&rsquo;t look any easier to read, but bear with me.</p>
+
+<p>The <code>make_lexer</code> subroutine takes as its first argument an iterator, which returns the text to match on every call. In this case, you only have one snippet of text to match, so merely shift it off of an array. If you were reading lines from a log file, the iterator would be quite handy.</p>
+
+<p>After the first argument comes a series of array references. Each reference takes two mandatory and one optional argument(s):</p>
+
+<pre><code>[ $label, $pattern, $optional_subroutine ]
+</code></pre>
+
+<p>The <code>$label</code> is the name of the token. The pattern should match whatever the label identifies. The third argument, a subroutine reference, takes as arguments the label and the <em>text</em> the label matched, and returns whatever you wish for a token.</p>
+
+<p>Consider how you typically use the <code>make_lexer</code> subroutine.</p>
+
+<pre><code>[ 'KEYWORD', qr/(?i:select|from|as)/ ],
+</code></pre>
+
+<p>Here&rsquo;s an example of how to transform the data before making the token:</p>
+
+<pre><code>[ 'TEXT', qr/(?:\w+|'\w+'|&quot;\w+&quot;)/, \&amp;text  ],
+</code></pre>
+
+<p>As mentioned previously, the regular expression might be naive, but leave that for now and focus on the <code>&amp;text</code> subroutine.</p>
+
+<pre><code>sub text {
+    my ($label, $value) = @_;
+    $value =~ s/^[&quot;']//;
+    $value =~ s/[&quot;']$//;
+    return [ $label, $value ];
+}
+</code></pre>
+
+<p>This says, &ldquo;Take the label and the value, strip leading and trailing quotes from the value and return them in an array reference.&rdquo;</p>
+
+<p>To strip the white space you don&rsquo;t care about, simply return nothing:</p>
+
+<pre><code> 'SPACE', qr/\s*/, sub {} ],
+</code></pre>
+
+<p>Now that you have your lexer, put it to work. Remember that column aliases are the <code>TEXT</code> not in parentheses, but immediately prior to commas or the <code>from</code> keyword. How do we know if you&rsquo;re inside of parentheses? Cheat a little bit:</p>
+
+<pre><code>[ 'PAREN', qr/\(/, sub { [shift,  1] } ],
+[ 'PAREN', qr/\)/, sub { [shift, -1] } ],
+</code></pre>
+
+<p>With that, you can add a one whenever you get to an opening parenthesis and subtract it when you get to a closing one. Whenever the result is zero, you know that you&rsquo;re outside of parentheses.</p>
+
+<p>To get the tokens, call the <code>$lexer</code> iterator repeatedly.</p>
+
+<pre><code>while ( defined (my $token = $lexer-&gt;() ) { ... }
+</code></pre>
+
+<p>The tokens look like this:</p>
+
+<pre><code>[  'KEYWORD',      'select' ]
+[  'TEXT',       'the_date' ]
+[  'KEYWORD',          'as' ]
+[  'TEXT',           'date' ]
+[  'COMMA',             ',' ]
+[  'TEXT',          'round' ]
+[  'PAREN',               1 ]
+[  'TEXT', 'months_between' ]
+[  'PAREN',               1 ]
+</code></pre>
+
+<p>And so on.</p>
+
+<p>Here&rsquo;s how to process the tokens:</p>
+
+<pre><code> 1:  my $inside_parens = 0;
+ 2:  while ( defined (my $token = $lexer-&gt;()) ) {
+ 3:      my ($label, $value) = @$token;
+ 4:      $inside_parens += $value if 'PAREN' eq $label;
+ 5:      next if $inside_parens || 'TEXT' ne $label;
+ 6:      if (defined (my $next = $lexer-&gt;('peek'))) {
+ 7:          my ($next_label, $next_value) = @$next;
+ 8:          if ('COMMA' eq $next_label) {
+ 9:              print &quot;$value\n&quot;;
+10:          }
+11:          elsif ('KEYWORD' eq $next_label &amp;&amp; 'from' eq $next_value) {
+12:              print &quot;$value\n&quot;;
+13:              last; # we're done
+14:          }
+15:      }
+16:  }
+</code></pre>
+
+<p>This is pretty straightforward, but there are some tricky bits. Each token is a two-element array reference, so line 3 makes the label and value fairly explicit. Lines 4 and 5 use the &ldquo;cheat&rdquo; for handling parentheses. Line 5 also skips anything that isn&rsquo;t text and therefore cannot be a column alias.</p>
+
+<p>Line 6 is a bit odd. In <code>HOP::Lexer</code>, passing the string <code>peek</code> to the lexer will return the next token without actually advancing the <code>$lexer</code> iterator. From there, it&rsquo;s straightforward logic to find out if the value is a column alias that matches the criteria.</p>
+
+<p>Putting all of this together makes:</p>
+
+<pre><code>#!/usr/bin/perl
+
+use strict;
+use warnings;
+use HOP::Lexer 'make_lexer';
+
+my $sql = &lt;&lt;END_SQL;
+select the_date as &quot;date&quot;,
+round(months_between(first_date,second_date),0) months_old
+,product,extract(year from the_date) year
+,case
+  when a=b then 'c'
+    else 'd'
+      end tough_one
+      from XXX
+END_SQL
+
+my @sql   = $sql;
+my $lexer = make_lexer(
+    sub { shift @sql },
+    [ 'KEYWORD', qr/(?i:select|from|as)/          ],
+    [ 'COMMA',   qr/,/                            ],
+    [ 'OP',      qr{[-=+*/]}                      ],
+    [ 'PAREN',   qr/\(/,      sub { [shift,  1] } ],
+    [ 'PAREN',   qr/\)/,      sub { [shift, -1] } ],
+    [ 'TEXT',    qr/(?:\w+|'\w+'|&quot;\w+&quot;)/, \&amp;text  ],
+    [ 'SPACE',   qr/\s*/,     sub {}              ],
+);
+
+sub text {
+    my ( $label, $value ) = @_;
+    $value =~ s/^[&quot;']//;
+    $value =~ s/[&quot;']$//;
+    return [ $label, $value ];
+}
+
+my $inside_parens = 0;
+while ( defined ( my $token = $lexer-&gt;() ) ) {
+    my ( $label, $value ) = @$token;
+    $inside_parens += $value if 'PAREN' eq $label;
+    next if $inside_parens || 'TEXT' ne $label;
+    if ( defined ( my $next = $lexer-&gt;('peek') ) ) {
+        my ( $next_label, $next_value ) = @$next;
+        if ( 'COMMA' eq $next_label ) {
+            print &quot;$value\n&quot;;
+        }
+        elsif ( 'KEYWORD' eq $next_label &amp;&amp; 'from' eq $next_value ) {
+            print &quot;$value\n&quot;;
+            last; # we're done
+        }
+    }
+}
+</code></pre>
+
+<p>That prints out the column aliases:</p>
+
+<pre><code>date
+months_old
+product
+year
+tough_one
+</code></pre>
+
+<p>So are you done? No, probably not. What you really need now are many other examples of the SQL generated in the first problem statement. Maybe the <code>&amp;text</code> subroutine is naive. Maybe there are other operators you forgot. Maybe there are floating-point numbers embedded in the SQL. When you have to lex data by hand, fine-tuning the lexer to match your actual data can take a few tries.</p>
+
+<p>It&rsquo;s also important to note that precedence is very important here. <code>&amp;make_lexer</code> evaluates each array reference passed in the order it receives them. If you passed the <code>TEXT</code> array reference before the <code>KEYWORD</code> array reference, the <code>TEXT</code> regular expression would match keywords before the <code>KEYWORD</code> could, thus generating spurious results.</p>
+
+<p>Happy lexing!</p>
+
+              </article>
+              <p><strong>Tags</strong></p>
+              <div class="tags">
+                <div class="category"><a href="/categories/regular-expressions">regular-expressions</a></div>
+                
+                  <div class="tag"><a href="/tags/building-parsers">building-parsers</a></div>
+                
+                  <div class="tag"><a href="/tags/grammars">grammars</a></div>
+                
+                  <div class="tag"><a href="/tags/lexing">lexing</a></div>
+                
+                  <div class="tag"><a href="/tags/parsing">parsing</a></div>
+                
+                  <div class="tag"><a href="/tags/regular-expressions">regular-expressions</a></div>
+                
+              </div>
+            </div>
+            
+              
+                
+<div class="row" id="author-bio-curtis-poe">
+  <div class="col-sm-2">
+    
+    <a href="/authors/curtis-poe/"><div class="circle-avatar" style="background-image:url(/images/author/curtis-poe.jpg)"></div></a>
+  </div>
+  <div class="col-sm-10">
+    <a href="/authors/curtis-poe/"><h3>Curtis Poe</h3></a>
+    <p></p>
+    <h5><a href="/authors/curtis-poe/">Browse their articles</a></h5>
+  </div>
+</div>
+
+            
+            <div class="row">
+              <h3>Feedback</h3>
+              <p>Something wrong with this article? Help us out by opening an issue or pull request on <a href="https://github.com/tpf/perldotcom/blob/master/content/legacy/_pub_2006_01_05_parsing.md">GitHub</a></p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="latest-sidebar">
+
+  <div class="row">
+    <div class="col-sm-12 centering">
+      <span style="font-size:1.8em" class="antonio txt-blue-major">OUR LATEST ARTICLES</span>
+    </div>
+  </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/the-perl-admbassador-curtis-poe/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>The Perl Ambassador: Curtis &#39;Ovid&#39; Poe</h6>
+          <p style="line-height:1"><small>The person behind the news of Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/a-tour-with-net-ftp/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/a-tour-with-net-ftp/thumb_kidyes.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>A tour with Net::FTP</h6>
+          <p style="line-height:1"><small>How to write an FTP client in Perl</small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/shortcode_test/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/author/brian-d-foy.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>shortcode_test</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/listen-to-larry-wall-s-state-of-the-onion-2000-on-youtube/thumb_larry-wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Listen to Larry Wall&#39;s State of the Onion 2000 on YouTube</h6>
+          <p style="line-height:1"><small></small></p>
+      </div>
+        </a>
+    </div>
+  
+    
+    
+    <div class="row">
+        <a href="http://localhost:1313/article/announcing-perl-7/">
+      <div class="col-sm-3">
+        <div class="circle-avatar" style="background-image:url(/images/announcing-perl-7/thumb_seven_on_blue_wall.jpg)"></div>
+      </div>
+      <div class="col-sm-9">
+          <h6>Announcing Perl 7</h6>
+          <p style="line-height:1"><small>Perl 5 with modern defaults</small></p>
+      </div>
+        </a>
+    </div>
+  
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+  <script async src="/widget/toplinks/toplinks.js" type="text/javascript"></script>
+    <div id="toplinks"></div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <a class="twitter-timeline" data-height="640" data-dnt="true" data-theme="dark" href="https://twitter.com/perlfoundation?ref_src=twsrc%5Etfw">Tweets by perlfoundation</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+
+<div class="row" style="margin-top:20px">
+  <div class="col-sm-12 centering">
+    <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
+  </div>
+</div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+<script>
+ 
+var tables, i;
+tables = document.getElementsByTagName('table');
+for (i=0;i<tables.length;i++) {
+  tables[i].className = 'table table-striped';
+}
+</script>
+<div class="push"></div>
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1">
+        <h5>Site Map</h5>
+        <ul>
+        <li><a href="/">Home</a></li>
+        <hr>
+        <li><a href="/about">About</a></li>
+        <hr>
+        <li><a href="/authors">Authors</a></li>
+        <hr>
+        <li><a href="/categories">Categories</a></li>
+        <hr>
+        <li><a href="/tags">Tags</a></li>
+        <hr>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5>Contact Us</h5>
+        <p>To get in touch, send an email to: perl.com-editor@perl.org</p>
+        <p><a href="https://perl.org">
+              <img src="/images/site/perl-onion_20.png" alt="Perl Onion"></a>
+          <a href="https://twitter.com/intent/follow?screen_name=perlfoundation">
+              <img src="/images/site/twitter_20.png" alt="twitter"></a>
+          <a href="/index.xml" /><img src="/images/site/rss_20.png" alt="rss"></a>
+          <a href="https://github.com/tpf/perldotcom">
+              <img src="/images/site/github_light_20.png" alt="GitHub logo"></a></p>
+      </div>
+      <div class="col-md-2">
+          <h5>License</h5>
+          <p>This work is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-NonCommercial 3.0 Unported License</a>.</p>
+          <p><a rel="license" href="https://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a></p>
+      </div>
+      <div class="col-md-5">
+          <h5>Legal</h5>
+          <p>Perl.com and the authors make no representations with respect to the accuracy or completeness of the contents of all work on this website and specifically disclaim all warranties, including without limitation warranties of fitness for a particular purpose. The information published on this website may not be suitable for every situation. All work on this website is provided with the understanding that Perl.com and the authors are not engaged in rendering professional services. Neither Perl.com nor the authors shall be liable for damages arising herefrom.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/javascript/jquery.min.js"></script>
+<script src="/javascript/bootstrap.min.js"></script>
+<script data-no-instant>document.write('<script src="/livereload.js?port=1313&mindelay=10"></' + 'script>')</script></body>
+</html>
+

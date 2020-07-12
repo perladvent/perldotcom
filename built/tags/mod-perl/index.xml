@@ -1,0 +1,1436 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mod Perl on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/mod-perl/</link>
+    <description>Recent content in Mod Perl on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 09 Feb 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/mod-perl/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Debugging and Profiling mod_perl Applications</title>
+      <link>http://localhost:1313/pub/2006/02/09/debug_mod_perl.html/</link>
+      <pubDate>Thu, 09 Feb 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/02/09/debug_mod_perl.html/</guid>
+      <description>
+
+&lt;p&gt;Because of the added complexity of being &lt;em&gt;inside&lt;/em&gt; of the Apache web server, debugging &lt;a href=&#34;http://perl.apache.org/&#34;&gt;&lt;code&gt;mod_perl&lt;/code&gt;&lt;/a&gt; applications is often not as straightforward as it is with regular Perl programs or CGIs. Is the problem with your code, Apache, a CPAN module you are using, or within &lt;code&gt;mod_perl&lt;/code&gt; itself? How do you tell? Sometimes traditional debugging techniques will not give you enough information to find your problem.&lt;/p&gt;
+
+&lt;p&gt;Perhaps, instead, you&amp;rsquo;re baffled as to why some code you just wrote is running so slow. You&amp;rsquo;re probably asking yourself, &amp;ldquo;Isn&amp;rsquo;t this &lt;code&gt;mod_perl&lt;/code&gt; stuff supposed to improve my code&amp;rsquo;s performance?&amp;rdquo; Don&amp;rsquo;t worry, slow code happens even to the best of us. How do you profile your code to find the problem?&lt;/p&gt;
+
+&lt;p&gt;This article shows how to use the available CPAN modules to debug and profile your &lt;code&gt;mod_perl&lt;/code&gt; applications.&lt;/p&gt;
+
+&lt;h3 id=&#34;traditional-debugging-methods&#34;&gt;Traditional Debugging Methods&lt;/h3&gt;
+
+&lt;p&gt;The tried-and-true &lt;code&gt;print&lt;/code&gt; statement is the debugger&amp;rsquo;s best friend. Used wisely this, can be the easiest and fastest way of figuring out what is amiss in your program. Can&amp;rsquo;t figure out why your sales tax subroutine is always off by 14 cents? Add several &lt;code&gt;print&lt;/code&gt; statements just before, just after, and all around inside of that particular subroutine. Use them to show the value of key variables at each step in the process. You can direct the output straight onto the page in your browser, or if you prefer, into hidden HTML comments. Typically this is all that you need to spot your problems. It&amp;rsquo;s flexible and easy to implement and understand.&lt;/p&gt;
+
+&lt;p&gt;Another common approach is to place &lt;code&gt;die()&lt;/code&gt; and/or &lt;code&gt;warn()&lt;/code&gt; statements as you trace through your code, isolating the problem. &lt;code&gt;die()&lt;/code&gt; is especially useful if you do not want your program to continue executing, possibly because the errors will corrupt your otherwise valid testing data. The main benefit of using &lt;code&gt;warn&lt;/code&gt; over a simple &lt;code&gt;print&lt;/code&gt; statement is that the output goes instead to the appropriate Apache &lt;em&gt;error_log&lt;/em&gt;. This keeps your debugging information out of the user interface and gives you the ability to log and spot errors long after they occurred for the user. Simply &lt;code&gt;tail&lt;/code&gt; your &lt;em&gt;error_log&lt;/em&gt; in another window and you can watch it all day long. If you&amp;rsquo;re into that sort of thing.&lt;/p&gt;
+
+&lt;p&gt;For example, if you had some code like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub handler {
+    my $r   =   shift;
+
+    # Set content type
+    $r-&amp;gt;content_type( &#39;text/html&#39; );
+
+    my $req = Apache2::Request-&amp;gt;new($r);
+
+    # Compute sales tax if we are told to do so
+    my $tax = 0;
+    if( $req-&amp;gt;param(&#39;compute_sales_tax&#39;) ) {
+        my $tax = compute_sales_tax($r, $req-&amp;gt;param(&#39;total_amount&#39;);
+    }
+
+    # Code to display results to the browser....
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; you might find a problem during testing. Your initial search leads you to believe that either the code never calls the &lt;code&gt;compute_sales_tax()&lt;/code&gt; function or the function always returns zero. You can add some simple debugging statements:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub handler {
+    my $r   =   shift;
+
+    # Set content type
+    $r-&amp;gt;content_type( &#39;text/html&#39; );
+
+    my $req = Apache2::Request-&amp;gt;new($r);
+
+    # Compute sales tax if we are told to do so
+    my $tax = 0;
+
+    # Debugging statements
+    warn(&amp;quot;Tax at start &#39;$tax&#39;&amp;quot;);
+    warn(&#39;compute_sales_tax &#39; . $req-&amp;gt;param(&#39;compute_sales_tax&#39;) );
+
+    if( $req-&amp;gt;param(&#39;compute_sales_tax&#39;) ) {
+
+        # Debugging
+        warn(&amp;quot;Tax before sub &#39;$tax&#39;&amp;quot;);
+        my $tax = compute_sales_tax($r, $req-&amp;gt;param(&#39;total_amount&#39;);
+        warn(&amp;quot;Tax after sub &#39;$tax&#39;&amp;quot;);
+    }
+
+    warn(&amp;quot;Tax after if &#39;$tax&#39;&amp;quot;);
+
+    # Code to display results to the browser....
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Assuming that the page that directs the user to this code has set &lt;code&gt;compute_sales_tax&lt;/code&gt; to a &lt;code&gt;true&lt;/code&gt; value, you will see something similar to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Tax at start &#39;0&#39; at line 5
+compute_sales_tax 1 at line 6
+Tax before sub &#39;0&#39; at line 12
+Tax after sub &#39;1.36&#39; at line 14
+Tax after if &#39;0&#39; at line 17
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you read through this, you see that &lt;code&gt;compute_sales_tax()&lt;/code&gt; is indeed being called, otherwise you would not see the &amp;ldquo;Tax before/after&amp;rdquo; &lt;code&gt;warn&lt;/code&gt; outputs. Directly after the subroutine call you can see that &lt;code&gt;$tax&lt;/code&gt; holds a suitable value. However, after the &lt;code&gt;if&lt;/code&gt; block, &lt;code&gt;$tax&lt;/code&gt; reverts back to zero. Upon closer examination, you might find that the bug is the &lt;code&gt;my&lt;/code&gt; before the call to &lt;code&gt;compute_sales_tax()&lt;/code&gt;. This creates a locally scoped variable named &lt;code&gt;$tax&lt;/code&gt; and does not assign it to the &lt;code&gt;$tax&lt;/code&gt; variable in the outer block, which causes it to stay zero and makes it seem that &lt;code&gt;compute_sales_tax()&lt;/code&gt; was never called.&lt;/p&gt;
+
+&lt;h3 id=&#34;when-to-use-apache-db&#34;&gt;When to Use &lt;code&gt;Apache::DB&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;Using &lt;code&gt;print&lt;/code&gt;, &lt;code&gt;die&lt;/code&gt;, and &lt;code&gt;warn&lt;/code&gt; statements in your code will help you find and fix 99 percent of the bugs you may run across when building &lt;code&gt;mod_perl&lt;/code&gt; applications. Too bad there is still that pesky remaining 1 percent that will make you tear your hair out in clumps and wish you had gone into selling insurance instead of programming. Luckily there is &lt;a href=&#34;https://metacpan.org/pod/Apache::DB&#34;&gt;Apache::DB&lt;/a&gt; to help keep the glare off our collective heads at next year&amp;rsquo;s Perl conference to a minimum.&lt;/p&gt;
+
+&lt;p&gt;Sometime, despite all of your attempts to see what is going wrong, you will find yourself in a situation where:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Your code causes Apache to segfault and you can&amp;rsquo;t for the life of you figure out why.&lt;/li&gt;
+&lt;li&gt;It appears that your code segfaults inside of a subroutine or method you are calling in a CPAN module you are using.&lt;/li&gt;
+&lt;li&gt;You have more debugging statements than actual code.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You could spend time hacking up your other installed modules, such as those from CPAN, with debugging statements&amp;ndash;but this only means you will have to return later and remove all of it. You could take an easier route and debug your &lt;code&gt;mod_perl&lt;/code&gt; application with a real source debugger.&lt;/p&gt;
+
+&lt;p&gt;Using the Perl debugger allows you to see directly into what is happening to your code and data. You can step through your code line by line, as Perl executes it. Because you are following the same &lt;em&gt;flow&lt;/em&gt;, there is no chance that you are making any bad assumptions. You might even consider it WYSIWYG, albeit without a GUI.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-apache-db&#34;&gt;Using &lt;code&gt;Apache::DB&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;While &lt;code&gt;Apache::DB&lt;/code&gt; works with both &lt;code&gt;mod_perl&lt;/code&gt; 1.x and &lt;code&gt;mod_perl&lt;/code&gt; 2.x, all of the examples in this article use &lt;code&gt;mod_perl&lt;/code&gt; 2.0. Once you have installed &lt;code&gt;Apache::DB&lt;/code&gt; from CPAN, using it is fairly simple. It does, however, require that you make a few Apache configuration changes. Assuming you have a &lt;code&gt;mod_perl&lt;/code&gt; handler installed at &lt;code&gt;/modperl/&lt;/code&gt; on your system, your configuration needs to resemble this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Location /modperl&amp;gt;
+  SetHandler perl-script
+  PerlResponseHandler My::Modperl::Handler
+  PerlFixupHandler +Apache::DB
+&amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You also need to modify either the appropriate &lt;code&gt;&amp;lt;Perl&amp;gt;&amp;lt;/Perl&amp;gt;&lt;/code&gt; section or your &lt;em&gt;startup.pl&lt;/em&gt; file to include:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use APR::Pool ();
+use Apache::DB ();
+Apache::DB-&amp;gt;init();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you are working in a &lt;code&gt;mod_perl&lt;/code&gt; 1.0 environment, the only change is that you should not include the &lt;code&gt;use APR::Pool ();&lt;/code&gt; directive.&lt;/p&gt;
+
+&lt;p&gt;Note that you must call &lt;code&gt;Apache::DB-&amp;gt;init();&lt;/code&gt; prior to whatever code you are attempting to debug. To be safe, I always just put it as the very first thing in my &lt;em&gt;startup.pl&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once you have modified your configuration, the last step is to launch your Apache server with the &lt;code&gt;-X&lt;/code&gt; command-line option. This option tells Apache to launch only one back-end process and to not fork into the background. If you don&amp;rsquo;t use this option, you can&amp;rsquo;t guarantee that your debugger has connected to same Apache child as your browser.&lt;/p&gt;
+
+&lt;p&gt;With this Apache daemon tying up your command prompt, simply browse to your application. As you will see, the shell running &lt;code&gt;httpd&lt;/code&gt; has been replaced with a Perl debugging session. This debugging session is tied directly to your application and browser. If you look at your browser it will appear to hang waiting for a response; this is due to the fact your Apache server is waiting on you to work with the debugger.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s debugger is very similar to other debuggers you may have used. You can step through your code line by line, skip entire subroutines, set break points, and display and/or change the value of variables with it.&lt;/p&gt;
+
+&lt;p&gt;It might be useful to read through &lt;a href=&#34;https://perldoc.perl.org/perldebtut.html&#34;&gt;&lt;code&gt;man perldebtut&lt;/code&gt;&lt;/a&gt;, a introductory tutorial on using the debugger. For a more complete reference to all of the available commands, see &lt;a href=&#34;https://perldoc.perl.org/perldebug.html&#34;&gt;&lt;code&gt;man perldebug&lt;/code&gt;&lt;/a&gt;. This list should be just enough to get you started:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Command&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;p expression&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;This prints out the value of an expression or variable, just like the &lt;code&gt;print&lt;/code&gt; directive in Perl.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;x expression&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;This evaluates an expression and prettily prints it for you. Use it to make complex data structures readable.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;s&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;This tells the debugger to take a single &lt;em&gt;step&lt;/em&gt;. A step is a single statement. If the next statement is a subroutine, the debugger will treat it as only one statement; you will not be able to step through each statement of that subroutine and the flow will continue without descending into it.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;n&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;This tells the debugger to go to the next statement. If the next statement is a subroutine, you will descend into it and be able to step through each line of that subroutine.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;l line&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Display a particular line of source code.&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;M&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Display all loaded modules.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&#34;code-profiling-with-apache-dprof&#34;&gt;Code Profiling with &lt;code&gt;Apache::DProf&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Apache::DProf&#34;&gt;&lt;code&gt;Apache::DProf&lt;/code&gt;&lt;/a&gt; provides the necessary hooks for you to get some coarse profiling information about your code. By coarse, I mean only information on a subroutine level. It will show you the number of times a subroutine is called along with duration information.&lt;/p&gt;
+
+&lt;p&gt;Essentially, &lt;code&gt;Apache::DProf&lt;/code&gt; wraps &lt;a href=&#34;https://metacpan.org/pod/Devel::DProf&#34;&gt;&lt;code&gt;Devel::DProf&lt;/code&gt;&lt;/a&gt; for you, making your life much easier. It is &lt;em&gt;possible&lt;/em&gt; to use &lt;code&gt;Devel::DProf&lt;/code&gt; by itself, but it assumes that you are running a normal Perl program from the command line and not in a persistent &lt;code&gt;mod_perl&lt;/code&gt; environment. This isn&amp;rsquo;t optimal, because while you can shoehorn &lt;code&gt;Devel::DProf&lt;/code&gt; into working, you&amp;rsquo;ll end up profiling all of the code used at server startup when you really only care about the runtime code.&lt;/p&gt;
+
+&lt;p&gt;Using &lt;code&gt;Apache::DProf&lt;/code&gt; is relatively straightforward. All you need to do is include &lt;code&gt;PerlModule Apache::DProf&lt;/code&gt; in your &lt;em&gt;httpd.conf&lt;/em&gt; and restart your server.&lt;/p&gt;
+
+&lt;p&gt;As an example, here&amp;rsquo;s a small application to profile. This code, while not all that useful, will help illustrate the major differences between these two profiling modules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package PerlTest;
+
+sub handler {
+    my $r = shift;
+
+    $r-&amp;gt;content_type( &#39;text/plain&#39; );
+
+    handle_request($r);
+
+    return( Apache2::Const::OK );
+}
+
+sub handle_request {
+    my $r = shift;
+
+    $r-&amp;gt;print( &amp;quot;Handling request....\n&amp;quot; );
+
+    cleanup_request($r);
+
+}
+
+sub cleanup_request {
+    my $r = shift;
+
+    $r-&amp;gt;print( &amp;quot;Cleaning up request....\n&amp;quot; );
+
+    sleep(5);     # Take some time in this section
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you profile a module with &lt;code&gt;Apache::Dprof&lt;/code&gt;, it will create a directory named &lt;em&gt;dprof/&lt;/em&gt; in your server&amp;rsquo;s &lt;em&gt;logs/&lt;/em&gt; directory. Under this directory will be subdirectories named after the PID of each Apache child your server has. This allows you to profile code over a long period of time on a production system to see where your real bottlenecks are. Often, &lt;em&gt;faking&lt;/em&gt; a typical user session does not truly represent how your users interact with your application and having the real data is beneficial.&lt;/p&gt;
+
+&lt;p&gt;After your server has run for a while, you need to stop it and revert your configuration, removing the &lt;code&gt;PerlModule Apache::DProf&lt;/code&gt; you just inserted. This is due to the fact that &lt;code&gt;Apache::DProf&lt;/code&gt; does not write its data to disk until the server child ends.&lt;/p&gt;
+
+&lt;p&gt;Viewing the profiling data is exactly the same as with &lt;code&gt;Devel::DProf&lt;/code&gt;. Choose a particular Apache child directory in &lt;em&gt;$SERVER_ROOT/logs/dprof/&lt;/em&gt; and run &lt;code&gt;dprofpp&lt;/code&gt; on the corresponding &lt;em&gt;tmon.out&lt;/em&gt; file.&lt;/p&gt;
+
+&lt;p&gt;After beating on the code sample above for awhile with &lt;code&gt;ab&lt;/code&gt;, here are the results &lt;code&gt;Apache::DProf&lt;/code&gt; gave me:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Total Elapsed Time = 1082.402 Seconds
+  User+System Time =        0 Seconds
+Exclusive Times
+%Time ExclSec CumulS #Calls sec/call Csec/c  Name
+ 0.00   0.004  0.001    687   0.0000 0.0000  RevSys::PerlTest::cleanup_request
+ 0.00       - -0.000      1        -      -  warnings::import
+ 0.00       - -0.000      1        -      -  APR::Pool::DESTROY
+ 0.00       - -0.000      1        -      -  strict::import
+ 0.00       - -0.000      1        -      -  Apache2::XSLoader::load
+ 0.00       - -0.000      3        -      -  Apache2::RequestIO::BEGIN
+ 0.00       - -0.000      2        -      -  RevSys::PerlTest::BEGIN
+ 0.00       - -0.003    687        -      -  Apache2::RequestRec::content_type
+ 0.00       - -0.006   1374        -      -  Apache2::RequestRec::print
+ 0.00       - -0.012    687        -      -  RevSys::PerlTest::handle_request
+ 0.00       - -0.024    687        -      -  RevSys::PerlTest::handler
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As expected, &lt;code&gt;cleanup_request()&lt;/code&gt; shows the most time used per call. The report also shows stats for the other function calls you would expect as well as the ones that happen &lt;em&gt;behind the scenes&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;code-profiling-with-apache-smallprof&#34;&gt;Code Profiling with &lt;code&gt;Apache::SmallProf&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;While &lt;code&gt;Apache::DProf&lt;/code&gt; will show you which subroutines use the most system resources, sometimes that is not enough information. &lt;a href=&#34;https://metacpan.org/pod/Apache::SmallProf&#34;&gt;&lt;code&gt;Apache::SmallProf&lt;/code&gt;&lt;/a&gt; gives you fine-grained details in a line-by-line profile of your code.&lt;/p&gt;
+
+&lt;p&gt;Setup is similar to both of two previous modules. Add into a &lt;code&gt;&amp;lt;Perl&amp;gt;&lt;/code&gt; section or your &lt;em&gt;startup.pl&lt;/em&gt; file the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use APR::Pool ();
+use Apache::DB ();
+Apache::DB-&amp;gt;init();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You also need to add &lt;code&gt;PerlFixupHandler Apache::SmallProf&lt;/code&gt; into the &lt;code&gt;&amp;lt;Directory&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;Location&amp;gt;&lt;/code&gt; block that refers to your &lt;code&gt;mod_perl&lt;/code&gt; code.&lt;/p&gt;
+
+&lt;p&gt;Like &lt;code&gt;Apache::DProf&lt;/code&gt;, &lt;code&gt;Apache::SmallProf&lt;/code&gt; writes all of the profiling data into &lt;em&gt;$SERVER_ROOT/logs/smallprof/&lt;/em&gt;. One interesting difference between &lt;code&gt;Apache::DProf&lt;/code&gt; and &lt;code&gt;Apache::SmallProf&lt;/code&gt; is that the latter writes a profile for each module in use. This is helpful because you already know which subroutines are slow and which packages they are in, from your first round of profiling with &lt;code&gt;Apache::DProf&lt;/code&gt;. By focusing on those modules you can find your troubled code much faster.&lt;/p&gt;
+
+&lt;p&gt;Viewing &lt;code&gt;Apache::SmallProf&lt;/code&gt; data is, however, a little different from &lt;code&gt;Apache::DProf&lt;/code&gt;. A module profile looks like this:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;number&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;wall time&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;cpu time&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;line number&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;source line&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;code&gt;&amp;lt;number&amp;gt;&lt;/code&gt; is the number of times this particular line was executed, &lt;code&gt;&amp;lt;wall time&amp;gt;&lt;/code&gt; is the actual time passed, and &lt;code&gt;&amp;lt;cpu time&amp;gt;&lt;/code&gt; is the amount of time the CPU spent working on that line. The remaining two pieces of data are the line number in the file and the actual source on that line.&lt;/p&gt;
+
+&lt;p&gt;You can just open up the profiles generated by &lt;code&gt;Apache::SmallProf&lt;/code&gt; and look at the results. However, this doesn&amp;rsquo;t get to the heart of the matter very quickly. Sorting the profile by the amount of time spent on each line gets you where you want to go:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sort -nrk 2 logs/smallprof/MyHandler.pm | more
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This command sorts the profile for &lt;code&gt;MyHandler.pm&lt;/code&gt; by the wall time of each line. If you use this same sort on the output from &lt;code&gt;Apache::SmallProf&lt;/code&gt; on the example code, you will see something similar to this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# sort -nrk 2 PerlTest.pm.prof | more
+    1 5.000785 0.000000         29:    sleep( 5 );
+    1 0.008177 0.000000         13:    return( Apache2::Const::OK );
+    1 0.007431 0.010000         21:    cleanup_request( $r );
+    3 0.001343 0.000000          4:use Apache2::RequestIO;
+    1 0.000176 0.000000         33:1;
+    3 0.000164 0.000000          3:use Apache2::RequestRec;
+    1 0.000093 0.000000         19:    $r-&amp;gt;print( &amp;quot;Handling request......\n&amp;quot; );
+    1 0.000067 0.000000         11:    handle_request( $r );
+    1 0.000058 0.000000          9:    $r-&amp;gt;content_type( &#39;text/plain&#39; );
+    1 0.000058 0.000000         28:    $r-&amp;gt;print( &amp;quot;Cleaning up request......\n&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, &lt;code&gt;Apache::SmallProf&lt;/code&gt; has zeroed right in on our &lt;code&gt;sleep()&lt;/code&gt; call as the source of our performance problems.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Hopefully, this article has given you enough of an introduction to these modules that you can begin using them in your development efforts. The next time you face a seemingly unsolvable bug or performance issue, you have a few more weapons in your arsenal.&lt;/p&gt;
+
+&lt;p&gt;If you have trouble getting any of these three modules to work, please don&amp;rsquo;t hesitate to contact me directly. If you need &lt;code&gt;mod_perl&lt;/code&gt; help in general, I strongly suggest you join the &lt;code&gt;mod_perl&lt;/code&gt; mailing list. You can often get an answer to your &lt;code&gt;mod_perl&lt;/code&gt; question in a few hours, if not minutes.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Introducing mod_parrot</title>
+      <link>http://localhost:1313/pub/2004/12/22/mod_parrot.html/</link>
+      <pubDate>Wed, 22 Dec 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/12/22/mod_parrot.html/</guid>
+      <description>
+
+&lt;p&gt;It&amp;rsquo;s been almost nine years since the first release of &lt;a href=&#34;http://perl.apache.org/&#34;&gt;mod_perl&lt;/a&gt;, and it remains a very powerful tool for writing web applications and extending the capabilities of the Apache web server. However, lurking around the corner is Perl 6, which gives us not only a new version of Perl to embed in Apache but an entirely new runtime engine called &lt;a href=&#34;http://www.parrotcode.org/&#34;&gt;Parrot&lt;/a&gt;. If there is ever going to be a Perl 6 version of mod_perl, Apache must first be able to run Parrot bytecode. This article introduces &lt;a href=&#34;http://www.smashing.org/mod_parrot&#34;&gt;mod_parrot&lt;/a&gt;, an Apache module that allows the execution of Parrot bytecode from within the web server. Like mod_perl, it also gives your code direct access to the Apache API so you can write your own handlers.&lt;/p&gt;
+
+&lt;h3 id=&#34;what-is-parrot&#34;&gt;What is Parrot?&lt;/h3&gt;
+
+&lt;p&gt;Parrot is a virtual machine (VM) optimized for dynamic languages like Perl, Python, PHP, and Ruby. Source code written in each of these languages eventually compiles down to bytecode (after some optimizations), which subsequently runs in a virtual machine. Currently, each language runs bytecode with its own VM, but one of Parrot&amp;rsquo;s goals is to provide a single common VM for all dynamic languages. This makes implementing a new language much easier because there&amp;rsquo;s no need to worry about writing a new VM, and this also makes it possible for code in one language to call code or access data structures from another language.&lt;/p&gt;
+
+&lt;p&gt;Parrot code comes in three distinct flavors:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Bytecode: This is the file format natively interpreted by Parrot.&lt;/li&gt;
+&lt;li&gt;PASM: Parrot assembler (PASM) is the low-level language that compiles down to bytecode. It has very simple operations to perform functions such as setting registers, adding numbers, and printing strings. PASM is very straightforward, but it operates at such a low level that it can be quite cumbersome.&lt;/li&gt;
+&lt;li&gt;PIR: Parrot Intermediate Representation (PIR) solves many of the problems encountered when programming in PASM. It provides more user-friendly and compiler-friendly constructs and optimizations and feels more like a traditional high-level programming language. Parrot eventually breaks down PIR into PASM before compiling to bytecode (you can even include PASM blocks in PIR). All of the examples in this article use PIR.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For more information on Parrot, including PASM and PIR syntax, visit the &lt;a href=&#34;http://www.parrotcode.org&#34;&gt;Parrot website&lt;/a&gt;. It will provide a good background for understanding the code in this article.&lt;/p&gt;
+
+&lt;h3 id=&#34;why-mod-parrot&#34;&gt;Why mod_parrot?&lt;/h3&gt;
+
+&lt;p&gt;Before discussing the details, you should know a little about mod_parrot&amp;rsquo;s history. Ask Björn Hansen and Robert Spier originally wrote mod_parrot in 2002, later turning it over to Kevin Falcone. This version of mod_parrot targeted Apache 1.3 and had very limited functionality due to Parrot&amp;rsquo;s immaturity at the time. In August 2004, with Parrot and its API much more mature, people suggested that the development on mod_parrot continue. This is where I picked up the project. However, instead of picking up where Ask, Robert, and Kevin left off, I started from scratch, coding for Apache 2 and focusing on access to the Apache API.&lt;/p&gt;
+
+&lt;p&gt;The new mod_parrot project has three primary goals:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Provide access to the Apache API through Parrot objects&lt;/li&gt;
+&lt;li&gt;Provide a common Apache layer for Parrot-based languages&lt;/li&gt;
+&lt;li&gt;Support for new languages should require little or no C coding&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;rsquo;s discuss each of these in more detail.&lt;/p&gt;
+
+&lt;h4 id=&#34;provide-access-to-the-apache-api-through-parrot&#34;&gt;Provide Access to the Apache API Through Parrot&lt;/h4&gt;
+
+&lt;p&gt;Much of mod_perl&amp;rsquo;s power comes from direct access to the Apache API. Rather than restrict your code to content generation, mod_perl provides hooks for things such as authentication handlers and output filters and gives you access to Apache&amp;rsquo;s internal structures, all in Perl. Once you have this functionality, it is easy to implement other useful features including script caching and persistent database connections.&lt;/p&gt;
+
+&lt;p&gt;mod_parrot shares this approach, providing access to the Apache API from Parrot. It does this using Parrot objects, mimicking mod_perl&amp;rsquo;s use of &lt;code&gt;$r&lt;/code&gt;. There will eventually be hooks for all phases of the Apache lifecycle, though the current version supports only content handlers and authentication handlers.&lt;/p&gt;
+
+&lt;h4 id=&#34;provide-a-common-apache-layer-for-parrot-based-languages&#34;&gt;Provide a Common Apache Layer for Parrot-based Languages&lt;/h4&gt;
+
+&lt;p&gt;There are several different languages that can run inside Apache today. The major players here are mod_perl and PHP, but Python, Ruby, and even LISP have modules embedding them into Apache. Each of these implementations comes with its own Apache module, which makes sense for languages with different runtime engines. This is where Parrot changes the landscape dramatically-all languages targeted to the Parrot VM now have a &lt;em&gt;common&lt;/em&gt; runtime engine, so they need only one Apache module: mod_parrot.&lt;/p&gt;
+
+&lt;h4 id=&#34;support-for-new-languages-should-require-little-or-no-c-coding&#34;&gt;Support for New Languages Should Require Little or No C Coding&lt;/h4&gt;
+
+&lt;p&gt;mod_parrot will provide all of the infrastructure for accessing the Apache API. The actual Apache module will already be written. Hooks for calling Parrot code for each stage of the Apache lifecycle will exist. Parrot objects will provide access to the Apache API. With all of this already done, and assuming our language compiles down to Parrot bytecode, we should be able to write the &amp;ldquo;glue&amp;rdquo; between Apache and our language in the language itself. mod_perl could be written in Perl; mod_python could be written in Python, and so on. Very little C code, if any, would be necessary. Each language community could maintain its own language-specific code while sharing the mod_parrot module.&lt;/p&gt;
+
+&lt;h3 id=&#34;architecture&#34;&gt;Architecture&lt;/h3&gt;
+
+&lt;p&gt;mod_parrot is written for Apache 2, with no plans to back-port it to Apache 1.3. The reason behind this decision is to code for the future, not the past or present; after all, Perl 6 is still a few years down the road. It&amp;rsquo;s also much easier to write a module for Apache 2 than it is for 1.3! In addition to the Apache 2 decision, there are several other interesting aspects of the mod_parrot architecture.&lt;/p&gt;
+
+&lt;h4 id=&#34;nci&#34;&gt;NCI&lt;/h4&gt;
+
+&lt;p&gt;The most significant design decision is the use of NCI (native call interface) to access the Apache API. mod_perl accesses most of the Apache API functions through individual XS wrappers (basically a bunch of C macros), themselves compiled into mod_perl itself or its supporting modules. This is a tried and true method, used for many Perl modules as well. Now, Parrot gives us NCI, which eliminates the need for these wrappers, letting you call arbitrary C functions without having to write any C code. Here&amp;rsquo;s an example of a Parrot program that calls the C function &lt;code&gt;getpid()&lt;/code&gt;, which returns the current process ID:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;.sub _main
+    # load libc.so, where getpid() is defined, and assign it to $P0
+    $P0 = loadlib &#39;/lib/libc.so.6&#39;
+
+    # find the function in the library and assign it to $P1
+    # &#39;iv&#39; means that getpid() returns an integer and takes no arguments
+    $P1 = dlfunc $P0, &#39;getpid&#39;, &#39;iv&#39;
+
+    # call getpid() and place result in $I0
+    $I0 = $P1( )
+
+    # print the PID
+    print $I0
+    print &amp;quot;\n&amp;quot;
+.end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s it&amp;ndash;there is no C code to write, no recompilation, and no relinking. However, the Apache API functions do not come from a loadable shared library; they&amp;rsquo;re in the Apache executable, &lt;code&gt;httpd&lt;/code&gt;. Fortunately, NCI can run C functions contained in the running process image, solving that problem. For more information on NCI, see the &lt;a href=&#34;http://www.parrotcode.org/docs/pdd/pdd16_native_call.html&#34;&gt;Parrot NCI Documentation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-apache-requestrec-object&#34;&gt;The Apache::RequestRec Object&lt;/h4&gt;
+
+&lt;p&gt;All access to the Apache API goes through Parrot objects. Because mod_parrot borrows heavily from mod_perl, it made sense to base the primary object class in mod_parrot on Apache&amp;rsquo;s &lt;code&gt;request_rec&lt;/code&gt; structure. Just as in mod_perl, the class is &lt;code&gt;Apache::RequestRec&lt;/code&gt;. This name is subject to change, however, as Parrot&amp;rsquo;s namespace nomenclature becomes clearer.&lt;/p&gt;
+
+&lt;p&gt;Every method is written in Parrot, with NCI calls to their corresponding Apache API functions. For example, here is the Parrot method for the &lt;code&gt;ap_rputs&lt;/code&gt; function (&lt;code&gt;$r-&amp;gt;puts&lt;/code&gt; in mod_perl):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;.sub puts method, prototyped
+    .param string data
+    .local pmc r
+    .local pmc ap_rputs
+    .local int offset
+
+    classoffset offset, self, &#39;Apache::RequestRec&#39;
+    getattribute r, self, offset
+
+    # find NCI object for ap_rputs
+    find_global ap_rputs, &#39;Apache::NCI&#39;, &#39;ap_rputs&#39;
+
+    # use NCI to call out to Apache&#39;s ap_rputs
+    ap_rputs( data, r )
+.end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Currently, &lt;code&gt;Apache::RequestRec&lt;/code&gt; is the only class implemented in mod_parrot. Other classes to support the API will eventually appear, including classes to support Apache&amp;rsquo;s &lt;code&gt;conn_rec&lt;/code&gt; and &lt;code&gt;server_rec&lt;/code&gt; structures.&lt;/p&gt;
+
+&lt;h3 id=&#34;installing-mod-parrot&#34;&gt;Installing mod_parrot&lt;/h3&gt;
+
+&lt;p&gt;You can download mod_parrot from the &lt;a href=&#34;http://www.smashing.org/mod_parrot&#34;&gt;mod_parrot home page&lt;/a&gt;. Additionally, you&amp;rsquo;ll need the following prerequisites (as of version 0.1):&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Parrot 0.1.1 (Poicephalus)&lt;/li&gt;
+&lt;li&gt;Apache 2.0.50 or later&lt;/li&gt;
+&lt;li&gt;Perl 5.6.0 or later (for configuration only)&lt;/li&gt;
+&lt;li&gt;Apache::Test 1.13 or later (for the test suite)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Once you have all the prerequisite software, run the &lt;code&gt;Configure.pl&lt;/code&gt; script. The arguments to this script will most certainly change in future releases, but for now, there are only two arguments:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;--parrot-build-dir=path-to-parrot-source&lt;/code&gt;, the path to the top-level Parrot directory&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--apxs=path-to-apxs&lt;/code&gt;, the path to Apache&amp;rsquo;s &lt;code&gt;apxs&lt;/code&gt; script, usually found in the &lt;em&gt;bin&lt;/em&gt; directory under the Apache installation directory&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- --&gt;
+
+&lt;pre&gt;&lt;code&gt;$ perl Configure.pl --parrot-build-dir=../parrot \
+  --apxs=/usr/local/apache2/bin/apxs
+
+Generating Makefile...done.
+Creating testing infrastructure...done.
+
+Type &#39;make&#39; to build mod_parrot.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When configuration completes, type &lt;code&gt;make&lt;/code&gt; to build mod_parrot, then &lt;code&gt;make test&lt;/code&gt; to run the tests. To install, become root and type &lt;code&gt;make install&lt;/code&gt;. This will install the mod_parrot module into your Apache installation and activate the module in &lt;code&gt;httpd.conf&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-a-mod-parrot-handler&#34;&gt;Writing a mod_parrot Handler&lt;/h3&gt;
+
+&lt;p&gt;While there are currently no languages targeted to Parrot that have the object support to use mod_parrot (though Parakeet in the Parrot source looks promising), we can still write Apache handlers. In what language? In Parrot, of course! Well, actually, PIR. Here&amp;rsquo;s a simple content handler that displays &amp;ldquo;Hello World,&amp;rdquo; or if you pass it an query string in the URL, &amp;ldquo;Hello &lt;em&gt;name&lt;/em&gt;,&amp;rdquo; where &lt;em&gt;name&lt;/em&gt; is the string you pass.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# this namespace is used to identify the handler
+.namespace [ &#39;HelloWorld&#39; ]
+
+# the actual handler
+.sub _handler
+    # our Apache::RequestRec object
+    .local pmc r
+
+    # this will contain Apache constants
+    .local pmc ap_constants
+
+    # instantiate the Apache::RequestRec object
+    find_type $I0, &#39;Apache::RequestRec&#39;
+    r = new $I0
+
+    # who should we say hello to?
+    $S0 = r.&#39;args&#39;( )
+    $I0 = length $S0
+    if $I0 &amp;gt; 0 goto say_hello
+    $S0 = &#39;world&#39;
+
+say_hello:
+    # call the puts method to send some output
+    $S1 = &#39;Hello &#39; . $S0
+    r.&#39;puts&#39;( $S1 )
+
+    # tell Apache that we&#39;re finished with this phase
+    find_global ap_constants, &#39;Apache::Constants&#39;, &#39;ap_constants&#39;
+    $I0 = ap_constants[&#39;OK&#39;]
+    .pcc_begin_return
+        .return $I0
+    .pcc_end_return
+.end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you are at all familiar with mod_perl or the Apache API, this should look familiar to you, even if you don&amp;rsquo;t know any Parrot. Let&amp;rsquo;s go through the code to see how it works. Because this is not an article about Parrot itself, I&amp;rsquo;ll glaze over the syntax and concentrate on what the code actually does.&lt;/p&gt;
+
+&lt;p&gt;The first line of code in the handler declares the namespace in which this handler exists. In this case, it is &lt;code&gt;HelloWorld&lt;/code&gt;. This is important because namespaces differentiate one handler from another in &lt;code&gt;httpd.conf&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Next comes the actual handler subroutine, which should always be named &lt;code&gt;_handler&lt;/code&gt;. The first thing the subroutine does is to declare some locally scoped &amp;ldquo;variables.&amp;rdquo; These are actually registers in Parrot, but PIR can abstract them with named variables as it were a higher level language. And &lt;code&gt;ap_constants&lt;/code&gt;, a hash that will give access to Apache constants including &lt;code&gt;OK&lt;/code&gt; and &lt;code&gt;DECLINED&lt;/code&gt;, come next. Both are PMCs, or &lt;em&gt;Parrot Magic Cookie&lt;/em&gt;, a special data type that implements the more complex data types of higher-level languages such as Perl or Python.&lt;/p&gt;
+
+&lt;p&gt;The code now checks for a query string using the &lt;code&gt;args&lt;/code&gt; method of the &lt;code&gt;Apache::RequestRec&lt;/code&gt; object and, if one exists, assigns it to the temporary string register &lt;code&gt;$S0&lt;/code&gt;. If there is no query string, &lt;code&gt;$S0&lt;/code&gt; will contain &lt;code&gt;world&lt;/code&gt;. Next, the code creates the output string, instantiates the &lt;code&gt;Apache::RequestRec&lt;/code&gt; object, and calls the &lt;code&gt;puts&lt;/code&gt; method to output &amp;ldquo;Hello World&amp;rdquo; or &amp;ldquo;Hello &lt;em&gt;name&lt;/em&gt;&amp;rdquo;. By default, the content type is &lt;code&gt;text/html&lt;/code&gt;, so there&amp;rsquo;s no need to set it here.&lt;/p&gt;
+
+&lt;p&gt;This is the end of the handler, so it&amp;rsquo;s time to tell Apache that we&amp;rsquo;re done and that it no longer needs to handle this phase of the request. This requires returning the Apache constant &lt;code&gt;OK&lt;/code&gt; from the &lt;code&gt;ap_constants&lt;/code&gt; hash in the &lt;code&gt;Apache::Constants&lt;/code&gt; namespace.&lt;/p&gt;
+
+&lt;p&gt;To compile the handler into Parrot bytecode, save it in a file with a &lt;em&gt;.imc&lt;/em&gt; extension (IMC is short for Intermediate Compiler). Then, compile it into Parrot bytecode (PBC) as follows (this step will be automatic in a future release):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ parrot -o HelloWorld.pbc HelloWorld.imc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;configuring-apache-to-use-a-handler&#34;&gt;Configuring Apache to Use A Handler&lt;/h3&gt;
+
+&lt;p&gt;Writing the handler was the hard part. Configuring Apache to use it is easy. The first thing to do is to initialize mod_parrot and load some bytecode libraries:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# mod_parrot initialization
+ParrotInit /path/to/lib/ModParrot/init.pbc
+ParrotLoad /path/to/lib/Apache/RequestRec.pbc
+ParrotLoad /path/to/lib/Apache/Constants.pbc
+
+# our handler
+ParrotLoad /path/to/HelloWorld.pbc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;ParrotInit&lt;/code&gt; tells mod_parrot where to find its initialization bytecode. A future release will probably handle this automatically, but for now explicitly set the path in &lt;code&gt;httpd.conf&lt;/code&gt;. &lt;code&gt;ParrotLoad&lt;/code&gt; tells mod_parrot to load a bytecode file. In this case, it loads the code that implements the &lt;code&gt;Apache::RequestRec&lt;/code&gt; object and the constants hash, as well as the bytecode for the new handler.&lt;/p&gt;
+
+&lt;p&gt;Next, Apache needs a location for the handler to, well, handle. How about the location &lt;code&gt;/hello&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Location /hello&amp;gt;
+    SetHandler parrot-code
+    ParrotHandler HelloWorld
+&amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, this sets the Apache handler for the location to &lt;code&gt;parrot-code&lt;/code&gt;. This is the official name of the mod_parrot handler. Then it sets the actual Parrot handler, which, as discussed in the previous section, is the namespace of the handler subroutine, &lt;code&gt;HelloWorld&lt;/code&gt;. That&amp;rsquo;s it. Save the configuration, restart Apache, point your browser to &lt;code&gt;http://yourserver/hello&lt;/code&gt; (replacing &lt;code&gt;yourserver&lt;/code&gt; with the name of your server), and you should see the &amp;ldquo;Hello World&amp;rdquo; message. Add a query string to see the output change: &lt;code&gt;http://yourserver/hello?Joe&lt;/code&gt; should produce &amp;ldquo;Hello Joe.&amp;rdquo;&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-an-authentication-handler&#34;&gt;Writing an Authentication Handler&lt;/h3&gt;
+
+&lt;p&gt;Apache handlers do more than just generate content, of course, and this applies to mod_parrot as well. Here&amp;rsquo;s an example of using an authentication handler to protect a private directory. It will use the HTTP basic authentication scheme, but instead of using a standard password file, it will accept any username as long as the password is &amp;ldquo;squawk.&amp;rdquo; Here&amp;rsquo;s the handler PIR code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# this namespace is used to identify the handler
+.namespace [ &#39;TestAuthHandler&#39;]
+
+# the actual handler
+.sub _handler
+    # our Apache::RequestRec object
+    .local pmc r
+    .local string pw
+    .local int status
+
+    # this will contain Apache constants
+    .local pmc ap_constants
+    find_global ap_constants, &#39;Apache::Constants&#39;, &#39;ap_constants&#39;
+
+    # instantiate the Apache::RequestRec object
+    find_type $I0, &#39;Apache::RequestRec&#39;
+    r = new $I0
+
+    # check the password, ignoring the username
+    (status, pw) = r.&#39;get_basic_auth_pw&#39;( )
+    if pw != &#39;squawk&#39; goto auth_failure
+    $I0 = ap_constants[&#39;OK&#39;]
+    goto auth_return_status
+
+# authentication failed
+auth_failure:
+    $I0 = ap_constants[&#39;HTTP_UNAUTHORIZED&#39;]
+    goto auth_return_status
+
+# return our status code
+auth_return_status:
+    .pcc_begin_return
+        .return $I0
+    .pcc_end_return
+.end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is the corresponding configuration in &lt;code&gt;httpd.conf&lt;/code&gt;. Instead of using &lt;code&gt;SetHandler&lt;/code&gt; and &lt;code&gt;ParrotHandler&lt;/code&gt; here, set &lt;code&gt;ParrotAuthenHandler&lt;/code&gt; to the namespace of the authentication handler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;Directory /usr/local/apache/htdocs/private&amp;gt;
+    ParrotAuthenHandler TestAuthHandler
+    AuthType Basic
+    AuthName Private
+    Require valid-user
+&amp;lt;/Directory&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;remembering-why-we-re-here&#34;&gt;Remembering Why We&amp;rsquo;re Here&lt;/h3&gt;
+
+&lt;p&gt;Note the low-level nature of the two handlers. There are no else clauses; goto statements appear throughout the subroutine; and return values must be assigned to registers before being used in another operation. You can plainly see that this is only one step above writing assembly here, but remember that you won&amp;rsquo;t have to worry about writing code at this level&amp;ndash;you&amp;rsquo;ll write in a high-level language such as Perl 6, and it will eventually compile down to Parrot assembler. Looking forward, the corresponding Perl 6 code for the &lt;code&gt;HelloWorld&lt;/code&gt; handler might look a lot like this (as with all things Perl 6, this is subject to change):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Apache::Constants &#39;:common&#39;;
+use Apache::RequestRec;
+
+sub handler(Apache::RequestRec $r)
+{
+    my ($status, $pw) = $r.get_basic_auth_pw();
+    return ($pw eq &#39;squawk&#39;) ? OK : HTTP_UNAUTHORIZED;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;future-directions&#34;&gt;Future Directions&lt;/h3&gt;
+
+&lt;p&gt;mod_parrot is still in its infancy. It&amp;rsquo;s quite functional, but there is still a lot of work to do before it can power any serious applications. At this point in development, the primary goal is to finish hooking into all phases of the Apache request lifecycle, including support for the relevant Apache API functions. Windows support will also become a priority as mod_parrot becomes more functional.&lt;/p&gt;
+
+&lt;p&gt;You may also wonder about CGI scripts. As of this writing, there is no support for running CGI scripts in mod_parrot. mod_perl has &lt;code&gt;Apache::Registry&lt;/code&gt; to help CGI scripts run in a persistent environment, and mod_parrot will need a similar infrastructure.&lt;/p&gt;
+
+&lt;p&gt;However, the real fun will begin when we have a high level language that we can use to write handlers. If the timelines work out as I hope they will, mod_parrot will be fully functional before the formal release of Perl 6 or any other mainstream Parrot-based language. Because the Apache/Parrot layer will have already been written, this will save quite a bit of development time for mod_perl, PHP, and other similar projects.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;d like to read more about mod_parrot, or would like to help with the project, visit the &lt;a href=&#34;http://www.smashing.org/mod_parrot&#34;&gt;mod_parrot home page&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Cross-Language Remoting with mod_perlservice</title>
+      <link>http://localhost:1313/pub/2004/11/18/mod_perlservice.html/</link>
+      <pubDate>Thu, 18 Nov 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/11/18/mod_perlservice.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;mod-perlservice-what-is-that&#34;&gt;Mod_perlservice? What is That?&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;Mod_perlservice&lt;/code&gt; is a cool, new way to do remoting &amp;ndash; sharing data between server and client processes &amp;ndash; with Perl and Apache. Let&amp;rsquo;s start by breaking that crazy name apart: mod + perl + service.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Mod&lt;/em&gt; means that it&amp;rsquo;s a module for the popular and ubiquitous Apache HTTP Server. &lt;em&gt;Perl&lt;/em&gt; represents the popular and ubiquitous programming language. &lt;em&gt;Service&lt;/em&gt; is the unique part. It&amp;rsquo;s the new ingredient that unifies Apache, Perl, and XML into an easy-to-use web services system.&lt;/p&gt;
+
+&lt;p&gt;With mod_perlservice, you can write Perl subs and packages on your server and call them over the internet from client code. Clients can pass scalars, arrays, and hashes to the server-side subroutines and obtain the return value (scalar, array, or hash) back from the remote code. Some folks refer to this functionality as &amp;ldquo;remoting&amp;rdquo; or &amp;ldquo;RPC,&amp;rdquo; so if you like you can say mod_perlservice is remoting with Perl and Apache. You can write client programs in a variety of languages; libraries for C, Perl, and Flash Action Script are all ready to go.&lt;/p&gt;
+
+&lt;p&gt;Now that you know what mod_perlservice is, let&amp;rsquo;s look at why it is. I believe that mod_perlservice has a very clean, easy-to-use interface when compared with other RPC systems. Also, because it builds on the Apache platform it benefits from Apache&amp;rsquo;s ubiquity, security, and status as a standard. Mod_perlservice sports an embedded Perl interpreter to offer high performance for demanding applications.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_11_18_mod_perlservice/mod_perlservicelogo.jpg&#34; alt=&#34;mod_perlservice&#34; width=&#34;200&#34; height=&#34;120&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;how-can-i-use-mod-perlservice&#34;&gt;How Can I Use mod_perlservice?&lt;/h3&gt;
+
+&lt;p&gt;Mod_perlservice helps create networked applications that require client-server communication, information processing, and sharing. Mod_perlservice is for applications, not for creating dynamic content for your HTML pages. However, you surely can use it for Flash remoting with Perl. Here are some usage examples:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;A desktop application (written using your favorite C++ GUI library) that records the current local air temperature and sends it to an online database every 10 minutes. Any client can query the server to obtain the current and historical local air temperature of any other participating client.&lt;/li&gt;
+&lt;li&gt;A Flash-based stock portfolio management system. You can create model stock portfolios and retrieve real-time stock quote information and news.&lt;/li&gt;
+&lt;li&gt;A command-line utility in Perl that accepts English sentences on standard input and outputs the sentences in French. Translation occurs in server-side Perl code. If the sentence is idiomatic and the translation is incorrect, the user has the option of sending the server a correct translation to store in an online idiom database.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;how-do-i-start&#34;&gt;How Do I Start?&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s move on to the fun stuff and set up a working installation. Before we begin, make sure you have everything you need! You need &lt;a href=&#34;http://httpd.apache.org/&#34;&gt;Apache HTTPD&lt;/a&gt;, &lt;a href=&#34;http://www.perl.org/&#34;&gt;Perl&lt;/a&gt;, &lt;a href=&#34;https://libexpat.github.io/&#34;&gt;Expat&lt;/a&gt;, &lt;a href=&#34;http://www.ivorycity.com/mod_perlservice/&#34;&gt;mod_perlservice&lt;/a&gt;, and a mod_perlservice client library (&lt;a href=&#34;http://www.ivorycity.com/mod_perlservice/perl_client.html&#34;&gt;Perl Client&lt;/a&gt; | &lt;a href=&#34;http://www.ivorycity.com/mod_perlservice/c_client.html&#34;&gt;C Client&lt;/a&gt; | &lt;a href=&#34;http://www.ivorycity.com/mod_perlservice/flash_client.html&#34;&gt;Flash Client&lt;/a&gt;). You must download a client library separately, as the distribution does not include any clients! In your build directory:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;myhost$ tar -xvzf mod_perlservice.tar.gz
+myhost$ cd mod_perlservice
+myhost$ ./configure
+myhost$ make
+myhost$ make install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If everything goes to plan, you&amp;rsquo;ll end up with a fresh &lt;em&gt;mod_perlservice.so&lt;/em&gt; in your Apache modules directory, (usually &lt;em&gt;/etc/apache/modules&lt;/em&gt;). Now it&amp;rsquo;s time to configure Apache to use mod_perlservice. &lt;code&gt;cd&lt;/code&gt; into your Apache configuration directory (usually &lt;em&gt;/etc/apache/conf&lt;/em&gt;) Add the following lines to the file &lt;em&gt;apache.conf&lt;/em&gt; (or &lt;em&gt;httpd.conf&lt;/em&gt;, if you have only a single configuration file):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;LoadModule perlservice_module modules/mod_perlservice.so
+AddModule mod_perlservice.c
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Add the following lines to &lt;em&gt;commonapache.conf&lt;/em&gt;, if you have it and &lt;em&gt;httpd.conf&lt;/em&gt; if you don&amp;rsquo;t:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;IfModule mod_perlservice.c&amp;gt;
+&amp;lt;Location /perlservice&amp;gt;   SetHandler
+mod_perlservice
+   Allow From All PerlApp
+   myappname /my/app/dir
+   #Examples
+   PerlApp stockmarket /home/services/stockmarket
+   PerlApp temperature /home/services/temperature
+&amp;lt;/Location&amp;gt;
+&amp;lt;/IfModule&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Pay close attention to the &lt;code&gt;PerlApp&lt;/code&gt; directive.&lt;/em&gt; For every mod_perlservice application you want to run, you need a &lt;code&gt;PerlApp&lt;/code&gt; directive. If I were creating a stock market application, I might create a directory: &lt;em&gt;/home/services/stockmarket&lt;/em&gt; and add the following &lt;code&gt;PerlApp&lt;/code&gt; directive:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PerlApp stockmarket /home/services/stockmarket
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This tells mod_perlservice to host an application called &lt;code&gt;stockmarket&lt;/code&gt; with the Perl code files located in the &lt;em&gt;/home/services/stockmarket&lt;/em&gt; directory. You may run as many service applications as you wish and you may organize them however you wish.&lt;/p&gt;
+
+&lt;p&gt;With the configuration files updated, the next step is to restart Apache:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;myhost$ /etc/init.d/apache restart
+or
+myhost$ apachectl restart
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now if everything went as planned, mod_perlservice should be installed. Congratulations!&lt;/p&gt;
+
+&lt;h3 id=&#34;an-example&#34;&gt;An Example&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s create that stock portfolio example mentioned earlier. It won&amp;rsquo;t support real-time quotes, but will instead create a static database of common stock names and historical prices. The application will support stock information for General Electric (GE), Red Hat (RHAT), Coca-Cola (KO), and Caterpillar (CAT).&lt;/p&gt;
+
+&lt;p&gt;The application will be &lt;em&gt;stockmarket&lt;/em&gt; and will keep all of the Perl files in the stock market application directory (&lt;em&gt;/home/services/stockmarket&lt;/em&gt;). The first file will be &lt;em&gt;quotes.pm&lt;/em&gt;, reading as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;our $lookups = {
+    &amp;quot;General Electric&amp;quot; =&amp;gt; &amp;quot;GE&amp;quot;,
+    &amp;quot;Red Hat&amp;quot;          =&amp;gt; &amp;quot;RHAT&amp;quot;,
+    &amp;quot;Coca Cola&amp;quot;        =&amp;gt; &amp;quot;KO&amp;quot;,
+    &amp;quot;Caterpillar Inc&amp;quot;  =&amp;gt; &amp;quot;CAT&amp;quot;
+};
+our $stocksymbols = {
+    &amp;quot;GE&amp;quot; =&amp;gt; {
+        &amp;quot;Price&amp;quot;            =&amp;gt; 33.91,
+        &amp;quot;EarningsPerShare&amp;quot; =&amp;gt; 1.544
+    },
+    &amp;quot;RHAT&amp;quot; =&amp;gt; {
+        &amp;quot;Price&amp;quot; =&amp;gt; 14.96,
+        &amp;quot;EarningsPerShare&amp;quot; =&amp;gt; 0.129
+    },
+    &amp;quot;KO&amp;quot;   =&amp;gt; {
+        &amp;quot;Price&amp;quot;            =&amp;gt; 42.84,
+        &amp;quot;EarningsPerShare&amp;quot; =&amp;gt; 1.984
+    },
+    &amp;quot;CAT&amp;quot; =&amp;gt; {
+        &amp;quot;Price&amp;quot;            =&amp;gt; 75.74,
+        &amp;quot;EarningsPerShare&amp;quot; =&amp;gt; 4.306
+    }
+};
+
+package quotes;
+
+sub lookupSymbol {
+    my $companyname = shift;
+    return $lookups-&amp;gt;{$company_name};
+}
+
+sub getLookupTable {
+    return $lookups;
+}
+
+sub getStockPrice {
+    my $stocksymbol = shift;
+    return $stocksymbols-&amp;gt;{$stocksymbol}-&amp;gt;{&amp;quot;Price&amp;quot;};
+}
+sub getAllStockInfo {
+    my $stocksymbol = shift;
+    return $stocksymbols{$stocksymbol};
+}
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s the example of the server-side program. Basically, two static &amp;ldquo;databases&amp;rdquo; (&lt;code&gt;$lookups&lt;/code&gt; and &lt;code&gt;$stocksymbols&lt;/code&gt;) provide information about a limited universe of stocks. The above methods query the static databases; the behavior should be fairly self-explanatory.&lt;/p&gt;
+
+&lt;p&gt;You may have as many &lt;em&gt;.pm&lt;/em&gt; files in your application as you wish and you may also define as many packages within a &lt;em&gt;.pm&lt;/em&gt; file as you wish. An extension to this application might be a file called &lt;em&gt;news.pm&lt;/em&gt; that enables you to fetch current and historical news about your favorite stocks.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s talk some security. As it stands, this code won&amp;rsquo;t work; mod_perlservice will restrict access to any file and method you don&amp;rsquo;t explicitly export for public use. Use the &lt;em&gt;.serviceaccess&lt;/em&gt; file to export things. Create this file in each application directory you declare with mod_perlservice or you&amp;rsquo;ll have no access. An example file might read:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;ServiceAccess&amp;gt;
+  &amp;lt;AllowFile name=&amp;quot;quotes.pm&amp;quot;&amp;gt;
+    Allow quotes::*
+  &amp;lt;/AllowFile&amp;gt;
+&amp;lt;/ServiceAccess&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the stock market example, this file should be &lt;em&gt;/home/services/stockmarket/.serviceaccess&lt;/em&gt;. Be sure that the &lt;code&gt;apache&lt;/code&gt; user does not own this file; that could be bad for security. This file allows access to the file &lt;em&gt;quotes.pm&lt;/em&gt; and allows public access to all (&lt;code&gt;*&lt;/code&gt;) the methods in package &lt;em&gt;quotes&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;If I want to restrict access only to &lt;code&gt;getStockPrice&lt;/code&gt;, I would have written &lt;code&gt;Allow quotes::getStockPrice&lt;/code&gt;. After that, I could add access to &lt;code&gt;lookupSymbol&lt;/code&gt; with &lt;code&gt;Allow quotes::lookupSymbol&lt;/code&gt;. To make &lt;em&gt;quotes.pm&lt;/em&gt; public carte blanche, use &lt;em&gt;Allow *&lt;/em&gt;. You won&amp;rsquo;t need to restart Apache when you make changes to this file as it reloads automatically.&lt;/p&gt;
+
+&lt;h3 id=&#34;client-code&#34;&gt;Client Code&lt;/h3&gt;
+
+&lt;p&gt;Well, so far I&amp;rsquo;ve only shown you half the story. It&amp;rsquo;s time to create some client-side code. This client example uses the Flash &amp;ldquo;PerlService&amp;rdquo; library, just one of the client-side interfaces to mod_perlservice. The Flash client works well for browser interfaces while the Perl and C clients can create command-line or GUI (ie, GTK or Qt) applications. This article is on the web, so we&amp;rsquo;ll give the Flash interface a spin and then go through an example in Perl.&lt;/p&gt;
+
+&lt;p&gt;The first code smidgen should go in the first root frame of your Flash application. It instantiates the global &lt;code&gt;PerlService&lt;/code&gt; object and creates event handlers for when remote method calls return from the server. The event handlers output the requested stock information to the display box.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#include &amp;quot;PerlService-0.0.2.as&amp;quot;
+// Create a global PerlService object
+// Tell the PerlService object about the remote code we want to use:
+// arg1) host: www.ivorycity.com
+// arg2) application: stockmarket
+// arg3) file: quotes.pm
+// arg4) package: quotes
+_global.ps = new PerlService(&amp;quot;www.ivorycity.com&amp;quot;,&amp;quot;stockmarket&amp;quot;,&amp;quot;quotes.pm&amp;quot;,&amp;quot;quotes&amp;quot;);
+// First declare three callback functions to handle return values
+function onStockPrice(val) {
+    output.text = &amp;quot;StockPrice: &amp;quot; + symbolInput.text + &amp;quot; &amp;quot; + val + &amp;quot;\n&amp;quot; + output.text;
+}
+
+function onAllStockInfo(val) {
+    output.text = &amp;quot;Stock Info: &amp;quot; + allInfoInput.text + &amp;quot;\n&amp;quot; + &amp;quot;\tPrice: &amp;quot;
+                  + val.Price + &amp;quot;\n&amp;quot; + &amp;quot;\tEarnings Per Share: &amp;quot;
+                  + val.EarningsPerShare + &amp;quot;\n&amp;quot; + output.text;
+}
+
+function onLookupSymbol(val) {
+    output.text = &amp;quot;Lookup Result: &amp;quot; + symbolInput.text + &amp;quot; &amp;quot; + val + &amp;quot;\n&amp;quot;
+                  + output.text;
+}
+
+// Register callback handlers for managing return values from remote  methods
+// ie, onStockPrice receives the return value from remote method getStockPrice
+
+ps.registerReplyHandler( &amp;quot;getStockPrice&amp;quot;, onStockPrice );
+ps.registerReplyHandler( &amp;quot;getAllStockInfo&amp;quot;, onAllStockInfo );
+ps.registerReplyHandler( &amp;quot;lookupSymbol&amp;quot;, onLookupSymbol );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now for the code that makes things happen. The following code attaches to three separate buttons. When clicked, the buttons call the remote Perl methods using the global &lt;code&gt;PerlService&lt;/code&gt; object. Flash Action Script is an event-driven system, so click event-handlers will call the remote code and return event-handlers will do something with those values.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_11_18_mod_perlservice/flashclientdgm.jpg&#34; alt=&#34;buttons and code associations&#34; width=&#34;400&#34; height=&#34;206&#34; /&gt;
+&lt;em&gt;Figure 1. Button and code associations.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;When a user presses Button 1, call the remote method &lt;code&gt;getStockPrice&lt;/code&gt; and pass the text in the first input box as an argument.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;on (release) {
+    ps.getStockPrice(box1.text);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the user presses Button 2, call the remote method &lt;code&gt;getAllStockInfo&lt;/code&gt; and pass the text in the second input box as an argument.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;on (release) {
+    ps.getAllStockInfo(box2.text);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the user presses Button 3, call the remote method &lt;code&gt;lookupSymbol&lt;/code&gt; and pass the text in the third input box as an argument.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;on (release) {
+    ps.lookupSymbol(box3.text);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s the entire Flash example. Here is the finished product.&lt;/p&gt;
+
+&lt;h4 id=&#34;perl-client&#34;&gt;Perl Client&lt;/h4&gt;
+
+&lt;p&gt;Not everyone uses Flash, especially in the Free Software community. The great thing about mod_perlservice is that everyone can join the party. Here&amp;rsquo;s a Perl Client that uses the same server-side stock market API.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use PService;
+
+my $hostname = &amp;quot;www.ivorycity.com&amp;quot;;
+my $appname  = &amp;quot;stockmarket&amp;quot;;
+my $filename = &amp;quot;quotes.pm&amp;quot;;
+my $package  = &amp;quot;quotes&amp;quot;;
+
+#Create the client object with following arguments:
+#1) The host you want to use
+#2) The application on the host
+#3) The perl module file name
+#4) The package you want to use
+
+my $ps = PSClient-&amp;gt;new( $hostname, $appname, $filename, $package );
+
+# Just call those remote methods and get the return value
+my $price  = $ps-&amp;gt;getStockPrice(&amp;quot;GE&amp;quot;);
+my $info   = $ps-&amp;gt;getAllStockInfo(&amp;quot;RHAT&amp;quot;);
+my $lookup = $ps-&amp;gt;lookupSymbol(&amp;quot;Coca Cola&amp;quot;);
+
+#Share your exciting new information with standard output
+print &amp;quot;GE Price: &amp;quot; . $price . &amp;quot;\n&amp;quot;;
+print &amp;quot;Red Hat Price: &amp;quot; . $info-&amp;gt;{Price} . &amp;quot;\n&amp;quot;;
+print &amp;quot;Red Hat EPS: &amp;quot; . $info-&amp;gt;{EarningsPerShare} . &amp;quot;\n&amp;quot;;
+print &amp;quot;Coca-Cola&#39;s ticker symbol is &amp;quot; . $lookup . &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using the &lt;em&gt;PSClient&lt;/em&gt; object to call remote methods might feel a little awkward if you expect to call them via &lt;code&gt;quotes::getStockPrice()&lt;/code&gt;, but think of the &lt;code&gt;$ps&lt;/code&gt; instance as a proxy class to your remote methods, if you like.&lt;/p&gt;
+
+&lt;p&gt;If things don&amp;rsquo;t work, use &lt;code&gt;print $ps-&amp;gt;get_errmsg();&lt;/code&gt; to print an error message. $ps-&amp;gt;get_errmsg(); That&amp;rsquo;s a local reserved function, so it doesn&amp;rsquo;t call the server. It&amp;rsquo;s one of a few reserved functions detailed in the &lt;a href=&#34;http://www.ivorycity.com/mod_perlservice/perl_client.html&#34;&gt;Perl client reference&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;As you can see, it requires much less work to create an example with the Perl client. You simply instantiate the PSClient object, call the remote methods, and do something with the return values. That&amp;rsquo;s it. There is no protocol decoding, dealing with HTTP, CGI arguments, or any of the old annoyances. Your remote code may as well be local code.&lt;/p&gt;
+
+&lt;h3 id=&#34;thanks-for-taking-the-tour&#34;&gt;Thanks for Taking the Tour&lt;/h3&gt;
+
+&lt;p&gt;That&amp;rsquo;s mod_perlservice. I&amp;rsquo;m sure many of you who are developing client-server applications can see the advantages of this system. Personally, I&amp;rsquo;ve always found the existing technologies to be inflexible and/or too cumbersome. The mod_perlservice system offers a clean, simple, and scalable interface that unites client-side and server-side code in the most sensible way yet.&lt;/p&gt;
+
+&lt;p&gt;What&amp;rsquo;s next? mod_parrotservice!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>mod_perl in 30 minutes</title>
+      <link>http://localhost:1313/pub/2002/03/22/modperl.html/</link>
+      <pubDate>Fri, 22 Mar 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/03/22/modperl.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-introduction-introduction-span&#34;&gt;&lt;span id=&#34;introduction&#34;&gt;Introduction&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In the &lt;a href=&#34;http://localhost:1313/pub/2002/02/26/whatismodperl.html&#34;&gt;previous article&lt;/a&gt;, I&amp;rsquo;ve shown quite amazing Web performance reports from companies that have deployed mod_perl heavily. You might be surprised but you can quite easily get similarly amazing results if you move your service to mod_perl as well. In fact, getting started with mod_perl shouldn&amp;rsquo;t take you more than 30 minutes &amp;ndash; the time it takes to compile and configure the server on a decent machine and get it running.&lt;/p&gt;
+
+&lt;p&gt;In this article I&amp;rsquo;ll show step-by-step installation and configuration scenarios, and chances are you will be able to run the basic statically compiled mod_perl setup without reading any other documents. Of course, you will want and need to read the documentation later, but I think you will agree with me that it&amp;rsquo;s ultimately cool to be able to get your feet wet without knowing much about the new technology up-front.&lt;/p&gt;
+
+&lt;p&gt;The mod_perl installation was tested on many mainstream Unix platforms, so unless you have a nonstandard system, you shouldn&amp;rsquo;t have any problems building the basic mod_perl server.&lt;/p&gt;
+
+&lt;p&gt;If you are a Windows user, then the easiest way is to use the binary package available from &lt;a href=&#34;http://perl.apache.org/distributions.html.&#34;&gt;http://perl.apache.org/distributions.html.&lt;/a&gt; From the same location, you can download the Linux RPM version and CVS snapshots. However, I always recommend to build the mod_perl from the source, and as you will see in a moment, it&amp;rsquo;s an easy thing to do.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-installing-mod-perl-is-easy-installing-mod-perl-is-easy-span&#34;&gt;&lt;span id=&#34;installing mod_perl is easy&#34;&gt;Installing mod_perl Is Easy&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So let&amp;rsquo;s start with the installation process. If you are an experienced Unix user, then you need no explanation for the following commands. Just copy and paste them and you will get the server installed.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll use a &lt;code&gt;%&lt;/code&gt; sign as the shell program&amp;rsquo;s prompt.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % cd /usr/src
+  % lwp-download http://www.apache.org/dist/httpd/apache_1.3.20.tar.gz
+  % lwp-download http://perl.apache.org/dist/mod_perl-1.26.tar.gz
+  % tar -zvxf apache_1.3.20.tar.gz
+  % tar -zvxf mod_perl-1.26.tar.gz
+  % cd mod_perl-1.26
+  % perl Makefile.PL APACHE_SRC=../apache_1.3.20/src \
+    DO_HTTPD=1 USE_APACI=1 EVERYTHING=1
+  % make &amp;amp;&amp;amp; make test &amp;amp;&amp;amp; make install
+  % cd ../apache_1.3.20
+  % make install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s all!&lt;/p&gt;
+
+&lt;p&gt;What&amp;rsquo;s left is to add a few configuration lines to &lt;em&gt;httpd.conf&lt;/em&gt;, an Apache configuration file, start the server and enjoy mod_perl.&lt;/p&gt;
+
+&lt;p&gt;If you have stumbled upon a problem at any of the above steps, then don&amp;rsquo;t despair &amp;ndash; the next section will explain in detail each step.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-installing-mod-perl-detailed-installing-mod-perl-detailed-span&#34;&gt;&lt;span id=&#34;installing mod_perl detailed&#34;&gt;Installing mod_perl Detailed&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you didn&amp;rsquo;t have the courage to try the steps in the previous section or you simply want to understand more before you try, then let&amp;rsquo;s go through the fine details of the installation process. If you have successfully installed mod_perl following the short scenario in the previous section, then you can skip this section and move on to the next one.&lt;/p&gt;
+
+&lt;p&gt;Before we proceed, I should note that you have to become a &lt;em&gt;root&lt;/em&gt; user in order to install the files in a protected area. If you don&amp;rsquo;t have &lt;em&gt;root&lt;/em&gt; access, then you can install all the files under your home directory. We will talk about the nuances of this approach in a future articles. I&amp;rsquo;ll also assume that you have &lt;em&gt;perl&lt;/em&gt; and &lt;em&gt;gcc&lt;/em&gt; or an equivalent C compiler installed.&lt;/p&gt;
+
+&lt;p&gt;I assume that all builds are being done in the &lt;em&gt;/home/stas/src&lt;/em&gt; directory. So we go into this directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % cd /home/stas/src
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we download the latest source distributions of Apache and mod_perl. If you have the &lt;code&gt;LWP&lt;/code&gt; module installed (also known as &lt;em&gt;libwww&lt;/em&gt; and available from CPAN), then you should have the &lt;code&gt;lwp-download&lt;/code&gt; utility that partly imitates your favorite browser by allowing you to download files from the Internet. You can use any other method to retrieve these files. Just make sure that you save both files in the &lt;em&gt;/home/stas/src&lt;/em&gt; directory, as this will make it easier for you to follow the example installation process. Of course, you can install both packages anywhere on your file system.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % lwp-download http://www.apache.org/dist/httpd/apache_1.3.20.tar.gz
+  % lwp-download http://perl.apache.org/dist/mod_perl-1.26.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can make sure that you&amp;rsquo;re downloading the latest stable versions by visiting the following distribution directories: &lt;em&gt;&lt;a href=&#34;http://www.apache.org/dist/httpd/&#34;&gt;http://www.apache.org/dist/httpd/&lt;/a&gt;&lt;/em&gt; and &lt;em&gt;&lt;a href=&#34;http://perl.apache.org/dist/&#34;&gt;http://perl.apache.org/dist/&lt;/a&gt;&lt;/em&gt;. As you have guessed already, the former URL is the main Apache distribution directory, the latter is the same thing for mod_perl.&lt;/p&gt;
+
+&lt;p&gt;Untar both sources. You have to uncompress and untar the files. In addition to its main usage for tarring and untarring files, the GNU &lt;code&gt;tar&lt;/code&gt; utility is able to uncompress files compressed by the &lt;code&gt;gzip&lt;/code&gt; utility, when the &lt;code&gt;-z&lt;/code&gt; option is used.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % tar -zvxf apache_1.3.20.tar.gz
+  % tar -zvxf mod_perl-1.26.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you have a non-GNU &lt;code&gt;tar&lt;/code&gt; utility, then chances are that it will be unable to decompress, so you need to do it in two steps. First, uncompress the packages with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % gzip -d apache_1.3.20.tar.gz
+  % gzip -d mod_perl-1.26.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then untar them with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % tar -xvf apache_1.3.20.tar
+  % tar -xvf mod_perl-1.26.tar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you don&amp;rsquo;t have &lt;code&gt;tar&lt;/code&gt; or &lt;code&gt;gzip&lt;/code&gt; utilities available, then install them or use their equivalents.&lt;/p&gt;
+
+&lt;p&gt;Now go into the mod_perl source distribution directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % cd mod_perl-1.26
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next step is to create the &lt;em&gt;Makefile&lt;/em&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl Makefile.PL APACHE_SRC=../apache_1.3.20/src \
+    DO_HTTPD=1 USE_APACI=1 EVERYTHING=1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;mod_perl accepts a variety of parameters, in this scenario we are going to use those that will allow you to do almost everything with mod_perl. Once you learn more about mod_perl, you will be able to fine-tune the list of parameters passed to &lt;em&gt;Makefile.PL&lt;/em&gt;. In future articles, I&amp;rsquo;ll go through all the available options.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;perl Makefile.PL ...&lt;/code&gt; execution will check for prerequisites and tell you which required software packages are missing from your system. If you don&amp;rsquo;t have some of the Perl packages installed, then you will have to install these before you proceed. They all are available from CPAN and can be easily downloaded and installed.&lt;/p&gt;
+
+&lt;p&gt;If you choose to install mod_perl with help of the &lt;code&gt;CPAN.pm&lt;/code&gt; module, then it will install all the missing modules for you. To do so, tell &lt;code&gt;CPAN.pm&lt;/code&gt; to install the &lt;code&gt;Bundle::Apache&lt;/code&gt; bundle.&lt;/p&gt;
+
+&lt;p&gt;This step also executes the &lt;code&gt;./configure&lt;/code&gt; script from Apache&amp;rsquo;s source distribution directory (absolutely transparently for you), which prepares the Apache build configuration files. If you need to pass parameters to Apache&amp;rsquo;s &lt;code&gt;./configure&lt;/code&gt; script, then pass them as options to &lt;code&gt;perl Makefile.PL ...&lt;/code&gt;. In future articles we will talk about all the available options.&lt;/p&gt;
+
+&lt;p&gt;Now you should build the &lt;em&gt;httpd&lt;/em&gt; executable by using the &lt;code&gt;make&lt;/code&gt; utility.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % make
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This command prepares mod_perl extension files, installs them in the Apache source tree and builds the &lt;em&gt;httpd&lt;/em&gt; executable (the Web server itself) by compiling all the required files. Upon completion of the &lt;code&gt;make&lt;/code&gt; process, you get returned to the mod_perl source distribution directory.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;make test&lt;/code&gt; executes various mod_perl tests on the freshly built &lt;em&gt;httpd&lt;/em&gt; executable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % make test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This command starts the server on a nonstandard port (8529) and tests whether all parts of the built server function correctly. If something goes wrong, then the process will report it to you.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;make install&lt;/code&gt; completes the installation process of mod_perl by installing all the Perl files required for mod_perl to run and, of course, the server documentation (man pages).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % make install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can use the following commands concatenation style:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % make &amp;amp;&amp;amp; make test &amp;amp;&amp;amp; make install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It simplifies the installation, since you don&amp;rsquo;t have to wait for each command to complete before starting the next one. When installing mod_perl for the first time, it&amp;rsquo;s better to do it step by step.&lt;/p&gt;
+
+&lt;p&gt;If you choose the all-in-one approach, then you should know that if &lt;code&gt;make&lt;/code&gt; fails, then neither &lt;code&gt;make test&lt;/code&gt; nor &lt;code&gt;make install&lt;/code&gt; will be executed. If &lt;code&gt;make test&lt;/code&gt; fails, then &lt;code&gt;make install&lt;/code&gt; will not be executed.&lt;/p&gt;
+
+&lt;p&gt;Finally, change to the Apache source distribution directory, run make install to create the Apache directory tree and install Apache header files (&lt;em&gt;*.h&lt;/em&gt;), default configuration files (&lt;em&gt;*.conf&lt;/em&gt;), the &lt;em&gt;httpd&lt;/em&gt; executable and a few other programs.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % cd ../apache_1.3.20
+  % make install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that, as with a plain Apache installation, any configuration files left from a previous installation won&amp;rsquo;t be overwritten by this process. You don&amp;rsquo;t need to back up your previously working configuration files before the installation.&lt;/p&gt;
+
+&lt;p&gt;When the &lt;code&gt;make install&lt;/code&gt; process completes, it will tell you how to start a freshly built Web server (the path to the &lt;code&gt;apachectl&lt;/code&gt; utility that is being used to control the server) and where the installed configuration files are. Remember or, even better, write down both of them, since you will need this information. On my machine the two important paths are:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  /usr/local/apache/bin/apachectl
+  /usr/local/apache/conf/httpd.conf
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So far, we have completed the building and installation of the mod_perl enabled Apache. The next steps are to configure &lt;em&gt;httpd.conf&lt;/em&gt;, write a little test script, start the server and check that the test script is working.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-configuring-and-starting-mod-perl-server-configuring-and-starting-mod-perl-server-span&#34;&gt;&lt;span id=&#34;configuring and starting mod_perl server&#34;&gt;Configuring and Starting mod_perl Server&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;First things first; we want to make sure that our Apache was built correctly and that we can serve plain HTML files with it. Why do that? To minimize the number of possible trouble makers, if we find out that mod_perl doesn&amp;rsquo;t work. After you know that Apache can serve HTML files, you don&amp;rsquo;t have to worry about it anymore. And if something goes wrong with mod_perl, you have eliminated the possibility that the &lt;em&gt;httpd&lt;/em&gt; binary or basic configurations are broken, you know that you are allowed to bind to the port you have configured your server to listen to, and that the browser you&amp;rsquo;re testing with is just fine. Again, you should follow these guidelines when installing mod_perl for the first time.&lt;/p&gt;
+
+&lt;p&gt;Configure Apache as you always do. Set &lt;code&gt;Port&lt;/code&gt;, &lt;code&gt;User&lt;/code&gt;, &lt;code&gt;Group&lt;/code&gt;, &lt;code&gt;ErrorLog&lt;/code&gt; and other directives in the &lt;em&gt;httpd.conf&lt;/em&gt; file (remember I&amp;rsquo;ve asked you to remember the location of this file at the end of the previous section?). Use the defaults as suggested, customize only when you have to. Values that you need to customize are &lt;code&gt;ServerName&lt;/code&gt;, &lt;code&gt;Port&lt;/code&gt;, &lt;code&gt;User&lt;/code&gt;, &lt;code&gt;Group&lt;/code&gt;, &lt;code&gt;ServerAdmin&lt;/code&gt;, &lt;code&gt;DocumentRoot&lt;/code&gt; and a few others. You will find helpful hints preceding each directive. Follow them if in doubt.&lt;/p&gt;
+
+&lt;p&gt;When you have edited the configuration file, it&amp;rsquo;s time to start the server. One of the ways to start and stop the server is to use the &lt;code&gt;apachectl&lt;/code&gt; utility. You start the server with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % /usr/local/apache/bin/apachectl start
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And stop it with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % /usr/local/apache/bin/apachectl stop
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that you have to be &lt;em&gt;root&lt;/em&gt; when starting the server if the server is going to listen on port &lt;code&gt;80&lt;/code&gt; or another privileged port (&amp;lt;1024).&lt;/p&gt;
+
+&lt;p&gt;After you start the server, check in the &lt;em&gt;error_log&lt;/em&gt; file (&lt;em&gt;/usr/local/apache/logs/error_log&lt;/em&gt; is the file&amp;rsquo;s default location) that the server has indeed started. Don&amp;rsquo;t rely on the status &lt;code&gt;apachectl&lt;/code&gt; reports. You should see something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [Thu Jun 22 17:14:07 2000] [notice] Apache/1.3.20 (Unix) 
+  mod_perl/1.26 configured -- resuming normal operations
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now point your browser to &lt;em&gt;&lt;a href=&#34;http://localhost/&#34;&gt;http://localhost/&lt;/a&gt;&lt;/em&gt; or &lt;em&gt;&lt;a href=&#34;http://your.server.name/&#34;&gt;http://your.server.name/&lt;/a&gt;&lt;/em&gt; as configured with the &lt;code&gt;ServerName&lt;/code&gt; directive. If you have set a &lt;code&gt;Port&lt;/code&gt; directive with a value different from &lt;code&gt;80&lt;/code&gt;, then apply this port number at the end of the server name. If you have used port 8080, then test the server with &lt;em&gt;&lt;a href=&#34;http://localhost:8080/&#34;&gt;http://localhost:8080/&lt;/a&gt;&lt;/em&gt; or &lt;em&gt;&lt;a href=&#34;http://your.server.name:8080/&#34;&gt;http://your.server.name:8080/&lt;/a&gt;&lt;/em&gt;. You should see the infamous &lt;em&gt;``It worked&amp;rdquo;&lt;/em&gt; page, which is an &lt;code&gt;index.html&lt;/code&gt; file that &lt;code&gt;make install&lt;/code&gt; in the Apache source tree installs for you. If you don&amp;rsquo;t see this page, then something is wrong and you should check the contents of the &lt;em&gt;error_log&lt;/em&gt; file. You will find the path of the error log file by looking it up in the &lt;code&gt;ErrorLog&lt;/code&gt; directive in &lt;em&gt;httpd.conf&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;If everything works as expected, then shut down the server, open &lt;em&gt;httpd.conf&lt;/em&gt; in your favorite editor, and scroll to the end of the file, where we will add the mod_perl configuration directives (of course you can place them anywhere in the file).&lt;/p&gt;
+
+&lt;p&gt;Assuming that you put all scripts that should be executed by the mod_perl enabled server in the &lt;em&gt;/home/httpd/perl/&lt;/em&gt; directory, add the following configuration directives:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Alias /perl/ /home/httpd/perl/
+
+  PerlModule Apache::Registry
+  &amp;lt;Location /perl&amp;gt;
+    SetHandler perl-script
+    PerlHandler Apache::Registry
+    Options ExecCGI
+    PerlSendHeader On
+    allow from all
+  &amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Save the modified file.&lt;/p&gt;
+
+&lt;p&gt;This configuration causes each URI starting with &lt;em&gt;/perl&lt;/em&gt; to be handled by the Apache mod_perl module. It will use the handler from the Perl module &lt;code&gt;Apache::Registry&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-preparing-the-scripts-directory-preparing-the-scripts-directory-span&#34;&gt;&lt;span id=&#34;preparing the scripts directory&#34;&gt;Preparing the Scripts Directory&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now create a &lt;em&gt;/home/httpd/perl/&lt;/em&gt; directory if it doesn&amp;rsquo;t yet exist. In order for you and Apache to be able to read, write and execute files we have to set correct permissions. You could get away by simply doing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % chmod 0777  /home/httpd/perl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is very, very insecure and you &lt;strong&gt;should not&lt;/strong&gt; follow this approach on the production machine. This is good enough when you just want to try things out and want to have as few obstacles as possible. Once you understand how things work, you should tighten the permissions of files served by Apache. In future articles, we will talk about setting proper file permissions.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-mod-perl-rules-apache-registry-script-the-mod-perl-rules-apache-registry-script-span&#34;&gt;&lt;span id=&#34;the mod_perl rules apache::registry script&#34;&gt;The ``mod_perl rules&amp;rdquo; Apache::Registry Script&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;As you probably know, mod_perl allows you to reuse CGI scripts written in Perl that were previously used under mod_cgi. Therefore, our first test script can be as simple as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  mod_perl_rules1.pl
+  ------------------
+  print &amp;quot;Content-type: text/plain\r\n\r\n&amp;quot;;
+  print &amp;quot;mod_perl rules!\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Save this script in the &lt;em&gt;/home/httpd/perl/mod_perl_rules1.pl&lt;/em&gt; file. Notice that the &lt;em&gt;shebang&lt;/em&gt; line is not needed with mod_perl, but you can keep it if you want. So the following script can be used as well:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  mod_perl_rules1.pl
+  ------------------
+  #!/usr/bin/perl
+  print &amp;quot;Content-type: text/plain\r\n\r\n&amp;quot;;
+  print &amp;quot;mod_perl rules!\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course you can write the same script using the Apache Perl API:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  mod_perl_rules2.pl
+  ------------------
+  my $r = shift;
+  $r-&amp;gt;send_http_header(&#39;text/plain&#39;);
+  $r-&amp;gt;print(&amp;quot;mod_perl rules!\n&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Save this script in the &lt;em&gt;/home/httpd/perl/mod_perl_rules2.pl&lt;/em&gt; file.&lt;/p&gt;
+
+&lt;p&gt;Now make both of the scripts executable and readable by the server. Remember that when you execute scripts from a shell, they are being executed by the user-name you are logged with. When instead you try to run the scripts by issuing requests, Apache needs to be able to read and execute them. So we make the script readable and executable by everybody:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % chmod 0755   /home/httpd/perl/mod_perl_rules1.pl \
+                 /home/httpd/perl/mod_perl_rules2.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you don&amp;rsquo;t want other users to be able to read your script, then you should add yourself into the groupname the Web server is running with (as defined by the &lt;code&gt;Group&lt;/code&gt; directive) and then make the script owned by that group and tighten the permissions. For example, on my machine I run the server under the group &lt;em&gt;httpd&lt;/em&gt; and I&amp;rsquo;m the only one who is in the same group, so I can do the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % chown stas.httpd /home/httpd/perl/mod_perl_rules1.pl \
+                 /home/httpd/perl/mod_perl_rules2.pl
+
+  % chmod 0750   /home/httpd/perl/mod_perl_rules1.pl \
+                 /home/httpd/perl/mod_perl_rules2.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first command makes the files belong to group &lt;em&gt;httpd&lt;/em&gt;, the second sets the proper execution and read permissions.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s secure, assuming that you have a dedicated groupname for your server.&lt;/p&gt;
+
+&lt;p&gt;Also, remember that all the directories that lead to the script should be readable and executable by the server.&lt;/p&gt;
+
+&lt;p&gt;You can test &lt;em&gt;mod_perl_rules1.pl&lt;/em&gt; from the command line, since it is essentially a regular Perl script.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl /home/httpd/perl/mod_perl_rules1.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You should see the following output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  mod_perl rules!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You cannot test the second script by executing it from the command line since it uses the mod_perl API that is available only when run from within the mod_perl server.&lt;/p&gt;
+
+&lt;p&gt;Make sure the server is running and issue these requests using your favorite browser:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  http://localhost/perl/mod_perl_rules1.pl
+  http://localhost/perl/mod_perl_rules2.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In both cases you will see on the following response:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  mod_perl rules!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you see it&amp;ndash;&lt;strong&gt;congratulations&lt;/strong&gt;! You have a working mod_perl server.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re using port 8080 instead of 80, then you should use this number in the URL:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  http://localhost:8080/perl/mod_perl_rules1.pl
+  http://localhost:8080/perl/mod_perl_rules2.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;localhost&lt;/code&gt; approach will work only if the browser is running on the same machine as the server. If not, then use the real server name for this test. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  http://your.server.name/perl/mod_perl_rules1.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If there is any problem, then please refer to the &lt;em&gt;error_log&lt;/em&gt; file for the error reports.&lt;/p&gt;
+
+&lt;p&gt;Now it&amp;rsquo;s a time to move your CGI scripts from &lt;em&gt;/somewhere/cgi-bin&lt;/em&gt; directory to &lt;em&gt;/home/httpd/perl/&lt;/em&gt; and see them running much much faster, when requested from the newly configured base URL (&lt;em&gt;/perl/&lt;/em&gt;). If you were accessing the script as &lt;em&gt;/cgi-bin/test.pl&lt;/em&gt;, then it will now be accessed from &lt;em&gt;/perl/test.pl&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Some of your scripts might not work immediately and will require some minor tweaking or even a partial rewrite to work properly with mod_perl. Chances are that if you are not practicing sloppy programming, then the scripts will work without any modifications.&lt;/p&gt;
+
+&lt;p&gt;If you have a problem with your scripts, then a good approach is to replace &lt;code&gt;Apache::Registry&lt;/code&gt; with &lt;code&gt;Apache::PerlRun&lt;/code&gt; in &lt;em&gt;httpd.conf&lt;/em&gt;, as the latter can execute really badly written scripts. Put the following configuration directives instead in &lt;em&gt;httpd.conf&lt;/em&gt; and restart the server:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlModule Apache::PerlRun
+  &amp;lt;Location /perl&amp;gt;
+    SetHandler perl-script
+    PerlHandler Apache::PerlRun
+    Options ExecCGI
+    PerlSendHeader On
+    allow from all
+  &amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now your scripts should work, unless there is something in them mod_perl doesn&amp;rsquo;t accept. We will discuss these nuances in future articles.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-mod-perl-rules-apache-perl-module-the-mod-perl-rules-apache-perl-module-span&#34;&gt;&lt;span id=&#34;the mod_perl rules apache perl module&#34;&gt;The ``mod_perl rules&amp;rdquo; Apache Perl Module&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;mod_perl is about running both scripts and handlers. Although I have started to present mod_perl using scripts, because it&amp;rsquo;s easier if you have written CGI scripts before, the more advanced use of mod_perl is about writing handlers. But have no fear. As you will see in a moment, writing handlers is almost as easy as writing scripts.&lt;/p&gt;
+
+&lt;p&gt;To create a mod_perl handler module, all I have to do is to wrap the code I have used for the script into a &lt;code&gt;handler&lt;/code&gt; subroutine, add a statement to return the status to the server when the subroutine has successfully completed, and append a package declaration at the top of the code.&lt;/p&gt;
+
+&lt;p&gt;Just as with scripts you can use either the CGI API you are probably used to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  ModPerl/Rules1.pm
+  ----------------
+  package ModPerl::Rules1;
+  use Apache::Constants qw(:common);
+
+  sub handler{
+    print &amp;quot;Content-type: text/plain\r\n\r\n&amp;quot;;
+    print &amp;quot;mod_perl rules!\n&amp;quot;;
+    return OK;
+  }
+  1; # satisfy require()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or the Apache Perl API that allows you to interact more intimately with the Apache core by providing an API unavailable under regular Perl. Of course, in the simple example that I show, using any of the approaches is fine, but when you need to use the API, this version of the code should be used.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  ModPerl/Rules2.pm
+  ----------------
+  package ModPerl::Rules2;
+  use Apache::Constants qw(:common);
+
+  sub handler{
+    my $r = shift;
+    $r-&amp;gt;send_http_header(&#39;text/plain&#39;);
+    print &amp;quot;mod_perl rules!\n&amp;quot;;
+    return OK;
+  }
+  1; # satisfy require()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Create a directory called &lt;em&gt;ModPerl&lt;/em&gt; under one of the directories in &lt;code&gt;@INC&lt;/code&gt; (e.g. &lt;em&gt;/usr/lib/perl5/site_perl/5.005&lt;/em&gt;), and put &lt;em&gt;Rules1.pm&lt;/em&gt; &lt;em&gt;Rules2.pm&lt;/em&gt; into it, the files should include the code from the above examples.&lt;/p&gt;
+
+&lt;p&gt;To find out what the &lt;code&gt;@INC&lt;/code&gt; directories are, execute:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl -le &#39;print join &amp;quot;\n&amp;quot;, @INC&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On my machine it reports:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  /usr/lib/perl5/5.6.1/i386-linux
+  /usr/lib/perl5/5.6.1
+  /usr/lib/perl5/site_perl/5.6.1/i386-linux
+  /usr/lib/perl5/site_perl/5.6.1
+  /usr/lib/perl5/site_perl
+  .
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now add the following snippet to &lt;em&gt;httpd.conf&lt;/em&gt; to configure mod_perl to execute the &lt;code&gt;ModPerl::Rules::handler&lt;/code&gt; subroutine whenever a request to &lt;em&gt;mod_perl_rules1&lt;/em&gt; is made:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlModule ModPerl::Rules1
+  &amp;lt;Location /mod_perl_rules1&amp;gt;
+    SetHandler perl-script
+    PerlHandler ModPerl::Rules1
+  &amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you can issue a request to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  http://localhost/mod_perl_rules1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and just as with our &lt;em&gt;mod_perl_rules.pl&lt;/em&gt; scripts you will see:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  mod_perl rules!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;as the response.&lt;/p&gt;
+
+&lt;p&gt;To test the second module &amp;lt;ModPerl::Rules2&amp;gt; add the same configuration, while replacing all 1&amp;rsquo;s with 2&amp;rsquo;s:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlModule ModPerl::Rules2
+  &amp;lt;Location /mod_perl_rules2&amp;gt;
+    SetHandler perl-script
+    PerlHandler ModPerl::Rules2
+  &amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And to test use the URI:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  http://localhost/mod_perl_rules2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-is-this-all-i-need-to-know-about-mod-perl-is-this-all-i-need-to-know-about-mod-perl-span&#34;&gt;&lt;span id=&#34;is this all i need to know about mod_perl&#34;&gt;Is This All I Need to Know About mod_perl?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Obviously, the next question you&amp;rsquo;ll ask is: &lt;em&gt;``Is this all I need to know about mod_perl?&amp;rdquo;&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The answer is: `yes and no.&lt;/p&gt;
+
+&lt;p&gt;The &lt;em&gt;yes&lt;/em&gt; part:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Just like with Perl, you have to know little about mod_perl to do really cool stuff. The presented setup allows you to run your visitor counters and guest book much faster, and amaze your friends, usually without changing a single line of code.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The &lt;em&gt;No&lt;/em&gt; part:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;A 50-fold improvement in guest book response times is great, but when you deploy a heavy service with thousands of concurrent users, taking into account a high-level competition between similar Web services, a delay of a few milliseconds might cost you a customer and probably many of them.&lt;/p&gt;
+
+&lt;p&gt;Of course, when you test a single script and you are the only user, you don&amp;rsquo;t really care about squeezing yet another millisecond from response time, but it becomes a real issue when these milliseconds add up at the production site, with hundreds of users concurrently generating requests to various scripts on your site. Users aren&amp;rsquo;t merciful nowadays &amp;ndash; if there is another even less fancier site that provides the same service but a little bit faster, then chances are that they will go over there.&lt;/p&gt;
+
+&lt;p&gt;Testing your scripts on an unloaded machine can be misleading, Everything might seem so perfect. But when you move them into a production machine, things don&amp;rsquo;t behave as well as they did on your development box. Many times you just run out of memory on busy services. You need to learn how to optimize your code to use less memory and how to make the memory shared.&lt;/p&gt;
+
+&lt;p&gt;Debugging is something people prefer not to talk about, since the process can be tedious. Learning how to make the debugging process simpler and efficient is a must if you consider yourself a Web programmer. This task is especially not so straightforward when debugging CGI scripts, and even more complicated with mod_perl &amp;ndash; unless you know how, and then it suddenly becomes easy.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;References&lt;/p&gt;
+&lt;p&gt;The Apache site&#39;s URL: &lt;a href=&#34;http://www.apache.org/&#34; class=&#34;uri&#34;&gt;http://www.apache.org/&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+The mod_perl site&#39;s URL: &lt;a href=&#34;http://perl.apache.org/&#34; class=&#34;uri&#34;&gt;http://perl.apache.org/&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+CPAN is the Comprehensive Perl Archive Network. The Master site&#39;s URL is &lt;a href=&#34;http://cpan.org/&#34; class=&#34;uri&#34;&gt;http://cpan.org/&lt;/a&gt;. CPAN is mirrored at more than 100 sites worldwide. (http://cpan.org/SITES.html)&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;mod_perl has many features unavailable under mod_cgi when working with databases. Among others the most important are persistent connections.&lt;/p&gt;
+
+&lt;p&gt;You have to know how to keep your service running nonstop and be able to recover fast if there are any problems.&lt;/p&gt;
+
+&lt;p&gt;Finally, the most important thing is the Apache-Perl API, which allows you to do anything with a received request, even intervene in every stage of request processing. This gives you great flexibility and allows you to create things you couldn&amp;rsquo;t dream about with plain mod_cgi.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There are many more things to learn about mod_perl and Web programming in general. In future articles, I&amp;rsquo;ll talk in details about all these issues.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-acknowledgements-acknowledgements-span&#34;&gt;&lt;span id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Many thanks to Eric Cholet for reviewing this article.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Why mod_perl?</title>
+      <link>http://localhost:1313/pub/2002/02/26/whatismodperl.html/</link>
+      <pubDate>Tue, 26 Feb 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/02/26/whatismodperl.html/</guid>
+      <description>
+
+&lt;p&gt;In this article, I&amp;rsquo;ll give an initial introduction to mod_perl, make you want to give it a try and present a few examples of the well-known sites that are powered by mod_perl enabled Apache.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-what-is-mod-perl-what-is-mod-perl-span&#34;&gt;&lt;span id=&#34;what is mod_perl&#34;&gt;What Is mod_perl?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;mod_perl is at the heart of the Apache/Perl integration project, which brings together the full power of the Perl programming language and the Apache Web server.&lt;/p&gt;
+
+&lt;p&gt;From the outset, Apache was designed so that you can extend it by the addition of ``modules.&amp;rdquo; Modules can do anything you need to do, such as rewrite HTTP requests, restrict access to certain pages and perform database lookups. Modules are normally written in C, which can be hard work. mod_perl is a module that allows you to do all of these things, and more, by using Perl &amp;ndash; making the development much quicker than C. Apache is the most popular Web server on the Internet and mod_perl is one of the most popular modules for extending it.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-why-is-mod-perl-so-popular-why-is-mod-perl-so-popular-span&#34;&gt;&lt;span id=&#34;why is mod_perl so popular&#34;&gt;Why Is mod_perl So Popular?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you love Perl and your favorite Web server is Apache, then you will love mod_perl at first sight. Once you try it in action, you will never look back &amp;ndash; you will find mod_perl has everything you need. But even if you do find that there is something missing, then just speak up. Before you can count to three, someone will have made it for you. Which, of course, will make you want to give something in return. Eventually you will contribute something on your own, and that will save time for a huge mod_perl community so that they can create even more things for others to use.&lt;/p&gt;
+
+&lt;p&gt;You get the picture &amp;ndash; mod_perl empowers its users, who in turn empower mod_perl, which in turn empowers its users, who in turn &amp;hellip; . It&amp;rsquo;s as simple as the nuclear reaction you learned about at school, or will learn at some point :)&lt;/p&gt;
+
+&lt;p&gt;With mod_perl it is possible to write Apache modules entirely in Perl. This allows you to easily do things that are more difficult or impossible in regular CGI programs, such as running sub-requests, writing your authentication and logging handlers.&lt;/p&gt;
+
+&lt;p&gt;The primary advantages of mod_perl are power and speed. You have full access to the inner workings of the Web server and you can intervene at any stage of HTTP request processing. This allows for customized processing of the various phases; for example, URI to filename translation, authorization, response generation and logging.&lt;/p&gt;
+
+&lt;p&gt;There are big savings in startup and compilation times. Having the Perl interpreter embedded in the server saves the very considerable overhead of starting an external interpreter for any HTTP request that needs to run Perl code. At least as important is code caching: the modules and scripts are loaded and compiled only once, when the server is first started. Then for the rest of the server&amp;rsquo;s life the scripts are served from the cache, so the server only has to run the pre-compiled code. In many cases, this is as fast as running compiled C programs.&lt;/p&gt;
+
+&lt;p&gt;There is little run-time overhead. In particular, under mod_perl, there is no need to start a separate process per request, as is often done with other Web-server extensions. The most wide-spread such extension mechanism, the Common Gateway Interface (CGI), is replaced entirely with Perl code that handles the response generation phase of request processing. Bundled with mod_perl are two general purpose modules for this purpose: &lt;code&gt;Apache::Registry&lt;/code&gt;, which can transparently run existing unmodified Perl CGI scripts and &lt;code&gt;Apache::PerlRun&lt;/code&gt;, which does a similar job but allows you to run scripts that are to some extent ``dirtier.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;mod_perl allows you to configure your Apache server and handlers in Perl (using the &lt;code&gt;PerlSetVar&lt;/code&gt; directive and the &amp;lt;Perl&amp;gt; sections). This makes the administration of servers with many virtual hosts and complex configuration a piece of cake. Hey, you can even define your own configuration directives!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-how-fast-and-stable-is-mod-perl-how-fast-and-stable-is-mod-perl-span&#34;&gt;&lt;span id=&#34;how fast and stable is mod_perl&#34;&gt;How Fast and Stable Is mod_perl?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Many people ask, ``How much of a performance improvement does mod_perl give?&amp;rdquo; Well, it all depends on what you are doing with mod_perl &amp;ndash; and possibly whom you ask. Developers report speed boosts from 200 percent to 2,000 percent. The best way to measure is to try it and see for yourself! (see &lt;a href=&#34;http://perl.apache.org/tidbits.html&#34;&gt;http://perl.apache.org/tidbits.html&lt;/a&gt; and &lt;a href=&#34;http://perl.apache.org/stories/&#34;&gt;http://perl.apache.org/stories/&lt;/a&gt; for the facts).&lt;/p&gt;
+
+&lt;p&gt;Every second of every day, thousands of Web sites all over the world are using mod_perl to serve hundreds of thousands of Web pages. Apache and mod_perl are some of the best-tested programs ever written. Of course, they are continually being developed and improved, but you do not have to work on the ``bleeding edge&amp;rdquo; of development &amp;ndash; you can use the stable products for your sites and let others do the testing of the new versions for you.&lt;/p&gt;
+
+&lt;p&gt;I want to show you just a few of the many busy and popular sites that are driven by mod_perl. A thousand words can&amp;rsquo;t substitute the experience. Visit the sites and feel the difference. They will persuade you that mod_perl rules!&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;ValueClick&lt;/strong&gt; &amp;ndash; &lt;a href=&#34;http://www.valueclick.com/&#34;&gt;http://www.valueclick.com/&lt;/a&gt; serves more than 70 million requests per day from about 20 machines. Each response is dynamic, with all sorts of calculation, storing, logging, counting &amp;ndash; you name it. &lt;strong&gt;All&lt;/strong&gt; of their ``application&amp;rdquo; programming is done in Perl.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Singles Heaven&lt;/strong&gt; &amp;ndash; &lt;a href=&#34;http://singlesheaven.com&#34;&gt;http://singlesheaven.com&lt;/a&gt; is a &lt;strong&gt;Match Maker&lt;/strong&gt; site with 35,000+ members and growing. The site is driven by mod_perl, DBI, &lt;code&gt;Apache::DBI&lt;/code&gt; (which provides a persistence to DB connections) and MySQL. The speed is enormous, chatting with mod_perl is a pleasure. Every page is generated by about 10 SQL queries, for it does many dynamic checks on every page &amp;ndash; like checking for new e-mails, users who are watched by various watchdogs and many more. You don&amp;rsquo;t feel these queries are actually happening, the speed is as fast as the &lt;em&gt;&amp;ldquo;Hello World&amp;rsquo;&amp;rdquo;&lt;/em&gt; script.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Internet Movie Database (Ltd)&lt;/strong&gt; &amp;ndash; &lt;a href=&#34;http://www.moviedatabase.com/&#34;&gt;http://www.moviedatabase.com/&lt;/a&gt; - serves about 2 million page views per day. All database lookups are handled inside Apache via mod_perl. Each request also goes through several mod_perl handlers and the output is then reformatted on the fly with mod_perl SSI to embed advertising banners and give different views of the site depending on the hostname used.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;CMPnet&lt;/strong&gt; &amp;ndash; &lt;a href=&#34;http://www.cmpnet.com,&#34;&gt;http://www.cmpnet.com,&lt;/a&gt; a technology information network serves about 600k page views per day.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;CitySearch.com&lt;/strong&gt; &amp;ndash; &lt;a href=&#34;http://www.citysearch.com/&#34;&gt;http://www.citysearch.com/&lt;/a&gt; is providing online city guides for more than 100 cities worldwide, citysearch.com helps people find and plan what they want to do and then lets them take action, offering local transactions such as buying event tickets and making hotel and restaurant reservations online. Its traffic exceeds 100 million page views a month.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;span-id-how-many-sites-are-running-a-mod-perl-enabled-apache-webserver-how-many-sites-are-running-a-mod-perl-enabled-apache-web-server-span&#34;&gt;&lt;span id=&#34;how many sites are running a mod_perl enabled apache webserver&#34;&gt;How Many Sites Are Running a mod_perl Enabled Apache Web Server?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;According to Netcraft ( &lt;a href=&#34;http://netcraft.com&#34;&gt;http://netcraft.com&lt;/a&gt; ), as of August 2001 - 18 million hosts are running the free Apache Web server, which is about 60 percent of all checked in survey hosts!&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.netcraft.com/survey/&#34;&gt;Here is the graph&lt;/a&gt; of &amp;ldquo;Server Share in Internet Web Sites.&amp;rdquo;
+What about mod_perl? &lt;a href=&#34;http://perl.apache.org/netcraft/&#34;&gt;http://perl.apache.org/netcraft/&lt;/a&gt; reports that sites running mod_perl account for 2,823,060 host names and 283,180 unique IP addresses. This is actually an underestimate, since when hosts are scanned for running Web servers only well-known ports are checked (80, 81, 8080 and a few others). If a server runs on unusual port, then it does not enter the count unless the owner has manually added it to the Netcraft database. Here is a graph of the growth in mod_perl usage:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_02_26_whatismodperl/mod_perl.jpg&#34; alt=&#34;mod_perl growth graph&#34; width=&#34;450&#34; height=&#34;257&#34; /&gt;
+For the latest numbers see &lt;a href=&#34;http://perl.apache.org/netcraft/&#34;&gt;http://perl.apache.org/netcraft/&lt;/a&gt; .&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-road-ahead-the-road-ahead-span&#34;&gt;&lt;span id=&#34;the road ahead&#34;&gt;The Road Ahead&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;You probably are excited about the release of Apache 2.0, the next generation of the best Web server. The major new features of this new generation of the Web server are threaded processes, which should make the server more scalable, and, of course, the very-welcomed filtering layer.&lt;/p&gt;
+
+&lt;p&gt;You probably are not less excited about the recent release of Perl 5.6, whose main new feature is (almost) stable support for threads, something that existed in the previous Perl version but which was quite shaky.&lt;/p&gt;
+
+&lt;p&gt;What has all this to do with mod_perl you ask? mod_perl 2.0 is being developed at this very moment and will benefit enormously from the new Apache and Perl features. The most important improvement will be a reduced process size &amp;ndash; a parsed Perl opcodes tree will be almost completely shared between threads of the same process.&lt;/p&gt;
+
+&lt;p&gt;Do you believe in coincidences? Both Perl 5.6 and Apache 2.0 were released in the same week in March 2000. Looks very suspicious to me. If you get the obvious conspiracy uncovered, then please let me know.&lt;/p&gt;
+
+&lt;p&gt;Of course, there are lots of bumps ahead of us. It will take time before all our applications will be able to benefit from the threading features. The main reason lies in fact that most of the Perl modules available from CPAN aren&amp;rsquo;t thread safe. But you shouldn&amp;rsquo;t despair. You can turn off threads for Perl code that is not thread safe or that uses modules that aren&amp;rsquo;t thread safe.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-i-want-mod-perl-now-where-do-i-get-it-i-want-mod-perl-now-where-do-i-get-it-span&#34;&gt;&lt;span id=&#34;i want mod_perl now, where do i get it&#34;&gt;I Want mod_perl Now, Where Do I Get It?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;mod_perl&amp;rsquo;s home is &lt;a href=&#34;http://perl.apache.org&#34;&gt;http://perl.apache.org&lt;/a&gt;. From the site you will be able to download the latest mod_perl software and various documentation; find commercial products and free third-party modules; read the success stories; and learn more about mod_perl.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s quite important to get yourself subscribed to the mod_perl list. If you want know what happens with mod_perl, if you want to know what new features are being developed, if you want to influence and contribute or if you simply want to get help, then you don&amp;rsquo;t want to skip this mailing list. To subscribe to the list send an empty e-mail to &lt;a href=&#34;mailto:modperl-subscribe@apache.org&#34;&gt;modperl-subscribe@apache.org&lt;/a&gt; .&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-are-there-any-mod-perl-books-and-documentation-are-there-any-mod-perl-books-and-documentation-span&#34;&gt;&lt;span id=&#34;are there any mod_perl books and documentation&#34;&gt;Are There Any mod_perl Books and Documentation?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Lincoln Stein and Doug MacEachern wrote &lt;a href=&#34;http://www.modperl.com/&#34;&gt;&lt;strong&gt;Writing Apache Modules with Perl and C&lt;/strong&gt;&lt;/a&gt; . It can be purchased online from &lt;a href=&#34;http://www.ora.com/catalog/wrapmod/&#34;&gt;O&amp;rsquo;Reilly&lt;/a&gt; and &lt;a href=&#34;http://www.amazon.com/exec/obidos/ASIN/156592567X/writinapachemodu&#34;&gt;Amazon.com&lt;/a&gt;.
+You will find a vast list of mod_perl documentation on the mod_perl home page: &lt;a href=&#34;http://perl.apache.org/&#34;&gt;http://perl.apache.org/&lt;/a&gt; .&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-i-love-mod-perl-i-want-to-know-who-wrote-this-great-free-product-i-love-mod-perl-i-want-to-know-who-wrote-this-great-free-product-span&#34;&gt;&lt;span id=&#34;i love mod_perl, i want to know who wrote this great free product!&#34;&gt;I Love mod_perl, I Want to Know Who Wrote This Great Free Product!&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Well, Doug MacEachern is the person to blame :). He is the guy who gave mod_perl to the mod_perl community. He is the Linus of the mod_perl project.&lt;/p&gt;
+
+&lt;p&gt;But as you know in a big community, there are always people who love to help, and there is a bunch of developers from all around the world who patch mod_perl, develop entire Perl modules for it, debug the server and advocate it. I&amp;rsquo;m afraid the list of contributing developers is too long to include here. But you are welcome to join the mod_perl mailing list and see all these folks in action. I promise you, you won&amp;rsquo;t regret the show, since you are going to learn much more than just about mod_perl. See for yourself.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-getting-involved-getting-involved-span&#34;&gt;&lt;span id=&#34;getting involved&#34;&gt;Getting Involved&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you are using mod_perl or planning to use it, then it&amp;rsquo;s a good idea to subscribe to the users mod_perl mailing list. You should send an empty e-mail to &lt;a href=&#34;mailto:modperl-subscribe@apache.org&#34;&gt;modperl-subscribe@apache.org&lt;/a&gt; in order to do that.&lt;/p&gt;
+
+&lt;p&gt;If you are interested in helping out with development of mod_perl 2.0, then you are welcome to join us. There are many features that are still need implementing and a lot of testing has to be done. So there is a lot of work if you are knowledgeable developer or even if you just a newbie. And the more help we get the sooner we bring mod_perl 2.0 into production shape. You can subscribe to the developers mailing list by sending an e-mail to &lt;a href=&#34;mailto:dev-subscribe@perl.apache.org&#34;&gt;dev-subscribe@perl.apache.org&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;If you are familiar with mod_perl, then you probably know about the big fat mod_perl guide that I maintain with help of many people (&lt;a href=&#34;http://perl.apache.org/guide/&#34;&gt;http://perl.apache.org/guide/&lt;/a&gt;). However, mod_perl 2.0 has quite a few things changed so the new documentation project has been started. You are welcome to check the updates on the &lt;a href=&#34;http://perl.apache.org/&#34;&gt;http://perl.apache.org/&lt;/a&gt; site and subscribe to the documentation mailing list to stay up to date by sending e-mail to &lt;a href=&#34;mailto:docs-dev-subscribe@perl.apache.org&#34;&gt;docs-dev-subscribe@perl.apache.org&lt;/a&gt; .&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;The Apache site&amp;rsquo;s URL: &lt;a href=&#34;http://www.apache.org/&#34;&gt;http://www.apache.org/&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The mod_perl site&amp;rsquo;s URL: &lt;a href=&#34;http://perl.apache.org/&#34;&gt;http://perl.apache.org/&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;CPAN is the Comprehensive Perl Archive Network. The Master site&amp;rsquo;s URL is &lt;a href=&#34;http://cpan.org/.&#34;&gt;http://cpan.org/.&lt;/a&gt; CPAN is mirrored at more than 100 sites worldwide. (&lt;a href=&#34;http://cpan.org/SITES.html&#34;&gt;http://cpan.org/SITES.html&lt;/a&gt;)&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

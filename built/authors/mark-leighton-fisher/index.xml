@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mark Leighton Fisher on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/mark-leighton-fisher/</link>
+    <description>Recent content in Mark Leighton Fisher on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 21 Jul 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/mark-leighton-fisher/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>An Introduction to Test::MockDBI</title>
+      <link>http://localhost:1313/pub/2005/07/21/test_mockdbi.html/</link>
+      <pubDate>Thu, 21 Jul 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/07/21/test_mockdbi.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;prelude&#34;&gt;Prelude&lt;/h3&gt;
+
+&lt;p&gt;How do you test DBI programs:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Without having to modify your current program code or environment settings?&lt;/li&gt;
+&lt;li&gt;Without having to set up multiple test databases?&lt;/li&gt;
+&lt;li&gt;Without separating your test data from your test code?&lt;/li&gt;
+&lt;li&gt;With tests for every bizarre value your program will ever have to face?&lt;/li&gt;
+&lt;li&gt;With complete control over all database return values, along with all DBI method return values?&lt;/li&gt;
+&lt;li&gt;With an easy, regex-based rules interface?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You test with &lt;a href=&#34;https://metacpan.org/pod/Test::MockDBI&#34;&gt;Test::MockDBI&lt;/a&gt;, that&amp;rsquo;s how. Test::MockDBI provides all of this by using Test::MockObject::Extends to mock up the entire DBI API. Without a solution like Test::MockDBI&amp;ndash;a solution that enables direct manipulation of the DBI&amp;ndash;you&amp;rsquo;ll have to trace DBI methods through a series of test databases.&lt;/p&gt;
+
+&lt;p&gt;You can make test databases work, but:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;You&amp;rsquo;ll need multiple (perhaps many) databases when you need multiple sets of mutually inconsistent values for complete test coverage.&lt;/li&gt;
+&lt;li&gt;Some DBI failure modes are impossible to generate through any test database.&lt;/li&gt;
+&lt;li&gt;Depending on the database toolset available, it may be difficult to insert all necessary test values&amp;ndash;for example, Unicode values in ASCII applications, or bizarre file types in a document-manager application.&lt;/li&gt;
+&lt;li&gt;Test databases, by definition, are separate from their corresponding test code. This increases the chance that the test code and the test data will fall out of sync with each other.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Using Test::MockDBI avoids these problems. Read on to learn how Test::MockDBI eases the job of testing DBI applications.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-mock-up-of-the-entire-dbi&#34;&gt;A Mock Up of the Entire DBI&lt;/h3&gt;
+
+&lt;p&gt;Test::MockDBI mocks up the entire DBI API by using &lt;a href=&#34;https://metacpan.org/pod/Test::MockObject::Extends&#34;&gt;Test::MockObject::Extends&lt;/a&gt; to substitute a Test::MockObject::Extends object in place of the &lt;a href=&#34;https://metacpan.org/pod/DBI&#34;&gt;DBI&lt;/a&gt;. A feature of this approach is that if the DBI API changes (and you use that change), you will notice during testing if you haven&amp;rsquo;t upgraded Test::MockDBI, as your program will complain about missing DBI API method(s).&lt;/p&gt;
+
+&lt;p&gt;Mocking up the entire DBI means that you can add the DBI testing code into an existing application without changing the initial application code&amp;ndash;using Test::MockDBI is entirely transparent to the rest of your application, as it neither knows nor cares that it&amp;rsquo;s using Test::MockDBI in place of the DBI. This property of transparency is what drove me to develop Test::MockDBI, as it meant I could add the Test::MockDBI DBI testing code to existing client applications without modifying the existing code (handy, for us consultants).&lt;/p&gt;
+
+&lt;p&gt;Further enhancing Test::MockDBI&amp;rsquo;s transparency is the &lt;code&gt;DBI testing type&lt;/code&gt; class value. Testing is only enabled when the DBI testing type is non-zero, so you can just leave the DBI testing code additions in your production code&amp;ndash;users will not even know about your DBI testing code unless you tell them.&lt;/p&gt;
+
+&lt;p&gt;Mocking up the entire DBI also means that you have complete control of the DBI&amp;rsquo;s behavior during testing. Often, you can simulate a &lt;code&gt;SELECT&lt;/code&gt; DBI transaction with a simple state machine that returns just a few rows from the (mocked up) database. Test::MockDBI lets you use a &lt;code&gt;CODEREF&lt;/code&gt; to supply database return values, so you can easily put a simple state machine into the &lt;code&gt;CODEREF&lt;/code&gt; to supply the necessary database values for testing. You could even put a delay loop into the &lt;code&gt;CODEREF&lt;/code&gt; when you need to perform speed tests on your code.&lt;/p&gt;
+
+&lt;h3 id=&#34;rules-based-dbi-testing&#34;&gt;Rules-Based DBI Testing&lt;/h3&gt;
+
+&lt;p&gt;You control the mocked-up DBI of Test::MockDBI with one or more rules that you insert as Test::MockDBI method calls into your program. The default DBI method values provided by Test::MockDBI make the database appear to have a hole in the bottom of it&amp;ndash;all method calls return OK, but you can&amp;rsquo;t get any data out of the database. Rules for DBI methods that return database values (the &lt;code&gt;fetch*()&lt;/code&gt; and &lt;code&gt;select*()&lt;/code&gt; methods) can use either a value that they return directly for matching method calls, or a &lt;code&gt;CODEREF&lt;/code&gt; called to provide a value each time that rule fires. A rule matches when its DBI testing type is the current testing type and the current SQL matches the rule&amp;rsquo;s regular expression. Rules fire in the order in which you declare them, so usually you want to order your rules from most-specific to least-specific.&lt;/p&gt;
+
+&lt;p&gt;The DBI testing type is an unsigned integer matching &lt;code&gt;/^d+$/&lt;/code&gt;. When the DBI testing type is zero, there will be no DBI testing (or at least, no mocked-up DBI testing) performed, and the program will use the DBI normally. A zero DBI testing type value in a rule means the rule could fire for any non-zero DBI testing type value&amp;ndash;that is, zero is the wildcard DBI testing type value for rules. Set the DBI testing type either by a first command-line argument of the form:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;--dbitest[=DTT]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;where the optional &lt;code&gt;DTT&lt;/code&gt; is the DBI testing type (defaulting to one), or through Test::MockDBI&amp;rsquo;s &lt;code&gt;set_dbi_test_type()&lt;/code&gt; method. Setting the DBI testing type through a first command-line argument has the advantage of requiring no modifications to the code under test, as this command-line processing is done so early (during &lt;code&gt;BEGIN&lt;/code&gt; time for Test::MockDBI) that the code under test should be ignorant of whether this processing ever happened.&lt;/p&gt;
+
+&lt;h3 id=&#34;dbi-return-values&#34;&gt;DBI Return Values&lt;/h3&gt;
+
+&lt;p&gt;Test::MockDBI defaults to returning a success (true) value for all DBI method calls. This fits well with the usual techniques of DBI programming, where the first DBI error causes the program to stop what it is doing. Test::MockDBI&amp;rsquo;s &lt;code&gt;bad_method()&lt;/code&gt; method creates a rule that forces a failure return value on the specified DBI method when the current DBI testing type and SQL match those of the rule. Arbitrary DBI method return value failures like these are difficult (at best) to generate with a test database.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI&amp;rsquo;s &lt;code&gt;set_retval_scalar()&lt;/code&gt; and &lt;code&gt;set_retval_array()&lt;/code&gt; methods create rules for what database values to return. Set rules for scalar return values (&lt;code&gt;arrayrefs&lt;/code&gt; and &lt;code&gt;hashrefs&lt;/code&gt;) with &lt;code&gt;set_retval_scalar()&lt;/code&gt; and for array return value rules with &lt;code&gt;set_retval_array()&lt;/code&gt;. You can supply a value to be returned every time the rule matches, which is good when extracting single rows out of the database, such as configuration parameters. Alternatively, pass a &lt;code&gt;CODEREF&lt;/code&gt; that will be called each time the rule fires to return a new value. Commonly, with &lt;code&gt;SELECT&lt;/code&gt; statements, the DBI returns one or more rows, then returns an empty row to signify the end of the data. A &lt;code&gt;CODEREF&lt;/code&gt; can incorporate a state machine that implements this &amp;ldquo;return 1+ rows, then a terminator&amp;rdquo; behavior quite easily. Having individual state machines for each rule is much easier to develop with than having one master state machine embedded into Test::MockDBI&amp;rsquo;s core. (An early alpha of Test::MockDBI used the master state machine approach, so I have empirical evidence of this result&amp;ndash;I am not emptily theorizing here.)&lt;/p&gt;
+
+&lt;p&gt;Depending on what tools you have for creating your test databases, it may be difficult to populate the test database with all of the values you need to test against. Although it is probably not so much the case today, only a few years ago populating a database with Unicode was difficult, given the national-charset-based tools of the day. Even today, a document management system might be difficult to populate with weird file types. Test::MockDBI makes these kinds of tests much easier to carry out, as you directly specify the data for the mock database to return rather than using a separate test database.&lt;/p&gt;
+
+&lt;p&gt;This ease of database value testing also applies when you need to test against combinations of database values that are unlikely to occur in practice (the old &amp;ldquo;comparing apples to battleships&amp;rdquo; problem). If you need to handle database value corruption&amp;ndash;as in network problems causing the return of partial values from a Chinese database when the program is in the U.S.&amp;ndash;this ability to completely specify the database return values could be invaluable in testing. Test::MockDBI lets you take complete control of your database return values without separating test code and test data.&lt;/p&gt;
+
+&lt;h3 id=&#34;simplicity-test-mockdbi-s-standard-output-based-interface&#34;&gt;Simplicity: Test::MockDBI&amp;rsquo;s Standard-Output-Based Interface&lt;/h3&gt;
+
+&lt;p&gt;This modern incarnation of the age-old stubbed-functions technique also uses the old technique of &amp;ldquo;&lt;code&gt;printf()&lt;/code&gt; and scratch head&amp;rdquo; as its output interface. This being Perl we are working with, and not FORTRAN IV (thank goodness), we have multiple options beyond the use of unvarnished standard output.&lt;/p&gt;
+
+&lt;p&gt;One option that I think integrates well with DBI-using module testing is to redirect standard output into a string using &lt;a href=&#34;https://metacpan.org/pod/IO::String&#34;&gt;IO::String&lt;/a&gt;. You can then match the string against the regex you are looking for. As you have already guessed, use of pure standard output integrates well with command-line program testing.&lt;/p&gt;
+
+&lt;p&gt;What you will look for, irrespective of where your code actually looks, is the output of each DBI method as it executes&amp;ndash;the method name and arguments&amp;ndash;along with anything else your code writes to standard output.&lt;/p&gt;
+
+&lt;h3 id=&#34;bind-test-data-to-test-code&#34;&gt;Bind Test Data to Test Code&lt;/h3&gt;
+
+&lt;p&gt;Because DBI and database return values are bound to your test programs when using Test::MockDBI, there is less risk of test data getting out of sync with the test code. A separate test database introduces another point of failure in your testing process. Multiple test databases add yet another point of failure for each database. Whatever you use to generate the test databases also introduces another point of failure for each database. I can imagine cases where special-purpose programs for generating test databases might create multiple points of failure, especially if the programs have to integrate data from multiple sources to generate the test data (such as a VMS Bill of Materials database and a Solaris PCB CAD file for a test database generation program running on Linux).&lt;/p&gt;
+
+&lt;p&gt;One of the major advances in software engineering is the increasing ability to gather and control related information together&amp;ndash;the 1990s advance of object-oriented programming in common languages is a testimony to this, from which we Perl programmers reap the benefits in our use of CPAN. For many testing purposes, there is no need for separate test databases. Without that need for a separate test database, separating test data from test code only complicates the testing process. Test::MockDBI lets you bind together your test code and test data into one nice, neat package. Binding is even closer than code and comments, as comments can get out of sync with their code, while the test code and test data for Test::MockDBI cannot get out of sync too far without causing their tests to fail unexpectedly.&lt;/p&gt;
+
+&lt;h3 id=&#34;when-to-use-test-mockdbi&#34;&gt;When to Use Test::MockDBI&lt;/h3&gt;
+
+&lt;p&gt;DBI&amp;rsquo;s &lt;code&gt;trace()&lt;/code&gt;, &lt;a href=&#34;https://metacpan.org/pod/DBD::Mock&#34;&gt;DBD::Mock&lt;/a&gt;, and Test::MockDBI are complementary solutions to the problem of testing DBI software. DBI&amp;rsquo;s &lt;code&gt;trace()&lt;/code&gt; is a pure tracing mechanism, as it does not change the data returned from the database or the DBI method return values. DBD::Mock works at level of a database driver, so you have to look at your DBI testing from the driver&amp;rsquo;s point of view, rather than the DBI caller&amp;rsquo;s point of view. DBD::Mock also requires that your code supports configurable DBI DSNs, which may not be the case in all circumstances, especially when you must maintain or enhance legacy DBI software.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI works at the DBI caller&amp;rsquo;s level, which is (IMHO) more natural for testing DBI-using software (possibly a matter of taste: TMTOWTDI). Test::MockDBI&amp;rsquo;s interface with your DBI software is a set of easy-to-program, regex-based rules, which incorporate a lot of power into one or a few lines of code, thereby using Perl&amp;rsquo;s built-in regex support to best advantage. This binds test data and test code tightly together, reducing the chance of synchronization problems between the test data and the test code. Using Test::MockDBI does not require modifying the current code of the DBI software being tested, as you only need additional code to enable Test::MockDBI-driven DBI testing.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI takes additional coding effort when you need to test DBI program performance. It may be that for performance testing, you want to use test databases rather than Test::MockDBI. If you were in any danger of your copy of &lt;em&gt;DBI.pm&lt;/em&gt; becoming corrupted, I don&amp;rsquo;t know whether you could adequately test that condition with Test::MockDBI, depending on the corruption. You would probably have to create a special mock DBI to test corrupted DBI code handling, though you could start building the special mock DBI by inheriting from Test::MockDBI without any problems from Test::MockDBI&amp;rsquo;s design, as it should be inheritance-friendly.&lt;/p&gt;
+
+&lt;h3 id=&#34;some-examples&#34;&gt;Some Examples&lt;/h3&gt;
+
+&lt;p&gt;To make:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$dbh = DBI-&amp;gt;connect(&amp;quot;dbi:AZ:universe&amp;quot;, &amp;quot;mortal&amp;quot;, &amp;quot;(none)&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;fail, add the rule:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;bad_method(&amp;quot;connect&amp;quot;, 1,
+    &amp;quot;CONNECT TO dbi:AZ:universe AS mortal WITH \\(none\\)&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(where &lt;code&gt;$tmd&lt;/code&gt; is the only Test::MockDBI object, which you obtain through Test::MockDBI&amp;rsquo;s &lt;code&gt;get_instance()&lt;/code&gt; method).&lt;/p&gt;
+
+&lt;p&gt;To make a SQL &lt;code&gt;SELECT&lt;/code&gt; failure when using &lt;code&gt;DBI::execute()&lt;/code&gt;, use the rule:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;bad_method(&amp;quot;execute&amp;quot;, 1,
+    &amp;quot;SELECT zip_plus_4 from zipcodes where state=&#39;IN&#39;&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This rule implies that:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;DBI::connect()&lt;/code&gt; &lt;code&gt;succeeded()&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;DBI::prepare()&lt;/code&gt; &lt;code&gt;succeeded()&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;But the &lt;code&gt;DBI::execute()&lt;/code&gt; failed as it should.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A common use of direct scalar return values is returning configuration data, such as a U.S. zip code for an address:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tmd-&amp;gt;set_retval_scalar(1,
+ &amp;quot;zip5.*&#39;IN&#39;.*&#39;NOBLESVILLE&#39;.*&#39;170 WESTFIELD RD&#39;&amp;quot;,
+ [ 46062 ]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This demonstrates using a regular expression, as matching SQL could then look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT
+  zip5
+FROM
+  zipcodes
+WHERE
+  state=&#39;IN&#39; AND
+  city=&#39;NOBLESVILLE&#39; AND
+  street_address=&#39;170 WESTFIELD RD&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the rule would match.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;SELECT&lt;/code&gt;s that return one or more rows from the database are the common case:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $counter = 0;                    # name counter
+sub possibly_evil_names {
+    $counter++;
+    if ($counter == 1) {
+        return (&#39;Adolf&#39;, &#39;Germany&#39;);
+    } elsif ($counter == 2) {
+        return (&#39;Josef&#39;, &#39;U.S.S.R.&#39;);
+    } else {
+        return ();
+    }
+}
+$tmd-&amp;gt;set_retval_array(1,
+   &amp;quot;SELECT\\s+name,\\s+country.*possibly_evil_names&amp;quot;,
+   \&amp;amp;possibly_evil_names);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using a &lt;code&gt;CODEREF&lt;/code&gt; (&lt;code&gt;\&amp;amp;possibly_evil_names&lt;/code&gt;) lets you easily add the state machine for implementing a return of two names followed by an empty array (because the code uses &lt;code&gt;fetchrow_array()&lt;/code&gt; to retrieve each row). SQL for this query could look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT
+  name,
+  country
+FROM
+  possibly_evil_names
+WHERE
+  year &amp;lt; 2000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;summary&#34;&gt;Summary&lt;/h3&gt;
+
+&lt;p&gt;Albert Einstein once said, &amp;ldquo;Everything should be made as simple as possible, but no simpler.&amp;rdquo; This is what I have striven for while developing Test::MockDBI&amp;ndash;the simplest possible useful module for testing DBI programs by mocking up the entire DBI.&lt;/p&gt;
+
+&lt;p&gt;Test::MockDBI gives you:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Complete control of DBI return values and database-returned data.&lt;/li&gt;
+&lt;li&gt;Returned database values from either direct value specifications or &lt;code&gt;CODEREF&lt;/code&gt;-generated values.&lt;/li&gt;
+&lt;li&gt;Easy, regex-based rules that govern the DBI&amp;rsquo;s behavior, along with intelligent defaults for the common cases.&lt;/li&gt;
+&lt;li&gt;Complete transparency to other code, so the code under test neither knows nor cares that you are testing it with Test::MockDBI.&lt;/li&gt;
+&lt;li&gt;Test data tightly bound to test code, which promotes cohesiveness in your testing environment, thereby reducing the chance that your tests might silently fail due to loss of synchronization between your test data and your test code.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Test::MockDBI is a valuable addition to the arsenal of DBI testing techniques.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>More Lightning Articles</title>
+      <link>http://localhost:1313/pub/2005/03/31/lightning2.html/</link>
+      <pubDate>Thu, 31 Mar 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/03/31/lightning2.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-emacsperl-customizing-emacs-with-perl-span&#34;&gt;&lt;span id=&#34;emacsperl&#34;&gt;Customizing Emacs with Perl&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;by Bob DuCharme&lt;/p&gt;
+
+&lt;p&gt;Over time, I&amp;rsquo;ve accumulated a list of Emacs customizations I wanted to implement when I got the chance. For example, I&amp;rsquo;d like macros to perform certain global replaces just within a marked block, and I&amp;rsquo;d like a macro to reformat an Outlook formatted date to an ISO 8609 formatted date. I&amp;rsquo;m not overly intimidated by the elisp language used to customize Emacs behavior; I&amp;rsquo;ve copied elisp code and modified it to make some tweaks before, I had a healthy dose of Scheme and LISP programming in school, and I&amp;rsquo;ve done extensive work with XSLT, a descendant of these grand old languages. Still, as with a lot of postponed editor customization work, I knew I&amp;rsquo;d have to use these macros many, many times before they earned back the time invested in creating them, because I wasn&amp;rsquo;t that familiar with string manipulation and other basic operations in a LISP-based language. I kept thinking to myself, &amp;ldquo;This would be so easy if I could just do the string manipulation in Perl!&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Then, I figured out how I could write Emacs functions that called Perl to operate on a marked block (or, in Emacs parlance, a &amp;ldquo;region&amp;rdquo;). Many Emacs users are familiar with the &lt;code&gt;Escape+|&lt;/code&gt; keystroke, which invokes the &lt;code&gt;shell-command-on-region&lt;/code&gt; function. It brings up a prompt in the minibuffer where you enter the command to run on the marked region, and after you press the Enter key Emacs puts the command&amp;rsquo;s output in the minibuffer if it will fit, or into a new &amp;ldquo;*Shell Command Output*&amp;rdquo; buffer if not. For example, after you mark part of an HTML file you&amp;rsquo;re editing as the region, pressing &lt;code&gt;Escape+|&lt;/code&gt; and entering &lt;code&gt;wc&lt;/code&gt; (for &amp;ldquo;word count&amp;rdquo;) at the minibuffer&amp;rsquo;s &amp;ldquo;Shell command on region:&amp;rdquo; prompt will feed the text to this command line utility if you have it in your path, and then display the number of lines, words, and characters in the region at the minibuffer. If you enter &lt;code&gt;sort&lt;/code&gt; at the same prompt, Emacs will run that command instead of &lt;code&gt;wc&lt;/code&gt; and display the result in a buffer.&lt;/p&gt;
+
+&lt;p&gt;Entering &lt;code&gt;perl /some/path/foo.pl&lt;/code&gt; at the same prompt will run the named Perl script on the marked region and display the output appropriately. This may seem like a lot of keystrokes if you just want to do a global replace in a few paragraphs, but remember: &lt;code&gt;Ctrl+|&lt;/code&gt; calls Emacs&amp;rsquo;s built-in &lt;code&gt;shell-command-on-region&lt;/code&gt; function, and you can call this same function from a new function that you define yourself. My recent great discovery was that along with parameters identifying the region boundaries and the command to run on the region, &lt;code&gt;shell-command-on-region&lt;/code&gt; takes an optional parameter that lets you tell it to replace the input region with the output region. When you&amp;rsquo;re editing a document with Emacs, this allows you to pass a marked region outside of Emacs to a Perl script, let the Perl script do whatever you like to the text, and then Emacs will replace the original text with the processed version. (If your Perl script mangled the text, Emacs&amp;rsquo; excellent &lt;code&gt;undo&lt;/code&gt; command can come to the rescue.)&lt;/p&gt;
+
+&lt;p&gt;Consider an example. When I take notes about a project at work, I might write that Joe R. sent an e-mail telling me that a certain system won&amp;rsquo;t need any revisions to handle the new data. I want to make a note of when he told me this, so I copy and paste the date from the e-mail he sent. We use Microsoft Outlook at work, and the dates have a format following the model &amp;ldquo;Tue 2/22/2005 6:05 PM&amp;rdquo;. I already have an Emacs macro bound to &lt;code&gt;alt+d&lt;/code&gt; to insert the current date and time (also handy when taking notes) and I wanted the date format that refers to e-mails to be the same format as the ones inserted with my &lt;code&gt;alt+d&lt;/code&gt; macro: an ISO 8609 format of the form &amp;ldquo;2005-02-22T18:05&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;em&gt;.emacs&lt;/em&gt; startup file holds customized functions that you want available during your Emacs session. The following shows a bit of code that I put in mine so that I could convert these dates:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;(defun OLDate2ISO ()
+  (interactive)
+  (shell-command-on-region (point)
+         (mark) &amp;quot;perl c:/util/OLDate2ISO.pl&amp;quot; nil t))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;(interactive)&lt;/code&gt; declaration tells Emacs that the function being defined can be invoked interactively as a command. For example, I can enter &amp;ldquo;OLDate2ISO&amp;rdquo; at the Emacs minibuffer command prompt, or I can press a keystroke or select a menu choice bound to this function. The &lt;code&gt;point&lt;/code&gt; and &lt;code&gt;mark&lt;/code&gt; functions are built into Emacs to identify the boundaries of the currently marked region, so they&amp;rsquo;re handy for the first and second arguments to &lt;code&gt;shell-command-on-region&lt;/code&gt;, which tell it which text is the region to act on. The third argument is the actual command to execute on the region; enter any command available on your operating system that can accept standard input. To define your own Emacs functions that call Perl functions, just change the script name in this argument from &lt;code&gt;OLDate2ISO&lt;/code&gt; to anything you like and then change this third argument to &lt;code&gt;shell-command-on-region&lt;/code&gt; to call your own Perl script.&lt;/p&gt;
+
+&lt;p&gt;Leave the last two arguments as &lt;code&gt;nil&lt;/code&gt; and &lt;code&gt;t&lt;/code&gt;. Don&amp;rsquo;t worry about the fourth parameter, which controls the buffer where the shell output appears. (Setting it to &lt;code&gt;nil&lt;/code&gt; means &amp;ldquo;don&amp;rsquo;t bother.&amp;rdquo;) The fifth parameter is the key to the whole trick: when non-nil, it tells Emacs to replace the marked text in the editing buffer with the output of the command described in the third argument instead of sending the output to a buffer.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;re familiar with Perl, there&amp;rsquo;s nothing particularly interesting about the &lt;em&gt;OLDate2ISO.pl&lt;/em&gt; script. It does some regular expression matching to split up the string, converts the time to a 24 hour clock, and rearranges the pieces:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Convert Outlook format date to ISO 8309 date 
+#(e.g. Wed 2/16/2005 5:27 PM to 2005-02-16T17:27)
+while (&amp;lt;&amp;gt;) {
+  if (/\w+ (\d+)\/(\d+)\/(\d{4}) (\d+):(\d+) ([AP])M/) {
+     $AorP = $6;
+     $minutes = $5;
+     $hour = $4;
+     $year = $3;
+     $month = $1;
+     $day = $2;
+     $day = &#39;0&#39; . $day if ($day &amp;lt; 10);
+     $month = &#39;0&#39; . $month if ($month &amp;lt; 10);
+     $hour = $hour + 12 if ($6 eq &#39;P&#39;);
+     $hour = &#39;0&#39; . $hour if ($hour &amp;lt; 10);
+     $_ = &amp;quot;$year-$month-$day&amp;quot; . &amp;quot;T$hour:$minutes&amp;quot;;
+  }
+  print;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you start up Emacs with a function definition like the &lt;code&gt;defun OLDate2ISO&lt;/code&gt; one shown above in your &lt;em&gt;.emacs&lt;/em&gt; file, the function is available to you like any other in Emacs. Press &lt;code&gt;Escape+x&lt;/code&gt; to bring up the Emacs minibuffer command line and enter &amp;ldquo;OLDate2ISO&amp;rdquo; there to execute it on the currently marked buffer. Like any other interactive command, you can also assign it to a keystroke or a menu choice.&lt;/p&gt;
+
+&lt;p&gt;There might be a more efficient way to do the Perl coding shown above, but I didn&amp;rsquo;t spend too much time on it. That&amp;rsquo;s the beauty of it: with five minutes of Perl coding and one minute of elisp coding, I had a new menu choice to quickly do the transformation I had always wished for.&lt;/p&gt;
+
+&lt;p&gt;Another example of something I always wanted is the following &lt;em&gt;txt2htmlp.pl&lt;/em&gt; script, which is useful after plugging a few paragraphs of plain text into an HTML document:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Turn lines of plain text into HTML p elements.
+while (&amp;lt;&amp;gt;) {
+  chop($_);
+  # Turn ampersands and &amp;lt; into entity references.
+  s/\&amp;amp;/\&amp;amp;amp\;/g;
+  s/&amp;lt;/\&amp;amp;lt\;/g;
+  # Wrap each non-blank line in a &amp;quot;p&amp;quot; element.
+  print &amp;quot;&amp;lt;p&amp;gt;$_&amp;lt;/p&amp;gt;\n\n&amp;quot; if (!(/^\s*$/));
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Again, it&amp;rsquo;s not a particularly innovative Perl script, but with the following bit of elisp in my &lt;em&gt;.emacs&lt;/em&gt; file, I have something that greatly speeds up the addition of hastily written notes into a web page, especially when I create an Emacs menu choice to call this function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;(defun txt2htmlp ()
+  (interactive)
+  (shell-command-on-region (point) 
+         (mark) &amp;quot;perl c:/util/txt2htmlp.pl&amp;quot; nil t))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sometimes when I hear about hot new editors, I wonder whether they&amp;rsquo;ll ever take the place of Emacs in my daily routine. Now that I can so easily add the power of Perl to my use of Emacs, it&amp;rsquo;s going to be a lot more difficult for any other editor to compete with Emacs on my computer.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-linetrace-debug-your-programs-with-devel-linetrace-span&#34;&gt;&lt;span id=&#34;linetrace&#34;&gt;Debug Your Programs with Devel::LineTrace&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;by Shlomi Fish&lt;/p&gt;
+
+&lt;p&gt;Often, programmers find a need to use print statements to output information to the screen, in order to help them analyze what went wrong in running the script. However, including these statements verbatim in the script is not such a good idea. If not promptly removed, these statements can have all kinds of side-effects: slowing down the script, destroying the correct format of its output (possibly ruining test-cases), littering the code, and confusing the user. It would be a better idea not to place them within the code in the first place. How, though, can you debug without debugging?&lt;/p&gt;
+
+&lt;p&gt;Enter &lt;a href=&#34;https://metacpan.org/pod/Devel::LineTrace&#34;&gt;Devel::LineTrace&lt;/a&gt;, a Perl module that can assign portions of code to execute at arbitrary lines within the code. That way, the programmer can add print statements in relevant places in the code without harming the program&amp;rsquo;s integrity.&lt;/p&gt;
+
+&lt;h4 id=&#34;verifying-that-use-lib-has-taken-effect&#34;&gt;Verifying That &lt;code&gt;use lib&lt;/code&gt; Has Taken Effect&lt;/h4&gt;
+
+&lt;p&gt;One example I recently encountered was that I wanted to use a module I wrote from the specialized directory where I placed it, while it was already installed in the Perl&amp;rsquo;s global include path. I used a &lt;code&gt;use lib &amp;quot;./MyPath&amp;quot;&lt;/code&gt; directive to make sure this was the case, but now had a problem. What if there was a typo in the path of the &lt;code&gt;use lib&lt;/code&gt; directive, and as a result, Perl loaded the module from the global path instead? I needed a way to verify it.&lt;/p&gt;
+
+&lt;p&gt;To demonstrate how &lt;code&gt;Devel::LineTrace&lt;/code&gt; can do just that, consider a similar script that tries to use a module named &lt;code&gt;CGI&lt;/code&gt; from the path &lt;em&gt;./MyModules&lt;/em&gt; instead of the global Perl path. (It is a bad idea to name your modules after names of modules from CPAN or from the Perl distribution, but this is just for the sake of the demonstration.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl -w
+
+use strict;
+use lib &amp;quot;./MyModules&amp;quot;;
+
+use CGI;
+
+my $q = CGI-&amp;gt;new();
+
+print $q-&amp;gt;header();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Name this script &lt;em&gt;good.pl&lt;/em&gt;. To test that Perl loaded the &lt;code&gt;CGI&lt;/code&gt; module from the &lt;em&gt;./MyModules&lt;/em&gt; directory, direct &lt;code&gt;Devel::LineTrace&lt;/code&gt; to print the relevant entry from the &lt;code&gt;%INC&lt;/code&gt; internal variable, at the first line after the &lt;code&gt;use CGI&lt;/code&gt; one.&lt;/p&gt;
+
+&lt;p&gt;To do so, prepare this file and call it &lt;em&gt;test-good.txt&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;good.pl:8
+    print STDERR &amp;quot;\$INC{CGI.pm} == &amp;quot;, $INC{&amp;quot;CGI.pm&amp;quot;}, &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Place the file and the line number at which the trace should be inserted on the first line. Then comes the code to evaluate, indented from the start of the line. After the first trace, you can put other traces, by starting the line with the filename and line number, and putting the code in the following (indented) lines. This example is simple enough not to need that though.&lt;/p&gt;
+
+&lt;p&gt;After you have prepared &lt;em&gt;test-good.txt&lt;/em&gt;, run the script through &lt;code&gt;Devel::LineTrace&lt;/code&gt; by executing the following command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ PERL5DB_LT=&amp;quot;test-good.txt&amp;quot; perl -d:LineTrace good.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(This assumes a Bourne-shell derivative.). The &lt;code&gt;PERL5DB_LT&lt;/code&gt; environment variable contains the path of the file to use for debugging, and the &lt;code&gt;-d:LineTrace&lt;/code&gt; directive to Perl instructs it to debug the script through the &lt;code&gt;Devel::LineTrace&lt;/code&gt; package.&lt;/p&gt;
+
+&lt;p&gt;As a result, you should see either the following output to standard error:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$INC{CGI.pm} == MyModules/CGI.pm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;meaning that Perl indeed loaded the module from the &lt;em&gt;MyModules&lt;/em&gt; sub-directory of the current directory. Otherwise, you&amp;rsquo;ll see something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$INC{CGI.pm} == /usr/lib/perl5/vendor_perl/5.8.4/CGI.pm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;which means that it came from the global path and something went wrong.&lt;/p&gt;
+
+&lt;h4 id=&#34;limitations-of-devel-linetrace&#34;&gt;Limitations of &lt;code&gt;Devel::LineTrace&lt;/code&gt;&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;Devel::LineTrace&lt;/code&gt; has two limitations:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Because it uses the Perl debugger interface and stops at every line (to check whether it contains a trace), program execution is considerably slower when the program is being run under it.&lt;/li&gt;
+&lt;li&gt;It assigns traces to line numbers, and therefore you must update it if the line numbering of the file changes.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Nevertheless, it is a good solution for keeping those pesky &lt;code&gt;print&lt;/code&gt; statements out of your programs. Happy LineTracing!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mockdbi-using-test-mockdbi-span&#34;&gt;&lt;span id=&#34;mockdbi&#34;&gt;Using Test::MockDBI&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;by Mark Leighton Fisher&lt;/p&gt;
+
+&lt;p&gt;What if you could test your program&amp;rsquo;s use of the DBI just by creating a set of rules to guide the DBI&amp;rsquo;s behavior—without touching a database (unless you want to)? That is the promise of &lt;a href=&#34;https://metacpan.org/pod/Test::MockDBI&#34;&gt;Test::MockDBI&lt;/a&gt;, which by mocking-up the entire DBI API gives you unprecedented control over every aspect of the DBI&amp;rsquo;s interface with your program.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Test::MockDBI&lt;/code&gt; uses &lt;a href=&#34;https://metacpan.org/pod/Test::MockObject::Extends&#34;&gt;Test::MockObject::Extends&lt;/a&gt; to mock all of the DBI transparently. The rest of the program knows nothing about using &lt;code&gt;Test::MockDBI&lt;/code&gt;, making &lt;code&gt;Test::MockDBI&lt;/code&gt; ideal for testing programs that you are taking over, because you only need to add the &lt;code&gt;Test::MockDBI&lt;/code&gt; invocation code— you do not have to modify any of the other program code. (I have found this very handy as a consultant, as I often work on other people&amp;rsquo;s code.)&lt;/p&gt;
+
+&lt;p&gt;Rules are invoked when the current SQL matches the rule&amp;rsquo;s SQL pattern. For finer control, there is an optional numeric DBI testing type for each rule, so that a rule only fires when the SQL matches &lt;em&gt;and&lt;/em&gt; the current DBI testing type is the specified DBI testing type. You can specify this numeric DBI testing type (a simple integer matching &lt;code&gt;/^\d+$/&lt;/code&gt;) from the command line or through &lt;code&gt;Test::MockDBI::set_dbi_test_type()&lt;/code&gt;. You can also set up rules to fail a transaction if a specific &lt;code&gt;DBI::bind_param()&lt;/code&gt; parameter is a specific value. This means there are three types of conditions for &lt;code&gt;Test::MockDBI&lt;/code&gt; rules:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The current SQL&lt;/li&gt;
+&lt;li&gt;The current DBI testing type&lt;/li&gt;
+&lt;li&gt;The current &lt;code&gt;bind_param()&lt;/code&gt; parameter values&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Under &lt;code&gt;Test::MockDBI&lt;/code&gt;, &lt;code&gt;fetch*()&lt;/code&gt; and &lt;code&gt;select*()&lt;/code&gt; methods default to returning nothing (the empty array, the empty hash, or undef for scalars). &lt;code&gt;Test::MockDBIM&lt;/code&gt; lets you take control of their returned data with the methods &lt;code&gt;set_retval_scalar()&lt;/code&gt; and &lt;code&gt;set_retval_array()&lt;/code&gt;. You can specify the returned data directly in the &lt;code&gt;set_retval_*()&lt;/code&gt; call, or pass a CODEREF that generates a return value to use for each call to the matching &lt;code&gt;fetch*()&lt;/code&gt; or &lt;code&gt;select*()&lt;/code&gt; method. CODEREFs let you both simulate DBI&amp;rsquo;s interaction with the database more accurately (as you can return a few rows, then stop), and add in any kind of state machine or other processing needed to precisely test your code.&lt;/p&gt;
+
+&lt;p&gt;When you need to test that your code handles database or DBI failures, &lt;code&gt;bad_method()&lt;/code&gt; is your friend. It can fail any DBI method, with the failures dependent on the current SQL and (optionally) the current DBI testing type. This capability is necessary to test code that handles bad database &lt;code&gt;UPDATE&lt;/code&gt;s, &lt;code&gt;INSERT&lt;/code&gt;s, or &lt;code&gt;DELETE&lt;/code&gt;s, along with being handy for testing failing &lt;code&gt;SELECT&lt;/code&gt;s.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Test::MockDBI&lt;/code&gt; extends your testing capabilities to testing code that is difficult or impossible to test on a live, working database. &lt;code&gt;Test::MockDBI&#39;s&lt;/code&gt; mock-up of the entire DBI API lets you add &lt;code&gt;Test::MockDBI&lt;/code&gt; to your programs without having to modify their current DBI code. Although it is not finished (not all of the DBI is mocked-up yet), &lt;code&gt;Test::MockDBI&lt;/code&gt; is already a powerful tool for testing DBI programs.&lt;/p&gt;
+
+&lt;h3 id=&#34;unnecessary-unbuffering-unbuffering&#34;&gt;&lt;a href=&#34;#unbuffering&#34;&gt;Unnecessary Unbuffering&lt;/a&gt;&lt;/h3&gt;
+
+&lt;p&gt;by chromatic&lt;/p&gt;
+
+&lt;p&gt;A great joy in a programmer&amp;rsquo;s life is removing useless code, especially when its absence improves the program. Often this happens in old codebases or codebases thrown together hastily. Sometimes it happens in code written by novice programmers who try several different ideas all together and fail to undo their changes.&lt;/p&gt;
+
+&lt;p&gt;One such persistent idiom is wholesale, program-wide unbuffering, which can take the form of any of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;local $| = 1;
+$|++;
+$| = 1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sometimes this is valuable. Sometimes it&amp;rsquo;s vital. It&amp;rsquo;s not the default for very good reason, though, and at best, including one of these lines in your program is useless code.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-s-unbuffering&#34;&gt;What&amp;rsquo;s Unbuffering?&lt;/h4&gt;
+
+&lt;p&gt;By default, modern operating systems don&amp;rsquo;t send information to output devices directly, one byte at a time, nor do they read information from input devices directly, one byte at a time. IO is so slow, especially for networks, compared to processors and memory that adding buffers and trying to fill them before sending and receiving information can improve performance.&lt;/p&gt;
+
+&lt;p&gt;Think of trying to fill a bathtub from a hand pump. You &lt;em&gt;could&lt;/em&gt; pump a little water into a bucket and walk back and forth to the bathtub, or you could fill a trough at the pump and fill the bucket from the trough. If the trough is empty, pumping a little bit of water into the bucket will give you a faster start, but it&amp;rsquo;ll take longer in between bucket loads than if you filled the trough at the start and carried water back and forth between the trough and the bathtub.&lt;/p&gt;
+
+&lt;p&gt;Information isn&amp;rsquo;t exactly like water, though. Sometimes it&amp;rsquo;s more important to deliver a message immediately even if it doesn&amp;rsquo;t fill up a bucket. &amp;ldquo;Help, fire!&amp;rdquo; is a very short message, but waiting to send it when you have a full load of messages might be the wrong thing.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s why modern operating systems also let you unbuffer specific filehandles. When you print to an unbuffered filehandle, the operating system will handle the message immediately. That doesn&amp;rsquo;t guarantee that whoever&amp;rsquo;s on the other side of the handle will respond immediately; there might be a pump and a trough there.&lt;/p&gt;
+
+&lt;h4 id=&#34;what-s-the-damage&#34;&gt;What&amp;rsquo;s the Damage?&lt;/h4&gt;
+
+&lt;p&gt;According to Mark-Jason Dominus&amp;rsquo; &lt;a href=&#34;http://perl.plover.com/FAQs/Buffering.html&#34;&gt;Suffering from Buffering?&lt;/a&gt;, one sample showed that buffered reading was 40% faster than unbuffered reading, and buffered writing was 60% faster. The latter number may only improve when considering network communications, where the overhead of sending and receiving a single packet of information can overwhelm short messages.&lt;/p&gt;
+
+&lt;p&gt;In simple interactive applications though, there may be no benefit. When attached to a terminal, such as a command line, Perl operates in line-buffered mode. Run the following program and watch the output carefully:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+# buffer flushed at newline
+loop_print( 5, &amp;quot;Line-buffered\n&amp;quot; );
+
+# buffer not flushed until newline
+loop_print( 5, &amp;quot;Buffered  &amp;quot; );
+print &amp;quot;\n&amp;quot;;
+
+# buffer flushed with every print
+{
+    local $| = 1;
+    loop_print( 5, &amp;quot;Unbuffered  &amp;quot; );
+}
+
+sub loop_print
+{
+    my ($times, $message) = @_;
+
+    for (1 .. $times)
+    {
+        print $message;
+        sleep 1;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first five greetings appear individually and immediately. Perl flushes the buffer for STDOUT when it sees the newlines. The second set appears after five seconds, all at once, when it sees the newline after the loop. The third set appears individually and immediately because Perl flushes the buffer after every &lt;code&gt;print&lt;/code&gt; statement.&lt;/p&gt;
+
+&lt;p&gt;Terminals are different from everything else, though. Consider the case of writing to a file. In one terminal window, create a file named &lt;em&gt;buffer.log&lt;/em&gt; and run &lt;code&gt;tail -f buffer.log&lt;/code&gt; or its equivalent to watch the growth of the file in real time. Then add the following lines to the previous program and run it again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;open( my $output, &#39;&amp;gt;&#39;, &#39;buffer.log&#39; ) or die &amp;quot;Can&#39;t open buffer.log: $!&amp;quot;;
+select( $output );
+loop_print( 5, &amp;quot;Buffered\n&amp;quot; );
+{
+      local $| = 1;
+      loop_print( 5, &amp;quot;Unbuffered\n&amp;quot; );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first five messages appear in the log in a batch, all at once, even though they all have newlines. Five messages aren&amp;rsquo;t enough to fill the buffer. Perl only flushes it when it unbuffers the filehandle on assignment to &lt;code&gt;$|&lt;/code&gt;. The second set of messages appear individually, one second after another.&lt;/p&gt;
+
+&lt;p&gt;Finally, the STDERR filehandle is hot by default. Add the following lines to the previous program and run it yet again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;select( STDERR );
+loop_print( 5, &amp;quot;Unbuffered STDERR &amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Though no code disables the buffer on STDERR, the five messages should print immediately, just as in the other unbuffered cases. (If they don&amp;rsquo;t, your OS is weird.)&lt;/p&gt;
+
+&lt;h4 id=&#34;what-s-the-solution&#34;&gt;What&amp;rsquo;s the Solution?&lt;/h4&gt;
+
+&lt;p&gt;Buffering exists for a reason; it&amp;rsquo;s almost always the right thing to do. When it&amp;rsquo;s the wrong thing to do, you can disable it. Here are some rules of thumb:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Never disable buffering by default.&lt;/li&gt;
+&lt;li&gt;Disable buffering when and while you have multiple sources writing to the same output and their order matters.&lt;/li&gt;
+&lt;li&gt;Never disable buffering for network outputs by default.&lt;/li&gt;
+&lt;li&gt;Disable buffering for network outputs only when the expected time between full buffers exceeds the expected client timeout length.&lt;/li&gt;
+&lt;li&gt;Don&amp;rsquo;t disable buffering on terminal outputs. For STDERR, it&amp;rsquo;s useless, dead code. For STDOUT, you probably don&amp;rsquo;t need it.&lt;/li&gt;
+&lt;li&gt;Disable buffering if it&amp;rsquo;s more important to print messages regularly than efficiently.&lt;/li&gt;
+&lt;li&gt;Don&amp;rsquo;t disable buffering until you know that the buffer is a problem.&lt;/li&gt;
+&lt;li&gt;Disable buffering in the smallest scope possible.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

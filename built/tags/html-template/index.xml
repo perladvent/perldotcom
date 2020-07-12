@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Html Template on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/html-template/</link>
+    <description>Recent content in Html Template on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 01 Feb 2007 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/html-template/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Advanced HTML::Template: Widgets</title>
+      <link>http://localhost:1313/pub/2007/02/02/htmltemplate-widgets.html/</link>
+      <pubDate>Thu, 01 Feb 2007 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2007/02/02/htmltemplate-widgets.html/</guid>
+      <description>
+
+&lt;p&gt;My previous article, looked at &lt;a href=&#34;http://localhost:1313/pub/2006/11/30/html-template-filters.html&#34;&gt;extending &lt;code&gt;HTML::Template&lt;/code&gt; through custom tags and filters&lt;/a&gt;. This article looks at ways to manage large, more complex pages, by bundling &lt;a href=&#34;https://metacpan.org/pod/HTML::Template&#34;&gt;HTML::Template&lt;/a&gt; into something like GUI &amp;ldquo;widgets&amp;rdquo; (or &amp;ldquo;controls&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;Imagine you have a basic page layout following the standard setup, with a header, a lefthand navbar, and the main body in the bottom right. The header and navbar are the same for all pages of the site, but of course the main body differs from page to page:&lt;/p&gt;
+
+&lt;p&gt;Header
+Navbar
+Body&lt;/p&gt;
+
+&lt;p&gt;Naturally, you don&amp;rsquo;t want to repeat the information for the header and the navbar explicitly on each page. Furthermore, if the HTML for the navbar changes, you don&amp;rsquo;t want to have to modify each and every page. The &lt;code&gt;&amp;lt;TMPL_INCLUDE&amp;gt;&lt;/code&gt; tag can help in this situation.&lt;/p&gt;
+
+&lt;p&gt;Create separate files for header and navbar, then include them in the template for each page (by convention, I use the filename extension &lt;em&gt;.tpf&lt;/em&gt; for page *f*ragments, to distinguish them from full-page templates: &lt;em&gt;.tpl&lt;/em&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=navbar.tpf&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;
+        &amp;lt;!-- Body goes here! --&amp;gt;
+        ...
+      &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now &lt;code&gt;HTML::Template&lt;/code&gt; will include the page fragments for the header and navbar in the page when it evaluates the template. Changes to either of the fragments will affect the entire site immediately.&lt;/p&gt;
+
+&lt;p&gt;(For simplicity of presentation, I am going to use the old familiar &lt;code&gt;&amp;lt;table&amp;gt;&lt;/code&gt; method to fix the layout&amp;ndash;this article is about &lt;code&gt;HTML::Template&lt;/code&gt;, not CSS positioning!)&lt;/p&gt;
+
+&lt;p&gt;Note that both the header and the navbar may include other &lt;code&gt;HTML::Template&lt;/code&gt; tags, such as &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt;: file fragment inclusion occurs &lt;em&gt;before&lt;/em&gt; tag substitution. If you need dynamic content in either header or navbar, all you need to do is set the value of the corresponding parameter using the &lt;code&gt;param()&lt;/code&gt; function before evaluating the template.&lt;/p&gt;
+
+&lt;h3 id=&#34;better-encapsulation-through-widgets&#34;&gt;Better Encapsulation through Widgets&lt;/h3&gt;
+
+&lt;p&gt;If there are only a few dynamic parameters in header and navbar, you can simply assign values to them together with the parameters required by the main body of the page. However, if the header and navbar themselves become sufficiently complicated, you probably don&amp;rsquo;t want to repeat their parameter-setting logic with the actual Perl code managing the main business logic for each page of our site. Instead, you can control them through an API.&lt;/p&gt;
+
+&lt;p&gt;To establish a Perl API for a page fragment, hide the entire template handling, including parameter setting and template substitution, in a subroutine. The subroutine takes several parameters and returns a string containing the fully expanded HTML code corresponding to the page fragment. You can then include this string in the current page through a simple &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tag.&lt;/p&gt;
+
+&lt;p&gt;As an example, consider a navbar that contains the username of the currently logged-in user.&lt;/p&gt;
+
+&lt;p&gt;Here is the page-fragment template for the navbar:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Current User: &amp;lt;TMPL_VAR NAME=login&amp;gt;
+&amp;lt;br /&amp;gt;
+&amp;lt;ul&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page1.html&amp;quot;&amp;gt;Page 1&amp;lt;/a&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page2.html&amp;quot;&amp;gt;Page 2&amp;lt;/a&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;a href=&amp;quot;page3.html&amp;quot;&amp;gt;Page 3&amp;lt;/a&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For this example, the corresponding subroutine is very simple. It&amp;rsquo;s easy to imagine a situation where the navbar requires some complex logic that you are glad to hide behind a function call&amp;ndash;for instance, when the selection of links depends on the permissions (found through a DB call) of the logged-in user.&lt;/p&gt;
+
+&lt;p&gt;Demonstrating the principle is straightforward; find the template fragment, set the required parameter, and render the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub navbar {
+  my ( $login ) = shift;
+
+  my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;navbar.tpf&#39; );
+  $tpl-&amp;gt;param( login =&amp;gt; $login );
+  return $tpl-&amp;gt;output();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The master-page template then includes the navbar string using a &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tag. (Note the header inclusion through a &lt;code&gt;&amp;lt;TMPL_INCLUDE&amp;gt;&lt;/code&gt; tag.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=navbar&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;
+        &amp;lt;!-- Body goes here! --&amp;gt;
+        ...
+      &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This approach provides pretty good encapsulation: the code calling the &lt;code&gt;navbar()&lt;/code&gt; routine does not need to know anything about its implementation&amp;ndash;in fact, the subroutine can be in a separate module entirely. It is not far-fetched to imagine a shared module for all reusable page fragments used on the site.&lt;/p&gt;
+
+&lt;h3 id=&#34;building-pages-inside-out&#34;&gt;Building Pages Inside Out&lt;/h3&gt;
+
+&lt;p&gt;This development model still uses a separate, top-level template file for each page. All shared parts of the page are then included in this master template.&lt;/p&gt;
+
+&lt;p&gt;The widget approach can go a step further to do away entirely with the notion of having a separate master template for each page, by turning even the &lt;em&gt;main body&lt;/em&gt; of the page into a widget or a collection of widgets. At this point, there may be only a single top-level template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;table&amp;gt;
+    &amp;lt;tr colspan=&amp;quot;2&amp;quot;&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_INCLUDE NAME=header.tpf&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;tr&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=navbar&amp;gt;&amp;lt;/td&amp;gt;
+      &amp;lt;td&amp;gt;&amp;lt;TMPL_VAR NAME=mainbody&amp;gt;&amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A central Perl &amp;ldquo;controller&amp;rdquo; component dispatches page requests to the appropriate main-body widget (assuming you specify destination pages through a request parameter called &lt;code&gt;action&lt;/code&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use CGI;
+use HTML::Template;
+
+my $q = CGI-&amp;gt;new;
+my $action = $q-&amp;gt;param( &#39;action&#39; );
+
+# Dispatch to the desired main function
+my $body_string = &#39;&#39;;
+if(    $action eq &#39;act1&#39; ) { $body_string = act1( $q ); }
+elsif( $action eq &#39;act2&#39; ) { $body_string = act2( $q ); }
+elsif( $action eq &#39;act3&#39; ) { $body_string = act3( $q ); }
+
+# Pull the current user from the query object and pass to the navbar
+my $navbar_string = navbar( $q-&amp;gt;param( &#39;login&#39; ) );
+
+# Set the rendered navbar and mainbody in the master template
+my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;tmpl3.tpl&#39; );
+$tpl-&amp;gt;param( mainbody =&amp;gt; $body_string );
+$tpl-&amp;gt;param( navbar   =&amp;gt; $navbar_string );
+
+print $q-&amp;gt;header(), $tpl-&amp;gt;output;
+
+sub navbar { ... }
+
+sub act1{ ... }
+sub act2{ ... }
+sub act3{ ... }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;a-drop-down-widget&#34;&gt;A Drop-down Widget&lt;/h3&gt;
+
+&lt;p&gt;At this point, you may ask why you still need a template for the page fragment at all. Well, you don&amp;rsquo;t&amp;ndash;unless you find it convenient, of course.&lt;/p&gt;
+
+&lt;p&gt;There are two reasons to use a template: as a more suitable method of generating HTML than having to program a whole bunch of &lt;code&gt;print&lt;/code&gt; statements, and to ensure separation of presentation from behavior. By encapsulating the nitty-gritty of HTML generation behind an API, you achieve the latter. How you go about the former depends entirely on the context. If you need to generate a lot of straight up HTML, with lots of &lt;code&gt;&amp;lt;table&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt;, and &lt;code&gt;&amp;lt;form&amp;gt;&lt;/code&gt; tags, a template fragment makes perfect sense. But if it is actually easier to program the &lt;code&gt;print&lt;/code&gt; statements yourself, there is nothing wrong with that&amp;ndash;by encapsulating the HTML generation in a subroutine, you still achieve separation of presentation and main control flow and business logic.&lt;/p&gt;
+
+&lt;p&gt;As a classic example for something that is hard to express as a template, consider a drop-down menu with a default that has to be set programmatically. Attempting to do this using a template leads to a mess of template loops and conditionals. However, doing it in a widget subroutine is clean and easy, in particular if you use the appropriate functions from the standard &lt;code&gt;CGI&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub color_select {
+  my ( $default_color ) = @_;
+
+  my @colors = qw( red green blue yellow cyan magenta );
+
+  return popup_menu( &#39;color_select&#39;, \@colors, $default_color );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Include the string returned by this subroutine in a page template using &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; tags as discussed previously.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;This concludes a brief overview of some useful techniques for using &lt;code&gt;HTML::Template&lt;/code&gt; that go beyond straight up variable replacement. I hope you enjoyed the trip.&lt;/p&gt;
+
+&lt;p&gt;There remains the question of when all of this is useful and suitable. To me, the beauty of &lt;code&gt;HTML::Template&lt;/code&gt; is its utter simplicity. There isn&amp;rsquo;t much in the way of creature comforts or &amp;ldquo;framework&amp;rdquo; features (such as forms processing or automated request dispatch). On the other hand, there is virtually &lt;em&gt;no&lt;/em&gt; overhead: it&amp;rsquo;s possible to understand the basic ideas of &lt;code&gt;HTML::Template&lt;/code&gt; in five minutes or fewer, and it&amp;rsquo;s easy to add to any simple CGI script. You don&amp;rsquo;t need to design the project around the framework (as is often the case with more powerful but inevitably more complex toolsets). In fact, &lt;code&gt;HTML::Template&lt;/code&gt; is so trivial to use that I use it in any CGI script that produces more than, say, 10 to 15 lines of HTML output. It&amp;rsquo;s just convenient.&lt;/p&gt;
+
+&lt;p&gt;Filters and &amp;ldquo;widgets&amp;rdquo; as described in this series are easy ways to add some convenience features that are missing from &lt;code&gt;HTML::Template&lt;/code&gt;. By bundling some repetitive code segments into a custom tag or a widget, you can keep both the code and template cleaner and simpler while at the same time continuing to enjoy the low overhead of &lt;code&gt;HTML::Template&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;However, there is only so much lipstick you can put on a pig. When you find ourselves building extensive libraries of custom tags or specific widgets, maybe you want to look more deeply into one of the existing frameworks for Perl web development, such as &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;the Template Toolkit&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, as long as you are happy with &lt;code&gt;HTML::Template&lt;/code&gt; and it works for you, there is no reason to change. It works for me&amp;ndash;and very well indeed.&lt;/p&gt;
+
+&lt;h4 id=&#34;sidebar-three-hidden-gems&#34;&gt;Sidebar: Three Hidden Gems&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;HTML::Template&lt;/code&gt; has several useful and often overlooked minor features and options, (despite being clearly documented in POD). I want to point out three of the ones that are most commonly useful&amp;ndash;all of which, by default, are (unfortunately, I think) turned &lt;em&gt;off&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h5 id=&#34;permit-unused-parameters&#34;&gt;Permit Unused Parameters&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, die_on_bad_params =&amp;gt; 0 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;HTML::Template will die when it encounters an unused parameter in the template. In other words, if you set a parameter with &lt;code&gt;$tpl-&amp;gt;param()&lt;/code&gt;, but there is no corresponding &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; in the template, template processing will fail by default. Setting the option &lt;code&gt;die_on_bad_params&lt;/code&gt; to &lt;code&gt;0&lt;/code&gt; disables this behavior.&lt;/p&gt;
+
+&lt;h5 id=&#34;make-global-variables-visible-in-loops&#34;&gt;Make Global Variables Visible In Loops&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, global_vars =&amp;gt; 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default, template loops open up a new scope, which makes all template parameters from outside the loop invisible within the loop. In particular, code like this will (by default) not work as expected:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Verbosity level: &amp;lt;TMPL_VAR NAME=isVerbose&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;TMPL_LOOP NAME=rows&amp;gt;
+  &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=rowitem&amp;gt;
+    &amp;lt;TMPL_IF NAME=isVerbose&amp;gt;
+      ... &amp;lt;!-- print additional, &#39;verbose&#39; info --&amp;gt;
+    &amp;lt;/TMPL_IF&amp;gt;
+&amp;lt;/TMPL_LOOP&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;verbose&lt;/code&gt; parameter, defined &lt;em&gt;outside&lt;/em&gt; the loop scope will by default &lt;em&gt;not&lt;/em&gt; be visible within the loop. Change this by setting the option &lt;code&gt;global_vars&lt;/code&gt; to &lt;code&gt;1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h5 id=&#34;special-loop-variables&#34;&gt;Special Loop Variables&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code&gt;my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;...&#39;, loop_context_vars =&amp;gt; 1 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, enable a very useful little feature by setting &lt;code&gt;loop_context_vars&lt;/code&gt; to &lt;code&gt;1&lt;/code&gt;. This defines several Boolean variables within each loop; they take on the appropriate value for each row:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;__first__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__inner__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__last__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__odd__&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__even__&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There is also an integer variable &lt;code&gt;__counter__&lt;/code&gt;, which is incremented for each row. Note that &lt;code&gt;__counter__&lt;/code&gt; starts at &lt;code&gt;1&lt;/code&gt;, in contrast to Perl arrays!&lt;/p&gt;
+
+&lt;p&gt;These variables are extremely useful in a variety of ways. For example, they make it easy to give every other row in a table a different background color to improve legibility. Together with filters (as described in my previous article), this allows for rather elegant template code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+  &amp;lt;style type=&amp;quot;text/css&amp;quot;&amp;gt;
+    .odd  { background-color: yellow }
+    .even { background-color: cyan }
+  &amp;lt;/style&amp;gt;
+&amp;lt;/head&amp;gt;
+
+&amp;lt;body&amp;gt;
+  &amp;lt;table&amp;gt;
+  &amp;lt;TMPL_LOOP NAME=rows&amp;gt;
+    &amp;lt;CSTM_ROW EVEN=even ODD=odd&amp;gt;
+      &amp;lt;td&amp;gt; &amp;lt;TMPL_VAR NAME=__counter__&amp;gt; Cell contents... &amp;lt;/td&amp;gt;
+    &amp;lt;/tr&amp;gt;
+  &amp;lt;/TMPL_LOOP&amp;gt;
+  &amp;lt;/table&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The appropriate filter for the new custom tag is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub cstmrow_filter {
+  my $text_ref = shift;
+  $$text_ref =~ s/&amp;lt;CSTM_ROW\s+EVEN=(.+)\s+ODD=(.*)\s*&amp;gt;
+                 /&amp;lt;TMPL_IF NAME=__odd__&amp;gt;
+                    &amp;lt;tr class=&amp;quot;$1&amp;quot;&amp;gt;
+                  &amp;lt;TMPL_ELSE&amp;gt;
+                    &amp;lt;tr class=&amp;quot;$2&amp;quot;&amp;gt;
+                  &amp;lt;\/TMPL_IF&amp;gt;
+                 /gx;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that, as implemented, the &lt;code&gt;EVEN&lt;/code&gt; attribute must precede the &lt;code&gt;ODD&lt;/code&gt; attribute in the &lt;code&gt;&amp;lt;CSTM_ROW&amp;gt;&lt;/code&gt; tag.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Advanced HTML::Template: Filters</title>
+      <link>http://localhost:1313/pub/2006/11/30/html-template-filters.html/</link>
+      <pubDate>Thu, 30 Nov 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/11/30/html-template-filters.html/</guid>
+      <description>
+
+&lt;p&gt;The CPAN module &lt;a href=&#34;https://metacpan.org/pod/HTML::Template&#34;&gt;&lt;code&gt;HTML::Template&lt;/code&gt;&lt;/a&gt; is a very simple, yet extremely useful module to achieve true separation of presentation and logic when programming CGI scripts. The basic idea is that, rather than having &lt;code&gt;print&lt;/code&gt; statements scattered all through your code (the &amp;ldquo;classic&amp;rdquo; CGI approach), or mixing logic in with HTML (as in JSP, ASP, and Perl Mason), you maintain &lt;em&gt;two&lt;/em&gt; files. One is the actual Perl script containing the business logic and the other one is a &lt;em&gt;template&lt;/em&gt; file, containing exclusively presentation layer statements.&lt;/p&gt;
+
+&lt;p&gt;The template is straight-up HTML, augmented by a small set of special tags. The templating system replaces these tags by dynamic content. The dynamic content comes from a Perl data structure that you have built in your code.&lt;/p&gt;
+
+&lt;p&gt;Here is a minimal template and the corresponding script:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;h1&amp;gt;&amp;lt;TMPL_VAR NAME=title&amp;gt;&amp;lt;/h1&amp;gt;
+
+    &amp;lt;ul&amp;gt;
+      &amp;lt;TMPL_LOOP NAME=rows&amp;gt;
+        &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=item&amp;gt;
+      &amp;lt;/TMPL_LOOP&amp;gt;
+    &amp;lt;/ul&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+
+#!/usr/bin/perl -w
+use HTML::Template;
+
+# Create the template object
+my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;tmpl1.tpl&#39; );
+
+# Set the parameter values
+$tpl-&amp;gt;param( title =&amp;gt; &amp;quot;Useful Books&amp;quot; );
+$tpl-&amp;gt;param( rows =&amp;gt; [ { item =&amp;gt; &amp;quot;Learning Perl&amp;quot; },
+                       { item =&amp;gt; &amp;quot;Programming Perl&amp;quot; },
+                       { item =&amp;gt; &amp;quot;Perl Cookbook&amp;quot; } ] );
+
+# Print
+print &amp;quot;Content-Type: text/html\n\n&amp;quot;, $tpl-&amp;gt;output;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s really all there is to it.&lt;/p&gt;
+
+&lt;h3 id=&#34;as-simple-as-possible-but-not-simpler&#34;&gt;As Simple as Possible, but Not Simpler?&lt;/h3&gt;
+
+&lt;p&gt;One of the nice things about &lt;code&gt;HTML::Template&lt;/code&gt; is that doesn&amp;rsquo;t try to do too much. It is a templating system for HTML, period. That keeps it simple and avoids complementary features, which could get in the way.&lt;/p&gt;
+
+&lt;p&gt;In this spirit, the module only offers a very, very limited set of tags, and no obvious way to extend this selection. Here is the complete list:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_IF&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_ELSE&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_UNLESS&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;TMPL_INLCUDE&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;All of these tags do pretty much what you might expect: &lt;code&gt;&amp;lt;TMPL_VAR&amp;gt;&lt;/code&gt; expands to dynamic text; &lt;code&gt;&amp;lt;TMPL_LOOP&amp;gt;&lt;/code&gt; loops over an array; &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;TMPL_ELSE&amp;gt;&lt;/code&gt;, and &lt;code&gt;&amp;lt;TMPL_UNLESS&amp;gt;&lt;/code&gt; provide a mechanism for conditional display; and &lt;code&gt;&amp;lt;TMPL_INLCUDE&amp;gt;&lt;/code&gt; allows you to include pieces of other documents (such as a shared page header).&lt;/p&gt;
+
+&lt;p&gt;Most of the time, this is precisely what you want. All the facilities are there to control the &lt;em&gt;display&lt;/em&gt;, but there is no danger in mixing general-purpose code in with the HTML template.&lt;/p&gt;
+
+&lt;p&gt;Yet, sometimes things can become unnecessarily clumsy&amp;ndash;in particular, concerning the conditional display of information. A typical example concerns &lt;em&gt;optional information&lt;/em&gt;. Suppose that you want to display a list of library books with their due dates, but should display the due date &lt;em&gt;only&lt;/em&gt; if the book is currently checked out. (This is a surprisingly common pattern. Think of items with an optional sales price, accounts with an optional bad account status, a flight schedule with optional delay information, etc.)&lt;/p&gt;
+
+&lt;p&gt;Sometimes you can simply leave the corresponding variable blank:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;ul&amp;gt;
+  &amp;lt;TMPL_LOOP NAME=books&amp;gt;
+    &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=title&amp;gt;   &amp;lt;TMPL_VAR NAME=duedate&amp;gt;
+  &amp;lt;/TMPL_LOOP&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and use the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tpl-&amp;gt;param( books =&amp;gt; [ { title =&amp;gt; &#39;Learning Perl&#39;, duedate =&amp;gt; &#39;&#39; },
+                        { title =&amp;gt; &#39;Programming Perl&#39;, duedate =&amp;gt; &#39;29. Feb. 2008&#39; } ] );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will work. There will be no output for the due date if there is no due date. However, what if you want to have some additional text, in addition to the actual due date? That template might resemble:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;ul&amp;gt;
+  &amp;lt;TMPL_LOOP NAME=books&amp;gt;
+    &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=title&amp;gt;
+        &amp;lt;TMPL_IF NAME=duedate&amp;gt;
+          Date due: &amp;lt;TMPL_VAR NAME=duedate&amp;gt;
+        &amp;lt;/TMPL_IF&amp;gt;
+  &amp;lt;/TMPL_LOOP&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Do this a lot, and you will start looking for a better solution! (The main problem here is not actually the additional typing, but the fact that the template itself is becoming increasingly unwieldy and its structure harder to follow.)&lt;/p&gt;
+
+&lt;p&gt;One solution is to put the additional text in code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tpl-&amp;gt;param( books =&amp;gt; [ { title =&amp;gt; &#39;Learning Perl&#39;, duedate =&amp;gt; &#39;&#39; },
+                        { title =&amp;gt; &#39;Programming Perl&#39;, duedate =&amp;gt; &#39;Date due: 29. Feb. 2008&#39; } ] );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, this is clumsy: it breaks the separation of presentation and behavior, as there is now strictly presentational material such as &amp;ldquo;Date due: &amp;ldquo; in the Perl code, and it makes the parameter less generally useful. If you want the plain date somewhere else in the template, it now comes bundled with a string that you may not want.&lt;/p&gt;
+
+&lt;p&gt;Wouldn&amp;rsquo;t it be nice if you could bundle the entire optional part of each list entry (&amp;ldquo;encapsulate it,&amp;rdquo; if you will) and simply call it by name? To put it in other words, what if you had the ability to define a custom tag?&lt;/p&gt;
+
+&lt;h3 id=&#34;enabling-custom-tags-using-filters&#34;&gt;Enabling Custom Tags Using Filters&lt;/h3&gt;
+
+&lt;p&gt;This is where &lt;em&gt;filters&lt;/em&gt; come in. A filter is a subroutine called on the template text before tag substitution takes place. A filter can do anything. In particular, it can modify the template programmatically.&lt;/p&gt;
+
+&lt;p&gt;A filter is precisely the hook into the template processing that is necessary to enable custom tags. Write your template in terms of standard template tags and your own custom tags. Then provide a filter (or filters) to replace these custom tags with the appropriate combinations of standard tags. The &lt;code&gt;HTML::Template&lt;/code&gt; &amp;ldquo;engine&amp;rdquo; then does the final substitutions and renders the ultimate output.&lt;/p&gt;
+
+&lt;p&gt;For the library example, suppose that you have chosen to use a custom tag &lt;code&gt;&amp;lt;CSTM_DUEDATE&amp;gt;&lt;/code&gt; to display the optional due date. This makes the template look very clean and simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;ul&amp;gt;
+  &amp;lt;TMPL_LOOP NAME=books&amp;gt;
+    &amp;lt;li&amp;gt;&amp;lt;TMPL_VAR NAME=title&amp;gt;   &amp;lt;CSTM_DUEDATE&amp;gt;
+  &amp;lt;/TMPL_LOOP&amp;gt;
+&amp;lt;/ul&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code to set the template parameter values does not change, but you now need to define the filter (and note that you need to escape the slash in the &lt;code&gt;&amp;lt;/TMPL_IF&amp;gt;&lt;/code&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub duedate_filter {
+  my $text_ref = shift;
+  $$text_ref =~ s/&amp;lt;CSTM_DUEDATE&amp;gt;/&amp;lt;TMPL_IF NAME=duedate&amp;gt;Date due: &amp;lt;TMPL_VAR NAME=duedate&amp;gt;&amp;lt;\/TMPL_IF&amp;gt;/g;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, you need to register this filter, so that the module will call it before tag substitution takes place. Filters are options to the template object, so registration takes place when you construct the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;books.tpl&#39;,
+                            filter =&amp;gt; \&amp;amp;duedate_filter );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s the basic idea. If you wanted to, you could register a sequential collection of filters (one filter per custom tag?) or you can put all required substitutions into a single routine. I can certainly perceive of the possibility of developing reusable &amp;ldquo;tag libraries&amp;rdquo; as Perl modules with filter definitions. Interestingly (and in contrast to JSP), the template files themselves do not need to know about the definitions and behavior of the &amp;ldquo;custom tags.&amp;rdquo; I think this is exactly right: the templates are plain (&amp;ldquo;dumb&amp;rdquo;) text files, which define the presentation layer. All the &lt;em&gt;behavior&lt;/em&gt; is in the Perl code, where it belongs.&lt;/p&gt;
+
+&lt;h3 id=&#34;data-sensitive-displays-and-data-filters&#34;&gt;Data-Sensitive Displays and Data Filters&lt;/h3&gt;
+
+&lt;p&gt;Consider another example application. Rather than dealing with optional information, this one uses &lt;em&gt;conditional formatting&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Assume that you have a list of accounts, and each account has a various state: &amp;ldquo;Good,&amp;rdquo; &amp;ldquo;Bad,&amp;rdquo; and &amp;ldquo;Canceled.&amp;rdquo; You would like to display the account number in a different color, depending on the state: green for &amp;ldquo;Good,&amp;rdquo; yellow for &amp;ldquo;Bad,&amp;rdquo; and red for &amp;ldquo;Canceled.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;If you tried to do this using &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;&lt;/code&gt; tags, this would be a real mess, for two reasons: You have more than two choices, so that we can&amp;rsquo;t use a &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;...&amp;lt;TMPL_ELSE&amp;gt;...&amp;lt;/TMPL_IF&amp;gt;&lt;/code&gt; construct; instead you would have to use a sequence of individual conditionals: &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;...&amp;lt;/TMPL_IF&amp;gt;&amp;lt;TMPL_IF&amp;gt;...&amp;lt;/TMPL_IF&amp;gt;&amp;lt;TMPL_IF&amp;gt;...&amp;lt;/TMPL_IF&amp;gt;&lt;/code&gt;. Moreover, &lt;code&gt;&amp;lt;TMPL_IF&amp;gt;&lt;/code&gt; does not allow for arbitrary conditional expressions (such as &lt;code&gt;$status eq &#39;good&#39;&lt;/code&gt;). All it does is test a Boolean variable. The classic approach is to introduce three Boolean dummy variables: &lt;code&gt;$isGood&lt;/code&gt;, &lt;code&gt;$isBad&lt;/code&gt;, and &lt;code&gt;$isCancelled&lt;/code&gt; to use in these tests. There&amp;rsquo;s certainly a better way!&lt;/p&gt;
+
+&lt;p&gt;Instead, introduce a custom tag that allows for configurable formatting:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;CSTM_SPAN NAME=...&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is the associated filter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub span_filter {
+  my $text_ref = shift;
+  $$text_ref =~ s/&amp;lt;CSTM_SPAN\s+NAME=(.*?)\s*&amp;gt;
+                 /&amp;lt;span class=&#39;&amp;lt;TMPL_VAR NAME=$1_class&amp;gt;&#39;&amp;gt;
+                    &amp;lt;TMPL_VAR NAME=$1&amp;gt;
+                  &amp;lt;\/span&amp;gt;
+                 /gx;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you use this custom tag in your template as &lt;code&gt;&amp;lt;CSTM_SPAN NAME=account&amp;gt;&lt;/code&gt;, then the template in the intermediate state, &lt;em&gt;after&lt;/em&gt; filter application, but &lt;em&gt;before&lt;/em&gt; template parameter substitution, will look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;span class=&#39;&amp;lt;TMPL_VAR NAME=account_class&amp;gt;&#39;&amp;gt;
+  &amp;lt;TMPL_VAR NAME=account&amp;gt;
+&amp;lt;/span&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The original single custom tag has expanded into an HTML &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt; tag wrapping the actual dynamic content. The &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt; defines a CSS class to provide formatting to the dynamic content. The &lt;em&gt;name&lt;/em&gt; of the CSS class itself is dynamic, too&amp;ndash;so that you can select the classes &lt;code&gt;.bad&lt;/code&gt; or &lt;code&gt;.good&lt;/code&gt; depending on the value of the account status. The name of the CSS class comes from the name of the displayed parameter. If this class is defined in a stylesheet or within the HTML document itself, a CSS-capable client will apply it to the dynamic text as expected.&lt;/p&gt;
+
+&lt;p&gt;In other words, the innocuous &lt;code&gt;&amp;lt;CSTM_SPAN&amp;gt;&lt;/code&gt; tag actually requires &lt;em&gt;two&lt;/em&gt; parameters: one containing the text to display and the other specifying the CSS class to apply. All you need to do is to set the &lt;code&gt;account_class&lt;/code&gt; parameter to the appropriate value in Perl code (and, of course, define the CSS classes somewhere in the stylesheet.)&lt;/p&gt;
+
+&lt;p&gt;Here is a slick way to stay in control doing this. You can call the &lt;code&gt;param()&lt;/code&gt; function either with individual name/value-pairs (as I have shown before), or with a hash-ref: &lt;code&gt;$tpl-&amp;gt;param( { key1 =&amp;gt; value1, key2 =&amp;gt; value2 } )&lt;/code&gt;. In other words, rather than calling &lt;code&gt;param()&lt;/code&gt; repeatedly throughout your code, setting individual parameters, you can build up one large hash, containing &lt;em&gt;all&lt;/em&gt; parameters, and then pass it to the template in a single call.&lt;/p&gt;
+
+&lt;p&gt;Now you can apply the filter trick that worked so well for the template itself, on the &lt;em&gt;parameters&lt;/em&gt; as well! In other words, before calling &lt;code&gt;$tpl-&amp;gt;param( \%parameter_hash)&lt;/code&gt;, pass the hash to a subroutine, which performs data filtering operations on the parameters. In this case, it adds the CSS class appropriate for the account status for each account in the data structure.&lt;/p&gt;
+
+&lt;p&gt;This approach centralizes all data-dependent display decisions in a single subroutine. If you add further status codes, or if you want to change the display class, there is only a single location to edit.&lt;/p&gt;
+
+&lt;p&gt;Here is a Perl program demonstrating these concepts:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/usr/bin/perl -w
+use HTML::Template;
+
+# Create the template object
+my $tpl = HTML::Template-&amp;gt;new( filename =&amp;gt; &#39;tmpl4.tpl&#39;,
+                               filter =&amp;gt; \&amp;amp;span_filter );
+
+# Build a data structure containing all the parameters
+my %params = ( title =&amp;gt; &amp;quot;Accounts&amp;quot;,
+               accounts =&amp;gt; [ { account =&amp;gt; &#39;Good&#39; }, { account =&amp;gt; &#39;Bad&#39; } ] );
+
+apply_display_logic( \%params );
+
+# Set all parameters for the template at once
+$tpl-&amp;gt;param( \%params );
+
+# Print
+print &amp;quot;Content-Type: text/html\n\n&amp;quot;, $tpl-&amp;gt;output;
+
+# ---
+
+sub span_filter {
+  my $text_ref = shift;
+  $$text_ref =~ s/&amp;lt;CSTM_SPAN\s+NAME=(.*?)\s*&amp;gt;
+                 /&amp;lt;span class=&#39;&amp;lt;TMPL_VAR NAME=$1_class&amp;gt;&#39;&amp;gt;
+                    &amp;lt;TMPL_VAR NAME=$1&amp;gt;
+                  &amp;lt;\/span&amp;gt;
+                 /gx;
+}
+
+sub apply_display_logic {
+  my $hash_ref = shift;
+
+  my %account_classes = ( Good =&amp;gt; &#39;good&#39;, Bad =&amp;gt; &#39;bad&#39; );
+
+  foreach my $acc ( @{ $hash_ref-&amp;gt;{ accounts } } ) {
+    $acc-&amp;gt;{account_class} = $account_classes{ $acc-&amp;gt;{account} };
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;happens&#34;&gt;#%@$! Happens&lt;/h3&gt;
+
+&lt;p&gt;When I first explained this idea to a colleague, his reaction was: &amp;ldquo;Great. You go down that path and you are going to end up with JSP. Is that what you want?&amp;rdquo; To which my response was: &amp;ldquo;Well, &lt;em&gt;fertilizer&lt;/em&gt; happens.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;GUI development is a pain. Always. You cannot avoid all issues regarding the separation of presentation and logic in GUI development. The challenge in my opinion is therefore not to find the &lt;em&gt;ideal&lt;/em&gt; web development framework, but the &lt;em&gt;optimal&lt;/em&gt; one for the task at hand.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;HTML::Template&lt;/code&gt; is very, very good for rather simple, minimum fuss, straightforward websites (of which there are significantly more than anyone might want to admit). It is particularly well-suited for reports and stats. In this application domain, the ability to the define custom tags to take care of formatting and special presentation issues is a distinct advantage.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;In the second part of this series, I will take these ideas a step further and explore how to use &lt;code&gt;HTML::Template&lt;/code&gt; to create GUI-like &lt;em&gt;widgets&lt;/em&gt; in a web/CGI situation.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

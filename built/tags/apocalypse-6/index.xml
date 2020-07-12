@@ -1,0 +1,1931 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Apocalypse 6 on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/apocalypse-6/</link>
+    <description>Recent content in Apocalypse 6 on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 29 Jul 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/apocalypse-6/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Exegesis 6</title>
+      <link>http://localhost:1313/pub/2003/07/29/exegesis6.html/</link>
+      <pubDate>Tue, 29 Jul 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/07/29/exegesis6.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;As soon as she walked through my door I knew her type: she was an argument waiting to happen. I wondered if the argument was required&amp;hellip; or merely optional? Guess I&amp;rsquo;d know the parameters soon enough.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;&amp;ldquo;I&amp;rsquo;m Star At Data,&amp;rdquo; she offered.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;She made it sound like a pass. But was the pass by name? Or by position?&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;&amp;ldquo;I think someone&amp;rsquo;s trying to execute me. Some caller.&amp;rdquo;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;&amp;ldquo;Okay, I&amp;rsquo;ll see what I can find out. Meanwhile, we&amp;rsquo;re gonna have to limit the scope of your accessibility.&amp;rdquo;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;&amp;ldquo;I&amp;rsquo;d prefer not to be bound like that,&amp;rdquo; she replied.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;&amp;ldquo;I see you know my methods,&amp;rdquo; I shot back.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;She just stared at me, like I was a block. Suddenly I wasn&amp;rsquo;t surprised someone wanted to dispatch her.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;&amp;ldquo;I&amp;rsquo;ll return later,&amp;rdquo; she purred. &amp;ldquo;Meanwhile, I&amp;rsquo;m counting on you to give me some closure.&amp;rdquo;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;It was gonna be another routine investigation.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;— Dashiell Hammett, &amp;ldquo;The Maltese Camel&amp;rdquo;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This Exegesis explores the new subroutine semantics described in Apocalypse 6. Those new semantics greatly increase the power and flexibility of subroutine definitions, providing required and optional formal parameters, named and positional arguments, a new and extended operator overloading syntax, a far more sophisticated type system, multiple dispatch, compile-time macros, currying, and subroutine wrappers.&lt;/p&gt;
+
+&lt;p&gt;As if that weren&amp;rsquo;t bounty enough, Apocalypse 6 also covers the object-oriented subroutines: methods and submethods. We will, however, defer a discussion of those until Exegesis 12.&lt;/p&gt;
+
+&lt;h3 id=&#34;playing-our-parts&#34;&gt;Playing Our Parts&lt;/h3&gt;
+
+&lt;p&gt;Suppose we want to be able to partition a list into two arrays (hereafter known as &amp;ldquo;sheep&amp;rdquo; and &amp;ldquo;goats&amp;rdquo;), according to some user-supplied criterion. We&amp;rsquo;ll call the necessary subroutine &lt;code&gt;&amp;amp;part&lt;/code&gt;, because it *part*itions a list into two *part*s.&lt;/p&gt;
+
+&lt;p&gt;In the most general case, we could specify how &lt;code&gt;&amp;amp;part&lt;/code&gt; splits the list up by passing it a subroutine. &lt;code&gt;&amp;amp;part&lt;/code&gt; could then call that subroutine for each element, placing the element in the &amp;ldquo;sheep&amp;rdquo; array if the subroutine returns true, and into the &amp;ldquo;goats&amp;rdquo; array otherwise. It would then return a list of references to the two resulting arrays.&lt;/p&gt;
+
+&lt;p&gt;For example, calling:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part &amp;amp;is_feline, @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;would result in &lt;code&gt;$cats&lt;/code&gt; being assigned a reference to an array containing all the animals that are feline and &lt;code&gt;$chattels&lt;/code&gt; being assigned a reference to an array containing everything else that exists merely for the convenience of cats.&lt;/p&gt;
+
+&lt;p&gt;Note that in the above example (and throughout the remainder of this discussion), when we&amp;rsquo;re talking about a subroutine as an object in its own right, we&amp;rsquo;ll use the &lt;code&gt;&amp;amp;&lt;/code&gt; sigil; but when we&amp;rsquo;re talking about a call to the subroutine, there will be no &lt;code&gt;&amp;amp;&lt;/code&gt; before its name. That&amp;rsquo;s a distinction Perl 6 enforces too: subroutine calls never have an ampersand; references to the corresponding &lt;code&gt;Code&lt;/code&gt; object always do.&lt;/p&gt;
+
+&lt;h3 id=&#34;part-the-first&#34;&gt;Part: The First&lt;/h3&gt;
+
+&lt;p&gt;The Perl 6 implementation of &lt;code&gt;&amp;amp;part&lt;/code&gt; would therefore be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Code $is_sheep, *@data) {
+    my (@sheep, @goats);
+    for @data {
+        if $is_sheep($_) { push @sheep, $_ }
+        else             { push @goats, $_ }
+    }
+    return (\@sheep, \@goats);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As in Perl 5, the &lt;code&gt;sub&lt;/code&gt; keyword declares a subroutine. As in Perl 5, the name of the subroutine follows the &lt;code&gt;sub&lt;/code&gt; and — assuming that name doesn&amp;rsquo;t include a package qualifier — the resulting subroutine is installed into the current package.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Un&lt;/strong&gt;like Perl 5, in Perl 6 we are allowed to specify a formal parameter list after the subroutine&amp;rsquo;s name. This list consists of zero or more parameter variables. Each of these parameter variables is really a lexical variable declaration, but because they&amp;rsquo;re in a parameter list we don&amp;rsquo;t need to (and aren&amp;rsquo;t allowed to!) use the keyword &lt;code&gt;my&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Just as with a regular variable, each parameter can be given a storage type, indicating what kind of value it is allowed to store. In the above example, for instance, the &lt;code&gt;$is_sheep&lt;/code&gt; parameter is given the type &lt;code&gt;Code&lt;/code&gt;, indicating that it is restricted to objects of that type (i.e. the first argument must be a subroutine or block).&lt;/p&gt;
+
+&lt;p&gt;Each of these parameter variables is automatically scoped to the body of the subroutine, where it can be used to access the arguments with which the subroutine was called.&lt;/p&gt;
+
+&lt;p&gt;A word about terminology: an &amp;ldquo;argument&amp;rdquo; is a item in the list of data that is passed as part of a subroutine call. A &amp;ldquo;parameter&amp;rdquo; is a special variable inside the subroutine itself. So the subroutine call sends arguments, which the subroutine then accesses via its parameters.&lt;/p&gt;
+
+&lt;p&gt;Perl 5 has parameters too, but they&amp;rsquo;re not user-specifiable. They&amp;rsquo;re always called &lt;code&gt;$_[0]&lt;/code&gt;, &lt;code&gt;$_[1]&lt;/code&gt;, &lt;code&gt;$_[2]&lt;/code&gt;, etc.&lt;/p&gt;
+
+&lt;h4 id=&#34;not-so-secret-alias&#34;&gt;Not-So-Secret Alias&lt;/h4&gt;
+
+&lt;p&gt;However, one way in which Perl 5 and Perl 6 parameters &lt;em&gt;are&lt;/em&gt; similar is that, unlike Certain Other Languages, Perl parameters don&amp;rsquo;t receive copies of their respective arguments. Instead, Perl parameters become &lt;em&gt;aliases&lt;/em&gt; for the corresponding arguments.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s already the case in Perl 5. So, for example, we can write a temperature conversion utility like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Perl 5 code...
+sub Fahrenheit_to_Kelvin {
+    $_[0] -= 32;
+    $_[0] /= 1.8;
+    $_[0] += 273.15;
+}
+
+# and later...
+
+Fahrenheit_to_Kelvin($reactor_temp);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When the subroutine is called, within the body of &lt;code&gt;&amp;amp;Fahrenheit_to_Kelvin&lt;/code&gt; the &lt;code&gt;$_[0]&lt;/code&gt; variable becomes just another name for &lt;code&gt;$reactor_temp&lt;/code&gt;. So the changes the subroutine makes to &lt;code&gt;$_[0]&lt;/code&gt; are really being made to &lt;code&gt;$reactor_temp&lt;/code&gt;, and at the end of the call &lt;code&gt;$reactor_temp&lt;/code&gt; has been converted to the new temperature scale.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s very handy when we intend to change the values of arguments (as in the above example), but it&amp;rsquo;s potentially a very nasty trap too. Many programmers, accustomed to the pass-by-copy semantics of other languages, will unconsciously fall into the habit of treating the contents of &lt;code&gt;$_[0]&lt;/code&gt; as if they were a copy. Eventually that will lead to some subroutine unintentionally changing one of its arguments — a bug that is often very hard to diagnose and frequently even harder to track down.&lt;/p&gt;
+
+&lt;p&gt;So Perl 6 modifies the way parameters and arguments interact. Explicit parameters are still aliases to the original arguments, but in Perl 6 they&amp;rsquo;re &lt;strong&gt;constant&lt;/strong&gt; aliases by default. That means, unless we specifically tell Perl 6 otherwise, it&amp;rsquo;s illegal to change an argument by modifying the corresponding parameter within a subroutine.&lt;/p&gt;
+
+&lt;p&gt;All of which means that a the naïve translation of &lt;code&gt;&amp;amp;Fahrenheit_to_Kelvin&lt;/code&gt; to Perl 6 isn&amp;rsquo;t going to work:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Perl 6 code...
+sub Fahrenheit_to_Kelvin(Num $temp) {
+    $temp -= 32;
+    $temp /= 1.8;
+    $temp += 273.15;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s because &lt;code&gt;$temp&lt;/code&gt; (and hence the actual value it&amp;rsquo;s an alias for) is treated as a constant within the body of &lt;code&gt;&amp;amp;Fahrenheit_to_Kelvin&lt;/code&gt;. In fact, we&amp;rsquo;d get a compile time error message like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Cannot modify constant parameter ($temp) in &amp;amp;Fahrenheit_to_Kelvin
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we want to be able to modify arguments via Perl 6 parameters, we have to say so up front, by declaring them &lt;code&gt;is rw&lt;/code&gt; (&amp;ldquo;read-write&amp;rdquo;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub Fahrenheit_to_Kelvin (Num $temp is rw) {
+    $temp -= 32;
+    $temp /= 1.8;
+    $temp += 273.15;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This requires a few extra keystrokes when the old behaviour is needed, but saves a huge amount of hard-to-debug grief in the most common cases. As a bonus, an explicit &lt;code&gt;is rw&lt;/code&gt; declaration means that the compiler can generally catch mistakes like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$absolute_temp = Fahrenheit_to_Kelvin(212);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because we specified that the &lt;code&gt;$temp&lt;/code&gt; argument has to be read-writeable, the compiler can easily catch attempts to pass in a read-only value.&lt;/p&gt;
+
+&lt;p&gt;Alternatively, we might prefer that &lt;code&gt;$temp&lt;/code&gt; not be an alias at all. We might prefer that &lt;code&gt;&amp;amp;Fahrenheit_to_Kelvin&lt;/code&gt; take a &lt;em&gt;copy&lt;/em&gt; of its argument, which we could then modify without affecting the original, ultimately returning it as our converted value. We can do that too in Perl 6, using the &lt;code&gt;is copy&lt;/code&gt; trait:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub Fahrenheit_to_Kelvin(Num $temp is copy) {
+    $temp -= 32;
+    $temp /= 1.8;
+    $temp += 273.15;
+    return $temp;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;defining-the-parameters&#34;&gt;Defining the Parameters&lt;/h4&gt;
+
+&lt;p&gt;Meanwhile, back at the &lt;code&gt;&amp;amp;part&lt;/code&gt;, we have:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Code $is_sheep, *@data) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which means that &lt;code&gt;&amp;amp;part&lt;/code&gt; expects its first argument to be a scalar value of type &lt;code&gt;Code&lt;/code&gt; (or &lt;code&gt;Code&lt;/code&gt; reference). Within the subroutine that first argument will thereafter be accessed via the name &lt;code&gt;$is_sheep&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The second parameter (&lt;code&gt;*@data&lt;/code&gt;) is what&amp;rsquo;s known as a &amp;ldquo;slurpy array&amp;rdquo;. That is, it&amp;rsquo;s an array parameter with the special marker (&lt;code&gt;*&lt;/code&gt;) in front of it, indicating to the compiler that &lt;code&gt;@data&lt;/code&gt; is supposed to grab all the remaining arguments passed to &lt;code&gt;&amp;amp;part&lt;/code&gt; and make each element of &lt;code&gt;@data&lt;/code&gt; an alias to one of those arguments.&lt;/p&gt;
+
+&lt;p&gt;In other words, the &lt;code&gt;*@data&lt;/code&gt; parameter does just what &lt;code&gt;@_&lt;/code&gt; does in Perl 5: it grabs all the available arguments and makes its elements aliases for those arguments. The only differences are that in Perl 6 we&amp;rsquo;re allowed to give that slurpy array a sensible name, and we&amp;rsquo;re allowed to specify other individual parameters before it — to give separate sensible names to one or more of the preliminary arguments to the call.&lt;/p&gt;
+
+&lt;p&gt;But why (you&amp;rsquo;re probably wondering) do we need an asterisk for that? Surely if we had defined &lt;code&gt;&amp;amp;part&lt;/code&gt; like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Code $is_sheep, @data) {...}   # note: no asterisk on @data
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;the array in the second parameter slot would have slurped up all the remaining arguments anyway.&lt;/p&gt;
+
+&lt;p&gt;Well, no. Declaring a parameter to be a regular (non-slurpy) array tells the subroutine to expect the corresponding argument to be a actual array (or an array reference). So if &lt;code&gt;&amp;amp;part&lt;/code&gt; had been defined with its second parameter just &lt;code&gt;@data&lt;/code&gt; (rather than &lt;code&gt;*@data&lt;/code&gt;), then we could call it like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;part \&amp;amp;selector, @animal_sounds;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;part \&amp;amp;selector, [&amp;quot;woof&amp;quot;,&amp;quot;meow&amp;quot;,&amp;quot;ook!&amp;quot;];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;but not like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;part \&amp;amp;selector, &amp;quot;woof&amp;quot;, &amp;quot;meow&amp;quot;, &amp;quot;ook!&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In each case, the compiler would compare the type of the second argument with the type required by the second parameter (i.e. an &lt;code&gt;Array&lt;/code&gt;). In the first two cases, the types match and everything is copacetic. In the third case, the second argument is a string, not an array or array reference, so we get a compile-time error message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Type mismatch in call to &amp;amp;part: @data expects Array but got Str instead
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another way of thinking about the difference between slurpy and regular parameters is to realize that a slurpy parameter imposes a list (i.e. flattening) context on the corresponding arguments, whereas a regular, non-slurpy parameter doesn&amp;rsquo;t flatten or listify. Instead, it insists on a single argument of the correct type.&lt;/p&gt;
+
+&lt;p&gt;So, if we want &lt;code&gt;&amp;amp;part&lt;/code&gt; to handle raw lists as data, we need to tell the &lt;code&gt;@data&lt;/code&gt; parameter to take whatever it finds — array or list — and flatten everything down to a list. That&amp;rsquo;s what the asterisk on &lt;code&gt;*@data&lt;/code&gt; does.&lt;/p&gt;
+
+&lt;p&gt;Because of that all-you-can-eat behaviour, slurpy arrays like this are generally placed at the very end of the parameter list and used to collect data for the subroutine. The preceding non-slurpy arguments generally tell the subroutine &lt;em&gt;what to do&lt;/em&gt;; the slurpy array generally tells it &lt;em&gt;what to do it to&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;splats-and-slurps&#34;&gt;Splats and Slurps&lt;/h4&gt;
+
+&lt;p&gt;Another aspect of Perl 6&amp;rsquo;s distinction between slurpy and non-slurpy parameters can be seen when we write a subroutine that takes multiple scalar parameters, then try to pass an array to that subroutine.&lt;/p&gt;
+
+&lt;p&gt;For example, suppose we wrote:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub log($message, $date, $time) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we happen to have the date and time in a handy array, we might expect that we could just call &lt;code&gt;log&lt;/code&gt; like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;log(&amp;quot;Starting up...&amp;quot;, @date_and_time);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We might then be surprised when this fails even to compile.&lt;/p&gt;
+
+&lt;p&gt;The problem is that each of &lt;code&gt;&amp;amp;log&lt;/code&gt;&amp;rsquo;s three scalar parameters imposes a scalar context on the corresponding argument in any call to &lt;code&gt;log&lt;/code&gt;. So &lt;code&gt;&amp;quot;Starting up...&amp;quot;&lt;/code&gt; is first evaluated in the scalar context imposed by the &lt;code&gt;$message&lt;/code&gt; parameter and the resulting string is bound to &lt;code&gt;$message&lt;/code&gt;. Then &lt;code&gt;@date_and_time&lt;/code&gt; is evaluated in the scalar context imposed by &lt;code&gt;$date&lt;/code&gt;, and the resulting array reference is bound to &lt;code&gt;$date&lt;/code&gt;. Then the compiler discovers that there is no third argument to bind to the &lt;code&gt;$time&lt;/code&gt; parameter and kills your program.&lt;/p&gt;
+
+&lt;p&gt;Of course, it &lt;strong&gt;has&lt;/strong&gt; to work that way, or we don&amp;rsquo;t get the ever-so-useful &amp;ldquo;array parameter takes an unflattened array argument&amp;rdquo; behaviour described earlier. Unfortunately, that otherwise admirable behaviour is actually getting in the way here and preventing &lt;code&gt;@date_and_time&lt;/code&gt; from flattening as we want.&lt;/p&gt;
+
+&lt;p&gt;So Perl 6 also provides a simple way of explicitly flattening an array (or a hash for that matter): the unary prefix &lt;code&gt;*&lt;/code&gt; operator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;log(&amp;quot;Starting up...&amp;quot;, *@date_and_time);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This operator (known as &amp;ldquo;splat&amp;rdquo;) simply flattens its argument into a list. Since it&amp;rsquo;s a unary operator, it does that flattening &lt;strong&gt;before&lt;/strong&gt; the arguments are bound to their respective parameters.&lt;/p&gt;
+
+&lt;p&gt;The syntactic similarity of a &amp;ldquo;slurpy&amp;rdquo; &lt;code&gt;*&lt;/code&gt; in a parameter list, and a &amp;ldquo;splatty&amp;rdquo; &lt;code&gt;*&lt;/code&gt; in an argument list is quite deliberate. It reflects a behavioral similarity: just as a slurpy asterisk implicitly flattens any argument to which its parameter is bound, so too a splatty asterisk explicitly flattens any argument to which it is applied.&lt;/p&gt;
+
+&lt;h4 id=&#34;i-do-declare&#34;&gt;I Do Declare&lt;/h4&gt;
+
+&lt;p&gt;By the way, take another look at those examples above — the ones with the &lt;code&gt;{...}&lt;/code&gt; where their subroutine bodies should be. Those dots aren&amp;rsquo;t just metasyntactic; they&amp;rsquo;re real executable Perl 6 code. A subroutine definition with a &lt;code&gt;{...}&lt;/code&gt; for its body isn&amp;rsquo;t actually a &lt;em&gt;definition&lt;/em&gt; at all. It&amp;rsquo;s a &lt;em&gt;declaration&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;In the same way that the Perl 5 declaration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Perl 5 code...
+sub part;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;states that there exists a subroutine &lt;code&gt;&amp;amp;part&lt;/code&gt;, without actually saying how it&amp;rsquo;s implemented, so too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Perl 6 code...
+sub part (Code $is_sheep, *@data) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;states that there exists a subroutine &lt;code&gt;&amp;amp;part&lt;/code&gt; that takes a &lt;code&gt;Code&lt;/code&gt; object and a list of data, without saying how it&amp;rsquo;s implemented. In fact, the old &lt;code&gt;sub part;&lt;/code&gt; syntax is no longer allowed; in Perl 6 you have to yada-yada-yada when you&amp;rsquo;re making a declaration.&lt;/p&gt;
+
+&lt;h4 id=&#34;body-parts&#34;&gt;Body Parts&lt;/h4&gt;
+
+&lt;p&gt;With the parameter list taking care of getting the right arguments into the right parameters in the right way, the body of the &lt;code&gt;&amp;amp;part&lt;/code&gt; subroutine is then quite straightforward:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+    my (@sheep, @goats);
+    for @data {
+        if $is_sheep($_) { push @sheep, $_ }
+        else             { push @goats, $_ }
+    }
+    return (\@sheep, \@goats);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;According to the original specification, we need to return references to two arrays. So we first create those arrays. Then we iterate through each element of the data (which the &lt;code&gt;for&lt;/code&gt; aliases to &lt;code&gt;$_&lt;/code&gt;, just as in Perl 5). For each element, we take the &lt;code&gt;Code&lt;/code&gt; object that was passed as &lt;code&gt;$is_sheep&lt;/code&gt; (let&amp;rsquo;s just call it the &lt;em&gt;selector&lt;/em&gt; from now on) and we call it, passing the current data element. If the selector returns true, we push the data element onto the array of &amp;ldquo;sheep&amp;rdquo;, otherwise it is appended to the list of &amp;ldquo;goats&amp;rdquo;. Once all the data has been divvied up, we return references to the two arrays.&lt;/p&gt;
+
+&lt;p&gt;Note that, if this were Perl 5, we&amp;rsquo;d have to unpack the &lt;code&gt;@_&lt;/code&gt; array into a list of lexical variables and then explicitly check that &lt;code&gt;$is_sheep&lt;/code&gt; is a valid &lt;code&gt;Code&lt;/code&gt; object. In the Perl 6 version there&amp;rsquo;s no &lt;code&gt;@_&lt;/code&gt;, the parameters are already lexicals, and the type-checking is handled automatically.&lt;/p&gt;
+
+&lt;h4 id=&#34;call-of-the-wild&#34;&gt;Call of the Wild&lt;/h4&gt;
+
+&lt;p&gt;With the explicit parameter list in place, we can use &lt;code&gt;&amp;amp;part&lt;/code&gt; in a variety of ways. If we already have a subroutine that is a suitable test:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub is_feline ($animal) {
+    return $animal.isa(Cat);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then we can just pass that to &lt;code&gt;&amp;amp;part&lt;/code&gt;, along with the data to be partitioned, then grab the two array references that come back:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part &amp;amp;is_feline, @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This works fine, because the first parameter of &lt;code&gt;&amp;amp;part&lt;/code&gt; expects a &lt;code&gt;Code&lt;/code&gt; object, and that&amp;rsquo;s exactly what &lt;code&gt;&amp;amp;is_feline&lt;/code&gt; is. Note that we couldn&amp;rsquo;t just put &lt;code&gt;is_feline&lt;/code&gt; there (i.e. without the ampersand), since that would indicate a &lt;em&gt;call&lt;/em&gt; to &lt;code&gt;&amp;amp;is_feline&lt;/code&gt;, rather than a reference to it.&lt;/p&gt;
+
+&lt;p&gt;In Perl 5 we&amp;rsquo;d have had to write &lt;code&gt;\&amp;amp;is_feline&lt;/code&gt; to get a reference to the subroutine. However, since the &lt;code&gt;$is_sheep&lt;/code&gt; parameter specifies that the first argument must be a scalar (i.e. it imposes a scalar context on the first argument slot), in Perl 6 we don&amp;rsquo;t have to create a subroutine reference explicitly. Putting a code object in the scalar context auto-magically enreferences it (just as an array or hash is automatically converted to a reference in scalar context). Of course, an explicit &lt;code&gt;Code&lt;/code&gt; reference is perfectly acceptable there too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part \&amp;amp;is_feline, @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Alternatively, rather than going to the trouble of declaring a separate subroutine to sort our sheep from our goats, we might prefer to conjure up a suitable (anonymous) subroutine on the spot:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part sub ($animal) { $animal.isa(Animal::Cat) }, @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;in-a-bind&#34;&gt;In a Bind&lt;/h4&gt;
+
+&lt;p&gt;So far we&amp;rsquo;ve always captured the two array references returned from the &lt;code&gt;part&lt;/code&gt; call by assigning the result of the call to a list of scalars. But we might instead prefer to bind them to actual arrays:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;(@cats, @chattels) := part sub($animal) { $animal.isa(Animal::Cat) }, @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using binding (&lt;code&gt;:=&lt;/code&gt;) instead of assignment (&lt;code&gt;=&lt;/code&gt;) causes &lt;code&gt;@cats&lt;/code&gt; and &lt;code&gt;@chattels&lt;/code&gt; to become aliases for the two anonymous arrays returned by &lt;code&gt;&amp;amp;part&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In fact, this aliasing of the two return values to &lt;code&gt;@cats&lt;/code&gt; and &lt;code&gt;@chattels&lt;/code&gt; uses &lt;em&gt;exactly&lt;/em&gt; the same mechanism that is used to alias subroutine parameters to their corresponding arguments. We could almost think of the lefthand side of the &lt;code&gt;:=&lt;/code&gt; as a parameter list (in this case, consisting of two non-slurpy array parameters), and the righthand side of the &lt;code&gt;:=&lt;/code&gt; as being the corresponding argument list. The only difference is that the variables on the lefthand side of a &lt;code&gt;:=&lt;/code&gt; are not implicitly treated as constant.&lt;/p&gt;
+
+&lt;p&gt;One consequence of the similarities between binding and parameter passing is that we can put a slurpy array on the left of a binding:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;(@Good, $Bad, *@Ugly) := (@Adams, @Vin, @Chico, @OReilly, @Lee, @Luck, @Britt);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first pseudo-parameter (&lt;code&gt;@Good&lt;/code&gt;) on the left expects an array, so it binds to &lt;code&gt;@Adams&lt;/code&gt; from the list on the right.&lt;/p&gt;
+
+&lt;p&gt;The second pseudo-parameter (&lt;code&gt;$Bad&lt;/code&gt;) expects a scalar. That means it imposes a scalar context on the second element of the righthand list. So &lt;code&gt;@Vin&lt;/code&gt; evaluates to a reference to the original array and &lt;code&gt;$Bad&lt;/code&gt; becomes an alias for &lt;code&gt;\@Vin&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The final pseudo-parameter (&lt;code&gt;*@Ugly&lt;/code&gt;) is slurpy, so it expects the rest of the lefthand side to be a list it can slurp up. In order to ensure that, the slurpy asterisk causes the remaining pseudo-arguments on the right to be flattened into a list, whose elements are then aliased to successive elements of &lt;code&gt;@Ugly&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;who-shall-sit-in-judgment&#34;&gt;Who Shall Sit in Judgment?&lt;/h4&gt;
+
+&lt;p&gt;Conjuring up an anonymous subroutine in each call to &lt;code&gt;part&lt;/code&gt; is intrinsically neither good nor bad, but it sure is ugly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part sub($animal) { $animal.isa(Animal::Cat) }, @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Fortunately, there&amp;rsquo;s a cleaner way to specify the selector within the call to &lt;code&gt;part&lt;/code&gt;. We can use a &lt;em&gt;parameterized block&lt;/em&gt; instead:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part -&amp;gt; $animal { $animal.isa(Animal::Cat) } @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A parameterized block is just a normal brace-delimited block, except that you&amp;rsquo;re allowed to put a list of parameters out in front of it, preceded by an arrow (&lt;code&gt;-&amp;gt;&lt;/code&gt;). So the actual parameterized block in the above example is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;-&amp;gt; $animal { $animal.isa(Animal::Cat) }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In Perl 6, a block is a subspecies of &lt;code&gt;Code&lt;/code&gt; object, so it&amp;rsquo;s perfectly okay to pass a parameterized block as the first argument to &lt;code&gt;&amp;amp;part&lt;/code&gt;. Like a real subroutine, a parameterized block can be subsequently invoked and passed an argument list. The body of the &lt;code&gt;&amp;amp;part&lt;/code&gt; subroutine will continue to work just fine.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s important to realize that parameterized blocks &lt;em&gt;aren&amp;rsquo;t&lt;/em&gt; subroutines though. They&amp;rsquo;re blocks, and so there are important differences in their behaviour. The most important difference is that you can&amp;rsquo;t &lt;code&gt;return&lt;/code&gt; from a parameterized block, the way you can from a subroutine. For example, this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;part sub($animal) { return $animal.size &amp;lt; $breadbox }, @creatures
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;works fine, returning the result of each size comparison every time the anonymous subroutine is called within &lt;code&gt;&amp;amp;part&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;But in this &amp;ldquo;pointier&amp;rdquo; version:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;part -&amp;gt; $animal { return $animal.size &amp;lt; $breadbox } @creatures
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;the &lt;code&gt;return&lt;/code&gt; isn&amp;rsquo;t inside a nested subroutine; it&amp;rsquo;s inside a block. The first time the parameterized block is executed within &lt;code&gt;&amp;amp;part&lt;/code&gt; it causes the subroutine in which the block was defined (i.e. the subroutine that&amp;rsquo;s &lt;em&gt;calling&lt;/em&gt; &lt;code&gt;part&lt;/code&gt;) to return!&lt;/p&gt;
+
+&lt;p&gt;Oops.&lt;/p&gt;
+
+&lt;p&gt;The problem with that second example, of course, is not that we were too Lazy to write the full anonymous subroutine. The problem is that we weren&amp;rsquo;t Lazy enough: we forgot to &lt;em&gt;leave out&lt;/em&gt; the &lt;code&gt;return&lt;/code&gt;. Just like a Perl 5 &lt;code&gt;do&lt;/code&gt; or &lt;code&gt;eval&lt;/code&gt; block, a Perl 6 parameterized block evaluates to the value of the last statement executed within it. We only needed to say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;part -&amp;gt; $animal { $animal.size &amp;lt; $breadbox } @creatures
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note too that, because the parameterized block is a block, we don&amp;rsquo;t need to put a comma after it to separate it from the second argument. In fact, &lt;em&gt;anywhere&lt;/em&gt; a block is used as an argument to a subroutine, any comma before or after the block is optional.&lt;/p&gt;
+
+&lt;h4 id=&#34;cowabunga&#34;&gt;Cowabunga!&lt;/h4&gt;
+
+&lt;p&gt;Even with the slight abbreviation provided by using a parameterized block instead of an anonymous subroutine, it&amp;rsquo;s all too easy to lose track of the the actual data (i.e. &lt;code&gt;@animals&lt;/code&gt;) when it&amp;rsquo;s buried at the end of that long selector definition.&lt;/p&gt;
+
+&lt;p&gt;We can help it stand out a little better by using a new feature of Perl 6: the &amp;ldquo;pipeline&amp;rdquo; operator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part sub($animal) { $animal.isa(Animal::Cat) } &amp;lt;== @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;&amp;lt;==&lt;/code&gt; operator takes a subroutine &lt;em&gt;call&lt;/em&gt; as its lefthand argument and a list of data as its righthand arguments. The subroutine being called on the left must have a slurpy array parameter (e.g. &lt;code&gt;*@data&lt;/code&gt;) and the list on the operator&amp;rsquo;s right is then bound to that parameter.&lt;/p&gt;
+
+&lt;p&gt;In other words, a &lt;code&gt;&amp;lt;==&lt;/code&gt; in a subroutine call marks the end of the specific arguments and the start of the slurped data.&lt;/p&gt;
+
+&lt;p&gt;Pipelines are more interesting when there are several stages to the process, as in this Perl 6 version of the Schwartzian transform:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@shortest_first = map  { .key }                     # 4
+              &amp;lt;== sort { $^a.value &amp;lt;=&amp;gt; $^b.value }  # 3
+              &amp;lt;== map  { $_ =&amp;gt; .height }            # 2
+              &amp;lt;== @animals;                         # 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example takes the array &lt;code&gt;@animals&lt;/code&gt;, flattens it into a list (#1), pipes that list in as the data for a &lt;code&gt;map&lt;/code&gt; operation (#2), takes the resulting list of object/height pairs and pipes that in to the &lt;code&gt;sort&lt;/code&gt; (#3), then takes the resulting sorted list of pairs and &lt;code&gt;map&lt;/code&gt;s out just the sorted objects (#4).&lt;/p&gt;
+
+&lt;p&gt;Of course, since the data lists for all of these functions always come at the end of the call anyway, we could have just written that as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@shortest_first = map  { .key }                     # 4
+                  sort { $^a.value &amp;lt;=&amp;gt; $^b.value }  # 3
+                  map  { $_ =&amp;gt; .height }            # 2
+                  @animals;                         # 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But there&amp;rsquo;s no reason to stint ourselves: the pipelines cost nothing in performance, and often make the flow of data much clearer.&lt;/p&gt;
+
+&lt;p&gt;One problem that many people have with pipelined list processing techniques like the Schwartzian Transform is that the pipeline flows the &amp;ldquo;wrong&amp;rdquo; way: the code reads left-to-right/top-to-bottom but the data (and execution) runs right-to-left/bottom-to-top. Happily, Perl 6 has a solution for that too. It provides a &amp;ldquo;reversed&amp;rdquo; version of the pipeline operator, to make it easy to create left-to-right pipelines:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@animals ==&amp;gt; map  { $_ =&amp;gt; .height }              # 1
+         ==&amp;gt; sort { $^a.value &amp;lt;=&amp;gt; $^b.value }    # 2
+         ==&amp;gt; map  { .key }                       # 3
+         ==&amp;gt; @shortest_first;                    # 4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This version works exactly the same as the previous right-to-left/bottom-to-top examples, except that now the various components of the pipeline are written and performed in the &amp;ldquo;natural&amp;rdquo; order.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;==&amp;gt;&lt;/code&gt; operator is the mirror-image of &lt;code&gt;&amp;lt;==&lt;/code&gt;, both visually and in its behaviour. That is, it takes a subroutine call as its righthand argument and a list of data on its left, and binds the lefthand list to the slurpy array parameter of the subroutine being called on the right.&lt;/p&gt;
+
+&lt;p&gt;Note that this last example makes use of a special dispensation given to both pipeline operators. The argument on the &amp;ldquo;sharp&amp;rdquo; side is supposed to be a subroutine call. However, if it is a variable, or a list of variables, then the pipeline operator simply assigns the list from its &amp;ldquo;blunt&amp;rdquo; side to variable (or list) on its &amp;ldquo;sharp&amp;rdquo; side.&lt;/p&gt;
+
+&lt;p&gt;Hence, if we preferred to partition our animals left-to-right, we could write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@animals ==&amp;gt; part sub ($animal) { $animal.isa(Animal::Cat) } ==&amp;gt; ($cats, $chattels);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;the-incredible-shrinking-selector&#34;&gt;The Incredible Shrinking Selector&lt;/h4&gt;
+
+&lt;p&gt;Of course, even with a parameterized block instead of an anonymous subroutine, the definition of the selector argument is still klunky:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part -&amp;gt; $animal { $animal.isa(Animal::Cat) } @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But it doesn&amp;rsquo;t have to be so intrusive. There&amp;rsquo;s another way to create a parameterized block. Instead of explicitly enumerating the parameters after a &lt;code&gt;-&amp;gt;&lt;/code&gt;, we could use &lt;em&gt;placeholder variables&lt;/em&gt; instead.&lt;/p&gt;
+
+&lt;p&gt;As explained in Apocalypse 4, a placeholder variable is one whose sigil is immediately followed by a caret (&lt;code&gt;^&lt;/code&gt;). Any block containing one or more placeholder variables is automatically a parameterized block, without the need for an explicit &lt;code&gt;-&amp;gt;&lt;/code&gt; or parameter list. Instead, the block&amp;rsquo;s parameter list is determined automatically from the set of placeholder variables enclosed by the block&amp;rsquo;s braces.&lt;/p&gt;
+
+&lt;p&gt;We could simplify our partitioning to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part { $^animal.isa(Animal::Cat) }
+@animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here &lt;code&gt;$^animal&lt;/code&gt; is a placeholder, so the block immediately surrounding it becomes a parameterized block — in this case with exactly one parameter.&lt;/p&gt;
+
+&lt;p&gt;Better still, any block containing a &lt;code&gt;$_&lt;/code&gt; is also a parameterized block — with a single parameter named &lt;code&gt;$_&lt;/code&gt;. We could dispense with the explicit placeholder and just write our partitioning statement:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part { $_.isa(Animal::Cat) }
+@animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which is really a shorthand for the parameterized block:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part -&amp;gt; $_ { $_.isa(Animal::Cat) }
+@animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Come to think of it, since we now have the unary dot operator (which calls a method using &lt;code&gt;$_&lt;/code&gt; as the invocant), we don&amp;rsquo;t even need the explicit &lt;code&gt;$_&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part { .isa(Animal::Cat) }
+@animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;part-the-second&#34;&gt;Part: The Second&lt;/h3&gt;
+
+&lt;p&gt;But wait, there&amp;rsquo;s even&amp;hellip;err&amp;hellip;less!&lt;/p&gt;
+
+&lt;p&gt;We could very easily extend &lt;code&gt;&amp;amp;part&lt;/code&gt; so that we don&amp;rsquo;t even need the block in that case; so that we could just pass the raw class in as the first parameter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part Animal::Cat, @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To do that, the type of the first parameter will have to become &lt;code&gt;Class&lt;/code&gt;, which is the (meta-)type of all classes. However, if we changed &lt;code&gt;&amp;amp;part&lt;/code&gt;&amp;rsquo;s parameter list in that way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Class $is_sheep, *@data) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then all our existing code that currently passes &lt;code&gt;Code&lt;/code&gt; objects as &lt;code&gt;&amp;amp;part&lt;/code&gt;&amp;rsquo;s first argument will break.&lt;/p&gt;
+
+&lt;p&gt;Somehow we need to be able to pass &lt;em&gt;either&lt;/em&gt; a &lt;code&gt;Code&lt;/code&gt; object &lt;em&gt;or&lt;/em&gt; a &lt;code&gt;Class&lt;/code&gt; as &lt;code&gt;&amp;amp;part&lt;/code&gt;&amp;rsquo;s first argument. To accomplish that, we need to take a short detour into&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;the-wonderful-world-of-junctions&#34;&gt;The Wonderful World of Junctions&lt;/h4&gt;
+
+&lt;p&gt;Perl 6 introduces an entirely new scalar data-type: the &lt;em&gt;junction&lt;/em&gt;. A junction is a single scalar value that can act like two or more values at once. So, for example, we can create a value that behaves like any of the values &lt;code&gt;1&lt;/code&gt;, &lt;code&gt;4&lt;/code&gt;, or &lt;code&gt;9&lt;/code&gt;, by writing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$monolith = any(1,4,9);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The scalar value returned by &lt;code&gt;any&lt;/code&gt; and subsequently stored in &lt;code&gt;$monolith&lt;/code&gt; is equal to &lt;code&gt;1&lt;/code&gt;. And at the same time it&amp;rsquo;s also equal to &lt;code&gt;4&lt;/code&gt;. And to &lt;code&gt;9&lt;/code&gt;. It&amp;rsquo;s equal to any of them. Hence the name of the &lt;code&gt;any&lt;/code&gt; function that we used to set it up.&lt;/p&gt;
+
+&lt;p&gt;What good it that? Well, if it&amp;rsquo;s equal to &amp;ldquo;any of them&amp;rdquo; then, with a single comparison, we can test if some other value is also equal to &amp;ldquo;any of them&amp;rdquo;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if $dave == any(1,4,9) { print &amp;quot;I&#39;m sorry, Dave, you&#39;re just a
+square.&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s considerably shorter (and more maintainable) than:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if $dave == 1 || $dave == 4 || $dave == 9 { print &amp;quot;I&#39;m sorry, Dave,
+you&#39;re just a square.&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It even reads more naturally.&lt;/p&gt;
+
+&lt;p&gt;Better still, Perl 6 provides an n-ary operator that builds the same kinds of junctions from its operands:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if $dave == 1|4|9 { print &amp;quot;I&#39;m sorry, Dave, you&#39;re just a square.&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once you get used to this notation, it too is very easy to follow: &lt;em&gt;if Dave equals 1 or 4 or 9&amp;hellip;&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;(Yes, the Perl 5 bitwise OR is still available in Perl 6; it&amp;rsquo;s just spelled differently now).&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;any&lt;/code&gt; function is more useful when the values under consideration are stored in a single array. For example, we could check whether a new value is bigger than any we&amp;rsquo;ve already seen:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if $newval &amp;gt; any(@oldvals) { print &amp;quot;$newval isn&#39;t the smallest.&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In Perl 5 we&amp;rsquo;d have to write that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if (grep { $newval &amp;gt; $_ } @oldvals) { print &amp;quot;$newval isn&#39;t the
+smallest.&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which isn&amp;rsquo;t as clear and isn&amp;rsquo;t as quick (since the &lt;code&gt;any&lt;/code&gt; version will short-circuit as soon as it knows the comparison is true, whereas the &lt;code&gt;grep&lt;/code&gt; version will churn through every element of &lt;code&gt;@oldvals&lt;/code&gt; no matter what).&lt;/p&gt;
+
+&lt;p&gt;An &lt;code&gt;any&lt;/code&gt; is even more useful when we have a collection of new values to check against the old ones. We can say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if any(@newvals) &amp;gt; any(@oldvals) { print &amp;quot;Already seen at least
+one smaller value.&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;instead of resorting to the horror of nested &lt;code&gt;grep&lt;/code&gt;s:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if (grep { my $old = $_; grep { $_ &amp;gt; $old } @newvals } @oldvals)
+{ print &amp;quot;Already seen at least one smaller value.&amp;quot; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What if we wanted to check whether &lt;em&gt;all&lt;/em&gt; of the new values were greater than any of the old ones? For that we use a different kind of junction — one that is equal to all our values at once (rather than just any one of them). We can create such a junction with the &lt;code&gt;all&lt;/code&gt; function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if all(@newvals) &amp;gt; any(@oldvals) {
+    print &amp;quot;These are all bigger than something already seen.&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We could also test if all the new values are greater than &lt;em&gt;all&lt;/em&gt; the old ones (not merely greater than at least one of them), with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if all(@newvals) &amp;gt; all(@oldvals) {
+    print &amp;quot;These are all bigger than everything already seen.&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s an operator for building &lt;code&gt;all&lt;/code&gt; junctions too. No prizes for guessing. It&amp;rsquo;s n-ary &lt;code&gt;&amp;amp;&lt;/code&gt;. So, if we needed to check that the maximal dimension of some object is within acceptable limits, we could say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if $max_dimension &amp;lt; $height &amp;amp; $width &amp;amp; $depth {
+    print &amp;quot;A maximal dimension of $max_dimension is okay.&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That last example is the same as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if $max_dimension &amp;lt; $height
+&amp;amp;&amp;amp; $max_dimension &amp;lt; $width
+&amp;amp;&amp;amp; $max_dimension &amp;lt; $depth {
+    print &amp;quot;A maximal dimension of $max_dimension is okay.&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;any&lt;/code&gt; junctions are known as &lt;em&gt;disjunctions&lt;/em&gt;, because they act like they&amp;rsquo;re in a boolean OR: &amp;ldquo;this OR that OR the other&amp;rdquo;. &lt;code&gt;all&lt;/code&gt; junctions are known as &lt;em&gt;conjunctions&lt;/em&gt;, because they have an implicit AND between their values — &amp;ldquo;this AND that AND the other&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;There are two other types of junction available in Perl 6: &lt;em&gt;abjunctions&lt;/em&gt; and &lt;em&gt;injunctions&lt;/em&gt;. An abjunction is created using the &lt;code&gt;one&lt;/code&gt; function and represents exactly one of its possible values at any given time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if one(@roots) == 0 {
+    print &amp;quot;Unique root to polynomial.&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In other words, it&amp;rsquo;s as though there were an implicit n-ary XOR between each pair of values.&lt;/p&gt;
+
+&lt;p&gt;Injunctions represent none of their values and hence are constructed with a built-in named &lt;code&gt;none&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if $passwd eq none(@previous_passwds) {
+    print &amp;quot;New password is acceptable.&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;They&amp;rsquo;re like a multi-part NEITHER&amp;hellip;NOR&amp;hellip;NOR&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;We can build a junction out of any scalar type. For example, strings:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $known_title = &#39;Mr&#39; | &#39;Mrs&#39; | &#39;Ms&#39; | &#39;Dr&#39; | &#39;Rev&#39;;
+
+if %person{title} ne $known_title {
+    print &amp;quot;Unknown title: %person{title}.&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or even &lt;code&gt;Code&lt;/code&gt; references:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my &amp;amp;ideal := \&amp;amp;tall &amp;amp; \&amp;amp;dark &amp;amp; \&amp;amp;handsome;
+
+if ideal($date) {   # Same as: if tall($date) &amp;amp;&amp;amp; dark($date) &amp;amp;&amp;amp; handsome($date)
+    swoon();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;the-best-of-both-worlds&#34;&gt;The Best of Both Worlds&lt;/h4&gt;
+
+&lt;p&gt;So a disjunction (&lt;code&gt;any&lt;/code&gt;) allows us to create a scalar value that is &lt;em&gt;either&lt;/em&gt; this &lt;em&gt;or&lt;/em&gt; that.&lt;/p&gt;
+
+&lt;p&gt;In Perl 6, classes (or, more specifically, &lt;code&gt;Class&lt;/code&gt; objects) are scalar values. So it follows that we can create a disjunction of classes. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Floor::Wax | Dessert::Topping
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;gives us a type that can be &lt;em&gt;either&lt;/em&gt; &lt;code&gt;Floor::Wax&lt;/code&gt; &lt;em&gt;or&lt;/em&gt; &lt;code&gt;Dessert::Topping&lt;/code&gt;. So a variable declared with that type:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my Floor::Wax|Dessert::Topping $shimmer;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;can store &lt;em&gt;either&lt;/em&gt; a &lt;code&gt;Floor::Wax&lt;/code&gt; object &lt;em&gt;or&lt;/em&gt; a &lt;code&gt;Dessert::Topping&lt;/code&gt; object. A parameter declared with that type:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub advertise(Floor::Wax|Dessert::Topping $shimmer) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;can be passed an argument that is of either type.&lt;/p&gt;
+
+&lt;h4 id=&#34;matcher-smarter-not-harder&#34;&gt;Matcher Smarter, not Harder&lt;/h4&gt;
+
+&lt;p&gt;So, in order to extend &lt;code&gt;&amp;amp;part&lt;/code&gt; to accept a &lt;code&gt;Class&lt;/code&gt; as its first argument, whilst allowing it to accept a &lt;code&gt;Code&lt;/code&gt; object in that position, we just use a type junction:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Code|Class $is_sheep, *@data) {
+    my (@sheep, @goats);
+    for @data {
+        when $is_sheep { push @sheep, $_ }
+        default        { push @goats, $_ }
+    }
+    return (\@sheep, \@goats);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are only two differences between this version and the previous one. The first difference is, of course, that we have changed the type of the first parameter. Previously it was &lt;code&gt;Code&lt;/code&gt;; now it&amp;rsquo;s &lt;code&gt;Code|Class&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The second change is in the body of the subroutine itself. We replaced the partitioning &lt;code&gt;if&lt;/code&gt; statement:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for @data {
+    if $is_sheep($_) { push @sheep, $_ }
+    else             { push @goats, $_ }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With a switch:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for @data {
+    when $is_sheep { push @sheep, $_ }
+    default        { push @goats, $_ }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now the actual work of categorizing each element as a &amp;ldquo;sheep&amp;rdquo; or a &amp;ldquo;goat&amp;rdquo; is done by the &lt;code&gt;when&lt;/code&gt; statement, because:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;when $is_sheep { push @sheep, $_ }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Is equivalent to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if $_ ~~ $is_sheep { push @sheep, $_; next }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When &lt;code&gt;$is_sheep&lt;/code&gt; is a subroutine reference, that implicit smart-match will simply pass &lt;code&gt;$_&lt;/code&gt; (the current data element) to the subroutine and then evaluate the return value as a boolean. On the other hand, when &lt;code&gt;$is_sheep&lt;/code&gt; is a class, the smart-match will check to see if the object in &lt;code&gt;$_&lt;/code&gt; belongs to the same class or some derived class.&lt;/p&gt;
+
+&lt;p&gt;The single &lt;code&gt;when&lt;/code&gt; statement handles either type of selector — &lt;code&gt;Code&lt;/code&gt; or &lt;code&gt;Class&lt;/code&gt; — auto-magically. That&amp;rsquo;s why it&amp;rsquo;s known as smart-matching.&lt;/p&gt;
+
+&lt;p&gt;Having now allowed class names as selectors, we can take the final step and simplify:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part { .isa(Animal::Cat) } @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part Animal::Cat, @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note, however, that the comma is back. Only blocks can appear in argument lists without accompanying commas, and the raw class isn&amp;rsquo;t a block.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;partitioning-rules&#34;&gt;Partitioning Rules!&lt;/h3&gt;
+
+&lt;p&gt;Now that the &lt;code&gt;when&lt;/code&gt;&amp;rsquo;s implicit smart-match is doing the hard work of deciding how to evaluate each data element against the selector, adding new kinds of selectors becomes trivial. For example, here&amp;rsquo;s a third version of &lt;code&gt;&amp;amp;part&lt;/code&gt; which also allows Perl 6 rules (i.e. patterns) to be used to partition a list:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Code|Class|Rule $is_sheep, *@data) {
+    my (@sheep, @goats);
+    for @data {
+        when $is_sheep { push @sheep, $_ }
+        default        { push @goats, $_ }
+    }
+    return (\@sheep, \@goats);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;All we needed to do was to tell &lt;code&gt;&amp;amp;part&lt;/code&gt; that its first argument was also allowed to be of type &lt;code&gt;Rule&lt;/code&gt;. That allows us to call &lt;code&gt;&amp;amp;part&lt;/code&gt; like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;($cats, $chattels) = part /meow/, @animal_sounds;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the scalar context imposed by the &lt;code&gt;$is_sheep&lt;/code&gt; parameter, the &lt;code&gt;/meow/&lt;/code&gt; pattern evaluates to a &lt;code&gt;Rule&lt;/code&gt; object (rather than immediately doing a match). That &lt;code&gt;Rule&lt;/code&gt; object is then bound to &lt;code&gt;$is_sheep&lt;/code&gt; and subsequently used as the selector in the &lt;code&gt;when&lt;/code&gt; statement.&lt;/p&gt;
+
+&lt;p&gt;Note that the body of this third version is exactly the same as that of the previous version. No change is required because, when it detects that &lt;code&gt;$is_sheep&lt;/code&gt; is a &lt;code&gt;Rule&lt;/code&gt; object, the &lt;code&gt;when&lt;/code&gt;&amp;rsquo;s smart-matching will auto-magically do a pattern match.&lt;/p&gt;
+
+&lt;p&gt;In the same way, we could further extend &lt;code&gt;&amp;amp;part&lt;/code&gt; to allow the user to pass a hash as the selector:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my %is_cat = (
+    cat =&amp;gt; 1, tiger =&amp;gt; 1, lion =&amp;gt; 1, leopard =&amp;gt; 1, # etc.
+);
+
+($cats, $chattels) = part %is_cat, @animal_names;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;simply by changing the parameter list of &lt;code&gt;&amp;amp;part&lt;/code&gt; to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Code|Class|Rule|Hash $is_sheep, *@data) {
+    # body exactly as before
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once again, the smart-match hidden in the &lt;code&gt;when&lt;/code&gt; statement just Does The Right Thing. On detecting a hash being matched against each datum, it will use the datum as a key, do a hash look up, and evaluate the truth of the corresponding entry in the hash.&lt;/p&gt;
+
+&lt;p&gt;Of course, the ever-increasing disjunction of allowable selector types is rapidly threatening to overwhelm the entire parameter list. At this point it would make sense to factor the type-junction out, give it a logical name, and use that name instead. To do that, we just write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;type Selector ::= Code | Class | Rule | Hash;
+
+sub part (Selector $is_sheep, *@data) {
+    # body exactly as before
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;::=&lt;/code&gt; binding operator is just like the &lt;code&gt;:=&lt;/code&gt; binding operator, except that it operates at compile-time. It&amp;rsquo;s the right choice here because types need to be fully defined at compile-time, so the compiler can do as much static type checking as possible.&lt;/p&gt;
+
+&lt;p&gt;The effect of the binding is to make the name &lt;code&gt;Selector&lt;/code&gt; an alias for &lt;code&gt;Code&lt;/code&gt; &lt;code&gt;|&lt;/code&gt; &lt;code&gt;Class&lt;/code&gt; &lt;code&gt;|&lt;/code&gt; &lt;code&gt;Rule&lt;/code&gt; &lt;code&gt;|&lt;/code&gt; &lt;code&gt;Hash&lt;/code&gt;. Then we can just use &lt;code&gt;Selector&lt;/code&gt; wherever we want that particular disjunctive type.&lt;/p&gt;
+
+&lt;h3 id=&#34;out-with-the-new-and-in-with-the-old&#34;&gt;Out with the New and in with the Old&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s take a step back for a moment.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ve already seen how powerful and clean these new-fangled explicit parameters can be, but maybe you still prefer the Perl 5 approach. After all, &lt;code&gt;@_&lt;/code&gt; was good enough fer Grandpappy when he lernt hisself Perl as a boy, dangnabit!&lt;/p&gt;
+
+&lt;p&gt;In Perl 6 we can still pass our arguments the old-fashioned way and then process them manually:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Still valid Perl 6...
+sub part {
+    # Unpack and verify args...
+    my ($is_sheep, @data) = @_;
+    croak &amp;quot;First argument to &amp;amp;part is not Code, Hash, Rule, or Class&amp;quot;
+        unless $is_sheep.isa(Selector);
+
+    # Then proceed as before...
+    my (@sheep, @goats);
+    for @data {
+        when $is_sheep { push @sheep, $_ }
+        default        { push @goats, $_ }
+    }
+    return (\@sheep, \@goats);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we declare a subroutine without a parameter list, Perl 6 automatically supplies one for us, consisting of a single slurpy array named &lt;code&gt;@_&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part {...}      # means: sub part (*@_) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That is, any un-parametered Perl 6 subroutine expects to flatten and then slurp up an arbitrarily long list of arguments, binding them to the elements of a parameter called &lt;code&gt;@_&lt;/code&gt;. That&amp;rsquo;s pretty much what a Perl 5 subroutine does. The only important difference is that in Perl 6 that slurpy &lt;code&gt;@_&lt;/code&gt; is, like all Perl 6 parameters, constant by default. So, if we want the &lt;em&gt;exact&lt;/em&gt; behaviour of a Perl 5 subroutine — including being able to modify elements of &lt;code&gt;@_&lt;/code&gt; — we need to be explicit:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (*@_ is rw) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that &amp;ldquo;declare a subroutine without a parameter list&amp;rdquo; &lt;em&gt;doesn&amp;rsquo;t&lt;/em&gt; mean &amp;ldquo;declare a subroutine with an empty parameter list&amp;rdquo;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part    {...}   # without parameter list
+sub part () {...}   # empty parameter list
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;An empty parameter list specifies that the subroutine takes exactly zero arguments, whereas a missing parameter list means it takes any number of arguments and binds them to the implicit parameter &lt;code&gt;@_&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, by using the implicit &lt;code&gt;@_&lt;/code&gt; instead of named parameters, we&amp;rsquo;re merely doing extra work that Perl 6 could do for us, as well as making the subroutine body more complex, harder to maintain, and slower. We&amp;rsquo;re also eliminating any chance of Perl 6 identifying argument mismatches at compile-time. And, unless we&amp;rsquo;re prepared to complexify the code even further, we&amp;rsquo;re preventing client code from using named arguments (see &amp;ldquo;Name your poison&amp;rdquo; below).&lt;/p&gt;
+
+&lt;p&gt;But this is Perl, not Fascism. We&amp;rsquo;re not in the business of imposing the One True Coding Style on Perl hackers. So if you want to pass your arguments the old-fashioned way, Perl 6 makes sure you still can.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-pair-of-lists-in-a-list-of-pairs&#34;&gt;A Pair of Lists in a List of Pairs&lt;/h3&gt;
+
+&lt;p&gt;Suppose now that, instead of getting a list of array references back, we wanted to get back a list of &lt;code&gt;key=&amp;gt;value&lt;/code&gt; pairs, where each value was one of the array refs and each key some kind of identifying label (we&amp;rsquo;ll see why that might be particularly handy soon).&lt;/p&gt;
+
+&lt;p&gt;The easiest solution is to use two fixed keys (for example, &amp;ldquo;&lt;code&gt;sheep&lt;/code&gt;&amp;rdquo; and &amp;ldquo;&lt;code&gt;goats&lt;/code&gt;&amp;rdquo;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Selector $is_sheep, *@data) returns List of Pair {
+    my %herd;
+    for @data {
+        when $is_sheep { push %herd{&amp;quot;sheep&amp;quot;}, $_ }
+        default        { push %herd{&amp;quot;goats&amp;quot;}, $_ }
+    }
+    return *%herd;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The parameter list of the subroutine is unchanged, but now we&amp;rsquo;ve added a return type after it, using the &lt;code&gt;returns&lt;/code&gt; keyword. That return type is &lt;code&gt;List of Pair&lt;/code&gt;, which tells the compiler that any &lt;code&gt;return&lt;/code&gt; statements in the subroutine are expected to return a list of values, each of which is a Perl 6 &lt;code&gt;key=&amp;gt;value&lt;/code&gt; pair.&lt;/p&gt;
+
+&lt;h4 id=&#34;parametric-types&#34;&gt;Parametric Types&lt;/h4&gt;
+
+&lt;p&gt;Note that this type is different from those we&amp;rsquo;ve seen so far: it&amp;rsquo;s compound. The &lt;code&gt;of Pair&lt;/code&gt; suffix is actually an argument that modifies the principal type &lt;code&gt;List&lt;/code&gt;, telling the container type what kind of value it&amp;rsquo;s allowed to store. This is possible because &lt;code&gt;List&lt;/code&gt; is a &lt;em&gt;parametric type&lt;/em&gt;. That is, it&amp;rsquo;s a type that can be specified with arguments that modify how it works. The idea is a little like C++ templates, except not quite so brain-meltingly complicated.&lt;/p&gt;
+
+&lt;p&gt;The specific parameters for a parametric type are normally specified in square brackets, immediately after the class name. The arguments that define a particular instance of the class are likewise passed in square brackets. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class Table[Class $of] {...}
+class Logfile[Str $filename] {...}
+module SecureOps[AuthKey $key] {...}
+
+# and later:
+
+sub typeset(Table of Contents $toc) {...}
+# Expects an object whose class is Table
+# and which stores Contents objects
+
+my Logfile[&amp;quot;./log&amp;quot;] $file;
+# $file can only store logfiles that log to ./log
+
+$plaintext = SecureOps[$KEY]::decode($cryptotext);
+# Only use &amp;amp;decode if our $KEY entitles us to
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that type names like &lt;code&gt;Table of Contents&lt;/code&gt; and &lt;code&gt;List of Pair&lt;/code&gt; are really just tidier ways to say &lt;code&gt;Table[of=&amp;gt;Contents]&lt;/code&gt; and &lt;code&gt;List[of=&amp;gt;Pair]&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;By convention, when we pass an argument to the &lt;code&gt;$of&lt;/code&gt; parameter of a parametric type, we&amp;rsquo;re telling that type what kind of value we&amp;rsquo;re expecting it to store. For example: whenever we access an element of &lt;code&gt;List of Pair&lt;/code&gt;, we expect to get back a &lt;code&gt;Pair&lt;/code&gt;. Similarly we could specify &lt;code&gt;List of Int&lt;/code&gt;, &lt;code&gt;Array of Str&lt;/code&gt;, or &lt;code&gt;Hash of Num&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Admittedly &lt;code&gt;List of Pair&lt;/code&gt; doesn&amp;rsquo;t seem &lt;em&gt;much&lt;/em&gt; tidier than &lt;code&gt;List(of=&amp;gt;Pair)&lt;/code&gt;, but as container types get more complex, the advantages start to become obvious. For example, consider a data structure consisting of an array of arrays of arrays of hashes of numbers (such as one might use to store, say, several years worth of daily climatic data). Using the &lt;code&gt;of&lt;/code&gt; notation that&amp;rsquo;s just:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;type Climate::Record ::= Array of Array of Array of Hash of Num;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Without the &lt;code&gt;of&lt;/code&gt; keyword, it&amp;rsquo;s:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;type Climate::Record ::= Array(of=&amp;gt;Array(of=&amp;gt;Array(of=&amp;gt;Hash(of=&amp;gt;Num))));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which is starting to look uncomfortably like Lisp.&lt;/p&gt;
+
+&lt;p&gt;Parametric types may have any number of parameters with any names we like, but only type parameters named &lt;code&gt;$of&lt;/code&gt; have special syntactic support built into Perl.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;tmtowtdeclarei&#34;&gt;TMTOWTDeclareI&lt;/h4&gt;
+
+&lt;p&gt;While we&amp;rsquo;re talking about type declarations, it&amp;rsquo;s worth noting that we could also have put &lt;code&gt;&amp;amp;part&lt;/code&gt;&amp;rsquo;s new return type out in front (just as we&amp;rsquo;ve been doing with variable and parameter types). However, this is only allowed for subroutines when the subroutine is explicitly scoped:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# lexical subroutine
+my List of Pair sub part (Selector $is_sheep, *@data) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# package subroutine
+our List of Pair sub part (Selector $is_sheep, *@data) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The return type goes between the scoping keyword (&lt;code&gt;my&lt;/code&gt; or &lt;code&gt;our&lt;/code&gt;) and the &lt;code&gt;sub&lt;/code&gt; keyword. And, of course, the &lt;code&gt;returns&lt;/code&gt; keyword is not used.&lt;/p&gt;
+
+&lt;p&gt;Contrariwise, we can also put variable/parameter type information &lt;em&gt;after&lt;/em&gt; the variable name. To do that, we use the &lt;code&gt;of&lt;/code&gt; keyword:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my sub part ($is_sheep of Selector, *@data) returns List of Pair {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This makes sense, when you think about it. As we saw above, &lt;code&gt;of&lt;/code&gt; tells the preceding container what type of value it&amp;rsquo;s supposed to store, so &lt;code&gt;$is_sheep of Selector&lt;/code&gt; tells &lt;code&gt;$is_sheep&lt;/code&gt; it&amp;rsquo;s supposed to store a &lt;code&gt;Selector&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;you-are-what-you-eat-not&#34;&gt;You Are What You Eat &amp;ndash; Not!&lt;/h4&gt;
+
+&lt;p&gt;Careful though: we have to remember to use &lt;code&gt;of&lt;/code&gt; there, not &lt;code&gt;is&lt;/code&gt;. It would be a mistake to write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my sub part ($is_sheep is Selector, *@data) returns List of Pair {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s because Perl 6 variables and parameters can be more precisely typed than variables in most other languages. Specifically, Perl 6 allows us to specify both the &lt;em&gt;storage type&lt;/em&gt; of a variable (i.e. what kinds of values it can contain) and the &lt;em&gt;implementation class&lt;/em&gt; of the variable (i.e. how the variable itself is actually implemented).&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;is&lt;/code&gt; keyword indicates what a particular container (variable, parameter, etc.) &lt;em&gt;is&lt;/em&gt; — namely, how it&amp;rsquo;s implemented and how it operates. Saying:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub bark(@dogs is Pack) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;specifies that, although the &lt;code&gt;@dogs&lt;/code&gt; parameter looks like an &lt;code&gt;Array&lt;/code&gt;, it&amp;rsquo;s actually implemented by the &lt;code&gt;Pack&lt;/code&gt; class instead.&lt;/p&gt;
+
+&lt;p&gt;That declaration is &lt;strong&gt;not&lt;/strong&gt; specifying that the &lt;code&gt;@dogs&lt;/code&gt; variable &lt;em&gt;stores&lt;/em&gt; &lt;code&gt;Pack&lt;/code&gt; objects. In fact, it&amp;rsquo;s not saying anything at all about what &lt;code&gt;@dogs&lt;/code&gt; stores. Since its storage type has been left unspecified, &lt;code&gt;@dogs&lt;/code&gt; inherits the default storage type — &lt;code&gt;Any&lt;/code&gt; — which allows its elements to store any kind of scalar value.&lt;/p&gt;
+
+&lt;p&gt;If we&amp;rsquo;d wanted to specify that &lt;code&gt;@dogs&lt;/code&gt; was a normal array, but that it can only store &lt;code&gt;Dog&lt;/code&gt; objects, we&amp;rsquo;d need to write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub bark(@dogs of Dog) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and if we&amp;rsquo;d wanted it to store &lt;code&gt;Dog&lt;/code&gt;s but be implemented by the &lt;code&gt;Pack&lt;/code&gt; class, we&amp;rsquo;d have to write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub bark(@dogs is Pack of Dog) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Appending &lt;code&gt;is SomeType&lt;/code&gt; to a variable or parameter is the Perl 6 equivalent of Perl 5&amp;rsquo;s &lt;code&gt;tie&lt;/code&gt; mechanism, except that the tying is part of the declaration. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my $Elvis is King of Rock&amp;amp;Roll;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;rather than a run-time function call like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Perl 5 code...
+my $Elvis;
+tie $Elvis, &#39;King&#39;, stores=&amp;gt;all(&#39;Rock&#39;,&#39;Roll&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In any case, the simple rule for &lt;code&gt;of&lt;/code&gt; vs &lt;code&gt;is&lt;/code&gt; is: &lt;em&gt;to say what a variable stores, use &lt;code&gt;of&lt;/code&gt;; to say how the variable itself works, use &lt;code&gt;is&lt;/code&gt;&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;many-happy-returns&#34;&gt;Many Happy Returns&lt;/h4&gt;
+
+&lt;p&gt;Meanwhile, we&amp;rsquo;re still attempting to create a version of &lt;code&gt;&amp;amp;part&lt;/code&gt; that returns a list of pairs. The easiest way to create and return a suitable list of pairs is to flatten a hash in a list context. This is precisely what the &lt;code&gt;return&lt;/code&gt; statement does:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;return *%herd;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;using the splatty star. Although, in this case, we could have simply written:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;return %herd;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;since the declared return type (&lt;code&gt;List of Pair&lt;/code&gt;) automatically imposes list context (and hence list flattening) on any &lt;code&gt;return&lt;/code&gt; statement within &lt;code&gt;&amp;amp;part&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, it will only make sense to return a flattened hash if we&amp;rsquo;ve already partitioned the original data into that hash. So the bodies of the &lt;code&gt;when&lt;/code&gt; and &lt;code&gt;default&lt;/code&gt; statements inside &lt;code&gt;&amp;amp;part&lt;/code&gt; have to be changed accordingly. Now, instead of pushing each element onto one of two separate arrays, we push each element onto one of the two arrays stored inside &lt;code&gt;%herd&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for @data {
+    when $is_sheep { push %herd{&amp;quot;sheep&amp;quot;}, $_ }
+    default        { push %herd{&amp;quot;goats&amp;quot;}, $_ }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;it-lives&#34;&gt;It Lives!!!!!&lt;/h4&gt;
+
+&lt;p&gt;Assuming that each of the hash entries (&lt;code&gt;%herd{&amp;quot;sheep&amp;quot;}&lt;/code&gt; and &lt;code&gt;%herd{&amp;quot;goats&amp;quot;}&lt;/code&gt;) will be storing a reference to one of the two arrays, we can simply push each data element onto the appropriate array.&lt;/p&gt;
+
+&lt;p&gt;In Perl 5 we&amp;rsquo;d have to dereference each of the array references inside our hash before we could push a new element onto it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Perl 5 code...
+push @{$herd{&amp;quot;sheep&amp;quot;}}, $_;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But in Perl 6, the first parameter of &lt;code&gt;push&lt;/code&gt; expects an array, so if we give it an array reference, the interpreter can work out that it needs to dereference that first argument. So we can just write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Perl 6 code...
+push %herd{&amp;quot;sheep&amp;quot;}, $_;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Remember that, in Perl 6, hashes keep their &lt;code&gt;%&lt;/code&gt; sigil, even when being indexed).&lt;/p&gt;
+
+&lt;p&gt;Initially, of course, the entries of &lt;code&gt;%herd&lt;/code&gt; don&amp;rsquo;t contain references to arrays at all; like all uninitialized hash entries, they contain &lt;code&gt;undef&lt;/code&gt;. But, because &lt;code&gt;push&lt;/code&gt; itself is defined like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub push (@array is rw, *@data) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;an actual read-writable array is expected as the first argument. If a scalar variable containing &lt;code&gt;undef&lt;/code&gt; is passed to such a parameter, Perl 6 detects the fact and autovivifies the necessary array, placing a reference to it into the previously undefined scalar argument. That behaviour makes it trivially easy to create subroutines that autovivify read/write arguments, in the same way that Perl 5&amp;rsquo;s &lt;code&gt;open&lt;/code&gt; does.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s also possible to declare a read/write parameter that &lt;em&gt;doesn&amp;rsquo;t&lt;/em&gt; autovivify in this way: using the &lt;code&gt;is ref&lt;/code&gt; trait instead of &lt;code&gt;is rw&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub push_only_if_real_array (@array is ref, *@data) {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;is ref&lt;/code&gt; still allows the parameter to be read from and written to, but throws an exception if the corresponding argument isn&amp;rsquo;t already a real referent of some kind.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-label-by-any-other-name&#34;&gt;A Label by Any Other Name&lt;/h3&gt;
+
+&lt;p&gt;Mandating fixed labels for the two arrays being returned seems a little inflexible, so we could add another — optional — parameter via which user-selected key names could be passed&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Selector $is_sheep,
+          Str ?@labels is dim(2) = &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;,
+          *@data
+         ) returns List of Pair
+{
+    my ($sheep, $goats) is constant = @labels;
+    my %herd = ($sheep=&amp;gt;[], $goats=&amp;gt;[]);
+    for @data {
+        when $is_sheep { push %herd{$sheep}, $_ }
+        default        { push %herd{$goats}, $_ }
+    }
+    return *%herd;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Optional parameters in Perl 6 are prefixed with a &lt;code&gt;?&lt;/code&gt; marker (just as slurpy parameters are prefixed with &lt;code&gt;*&lt;/code&gt;). Like required parameters, optional parameters are passed positionally, so the above example means that the second argument is expected to be an array of strings. This has important consequences for backwards compatibility — as we&amp;rsquo;ll see shortly.&lt;/p&gt;
+
+&lt;p&gt;As well as declaring it to be optional (using a leading &lt;code&gt;?&lt;/code&gt;), we also declare the &lt;code&gt;@labels&lt;/code&gt; parameter to have exactly two elements, by specifying the &lt;code&gt;is dim(2)&lt;/code&gt; trait. The &lt;code&gt;is dim&lt;/code&gt; trait takes one or more integer values. The number of values it&amp;rsquo;s given specifies the number of dimensions the array has; the values themselves specify how many elements long the array is in each dimension. For example, to create a four-dimensional array of 7x24x60x60 elements, we&amp;rsquo;d declare it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @seconds is dim(7,24,60,60);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the latest version of &lt;code&gt;&amp;amp;part&lt;/code&gt;, the &lt;code&gt;@labels is dim(2)&lt;/code&gt; declaration means that &lt;code&gt;@labels&lt;/code&gt; is a normal one-dimensional array, but that it has only two elements in that one dimension.&lt;/p&gt;
+
+&lt;p&gt;The final component of the declaration of &lt;code&gt;@labels&lt;/code&gt; is the specification of its default value. Any optional parameter may be given a default value, to which it will be bound if no corresponding argument is provided. The default value can be any expression that yields a value compatible with the type of the optional parameter.&lt;/p&gt;
+
+&lt;p&gt;In the above version of &lt;code&gt;&amp;amp;part&lt;/code&gt;, for the sake of backwards compatibility we make the optional &lt;code&gt;@labels&lt;/code&gt; default to the list of two strings &lt;code&gt;&amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;&lt;/code&gt;  (using the new Perl 6 list-of-strings syntax).&lt;/p&gt;
+
+&lt;p&gt;Thus if we provide an array of two strings explicitly, the two strings we provide will be used as keys for the two pairs returned. If we don&amp;rsquo;t specify the labels ourselves, &lt;code&gt;&amp;quot;sheep&amp;quot;&lt;/code&gt; and &lt;code&gt;&amp;quot;goats&amp;quot;&lt;/code&gt; will be used.&lt;/p&gt;
+
+&lt;h4 id=&#34;name-your-poison&#34;&gt;Name Your Poison&lt;/h4&gt;
+
+&lt;p&gt;With the latest version of &lt;code&gt;&amp;amp;part&lt;/code&gt; defined to return named pairs, we can now write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@parts = part Animal::Cat, &amp;lt;&amp;lt;cat chattel&amp;gt;&amp;gt;, @animals;
+#    returns: (cat=&amp;gt;[...], chattel=&amp;gt;[...])
+# instead of: (sheep=&amp;gt;[...], goats=&amp;gt;[...])
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first argument (&lt;code&gt;Animal::Cat&lt;/code&gt;) is bound to &lt;code&gt;&amp;amp;part&lt;/code&gt;&amp;rsquo;s &lt;code&gt;$is_sheep&lt;/code&gt; parameter (as before). The second argument (&lt;code&gt;&amp;lt;&amp;lt;cat chattel&amp;gt;&amp;gt;&lt;/code&gt;) is now bound to the optional &lt;code&gt;@labels&lt;/code&gt; parameter, leaving the &lt;code&gt;@animals&lt;/code&gt; argument to be flattened into a list and slurped up by the &lt;code&gt;@data&lt;/code&gt; parameter.&lt;/p&gt;
+
+&lt;p&gt;We could also pass some or all of the arguments as &lt;em&gt;named arguments&lt;/em&gt;. A named argument is simply a Perl 6 pair, where the key is the name of the intended parameter, and the value is the actual argument to be bound to that parameter. That makes sense: every parameter we ever declare has to have a name, so there&amp;rsquo;s no good reason why we shouldn&amp;rsquo;t be allowed to pass it an argument using that name to single it out.&lt;/p&gt;
+
+&lt;p&gt;An important restriction on named arguments is that they cannot come before positional arguments, or after any arguments that are bound to a slurpy array. Otherwise, there would be no efficient, single-pass way of working out which unnamed arguments belong to which parameters. Apart from that one overarching restriction (which Larry likes to think of as a zoning law), we&amp;rsquo;re free to pass named arguments in any order we like. That&amp;rsquo;s a huge advantage in any subroutine that takes a large number of parameters, because it means we no longer have to remember their order, just their names.&lt;/p&gt;
+
+&lt;p&gt;For example, using named arguments we could rewrite the above &lt;code&gt;part&lt;/code&gt; call as any of the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Use named argument to pass optional @labels argument...
+@parts = part Animal::Cat, labels =&amp;gt; &amp;lt;&amp;lt;cat chattel&amp;gt;&amp;gt;, @animals;
+
+# Use named argument to pass both @labels and @data arguments...
+@parts = part Animal::Cat, labels =&amp;gt; &amp;lt;&amp;lt;cat chattel&amp;gt;&amp;gt;, data =&amp;gt; @animals;
+
+# The order in which named arguments are passed doesn&#39;t matter...
+@parts = part Animal::Cat, data =&amp;gt; @animals, labels =&amp;gt; &amp;lt;&amp;lt;cat chattel&amp;gt;&amp;gt;;
+
+# Can pass *all* arguments by name...
+@parts = part is_sheep =&amp;gt; Animal::Cat,
+                labels =&amp;gt; &amp;lt;&amp;lt;cat chattel&amp;gt;&amp;gt;,
+                  data =&amp;gt; @animals;
+
+# And the order still doesn&#39;t matter...
+@parts = part data =&amp;gt; @animals,
+              labels =&amp;gt; &amp;lt;&amp;lt;cat chattel&amp;gt;&amp;gt;,
+              is_sheep =&amp;gt; Animal::Cat;
+
+# etc.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As long as we never put a named argument before a positional argument, or after any unnamed data for the slurpy array, the named arguments can appear in any convenient order. They can even be pulled out of a flattened hash:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@parts = part *%args;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;who-gets-the-last-piece-of-cake&#34;&gt;Who Gets the Last Piece of Cake?&lt;/h4&gt;
+
+&lt;p&gt;We&amp;rsquo;re making progress. Whether we pass its arguments by name or positionally, our call to &lt;code&gt;part&lt;/code&gt; produces two partitions of the original list. Those partitions now come back with convenient labels that we can specify via the optional &lt;code&gt;@labels&lt;/code&gt; parameter.&lt;/p&gt;
+
+&lt;p&gt;But now there&amp;rsquo;s a problem. Even though we explicitly marked it as optional, it turns out that things can go horribly wrong if we don&amp;rsquo;t actually supply that optional argument. Which is not very &amp;ldquo;optional&amp;rdquo;. Worse, it means there&amp;rsquo;s potentially a problem with every single legacy call to &lt;code&gt;part&lt;/code&gt; that was coded before we added the optional parameter.&lt;/p&gt;
+
+&lt;p&gt;For example, consider the call:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@pets = (&#39;Canis latrans&#39;, &#39;Felis sylvestris&#39;);
+
+@parts = part /:i felis/, @pets;
+
+# expected to return: (sheep=&amp;gt;[&#39;Felis sylvestris&#39;], goats=&amp;gt;[&#39;Canis latrans&#39;] )
+# actually returns:   (&#39;Canis latrans&#39;=&amp;gt;[], &#39;Felis sylvestris&#39;=&amp;gt;[])
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What went wrong?&lt;/p&gt;
+
+&lt;p&gt;Well, when the call to &lt;code&gt;part&lt;/code&gt; is matching its argument list against &lt;code&gt;&amp;amp;call&lt;/code&gt;&amp;rsquo;s parameter list, it works left-to-right as follows:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;The first parameter (&lt;code&gt;$is_sheep&lt;/code&gt;) is declared as a scalar of type &lt;code&gt;Selector&lt;/code&gt;, so the first argument must be a &lt;code&gt;Code&lt;/code&gt; or a &lt;code&gt;Class&lt;/code&gt; or a &lt;code&gt;Hash&lt;/code&gt; or a &lt;code&gt;Rule&lt;/code&gt;. It&amp;rsquo;s actually a &lt;code&gt;Rule&lt;/code&gt;, so the call mechanism binds that rule to &lt;code&gt;$is_sheep&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;The second parameter (&lt;code&gt;?@labels&lt;/code&gt;) is declared as an array of two strings, so the second argument must be an array of two strings. &lt;code&gt;@pets&lt;/code&gt; is an array of two strings, so we bind that array to &lt;code&gt;@labels&lt;/code&gt;. (Oops!)&lt;/li&gt;
+&lt;li&gt;The third parameter (&lt;code&gt;*@data&lt;/code&gt;) is declared as a slurpy array, so any remaining arguments should be flattened and bound to successive elements of &lt;code&gt;@data&lt;/code&gt;. There are no remaining arguments, so there&amp;rsquo;s nothing to flatten-and-bind, so &lt;code&gt;@data&lt;/code&gt; remains empty.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;That&amp;rsquo;s the problem. If we pass the arguments positionally and there are not enough of them to bind to every parameter, the parameters at the start of the parameter list are bound before those towards the end. Even if those earlier parameters are marked optional. In other words, argument binding is &amp;ldquo;greedy&amp;rdquo; and (for obvious efficiency reasons) it never backtracks to see if there might be better ways to match arguments to parameters. Which means, in this case, that our data is being preemptively &amp;ldquo;stolen&amp;rdquo; by our labels.&lt;/p&gt;
+
+&lt;h4 id=&#34;pipeline-to-the-rescue&#34;&gt;Pipeline to the Rescue!&lt;/h4&gt;
+
+&lt;p&gt;So in general (and in the above example in particular) we need some way of indicating that a positional argument belongs to the slurpy data, not to some preceding optional parameter. One way to do that is to pass the ambiguous argument by name:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@parts = part /:i felis/, data=&amp;gt;@pets;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then there can be no mistake about which argument belongs to what parameter.&lt;/p&gt;
+
+&lt;p&gt;But there&amp;rsquo;s also a purely positional way to tell the call to &lt;code&gt;part&lt;/code&gt; that &lt;code&gt;@pets&lt;/code&gt; belongs to the slurpy &lt;code&gt;@data&lt;/code&gt;, not to the optional &lt;code&gt;@labels&lt;/code&gt;. We can pipeline it directly there. After all, that&amp;rsquo;s precisely what the pipeline operator does: it binds the list on its blunt side to the slurpy array parameter of the call on its sharp side. So we could just write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@parts = part /:i felis/ &amp;lt;== @pets;
+
+# returns: (sheep=&amp;gt;[&#39;Felis sylvestris&#39;], goats=&amp;gt;[&#39;Canis latrans&#39;])
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because &lt;code&gt;@pets&lt;/code&gt; now appears on the blunt end of a pipeline, there&amp;rsquo;s no way it can be interpreted as anything other than the slurped data for the call to &lt;code&gt;part&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;a-natural-assumption&#34;&gt;A Natural Assumption&lt;/h4&gt;
+
+&lt;p&gt;Of course, as a solution to the problem of legacy code, this is highly sub-optimal. It requires that every single pre-existing call to &lt;code&gt;part&lt;/code&gt; be modified (by having a pipeline inserted). That will almost certainly be too painful.&lt;/p&gt;
+
+&lt;p&gt;Our new optional labels would be much more useful if their existence itself were also optional — if we could somehow add a single statement to the start of any legacy code file and thereby cause &lt;code&gt;&amp;amp;part&lt;/code&gt; to work like it used to in the good old days before labels. In other words, what we really want is an impostor &lt;code&gt;&amp;amp;part&lt;/code&gt; subroutine that pretends that it only has the original two parameters (&lt;code&gt;$is_sheep&lt;/code&gt; and &lt;code&gt;@data&lt;/code&gt;), but then when it&amp;rsquo;s called surreptitiously supplies an appropriate value for the new &lt;code&gt;@label&lt;/code&gt; parameter and quietly calls the real &lt;code&gt;&amp;amp;part&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In Perl 6, that&amp;rsquo;s easy. All we need is a good curry.&lt;/p&gt;
+
+&lt;p&gt;We write the following at the start of the file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use List::Part;   # Supposing &amp;amp;part is defined in this module
+
+my &amp;amp;part ::= &amp;amp;List::Part::part.assuming(labels =&amp;gt; &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That second line is a little imposing so let&amp;rsquo;s break it down. First of all:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;List::Part::part
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is just the fully qualified name of the &lt;code&gt;&amp;amp;part&lt;/code&gt; subroutine that&amp;rsquo;s defined in the &lt;code&gt;List::Part&lt;/code&gt; module (which, for the purposes of this example, is where we&amp;rsquo;re saying &lt;code&gt;&amp;amp;part&lt;/code&gt; lives). So:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;amp;List::Part::part
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is the actual &lt;code&gt;Code&lt;/code&gt; object corresponding to the &lt;code&gt;&amp;amp;part&lt;/code&gt; subroutine. So:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;amp;List::Part::part.assuming(...)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is a method call on that &lt;code&gt;Code&lt;/code&gt; object. This is the tricky bit, but it&amp;rsquo;s no big deal really. If a &lt;code&gt;Code&lt;/code&gt; object really is an object, we certainly ought to be able to call methods on it. So:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;amp;List::Part::part.assuming(labels =&amp;gt; &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;calls the &lt;code&gt;assuming&lt;/code&gt; method of the &lt;code&gt;Code&lt;/code&gt; object &lt;code&gt;&amp;amp;part&lt;/code&gt; and passes the &lt;code&gt;assuming&lt;/code&gt; method a named argument whose name is &lt;code&gt;labels&lt;/code&gt; and whose value is the list of strings &lt;code&gt;&amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now, if we only knew what the &lt;code&gt;.assuming&lt;/code&gt; method did&amp;hellip;&lt;/p&gt;
+
+&lt;h4 id=&#34;that-about-wraps-it-up&#34;&gt;That About Wraps it Up&lt;/h4&gt;
+
+&lt;p&gt;What the &lt;code&gt;.assuming(...)&lt;/code&gt; method does is place an anonymous wrapper around an existing &lt;code&gt;Code&lt;/code&gt; object and then return a reference to (what appears to be) an entirely separate &lt;code&gt;Code&lt;/code&gt; object. That new &lt;code&gt;Code&lt;/code&gt; object works exactly like the original — except that the new one is missing one or more of the original&amp;rsquo;s parameters.&lt;/p&gt;
+
+&lt;p&gt;Specifically, the parameter list of the wrapper subroutine doesn&amp;rsquo;t have any of the parameters that were named in in the call to &lt;code&gt;.assuming&lt;/code&gt;. Instead those missing parameters are automatically filled in whenever the new subroutine is called, using the values of those named arguments to &lt;code&gt;.assuming&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;All of which simply means that the method call:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;amp;List::Part::part.assuming(labels =&amp;gt; &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;returns a reference to a new subroutine that acts like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub ($is_sheep, *@data) {
+    return part($is_sheep, labels=&amp;gt;&amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;, *@data)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That is, because we passed a &lt;code&gt;labels =&amp;gt; &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;&lt;/code&gt;  argument to &lt;code&gt;.assuming&lt;/code&gt;, we get back a subroutine &lt;em&gt;without&lt;/em&gt; a &lt;code&gt;labels&lt;/code&gt; parameter, but which then just calls &lt;code&gt;part&lt;/code&gt; and inserts the value &lt;code&gt;&amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;&lt;/code&gt;  for the missing parameter.&lt;/p&gt;
+
+&lt;p&gt;Or, as the code itself suggests:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;amp;List::Part::part.assuming(labels =&amp;gt; &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;gives us what &lt;code&gt;&amp;amp;List::Part::part&lt;/code&gt; would become under the assumption that the value of &lt;code&gt;@labels&lt;/code&gt; is always &lt;code&gt;&amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;&lt;/code&gt; .&lt;/p&gt;
+
+&lt;p&gt;How does that help with our source code backwards compatibility problem? It completely solves it. All we have to do is to make Perl 6 use that carefully wrapped, two-parameter version of &lt;code&gt;&amp;amp;part&lt;/code&gt; in all our legacy code, instead of the full three-parameter one. To do that, we merely create a lexical subroutine of the same name and bind the wrapped version to that lexical:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my &amp;amp;part ::= &amp;amp;List::Part::part.assuming(labels =&amp;gt; &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;my &amp;amp;part&lt;/code&gt; declares a lexical subroutine named &lt;code&gt;&amp;amp;part&lt;/code&gt; (in exactly the same way that a &lt;code&gt;my $part&lt;/code&gt; would declare a lexical variable named &lt;code&gt;$part&lt;/code&gt;). The &lt;code&gt;my&lt;/code&gt; keyword says that it&amp;rsquo;s lexical and the sigil says what kind of thing it is (&lt;code&gt;&amp;amp;&lt;/code&gt; for subroutine, in this case). Then we simply install the wrapped version of &lt;code&gt;&amp;amp;List::Part::part&lt;/code&gt; as the implementation of the new lexical &lt;code&gt;&amp;amp;part&lt;/code&gt; and we&amp;rsquo;re done.&lt;/p&gt;
+
+&lt;p&gt;Just as lexical variables hide package or global variables of the same name, so too a lexical subroutine hides any package or global subroutine of the same name. So &lt;code&gt;my &amp;amp;part&lt;/code&gt; hides the imported &lt;code&gt;&amp;amp;List::Part::part&lt;/code&gt;, and every subsequent call to &lt;code&gt;part(...)&lt;/code&gt; in the rest of the current scope calls the lexical &lt;code&gt;&amp;amp;part&lt;/code&gt; instead.&lt;/p&gt;
+
+&lt;p&gt;Because that lexical version is bound to a label-assuming wrapper, it doesn&amp;rsquo;t have a &lt;code&gt;labels&lt;/code&gt; parameter, so none of the legacy calls to &lt;code&gt;&amp;amp;part&lt;/code&gt; are broken. Instead, the lexical &lt;code&gt;&amp;amp;part&lt;/code&gt; just silently &amp;ldquo;fills in&amp;rdquo; the &lt;code&gt;labels&lt;/code&gt; parameter with the value we originally gave to &lt;code&gt;.assuming&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If we needed to add another partitioning call within the scope of that lexical &lt;code&gt;&amp;amp;part&lt;/code&gt;, but we wanted to use those sexy new non-default labels, we could do so by calling the actual three-parameter &lt;code&gt;&amp;amp;part&lt;/code&gt; via its fully qualified name, like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@parts = List::Part::part(Animal::Cat, &amp;lt;&amp;lt;cat chattel&amp;gt;&amp;gt;, @animals);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;pair-bonding&#34;&gt;Pair Bonding&lt;/h4&gt;
+
+&lt;p&gt;One major advantage of having &lt;code&gt;&amp;amp;part&lt;/code&gt; return a list of pairs rather than a simple list of arrays is that now, instead of positional binding:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# with original (list-of-arrays) version of &amp;amp;part...
+(@cats, @chattels) := part Animal::Cat &amp;lt;== @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;we can do &amp;ldquo;named binding&amp;rdquo;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# with latest (list-of-pairs) version of &amp;amp;part...
+(goats=&amp;gt;@chattels, sheep=&amp;gt;@cats) := part Animal::Cat &amp;lt;== @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Named binding???&lt;/p&gt;
+
+&lt;p&gt;Well, we just learned that we can bind arguments to parameters by name, but earlier we saw that parameter binding is merely an implicit form of explicit &lt;code&gt;:=&lt;/code&gt; binding. So the inevitable conclusion is that the only reason we can bind parameters by name is because &lt;code&gt;:=&lt;/code&gt; supports named binding.&lt;/p&gt;
+
+&lt;p&gt;And indeed it does. If a &lt;code&gt;:=&lt;/code&gt; finds a list of pairs on its righthand side, and a list of simple variables on its lefthand side, it uses named binding instead of positional binding. That is, instead of binding first to first, second to second, etc., the &lt;code&gt;:=&lt;/code&gt; uses the key of each righthand pair to determine the name of the variable on its left to which the value of the pair should be bound.&lt;/p&gt;
+
+&lt;p&gt;That sounds complicated, but the effect is very easy to understand:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Positional binding...
+($who, $why) := ($because, &amp;quot;me&amp;quot;);
+# same as: $who := $because; $why := &amp;quot;me&amp;quot;;
+
+# Named binding...
+($who, $why) := (why =&amp;gt; $because, who =&amp;gt; &amp;quot;me&amp;quot;);
+# same as: $who := &amp;quot;me&amp;quot;; $why := $because;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even more usefully, if the binding operator detects a list of pairs on its left and another list of pairs on its right, it binds the value of the first pair on the right to the value of the identically named pair on the left (again, regardless of where the two pairs appear in their respective lists). Then it binds the value of the second pair on the right to the value of the identically named pair on the left, and so on.&lt;/p&gt;
+
+&lt;p&gt;That means we can set up a named &lt;code&gt;:=&lt;/code&gt; binding in which the names of the bound variables don&amp;rsquo;t even have to match the keys of the values being bound to them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Explicitly named binding...
+(who=&amp;gt;$name, why=&amp;gt;$reason) := (why =&amp;gt; $because, who =&amp;gt; &amp;quot;me&amp;quot;);
+# same as: $name := &amp;quot;me&amp;quot;; $reason := $because;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The most common use for that feature will probably be to create &amp;ldquo;free-standing&amp;rdquo; aliases for particular entries in a hash:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;(who=&amp;gt;$name, why=&amp;gt;$reason) := *%explanation;
+# same as: $name := %explanation{who}; $reason := %explanation{why};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or to convert particular hash entries into aliases for other variables:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;*%details := (who=&amp;gt;&amp;quot;me&amp;quot;, why=&amp;gt;$because);
+# same as: %details{who} := &amp;quot;me&amp;quot;, %details{why} := $because;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;an-argument-in-name-only&#34;&gt;An Argument in Name Only&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s pretty cool that Perl 6 automatically lets us specify positional arguments — and even return values — by name rather than position.&lt;/p&gt;
+
+&lt;p&gt;But what if we&amp;rsquo;d prefer that some of our arguments could &lt;em&gt;only&lt;/em&gt; be specified by name. After all, the &lt;code&gt;@labels&lt;/code&gt; parameter isn&amp;rsquo;t really in the same league as the &lt;code&gt;$is_sheep&lt;/code&gt; parameter: it&amp;rsquo;s only an option after all, and one that most people probably won&amp;rsquo;t use. It shouldn&amp;rsquo;t really be a positional parameter at all.&lt;/p&gt;
+
+&lt;p&gt;We &lt;strong&gt;can&lt;/strong&gt; specify that the &lt;code&gt;labels&lt;/code&gt; argument is only to be passed by name&amp;hellip;by changing the previous declaration of the &lt;code&gt;@labels&lt;/code&gt; parameter very slightly:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Selector $is_sheep,
+          Str +@labels is dim(2) = &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;,
+          *@data
+         ) returns List of Pair
+{
+    my ($sheep, $goats) is constant = @labels;
+    my %herd = ($sheep=&amp;gt;[], $goats=&amp;gt;[]);
+    for @data {
+        when $is_sheep { push %herd{$sheep}, $_ }
+        default        { push %herd{$goats}, $_ }
+    }
+    return *%herd;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In fact, there&amp;rsquo;s only a single character&amp;rsquo;s worth of difference in the whole definition. Whereas before we declared the &lt;code&gt;@labels&lt;/code&gt; parameter like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Str ?@labels is dim(2) = &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;now we declare it like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Str +@labels is dim(2) = &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Changing that &lt;code&gt;?&lt;/code&gt; prefix to a &lt;code&gt;+&lt;/code&gt; changes &lt;code&gt;@labels&lt;/code&gt; from an optional positional-or-named parameter to an optional named-only parameter. Now if we want to pass in a &lt;code&gt;labels&lt;/code&gt; argument, we can only pass it by name. Attempting to pass it positionally will result in some extreme prejudice from the compiler.&lt;/p&gt;
+
+&lt;p&gt;Named-only parameters are still optional parameters however, so legacy code that omits the labels:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%parts = part Animal::Cat &amp;lt;== @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;still works fine (and still causes the &lt;code&gt;@labels&lt;/code&gt; parameter to default to &lt;code&gt;&amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Better yet, converting &lt;code&gt;@labels&lt;/code&gt; from a positional to a named-only parameter also solves the problem of legacy code of the form:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%parts = part Animals::Cat, @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;@animals&lt;/code&gt; can&amp;rsquo;t possibly be intended for the &lt;code&gt;@labels&lt;/code&gt; parameter now. We explicitly specified that labels can only be passed by name, and the &lt;code&gt;@animals&lt;/code&gt; argument isn&amp;rsquo;t named.&lt;/p&gt;
+
+&lt;p&gt;So named-only parameters give us a clean way of upgrading a subroutine and still supporting legacy code. Indeed, in many cases the &lt;strong&gt;only&lt;/strong&gt; reasonable way to add a new parameter to an existing, widely used, Perl 6 subroutine will be to add it as a named-only parameter.&lt;/p&gt;
+
+&lt;h3 id=&#34;careful-with-that-arg-eugene&#34;&gt;Careful with that Arg, Eugene!&lt;/h3&gt;
+
+&lt;p&gt;Of course, there&amp;rsquo;s no free lunch here. The cost of solving the legacy code problem is that we changed the meaning of any more recent code like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%parts = part Animal::Cat, &amp;lt;&amp;lt;cat chattel&amp;gt;&amp;gt;, @animals;     # Oops!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When &lt;code&gt;@labels&lt;/code&gt; was positional-or-named, the &lt;code&gt;&amp;lt;&amp;lt;cat chattel&amp;gt;&amp;gt;&lt;/code&gt;  argument could only be interpreted as being intended for &lt;code&gt;@labels&lt;/code&gt;. But now, there&amp;rsquo;s no way it can be for &lt;code&gt;@labels&lt;/code&gt; (because it isn&amp;rsquo;t named), so Perl 6 assumes that the list is just part of the slurped data. The two-element list will now be flattened (along with &lt;code&gt;@animals&lt;/code&gt;), resulting in a single list that is then bound to the &lt;code&gt;@data&lt;/code&gt; parameter, as if we&amp;rsquo;d written:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%parts = part Animal::Cat &amp;lt;== &#39;cat&#39;, &#39;chattel&#39;, @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is yet another reason why named-only should probably be the first choice for optional parameters.&lt;/p&gt;
+
+&lt;h4 id=&#34;temporal-life-insurance&#34;&gt;Temporal Life Insurance&lt;/h4&gt;
+
+&lt;p&gt;Being able to add name-only parameters to existing subroutines is an important way of future-proofing any calls to the subroutine. So long as we continue to add only named-only parameters to &lt;code&gt;&amp;amp;part&lt;/code&gt;, the order in which the subroutine expects its positional and slurpy arguments will be unchanged, so every existing call to &lt;code&gt;part&lt;/code&gt; will continue to work correctly.&lt;/p&gt;
+
+&lt;p&gt;Curiously, the reverse is also true. Named-only parameters also provide us with a way to &amp;ldquo;history-proof&amp;rdquo; subroutine &lt;em&gt;calls&lt;/em&gt;. That is, we can allow a subroutine to accept named arguments that it doesn&amp;rsquo;t (yet) know how to handle! Like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Selector $is_sheep,
+          Str +@labels is dim(2) = &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;
+          *%extras,         # &amp;lt;-- NEW PARAMETER ADDED HERE
+          *@data,
+         ) returns List of Pair
+{
+    # Handle extras...
+    carp &amp;quot;Ignoring unknown named parameter &#39;$_&#39;&amp;quot; for keys %extras;
+
+    # Remainder of subroutine as before...
+    my ($sheep, $goats) is constant = @labels;
+    my %herd = ($sheep=&amp;gt;[], $goats=&amp;gt;[]);
+    for @data {
+        when $is_sheep { push %herd{$sheep}, $_ }
+        default        { push %herd{$goats}, $_ }
+    }
+    return *%herd;
+}
+
+# and later...
+
+%parts = part Animal::Cat, label=&amp;gt;&amp;lt;&amp;lt;Good Bad&amp;gt;&amp;gt;, max=&amp;gt;3, @data;
+
+# warns: &amp;quot;Ignoring unknown parameter &#39;max&#39; at future.pl, line 19&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;*%extras&lt;/code&gt; parameter is a &amp;ldquo;slurpy hash&amp;rdquo;. Just as the slurpy array parameter (&lt;code&gt;*@data&lt;/code&gt;) sucks up any additional positional arguments for which there&amp;rsquo;s no explicit parameter, a slurpy hash sucks up any named arguments that are unaccounted for. In the above example, for instance, &lt;code&gt;&amp;amp;part&lt;/code&gt; has no &lt;code&gt;$max&lt;/code&gt; parameter, so passing the named argument &lt;code&gt;max=&amp;gt;3&lt;/code&gt; would normally produce a (compile-time) exception:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Invalid named parameter (&#39;max&#39;) in call to &amp;amp;part
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, because &lt;code&gt;&amp;amp;part&lt;/code&gt; now has a slurpy hash, that extraneous named argument is simply bound to the appropriate entry of &lt;code&gt;%extras&lt;/code&gt; and (in this example) used to generate a warning.&lt;/p&gt;
+
+&lt;p&gt;The more common use of such slurpy hashes is to capture the named arguments that are passed to an object constructor and have them automatically forwarded to the constructors of the appropriate ancestral classes. We&amp;rsquo;ll explore that technique in Exegesis 12.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-greatest-thing-since-sliced-arrays&#34;&gt;The Greatest Thing Since Sliced Arrays&lt;/h3&gt;
+
+&lt;p&gt;So far we&amp;rsquo;ve progressively extended &lt;code&gt;&amp;amp;part&lt;/code&gt; from the first simple version that only accepted subroutines as selectors, to the most recent versions that can now also use classes, rules, or hashes to partition their data.&lt;/p&gt;
+
+&lt;p&gt;Suppose we also wanted to allow the user to specify a list of integer indices as the selector, and thereby allow &lt;code&gt;&amp;amp;part&lt;/code&gt; to separate a slice of data from its &amp;ldquo;anti-slice&amp;rdquo;. In other words, instead of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%data{2357}  = [ @data[2,3,5,7]            ];
+%data{other} = [ @data[0,1,4,6,8..@data-1] ];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;we could write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%data = part [2,3,5,7], labels=&amp;gt;[&amp;quot;2357&amp;quot;,&amp;quot;other&amp;quot;], @data;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We could certainly extend &lt;code&gt;&amp;amp;part&lt;/code&gt; to do that:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;type Selector ::= Code | Class | Rule | Hash | (Array of Int);
+
+sub part (Selector $is_sheep,
+          Str +@labels is dim(2) = &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;,
+          *@data
+         ) returns List of Pair
+{
+    my ($sheep, $goats) is constant = @labels;
+    my %herd = ($sheep=&amp;gt;[], $goats=&amp;gt;[]);
+    if $is_sheep.isa(Array of Int) {
+        for @data.kv -&amp;gt; $index, $value {
+            if $index == any($is_sheep) { push %herd{$sheep}, $value }
+            else                        { push %herd{$goats}, $value }
+        }
+    }
+    else {
+        for @data {
+            when $is_sheep { push %herd{$sheep}, $_ }
+            default        { push %herd{$goats}, $_ }
+        }
+    }
+    return *%herd;
+}
+
+# and later, if there&#39;s a prize for finishing 1st, 2nd, 3rd, or last...
+
+%prize = part [0, 1, 2, @horses-1],
+              labels =&amp;gt; &amp;lt;&amp;lt; placed  also_ran &amp;gt;&amp;gt;,
+              @horses;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that this is the first time we couldn&amp;rsquo;t just add another class to the &lt;code&gt;Selector&lt;/code&gt; type and rely on the smart-match inside the &lt;code&gt;when&lt;/code&gt; to work out how to tell &amp;ldquo;sheep&amp;rdquo; from &amp;ldquo;goats&amp;rdquo;. The problem here is that when the selector is an array of integers, the &lt;em&gt;value&lt;/em&gt; of each data element no longer determines its sheepishness/goatility. It&amp;rsquo;s now the element&amp;rsquo;s &lt;em&gt;position&lt;/em&gt; (i.e. its index) that decides its fate. Since our existing smart-match compares values, not positions, the &lt;code&gt;when&lt;/code&gt; can&amp;rsquo;t pick out the right elements for us. Instead, we have to consider both the index &lt;em&gt;and&lt;/em&gt; the value of each data element.&lt;/p&gt;
+
+&lt;p&gt;To do that we use the &lt;code&gt;@data&lt;/code&gt; array&amp;rsquo;s &lt;code&gt;.kv&lt;/code&gt; method. Just as calling the &lt;code&gt;.kv&lt;/code&gt; method on a hash returns &lt;em&gt;key&lt;/em&gt;, &lt;em&gt;value&lt;/em&gt;, &lt;em&gt;key&lt;/em&gt;, &lt;em&gt;value&lt;/em&gt;, &lt;em&gt;key&lt;/em&gt;, &lt;em&gt;value&lt;/em&gt;, etc., so too calling the &lt;code&gt;.kv&lt;/code&gt; method on an array returns &lt;em&gt;index&lt;/em&gt;, &lt;em&gt;value&lt;/em&gt;, &lt;em&gt;index&lt;/em&gt;, &lt;em&gt;value&lt;/em&gt;, &lt;em&gt;index&lt;/em&gt;, &lt;em&gt;value&lt;/em&gt;, etc. Then we just use a parameterized block as our &lt;code&gt;for&lt;/code&gt; block, specifying that it has two arguments. That causes the &lt;code&gt;for&lt;/code&gt; to grab two elements of the list its iterating (i.e. one index and one value) on each iteration.&lt;/p&gt;
+
+&lt;p&gt;Then we simply test to see if the current index is any of those specified in &lt;code&gt;$is_sheep&lt;/code&gt;&amp;rsquo;s array and, if so, we push the corresponding value:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;for @data.kv -&amp;gt; $index, $value {
+    if $index == any(@$is_sheep) { push %herd{$sheep}, $value }
+    else                         { push %herd{$goats}, $value }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;a-parting-of-the-err-parts&#34;&gt;A Parting of the &amp;hellip; err &amp;hellip; Parts&lt;/h3&gt;
+
+&lt;p&gt;That works okay, but it&amp;rsquo;s not perfect. In fact, as it&amp;rsquo;s presented above the &lt;code&gt;&amp;amp;part&lt;/code&gt; subroutine is now both an ugly solution and an inefficient one.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s ugly because &lt;code&gt;&amp;amp;part&lt;/code&gt; is now twice as long as it was before. The two branches of control-flow within it are similar in form but quite different in function. One partitions the data according to the &lt;em&gt;contents&lt;/em&gt; of a datum; the other, according to a datum&amp;rsquo;s &lt;em&gt;position&lt;/em&gt; in &lt;code&gt;@data&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s inefficient because it effectively tests the type of the selector argument twice: once (implicitly) when it&amp;rsquo;s first bound to the &lt;code&gt;$is_sheep&lt;/code&gt; parameter, and then again (explicitly) in the call to &lt;code&gt;.isa&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;It would be cleaner and more maintainable to break these two nearly unrelated behaviours out into separate subroutines. And it would be more efficient if we could select between those two subroutines by testing the type of the selector only once.&lt;/p&gt;
+
+&lt;p&gt;Of course, in Perl 6 we can do just that — with a &lt;em&gt;multisub&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;What&amp;rsquo;s a multisub? It&amp;rsquo;s a collection of related subroutines (known as &amp;ldquo;variants&amp;rdquo;), all of which have the same name but different parameter lists. When the multisub is called and passed a list of arguments, Perl 6 examines the types of the arguments, finds the variant with the same name and the most compatible parameter list, and calls that variant.&lt;/p&gt;
+
+&lt;p&gt;By the way, you might be more familiar with the term &lt;em&gt;multimethod&lt;/em&gt;. A multisub is a multiply dispatched subroutine, in the same way that a multimethod is a multiply dispatched method. There&amp;rsquo;ll be much more about those in Exegesis 12.&lt;/p&gt;
+
+&lt;p&gt;Multisubs provide facilities something akin to function overloading in C++. We set up several subroutines with the same logical name (because they implement the same logical action). But each takes a distinct set of argument types and does the appropriate things with those particular arguments.&lt;/p&gt;
+
+&lt;p&gt;However, multisubs are more &amp;ldquo;intelligent&amp;rdquo; that mere overloaded subroutines. With overloaded subroutines, the compiler examines the compile-time types of the subroutine&amp;rsquo;s arguments and hard codes a call to the appropriate variant based on that information. With multisubs, the compiler takes no part in the variant selection process. Instead, the interpreter decides which variant to invoke at the time the call is actually made. It does that by examining the &lt;em&gt;run-time&lt;/em&gt; type of each argument, making use of its inheritance relationships to resolve any ambiguities.&lt;/p&gt;
+
+&lt;p&gt;To see why a run-time decision is better, consider the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class Lion is Cat {...}    # Lion inherits from Cat
+
+multi sub feed(Cat  $c) { pat $c; my $glop = open &#39;Can&#39;; spoon_out($glop); }
+multi sub feed(Lion $l) { $l.stalk($prey) and kill; }
+
+my Cat $fluffy = Lion.new;
+
+feed($fluffy);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In Perl 6, the call to &lt;code&gt;feed&lt;/code&gt; will correctly invoke the second variant because the interpreter knows that &lt;code&gt;$fluffy&lt;/code&gt; actually contains a reference to a &lt;code&gt;Lion&lt;/code&gt; object at the time the call is made (even though the nominal type of the variable is &lt;code&gt;Cat&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;If Perl 6 multisubs worked like C++&amp;rsquo;s function overloading, the call to &lt;code&gt;feed($fluffy)&lt;/code&gt; would invoke the &lt;em&gt;first&lt;/em&gt; version of &lt;code&gt;feed&lt;/code&gt;, because all that the compiler knows for sure at compile-time is that &lt;code&gt;$fluffy&lt;/code&gt; is declared to store &lt;code&gt;Cat&lt;/code&gt; objects. That&amp;rsquo;s precisely why Perl 6 doesn&amp;rsquo;t do it that way. We prefer leave the hand-feeding of lions to other languages.&lt;/p&gt;
+
+&lt;h4 id=&#34;many-parts&#34;&gt;Many Parts&lt;/h4&gt;
+
+&lt;p&gt;As the above example shows, in Perl 6, multisub variants are defined by prepending the &lt;code&gt;sub&lt;/code&gt; keyword with another keyword: &lt;code&gt;multi&lt;/code&gt;. The parameters that the interpreter is going to consider when deciding which variant to call are specified to the left of a colon (&lt;code&gt;:&lt;/code&gt;), with any other parameters specified to the right. If there is no colon in the parameter list (as above), &lt;em&gt;all&lt;/em&gt; the parameters are considered when deciding which variant to invoke.&lt;/p&gt;
+
+&lt;p&gt;We could re-factor the most recent version of &lt;code&gt;&amp;amp;part&lt;/code&gt; like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;type Selector ::= Code | Class | Rule | Hash;
+
+multi sub part (Selector $is_sheep:
+                Str +@labels is dim(2) = &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;,
+                *@data
+               ) returns List of Pair
+{
+    my ($sheep, $goats) is constant = @labels;
+    my %herd = ($sheep=&amp;gt;[], $goats=&amp;gt;[]);
+    for @data {
+        when $is_sheep { push %herd{$sheep}, $_ }
+        default        { push %herd{$goats}, $_ }
+    }
+    return *%herd;
+}
+
+multi sub part (Int @sheep_indices:
+                Str +@labels is dim(2) = &amp;lt;&amp;lt;sheep goats&amp;gt;&amp;gt;,
+                *@data
+               ) returns List of Pair
+{
+    my ($sheep, $goats) is constant = @labels;
+    my %herd = ($sheep=&amp;gt;[], $goats=&amp;gt;[]);
+    for @data -&amp;gt; $index, $value {
+        if $index == any(@sheep_indices) { push %herd{$sheep}, $value }
+        else                             { push %herd{$goats}, $value }
+    }
+    return *%herd;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we create two variants of a single multisub named &lt;code&gt;&amp;amp;part&lt;/code&gt;. The first variant will be invoked whenever &lt;code&gt;&amp;amp;part&lt;/code&gt; is called with a &lt;code&gt;Selector&lt;/code&gt; object as its first argument (that is, when it is passed a &lt;code&gt;Code&lt;/code&gt; or &lt;code&gt;Class&lt;/code&gt; or &lt;code&gt;Rule&lt;/code&gt; or &lt;code&gt;Hash&lt;/code&gt; object as its selector).&lt;/p&gt;
+
+&lt;p&gt;The second variant will be invoked only if the first argument is an &lt;code&gt;Array of Int&lt;/code&gt;. If the first argument is anything else, an exception will be thrown.&lt;/p&gt;
+
+&lt;p&gt;Notice how similar the body of the first variant is to the earlier subroutine versions. Likewise, the body of the second variant is almost identical to the &lt;code&gt;if&lt;/code&gt; branch of the previous (subroutine) version.&lt;/p&gt;
+
+&lt;p&gt;Notice too how the body of each variant only has to deal with the particular type of selector that its first parameter specifies. That&amp;rsquo;s because the interpreter has already determined what type of thing the first argument was when deciding which variant to call. A particular variant will only ever be called if the first argument is compatible with that variant&amp;rsquo;s first parameter.&lt;/p&gt;
+
+&lt;h3 id=&#34;call-me-early&#34;&gt;Call Me Early&lt;/h3&gt;
+
+&lt;p&gt;Suppose we wanted more control over the default labels that &lt;code&gt;&amp;amp;part&lt;/code&gt; uses for its return values. For example, suppose we wanted to be able to prompt the user for the appropriate defaults — before the program runs.&lt;/p&gt;
+
+&lt;p&gt;The default value for an optional parameter can be any valid Perl expression whose result is compatible with the type of the parameter. We could simply write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my Str @def_labels;
+
+BEGIN {
+    print &amp;quot;Enter 2 default labels: &amp;quot;;
+    @def_labels = split(/\s+/, &amp;lt;&amp;gt;, 3).[0..1];
+}
+
+sub part (Selector $is_sheep,
+          Str +@labels is dim(2) = @def_labels,
+          *@data
+         ) returns List of Pair
+{
+    # body as before
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We first define an array variable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my Str @def_labels;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will ultimately serve as the expression that the &lt;code&gt;@labels&lt;/code&gt; parameter uses as its default:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Str +@labels is dim(2) = @def_labels
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we merely need a &lt;code&gt;BEGIN&lt;/code&gt; block (so that it runs before the program starts) in which we prompt for the required information:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;print &amp;quot;Enter 2 default labels: &amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;read it in:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;split the input line into three pieces using whitespace as a separator:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;split(/\s+/, &amp;lt;&amp;gt;, 3)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;grab the first two of those pieces:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;split(/\s+/, &amp;lt;&amp;gt;, 3).[0..1]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and assign them to &lt;code&gt;@def_labels&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@def_labels = split(/\s+/, &amp;lt;&amp;gt;, 3).[0..1];
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;re now guaranteed that &lt;code&gt;@def_labels&lt;/code&gt; has the necessary default labels before &lt;code&gt;&amp;amp;part&lt;/code&gt; is ever called.&lt;/p&gt;
+
+&lt;h4 id=&#34;core-breach&#34;&gt;Core Breach&lt;/h4&gt;
+
+&lt;p&gt;Built-ins like &lt;code&gt;&amp;amp;split&lt;/code&gt; can also be given named arguments in Perl 6, so, alternatively, we could write the &lt;code&gt;BEGIN&lt;/code&gt; block like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;BEGIN {
+    print &amp;quot;Enter 2 default labels: &amp;quot;;
+    @def_labels = split(str=&amp;gt;&amp;lt;&amp;gt;, max=&amp;gt;3).[0..1];
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we&amp;rsquo;re leaving out the split pattern entirely and making use of &lt;code&gt;&amp;amp;split&lt;/code&gt;&amp;rsquo;s default split-on-whitespace behaviour.&lt;/p&gt;
+
+&lt;p&gt;Incidentally, an important goal of Perl 6 is to make the language powerful enough to natively implement all its own built-ins. We won&amp;rsquo;t actually implement it that way, since screamingly fast performance is another goal, but we do want to make it easy for anyone to create their own versions of any Perl built-in or control structure.&lt;/p&gt;
+
+&lt;p&gt;So, for example, &lt;code&gt;&amp;amp;split&lt;/code&gt; would be declared like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub split( Rule|Str ?$sep = /\s+/,
+           Str ?$str = $CALLER::_,
+           Int ?$max = Inf
+          )
+{
+    # implementation here
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note first that every one of &lt;code&gt;&amp;amp;split&lt;/code&gt;&amp;rsquo;s parameters is optional, and that the defaults are the same as in Perl 5. If we omit the separator pattern, the default separator is whitespace; if we omit the string to be split, &lt;code&gt;&amp;amp;split&lt;/code&gt; splits the caller&amp;rsquo;s &lt;code&gt;$_&lt;/code&gt; variable; if we omit the &amp;ldquo;maximum number of pieces to return&amp;rdquo; argument, there is no upper limit on the number of splits that may be made.&lt;/p&gt;
+
+&lt;p&gt;Note that we can&amp;rsquo;t just declare the second parameter like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Str ?$str = $_,
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s because, in Perl 6, the &lt;code&gt;$_&lt;/code&gt; variable is lexical (not global), so a subroutine doesn&amp;rsquo;t have direct access to the &lt;code&gt;$_&lt;/code&gt; of its caller. That means that Perl 6 needs a special way to access a caller&amp;rsquo;s &lt;code&gt;$_&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;That special way is via the &lt;code&gt;CALLER::&lt;/code&gt; namespace. Writing &lt;code&gt;$CALLER::_&lt;/code&gt; gives us access to the &lt;code&gt;$_&lt;/code&gt; of whatever scope called the current subroutine. This works for other variables too (&lt;code&gt;$CALLER::foo&lt;/code&gt;, &lt;code&gt;@CALLER::bar&lt;/code&gt;, etc.) but is rarely useful, since we&amp;rsquo;re only allowed to use &lt;code&gt;CALLER::&lt;/code&gt; to access variables that already exist, and &lt;code&gt;$_&lt;/code&gt; is about the only variable that a subroutine can rely upon to be present in any scope it might be called from.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;a-constant-source-of-joy&#34;&gt;A Constant Source of Joy&lt;/h4&gt;
+
+&lt;p&gt;Setting up the &lt;code&gt;@def_labels&lt;/code&gt; array at compile-time and then using it as the default for the &lt;code&gt;@labels&lt;/code&gt; parameter works fine, but there&amp;rsquo;s always the chance that the array might somehow be accidentally reassigned later. If that&amp;rsquo;s not desirable, then we need to make the array a constant. In Perl 6 that looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my @def_labels is constant = BEGIN {
+    print &amp;quot;Enter 2 default labels: &amp;quot;;
+    split(/\s+/, &amp;lt;&amp;gt;, 3).[0..1];
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;is constant&lt;/code&gt; trait is the way we prevent any Perl 6 variable from being reassigned after it&amp;rsquo;s been declared. It effectively replaces the &lt;code&gt;STORE&lt;/code&gt; method of the variable&amp;rsquo;s implementation with one that throws an exception whenever it&amp;rsquo;s called. It also instructs the compiler to keep an eye out for compile-time-detectable modifications to the variable and die violently if it finds any.&lt;/p&gt;
+
+&lt;p&gt;Whenever a variable is declared &lt;code&gt;is constant&lt;/code&gt; it must be initialized as part of its declaration. In this case we use the return value of a &lt;code&gt;BEGIN&lt;/code&gt; block as the initializer value.&lt;/p&gt;
+
+&lt;p&gt;Oh, by the way, &lt;code&gt;BEGIN&lt;/code&gt; blocks have return values in Perl 6. Specifically, they return the value of the last statement executed inside them (just like a Perl 5 &lt;code&gt;do&lt;/code&gt; or &lt;code&gt;eval&lt;/code&gt; block does, except that &lt;code&gt;BEGIN&lt;/code&gt;s do it at compile-time).&lt;/p&gt;
+
+&lt;p&gt;In the above example the result of the &lt;code&gt;BEGIN&lt;/code&gt; is the return value of the call to &lt;code&gt;split&lt;/code&gt;. So &lt;code&gt;@def_labels&lt;/code&gt; is initialized to the two default labels, which cannot thereafter be changed.&lt;/p&gt;
+
+&lt;h4 id=&#34;begin-at-the-scene-of-the-crime&#34;&gt;&lt;code&gt;BEGIN&lt;/code&gt; at the Scene of the Crime&lt;/h4&gt;
+
+&lt;p&gt;Of course, the &lt;code&gt;@def_labels&lt;/code&gt; array is really just a temporary storage facility for transferring the results of the &lt;code&gt;BEGIN&lt;/code&gt; block to the default value of the &lt;code&gt;@labels&lt;/code&gt; parameter.&lt;/p&gt;
+
+&lt;p&gt;We could easily do away with it entirely, by simply putting the &lt;code&gt;BEGIN&lt;/code&gt; block right there &lt;em&gt;in&lt;/em&gt; the parameter list:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub part (Selector $is_sheep,
+          Str +@labels is dim(2) = BEGIN {
+                      print &amp;quot;Enter 2 default labels: &amp;quot;; 
+                      split(/\s+/, &amp;lt;&amp;gt;, 3).[0..1];
+                    },
+          *@data
+         ) returns List of Pair
+{
+    # body as before
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that works fine.&lt;/p&gt;
+
+&lt;h3 id=&#34;macro-biology&#34;&gt;Macro Biology&lt;/h3&gt;
+
+&lt;p&gt;The only problem is that it&amp;rsquo;s ugly, brutish, and not at all short. If only there were some way of calling the &lt;code&gt;BEGIN&lt;/code&gt; block at that point without having to put the actual &lt;code&gt;BEGIN&lt;/code&gt; block at that point&amp;hellip;.&lt;/p&gt;
+
+&lt;p&gt;Well, of course there is such a way. In Perl 6 a block is just a special kind of nameless subroutine&amp;hellip; and a subroutine is just a special name-ful kind of block. So it shouldn&amp;rsquo;t really come as a surprise that &lt;code&gt;BEGIN&lt;/code&gt; blocks have a name-ful, subroutine-ish counterpart. They&amp;rsquo;re called &lt;em&gt;macros&lt;/em&gt; and they look and act very much like ordinary subroutine, except that they run at compile-time.&lt;/p&gt;
+
+&lt;p&gt;So, for example, we could create a compile-time subroutine that requests and returns our user-specified labels:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;macro request(int $n, Str $what) returns List of Str {
+    print &amp;quot;Enter $n $what: &amp;quot;;
+    my @def_labels = split(/\s+/, &amp;lt;&amp;gt;, $n+1);
+    return { @def_labels[0..$n-1] };
+}
+
+# and later...
+
+sub part (Selector $is_sheep,
+          Str +@labels is dim(2) = request(2,&amp;quot;default labels&amp;quot;),
+          *@data
+         ) returns List of Pair
+{
+    # body as before
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Calls to a macro are invoked during compilation (not at run-time). In fact, like a &lt;code&gt;BEGIN&lt;/code&gt; block, a macro call is executed as soon as the parser has finished parsing it. So, in the above example, when the parser has parsed the declaration of the &lt;code&gt;@labels&lt;/code&gt; parameter and then the &lt;code&gt;=&lt;/code&gt; sign indicating a default value, it comes across what looks like a subroutine call. As soon as it has parsed that subroutine call (including its argument list) it will detect that the subroutine &lt;code&gt;&amp;amp;request&lt;/code&gt; is actually a macro, so it will immediately call &lt;code&gt;&amp;amp;request&lt;/code&gt; with the specified arguments (&lt;code&gt;2&lt;/code&gt; and &lt;code&gt;&amp;quot;default labels&amp;quot;&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Whenever a macro like &lt;code&gt;&amp;amp;request&lt;/code&gt; is invoked, the parser itself intercepts the macro&amp;rsquo;s return value and integrates it somehow back into the parse tree it is in the middle of building. If the macro returns a block — as &lt;code&gt;&amp;amp;request&lt;/code&gt; does in the above example — the parser extracts the the contents of that block and inserts the parse tree of those contents into the program&amp;rsquo;s parse tree. In other words, if a macro returns a block, a precompiled version of whatever is inside the block replaces the original macro call.&lt;/p&gt;
+
+&lt;p&gt;Alternatively, a macro can return a string. In that case, the parser inserts that string back into the source code in place of the macro call and then reparses it. This means we could also write &lt;code&gt;&amp;amp;request&lt;/code&gt; like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;macro request(int $n, Str $what) returns List of Str {
+    print &amp;quot;Enter $n $what: &amp;quot;;
+    return &amp;quot;&amp;lt;&amp;lt; ( @(split(/\s+/, &amp;lt;&amp;gt;, $n+1).[0..$n-1]) &amp;gt;&amp;gt;&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;in which case it would return a string containing the characters &lt;code&gt;&amp;quot;&amp;lt;&amp;lt;&amp;quot;&lt;/code&gt;, followed by the two labels that the &lt;code&gt;request&lt;/code&gt; call reads in, followed by a closing double angles. The parser would then substitute that string in place of the macro call, discover it was a &lt;code&gt;&amp;lt;&amp;lt;...&amp;gt;&amp;gt;&lt;/code&gt; word list, and use that list as the default labels.&lt;/p&gt;
+
+&lt;h4 id=&#34;macros-for-begin-ners&#34;&gt;Macros for &lt;code&gt;BEGIN&lt;/code&gt;-ners&lt;/h4&gt;
+
+&lt;p&gt;Macros are enormously powerful. In fact, in Perl 6, we could implement the functionality of &lt;code&gt;BEGIN&lt;/code&gt; itself using a macro:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;macro MY_BEGIN (&amp;amp;block) {
+    my $context = want;
+    if $context ~~ List {
+        my @values = block();
+        return { *@values };
+    }
+    elsif $context ~~ Scalar {
+        my $value = block();
+        return { $value };
+    }
+    else {
+        block();
+        return;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;MY_BEGIN&lt;/code&gt; macro declares a single parameter (&lt;code&gt;&amp;amp;block&lt;/code&gt;). Because that parameter is specified with the &lt;code&gt;Code&lt;/code&gt; sigil (&lt;code&gt;&amp;amp;&lt;/code&gt;), the macro requires that the corresponding argument must be a block or subroutine of some type. Within the body of &lt;code&gt;&amp;amp;MY_BEGIN&lt;/code&gt; that argument is bound to the &lt;em&gt;lexical&lt;/em&gt; subroutine &lt;code&gt;&amp;amp;block&lt;/code&gt; (just as a &lt;code&gt;$foo&lt;/code&gt; parameter would bind its corresponding argument to a lexical scalar variable, or a &lt;code&gt;@foo&lt;/code&gt; parameter would bind its argument to a lexical array).&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;&amp;amp;MY_BEGIN&lt;/code&gt; then calls the &lt;code&gt;want&lt;/code&gt; function, which is Perl 6&amp;rsquo;s replacement for &lt;code&gt;wantarray&lt;/code&gt;. &lt;code&gt;want&lt;/code&gt; returns a scalar value that simultaneously represents any the contexts in which the current subroutine was called. In other words, it returns a disjunction of various classes. We then compare that context information against the three possibilities — &lt;code&gt;List&lt;/code&gt;, &lt;code&gt;Scalar&lt;/code&gt;, and (by elimination) &lt;code&gt;Void&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If &lt;code&gt;MY_BEGIN&lt;/code&gt; was called in a list context, we evaluate its block/closure argument in a list context, capture the results in an array (&lt;code&gt;@values&lt;/code&gt;), and then return a block containing the contents of that array flattened back to a list. In a scalar context we do much the same thing, except that &lt;code&gt;MY_BEGIN&lt;/code&gt;&amp;rsquo;s argument is evaluated in scalar context and a block containing that scalar result is returned. In a void context (the only remaining possibility), the argument is simply evaluated and nothing is returned.&lt;/p&gt;
+
+&lt;p&gt;In the first two cases, returning a block causes the original macro call to be replaced by a parse tree, specifically, the parse tree representing the values that resulted from executing the original block passed to &lt;code&gt;MY_BEGIN&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In the final case — a void context — the compiler isn&amp;rsquo;t expecting to replace the macro call with anything, so it doesn&amp;rsquo;t matter what we return, just as long as we evaluate the block. The macro call itself is simply eliminated from the final parse-tree.&lt;/p&gt;
+
+&lt;p&gt;Note that &lt;code&gt;MY_BEGIN&lt;/code&gt; could be written more concisely than it was above, by taking advantage of the smart-matching behaviour of a switch statement:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;macro MY_BEGIN (&amp;amp;block) {
+    given want {
+        when List   { my @values = block(); return { *@values }; }
+        when Scalar { my $value  = block(); return {  $value  }; }
+        when Void   {              block(); return               }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;a-macro-by-any-other-syntax&#34;&gt;A Macro by Any Other Syntax &amp;hellip;&lt;/h4&gt;
+
+&lt;p&gt;Because macros are called by the parser, it&amp;rsquo;s possible to have them interact with the parser itself. In particular, it&amp;rsquo;s possible for a macro to tell the parser how the macro&amp;rsquo;s own argument list should be parsed.&lt;/p&gt;
+
+&lt;p&gt;For example, we could give the &lt;code&gt;&amp;amp;request&lt;/code&gt; macro its own non-standard argument syntax, so that instead of calling it as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;request(2,&amp;quot;default labels&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;we could just write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;request(2 default labels)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To do that we&amp;rsquo;d define &lt;code&gt;&amp;amp;request&lt;/code&gt; like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;macro request(int $n, Str $what) 
+    is parsed( /:w \( (\d+) (.*?) \) / )
+    returns List of Str
+{
+    print &amp;quot;Enter $n $what: &amp;quot;;
+    my @def_labels = split(/\s+/, &amp;lt;&amp;gt;, $n+1);
+    return { @def_labels[0..$n-1] };
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;is parsed&lt;/code&gt; trait tells the parser what to look for immediately after it encounters the macro&amp;rsquo;s name. In the above example, the parser is told that, after encountering the sequence &lt;code&gt;&amp;quot;request&amp;quot;&lt;/code&gt; it should expect to match the pattern:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;/ :w        # Allow whitespace between the tokens
+  \(        # Match an opening paren
+  (\d+)     # Capture one-or-more digits
+  (.*?)     # Capture everything else up to...
+  \)        # ...a closing paren
+/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that the one-or-more-digits and the anything-up-to-paren bits of the pattern are in capturing parentheses. This is important because the list of substrings that an &lt;code&gt;is parsed&lt;/code&gt; pattern captures is then used as the argument list to the macro call. The captured digits become the first argument (which is then bound to the &lt;code&gt;$n&lt;/code&gt; parameter) and the captured &amp;ldquo;everything else&amp;rdquo; becomes the second argument (and is bound to &lt;code&gt;$what&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Normally, of course, we don&amp;rsquo;t need to specify the &lt;code&gt;is parsed&lt;/code&gt; trait when setting up a macro. Since a macro is a kind of subroutine, by default its argument list is parsed the same as any other subroutine&amp;rsquo;s — as a comma-separated list of Perl 6 expressions.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: this document is out of date and remains here for historic interest. See &lt;a href=&#34;http://dev.perl.org/perl6/doc/design/syn/S06.html&#34;&gt;Synopsis 6&lt;/a&gt; for the current design information.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;refactoring-parameter-lists&#34;&gt;Refactoring Parameter Lists&lt;/h3&gt;
+
+&lt;p&gt;By this stage, you might be justified in feeling that &lt;code&gt;&amp;amp;part&lt;/code&gt;&amp;rsquo;s parameter list is getting just a leeeeettle too sophisticated for its own good. Moreover, if we were using the multisub version, that complexity would have to be repeated in every variant.&lt;/p&gt;
+
+&lt;p&gt;Philosophically though, that&amp;rsquo;s okay. The later versions of &lt;code&gt;&amp;amp;part&lt;/code&gt; are doing some fairly sophisticated things, and the complexity required to achieve that has to go somewhere. Putting that extra complexity in the parameter list means that the body of &lt;code&gt;&amp;amp;part&lt;/code&gt; stays much simpler, as do any calls to &lt;code&gt;&amp;amp;part&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s the whole point: &lt;em&gt;Complexify locally to simplify globally.&lt;/em&gt; Or maybe: &lt;em&gt;Complexify declaratively to simplify procedurally.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;But there&amp;rsquo;s precious little room for the consolations of philosophy when you&amp;rsquo;re swamped in code and up to your assembler in allomorphism. So, rather than having to maintain those complex and repetitive parameter lists, we might prefer to factor out the common infrastructure. With, of course, yet another macro:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;macro PART_PARAMS {
+    my ($sheep,$goats) = request(2 default labels);
+    return &amp;quot;Str +\@labels is dim(2) = &amp;lt;&amp;lt;$sheep $goats&amp;gt;&amp;gt;, *\@data&amp;quot;;
+}
+
+multi sub part (Selector $is_sheep, PART_PARAMS) {
+    # body as before
+}
+
+multi sub part (Int @is_sheep, PART_PARAMS) {
+    # body as before
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we create a macro named &lt;code&gt;&amp;amp;PART_PARAMS&lt;/code&gt; that requests and extracts the default labels and then interpolates them into a string, which it returns. That string then replaces the original macro call.&lt;/p&gt;
+
+&lt;p&gt;Note that we reused the &lt;code&gt;&amp;amp;request&lt;/code&gt; macro within the &lt;code&gt;&amp;amp;PART_PARAMS&lt;/code&gt; macro. That&amp;rsquo;s important, because it means that, as the body of &lt;code&gt;&amp;amp;PART_PARAMS&lt;/code&gt; is itself being parsed, the default names are requested and interpolated into &lt;code&gt;&amp;amp;PART_PARAMS&lt;/code&gt;&amp;rsquo;s code. That ensures that the user-supplied default labels are hardwired into &lt;code&gt;&amp;amp;PART_PARAMS&lt;/code&gt; even before it&amp;rsquo;s compiled. So every subsequent call to &lt;code&gt;PART_PARAMS&lt;/code&gt; will return the same default labels.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, if we&amp;rsquo;d written &lt;code&gt;&amp;amp;PART_PARAMS&lt;/code&gt; like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;macro PART_PARAMS {
+    print &amp;quot;Enter 2 default labels: &amp;quot;;
+    my ($sheep,$goats) = split(/\s+/, &amp;lt;&amp;gt;, 3);
+    return &amp;quot;*\@data, Str +\@labels is dim(2) = &amp;lt;&amp;lt;$sheep $goats&amp;gt;&amp;gt;&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then each time we used the &lt;code&gt;&amp;amp;PART_PARAMS&lt;/code&gt; macro in our code, it would re-prompt for the labels. So we could give each variant of &lt;code&gt;&amp;amp;part&lt;/code&gt; its own default labels. Either approach is fine, depending on the effect we want to achieve. It&amp;rsquo;s really just a question how much work we&amp;rsquo;re willing to put in in order to be Lazy.&lt;/p&gt;
+
+&lt;h3 id=&#34;smooth-operators&#34;&gt;Smooth Operators&lt;/h3&gt;
+
+&lt;p&gt;By now it&amp;rsquo;s entirely possible that your head is spinning with the sheer number of ways Perl 6 lets us implement the &lt;code&gt;&amp;amp;part&lt;/code&gt; subroutine. Each of those ways represents a different tradeoff in power, flexibility, and maintainability of the resulting code. It&amp;rsquo;s important to remember that, however we choose to implement &lt;code&gt;&amp;amp;part&lt;/code&gt;, it&amp;rsquo;s always invoked in basically the same way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%parts = part $selector, @data;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sure, some of the above techniques let us modify the return labels, or control the use of named vs positional arguments. But with all of them, the call itself starts with the name of the subroutine, after which we specify the arguments.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s change that too!&lt;/p&gt;
+
+&lt;p&gt;Suppose we preferred to have a partitioning &lt;em&gt;operator&lt;/em&gt;, rather than a subroutine. If we ignore those optional labels, and restrict our list to be an actual array, we can see that the core partitioning operation is binary (&amp;ldquo;apply this selector to that array&amp;rdquo;).&lt;/p&gt;
+
+&lt;p&gt;If &lt;code&gt;&amp;amp;part&lt;/code&gt; is to become an operator, we need it to be a binary operator. In Perl 6 we can make up completely new operators, so let&amp;rsquo;s take our partitioning inspiration from Moses and call our new operator: &lt;code&gt;~|_|~&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll assume that this &amp;ldquo;Red Sea&amp;rdquo; operator is to be used like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%parts = @animals ~|_|~ Animal::Cat;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The left operand is the array to be partitioned and the right operand is the selector. To implement it, we&amp;rsquo;d write;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;multi sub infix:~|_|~ (@data, Selector $is_sheep)
+    is looser(&amp;amp;infix:+)
+    is assoc(&#39;non&#39;)
+{
+    return part $is_sheep, @data;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Operators are often overloaded with multiple variants (as we&amp;rsquo;ll soon see), so we typically implement them as multisubs. However, it&amp;rsquo;s also perfectly possible to implement them as regular subroutines, or even as macros.&lt;/p&gt;
+
+&lt;p&gt;To distinguish a binary operator from a regular multisub, we give it a special compound name, composed of the keyword &lt;code&gt;infix:&lt;/code&gt; followed by the characters that make up the operator&amp;rsquo;s symbol. These characters can be any sequence of non-whitespace Unicode characters (except left parenthesis, which can only appear if it&amp;rsquo;s the first character of the symbol). So instead of &lt;code&gt;~|_|~&lt;/code&gt; we could equally well have named our partitioning operator any of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;infix:¥
+infix:¦
+infix:^%#$!
+infix:&amp;lt;-&amp;gt;
+infix:∇
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;infix:&lt;/code&gt; keyword tells the compiler that the operator is placed between its operands (as binary operators always are). If we&amp;rsquo;re declaring a unary operator, there are three other keywords that can be used instead: &lt;code&gt;prefix:&lt;/code&gt;, &lt;code&gt;postfix:&lt;/code&gt;, or &lt;code&gt;circumfix:&lt;/code&gt;. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub prefix:±       (Num $n) is equiv(&amp;amp;infix:+)    { return +$n|-$n }
+
+sub postfix:²      (Num $n) is tighter(&amp;amp;infix:**) { return $n**2 }
+
+sub circumfix:⌊...⌋ (Num $n) { return POSIX::floor($n) }
+
+# and later...
+
+$error = ±⌊$x²⌋;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;is tighter&lt;/code&gt;, &lt;code&gt;is looser&lt;/code&gt;, and &lt;code&gt;is equiv&lt;/code&gt; traits tell the parser what the precedence of the new operator will be, relative to existing operators: namely, whether the operator binds more tightly than, less tightly than, or with the same precedence as the operator named in the trait. Every operator has to have a precedence and associativity, so every operator definition has to include one of these three traits.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;is assoc&lt;/code&gt; trait is only required on infix operators and specifies whether they chain to the left (like &lt;code&gt;+&lt;/code&gt;), to the right (like &lt;code&gt;=&lt;/code&gt;), or not at all (like &lt;code&gt;..&lt;/code&gt;). If the trait is not specified, the operator takes its associativity from the operator that&amp;rsquo;s specified in the &lt;code&gt;is tighter&lt;/code&gt;, &lt;code&gt;is looser&lt;/code&gt;, or &lt;code&gt;is equiv&lt;/code&gt; trait.&lt;/p&gt;
+
+&lt;h4 id=&#34;arguments-both-ways&#34;&gt;Arguments Both Ways&lt;/h4&gt;
+
+&lt;p&gt;On the other hand, we might prefer that the selector come first (as it does in &lt;code&gt;&amp;amp;part&lt;/code&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;%parts = Animal::Cat ~|_|~ @animals;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;in which case we could just add:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;multi sub infix:~|_|~ (Selector $is_sheep, @data)
+    is equiv( &amp;amp;infix:~|_|~(Array,Selector) )
+{
+    return part $is_sheep, @data;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;so now we can specify the selector and the data in &lt;em&gt;either&lt;/em&gt; order.&lt;/p&gt;
+
+&lt;p&gt;Because the two variants of the &lt;code&gt;&amp;amp;infix:~|_|~&lt;/code&gt; multisubs have different parameter lists (one is &lt;code&gt;(Array,Selector)&lt;/code&gt;, the other is &lt;code&gt;(Selector, Array)&lt;/code&gt;, Perl 6 always knows which one to call. If the left operand is a &lt;code&gt;Selector&lt;/code&gt;, the &lt;code&gt;&amp;amp;infix:~|_|~(Selector,Array)&lt;/code&gt; variant is called. If the left operand is an array, the &lt;code&gt;&amp;amp;infix:~|_|~(Array,Selector)&lt;/code&gt; variant is invoked.&lt;/p&gt;
+
+&lt;p&gt;Note that, for this second variant, we specified &lt;code&gt;is equiv&lt;/code&gt; instead of &lt;code&gt;is tighter&lt;/code&gt; or &lt;code&gt;is looser&lt;/code&gt;. This ensures that the precedence and associativity of the second variant are the same as those of the first. That&amp;rsquo;s also why we didn&amp;rsquo;t need to specify an &lt;code&gt;is assoc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;parting-is-such-sweet-sorrow&#34;&gt;Parting Is Such Sweet Sorrow&lt;/h3&gt;
+
+&lt;p&gt;Phew. Talk about &amp;ldquo;more than one way to do it&amp;rdquo;!&lt;/p&gt;
+
+&lt;p&gt;But don&amp;rsquo;t be put off by these myriad new features and alternatives. The vast majority of them are special-purpose, power-user techniques that you may well never need to use or even know about.&lt;/p&gt;
+
+&lt;p&gt;For most of us it will be enough to know that we can now add a proper parameter list, with sensibly named parameters, to any subroutine. What we used to write as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub feed {
+    my ($who, $how_much, @what) = @_;
+    ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;we now write as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub feed ($who, $how_much, *@what) {
+    ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or, when we&amp;rsquo;re feeling particularly cautious:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub feed (Str $who, Num $how_much, Food *@what) {
+    ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Just being able to do that is a huge win for Perl 6.&lt;/p&gt;
+
+&lt;h3 id=&#34;parting-shot&#34;&gt;Parting Shot&lt;/h3&gt;
+
+&lt;p&gt;By the way, here&amp;rsquo;s (most of) that same partitioning functionality implemented in Perl 5:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Perl 5 code...
+sub part {
+    my ($is_sheep, $maybe_flag_or_labels, $maybe_labels, @data) = @_;
+    my ($sheep, $goats);
+    if ($maybe_flag_or_labels eq &amp;quot;labels&amp;quot; &amp;amp;&amp;amp; ref $maybe_labels eq &#39;ARRAY&#39;) { 
+        ($sheep, $goats) = @$maybe_labels;
+    }
+    elsif (ref $maybe_flag_or_labels eq &#39;ARRAY&#39;) {
+        unshift @data, $maybe_labels;
+        ($sheep, $goats) = @$maybe_flag_or_labels;
+    }
+    else {
+        unshift @data, $maybe_flag_or_labels, $maybe_labels;
+        ($sheep, $goats) = qw(sheep goats);
+    }
+    my $arg1_type = ref($is_sheep) || &#39;CLASS&#39;;
+    my %herd;
+    if ($arg1_type eq &#39;ARRAY&#39;) {
+        for my $index (0..$#data) {
+            my $datum = $data[$index];
+            my $label = grep({$index==$_} @$is_sheep) ? $sheep : $goats;
+            push @{$herd{$label}}, $datum;
+        }
+    }
+    else {
+        croak &amp;quot;Invalid first argument to &amp;amp;part&amp;quot;
+            unless $arg1_type =~ /^(Regexp|CODE|HASH|CLASS)$/;
+        for (@data) {
+            if (  $arg1_type eq &#39;Regexp&#39; &amp;amp;&amp;amp; /$is_sheep/
+               || $arg1_type eq &#39;CODE&#39;   &amp;amp;&amp;amp; $is_sheep-&amp;gt;($_)
+               || $arg1_type eq &#39;HASH&#39;   &amp;amp;&amp;amp; $is_sheep-&amp;gt;{$_}
+               || UNIVERSAL::isa($_,$is_sheep)
+               ) {
+                push @{$herd{$sheep}}, $_;
+            }
+            else {
+                push @{$herd{$goats}}, $_;
+            }
+        }
+    }
+    return map {bless {key=&amp;gt;$_,value=&amp;gt;$herd{$_}},&#39;Pair&#39;} keys %herd;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; which is &lt;em&gt;precisely&lt;/em&gt; why we&amp;rsquo;re developing Perl 6.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

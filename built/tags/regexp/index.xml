@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Regexp on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/regexp/</link>
+    <description>Recent content in Regexp on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 16 Jan 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/regexp/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Maintaining Regular Expressions</title>
+      <link>http://localhost:1313/pub/2004/01/16/regexps.html/</link>
+      <pubDate>Fri, 16 Jan 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/01/16/regexps.html/</guid>
+      <description>
+
+&lt;p&gt;For some, regular expressions provide the chainsaw functionality of the much-touted Perl &amp;ldquo;Swiss Army knife&amp;rdquo; metaphor. They are powerful, fast, and very sharp, but like real chainsaws, can be dangerous when used without appropriate safety measures.&lt;/p&gt;
+
+&lt;p&gt;In this article I&amp;rsquo;ll discuss the issues associated with using heavy-duty, contractor-grade regular expressions, and demonstrate a few maintenance techniques to keep these chainsaws in proper condition for safe and effective long-term use.&lt;/p&gt;
+
+&lt;h3 id=&#34;readability-whitespace-and-comments&#34;&gt;Readability: Whitespace and Comments&lt;/h3&gt;
+
+&lt;p&gt;Before getting into any deep issues, I want to cover the number one rule of shop safety: use whitespace to format your regular expressions. Most of us already honor this wisdom in our various coding styles (though perhaps not with the zeal of Python developers). But more of us could make better, judicious use of whitespace in our regular expressions, via the &lt;code&gt;/x&lt;/code&gt; modifier. Not only does it improve readability, but allows us to add meaningful, explanatory comments. For example, this simple regular expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# matching &amp;quot;foobar&amp;quot; is critical here ...
+  $_ =~ m/foobar/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Could be rewritten, using a trailing &lt;code&gt;/x&lt;/code&gt; modifier, as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$_ =~ m/ foobar    # matching &amp;quot;foobar&amp;quot; is critical here ...
+         /x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, in this example you might argue that readability wasn&amp;rsquo;t improved at all; I guess that&amp;rsquo;s the problem with triviality. Here&amp;rsquo;s another, slightly less trivial example that also illustrates the need to escape literal whitespace and comment characters when using the &lt;code&gt;/x&lt;/code&gt; modifier:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$_ =~ m/^                         # anchor at beginning of line
+          The\ quick\ (\w+)\ fox    # fox adjective
+          \ (\w+)\ over             # fox action verb
+          \ the\ (\w+) dog          # dog adjective
+          (?:                       # whitespace-trimmed comment:
+            \s* \# \s*              #   whitespace and comment token
+            (.*?)                   #   captured comment text; non-greedy!
+            \s*                     #   any trailing whitespace
+          )?                        # this is all optional
+          $                         # end of line anchor
+         /x;                        # allow whitespace
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This regular expression successfully matches the following lines of input:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;The quick brown fox jumped over the lazy dog
+The quick red fox bounded over the sleeping dog
+The quick black fox slavered over the dead dog   # a bit macabre, no?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;While embedding meaningful explanatory comments in your regular expressions can only help readability and maintenance, many of us don&amp;rsquo;t like the plethora of backslashed spaces made necessary by the &amp;ldquo;global&amp;rdquo; &lt;code&gt;/x&lt;/code&gt; modifier. Enter the &amp;ldquo;locally&amp;rdquo; acting &lt;code&gt;(?#)&lt;/code&gt; and &lt;code&gt;(?x:)&lt;/code&gt; embedded modifiers:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$_ =~ m/^(?#                      # anchor at beginning of line
+
+          )The quick (\w+) fox (?#  # fox adjective
+          )(\w+) over (?#           # fox action verb
+          )the (\w+) dog(?x:        # dog adjective
+                                    # optional, trimmed comment:
+            \s*                     #   leading whitespace
+            \# \s* (.*?)            #   comment text
+            \s*                     #   trailing whitespace
+
+          )?$(?#                    # end of line anchor
+          )/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this case, the &lt;code&gt;(?#)&lt;/code&gt; embedded modifier was used to introduce our commentary between each set of whitespace-sensitive textual components; the non-capturing parentheses construct &lt;code&gt;(?:)&lt;/code&gt; used for the optional comment text was also altered to include a locally-acting &lt;code&gt;x&lt;/code&gt; modifier. No backslashing was necessary, but it&amp;rsquo;s a bit harder to quickly distinguish relevant whitespace. To each their own, YMMV, TIMTOWTDI, etc.; the fact is, both commented examples are probably easier to maintain than:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# match the fox adjective and action verb, then the dog adjective,
+  # and any optional, whitespace-trimmed commentary:
+  $_ =~ m/^The quick (\w+) fox (\w+) over the (\w+) dog(?:\s*#\s*(.*?)\s*$/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example, while well-commented and clear at first, quickly deteriorates into the nearly unreadable &amp;ldquo;line noise&amp;rdquo; that gives Perl programmers a bad name and makes later maintenance difficult.&lt;/p&gt;
+
+&lt;p&gt;So, as in other programming languages, use whitespace formatting and commenting as appropriate, or maybe even when it seems like overkill; it can&amp;rsquo;t hurt. And like the choice between alternative code indentation and bracing styles, Perl regular expressions allow a few different options (global &lt;code&gt;/x&lt;/code&gt; modifier, local &lt;code&gt;(?#)&lt;/code&gt; and &lt;code&gt;(?x:)&lt;/code&gt; embedded modifiers) to suit your particular aesthetics.&lt;/p&gt;
+
+&lt;h3 id=&#34;capturing-parenthesis-taming-the-jungle&#34;&gt;Capturing Parenthesis: Taming the Jungle&lt;/h3&gt;
+
+&lt;p&gt;Most of us use regular expressions to actually do something with the parsed text (although the condition that the input matches the expressions is also important). Assigning the captured text from the previous example is relatively easy: the first three capturing parentheses are visually distinct and can be clearly numbered &lt;code&gt;$1&lt;/code&gt;, &lt;code&gt;$2&lt;/code&gt; and &lt;code&gt;$3&lt;/code&gt;; however, the extra set of non-capturing parentheses, which provide optional commentary, themselves have another set of embedded, capturing parentheses; here&amp;rsquo;s another rewriting of the example, with slightly less whitespace formatting:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my ($fox, $verb, $dog, $comment);
+  if ( $_ =~ m/^                         # anchor at beginning of line
+               The\ quick\ (\w+)\ fox    # fox adjective
+               \ (\w+)\ over             # fox action verb
+               \ the\ (\w+) dog          # dog adjective
+               (?:\s* \# \s* (.*?) \s*)? # an optional, trimmed comment
+               $                         # end of line anchor
+              /x
+     ) {
+      ($fox, $verb, $dog, $comment) = ($1, $2, $3, $4);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;From a quick glance at this code, can you immediately tell whether the &lt;code&gt;$comment&lt;/code&gt; variable will come from &lt;code&gt;$4&lt;/code&gt; or &lt;code&gt;$5&lt;/code&gt;? Will it include the leading &lt;code&gt;#&lt;/code&gt; comment character? If you are a practiced regular expression programmer, you probably can answer these questions without difficulty, at least for this fairly trivial example. But if we could make &lt;em&gt;this&lt;/em&gt; example even clearer, you will hopefully agree that similarly clarifying some of your more gnarly regular expressions would be beneficial in the long run.&lt;/p&gt;
+
+&lt;p&gt;When regular expressions grow very large, or include more than three pairs of parentheses (capturing or otherwise), a useful clarifying technique is to embed the capturing assignments directly within the regular expression, via the code-executing pattern &lt;code&gt;(?{})&lt;/code&gt;. In the embedded code, the special &lt;code&gt;$^N&lt;/code&gt; variable, which holds the contents of the last parenthetical capture, is used to &amp;ldquo;inline&amp;rdquo; any variable assignments; our previous example turns into this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my ($fox, $verb, $dog, $comment);
+  $_ =~ m/^                               # anchor at beginning of line
+          The\ quick\  (\w+)              # fox adjective
+                       (?{ $fox  = $^N }) 
+          \ fox\       (\w+)              # fox action verb
+                       (?{ $verb = $^N })
+          \ over\ the\ (\w+)              # dog adjective
+                       (?{ $dog  = $^N })
+          dog
+                                          # optional trimmed comment
+            (?:\s* \# \s*                 #   leading whitespace
+            (.*?)                         #   comment text
+            (?{ $comment = $^N })
+            \s*)?                         #   trailing whitespace
+          $                               # end of line anchor
+         /x;                              # allow whitespace
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now it should be explicitly clear that the &lt;code&gt;$comment&lt;/code&gt; variable will only contain the whitespace-trimmed commentary following (but not including) the &lt;code&gt;#&lt;/code&gt; character. We also don&amp;rsquo;t have to worry about numbered variables &lt;code&gt;$1&lt;/code&gt;, &lt;code&gt;$2&lt;/code&gt;, &lt;code&gt;$3&lt;/code&gt;, etc. anymore, since we don&amp;rsquo;t make use of them. This regular expression can be easily extended to capture other text without rearranging variable assignments.&lt;/p&gt;
+
+&lt;h3 id=&#34;repeated-execution&#34;&gt;Repeated Execution&lt;/h3&gt;
+
+&lt;p&gt;There are a few caveats to using this technique, however; note that code within &lt;code&gt;(?{})&lt;/code&gt; constructs is executed immediately as the regular expression engine incorporates it into a match. That is, if the engine backtracks off a parenthetical capture to generate a successful match that does not include that capture, the associated &lt;code&gt;(?{})&lt;/code&gt; code will have already been executed. To illustrate, let&amp;rsquo;s again look at just the capturing pattern for the comment text &lt;code&gt;(.*?)&lt;/code&gt; and let&amp;rsquo;s also add a debugging &lt;code&gt;warn &amp;quot;$comment\n&amp;quot;&lt;/code&gt; statement:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# optional trimmed comment
+            (?:\s* \# \s*               #   leading whitespace
+            (.*?) (?{ $comment = $^N;   #   comment text
+                      warn &amp;quot;&amp;gt;&amp;gt;$comment&amp;lt;&amp;lt;\n&amp;quot;
+                        if $debug;
+                    })
+            \s*)?                       #   trailing whitespace
+          $                             # end of line anchor
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The capturing &lt;code&gt;(.*?)&lt;/code&gt; pattern is a non-greedy extension that will cause the regular expression matching engine to constantly try to finish the match (looking for any trailing whitespace and the end of string, &lt;code&gt;$&lt;/code&gt;) without extending the &lt;code&gt;.*?&lt;/code&gt; pattern any further. The upshot of all this is that with debugging turned on, this input text:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;The quick black fox slavered over the dead dog # a bit macabre, no?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Will lead to these debugging statements:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;gt;&amp;gt;&amp;lt;&amp;lt;
+&amp;gt;&amp;gt;a&amp;lt;&amp;lt;
+&amp;gt;&amp;gt;a &amp;lt;&amp;lt;
+&amp;gt;&amp;gt;a b&amp;lt;&amp;lt;
+&amp;gt;&amp;gt;a bi&amp;lt;&amp;lt;
+&amp;gt;&amp;gt;a bit&amp;lt;&amp;lt;
+&amp;gt;&amp;gt;a bit &amp;lt;&amp;lt;
+&amp;gt;&amp;gt;a bit m&amp;lt;&amp;lt;
+[ ... ]
+&amp;gt;&amp;gt;a bit macabre, n&amp;lt;&amp;lt;
+&amp;gt;&amp;gt;a bit macabre, no&amp;lt;&amp;lt;
+&amp;gt;&amp;gt;a bit macabre, no?&amp;lt;&amp;lt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In other words, the adjacent embedded &lt;code&gt;(?{})&lt;/code&gt; code gets executed every time the matching engine &amp;ldquo;uses&amp;rdquo; it while trying to complete the match; because the matching engine may &amp;ldquo;backtrack&amp;rdquo; to try many alternatives, the embedded code will also be executed as many times.&lt;/p&gt;
+
+&lt;p&gt;This multiple execution behavior does raise a few concerns. If the embedded code is only performing assignments, via &lt;code&gt;$^N&lt;/code&gt;, there doesn&amp;rsquo;t seem at first to be much of a problem, because each successive execution overrides any previous assignments, and only the final, successful execution matters, right? However, what if the input text had instead been:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;The quick black fox slavered over the dead doggie # a bit macabre, no?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This text should fail to match the regular expression overall (since &amp;ldquo;doggie&amp;rdquo; won&amp;rsquo;t match &amp;ldquo;dog&amp;rdquo;), and it does. But, because the embedded &lt;code&gt;(?{})&lt;/code&gt; code chunks are executed as the match is evaluated, the &lt;code&gt;$fox&lt;/code&gt;, &lt;code&gt;$verb&lt;/code&gt; and &lt;code&gt;$dog&lt;/code&gt; variables are successfully assigned; the match doesn&amp;rsquo;t fail until &amp;ldquo;doggie&amp;rdquo; is seen. Our program might now be more readable and maintainable, but we&amp;rsquo;ve also subtly altered the behavior of the program.&lt;/p&gt;
+
+&lt;p&gt;The second problem is one of performance; what if our assignment code hadn&amp;rsquo;t simply copied &lt;code&gt;$^N&lt;/code&gt; into a variable, but had instead executed a remote database update? Repeatedly hitting the database with meaningless updates may be crippling and inefficient. However, the behavioral aspects of the database example are even more frightening: what if the match failed overall, but our updates had already been executed? Imagine that instead of an update operation, our code triggered a new row insert for the comment, inserting multiple, incorrect comment rows!&lt;/p&gt;
+
+&lt;h3 id=&#34;deferred-execution&#34;&gt;Deferred Execution&lt;/h3&gt;
+
+&lt;p&gt;Luckily, Perl&amp;rsquo;s ability to introduce &amp;ldquo;locally scoped&amp;rdquo; variables provides a mechanism to &amp;ldquo;defer&amp;rdquo; code execution until an overall successful match is accomplished. As the regular expression matching engine tries alternative matches, it introduces a new, nested scope for each &lt;code&gt;(?{})&lt;/code&gt; block, and, more importantly, it exits a local scope if a particular match is abandoned for another. If we were to write out the code executed by the matching engine as it moved (and backtracked) through our input, it might look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{ # introduce new scope
+  $fox = $^N;
+  { # introduce new scope
+    $verb = $^N;
+    { # introduce new scope
+      $dog = $^N;
+      { # introduce new scope
+        $comment = $^N;
+      } # close scope: failed overall match
+      { # introduce new scope
+        $comment = $^N;
+      } # close scope: failed overall match
+      { # introduce new scope
+        $comment = $^N;
+      } # close scope: failed overall match
+
+      # ...
+
+      { # introduce new scope
+        $comment = $^N;
+      } # close scope: successful overall match
+    } # close scope: successful overall match
+  } # close scope: successful overall match
+} # close scope: successful overall match
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can use this block-scoping behavior to solve both our altered behavior and performance issues. Instead of executing code immediately within each block, we&amp;rsquo;ll cleverly &amp;ldquo;bundle&amp;rdquo; the code up, save it away on a locally scoped &amp;ldquo;stack,&amp;rdquo; and only process the code if and when we get to the end of a successful match:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;my ($fox, $verb, $dog, $comment);
+  $_ =~ m/(?{
+              local @c = ();            # provide storage &amp;quot;stack&amp;quot;
+          })
+          ^                             # anchor at beginning of line
+          The\ quick\  (\w+)            # fox adjective
+                       (?{
+                           local @c;
+                           push @c, sub {
+                               $fox = $^N;
+                           };
+                       })
+          \ fox\       (\w+)            # fox action verb
+                       (?{
+                           local @c = @c;
+                           push @c, sub {
+                               $verb = $^N;
+                           };
+                       })
+          \ over\ the\ (\w+)            # dog adjective
+                       (?{
+                           local @c = @c;
+                           push @c, sub {
+                               $dog = $^N;
+                           };
+                       })
+          dog
+                                        # optional trimmed comment
+            (?:\s* \# \s*               #   leading whitespace
+            (.*?)                       #   comment text
+            (?{
+                local @c = @c;
+                push @c, sub {
+                    $comment = $^N;
+                    warn &amp;quot;&amp;gt;&amp;gt;$comment&amp;lt;&amp;lt;\n&amp;quot;
+                      if $debug;
+                };
+            })
+            \s*)?                       #   trailing whitespace
+          $                             # end of line anchor
+          (?{
+              for (@c) { &amp;amp;$_; }         # execute the deferred code
+          })
+         /x;                            # allow whitespace
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using subroutine &amp;ldquo;closures&amp;rdquo; to package up our code and save them on a locally defined stack, &lt;code&gt;@c&lt;/code&gt;, allows us to defer any processing until the very end of a successful match. Here&amp;rsquo;s the matching engine code execution &amp;ldquo;path&amp;rdquo;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{ # introduce new scope
+
+  local @c = (); # provide storage &amp;quot;stack&amp;quot;
+
+  { # introduce new scope
+
+    local @c;
+    push @c, sub { $fox = $^N; };
+
+    { # introduce new scope
+
+      local @c = @c;
+      push @c, sub { $verb = $^N; };
+
+      { # introduce new scope
+
+        local @c = @c;
+        push @c, sub { $dog = $^N; };
+
+        { # introduce new scope
+
+          local @c = @c;
+          push @c, sub { $comment = $^N; };
+
+        } # close scope; lose changes to @c
+
+        { # introduce new scope
+
+          local @c = @c;
+          push @c, sub { $comment = $^N; };
+
+        } # close scope; lose changes to @c
+
+        # ...
+
+        { # introduce new scope
+
+          local @c = @c;
+          push @c, sub { $comment = $^N; };
+
+          { # introduce new scope
+
+            for (@c) { &amp;amp;$_; }
+
+          } # close scope
+
+        } # close scope; lose changes to @c
+      } # close scope; lose changes to @c
+    } # close scope; lose changes to @c
+  } # close scope; lose changes to @c
+} # close scope; no more @c at all
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This last technique is especially wordy; however, given judicious use of whitespace and well-aligned formatting, this idiom could ease the maintenance of long, complicated regular expressions.&lt;/p&gt;
+
+&lt;p&gt;But, more importantly, &lt;strong&gt;it doesn&amp;rsquo;t work&lt;/strong&gt; as written. What!?! Why? Well, it turns out that Perl&amp;rsquo;s support for code blocks inside &lt;code&gt;(?{})&lt;/code&gt; constructs doesn&amp;rsquo;t support subroutine closures (even attempting to compile one causes a core dump). But don&amp;rsquo;t worry, all is not lost! Since this is Perl, we can always take things a step further, and make the hard things easy &amp;hellip;&lt;/p&gt;
+
+&lt;h3 id=&#34;making-it-actually-work-use-regexp-deferredexecution&#34;&gt;Making it Actually Work: &lt;code&gt;use Regexp::DeferredExecution&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;Though we cannot (yet) compile subroutines within &lt;code&gt;(?{})&lt;/code&gt; constructs, we can manipulate all the other types of Perl variables: scalars, arrays, and hashes. So instead of using closures:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;m/
+    (?{ local @c = (); })
+    # ...
+    (?{ local @c; push @c, sub { $comment = ^$N; } })
+    # ...
+    (?{ for (@c) { &amp;amp;$_; } })
+   /x
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can instead just package up our &lt;code&gt;$comment = $^N&lt;/code&gt; code into a string, to be executed by an &lt;code&gt;eval&lt;/code&gt; statement later:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;m/
+    (?{ local @c = (); })
+    # ...
+    (?{ local @c; push @c, [ $^N, q{ $comment = ^$N; } ] })
+    # ...
+    (?{ for (@c) { $^N = $$[0]; eval $$[1]; } })
+   /x
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that we also had to store away the version of &lt;code&gt;$^N&lt;/code&gt; that was active at the time of the &lt;code&gt;(?{})&lt;/code&gt; pattern, because it very likely will have changed by the end of the match. We didn&amp;rsquo;t need to do this previously, as we were storing closures that efficiently captured all the local context of the code to be executed.&lt;/p&gt;
+
+&lt;p&gt;Well, now this is getting &lt;em&gt;really&lt;/em&gt; wordy, and downright ugly to be honest. However, through the magic of Perl&amp;rsquo;s overloading mechanism, we can avoid having to see any of that ugliness, by simply using the &lt;code&gt;Regexp::DeferredExecution&lt;/code&gt; module from CPAN:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Regexp:DeferredExecution;
+
+  my ($fox, $verb, $dog, $comment);
+  $_ =~ m/^                               # anchor at beginning of line
+          The\ quick\  (\w+)              # fox adjective
+                       (?{ $fox  = $^N }) 
+          \ fox\       (\w+)              # fox action verb
+                       (?{ $verb = $^N })
+          \ over\ the\ (\w+)              # dog adjective
+                       (?{ $dog  = $^N })
+          dog
+                                          # optional trimmed comment
+            (?:\s* \# \s*                 #   leading whitespace
+            (.*?)
+            (?{ $comment = $^N })         #   comment text
+            \s*)?                         #   trailing whitespace
+          $                               # end of line anchor
+         /x;                              # allow whitespace
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How does the &lt;code&gt;Regexp::DeferredExecution&lt;/code&gt; module perform its magic? Carefully, of course, but also simply; it just makes the same alterations to regular expressions that we made manually. 1) An initiating embedded code pattern is prepended to declare local &amp;ldquo;stack&amp;rdquo; storage. 2) Another embedded code pattern is added at the end of the expression to execute any code found in the stack (the stack itself is stored in &lt;code&gt;@Regexp::DeferredExecution::c&lt;/code&gt;, so you shouldn&amp;rsquo;t need to worry about variable name collisions with your own code). 3) Finally, any &lt;code&gt;(?{})&lt;/code&gt; constructs seen in your regular expressions are saved away onto a local copy of the stack for later execution. It looks a little like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;package Regexp::DeferredExecution;
+
+use Text::Balanced qw(extract_multiple extract_codeblock);
+
+use overload;
+
+sub import { overload::constant &#39;qr&#39; =&amp;gt; \&amp;amp;convert; }
+sub unimport { overload::remove_constant &#39;qr&#39;; }
+
+sub convert {
+
+  my $re = shift; 
+
+  # no need to convert regexp&#39;s without (?{ &amp;lt;code&amp;gt; }):
+  return $re unless $re =~ m/\(\?\{/;
+
+  my @chunks = extract_multiple($re,
+                                [ qr/\(\?  # &#39;(?&#39; (escaped)
+                                     (?={) # followed by &#39;{&#39; (lookahead)
+                                    /x,
+                                  \&amp;amp;extract_codeblock
+                                ]
+                               );
+
+  for (my $i = 1 ; $i &amp;lt; @chunks ; $i++) {
+    if ($chunks[$i-1] eq &amp;quot;(?&amp;quot;) {
+      # wrap all code into a closure and push onto the stack:
+      $chunks[$i] =~
+        s/\A{ (.*) }\Z/{
+          local \@Regexp::DeferredExecution::c;
+          push \@Regexp::DeferredExecution::c, [\$^N, q{$1}];
+        }/msx;
+  }
+
+  $re = join(&amp;quot;&amp;quot;, @chunks);
+
+  # install the stack storage and execution code:
+  $re = &amp;quot;(?{
+            local \@Regexp::DeferredExecution::c = (); # the stack
+         })$re(?{
+            for (\@Regexp::DeferredExecution::c) {
+              \$^N = \$\$_[0];  # reinstate \$^N
+              eval \$\$_[1];    # execute the code
+            }
+         })&amp;quot;;
+
+  return $re;
+}
+
+1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;One caveat of &lt;code&gt;Regexp::DeferredExecution&lt;/code&gt; use is that while execution will occur only once per compiled regular expressions, the ability to embed regular expressions inside of other regular expressions will circumvent this behavior:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Regexp::DeferredExecution;
+
+  # the quintessential foobar/foobaz parser:
+  $re = qr/foo
+           (?:
+              bar (?:{ warn &amp;quot;saw bar!\n&amp;quot;; })
+              |
+              baz (?:{ warn &amp;quot;saw baz!\n&amp;quot;; })
+           )?/x;
+
+  # someone&#39;s getting silly now:
+  $re2 = qr/ $re
+             baroo!
+             (?:{ warn &amp;quot;saw foobarbaroo! (or, foobazbaroo!)\n&amp;quot;; })
+           /x;
+
+  &amp;quot;foobar&amp;quot; =~ /$re2/;
+
+  __END__
+  &amp;quot;saw bar!&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even though the input text to &lt;code&gt;$re2&lt;/code&gt; failed to match, the deferred code from &lt;code&gt;$re&lt;/code&gt; was executed because its pattern &lt;em&gt;did&lt;/em&gt; match successfully. Therefore, &lt;code&gt;Regexp::DeferredExecution&lt;/code&gt; should only be used with &amp;ldquo;constant&amp;rdquo; regular expressions; there is currently no way to overload dynamic, &amp;ldquo;interpolated&amp;rdquo; regular expressions.&lt;/p&gt;
+
+&lt;h3 id=&#34;see-also&#34;&gt;See Also&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;Regexp::Fields&lt;/code&gt; module provides a much more compact shorthand for embedded named variable assignments, &lt;code&gt;(?&amp;lt;varname&amp;gt; pattern)&lt;/code&gt;, such that our example becomes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Regexp::Fields qw(my);
+
+  my $rx =
+    qr/^                             # anchor at beginning of line
+       The\ quick\ (?&amp;lt;fox&amp;gt; \w+)\ fox # fox adjective
+       \ (?&amp;lt;verb&amp;gt; \w+)\ over         # fox action verb
+       \ the\ (?&amp;lt;dog&amp;gt; \w+) dog       # dog adjective
+       (?:\s* \# \s*
+          (?&amp;lt;comment&amp;gt; .*?)
+       \s*)? # an optional, trimmed comment
+       $                             # end of line anchor
+      /x;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that in this particular example, the &lt;code&gt;my $rx&lt;/code&gt; compilation stanza actually implicitly declared &lt;code&gt;$fox&lt;/code&gt;, &lt;code&gt;$verb&lt;/code&gt; etc. If variable assignment is all you&amp;rsquo;re ever doing, &lt;code&gt;Regexp::Fields&lt;/code&gt; is all you&amp;rsquo;ll need. If you want to embed more generic code fragments in your regular expressions, &lt;code&gt;Regexp::DeferredExecution&lt;/code&gt; may be your ticket.&lt;/p&gt;
+
+&lt;p&gt;And finally, because in Perl there is always One More Way To Do It, I&amp;rsquo;ll also demonstrate &lt;code&gt;Regexp::English&lt;/code&gt;, a module that allows you to use regular expressions without actually writing any regular expressions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Regexp::English;
+
+  my ($fox, $verb, $dog, $comment);
+
+  my $rx = Regexp::English-&amp;gt;new
+               -&amp;gt; start_of_line
+               -&amp;gt; literal(&#39;The quick &#39;)
+
+               -&amp;gt; remember(\$fox)
+                   -&amp;gt; word_chars
+               -&amp;gt; end
+
+               -&amp;gt; literal(&#39; fox &#39;)
+
+               -&amp;gt; remember(\$verb)
+                   -&amp;gt; word_chars
+               -&amp;gt; end
+
+               -&amp;gt; literal(&#39; over the &#39;)
+
+               -&amp;gt; remember(\$dog)
+                   -&amp;gt; word_chars
+               -&amp;gt; end
+
+               -&amp;gt; literal(&#39; dog&#39;)
+
+               -&amp;gt; optional
+                   -&amp;gt; zero_or_more -&amp;gt; whitespace_char -&amp;gt; end
+                   -&amp;gt; literal(&#39;#&#39;)
+                   -&amp;gt; zero_or_more -&amp;gt; whitespace_char -&amp;gt; end
+
+                   -&amp;gt; remember(\$comment)
+                       -&amp;gt; minimal
+                           -&amp;gt; multiple
+                               -&amp;gt; word_char
+                               -&amp;gt; or
+                               -&amp;gt; whitespace_char
+                           -&amp;gt; end
+                       -&amp;gt; end
+                   -&amp;gt; end
+                   -&amp;gt; zero_or_more -&amp;gt; whitespace_char -&amp;gt; end
+               -&amp;gt;end
+
+               -&amp;gt; end_of_line;
+
+  $rx-&amp;gt;match($_);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I must admit that this last example appeals to my inner-Lispish self.&lt;/p&gt;
+
+&lt;p&gt;Hopefully you&amp;rsquo;ve gleaned a few tips and tricks from this little workshop of mine that you can take back to your own shop.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

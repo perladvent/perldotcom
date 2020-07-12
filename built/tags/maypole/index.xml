@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Maypole on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/maypole/</link>
+    <description>Recent content in Maypole on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 29 Apr 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/maypole/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Rapid Web Application Deployment with Maypole : Part 2</title>
+      <link>http://localhost:1313/pub/2004/04/29/maypole.html/</link>
+      <pubDate>Thu, 29 Apr 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/04/29/maypole.html/</guid>
+      <description>
+
+&lt;p&gt;When we &lt;a href=&#34;http://localhost:1313/pub/2004/04/15/maypole.html&#34;&gt;last&lt;/a&gt; left our intrepid web developer, he had successfully set up an online sales catalogue in 11 lines of code. Now, however, he has to move on to turning this into a sales site with a shopping cart and all the usual trimmings. It&amp;rsquo;s time to see some of that flexibility we talked about last week; unfortunately this means we&amp;rsquo;re going to have to write some more code, but we can&amp;rsquo;t have everything.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-who-am-i-who-am-i-span&#34;&gt;&lt;span id=&#34;Who_Am_I?&#34;&gt;Who Am I?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In order to add the shopping cart to the site, we need to introduce the concept of a current user. This will allow viewers of the site to log in and have their own cart. We will be adding two new tables to the database, a table to store details about the user, and one to represent the cart. Our tables will look like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  CREATE TABLE user (
+    id int not null auto_increment primary key,
+    first_name varchar(64),
+    last_name varchar(64),
+    email varchar(255),
+    password varchar(64),
+    address1 varchar(255),
+    address2 varchar(255),
+    state varchar(255),
+    postal_code varchar(64),
+    country varchar(64)
+  );
+
+  CREATE TABLE cart_item (
+    id int not null auto_increment primary key,
+    user int,
+    item int
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As before, Maypole automatically creates classes for the tables. We use &lt;code&gt;Class::DBI&lt;/code&gt; relationships to tell Maypole what&amp;rsquo;s going on with these tables:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  ISellIt::User-&amp;gt;has_many( &amp;quot;cart_items&amp;quot; =&amp;gt; &amp;quot;ISellIt::BasketItem&amp;quot;);
+  ISellIt::BasketItem-&amp;gt;has_a( &amp;quot;user&amp;quot; =&amp;gt; &amp;quot;ISellit::User&amp;quot; );
+  ISellIt::BasketItem-&amp;gt;has_a( &amp;quot;item&amp;quot; =&amp;gt; &amp;quot;ISellit::Product&amp;quot; );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We now need a way to tell our application about the current user. There&amp;rsquo;s a long explanation of Maypole&amp;rsquo;s authentication system in the &lt;a href=&#34;http://maypole.simon-cozens.org/doc/authentication.html&#34;&gt;Maypole documentation&lt;/a&gt;, but one of the easiest ways to do add the concept of the current user is with the &lt;code&gt;Maypole::Authentication::UserSessionCookie&lt;/code&gt; module.&lt;/p&gt;
+
+&lt;p&gt;As its name implies, this module takes care of associating a user with a session, and issuing a cookie to the user&amp;rsquo;s browser. It also manages validating the user&amp;rsquo;s login credentials, by default by looking up the user name and password in a database table; precisely what we need!&lt;/p&gt;
+
+&lt;p&gt;Maypole provides an authentication method for us to override, and it&amp;rsquo;s here that we&amp;rsquo;re going to intercept any request that requires a user &amp;ndash; viewing the shopping cart, adding items to an order, and so on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub authenticate {
+    my ($self, $r) = @_;
+    unless ($r-&amp;gt;{table} eq &amp;quot;cart&amp;quot; or $r-&amp;gt;{action} eq &amp;quot;buy&amp;quot;) {
+      return OK;
+    }
+
+    # Else we need a user
+    $r-&amp;gt;get_user;
+    if (!$r-&amp;gt;{user}) {
+      $r-&amp;gt;template(&amp;quot;login&amp;quot;);
+    }
+    return OK;
+   }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;get_user&lt;/code&gt; method, which does all the work of setting the cookie and setting the credentials, is provided by the &lt;code&gt;UserSessionCookie&lt;/code&gt; module. The only thing we need to tell it is that we&amp;rsquo;re going to use the user&amp;rsquo;s email address and password as login credentials, rather than some arbitrary user name. We can do this in the configuration for our application, as described in the &lt;code&gt;UserSessionCookie&lt;/code&gt; documentation:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  ISellIt-&amp;gt;{config}-&amp;gt;{auth}-&amp;gt;{user_field} = &amp;quot;email&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, we set up a login template, which will present the users with a form to enter their credentials; there&amp;rsquo;s one in the Maypole manual, in the &lt;a href=&#34;http://maypole.simon-cozens.org/doc/Request.html&#34;&gt;Request chapter&lt;/a&gt;, which we can modify to suit our needs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [% INCLUDE header %]
+
+    &amp;lt;h2&amp;gt; You need to log in before buying anything &amp;lt;/h2&amp;gt;
+
+  &amp;lt;DIV class=&amp;quot;login&amp;quot;&amp;gt;
+  [% IF login_error %]
+     &amp;lt;FONT COLOR=&amp;quot;#FF0000&amp;quot;&amp;gt; [% login_error %] &amp;lt;/FONT&amp;gt;
+  [% END %]
+    &amp;lt;FORM ACTION=&amp;quot;/[% request.path%]&amp;quot; METHOD=&amp;quot;post&amp;quot;&amp;gt;
+  Email Address:
+    &amp;lt;INPUT TYPE=&amp;quot;text&amp;quot; NAME=&amp;quot;email&amp;quot;&amp;gt; &amp;lt;BR&amp;gt;
+  Password: &amp;lt;INPUT TYPE=&amp;quot;password&amp;quot; NAME=&amp;quot;password&amp;quot;&amp;gt; &amp;lt;BR&amp;gt;
+  &amp;lt;INPUT TYPE=&amp;quot;submit&amp;quot;&amp;gt;
+  &amp;lt;/FORM&amp;gt;
+  &amp;lt;/DIV&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now logging in is sorted out; if a user presents the correct credentials, &lt;code&gt;get_user&lt;/code&gt; will put the user&amp;rsquo;s &lt;code&gt;ISellIt::User&lt;/code&gt; object in the Maypole request object as &lt;code&gt;$r-&amp;gt;{user}&lt;/code&gt;, and the user&amp;rsquo;s request will continue to where it was going.&lt;/p&gt;
+
+&lt;p&gt;Now, of course, since we have a user object we can play with, we can use the user&amp;rsquo;s information in other contexts:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [% IF request.user %]
+    &amp;lt;DIV class=&amp;quot;messages&amp;quot;&amp;gt;
+    Welcome back, [% request.user.first_name %]!
+    &amp;lt;/DIV&amp;gt;
+  [% END %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since we&amp;rsquo;re going to be referring to the user a lot, we pass it to the template as an additional argument, &lt;code&gt;my&lt;/code&gt;. Maypole has an open-ended &amp;ldquo;hook&amp;rdquo; method, &lt;code&gt;additional_data&lt;/code&gt;, which is perfect for doing just this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub additional_data {
+    my $r = shift;
+    $r-&amp;gt;{template_args}{my} = $r-&amp;gt;{user};
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We call it &lt;code&gt;my&lt;/code&gt; so that we can say, for instance:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;DIV class=&amp;quot;messages&amp;quot;&amp;gt;
+    Welcome back, [% my.first_name %]!
+    &amp;lt;/DIV&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So now we have a user. We can add a new action, &lt;code&gt;order&lt;/code&gt;, to add an item to the user&amp;rsquo;s shopping cart:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package ISellIt::Product;
+
+  sub order :Exported {
+    my ($self, $r, $product) = @_;
+    $r-&amp;gt;{user}-&amp;gt;add_to_cart_items({ item =&amp;gt; $product });
+    $r-&amp;gt;{template} = &amp;quot;view&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This adds an entry in the &lt;code&gt;cart_item&lt;/code&gt; table associating the item with the user, and then sends us back to viewing the item.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ve sent our user back shopping without an indication that we actually did add an item to his shopping cart; we can give such an indication by passing information into the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub order :Exported {
+    my ($self, $r, $product) = @_;
+    $r-&amp;gt;{user}-&amp;gt;add_to_cart_items({ item =&amp;gt; $product });
+    $r-&amp;gt;{template} = &amp;quot;view&amp;quot;;
+    $r-&amp;gt;{template_args}{bought} = 1;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then displaying it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [% IF bought %]
+  &amp;lt;DIV class=&amp;quot;messages&amp;quot;&amp;gt;
+    We&#39;ve just added this item to your shopping cart. To complete
+    your transaction, please &amp;lt;A HREF=&amp;quot;/user/view_cart&amp;quot;&amp;gt;view your
+    cart&amp;lt;/A&amp;gt; and check out.
+  &amp;lt;/DIV&amp;gt;
+  [% END %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So now we need to allow the user to view a cart.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-displaying-the-cart-displaying-the-cart-span&#34;&gt;&lt;span id=&#34;Displaying_the_Cart&#34;&gt;Displaying the Cart&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;This also turns out to be relatively easy &amp;ndash; most things in Maypole are &amp;ndash; involving an action on the user class. We need to fill our Maypole request object with the items in the user&amp;rsquo;s cart:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package ISellIt::User;
+
+  sub view_cart :Exported {
+    my ($self, $r) = @_;
+    $r-&amp;gt;{objects} = [ $r-&amp;gt;{user}-&amp;gt;cart_items ];
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And then we need to produce a &lt;em&gt;user/view_cart&lt;/em&gt; template that displays them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [% PROCESS header %]
+
+  &amp;lt;h2&amp;gt; Your Shopping Cart &amp;lt;/h2&amp;gt;
+
+  &amp;lt;TABLE&amp;gt;
+  &amp;lt;TR&amp;gt; &amp;lt;TH&amp;gt; Product &amp;lt;/TH&amp;gt; &amp;lt;TH&amp;gt; Price &amp;lt;/TH&amp;gt; &amp;lt;/TR&amp;gt;
+  [% SET count = 0;
+  FOR item = objects;
+    SET count = count + 1;
+    &amp;quot;&amp;lt;tr&amp;quot;;
+    &#39; class=&amp;quot;alternate&amp;quot;&#39; IF count % 2;
+    &amp;quot;&amp;gt;&amp;quot;;
+  %]
+    &amp;lt;TD&amp;gt; [% item.product.name %] &amp;lt;/TD&amp;gt;
+    &amp;lt;TD&amp;gt; [% item.product.price %] &amp;lt;/TD&amp;gt;
+    &amp;lt;TD&amp;gt;
+      &amp;lt;FORM ACTION=&amp;quot;/cart_item/delete/[% item.id %]&amp;quot;&amp;gt;
+      &amp;lt;INPUT TYPE=&amp;quot;submit&amp;quot; VALUE=&amp;quot;Remove from cart&amp;quot;&amp;gt;
+      &amp;lt;/FORM&amp;gt;
+    &amp;lt;/TD&amp;gt;
+  &amp;lt;/tr&amp;gt;
+  [% END %]
+  &amp;lt;/TABLE&amp;gt;
+
+  &amp;lt;A HREF=&amp;quot;/user/checkout&amp;quot;&amp;gt; Check out! &amp;lt;/A&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once again, the HTML isn&amp;rsquo;t great, but it gives us something we can pass to the design people to style up nicely. Now on to checking out the cart&amp;hellip;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-check-out-check-out-span&#34;&gt;&lt;span id=&#34;Check_out&#34;&gt;Check Out&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The hardest part about building an e-commerce application is interacting with the payment and credit-card fulfillment service. We&amp;rsquo;ll use the &lt;a href=&#34;https://metacpan.org/pod/Business::OnlinePayment&#34;&gt;Business::OnlinePayment&lt;/a&gt; module to handle that side of things, and handle the order fulfillment by simply sending an email.&lt;/p&gt;
+
+&lt;p&gt;The actual check-out page needs to collect credit card and delivery information, and so it doesn&amp;rsquo;t actually need any objects; the only object we actually need is the &lt;code&gt;ISellIt::User&lt;/code&gt;, and that was stashed away in the request object by the authentication routine. However, we do want to display the total cost. So to make things easier we&amp;rsquo;ll add an action and compute this in Perl. We make the total cost a method on the user, so we can use this later:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package ISellIt::User;
+  use List::Util qw(sum);
+  sub basket_cost {
+    my $self = shift;
+    sum map { $_-&amp;gt;item-&amp;gt;price }
+    $self-&amp;gt;basket_items
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And define &lt;code&gt;checkout&lt;/code&gt; to add this total to our template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub checkout :Exported {
+    my ($self, $r) = @_;
+    $r-&amp;gt;{template_args}{total_cost} = $r-&amp;gt;{user}-&amp;gt;basket_cost;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we write our &lt;em&gt;user/checkout&lt;/em&gt; template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [% PROCESS header %]
+  &amp;lt;h2&amp;gt; Check out &amp;lt;/h2&amp;gt;
+
+  &amp;lt;p&amp;gt; Please enter your credit card and delivery details. &amp;lt;/p&amp;gt;
+
+  &amp;lt;form method=&amp;quot;post&amp;quot; action=&amp;quot;https://www.isellit.com/user/do_checkout&amp;quot;&amp;gt;
+    &amp;lt;P&amp;gt;
+    First name: &amp;lt;input name=&amp;quot;first_name&amp;quot; value=&amp;quot;[% my.first_name %]&amp;quot;&amp;gt;&amp;lt;BR&amp;gt;
+    Last name: &amp;lt;input name=&amp;quot;last_name&amp;quot; value=&amp;quot;[% my.last_name %]&amp;quot;&amp;gt;&amp;lt;/P&amp;gt;
+    &amp;lt;P&amp;gt;
+    Street address: &amp;lt;input name=&amp;quot;address&amp;quot; value=&amp;quot;[% my.address1 %]&amp;quot;&amp;gt;&amp;lt;BR&amp;gt;
+    City: &amp;lt;input name=&amp;quot;city&amp;quot; value=&amp;quot;[% my.address2 %]&amp;quot;&amp;gt;&amp;lt;BR&amp;gt;
+    State: &amp;lt;input name=&amp;quot;state&amp;quot; value=&amp;quot;[% my.state %]&amp;quot;&amp;gt;
+    Zip: &amp;lt;input name=&amp;quot;zip&amp;quot; value=&amp;quot;[% my.postal_code %]&amp;quot;&amp;gt;
+    &amp;lt;/P&amp;gt;
+
+    &amp;lt;P&amp;gt;
+    Card type: &amp;lt;select name=&amp;quot;type&amp;quot;&amp;gt;
+      &amp;lt;option&amp;gt;Visa&amp;lt;/option&amp;gt;
+      &amp;lt;option&amp;gt;Mastercard&amp;lt;/option&amp;gt;
+      ...
+    &amp;lt;/select&amp;gt;
+
+    Card number: &amp;lt;input name=&amp;quot;card_number&amp;quot;&amp;gt;
+    Expiration: &amp;lt;input name=&amp;quot;expiration&amp;quot;&amp;gt; &amp;lt;BR&amp;gt;
+    Total: $ [% total_price %]
+    &amp;lt;/P&amp;gt;
+    &amp;lt;P&amp;gt;
+    Please click &amp;lt;B&amp;gt;once&amp;lt;/B&amp;gt; and wait for the payment to be
+    authorised.... &amp;lt;input type=&amp;quot;submit&amp;quot; value=&amp;quot;order&amp;quot;&amp;gt;
+  &amp;lt;/form&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What happens when this data is sent to the &lt;code&gt;do_checkout&lt;/code&gt; action? (Over SSL, you&amp;rsquo;ll notice.) First of all, we&amp;rsquo;ll check if the user has entered address details for the first time, and if so, store them in the database. Perhaps unnecessary in this day of browsers that auto-fill forms, but it&amp;rsquo;s still a convenience. Maypole stores the POST&amp;rsquo;ed in parameters in &lt;code&gt;params&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub do_checkout :Exported {
+    my ($self, $r) = @_;
+    my %params = %{$r-&amp;gt;{params}};
+    my $user = $r-&amp;gt;{user};
+
+    $user-&amp;gt;address1($params{address}) unless $user-&amp;gt;address1;
+    $user-&amp;gt;address2($params{city})  unless $user-&amp;gt;address2;
+    $user-&amp;gt;state($params{state})    unless $user-&amp;gt;state;
+    $user-&amp;gt;postal_code($params{zip})  unless $user-&amp;gt;postal_code;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We need to construct a request to go out via &lt;code&gt;Business::OnlinePayment&lt;/code&gt;; thankfully, the form parameters we&amp;rsquo;ve received are going to be precisely in the format that &lt;code&gt;OnlinePayment&lt;/code&gt; wants, thanks to careful form design. All we need to do is to insert our account details and the total:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $tx = new Business::OnlinePayment(&amp;quot;TCLink&amp;quot;);
+    $tx-&amp;gt;content(%params,
+      type   =&amp;gt; &amp;quot;cc&amp;quot;,
+      login  =&amp;gt; VENDOR_LOGIN,
+      password =&amp;gt; VENDOR_PASSWORD,
+      action   =&amp;gt; &#39;Normal Authorization&#39;
+      amount   =&amp;gt; $r-&amp;gt;{user}-&amp;gt;basket_total
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can submit the payment and see what happens. If there&amp;rsquo;s a problem, we add a message to the template and send the user back again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $tx-&amp;gt;submit;
+    if (!$tx-&amp;gt;is_success) {
+      $r-&amp;gt;{template_args}{message} =
+        &amp;quot;There was a problem authorizing your transaction: &amp;quot;.
+        $tx-&amp;gt;error_message;
+      $r-&amp;gt;{template} = &amp;quot;checkout&amp;quot;;
+      return;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Otherwise, we have our money; we probably want to tell the box-shifters about it, or we lose customers fast:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    fulfill_order(
+      address_details =&amp;gt; $r-&amp;gt;{params},
+      order_details   =&amp;gt; [ map { $_-&amp;gt;item } $r-&amp;gt;{user}-&amp;gt;cart_items ],
+      cc_auth     =&amp;gt; $tx-&amp;gt;authorization
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now we empty the shopping cart, and send the user on his way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $_-&amp;gt;delete for $r-&amp;gt;{user}-&amp;gt;cart_items;
+    $r-&amp;gt;{template} = &amp;quot;frontpage&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Done! We&amp;rsquo;ve taken a user from logging in, adding goods to the cart, credit card validation, and checkout. But&amp;hellip; wait. How did we get our user in the first place?&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-registering-a-user-registering-a-user-span&#34;&gt;&lt;span id=&#34;Registering_a_User&#34;&gt;Registering a User&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We have to find a way to sign a user up. This is actually not that hard, particularly since we can use the example of &lt;a href=&#34;https://metacpan.org/pod/Maypole::Manual::Flox&#34;&gt;Flox&lt;/a&gt; in the Maypole manual. First, we&amp;rsquo;ll add a &amp;ldquo;register&amp;rdquo; link to our login template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;P&amp;gt;New user? &amp;lt;A HREF=&amp;quot;/user/register&amp;quot;&amp;gt;Sign up!&amp;lt;/A&amp;gt;&amp;lt;/P&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This page doesn&amp;rsquo;t require any objects to be loaded up, since it&amp;rsquo;s just going to display a registration form; we can just add our template in &lt;em&gt;/user/register&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [% INCLUDE header %]
+  &amp;lt;P&amp;gt;Welcome to buying with iSellIt!&amp;lt;/P&amp;gt;
+
+  &amp;lt;P&amp;gt;To set up your account, we only need a few details from you:
+  &amp;lt;/P&amp;gt;
+
+  &amp;lt;FORM METHOD=&amp;quot;POST&amp;quot; ACTION=&amp;quot;/user/do_register&amp;quot;&amp;gt;
+    &amp;lt;P&amp;gt;Your name:
+    &amp;lt;input name=&amp;quot;first_name&amp;quot;&amp;gt;
+    &amp;lt;input name=&amp;quot;last_name&amp;quot;&amp;gt; &amp;lt;/P&amp;gt;
+    &amp;lt;P&amp;gt;Your email address: &amp;lt;input name=&amp;quot;email&amp;quot;&amp;gt; &amp;lt;/P&amp;gt;
+    &amp;lt;P&amp;gt;Please choose a password: &amp;lt;input name=&amp;quot;password&amp;quot;&amp;gt; &amp;lt;/P&amp;gt;
+    &amp;lt;input type=&amp;quot;submit&amp;quot; name=&amp;quot;Register&amp;quot; value=&amp;quot;Register&amp;quot;&amp;gt;
+  &amp;lt;/FORM&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As before, we need to explain to &lt;a href=&#34;https://metacpan.org/pod/Class::DBI::FromCGI&#34;&gt;Class::DBI::FromCGI&lt;/a&gt; how these fields are to be edited:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  ISellIt::User-&amp;gt;untaint_columns(
+    printable =&amp;gt; [qw/first_name last_name password/],
+    email   =&amp;gt; [qw/email/],
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And now we can write our &lt;code&gt;do_register&lt;/code&gt; event, using the &lt;code&gt;FromCGI&lt;/code&gt; style:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub do_register :Exported {
+    my ($self, $r) = @_;
+    my $h = CGI::Untaint-&amp;gt;new(%{$r-&amp;gt;{params}});
+    my $user = $self-&amp;gt;create_from_cgi($h);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If there were any problems, we send them back to the register form again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if (my %errors = $obj-&amp;gt;cgi_update_errors) {
+      $r-&amp;gt;{template_args}{cgi_params} = $r-&amp;gt;{params};
+      $r-&amp;gt;{template_args}{errors} = \%errors;
+      $r-&amp;gt;{template} = &amp;quot;register&amp;quot;;
+      return;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Otherwise, we now have a user; we need to issue the cookie as if the user had logged in normally. Again, this is something that &lt;code&gt;UserSessionCookie&lt;/code&gt; looks after for us:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $r-&amp;gt;{user} = $user;
+    $r-&amp;gt;login_user($user-&amp;gt;id);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And finally we send the user on his or her way again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $r-&amp;gt;{template} = &amp;quot;frontpage&amp;quot;;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There we go: now we can create new users; provision of a password reminder function is an exercise for the interested reader.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-maypole-summary-maypole-summary-span&#34;&gt;&lt;span id=&#34;Maypole_Summary&#34;&gt;Maypole Summary&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ve done it &amp;ndash; we&amp;rsquo;ve created an e-commerce store in a very short space of time and with a minimal amount of code. One of the things that I like about Maypole is the extent to which you only need to code your business logic; all of the display templates can be mocked up and then shipped off to professionals, and the rest of the work is just handled magically behind the scenes by Maypole.&lt;/p&gt;
+
+&lt;p&gt;Thanks to the TPF funding of Maypole, we now have an extensive user manual with several case studies (this one included), and a lively user and developer community. I hope you too will be joining it soon!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Rapid Web Application Deployment with Maypole</title>
+      <link>http://localhost:1313/pub/2004/04/15/maypole.html/</link>
+      <pubDate>Thu, 22 Apr 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/04/15/maypole.html/</guid>
+      <description>
+
+&lt;p&gt;You have a database. You have a web server. You have a deadline.&lt;/p&gt;
+
+&lt;p&gt;Whether it&amp;rsquo;s bringing up an e-commerce storefront for a new venture, implementing a new front-end to HR&amp;rsquo;s employee database, or even providing a neat way to track citations for U.S. English slang terms, it&amp;rsquo;s always the same story &amp;ndash; and the deadline is always yesterday.&lt;/p&gt;
+
+&lt;p&gt;For this month of April, I&amp;rsquo;m working on a Perl Foundation sponsorship to develop a project of mine called Maypole, which enables Perl programmers to get web front-ends to databases, as well as complex web-based applications, up and running quickly.&lt;/p&gt;
+
+&lt;p&gt;Extremely quickly, and with very little Perl coding required. I&amp;rsquo;ve used Maypole to set up an Intranet portal, a database and display system for choosing menus and recipes, song lyric and chord sheet projection software, an open-source social network site, and a web database of beer-tasting notes; and that just was in the past two weeks.&lt;/p&gt;
+
+&lt;p&gt;Maypole&amp;rsquo;s flexibility stems from three fundamentals:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#Separation_of_concerns&#34;&gt;Clear separation of concerns&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/pub/2004/04/15/maypole.html#Sensible_defaults&#34;&gt;Intelligent defaults&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/pub/2004/04/15/maypole.html#Ease_of_Extensibility&#34;&gt;Ease of extensibility&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;To demonstrate these three principles, we&amp;rsquo;re going to look at a bread-and-butter web application &amp;ndash; an online shop&amp;rsquo;s product catalogue &amp;ndash; and see how quickly we can put it together with Maypole.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-separation-of-concerns-separation-of-concerns-span&#34;&gt;&lt;span id=&#34;Separation_of_concerns&#34;&gt;Separation of Concerns&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Maypole was originally called &lt;code&gt;Apache::MVC&lt;/code&gt;, reflecting its basis in the Model-View-Controller design pattern. (I had to change it firstly because Maypole isn&amp;rsquo;t tied to Apache, and secondly because &lt;code&gt;Apache::MVC&lt;/code&gt; is a really dull name.) It&amp;rsquo;s the same design pattern that forms the foundation of similar projects in other languages, such as Java&amp;rsquo;s Struts framework.&lt;/p&gt;
+
+&lt;p&gt;This design pattern is found primarily in graphical applications; the idea is that you have a Model class that represents and manipulates your data, a View class that is responsible for displaying that data to the user, and a Controller class that controls the other classes in response to events triggered by the user. This analogy doesn&amp;rsquo;t correspond precisely to a web-based application, but we can take an important principle from it. As Andy Wardley explains:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;What the MVC-for-the-web crowd is really trying to achieve is a clear separation of concerns. Put your database code in one place, your application code in another, your presentation code in a third place. That way, you can chop and change different elements at will, hopefully without affecting the other parts (depending on how well your concerns are separated, of course). This is common sense and good practice. MVC achieves this separation of concerns as a byproduct of clearly separating inputs (controls) and outputs (views).&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This is what Maypole does. It has a number of database drivers, a number of front-end drivers, and a number of templating presentation drivers. In common cases, Maypole provides precisely what you need for all of these areas, and you get to concentrate on writing just the business logic of your application. This is one of the reasons why Maypole lets you develop so rapidly &amp;ndash; because most of the time, you don&amp;rsquo;t need to do any development at all.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s begin, then, by choosing what elements are going to make up our product database. We will actually be using what is by far the most common configuration of model, view, and controller classes: Maypole provides a model class based on &lt;code&gt;Class::DBI&lt;/code&gt;, a view class based on &lt;code&gt;Template::Toolkit&lt;/code&gt;, and a controller class based on Apache &lt;code&gt;mod_perl&lt;/code&gt;. We&amp;rsquo;ll come to what all of this means in a second, but because this configuration is so common, it is the default; no code is required to set that up.&lt;/p&gt;
+
+&lt;p&gt;We will, however, need a database. Our client is going to be &lt;code&gt;iSellIt&lt;/code&gt;, a fictitious supplier of computer components and software. We will have database tables for products, manufacturers, and categories of stuff, and subcategories of categories. Here&amp;rsquo;s what that database might look like.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    CREATE TABLE product (
+        id int NOT NULL auto_increment primary key,
+        category int,
+        subcategory int,
+        manufacturer int,
+        part_number varchar(50),
+        name varchar(50),
+        cost decimal(6,2),
+        description text
+    );
+
+    CREATE TABLE manufacturer (
+        id int NOT NULL auto_increment primary key,
+        name varchar(50),
+        url varchar(255),
+        notes text
+    );
+
+    CREATE TABLE category (
+        id int NOT NULL auto_increment primary key,
+        name varchar(50)
+    );
+
+    CREATE TABLE subcategory (
+        id int NOT NULL auto_increment primary key,
+        name varchar(50),
+        category integer
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;re going to assume that we&amp;rsquo;ve loaded some data into this database already, but we&amp;rsquo;re going to want the sales people to update it themselves over a web interface.&lt;/p&gt;
+
+&lt;p&gt;In order to use Maypole, we need what&amp;rsquo;s called a driver module. This is a very short Perl module that defines the application we&amp;rsquo;re working with. I say it&amp;rsquo;s a Perl module, and that may make you think this is about writing code, but to be honest, most of it is actually configuration in disguise. Here&amp;rsquo;s the driver module for our ISellIt application. (The client may be called &lt;code&gt;iSellIt&lt;/code&gt;, but many years exposure to Perl module names makes me allergic to starting one with a lowercase letter.)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package ISellIt;
+    use base &#39;Apache::MVC&#39;;
+    use Class::DBI::Loader::Relationship;
+
+    ISellIt-&amp;gt;setup(&amp;quot;dbi:mysql:isellit&amp;quot;);
+    ISellIt-&amp;gt;config-&amp;gt;{uri_base} = &amp;quot;http://localhost/isellit&amp;quot;;
+    ISellIt-&amp;gt;config-&amp;gt;{rows_per_page} = 10;
+    ISellIt-&amp;gt;config-&amp;gt;{loader}-&amp;gt;relationship($_) for 
+        (&amp;quot;a manufacturer has products&amp;quot;, &amp;quot;a category has products&amp;quot;,
+         &amp;quot;a subcategory has products&amp;quot;, &amp;quot;a category has subcategories&amp;quot;);
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Ten lines of code; that&amp;rsquo;s the sort of size you should expect a Maypole application to be. Let&amp;rsquo;s take it apart, a line at a time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package ISellIt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the name of our application, and it&amp;rsquo;s what we&amp;rsquo;re going to tell Apache to use as the Perl handler for our web site.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use base &#39;Apache::MVC&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This says that we&amp;rsquo;re using the Apache front-end to Maypole, and so we&amp;rsquo;re writing a &lt;code&gt;mod_perl&lt;/code&gt; application.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Class::DBI::Loader::Relationship;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we use a Perl module that I wrote to help put together Maypole driver classes. It allows us to declare the relationships between our database tables in a straightforward way.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ISellIt-&amp;gt;setup(&amp;quot;dbi:mysql:isellit&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We tell &lt;code&gt;ISellIt&lt;/code&gt; to go connect to the database and work out the tables and columns in our application. In addition, because we haven&amp;rsquo;t changed any class defaults, it&amp;rsquo;s assumed that we&amp;rsquo;re going to use &lt;code&gt;Class::DBI&lt;/code&gt; and Template Toolkit. We could have said that we want to use &lt;code&gt;Apache::MVC&lt;/code&gt; with &lt;code&gt;DBIx::SearchBuilder&lt;/code&gt; and &lt;code&gt;HTML::Mason&lt;/code&gt;, but we don&amp;rsquo;t.&lt;/p&gt;
+
+&lt;p&gt;Maypole&amp;rsquo;s &lt;code&gt;Class::DBI&lt;/code&gt;-based class uses &lt;a href=&#34;https://metacpan.org/pod/Class::DBI::Loader&#34;&gt;&lt;code&gt;Class::DBI::Loader&lt;/code&gt;&lt;/a&gt; to investigate the structure of the database, and then map the &lt;code&gt;product&lt;/code&gt; table onto a &lt;code&gt;ISellIt::Product&lt;/code&gt; class, and so on. You can read more about how &lt;code&gt;Class::DBI&lt;/code&gt;&amp;rsquo;s table-class mapping works in &lt;a href=&#34;http://www.perl.com/pub/2002/11/27/classdbi.html&#34;&gt;Tony&amp;rsquo;s article about it&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ISellIt-&amp;gt;config-&amp;gt;{uri_base} = &amp;quot;http://localhost/isellit&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;ISellIt&lt;/code&gt; sometimes needs to know where it lives, so that it can properly produce links to other pages inside the application.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ISellIt-&amp;gt;config-&amp;gt;{rows_per_page} = 10;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This says that we don&amp;rsquo;t want to display the whole product list on one page; there&amp;rsquo;ll be a maximum of 10 items on a page, before we get a page-view of the list.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ISellIt-&amp;gt;config-&amp;gt;{loader}-&amp;gt;relationship($_) for 
+        (&amp;quot;a manufacturer has products&amp;quot;, &amp;quot;a category has products&amp;quot;,
+         &amp;quot;a subcategory has products&amp;quot;, &amp;quot;a category has subcategories&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we define our relationship constraints, in reasonably natural syntax: a manufacturer has a number of products, and a category will delimit a collection of products, and so on.&lt;/p&gt;
+
+&lt;p&gt;Ten lines of code. What has it got us?&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-sensible-defaults-sensible-defaults-span&#34;&gt;&lt;span id=&#34;Sensible_defaults&#34;&gt;Sensible Defaults&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;The second foundation of Maypole is its use of sensible defaults. It has a system of generic templates that &amp;ldquo;do the right thing&amp;rdquo; for viewing and editing data in a database. In many cases, web application programmers won&amp;rsquo;t need to change the default behavior at all; in the majority of cases, they only need to change a few of the templates, and in the best cases, they can declare that the templating is the web design group&amp;rsquo;s problem and not need to do any work at all.&lt;/p&gt;
+
+&lt;p&gt;So, if we install the application and the default templates, and go to our site, &lt;code&gt;http://localhost/isellit&lt;/code&gt;; we should see this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_04_15_maypole/maypole1.png&#34; alt=&#34;&#34; /&gt;
+Which is only fair for 10 lines of code. But it gets better, because if we click on, say, the product listing, we get a screen like so:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_04_15_maypole/maypole2.png&#34; alt=&#34;&#34; /&gt;
+Now that&amp;rsquo;s something we could probably give to the sales team with no further alterations needed, and they could happily add, edit, and delete products.&lt;/p&gt;
+
+&lt;p&gt;Similarly, if we then click on a manufacturer in that products table, we see a handy page about the manufacturer, their products, and so on:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_04_15_maypole/maypole3.png&#34; alt=&#34;&#34; /&gt;
+Now I think we are getting some worth from our 10 lines. Next, we give the templates to the web designers. Maypole searches for templates in three different places: first, it looks for a template specific to a class; then it looks for a custom template for the whole application; finally, it looks in the &lt;em&gt;factory&lt;/em&gt; directory to use the totally generic, do-the-right-thing template.&lt;/p&gt;
+
+&lt;p&gt;So, to make a better manufacturer view, we tell them to copy the &lt;em&gt;factory/view&lt;/em&gt; template into &lt;em&gt;manufacturer/view&lt;/em&gt; and customize it. We copy &lt;em&gt;factory/list&lt;/em&gt; into &lt;em&gt;product/list&lt;/em&gt; and customize it as a listing of products; we copy &lt;em&gt;factory/header&lt;/em&gt; and &lt;em&gt;factory/footer&lt;/em&gt; into the &lt;em&gt;custom/&lt;/em&gt; directory, and turn them into the boilerplate HTML surrounding every page, and so on.&lt;/p&gt;
+
+&lt;p&gt;Now, I am not very good at HTML design, which is why I like Maypole &amp;ndash; it makes it someone else&amp;rsquo;s problem &amp;ndash; but this means I&amp;rsquo;m not very good at showing you what sort of thing you can do with the templates. But here&amp;rsquo;s a mock-up; I created &lt;code&gt;product/view&lt;/code&gt; with the following template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [% INCLUDE header %]
+    [% PROCESS macros %]
+
+    &amp;lt;DIV class=&amp;quot;nav&amp;quot;&amp;gt; You are in: [% maybe_link_view(product.category) %] &amp;gt; 
+    [% maybe_link_view(product.subcategory) %] &amp;lt;/DIV&amp;gt;
+
+    &amp;lt;h2&amp;gt; [% product.name %]&amp;lt;/h2&amp;gt;
+    &amp;lt;DIV class=&amp;quot;manufacturer&amp;quot;&amp;gt; By [% maybe_link_view(product.manufacturer) %] 
+    &amp;lt;/DIV&amp;gt;
+    &amp;lt;DIV class=&amp;quot;description&amp;quot;&amp;gt; [% product.description %] &amp;lt;/DIV&amp;gt;
+
+    &amp;lt;TABLE class=&amp;quot;view&amp;quot;&amp;gt;
+    &amp;lt;TR&amp;gt;
+        &amp;lt;TD class=&amp;quot;field&amp;quot;&amp;gt; Price (ex. VAT) &amp;lt;/TD&amp;gt; 
+        &amp;lt;TD&amp;gt; &amp;amp;pound; [% product.cost %] &amp;lt;/TD&amp;gt;
+    &amp;lt;/TR&amp;gt;
+    &amp;lt;TR&amp;gt;
+        &amp;lt;TD class=&amp;quot;field&amp;quot;&amp;gt; Part number  &amp;lt;/TD&amp;gt; 
+        &amp;lt;TD&amp;gt; [% product.part_number %] &amp;lt;/TD&amp;gt;
+    &amp;lt;/TR&amp;gt;
+    &amp;lt;/TABLE&amp;gt;
+
+    [% button(product, &amp;quot;order&amp;quot;) %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Producing the following screenshot. It may not look better, but at least it proves things can be made to look different.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2004_04_15_maypole/maypole4.png&#34; alt=&#34;&#34; /&gt;
+We&amp;rsquo;ve written a Template Toolkit template; the parts surrounded in &lt;code&gt;[% ... %]&lt;/code&gt; are templating directives. If you&amp;rsquo;re not too familiar with the Template Toolkit, the Maypole manual&amp;rsquo;s &lt;a href=&#34;http://maypole.simon-cozens.org/doc/View.html&#34;&gt;view documentation&lt;/a&gt; has a good introduction to TT in the Maypole context.&lt;/p&gt;
+
+&lt;p&gt;Maypole provides a number of default Template macros, such as &lt;code&gt;maybe_link_view&lt;/code&gt;, which links an object to a page viewing that object, although all of these can be overridden. It also passes in the object &lt;code&gt;product&lt;/code&gt;, which it knows to be the one we&amp;rsquo;re talking about.&lt;/p&gt;
+
+&lt;p&gt;In fact, that&amp;rsquo;s what Maypole is really about: we&amp;rsquo;ve described it in terms of putting a web front-end onto a database, but fundamentally, it&amp;rsquo;s responsible for using the URL &lt;code&gt;/product/view/210&lt;/code&gt; to load up the &lt;code&gt;product&lt;/code&gt; object with ID &lt;code&gt;210&lt;/code&gt;, call the &lt;code&gt;view&lt;/code&gt; method on its class, and pass it to the &lt;code&gt;view&lt;/code&gt; template. Similarly, &lt;code&gt;/product/list&lt;/code&gt; calls the &lt;code&gt;list&lt;/code&gt; method on the product class, which populates the template with a page full of products.&lt;/p&gt;
+
+&lt;p&gt;The interesting thing about this template is that very last line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [% button(product, &amp;quot;order&amp;quot;) %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This produces a button which will produce a POST to the URL &lt;code&gt;/product/order/210&lt;/code&gt;, which does the same as &lt;code&gt;view&lt;/code&gt; except this time calls the &lt;code&gt;order&lt;/code&gt; method. But Maypole doesn&amp;rsquo;t yet know how to &lt;code&gt;order&lt;/code&gt; a product. This is OK, because we can tell it.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-ease-of-extensibility-ease-of-extensibility-span&#34;&gt;&lt;span id=&#34;Ease_of_Extensibility&#34;&gt;Ease of Extensibility&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Maypole&amp;rsquo;s third principle is ease of extensibility. That is to say, Maypole makes it very easy to go from a simple database front-end to a full-fledged web application. Which is just as well; as has been simulated above, once the templates come back from the web designers, you find that what you thought was just going to be a product database has become an online shop. And you&amp;rsquo;ve still got a deadline.&lt;/p&gt;
+
+&lt;p&gt;But before we start extending our catalogue application to take on the new specifications (which we&amp;rsquo;ll do in the second article about this), let&amp;rsquo;s take a look at what we&amp;rsquo;ve achieved so far and what we need immediately.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ve got a way to list all the products, manufacturers, categories, and subcategories in our database; we have a way to add, edit and delete all of these things; we can search for products by manufacturer, price, and so on. What&amp;rsquo;s to stop us deploying this as a customer-facing web site, as well as for Intranet updates to the product catalogue?&lt;/p&gt;
+
+&lt;p&gt;The immediate problem is security. We can add, edit, and delete products &amp;ndash; but so can anyone else. We want to allow those coming from the outside world only to view, list and search; for everything else, we require the user to be coming from an IP address in our internal range. (For now; we&amp;rsquo;ll add the concept of a user when we&amp;rsquo;re adding the shopping cart, and the idea of privileged user won&amp;rsquo;t be far off that.)&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, now we want some user-defined behavior, we have to start writing code. Thankfully, we don&amp;rsquo;t have to write much of it. We add a few lines to our driver class, first to define our private IP address space as a &lt;code&gt;NetAddr::IP&lt;/code&gt; object, since that provides a handy way of determining if an address is in a network:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use constant INTERNAL_RANGE =&amp;gt; &amp;quot;10.0.0.0/8&amp;quot;;
+    use NetAddr::IP;
+    my $range = NetAddr::IP-&amp;gt;new(INTERNAL_RANGE);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we write our authentication method; Maypole&amp;rsquo;s default &lt;code&gt;authenticate&lt;/code&gt; allows everyone access to everything, so we need to override this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Maypole::Constants;
+    sub authenticate {
+        my ($self, $r) = @_;
+
+        # Everyone can view, search, list
+        return OK if $r-&amp;gt;action =~ /^(view|search|list)$/;
+
+        # Else they have to be in the internal network
+        my $ip = NetAddr-&amp;gt;IP-&amp;gt;new($r-&amp;gt;{ar}-&amp;gt;connection-&amp;gt;remote_ip);
+        return OK if $ip-&amp;gt;within($range);
+        return DECLINED;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;authenticate&lt;/code&gt; class method gets passed a Maypole request object; this is like an Apache request object, but at a much, much higher level &amp;ndash; it contains information about the web request, the class that&amp;rsquo;s going to be used to fulfill the request, the method we need to call on the class, the template that&amp;rsquo;s going to be processed, any objects, form parameters, and query parameters, and so on.&lt;/p&gt;
+
+&lt;p&gt;At this point, Maypole has already parsed the URI into its component database table, action, and additional arguments, so we first check to see if the action is one of the universally permitted ones.&lt;/p&gt;
+
+&lt;p&gt;If not, we extract the &lt;code&gt;Apache::Request&lt;/code&gt; object stashed inside the Maypole object, and ask it for the remote IP address. If it&amp;rsquo;s in the private range, we can do everything. If not, we can do nothing. Simple enough.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s almost ready to go live, when the design guys tell you that they&amp;rsquo;d really love to put a picture alongside the description of a product. No problem.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s two ways to do this; the way that seems really easy uses the file system to store the pictures, and has you put something like this in the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;IMG SRC=&amp;quot;/static/product_pictures/[% product.id %].png&amp;quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But while that&amp;rsquo;s very simple for viewing pictures, and makes a great mockup, it&amp;rsquo;s not that easy to upload pictures. So you decide to put the pictures in the database. You add a &amp;ldquo;picture&amp;rdquo; binary column to the product table, and then you consult the Maypole manual.&lt;/p&gt;
+
+&lt;p&gt;One of the great things about this Perl Foundation sponsorship is that it&amp;rsquo;s allowing me to put together a really great manual, which contains all sorts of tricks for dealing with Maypole; the &lt;a href=&#34;http://maypole.simon-cozens.org/doc/Request.html&#34;&gt;Request&lt;/a&gt; chapter contains a couple of recipes for uploading and displaying photos.&lt;/p&gt;
+
+&lt;p&gt;What we need to do is create some new actions &amp;ndash; one to upload a picture, and one to display it again. We&amp;rsquo;ll only show the one to display a picture, since you can get them both from the manual, and because looking at this turns out to be a handy way to understand how to extend Maypole more generally.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s useful to visualize what we&amp;rsquo;re going to end up with, and work backwards. We&amp;rsquo;ll have a URL like &lt;code&gt;/product/view_picture/210&lt;/code&gt; producing an &lt;code&gt;image/png&lt;/code&gt; or similar page with the product&amp;rsquo;s image. This allows us to put in our templates:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;IMG SRC=&amp;quot;/product/view_picture/[% product.id %]/&amp;quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And have the image displayed on our product view page. In fact, we&amp;rsquo;re more likely to want to say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [% IF product.picture %]
+    &amp;lt;IMG SRC=&amp;quot;/product/view_picture/[% product.id %]/&amp;quot;&amp;gt;
+    [% ELSE %]
+    &amp;lt;IMG SRC=&amp;quot;/static/no_picture.png&amp;quot;&amp;gt;
+    [% END %]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, we&amp;rsquo;ve explained that Maypole turns URLs into method calls, so we&amp;rsquo;re going to be putting a &lt;code&gt;view_picture&lt;/code&gt; method in the product&amp;rsquo;s class; this class is &lt;code&gt;ISellIt::Product&lt;/code&gt;, so we begin like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package ISellIt::Product;
+    sub view_picture {
+        my ($self, $r) = @_;
+        # ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This has a big problem. We don&amp;rsquo;t actually want people to be able to call any method on our class over the web; that would be unwise. Maypole will refuse to do this. So in order to tell Maypole that we&amp;rsquo;re allowed to call this method remotely, we decorate it with an attribute:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub view_picture :Exported {
+        my ($self, $r) = @_;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At this point, we can call &lt;code&gt;view_picture&lt;/code&gt; over the Web; we now need to make it populate the Maypole request with the appropriate data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub view_picture :Exported {
+        my ($self, $r, $product) = @_;
+        if ($product) {
+            $r-&amp;gt;{content_type} = &amp;quot;image/png&amp;quot;;
+            $r-&amp;gt;{content} = $product-&amp;gt;picture;
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a slightly unusual Maypole method, because we&amp;rsquo;re bypassing the whole view class processing and templating stages, and generating content manually, but it serves to illustrate one thing: Maypole arranges for the appropriate object to be passed into the method; we&amp;rsquo;ve gone from URL to object without requiring any code of our own.&lt;/p&gt;
+
+&lt;p&gt;When we come to implementing ordering, in our next article, we&amp;rsquo;ll be adding more actions like this to place the product in a user&amp;rsquo;s shopping cart, check out, validate his credit card and so on. But this should be good enough for now: a templated, web-editable product database, with pictures, without stress, without too much code, and within the deadline. Well, almost.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-summary-summary-span&#34;&gt;&lt;span id=&#34;Summary&#34;&gt;Summary&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;Maypole is evolving rapidly, thanks primarily to the Perl Foundation who have enabled me to work on it for this month; it&amp;rsquo;s allowed me to write many thousands of words of articles, sample applications, and Maypole-related code, and this has helped Maypole to become an extremely useful framework for developing web applications.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

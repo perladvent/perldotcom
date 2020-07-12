@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Installation on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-installation/</link>
+    <description>Recent content in Perl Installation on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 21 Dec 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-installation/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>A Timely Start</title>
+      <link>http://localhost:1313/pub/2005/12/21/a_timely_start.html/</link>
+      <pubDate>Wed, 21 Dec 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/12/21/a_timely_start.html/</guid>
+      <description>
+
+&lt;p&gt;This article is a follow-up to the lightning talk I delivered at the recent YAPC::Europe 2005 that took place in Braga, Portugal: &amp;ldquo;Perl Vs. Korn Shell: 1-1.&amp;rdquo; I presented two case studies taken from my experience as Perl expert at the Agency (they have asked me to remain discreet about their real name, but rest reassured, it&amp;rsquo;s not the CIA, it&amp;rsquo;s a European agency).&lt;/p&gt;
+
+&lt;p&gt;In the first case, I explained how I had rewritten a heavily used Korn shell script in Perl, in the process bringing its execution time from a half-hour down to ten seconds. The audience laughed and applauded loudly at that point of my talk.&lt;/p&gt;
+
+&lt;p&gt;Then I proceeded to the second case, where the situation was not so rosy for Perl. One of my colleagues had rewritten a simple &lt;code&gt;ksh&lt;/code&gt; script that did a few computations then transferred a file over FTP. The rewrite in Perl ran ten times slower.&lt;/p&gt;
+
+&lt;h3 id=&#34;slower&#34;&gt;Slower?&lt;/h3&gt;
+
+&lt;p&gt;My job was to investigate. I found a couple of obvious ways of speeding up the Perl script. First I removed hidden calls to subprocesses:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Shell qw( date which );
+# ...
+$now   = date();
+$where = which &#39;some_command&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then I replaced a few &lt;code&gt;use&lt;/code&gt; directives with calls to &lt;code&gt;require&lt;/code&gt;. If you&amp;rsquo;re going to use the features contained in a module only conditionally, &lt;code&gt;require&lt;/code&gt; may be preferable, because &lt;code&gt;perl&lt;/code&gt; always executes &lt;code&gt;use&lt;/code&gt; directives at compile time.&lt;/p&gt;
+
+&lt;p&gt;Take this code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Pod::Usage;
+
+# $help set from command-line option
+if ($help) {
+    pod2usage(-exitstatus =&amp;gt; 0);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This loads &lt;a href=&#34;https://metacpan.org/pod/Pod::Usage&#34;&gt;Pod::Usage&lt;/a&gt;, even if &lt;code&gt;$help&lt;/code&gt; is false. The following change won&amp;rsquo;t help, though:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# $help set from command-line option
+if ($help) {
+    use Pod::Usage;
+    pod2usage(-exitstatus =&amp;gt; 0);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This just gives the illusion that the program loads &lt;code&gt;Pod::Usage&lt;/code&gt; only when necessary. The right answer is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# $help set from command-line option
+if ($help) {
+    require Pod::Usage;
+    Pod::Usage::pod2usage(-exitstatus =&amp;gt; 0);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After these changes the situation had improved: the Perl version was only five times slower now. I pulled out the profiler. Sadly, most of the time still went to loading modules, especially &lt;a href=&#34;https://metacpan.org/pod/Net::FTP&#34;&gt;Net::FTP&lt;/a&gt;. Of course, we &lt;em&gt;always&lt;/em&gt; needed that.&lt;/p&gt;
+
+&lt;p&gt;If you dig in, you realize that &lt;code&gt;Net::FTP&lt;/code&gt; is not the only culprit. It loads other modules that in turn load other modules, and so on. Here is the complete list:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;/.../libnet.cfg
+Carp.pm
+Config.pm
+Errno.pm
+Exporter.pm
+Exporter/Heavy.pm
+IO.pm
+IO/Handle.pm
+IO/Socket.pm
+IO/Socket/INET.pm
+IO/Socket/UNIX.pm
+Net/Cmd.pm
+Net/Config.pm
+Net/FTP.pm
+SelectSaver.pm
+Socket.pm
+Symbol.pm
+Time/Local.pm
+XSLoader.pm
+strict.pm
+vars.pm
+warnings.pm
+warnings/register.pm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is not by itself a bad thing: modules are there to promote code reuse, after all, so in theory, the more modules a module uses, the better. It usually shows that it&amp;rsquo;s not reinventing wheels. Modules are good and account for much of Perl&amp;rsquo;s success. You can solve so many problems in ten lines: use this, use that, use this too, grab this from CPAN, write three lines yourself&amp;ndash;bang! problem solved.&lt;/p&gt;
+
+&lt;h3 id=&#34;why-was-perl-slower&#34;&gt;Why Was Perl Slower?&lt;/h3&gt;
+
+&lt;p&gt;In my case, though, the sad truth was that the Perl version of the FTP script spent 95 percent of its time getting started; the meat of the script, the code written by my colleague, accounted for only five percent of the execution time. The &lt;code&gt;ksh&lt;/code&gt; version, on the other hand, started to work on the job nearly immediately.&lt;/p&gt;
+
+&lt;p&gt;My lightning talk ended with the conclusion that Perl needs a compiler&amp;ndash;badly. In the final slides I addressed some popular objections against this statement, the more important one being that &amp;ldquo;it won&amp;rsquo;t make your code run faster.&amp;rdquo; I know: I want it to &lt;em&gt;start&lt;/em&gt; faster.&lt;/p&gt;
+
+&lt;p&gt;Several hackers came for a discussion after my talk. Some of their objections were interesting but missed the point. (&amp;ldquo;The total execution time is good enough.&amp;rdquo; Me: &amp;ldquo;It&amp;rsquo;s not up to me to decide, there are specs; and the FTP version &lt;em&gt;is&lt;/em&gt; five times faster. That&amp;rsquo;s what I&amp;rsquo;m talking about.&amp;ldquo;)&lt;/p&gt;
+
+&lt;p&gt;However, other remarks suggested that some stones remained unturned. One of the attendants timed &lt;code&gt;perl -MNet::FTP -e 0&lt;/code&gt; under my eyes and indeed it loaded quite fast on his laptop. It loaded faster than on the Agency&amp;rsquo;s multi-CPU, 25000-euro computers. How come?&lt;/p&gt;
+
+&lt;p&gt;The answer turned out to be the length of &lt;code&gt;PERL5LIB&lt;/code&gt;. The Agency has collections of systems that build upon one another. Each system may contain one or several directories hosting Perl modules. The build system produces a value for &lt;code&gt;PERL5LIB&lt;/code&gt; that includes the Perl module directories for the system, followed by the module directories of all of the systems it builds upon, recursively.&lt;/p&gt;
+
+&lt;p&gt;I wrote a small module, &lt;code&gt;Devel::Dependencies&lt;/code&gt;, which uses &lt;code&gt;BEGIN&lt;/code&gt; and &lt;code&gt;CHECK&lt;/code&gt; blocks to find all of the modules that a Perl program loads. Optionally, it lists the path to each module, the position of that path within &lt;code&gt;@INC&lt;/code&gt;, and the sum of all of the positions at the end. This gives a good idea of the number of directory searches Perl has to perform when loading modules.&lt;/p&gt;
+
+&lt;p&gt;I used it on a one-line script that just says &lt;code&gt;use Net::FTP&lt;/code&gt;. Here&amp;rsquo;s the result:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ echo $PERL5LIB
+XxB:
+/build/MAP/CONFIG!11.213/idl/stubs:
+/build/MAP/CONFIG!11.213/perl/lib:
+/build/MAP/CONFIG!11.213/pm:
+/build/LIB/UTILS!11.151/ftpstuff:
+/build/LIB/UTILS!11.151/alien/PA-RISC2.0:
+/build/LIB/UTILS!11.151/alien:
+/build/LIB/UTILS!11.151/perl/lib:
+/build/LIB/UTILS!11.151/pm:
+/build/MAP/MAP_SERVER!11.197/pm:
+/build/CONTROL/KLIBS!11.132/idl/stubs:
+/build/CONTROL/KLIBS!11.132/perl/lib:
+/build/CONTROL/KLIBS!11.132/pm:
+/build/CONTROL/ACME!11.177/idl/stubs:
+/build/CONTROL/ACME!11.177/pm:
+/build/CONTROL/ADAPTER!11.189/pm:
+/build/MAP/HMI!1.12.165/idl/stubs:
+/build/CONTROL/KERNEL_INIT!11.130/pm:
+/build/CONTROL/BUSINESS!11.176/pm:
+/build/CONTROL/KERNEL!11.130/pm:
+/build/BASIC/SSC!11.78/pm:
+/build/BASIC/LOG!11.78/perl/lib:
+/build/BASIC/LOG!11.78/pm:
+/build/BASIC/BSC!11.77/pm:
+/build/BASIC/POLYORB!11.39/idl/stubs:
+/build/BASIC/TEST!11.58/perl/lib/ldap/interface:
+/build/BASIC/TEST!11.58/perl/lib/ldap:
+/build/BASIC/TEST!11.58/perl/lib:
+/build/BASIC/TEST!11.58/pm:
+/build/BASIC/TANGRAM!11.53/perl/lib:
+/build/BASIC/TANGRAM!11.53/pm:
+/build/LIB/PERL!5.6.1.1.39/lib/site_perl:
+/build/LIB/PERL!5.6.1.1.39/lib:
+/build/LIB/PERL!5.6.1.1.39/alien:
+/build/LIB/PERL!5.6.1.1.39/pm:
+/build/LIB/GNU!11.30/pm:
+/build/CM/LIB!2.1.221/perl/lib/wle/interface:
+/build/CM/LIB!2.1.221/perl/lib:
+/build/CM/LIB!2.1.221/alien:
+/build/CM/LIB!2.1.221/pm:
+/build/CM/CM_LIB!2.1.96/perl/lib/MakeCfg:
+/build/CM/CM_LIB!2.1.96/perl/lib:
+/build/CM/CM_LIB!2.1.96/pm:
+/build/CM/EXT_LIBS!2.1.6/perl/lib:
+/build/CM/EXT_LIBS!2.1.6/alien:
+/build/CM/EXT_LIBS!2.1.6/pm:
+XxE
+
+$ perl -c -MDevel::Dependencies=origin ftp.pl
+Devel::Dependencies 23 dependencies:
+  /build/LIB/UTILS!11.151/ftpstuff/Net/libnet.cfg /build/LIB/UTILS!11.151/ftpstuff/Net/libnet.cfg (6)
+  Carp.pm /build/LIB/PERL!5.6.1.1.39/lib/Carp.pm (38)
+  Config.pm /build/LIB/PERL!5.6.1.1.39/lib/PA-RISC2.0/Config.pm (37)
+  Errno.pm /build/LIB/PERL!5.6.1.1.39/lib/PA-RISC2.0/Errno.pm (37)
+  Exporter.pm /build/LIB/PERL!5.6.1.1.39/lib/Exporter.pm (38)
+  Exporter/Heavy.pm /build/LIB/PERL!5.6.1.1.39/lib/Exporter/Heavy.pm (38)
+  IO.pm /build/LIB/PERL!5.6.1.1.39/lib/PA-RISC2.0/IO.pm (37)
+  IO/Handle.pm /build/LIB/PERL!5.6.1.1.39/lib/PA-RISC2.0/IO/Handle.pm (37)
+  IO/Socket.pm /build/LIB/PERL!5.6.1.1.39/lib/PA-RISC2.0/IO/Socket.pm (37)
+  IO/Socket/INET.pm /build/LIB/PERL!5.6.1.1.39/lib/IO/Socket/INET.pm (38)
+  IO/Socket/UNIX.pm /build/LIB/PERL!5.6.1.1.39/lib/IO/Socket/UNIX.pm (38)
+  Net/Cmd.pm /build/LIB/UTILS!11.151/ftpstuff/Net/Cmd.pm (6)
+  Net/Config.pm /build/LIB/UTILS!11.151/ftpstuff/Net/Config.pm (6)
+  Net/FTP.pm /build/LIB/UTILS!11.151/ftpstuff/Net/FTP.pm (6)
+  SelectSaver.pm /build/LIB/PERL!5.6.1.1.39/lib/SelectSaver.pm (38)
+  Socket.pm /build/LIB/PERL!5.6.1.1.39/lib/PA-RISC2.0/Socket.pm (37)
+  Symbol.pm /build/LIB/PERL!5.6.1.1.39/lib/Symbol.pm (38)
+  Time/Local.pm /build/LIB/PERL!5.6.1.1.39/lib/Time/Local.pm (38)
+  XSLoader.pm /build/LIB/PERL!5.6.1.1.39/lib/PA-RISC2.0/XSLoader.pm (37)
+  strict.pm /build/LIB/PERL!5.6.1.1.39/lib/strict.pm (38)
+  vars.pm /build/LIB/PERL!5.6.1.1.39/lib/vars.pm (38)
+  warnings.pm /build/LIB/PERL!5.6.1.1.39/lib/warnings.pm (38)
+  warnings/register.pm /build/LIB/PERL!5.6.1.1.39/lib/warnings/register.pm (38)
+Total directory searches: 739
+ftp.pl syntax OK
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now it looked like I had found the wasted time.&lt;/p&gt;
+
+&lt;h3 id=&#34;making-perl-faster&#34;&gt;Making Perl Faster&lt;/h3&gt;
+
+&lt;p&gt;Still pushing, I wrote a script that consolidates &lt;code&gt;@INC&lt;/code&gt;. It creates a directory tree containing the union of all of the directory trees found in &lt;code&gt;@INC&lt;/code&gt; and then populates them with symlinks to the .pm files. I could replace the lengthy &lt;code&gt;PERL5LIB&lt;/code&gt; with one that contained just one directory. Here&amp;rsquo;s the resulting dependency listing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ler@cougar: cm_perl -I lib/MAP/CONFIG -c -MDevel::Dependencies=origin ftp.pl
+  Devel::Dependencies 23 dependencies:
+  Carp.pm lib/MAP/CONFIG/Carp.pm (2)
+  Config.pm lib/MAP/CONFIG/PA-RISC2.0/Config.pm (1)
+  Errno.pm lib/MAP/CONFIG/PA-RISC2.0/Errno.pm (1)
+  Exporter.pm lib/MAP/CONFIG/Exporter.pm (2)
+  Exporter/Heavy.pm lib/MAP/CONFIG/Exporter/Heavy.pm (2)
+  IO.pm lib/MAP/CONFIG/PA-RISC2.0/IO.pm (1)
+  IO/Handle.pm lib/MAP/CONFIG/PA-RISC2.0/IO/Handle.pm (1)
+  IO/Socket.pm lib/MAP/CONFIG/PA-RISC2.0/IO/Socket.pm (1)
+  IO/Socket/INET.pm lib/MAP/CONFIG/IO/Socket/INET.pm (2)
+  IO/Socket/UNIX.pm lib/MAP/CONFIG/IO/Socket/UNIX.pm (2)
+  Net/Cmd.pm lib/MAP/CONFIG/Net/Cmd.pm (2)
+  Net/Config.pm lib/MAP/CONFIG/Net/Config.pm (2)
+  Net/FTP.pm lib/MAP/CONFIG/Net/FTP.pm (2)
+  SelectSaver.pm lib/MAP/CONFIG/SelectSaver.pm (2)
+  Socket.pm lib/MAP/CONFIG/PA-RISC2.0/Socket.pm (1)
+  Symbol.pm lib/MAP/CONFIG/Symbol.pm (2)
+  Time/Local.pm lib/MAP/CONFIG/Time/Local.pm (2)
+  XSLoader.pm lib/MAP/CONFIG/PA-RISC2.0/XSLoader.pm (1)
+  lib/MAP/CONFIG/Net/libnet.cfg lib/MAP/CONFIG/Net/libnet.cfg (2)
+  strict.pm lib/MAP/CONFIG/strict.pm (2)
+  vars.pm lib/MAP/CONFIG/vars.pm (2)
+  warnings.pm lib/MAP/CONFIG/warnings.pm (2)
+  warnings/register.pm lib/MAP/CONFIG/warnings/register.pm (2)
+Total directory searches: 39
+ftp.pl syntax OK
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Why does Perl find &lt;em&gt;Carp.pm&lt;/em&gt; in the &lt;em&gt;second&lt;/em&gt; directory, considering Perl should search the directory passed via &lt;code&gt;-I&lt;/code&gt; first? &lt;code&gt;perl -V&lt;/code&gt; gives the answer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    (extract)
+  @INC:
+    lib/MAP/CONFIG/PA-RISC2.0
+    lib/MAP/CONFIG
+    XxB
+    /build/LIB/UTILS!11.162/ftpstuff/PA-RISC2.0
+    /build/LIB/UTILS!11.162/ftpstuff
+    /build/LIB/UTILS!11.162/alien/PA-RISC2.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Under some circumstances, Perl adds architecture-specific paths to &lt;code&gt;@INC&lt;/code&gt;; for more information on this, see the description of &lt;code&gt;PER5LIB&lt;/code&gt; in the &lt;code&gt;perlrun&lt;/code&gt; manpage.&lt;/p&gt;
+
+&lt;p&gt;Finally I timed the &lt;em&gt;ftp.pl&lt;/em&gt; program twice: with the normal &lt;code&gt;PERL5LIB&lt;/code&gt; and with the consolidated &lt;code&gt;PERL5LIB&lt;/code&gt;. Here are the results (&lt;code&gt;u&lt;/code&gt; stands for &amp;ldquo;user time,&amp;rdquo; &lt;code&gt;s&lt;/code&gt; for &amp;ldquo;system time,&amp;rdquo; and &lt;code&gt;u+s&lt;/code&gt; is the sum; times are in seconds):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Running ft_ftp.pl..
+47-element PERL5LIB  : u: 0.07 s: 0.20 u+s: 0.27
+Consolidated PERL5LIB: u: 0.05 s: 0.04 u+s: 0.09
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Therefore, I recommended incorporating the consolidation script as part of the process that builds the various systems.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;It may seem silly to have a &lt;code&gt;PERL5LIB&lt;/code&gt; that contains 47 directories. On the other hand, that kind of situation naturally arises once you try to use Perl in complex developments such as the Agency&amp;rsquo;s. After all, Perl &amp;ldquo;is a real programming language,&amp;rdquo; we like to say, so why can&amp;rsquo;t it do what C++ or Ada can do?&lt;/p&gt;
+
+&lt;p&gt;I still think that we need a Perl compiler. The problem is not the length of &lt;code&gt;PERL5LIB&lt;/code&gt;, it&amp;rsquo;s the fact that Perl processes it each time it runs the script. My workaround, in effect, amounts to &amp;ldquo;compiling&amp;rdquo; a fast Perl lib.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

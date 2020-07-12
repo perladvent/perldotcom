@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Embed on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-embed/</link>
+    <description>Recent content in Perl Embed on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 26 May 2005 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-embed/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Manipulating Word Documents with Perl</title>
+      <link>http://localhost:1313/pub/2005/05/26/word_control.html/</link>
+      <pubDate>Thu, 26 May 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/05/26/word_control.html/</guid>
+      <description>
+
+&lt;p&gt;In a recent lightning article, &lt;a href=&#34;http://localhost:1313/pub/2005/03/31/lightning2.html&#34;&gt;Customizing Emacs with Perl&lt;/a&gt;, &lt;a href=&#34;http://localhost:1313/authors/bob-ducharme&#34;&gt;Bob DuCharme&lt;/a&gt; explained how to use the Emacs &lt;code&gt;shell-command-on-region&lt;/code&gt; function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the time needed to write the &lt;a href=&#34;http://www.gnu.org/software/emacs/elisp-manual/html_mono/elisp.html&#34;&gt;elisp&lt;/a&gt; code needed for a particular string manipulation, especially when he knew how much easier it would be for him to do that manipulation with Perl. However, by using the Emacs function &lt;code&gt;shell-command-on-region&lt;/code&gt;, Bob could have his cake an eat it too&amp;ndash;keep editing with Emacs, while using Perl on demand for string manipulation.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve often been in the same boat as Bob, though while using Microsoft Word. When facing a thorny string manipulation problem, I, too, have found myself thinking, &lt;em&gt;This would be so easy if I could just use Perl!&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, Word VBA doesn&amp;rsquo;t include a feature analogous to the &lt;code&gt;shell-command-on-region&lt;/code&gt; function &amp;hellip;which certainly sounded like a challenge to me. In &lt;a href=&#34;http://www.oreilly.com/catalog/wordhks&#34;&gt;Word Hacks&lt;/a&gt;, &lt;a href=&#34;http://www.oreillynet.com/cs/catalog/view/au/906&#34;&gt;Sean M. Burke&lt;/a&gt; and I &lt;a href=&#34;http://www.windowsdevcenter.com/pub/windows/excerpt/wdhks_1/index.html?page=5&#34;&gt;demonstrated&lt;/a&gt;how to use the Windows clipboard as a primitive but simple means of exchanging data between Word and a Perl script. I decided to see if I could generalize that technique to emulate the Emacs &lt;code&gt;shell-command-on-region&lt;/code&gt; function from Word, using VBA and Perl. I&amp;rsquo;m happy to report that it works. Using the code shown in this article, you&amp;rsquo;ll be able to run any DOS command that accepts standard input (like most in the fabulous &lt;a href=&#34;http://unxutils.sourceforge.net/&#34;&gt;UnxUtils package&lt;/a&gt;) on text you&amp;rsquo;ve selected in Microsoft Word, then either have the output echoed back or use it to replace the selected text. As an example, you can use the code in this article to run Bob&amp;rsquo;s &lt;a href=&#34;http://localhost:1313/media/_pub_2005_05_26_word_control/ol2iso.pl&#34;&gt;&lt;code&gt;OLDate2ISO.pl&lt;/code&gt;&lt;/a&gt; script on a selected date. (The &lt;code&gt;OLDate2ISO.pl&lt;/code&gt; script converts a Microsoft Outlook style date, like &amp;ldquo;Sat 4/16/2005 7:35 PM&amp;rdquo; to ISO 8609 format, like &amp;ldquo;2005-04-16T19:35&amp;rdquo;.)&lt;/p&gt;
+
+&lt;p&gt;VBA doesn&amp;rsquo;t offer any easy way to capture shell command output, so there are actually two scripts needed to emulate the Emacs &lt;code&gt;shell-command-on-region&lt;/code&gt; function: a Perl script to interact with the DOS shell, and a VBA function to manage that Perl script and deal with the output. In addition, I also wrote a simple wrapper macro that emulates the interactive (&lt;code&gt;Escape+|&lt;/code&gt;) form of the &lt;code&gt;shell-command-on-region&lt;/code&gt; function, using an input box, as shown in &lt;a href=&#34;#shell_command_dialog&#34;&gt;Figure 2&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-clip2shell-pl-media-pub-2005-05-26-word-control-clip2shell-pl-script&#34;&gt;The &lt;a href=&#34;http://localhost:1313/media/_pub_2005_05_26_word_control/clip2shell.pl&#34;&gt;clip2shell.pl&lt;/a&gt; script&lt;/h3&gt;
+
+&lt;p&gt;It&amp;rsquo;s true that VBA does include a &lt;code&gt;Shell()&lt;/code&gt; function, but when using that function, there&amp;rsquo;s no way to capture the output (if any) of the command invoked. To capture the output of a command run on the DOS shell, I&amp;rsquo;ve used a simple Perl script, named &lt;code&gt;clip2shell.pl&lt;/code&gt; that takes one argument: a single string containing the name of the command to run (including any arguments). The current contents of the Windows clipboard are the input to that command, and the command&amp;rsquo;s output is then put to the clipboard. (The &lt;code&gt;Win32::Clipboard&lt;/code&gt; module is included in the standard &lt;a href=&#34;http://www.activestate.com/Products/ActivePerl/&#34;&gt;ActivePerl&lt;/a&gt; distribution). Here&amp;rsquo;s the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# clip2shell.pl 
+# A script for running a DOS shell command
+# on the contents of the clipboard, then
+# putting the command&#39;s results back
+# on the clipboard
+use Win32::Clipboard;
+my $TEMP          = $ENV{&#39;TEMP&#39;};
+my $semaphore     = &amp;quot;$TEMP/$$.tmp&amp;quot;;
+my $cliptext_file = &amp;quot;$TEMP/$$.cliptext.tmp&amp;quot;;
+
+my $clipboard     = Win32::Clipboard();
+my $cliptext      = $clipboard-&amp;gt;Get();
+my $shell_command = shift @ARGV;
+
+open F, &amp;quot;&amp;gt;$cliptext_file&amp;quot; or die;
+print F $cliptext;
+close F;
+
+my $output = `$shell_command $cliptext_file`;
+$clipboard-&amp;gt;Set($output);
+
+unlink($cliptext_file);
+rmdir($semaphore);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that before exiting, the script deletes a folder named with &lt;code&gt;$semaphore&lt;/code&gt;, which contains the script&amp;rsquo;s &lt;a href=&#34;http://en.wikipedia.org/wiki/Process_identifier&#34;&gt;PID&lt;/a&gt;, appended with a &lt;em&gt;.tmp&lt;/em&gt; extension, located in the current user&amp;rsquo;s TEMP folder. This is how &lt;code&gt;clip2shell.pl&lt;/code&gt; tells VBA that it&amp;rsquo;s safe to read the result back from the clipboard. As I mentioned earlier, the VBA &lt;code&gt;Shell()&lt;/code&gt; command doesn&amp;rsquo;t return the command&amp;rsquo;s output&amp;ndash;but it does return the command&amp;rsquo;s PID.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-shell-command-on-region-function-vba-style&#34;&gt;The &lt;code&gt;shell-command-on-region&lt;/code&gt; function, VBA style&lt;/h3&gt;
+
+&lt;p&gt;The VBA function, &lt;code&gt;ShellCommandOnRegion&lt;/code&gt;, manages the interaction between Word and the &lt;code&gt;clip2shell.pl&lt;/code&gt; script. When this function invokes &lt;code&gt;clip2shell.pl&lt;/code&gt; using the VBA &lt;code&gt;Shell()&lt;/code&gt; function, it also creates the semaphore folder, named using &lt;code&gt;clip2shell.pl&lt;/code&gt;&amp;rsquo;s PID (the return value of the &lt;code&gt;Shell&lt;/code&gt; function), then waits for the deletion of that folder before getting the output from the clipboard. At that point, it either echoes back the output (using the Status Bar, or, for output more than 80 characters long, a separate message box), or pastes it back in to the document, replacing the current selection. The optional &lt;code&gt;bReplaceCurrentSelection&lt;/code&gt; argument controls the output method, which is &lt;code&gt;False&lt;/code&gt; by default.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Function ShellCommandOnRegion(sShellCommand As String, _
+               Optional ByVal sngMaxWaitSeconds As Single = 5, _
+               Optional ByVal bReplaceCurrentSelection As Boolean = False) As Boolean
+Dim lPID As Long
+Dim sSemaphore As String
+Dim sngStartTime As Single
+Dim oClipboard As New DataObject
+Dim sel As Selection
+Dim sResult As String
+
+Set sel = Selection
+
+If sel.Type = wdSelectionIP Then
+    StatusBar = &amp;quot;Please select some text first.&amp;quot;
+    Exit Function
+End If
+
+sel.Copy
+
+sngStartTime = Timer
+
+lPID = Shell(&amp;quot;perl c:\clip2shell.pl &amp;quot; + Chr(34) + sShellCommand + Chr(34))
+sSemaphore = Environ(&amp;quot;TEMP&amp;quot;) + &amp;quot;\&amp;quot; + CStr(lPID) + &amp;quot;.tmp&amp;quot;
+MkDir sSemaphore
+
+Do: DoEvents
+Loop Until Len(Dir(sSemaphore, vbDirectory)) = 0 _
+            Or ((Timer - sngStartTime) &amp;gt; sngMaxWaitSeconds)
+
+If Not Len(Dir(sSemaphore, vbDirectory)) = 0 Then
+    RmDir sSemaphore
+    Exit Function
+End If
+
+oClipboard.GetFromClipboard
+sResult = oClipboard.GetText
+
+If bReplaceCurrentSelection Then
+    Selection.Paste
+Else
+    If Len(sResult) &amp;gt; 80 Then
+        MsgBox sResult
+    Else
+        StatusBar = sResult
+    End If
+End If
+
+ShellCommandOnRegion = True
+End Function
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If there&amp;rsquo;s a problem and clip2shell.pl doesn&amp;rsquo;t delete the semaphore folder within a certain amount of time (the default shown here is 5 seconds, as represented with the optional &lt;code&gt;sngMaxWaitSeconds&lt;/code&gt; argument), &lt;code&gt;ShellCommandOnRegion&lt;/code&gt; gives up, deletes the semaphore folder itself, and returns a value of &lt;code&gt;False&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;NOTE: Before using this code, make sure you have a reference set to the &lt;strong&gt;&lt;code&gt;Microsoft Forms 2.0 Object Library&lt;/code&gt;&lt;/strong&gt;, as shown in &lt;a href=&#34;#msforms_reference&#34;&gt;Figure 1&lt;/a&gt;. Without this reference set, the &lt;code&gt;DataObject&lt;/code&gt; object type won&amp;rsquo;t be available to your code, which will cause a compilation error. To reach this dialog from Word, choose Tools, Macro, Visual Basic Editor. From within the Visual Basic Editor, choose Tools, References.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_05_26_word_control/msforms_reference.gif&#34; alt=&#34;setting a reference&#34; width=&#34;449&#34; height=&#34;364&#34; /&gt;
+&lt;em&gt;Figure 1. Setting a reference to the &lt;code&gt;Microsoft Forms 2.0 Object Library&lt;/code&gt;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;putting-it-together&#34;&gt;Putting it Together&lt;/h3&gt;
+
+&lt;p&gt;With the &lt;code&gt;clip2shell.pl&lt;/code&gt; script and the &lt;code&gt;ShellCommandOnRegion&lt;/code&gt; function set up, it&amp;rsquo;s time to demonstrate how to use Bob DuCharme&amp;rsquo;s &lt;code&gt;OLDate2ISO.pl&lt;/code&gt; script on text selected in a Word document. First, I want to show a macro that runs &lt;code&gt;OLDate2ISO.pl&lt;/code&gt; on selected text, then I&amp;rsquo;ll show a more generalized macro, which emulates the interactive (&lt;code&gt;Escape+|&lt;/code&gt;) version of the Emacs &lt;code&gt;shell-command-on-region&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the &lt;code&gt;OLDate2ISO.pl&lt;/code&gt; script, modified slightly to make its substitution globally on all the dates in its input:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Convert Outlook format date to ISO 8309 date 
+#(e.g. Wed 2/16/2005 5:27 PM to 2005-02-16T17:27)
+while (&amp;lt;&amp;gt;) {
+  s{\w+ (\d+)/(\d+)/(\d{4}) (\d+):(\d+) ([AP])M} {
+     my $hour  = $4;
+     $hour    += 12 if $6 eq &#39;P&#39;;
+     sprintf( &#39;%04d-%02d-%02dT%02s:%02s&#39;, $3, $1, $2, $hour, $5 );
+  }gse;
+  print;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the &lt;code&gt;OLDate2ISO&lt;/code&gt; macro. After putting it in the template or document of your choice, run it by pressing &lt;code&gt;Alt-F8&lt;/code&gt; (which is the same as choosing Tools -&amp;gt; Macro -&amp;gt; Macros), or by assigning it to a menu or keyboard shortcut:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Sub OLDate2ISO()
+If ShellCommandOnRegion(&amp;quot;perl c:\ol2iso.pl&amp;quot;, , True) = False Then
+    MsgBox &amp;quot;Couldn&#39;t fix selected dates&amp;quot;
+End If
+End Sub
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A dedicated macro is great for frequently used Perl scripts (or other shell commands), but it&amp;rsquo;s also helpful to be able to run an arbitrary shell command on the selected Word text, and have the text echoed back, using the Status Bar (or, if longer than will easily fit on the Status Bar, in a separate message box&amp;ndash;the Status Bar/message box route was the closest I could get to an Emacs mini-buffer).&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the code for the general-purpose macro, named &lt;code&gt;RunShellCommandOnSelection&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Sub RunShellCommandOnSelection()
+Static sShellCommand As String
+sShellCommand = InputBox(prompt:=&amp;quot;Enter full Shell Command to run on selection:&amp;quot;, _
+                Title:=&amp;quot;ShellCommandOnRegion&amp;quot;, _
+                Default:=sShellCommand)
+
+If Len(sShellCommand) = 0 Then Exit Sub
+
+If Selection.Type = wdSelectionIP Then
+    MsgBox &amp;quot;Please select some text first.&amp;quot;
+    Exit Sub
+End If
+
+If ShellCommandOnRegion(sShellCommand) = False Then
+    MsgBox &amp;quot;Shell command failed&amp;quot;
+End If
+End Sub
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running this macro brings up the dialog shown in &lt;a href=&#34;#shell_command_dialog&#34;&gt;Figure 2&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2005_05_26_word_control/shell_command_dialog.gif&#34; alt=&#34;the macro&amp;#39;s dialog&#34; width=&#34;363&#34; height=&#34;152&#34; /&gt;
+&lt;em&gt;Figure 2. The dialog that appears when running the &lt;code&gt;RunShellCommandOnSelection&lt;/code&gt; macro.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;By using a &lt;code&gt;Static&lt;/code&gt; variable declaration, the command entered will be &amp;ldquo;sticky&amp;rdquo; within Word sessions (to some extent), making it easy to re-run the same command multiple times. If you wanted to replace the selected text instead of echoing the result, modify the &lt;code&gt;RunShellCommandOnSelection&lt;/code&gt; macro by adding the optional &lt;code&gt;bReplaceCurrentSelection&lt;/code&gt; argument to the &lt;code&gt;ShellCommandOnRegion&lt;/code&gt; call (leaving a blank value for the &lt;code&gt;sngMaxWaitSeconds&lt;/code&gt; argument):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;If ShellCommandOnRegion(sShellCommand, ,True) = False Then
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Word may not be quite as customizable as Emacs, but by emulating a single Emacs function using Perl and VBA, it&amp;rsquo;s possible to add a powerful new tool to Word, and in doing so, give any Perl refugees who find themselves in the Word world&amp;ndash;whether by choice or circumstance&amp;ndash;some of the comforts of home.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

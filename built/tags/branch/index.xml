@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Branch on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/branch/</link>
+    <description>Recent content in Branch on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 13 May 2016 07:57:42 +0000</lastBuildDate>
+    <atom:link href="/tags/branch/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Displaying the Git branch in the terminal prompt with and without Perl</title>
+      <link>http://localhost:1313/article/displaying-the-git-branch-in-the-terminal-prompt-with-perl/</link>
+      <pubDate>Fri, 13 May 2016 07:57:42 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/displaying-the-git-branch-in-the-terminal-prompt-with-perl/</guid>
+      <description>
+
+&lt;p&gt;One way to evolve as a programmer is to pay attention to things you do repeatedly, and replace that action with an efficient alternative. It took me a shamefully long time to realize I was typing &lt;code&gt;git branch&lt;/code&gt; many times a day to check which branch I was committing code to. A more efficient way is to display the current branch name in the terminal prompt. Ideally I&amp;rsquo;d like to see something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/some/path [master]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;the-branch-command&#34;&gt;The branch command&lt;/h3&gt;
+
+&lt;p&gt;With Git version control, code changes are committed to branches. The active branch is the context for work. For example I might be working on a new feature, so I create a new branch called &amp;ldquo;new-feature-x&amp;rdquo; and start writing code. Any changes I make to the code whilst in this branch, do not affect the master branch of code. This makes knowing the active branch really important - I don&amp;rsquo;t want to commit code to the wrong branch.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;branch&lt;/code&gt; command displays a list of all local branches and places an asterisk next to the active one. So in my fictional example, it might look like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch
+  master
+* new-feature-x
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Git prepends an asterisk to highlight the active branch name. Sometimes I use this to remind myself which branches are available locally, but most of the time I&amp;rsquo;m checking it to see which branch I&amp;rsquo;m currently working on. The Git &lt;a href=&#34;https://git-scm.com/docs/git-branch&#34;&gt;branch documentation&lt;/a&gt; has more information on the ins and outs of &lt;code&gt;branch&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;parsing-git-branch-with-perl&#34;&gt;Parsing git branch with Perl&lt;/h3&gt;
+
+&lt;p&gt;This is the one liner I want to use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch 2&amp;gt; /dev/null | perl -ne &#39;print &amp;quot; [$_]&amp;quot; if s/^\*\s+// &amp;amp;&amp;amp; chomp&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It runs &lt;code&gt;git branch&lt;/code&gt; redirecting error messages to the netherworld. That means if the current working directory is not a git repository, the ensuing error message will be ignored. We pipe the list of git branches to Perl, which uses the &lt;code&gt;-n&lt;/code&gt; option to loop through each line of input, running the quoted code.&lt;/p&gt;
+
+&lt;p&gt;The code operates on the default variable &lt;code&gt;$_&lt;/code&gt; which is the line of output from &lt;code&gt;git branch&lt;/code&gt; being looped over. The active branch name always begins with an asterisk, So &lt;code&gt;s/^\*\s+//&lt;/code&gt; tries to substitute the leading asterisk and whitespace from the branch name. Substitute returns the number of characters it replaced, so for all lines except the active branch, that will be zero and evaluate to false. If it&amp;rsquo;s true, the code then chomps the trailing newline character from the branch name and prints it.&lt;/p&gt;
+
+&lt;p&gt;I can add this as a function to my &lt;code&gt;.bashrc&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;function current_git_branch {
+  git branch &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/dev/&lt;/span&gt;null &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; perl &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;ne&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;print &amp;#34; [$_]&amp;#34; if s/^\*\s+// &amp;amp;&amp;amp; chomp&amp;#39;&lt;/span&gt;
+}
+PS1&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\w\$(current_git_branch) &amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;PS1&lt;/code&gt; variable defines the terminal prompt content and style. Here I&amp;rsquo;ve defined it as follows: &lt;code&gt;\w&lt;/code&gt; is the current working directory path, e.g. &lt;code&gt;~/Projects/work/&lt;/code&gt; or whatever. This is followed by the call to &lt;code&gt;current_git_branch&lt;/code&gt;. Once those edits are saved in my &lt;code&gt;.bashrc&lt;/code&gt;, I need to save the file and reload it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ . ~/.bashrc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now my terminal prompt looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/Projects/work [new-feature-x]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And if I checkout a different branch it will change:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;~/Projects/work [new-feature-x] git checkout master
+~/Projects/work [master]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;some-other-ways&#34;&gt;Some other ways&lt;/h3&gt;
+
+&lt;p&gt;One easy alternative would be to use Perl 6:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch 2&amp;gt; /dev/null | perl6 -ne &#39;print &amp;quot; [$_]&amp;quot; if s/^\*\s+// &amp;amp;&amp;amp; .chomp&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code is almost the same as before, only &lt;code&gt;chomp&lt;/code&gt; has been changed to a method call. A regex capture could be used instead too:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git branch 2&amp;gt; /dev/null | perl -ne &#39;print &amp;quot; [$1]&amp;quot; if /^\*\s+(\S+)/&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;ve also seen &lt;a href=&#34;https://askubuntu.com/questions/730754/how-do-i-show-the-git-branch-with-colours-in-bash-prompt&#34;&gt;examples&lt;/a&gt; using &lt;code&gt;sed&lt;/code&gt; to parse the output instead of Perl.&lt;/p&gt;
+
+&lt;h3 id=&#34;bash-only&#34;&gt;Bash only&lt;/h3&gt;
+
+&lt;p&gt;Perhaps a more efficient approach is to have Git emit only the active branch name, and then we don&amp;rsquo;t need another program to parse the output at all, we can just use bash. Credit goes to &lt;a href=&#34;http://randalschwartz.com&#34;&gt;Randal Schwartz&lt;/a&gt; for showing me this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ git rev-parse --abbrev-ref HEAD
+new-feature-x
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This emits the active branch only. So now the code in my &lt;code&gt;.bashrc&lt;/code&gt; becomes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;function current_git_branch {
+  local branch&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;$&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;git rev&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;parse &lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;abbrev&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;ref HEAD &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/dev/&lt;/span&gt;null);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; [[ &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;n $branch ]];&lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+    echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; [$branch]&amp;#34;&lt;/span&gt;;
+  fi
+}
+PS1&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\w\$(current_git_branch) &amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code assigns the output of the git command to the variable &lt;code&gt;branch&lt;/code&gt;. It then echoes the branch name as long as it&amp;rsquo;s not a zero length string (which happens when the current working directory is not a git repository). But wait a second, what happened to that newline at the end of the branch name? Bash has some interesting behavior with nested &lt;code&gt;echo&lt;/code&gt; commands. Check this out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ echo -n $(echo -e &amp;quot;\n\n\n\n&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you run that command at the terminal you should get no output, even though it includes 4 newline characters, plus another newline appended by the &lt;code&gt;echo&lt;/code&gt; subcommand. The outer &lt;code&gt;echo&lt;/code&gt; ignores all newlines returned by the subcommand, and the &lt;code&gt;-n&lt;/code&gt; option suppresses its own newline append (thanks to Ben Grimm for the explanation).&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;m going with the bash variant, but whichever method you use, displaying the branch name in the terminal is a nice time saver.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Quick tip: git push origin hamster?</title>
+      <link>http://localhost:1313/article/206/2015/12/24/Quick-tip--git-push-origin-hamster-/</link>
+      <pubDate>Thu, 24 Dec 2015 17:20:05 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/206/2015/12/24/Quick-tip--git-push-origin-hamster-/</guid>
+      <description>&lt;p&gt;My typing is horrible. I make mistakes all the time. I&amp;rsquo;m an avid &lt;a href=&#34;http://www.vim.org/&#34;&gt;Vim&lt;/a&gt; user but I still use the arrow keys. I&amp;rsquo;m one of those people who need technology that does what they meant, not what they asked for. So if you&amp;rsquo;re a coder like me, you probably see this a lot:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ git push origin amster
+error: src refspec amster does &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; match any&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Fortunately there is a simple workaround: Git&amp;rsquo;s &lt;a href=&#34;https://git-scm.com/docs/git-symbolic-ref&#34;&gt;symbolic references&lt;/a&gt;. I can add a symbolic reference for &lt;code&gt;amster&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ git symbolic&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;ref refs&lt;span style=&#34;color:#e6db74&#34;&gt;/heads/&lt;/span&gt;amster refs&lt;span style=&#34;color:#e6db74&#34;&gt;/heads/m&lt;/span&gt;aster&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And now Git does what I meant:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ git push origin amster
+Counting objects: &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;, done&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+Delta compression using up to &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt; threads&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+Compressing objects: &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;% &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;3&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;), done&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+Writing objects: &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;% &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;(&lt;/span&gt;3&lt;span style=&#34;color:#e6db74&#34;&gt;/3), 695 bytes | 0 bytes/s&lt;/span&gt;, done&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+Total &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; (delta &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;), reused &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; (delta &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;)
+To git@github&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com:user&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;SomeProject&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;git
+   ec208c7&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;fb0cb8f  amster &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; master&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Because it&amp;rsquo;s a symbolic reference, anytime I mean to type &lt;code&gt;master&lt;/code&gt; but actually type &lt;code&gt;amster&lt;/code&gt;, Git will do the right thing. Try it!&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Java Inline on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/java-inline/</link>
+    <description>Recent content in Java Inline on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 07 Nov 2003 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/java-inline/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Bringing Java into Perl</title>
+      <link>http://localhost:1313/pub/2003/11/07/java.html/</link>
+      <pubDate>Fri, 07 Nov 2003 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2003/11/07/java.html/</guid>
+      <description>
+
+&lt;p&gt;In this article, I will show how to bring Java code into a Perl program with &lt;code&gt;Inline::Java&lt;/code&gt;. I won&amp;rsquo;t probe the internals of &lt;code&gt;Inline&lt;/code&gt; or &lt;code&gt;Inline::Java&lt;/code&gt;, but I will tell you what you need to make a Java class available in a program or module. The program/module distinction is important only in one small piece of syntax, which I will point out.&lt;/p&gt;
+
+&lt;p&gt;The article starts with the Java code to be glued into Perl, then shows several approaches for doing so. First, the code is placed directly into a Perl program. Second, the code is placed into a module used by a program. Finally, the code is accessed via a small Perl proxy in the module.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-java-code-the-java-code-span&#34;&gt;&lt;span id=&#34;the_java_code&#34;&gt;The Java Code&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Consider the following Java class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    public class Hi {
+
+        String greeting;
+
+        public Hi(String greeting) {
+            this.greeting = greeting;
+        }
+
+        public void setGreeting(String newGreeting) {
+            greeting = newGreeting;
+        }
+
+        public String getGreeting() {
+            return greeting;
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This class is for demonstration only. Each of its objects is nothing but a wrapper for the string passed to the constructor. The only operations are accessors for that one string. Yet with this, we will learn most of what we need to know to use Java from Perl. Later, we will add a few features, to show how arrays are handled. That&amp;rsquo;s not as interesting as it sounds, since &lt;code&gt;Inline::Java&lt;/code&gt; almost always does all of the work without help.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-program-a-program-span&#34;&gt;&lt;span id=&#34;a_program&#34;&gt;A Program&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Since we&amp;rsquo;re talking about Perl, there is more than one way to incorporate our trivial Java class into a Perl program. (Vocabulary Note: Some people call Perl programs &amp;ldquo;scripts.&amp;rdquo; I try not to.) Here, I&amp;rsquo;ll show the most direct approach. Subsequent sections move to more and more indirect approaches, which are more often useful in practice.&lt;/p&gt;
+
+&lt;p&gt;Not surprisingly, the most direct approach is the simplest to understand. See if you can follow this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use Inline Java =&amp;gt; &amp;lt;&amp;lt;&#39;EOJ&#39;;
+    public class Hi {
+        // The class body is shown in the Java Code above
+    }
+    EOJ
+
+    my $greeter = Hi-&amp;gt;new(&amp;quot;howdy&amp;quot;);
+    print $greeter-&amp;gt;getGreeting(), &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Java class is the one above, so I have omitted all but the class declaration. The Perl code just wraps it, so it is tiny. To use &lt;code&gt;Inline::Java&lt;/code&gt;, say &lt;code&gt;use Inline Java =&amp;gt; code&lt;/code&gt; where &lt;code&gt;code&lt;/code&gt; tells &lt;code&gt;Inline&lt;/code&gt; where to look for the code. In this case, the code follows inline (clever naming, huh?). Note that single-quote context is safest here. There are other ways to include the code; we&amp;rsquo;ll see my favorite way later. The overly curious are welcome to consult the perldoc for all of the others.&lt;/p&gt;
+
+&lt;p&gt;Once &lt;code&gt;Inline::Java&lt;/code&gt; has worked its magic &amp;ndash; and it is highly magical &amp;ndash; we can use the Java &lt;code&gt;Hi&lt;/code&gt; class as if it was a Perl package. &lt;code&gt;Inline::Java&lt;/code&gt; provides several ways to construct Java objects. I usually use the one shown here; namely, I pretend the Java constructor is called &lt;code&gt;new&lt;/code&gt;, just like many Perl constructors are. In honor of Java, you might rather say &lt;code&gt;my $greeter = new Hi(&amp;quot;howdy&amp;quot;);&lt;/code&gt;, but I usually avoid this indirect object form. You can even call the constructor by the class name as in &lt;code&gt;my $greeter = Hi-&amp;gt;Hi(&amp;quot;howdy&amp;quot;);&lt;/code&gt; (or, you could even say the pathological &lt;code&gt;my $greeter = Hi Hi(&amp;quot;howdy&amp;quot;);&lt;/code&gt;). Class methods are accessed just like the constructor, except that their names are the Java method names. Instance methods are called through an object reference, as if the reference were a Perl object.&lt;/p&gt;
+
+&lt;p&gt;Note that &lt;code&gt;Inline::Java&lt;/code&gt; performs type conversions for us, so we can pass and receive Java primitive types in the appropriate Perl variables. This carries over to arrays, etc. When you think about what must be going on under the hood, you&amp;rsquo;ll realize what a truly magical module this is.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-module-a-module-span&#34;&gt;&lt;span id=&#34;a_module&#34;&gt;A Module&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;I often say that most Perl code begins life in a program. As time goes by, the good parts of that code, the ones that can be reused, are factored out into modules. Suppose our greeter is really popular, so many programs want to use it. We don&amp;rsquo;t want to have to include the Java code in each one (and possibly require each program to compile its own copy of the class file). Hence, we want a module. My module looks a lot like my earlier program, except for two features. First, I changed the way &lt;code&gt;Inline&lt;/code&gt; looks for the code, which has nothing to do with whether the code is in a program or a module. Second, reaching class methods from any package other than &lt;code&gt;main&lt;/code&gt; requires careful &amp;ndash; though not particularly difficult &amp;ndash; qualification of the method name.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Hi;
+    use strict; use warnings;
+
+    use Inline Java =&amp;gt; &amp;quot;DATA&amp;quot;;
+
+    sub new {
+        my $class    = shift;
+        my $greeting = shift;
+        return Hi::Hi-&amp;gt;new($greeting);
+    }
+
+    1;
+
+    __DATA__
+    __Java__
+    public class Hi {
+        // The class body is shown in The Java Code above
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The package starts like all good packages, by using &lt;code&gt;strict&lt;/code&gt; and &lt;code&gt;warnings&lt;/code&gt;. The &lt;code&gt;use Inline&lt;/code&gt; statement is almost like the previous one, but the code lives in the &lt;code&gt;__DATA__&lt;/code&gt; segment instead of actually being inline. Note that when you put the code in the &lt;code&gt;__DATA__&lt;/code&gt; segment, you must include a marker for your language so that &lt;code&gt;Inline&lt;/code&gt; can find it. There are usually several choices for each language&amp;rsquo;s marker; I chose &lt;code&gt;__Java__&lt;/code&gt;. This allows &lt;code&gt;Inline&lt;/code&gt; to glue from multiple languages into one source file.&lt;/p&gt;
+
+&lt;p&gt;The constructor is needed so that the caller does not need to know they are interfacing with &lt;code&gt;Inline::Java&lt;/code&gt;. They call the constructor with &lt;code&gt;Hi-&amp;gt;new(&amp;quot;greeting&amp;quot;)&lt;/code&gt; as they would for a typical package called &lt;code&gt;Hi&lt;/code&gt;. Yet, the module&amp;rsquo;s constructor must do a bit of work to get the right object for the caller. It starts by retrieving the arguments, then returns the result of the unusual call &lt;code&gt;Hi::Hi-&amp;gt;new(...)&lt;/code&gt;. The first &lt;code&gt;Hi&lt;/code&gt; is for the Perl package and the second is for the Java class; both are required. Just as in the program from the last section, there are multiple ways to call the constructor. I chose the direct method with the name &lt;code&gt;new&lt;/code&gt;. You could use the indirect object form and/or call the method by the class name. The returned object can be used as normal, so I just pass it back to the caller. All instance methods are passed directly through &lt;code&gt;Inline::Java&lt;/code&gt; without help from &lt;code&gt;Hi.pm&lt;/code&gt;. If there were class methods (declared with the &lt;code&gt;static&lt;/code&gt; keyword in Java), I would either have to provide a wrapper, or the caller would have to qualify the names. Neither solution is particularly difficult, but I favor the wrapper, to keep the caller&amp;rsquo;s effort to a minimum. This is my typical laziness at work. Since there will likely be several callers, and I will have to write them, I want to push any difficult parts into the module.&lt;/p&gt;
+
+&lt;p&gt;If you need to adapt the behavior of the Java object for your Perl audience, you may insert routines in &lt;code&gt;Hi.pm&lt;/code&gt; to do that. For instance, perhaps you want a more typical Perl accessor, instead of the &lt;code&gt;get&lt;/code&gt;/&lt;code&gt;set&lt;/code&gt; pair used in the Java code. In this case, you must make your own genuine Perl object and proxy through it to the Java class. That might look something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Hi2;
+    use strict; use warnings;
+
+    use Inline Java =&amp;gt; &amp;quot;DATA&amp;quot;;
+
+    sub new {
+        my $class    = shift;
+        my $greeting = shift;
+        bless { OBJECT =&amp;gt; Hi2::Hi-&amp;gt;new($greeting) }, $class;
+    }
+
+    sub greeting {
+        my $self      = shift;
+        my $new_value = shift;
+        if (defined $new_value) {
+            $self-&amp;gt;{OBJECT}-&amp;gt;setGreeting($new_value);
+        }
+        return $self-&amp;gt;{OBJECT}-&amp;gt;getGreeting();
+    }
+
+    1;
+
+    __DATA__
+    __Java__
+    public class Hi {
+        // Body omitted again
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here, the object returned from &lt;code&gt;Inline::Java&lt;/code&gt;, which I&amp;rsquo;ll call the Java object for short, is stored in the &lt;code&gt;OBJECT&lt;/code&gt; key of a hash-based &lt;code&gt;Hi2&lt;/code&gt; object that is returned to the caller. The distinction between the Perl package and the Java class is clear in this constructor call. The Perl package comes first, then the Java class, then the class method to call.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;greeting&lt;/code&gt; method, shifts in the &lt;code&gt;$new_value&lt;/code&gt;, which the caller supplies if she wants to change the value. If &lt;code&gt;$new_value&lt;/code&gt; is defined, &lt;code&gt;greeting&lt;/code&gt; passes the &lt;code&gt;set&lt;/code&gt; message to the Java object. In either case, it returns the current value to the caller, as Perl accessors usually do.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-a-pure-proxy-a-pure-proxy-span&#34;&gt;&lt;span id=&#34;a_pure_proxy&#34;&gt;A Pure Proxy&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In the last section, we saw how to make a Perl module access Java code. We also saw how to make the Perl module adapt between the caller&amp;rsquo;s expectation of Perl objects and the underlying Java objects. Here, we will see how to access Java classes that can&amp;rsquo;t be included in the Perl code.&lt;/p&gt;
+
+&lt;p&gt;There are a lot of Java libraries. These are usually distributed in compiled form in so-called &lt;em&gt;.jar&lt;/em&gt; (&lt;strong&gt;j&lt;/strong&gt;ava &lt;strong&gt;ar&lt;/strong&gt;chive) files. This is good design on the part of the Java community, just as using modules is good design on the part of the Perl community. Just as we wanted to make the &lt;code&gt;Hi&lt;/code&gt; Java class available to lots of programs &amp;ndash; and thus placed it in a module &amp;ndash; so the Java people put reusable code in .jars. (Yes, Java people share the bad pun heritage of the Unix people, which brought us names like &lt;code&gt;yacc&lt;/code&gt;, &lt;code&gt;bison&lt;/code&gt;, &lt;code&gt;more&lt;/code&gt;, and &lt;code&gt;less&lt;/code&gt;.)&lt;/p&gt;
+
+&lt;p&gt;Suppose that our humble greeter is so popular that it has been greatly expanded and .jarred for worldwide use. Unless we provide an adapter like the one shown earlier, the caller must use the .jarred code from Perl in a Java-like way. So I will now show three pieces of code: 1) an expanded greeter, 2) a Perl driver that uses it, and 3) a mildly adapting Perl module the driver can use.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the expanded greeter; the two Perl pieces follow later:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    import java.util.Random;
+    public class Higher {
+        private static Random myRand = new Random();
+        private String[] greetings;
+
+        public Higher(String[] greetings) {
+            this.greetings = greetings;
+        }
+
+        public void setGreetings(String[] newGreetings) {
+            greetings = newGreetings;
+        }
+
+        public String[] getGreetings() {
+            return greetings;
+        }
+
+        public void setGreeting(int index, String newGreeting) {
+            greetings[index] = newGreeting;
+        }
+
+        public String getGreeting() {
+            float randRet = myRand.nextFloat();
+            int   index   = (int) (randRet * greetings.length);
+            return greetings[index];
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now there are multiple greetings, so the constructor takes an array of &lt;code&gt;Strings&lt;/code&gt;. There are &lt;code&gt;get&lt;/code&gt;/&lt;code&gt;set&lt;/code&gt; pairs for the whole list of greetings and for single greetings. The single &lt;code&gt;get&lt;/code&gt; accessor returns one greeting at random. The single &lt;code&gt;set&lt;/code&gt; accessor takes the index of the greeting to replace and its new value.&lt;/p&gt;
+
+&lt;p&gt;Note that Java arrays are fixed-size; don&amp;rsquo;t let &lt;code&gt;Inline::Java&lt;/code&gt; fool you into thinking otherwise. It is very good at making you think Java works just like Perl, even though this is not the case. Calling &lt;code&gt;setGreeting&lt;/code&gt; with an out-of-bounds index will be fatal unless trapped. Yes, you can trap Java exceptions with &lt;code&gt;eval&lt;/code&gt; and the &lt;code&gt;$@&lt;/code&gt; variable.&lt;/p&gt;
+
+&lt;p&gt;This driver uses the newly expanded greeter through &lt;code&gt;Hi3.pm&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #!/usr/bin/perl
+    use strict; use warnings;
+
+    use Hi3;
+
+    my $greeter = Hi3-&amp;gt;new([&amp;quot;Hello&amp;quot;, &amp;quot;Bonjour&amp;quot;, &amp;quot;Hey Y&#39;all&amp;quot;, &amp;quot;G&#39;Day&amp;quot;]);
+    print $greeter-&amp;gt;getGreeting(), &amp;quot;\n&amp;quot;;
+          $greeter-&amp;gt;setGreeting(0, &amp;quot;Howdy&amp;quot;);
+    print $greeter-&amp;gt;getGreeting(), &amp;quot;\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;Hi3&lt;/code&gt; module (directly below) provides access to the Java code. I called the constructor with an anonymous array. An array reference also works, but a simple list does not. The constructor returns a Java object (at least, it looks that way to us); the other calls just provide additional examples. Note, in particular, that &lt;code&gt;setGreeting&lt;/code&gt; expects an &lt;code&gt;int&lt;/code&gt; and a &lt;code&gt;String&lt;/code&gt;. &lt;code&gt;Inline::Java&lt;/code&gt; examines the arguments and coerces them into the best types it can. This nearly always works as expected. When it doesn&amp;rsquo;t, you need to look in the documentation for &amp;ldquo;CASTING.&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;Finally, this is &lt;code&gt;Hi3.pm&lt;/code&gt; (behold the power of Perl and the work of the &lt;code&gt;Inline&lt;/code&gt; developers):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Hi3;
+    use strict; use warnings;
+
+    BEGIN {
+        $ENV{CLASSPATH} .= &amp;quot;:/home/phil/jar_home/higher.jar&amp;quot;;
+    }
+    use Inline Java  =&amp;gt; &#39;STUDY&#39;,
+               STUDY =&amp;gt; [&#39;Higher&#39;];
+
+    sub new {
+        my $class = shift;
+        return Hi3::Higher-&amp;gt;new(@_);
+    }
+
+    1;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To use a class hidden in a .jar I need to do three things:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Make sure an absolute path to the .jar file is in the &lt;code&gt;CLASSPATH&lt;/code&gt;, &lt;em&gt;before&lt;/em&gt; using &lt;code&gt;Inline&lt;/code&gt;. A well-placed &lt;code&gt;BEGIN&lt;/code&gt; block makes this happen.&lt;/li&gt;
+&lt;li&gt;Use &lt;code&gt;STUDY&lt;/code&gt; instead of providing Java source code.&lt;/li&gt;
+&lt;li&gt;Add the &lt;code&gt;STUDY&lt;/code&gt; directive to the &lt;code&gt;use Inline&lt;/code&gt; statement. This tells &lt;code&gt;Inline::Java&lt;/code&gt; to look for named classes. In this case, the list has only one element: &lt;code&gt;Higher&lt;/code&gt;. Names in this list must be fully qualified if the corresponding class has a Java package.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The constructor just calls the &lt;code&gt;Higher&lt;/code&gt; constructor through &lt;code&gt;Inline::Java&lt;/code&gt;, as we have seen before.&lt;/p&gt;
+
+&lt;p&gt;Yes, this is the whole module, all 15 lines of it.&lt;/p&gt;
+
+&lt;p&gt;If you need an adapter between your caller and the Java library, you can put it in either Perl or Java code. I prefer to code such adapters in Perl when possible, following the plan we saw in the previous section. Yet occasionally, that is too painful, and I resort to Java. For example, the glue module &lt;code&gt;Java::Build::JVM&lt;/code&gt; uses both a Java and a Perl adapter to ease communication with the genuine &lt;code&gt;javac&lt;/code&gt; compiler. Look at the &lt;code&gt;Java::Build&lt;/code&gt; distribution from CPAN for details.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-anatomy-of-automated-compiling-a-brief-discussion-anatomy-of-automated-compiling-a-brief-discussion-span&#34;&gt;&lt;span id=&#34;anatomy_of_automated_compiling__a_brief_discussion&#34;&gt;Anatomy of Automated Compiling: A Brief Discussion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;So what is &lt;code&gt;Inline::Java&lt;/code&gt; doing for us? When it finds our Java code, it makes a copy in the .java file of the proper name (&lt;code&gt;javac&lt;/code&gt; is adamant that class names and file names match). Then it uses our Java compiler to build a compiled version of the program. It puts that version in a directory, using an MD5 sum to ensure that recompiling happens when and only when the code changes.&lt;/p&gt;
+
+&lt;p&gt;You can cruise through the directories looking at what it did. If something goes wrong, it will even give you hints about where to look. Here&amp;rsquo;s a tour of some of those directories. First, there is a base directory. If you don&amp;rsquo;t do anything special, it will be called &lt;em&gt;_Inline&lt;/em&gt;, under the working directory from which you launched the program. If you have a &lt;em&gt;.Inline&lt;/em&gt; directory in your home directory, all &lt;code&gt;Inline&lt;/code&gt; modules will use it. If you use the &lt;code&gt;DIRECTORY&lt;/code&gt; directive in your &lt;code&gt;use Inline&lt;/code&gt; statement, its value will be used instead. For ease of discussion, I&amp;rsquo;ll call the directory &lt;em&gt;_Inline&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Under &lt;em&gt;_Inline&lt;/em&gt; is a config file that describes the various &lt;code&gt;Inline&lt;/code&gt; languages available to you. More importantly, there are two subdirectories: &lt;em&gt;build&lt;/em&gt; and &lt;em&gt;lib&lt;/em&gt;. If your code compiles, the &lt;em&gt;build&lt;/em&gt; directory will be cleaned. (That&amp;rsquo;s the default behavior; you can include directives in your &lt;code&gt;use Inline&lt;/code&gt; statement to control this.) If not, the &lt;em&gt;build&lt;/em&gt; directory has a subdirectory for your program, with part of the MD5 sum in its name. That directory will hold the code in its .java file and the error output from javac in &lt;em&gt;cmd.out&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Code that successfully compiles ends up in &lt;em&gt;lib/auto&lt;/em&gt;. The actual .class files end up in a subdirectory, which is again named by class and MD5 sum. Typically, there will be three files there. The .class file is as normal. The other files describe the class. The .inl file has an &lt;code&gt;Inline&lt;/code&gt; description of the class. It contains the full MD5 sum, so code does not need to be recompiled unless it changes. It also says when the code was compiled, along with a lot of other information about the &lt;code&gt;Inline::Java&lt;/code&gt; currently installed. The .jdat file is specific to &lt;code&gt;Inline::Java&lt;/code&gt;. It lists the signatures of the methods available in the class. &lt;code&gt;Inline::Java&lt;/code&gt; finds these using Java&amp;rsquo;s reflection system (reflection is the Java term for symbolic references).&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-see-also-see-also-span&#34;&gt;&lt;span id=&#34;see_also&#34;&gt;See Also&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;For more information on &lt;code&gt;Inline&lt;/code&gt; and &lt;code&gt;Inline::Java&lt;/code&gt; and the other inline modules, see their perldoc. If you want to join in, sign up for the &lt;a href=&#34;mailto:inline@perl.org&#34;&gt;inline@perl.org&lt;/a&gt; mailing list, which is archived at &lt;a href=&#34;http://nntp.x.perl.org/group/perl.inline&#34;&gt;nntp.x.perl.org/group/perl.inline&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-acknowledgements-acknowledgements-span&#34;&gt;&lt;span id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Thanks to Brian Ingerson for &lt;code&gt;Inline&lt;/code&gt; and Patrick LeBoutillier for &lt;code&gt;Inline::Java&lt;/code&gt;. These excellent modules have saved me much time and heartache. In fact, I doubt I would have had the courage to use Java in Perl without them. Double thanks to Patrick LeBoutillier, since he took the time to read this article and correct some errors (including my failure to put &amp;ldquo;Bonjour&amp;rdquo; in the greetings list).&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ipv4 on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/ipv4/</link>
+    <description>Recent content in Ipv4 on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 19 Sep 2019 11:00:07 +0000</lastBuildDate>
+    <atom:link href="/tags/ipv4/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Creating IP address tools from scratch</title>
+      <link>http://localhost:1313/article/creating-ip-address-tools-from-scratch/</link>
+      <pubDate>Thu, 19 Sep 2019 11:00:07 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/creating-ip-address-tools-from-scratch/</guid>
+      <description>
+
+&lt;p&gt;Recently I&amp;rsquo;ve been researching how the Internet is organized, and working with &lt;a href=&#34;https://en.wikipedia.org/wiki/WHOIS&#34;&gt;whois&lt;/a&gt; data. I&amp;rsquo;ve been creating simple tools that process IP addresses without any help from CPAN. At work we tend to use &lt;a href=&#34;https://metacpan.org/pod/Net::IP::XS&#34;&gt;Net::IP::XS&lt;/a&gt; for these tasks, but sometimes it&amp;rsquo;s fun to figure out how things work under the hood.&lt;/p&gt;
+
+&lt;h2 id=&#34;converting-to-decimal&#34;&gt;Converting to decimal&lt;/h2&gt;
+
+&lt;p&gt;I&amp;rsquo;m sure you&amp;rsquo;re familiar with the IPv4 address &lt;a href=&#34;https://en.wikipedia.org/wiki/IPv4#Addressing&#34;&gt;format&lt;/a&gt;; the &amp;ldquo;dotted quad&amp;rdquo; consists of four numbers between 0 and 255 separated by periods. Your home wifi network probably starts at 192.168.0.0. The format is just another way of representing a 32-bit integer; here are the numbers and their equivalent in binary:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     192      168        0        0
+11000000 10101000 00000000 00000000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To figure out the value of the address in decimal, you need to read all 32 bits in one go:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;11000000101010000000000000000000
+                      3232235520
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I find it useful to convert IPv4 addresses to decimals for storing them in a database; it&amp;rsquo;s much faster to search integers than text. So how would we do that in Perl? Here&amp;rsquo;s one way:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ipv4 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;192.168.0.0&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @bytes &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\./&lt;/span&gt;, $ipv4;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;N&amp;#39;&lt;/span&gt;, pack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CCCC&amp;#39;&lt;/span&gt;, @bytes; &lt;span style=&#34;color:#75715e&#34;&gt;# 3232235520&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code splits the IPv4 string &lt;code&gt;192.168.0.0&lt;/code&gt; into an array of 4 numbers (192,168,0,0). I use &lt;a href=&#34;https://perldoc.perl.org/functions/pack.html&#34;&gt;pack&lt;/a&gt; to convert each number from Perl&amp;rsquo;s representation into an unsigned 8-bit integer (the &amp;ldquo;C&amp;rdquo; is for char, the C language type). Then I use &lt;a href=&#34;https://perldoc.perl.org/functions/unpack.html&#34;&gt;unpack&lt;/a&gt; to read all 32 bits at once (the &amp;ldquo;N&amp;rdquo; is for an unsigned long in Network order - i.e. big endian).&lt;/p&gt;
+
+&lt;p&gt;Using &lt;code&gt;pack&lt;/code&gt; and &lt;code&gt;unpack&lt;/code&gt; is convenient, but it&amp;rsquo;s not the fastest way to convert those numbers into a single 32-bit integer. We can accomplish the same feat with multiplication and exponentiation:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;24&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;];&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This multiplies each number by 2 raised to the appropriate power (&lt;code&gt;**&lt;/code&gt; is Perl&amp;rsquo;s exponentiation operator): 192 must be multiplied by 2^24 as we want it to be moved 24 bits to the left, 168 should be multiplied by 2^16 and so on. Alternatively I could use bit-shifting to do the same thing:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;24&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; ($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; ($bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;];&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using exponents or bit-shifting are both over 3x faster than my pack-unpack routine. That isn&amp;rsquo;t unusual: aside from avoiding subroutine calls, compilers are optimized for base 2 operations.&lt;/p&gt;
+
+&lt;p&gt;You might be wondering how this would work for an &lt;a href=&#34;https://en.wikipedia.org/wiki/IPv6#Addressing&#34;&gt;IPv6&lt;/a&gt; address. In principle the steps are the same, but it&amp;rsquo;s more complicated: IPv6 addresses are 128-bit integers, which is larger than Perl can natively handle. IPv6 addresses also have more involved representation &lt;a href=&#34;https://en.wikipedia.org/wiki/IPv6_address#Representation&#34;&gt;rules&lt;/a&gt;. I&amp;rsquo;ll tackle IPv6 in a future article.&lt;/p&gt;
+
+&lt;h2 id=&#34;changing-decimal-back-to-dotted-quad&#34;&gt;Changing decimal back to dotted quad&lt;/h2&gt;
+
+&lt;p&gt;To get back from a decimal number to an IPv4 address, just reverse the process:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3232235776&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @bytes &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CCCC&amp;#39;&lt;/span&gt;, pack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;N&amp;#39;&lt;/span&gt;, $decimal;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ipv4 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;, @bytes; &lt;span style=&#34;color:#75715e&#34;&gt;# 192.168.1.0&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here I&amp;rsquo;ve used the pack-unpack routine again. I&amp;rsquo;m not sure if there&amp;rsquo;s a exponent/bit-shift solution that&amp;rsquo;s faster. I could right shift the decimal 24 bits to get 192, then left shift 192 24 bits and subtract it from the decimal, then shift the decimal 16 bits right and so on. But that seems like a lot of work.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Edit&lt;/strong&gt;: Dave Cross posted a &lt;a href=&#34;https://www.reddit.com/r/perl/comments/d6kncb/creating_ip_address_tools_from_scratch/f0vas6d?utm_source=share&amp;amp;utm_medium=web2x&#34;&gt;solution&lt;/a&gt; using bitmaps.&lt;/p&gt;
+
+&lt;h2 id=&#34;extracting-a-range-from-cidr-notation&#34;&gt;Extracting a range from CIDR notation&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing&#34;&gt;CIDR&lt;/a&gt; notation is shorthand way of describing a range of contiguous IP addresses belonging to a network. For instance your home network is commonly administered on &lt;code&gt;192.168.0.0/16&lt;/code&gt;. This can be read as &amp;ldquo;the network begins at 192.168.0.0 and the network mask is 16 bits long&amp;rdquo;. In other words the network begins at &lt;code&gt;192.168.0.0&lt;/code&gt; and ends at &lt;code&gt;192.168.255.255&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;CIDR is powerful though because the network mask doesn&amp;rsquo;t have to be a factor of 8; it&amp;rsquo;s harder to read &lt;code&gt;105.201.192.0/19&lt;/code&gt; and know where the network ends. And that&amp;rsquo;s where Perl can help:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($start_ipv4, $prefixlen) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\//&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;105.201.192.0/19&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @bytes &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\./&lt;/span&gt;, $start_ipv4;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $start_decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;24&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;];
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bits_remaining &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; $prefixlen;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $end_decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $start_decimal &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt; $bits_remaining &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @bytes &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CCCC&amp;#39;&lt;/span&gt;, pack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;N&amp;#39;&lt;/span&gt;, $end_decimal;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $end_ipv4 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;, @bytes; &lt;span style=&#34;color:#75715e&#34;&gt;# 105.201.223.255&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This code starts by splitting the network &lt;code&gt;105.201.192.0/19&lt;/code&gt; into its starting IPv4 address and the network mask prefix length. I then use the same routine as before to obtain the decimal starting address. To figure out the last network address, I can use exponentiation again: 2 to the power of the remaining bits, minus 1 tells me how much larger the end address is than the start. To get the dotted quad I use pack-unpack to read the end decimal back into 4 bytes, and join them together again.&lt;/p&gt;
+
+&lt;h2 id=&#34;a-quick-note-on-scripting&#34;&gt;A quick note on scripting&lt;/h2&gt;
+
+&lt;p&gt;All of my code examples so far have used fixed variables to keep things simple. But I don&amp;rsquo;t actually write scripts like this. Text streams are the lingua franca of Unix systems; so it&amp;rsquo;s much more useful to write scripts that read streams of text and print streams of text. Then you can pipe data in and out of the script, chaining programs together to get the transformation you need. Here&amp;rsquo;s an example if what I&amp;rsquo;m talking about:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;&amp;lt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @columns &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\t/&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($start_ipv4, $prefixlen) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\//&lt;/span&gt;, $columns[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @bytes &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\./&lt;/span&gt;, $start_ipv4;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $start_decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;24&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $bytes[&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;];
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $bits_remaining &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; $prefixlen;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $end_decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $start_decimal &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;**&lt;/span&gt; $bits_remaining &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; ($start_decimal &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; $end_decimal) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @bytes &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CCCC&amp;#39;&lt;/span&gt;, pack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;N&amp;#39;&lt;/span&gt;, $start_decimal;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ipv4 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;, @bytes;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\t&amp;#34;&lt;/span&gt;, $ipv4, @columns;
+    $start_decimal&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+  }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This script enumerates all the IP addresses in a network. I use the &lt;a href=&#34;https://www.masteringperl.org/2014/10/the-double-diamond-a-more-secure/&#34;&gt;double diamond&lt;/a&gt; operator to read input from STDIN or treat its arguments like filenames automatically opening and streaming them. I expect tab-separated columns of text, and that the first column contains the CIDR to enumerate. It performs the conversion and prints the answer along with the original input in tab-separated form.&lt;/p&gt;
+
+&lt;p&gt;I can run it by piping input:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ echo &#39;129.232.156.16/29&#39; | enum-ips
+129.232.156.16  129.232.156.16/29
+129.232.156.17  129.232.156.16/29
+129.232.156.18  129.232.156.16/29
+129.232.156.19  129.232.156.16/29
+129.232.156.20  129.232.156.16/29
+129.232.156.21  129.232.156.16/29
+129.232.156.22  129.232.156.16/29
+129.232.156.23  129.232.156.16/29
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or pass it filenames to read from:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ enum-ips cidrs-1.txt cidrs-2.txt | head
+102.32.0.0  102.32.0.0/15
+102.32.0.1  102.32.0.0/15
+102.32.0.2  102.32.0.0/15
+102.32.0.3  102.32.0.0/15
+102.32.0.4  102.32.0.0/15
+102.32.0.5  102.32.0.0/15
+102.32.0.6  102.32.0.0/15
+102.32.0.7  102.32.0.0/15
+102.32.0.8  102.32.0.0/15
+102.32.0.9  102.32.0.0/15
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;representing-a-range-in-cidr-notation&#34;&gt;Representing a range in CIDR notation&lt;/h2&gt;
+
+&lt;p&gt;CIDR notation is compact and convenient; but the &lt;a href=&#34;https://www.ripe.net/manage-ips-and-asns/db/support/documentation/ripe-database-documentation/rpsl-object-types/4-2-descriptions-of-primary-objects/4-2-4-description-of-the-inetnum-object&#34;&gt;inetnum whois object&lt;/a&gt; defines each netblock by its starting and ending IPv4 address, like this: &amp;ldquo;197.232.80.0 - 197.232.83.255&amp;rdquo;. So I wrote a script to convert that string back into a CIDR:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;&amp;lt;&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @columns &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\t/&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($start_ipv4, $end_ipv4) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; split &lt;span style=&#34;color:#e6db74&#34;&gt;/\s+-\s+/&lt;/span&gt;, $columns[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $start_decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;N&amp;#39;&lt;/span&gt;, pack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CCCC&amp;#39;&lt;/span&gt;, split &lt;span style=&#34;color:#e6db74&#34;&gt;/\./&lt;/span&gt;, $start_ipv4;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $end_decimal   &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; unpack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;N&amp;#39;&lt;/span&gt;, pack &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CCCC&amp;#39;&lt;/span&gt;, split &lt;span style=&#34;color:#e6db74&#34;&gt;/\./&lt;/span&gt;, $end_ipv4;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $prefixlen     &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; length sprintf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%0b&amp;#34;&lt;/span&gt;, $end_decimal &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; $start_decimal;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; join &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\t&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$start_ipv4/$prefixlen&amp;#34;&lt;/span&gt;, @columns;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The script reads input one line at a time. It splits the string up into the starting and ending IPv4 addresses, and uses that same pack-unpack routine to convert each to its decimal. It then calculates the prefix length by finding the difference between the start and end addresses, stringifying it to binary with &lt;a href=&#34;https://perldoc.perl.org/functions/sprintf.html&#34;&gt;sprintf&lt;/a&gt; and subtracting the number of bits from 32 (because IPv4 addresses are 32-bit integers).&lt;/p&gt;
+
+&lt;p&gt;The trouble with the prefix length calculation is it uses stringification - sticking with numbers should be faster if there was a way to do it. Let&amp;rsquo;s recap what we know:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;We can calculate the maximum (unsigned) 32-bit integer value using a base of 2: 2&lt;sup&gt;32&lt;/sup&gt; - 1&lt;/li&gt;
+&lt;li&gt;IPv4 addresses are just another way of representing unsigned 32-bit integers&lt;/li&gt;
+&lt;li&gt;With an input like &lt;code&gt;197.232.80.0 - 197.232.83.255&lt;/code&gt; we can calculate the difference between the two values (1023)&lt;/li&gt;
+&lt;li&gt;We know the base is 2 and the result is 1023; we just don&amp;rsquo;t know what the exponent is: 2&lt;sup&gt;x&lt;/sup&gt; - 1 = 1023&lt;/li&gt;
+&lt;li&gt;To solve for &lt;code&gt;x&lt;/code&gt;, we can use the logarithm function which is the inverse of exponentiation&lt;/li&gt;
+&lt;li&gt;The solution is: x = log&lt;sub&gt;2&lt;/sub&gt; ⋅ (1023 + 1)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the Perl solution:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $prefixlen &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; int(log(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; $end_decimal &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; $start_decimal) &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; log(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;));&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It uses the &lt;a href=&#34;https://perldoc.perl.org/functions/log.html&#34;&gt;log&lt;/a&gt; function which uses the natural logarithm base &lt;em&gt;e&lt;/em&gt; (like the &lt;code&gt;ln&lt;/code&gt; button on a calculator), so it must be divided by &lt;code&gt;log(2)&lt;/code&gt; to act like log&lt;sub&gt;2&lt;/sub&gt;. Benchmarking this I was surprised to find that the &lt;code&gt;log&lt;/code&gt; solution is only a few percent faster than using &lt;code&gt;sprintf&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Edit&lt;/strong&gt;: Dan Book posted an IP address to decimal &lt;a href=&#34;https://www.reddit.com/r/perl/comments/d6kncb/creating_ip_address_tools_from_scratch/f0u1flu?utm_source=share&amp;amp;utm_medium=web2x&#34;&gt;solution&lt;/a&gt; that uses &lt;a href=&#34;https://metacpan.org/pod/Socket&#34;&gt;Socket&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Test2 Tools Skipuntil on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/test2-tools-skipuntil/</link>
+    <description>Recent content in Test2 Tools Skipuntil on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 12 Jun 2018 15:26:40 +0000</lastBuildDate>
+    <atom:link href="/tags/test2-tools-skipuntil/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Writing new testing tools with Test2</title>
+      <link>http://localhost:1313/article/writing-new-testing-tools-with-test2/</link>
+      <pubDate>Tue, 12 Jun 2018 15:26:40 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/writing-new-testing-tools-with-test2/</guid>
+      <description>
+
+&lt;p&gt;Perl has had great testing tools for a long time, but &lt;a href=&#34;https://metacpan.org/pod/Test2&#34;&gt;Test2&lt;/a&gt; is the single biggest improvement to Perl testing in years. One of my favorite Test2 features is how easy it is to extend it with new tools, and today I&amp;rsquo;ll show you how I wrote my first tool.&lt;/p&gt;
+
+&lt;h3 id=&#34;dealing-with-known-test-failures&#34;&gt;Dealing with known test failures&lt;/h3&gt;
+
+&lt;p&gt;Ideally when your tests fail, it means that something needs to be fixed, and that thing is fixable. However in the Real World™ things aren&amp;rsquo;t always that simple. For example you might investigate a failure, figure out the root cause, but the person to fix it is on vacation. Or perhaps there&amp;rsquo;s a datetime bug in the code, and it will resolve itself in a few days. The key here is that the failure is understood and not serious but also impractical to fix in the short term.&lt;/p&gt;
+
+&lt;p&gt;I found myself in exactly this situation a few months ago. I didn&amp;rsquo;t want to skip the failing test, as I thought it might be forgotten, but I also wanted the build to complete in the meantime. In large distributed development teams, you want successful builds to be &amp;ldquo;the norm&amp;rdquo;, so when a build fails, developers take notice.&lt;/p&gt;
+
+&lt;p&gt;I decided what I needed was a &lt;code&gt;skip_until&lt;/code&gt; function that would skip the test until a date was reached, at which point it would start failing again. Not finding anything on CPAN, I figured it was time for a new testing tool.&lt;/p&gt;
+
+&lt;h3 id=&#34;test2-terminology-plugins-vs-tools&#34;&gt;Test2 terminology: plugins vs tools&lt;/h3&gt;
+
+&lt;p&gt;In Test2, a &amp;ldquo;plugin&amp;rdquo; is a package which overrides the behavior of existing Test2 features, whereas a &amp;ldquo;tool&amp;rdquo; is a package which provides new functions. In this case I was creating a new testing function which didn&amp;rsquo;t already exist, so I needed to write a &lt;a href=&#34;https://metacpan.org/pod/Test2::Tools&#34;&gt;Test2::Tools&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;test2-api-context&#34;&gt;Test2::API context&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Test2::API&#34;&gt;Test2::API&lt;/a&gt; provides the &lt;code&gt;context&lt;/code&gt; function to access the test context during runtime. The context object provides common test methods like &lt;code&gt;pass&lt;/code&gt;, &lt;code&gt;fail&lt;/code&gt; and &lt;code&gt;skip&lt;/code&gt; etc, which let&amp;rsquo;s you add custom test behavior. Here&amp;rsquo;s how I use it to skip tests:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Test2::Tools::SkipUntil;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test2::API &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;context&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Exporter &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;import&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;our&lt;/span&gt; @EXPORT_OK &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;skip_until&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;skip_until&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($reason, $count, $date) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; ($should_skip) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $ctx &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; context();
+    $ctx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;skip(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;skipped test&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$reason skip until $date&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;$count);
+    $ctx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;release;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; warnings &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;exiting&amp;#39;&lt;/span&gt;;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;last&lt;/span&gt; SKIP;
+  }
+}
+&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I declare a new function called &lt;code&gt;skip_until&lt;/code&gt; which accepts a text reason to skip, a count of tests to skip and a date. This signature is the same as &lt;a href=&#34;Test2::Tools::Basic::skip&#34;&gt;skip&lt;/a&gt;, with the extra date parameter (I don&amp;rsquo;t love the parameter order but I figure it&amp;rsquo;s better to remain similar to prior art).&lt;/p&gt;
+
+&lt;p&gt;For the sake of brevity I&amp;rsquo;ve omitted the argument checking code and the date time logic to decide whether &lt;code&gt;$should_skip&lt;/code&gt; is true or not. If it is, the main &lt;code&gt;if&lt;/code&gt; block obtains the test context, and calls &lt;code&gt;skip&lt;/code&gt; for the count of tests to skip. Next it calls &lt;code&gt;release&lt;/code&gt; to free the test context (&lt;a href=&#34;https://metacpan.org/pod/Test2::API::Context#CRITICAL-DETAILS&#34;&gt;important!&lt;/a&gt;). Finally it calls &lt;code&gt;last&lt;/code&gt; to exit the SKIP block that &lt;code&gt;skip_until&lt;/code&gt; would be called from.&lt;/p&gt;
+
+&lt;p&gt;Careful readers might notice that the use of &lt;code&gt;SKIP&lt;/code&gt; means &lt;code&gt;$count&lt;/code&gt; can be 1, and all tests within the skip block will still be skipped. This is the same as the Test2 behavior, in fact that code is almost identical to the Test2::Tools::Basic &lt;a href=&#34;https://metacpan.org/source/EXODIST/Test2-Suite-0.000114/lib/Test2/Tools/Basic.pm#L67&#34;&gt;source&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;using-the-new-tool&#34;&gt;Using the new tool&lt;/h3&gt;
+
+&lt;p&gt;Now if I import &lt;code&gt;Test2::Tools::SkipUntil&lt;/code&gt; in my tests I  can use it like any other module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/perl&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test2::Tools::Basic;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test2::Tools::SkipUntil &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;skip_until&amp;#39;&lt;/span&gt;;
+
+SKIP:{
+  skip_until &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;This should be fixed next month, see ticket #529&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2018-06-30&amp;#39;&lt;/span&gt;;
+
+  ok foo();
+  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+}
+
+done_testing;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And the tests will be skipped until the date is reached. Test2 makes writing new testing tools easy, if you have a good idea for a new testing function, consider using Test2.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Test2::Tools&#34;&gt;Test2::Tools&lt;/a&gt; is the Test2 documentation for Test2 tools&lt;/li&gt;
+&lt;li&gt;For plugins see &lt;a href=&#34;https://metacpan.org/pod/Test2::Plugin&#34;&gt;Test2::Plugin&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Test2::API&#34;&gt;Test2::API&lt;/a&gt; is used to get the test context object, see the context &lt;a href=&#34;https://metacpan.org/pod/Test2::API::Context#CRITICAL-DETAILS&#34;&gt;cardinal rules&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Test2::Tools::SkipUntil&#34;&gt;Test2::Tools::SkipUntil&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+Cover image via &lt;a href=&#34;https://pixabay.com/p-762486/&#34;&gt;pixabay&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

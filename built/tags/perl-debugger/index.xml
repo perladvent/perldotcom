@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl Debugger on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-debugger/</link>
+    <description>Recent content in Perl Debugger on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 06 Apr 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/perl-debugger/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Unraveling Code with the Debugger</title>
+      <link>http://localhost:1313/pub/2006/04/06/debugger.html/</link>
+      <pubDate>Thu, 06 Apr 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/04/06/debugger.html/</guid>
+      <description>
+
+&lt;p&gt;Many people who work with Perl code never touch the debugger. My goal in this article is to provide reasoned argument for adding the Perl debugger to your set of tools, as well as pointers on how to do so. Many people are most comfortable with adding debugging variables and print statements to their code. These are fine techniques; I use them too, when they are appropriate. At other times, the debugger has saved me from tearing my hair out.&lt;/p&gt;
+
+&lt;p&gt;To mangle an old saying, with apologies to Sartre, &amp;ldquo;Hell is other people&amp;rsquo;s code.&amp;rdquo; Other people think differently than I do; they use weird idioms, and sometimes their comments are incomprehensible. Invoking the debugger on someone&amp;rsquo;s code is like having a conversation with the author. It opens the code to the questions I want answered, in real time&amp;ndash;and there&amp;rsquo;s another party in the conversation, the Perl interpreter. The debugger makes it easy to try things out, even quicker than writing a one-liner, because the environment&amp;rsquo;s already set up for the running program.&lt;/p&gt;
+
+&lt;p&gt;This article is a case example of using the Perl debugger in a production environment. In this situation, we had problems with CGI scripts on a machine I don&amp;rsquo;t maintain. I wanted to go in, solve the problem, and get out quickly, without unnecessarily changing anybody&amp;rsquo;s code.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve written the article so that you can follow along yourself, if you wish. To do so, you need a Linux/Unix system with Perl 5.8, Apache (any version), and a basic &lt;a href=&#34;http://www.twiki.org/&#34;&gt;TWiki&lt;/a&gt; installation. (I&amp;rsquo;m using version 20040902-3.) TWiki is quite easy to install from packages; it took me 3 minutes under Ubuntu, including answering a few installation questions. If you&amp;rsquo;re installing for this walk-through, enable the sample data set, which installs into the default TWiki directories (&lt;em&gt;/var/lib/twiki/data&lt;/em&gt; and &lt;em&gt;/var/www/twiki/pub&lt;/em&gt; on Debian and Ubuntu).&lt;/p&gt;
+
+&lt;p&gt;Additionally, for any use of the debugger, you should install the Perl modules &lt;a href=&#34;https://metacpan.org/pod/Term::ReadLine&#34;&gt;Term::ReadLine&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Term::ReadKey&#34;&gt;Term::ReadKey&lt;/a&gt; from &lt;a href=&#34;https://metacpan.org/&#34;&gt;MetaCPAN&lt;/a&gt;. These will give you bash/csh-like cursor control, history browsing with up and down arrows, and tab completion on variables and functions.&lt;/p&gt;
+
+&lt;h3 id=&#34;statement-of-the-problem&#34;&gt;Statement of the Problem&lt;/h3&gt;
+
+&lt;p&gt;Our production installation of TWiki had a problem with a hidden web: a section that users could reach only by using its URL, rather than through the usual list of public webs (on the left side of each page). The problem appeared when we tried to make the hidden web public; it remained hidden. We lived with this for a few weeks, convinced that TWiki had a sticky setting somewhere that we didn&amp;rsquo;t know about, or perhaps TWiki had a bug. The documentation, while excellent, didn&amp;rsquo;t seem to address our problem. A number of people looked at the configuration files without seeing the solution.&lt;/p&gt;
+
+&lt;p&gt;Above all, it was important to fix this quickly, because we couldn&amp;rsquo;t spend much effort on this relatively minor annoyance. We were almost at the point of asking for help within the TWiki community, but as we didn&amp;rsquo;t find evidence anybody else was having this problem, it likely wouldn&amp;rsquo;t be a quick fix. (As you&amp;rsquo;re reading, you may see the answer, but please keep reading; the utility of the debugger extends far beyond such an easy problem.)&lt;/p&gt;
+
+&lt;h3 id=&#34;initial-look&#34;&gt;Initial Look&lt;/h3&gt;
+
+&lt;p&gt;To create a hidden web within TWiki, set &lt;code&gt;NOSEARCHALL = yes&lt;/code&gt; in the web&amp;rsquo;s &lt;code&gt;WebPreferences&lt;/code&gt; page. Setting &lt;code&gt;NOSEARCHALL = no&lt;/code&gt; still left the web hidden.&lt;/p&gt;
+
+&lt;p&gt;The documentation suggested that the only configuration variable involved was &lt;code&gt;NOSEARCHALL&lt;/code&gt;. My next step was grepping the data directory, and then the TWiki source code&amp;ndash;which turned up the likely code responsible, a certain function &lt;code&gt;TWiki::getPublicWebList&lt;/code&gt;. Looking at that code didn&amp;rsquo;t make the answer clear. (If you&amp;rsquo;re following along, go ahead and run &lt;code&gt;perldoc -m TWiki&lt;/code&gt; to see if you can spot the problem by inspection.)&lt;/p&gt;
+
+&lt;p&gt;Back in the web browser, I noted that the URL for normal TWiki page viewing was &lt;code&gt;http://hostname/cgi-bin/twiki/view/Main/WebHome&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;From my initial look at the code, I knew the CGI that produced this was in &lt;em&gt;/usr/lib/cgi-bin/twiki/view&lt;/em&gt;. Could I run it from the command line? Changing to that directory, I ran &lt;code&gt;./view&lt;/code&gt; and saw the expected HTML for the front page.&lt;/p&gt;
+
+&lt;h3 id=&#34;debugger&#34;&gt;Debugger&lt;/h3&gt;
+
+&lt;p&gt;Next, I fired up the debugger on the file: &lt;code&gt;perl -d view&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip; which didn&amp;rsquo;t work, because the program uses taint mode. (If you try, you&amp;rsquo;ll see the warning, &lt;em&gt;&amp;rdquo;-T&amp;rdquo; is on the #! line, it must also be used on the command line at view line 1.&lt;/em&gt;) That was easy to fix by running &lt;code&gt;perl -dT view&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If you try that, you&amp;rsquo;ll see the debugger interface:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Loading DB routines from perl5db.pl version 1.28
+Editor support available.
+
+Enter h or `h h&#39; for help, or `man perldebug&#39; for more help.
+
+main::(view:38):        my $query = new CGI;
+  DB&amp;lt;1&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The major elements here are: an introductory message; the package, filename, and line number; the command the debugger is about to run; and a prompt showing your command-history number.&lt;/p&gt;
+
+&lt;p&gt;Press &lt;code&gt;c&lt;/code&gt; (for continue) and Enter. The program will run through to completion, finishing with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Debugged program terminated.  Use q to quit or R to restart,
+  use O inhibit_exit to avoid stopping after program termination,
+  h q, h R or h O to get additional info.
+  DB&amp;lt;1&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Press &lt;code&gt;R&lt;/code&gt; to restart the program &amp;hellip; which normally would work, but you can&amp;rsquo;t restart programs with taint mode enabled. No matter. Restart the debugger with &lt;code&gt;perl -dT view&lt;/code&gt; again.&lt;/p&gt;
+
+&lt;p&gt;Next, press &lt;code&gt;l&lt;/code&gt; for a code listing with line numbers. The default is ten lines of code. You&amp;rsquo;ll notice an arrow by the line prepared to execute next. Some lines have a trailing colon (&lt;code&gt;:&lt;/code&gt;), which means that you can interrupt execution at that line. Pressing &lt;code&gt;l&lt;/code&gt; again will show the next ten lines, and so on. &lt;code&gt;l&lt;/code&gt; can also handle listing a range (such as &lt;code&gt;l 1-40&lt;/code&gt;) or a function (such as &lt;code&gt;l TWiki::initialize&lt;/code&gt;). You can move the current display back to the execution point with a period (&lt;code&gt;.&lt;/code&gt;) or back ten lines with minus (&lt;code&gt;-&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Start running the program, slowly. Press &lt;code&gt;n&lt;/code&gt;, for next, and the display will change to show the subsequent line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;8&amp;gt; n
+main::(view:40):        my $thePathInfo = $query-&amp;gt;path_info();
+  DB&amp;lt;8&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;n&lt;/code&gt; will always bring you to the next executable line. This command is used frequently enough that you can press Enter to repeat it. If you try this, on the fifth execution you&amp;rsquo;ll see that multiline commands break up nicely on the screen:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;1&amp;gt;
+main::(view:45):       my( $topic, $webName, $scriptUrlPath, $userName ) =
+main::(view:46):          TWiki::initialize( $thePathInfo, $theRemoteUser,
+main::(view:47):                             $theTopic, $theUrl, $query );
+  DB&amp;lt;1&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Only the first of those lines is breakable, however. Another &lt;code&gt;n&lt;/code&gt; would skip ahead to line 49; but don&amp;rsquo;t do that yet.&lt;/p&gt;
+
+&lt;p&gt;The next feature is code evaluation. At the debugger prompt, you may enter any Perl code to execute in the current context. This can include modifying the running program, such as defining functions or variables.&lt;/p&gt;
+
+&lt;p&gt;You can also run functions or examine data using normal Perl syntax. There is a special command to evaluate and dump expressions in a list context, &lt;code&gt;x&lt;/code&gt;. Try it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;1&amp;gt; x $query-&amp;gt;url;
+0  &#39;http://localhost/view&#39;
+  DB&amp;lt;2&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that the command history number increments from 1 to 2, because this is the first nontrivial command you&amp;rsquo;ve executed. Reexecute any prior command with the shortcut &lt;code&gt;!number&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;0&lt;/code&gt; signifies the array index of each element, which is useful with lists. &lt;code&gt;x&lt;/code&gt; will also do the right thing for data structures. Try viewing your CGI object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;2&amp;gt; x $query
+0  CGI=HASH(0x8aef668)
+   &#39;.charset&#39; =&amp;gt; &#39;ISO-8859-1&#39;
+   &#39;.fieldnames&#39; =&amp;gt; HASH(0x8a83034)
+        empty hash
+   &#39;.parameters&#39; =&amp;gt; ARRAY(0x8b32aa4)
+        empty array
+   &#39;.path_info&#39; =&amp;gt; &#39;&#39;
+   &#39;escape&#39; =&amp;gt; 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For deep data, you might prefer restricting the depth walking to two levels: &lt;code&gt;x 2 $query&lt;/code&gt; .&lt;/p&gt;
+
+&lt;p&gt;The next feature, which goes along with &lt;code&gt;n&lt;/code&gt;, is &lt;code&gt;s&lt;/code&gt;, for single-stepping &lt;em&gt;into&lt;/em&gt; a function. &lt;code&gt;s&lt;/code&gt; will replace the current running context with that context of the subroutine. After one &lt;code&gt;s&lt;/code&gt;, you&amp;rsquo;re within &lt;code&gt;TWiki::initialize&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;4&amp;gt; s
+TWiki::initialize(/usr/share/perl5/TWiki.pm:333):
+333:        my ( $thePathInfo, $theRemoteUser, $theTopic,
+                               $theUrl, $theQuery ) = @_;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The description line has changed, showing that you&amp;rsquo;re in a new package, function, and file. Press Enter; note that &lt;code&gt;s&lt;/code&gt; also repeats with Enter. Three more repeats will get you two levels deeper:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;4&amp;gt;
+TWiki::initialize(/usr/share/perl5/TWiki.pm:336):
+336:            basicInitialize();
+  DB&amp;lt;4&amp;gt;
+TWiki::basicInitialize(/usr/share/perl5/TWiki.pm:490):
+490:        setupLocale();
+  DB&amp;lt;4&amp;gt;
+TWiki::setupLocale(/usr/share/perl5/TWiki.pm:515):
+515:        $siteCharset = &#39;ISO-8859-1&#39;;
+               # Default values if locale mis-configured
+  DB&amp;lt;4&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you are deep inside the TWiki module. Imagine tracking this program execution by hand; it would be considerably more tedious. Instead, you have the sometimes challenging task of figuring out where the program has taken you. Fortunately, the debugger has tools for making this easier. Note that the indenting isn&amp;rsquo;t any judge of the execution depth; to find that, use &lt;code&gt;T&lt;/code&gt; for trace:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;1&amp;gt; T
+. = TWiki::setupLocale() called from file
+    `/usr/share/perl5/TWiki.pm&#39; line 490
+. = TWiki::basicInitialize() called from file
+    `/usr/share/perl5/TWiki.pm&#39; line 336
+@ = TWiki::initialize(&#39;&#39;, undef, undef, &#39;http://localhost/view&#39;,
+    ref(CGI)) called from file `view&#39; line 45
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The backtrace has the following format: the first character is the calling context; &lt;code&gt;.&lt;/code&gt;, &lt;code&gt;$&lt;/code&gt;, and &lt;code&gt;@&lt;/code&gt; signify void, scalar, and list contexts respectively. Next is function name, including the arguments passed, if any. Finally comes the calling filename and line number. These lines go from deepest to shallowest execution depth.&lt;/p&gt;
+
+&lt;p&gt;Perhaps you went too deep. Use &lt;code&gt;r&lt;/code&gt; to return from a function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;8&amp;gt; r
+void context return from TWiki::setupLocale
+TWiki::basicInitialize(/usr/share/perl5/TWiki.pm:491):
+491:        setupRegexes();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here you can see that &lt;code&gt;r&lt;/code&gt; shows the return value and its context. This can be quite useful, as the calling context can occasionally surprise even experienced programmers. With inspection, you can verify that this output makes sense compared to the trace above, because it&amp;rsquo;s one line beyond the caller from the first line of that trace.&lt;/p&gt;
+
+&lt;p&gt;Use &lt;code&gt;r&lt;/code&gt; again twice, to get back to the top. Now it&amp;rsquo;s clear that &lt;code&gt;initialize()&lt;/code&gt; returns a list to the caller:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;1&amp;gt; r
+list context return from TWiki::initialize:
+0  &#39;WebHome&#39;
+1  &#39;Main&#39;
+2  &#39;/cgi-bin/twiki&#39;
+3  &#39;guest&#39;
+4  &#39;/var/lib/twiki/data&#39;
+main::(view:49):        TWiki::UI::View::view( $webName,
+                            $topic, $userName, $query );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you were tracking the initialization routine, you might remind yourself what the caller was doing with the command &lt;code&gt;-&lt;/code&gt; to show the calling line again; but that&amp;rsquo;s not necessary now, so continue!&lt;/p&gt;
+
+&lt;p&gt;Take a step back. You know you&amp;rsquo;re looking for the function &lt;code&gt;TWiki::getPublicWebList&lt;/code&gt;. You can take a shortcut to get there. The debugger command &lt;code&gt;c&lt;/code&gt; can take arguments, either line numbers or subroutine names.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;5&amp;gt; c TWiki::getPublicWebList
+TWiki::getPublicWebList(/usr/share/perl5/TWiki.pm:2559):
+2559:       if( ! @publicWebList ) {
+  DB&amp;lt;6&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, you&amp;rsquo;ve switched modules again, into &lt;em&gt;TWiki.pm&lt;/em&gt;. Take a look around:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;3&amp;gt; l
+2559==&amp;gt;     if( ! @publicWebList ) {
+2560            # build public web list, e.g. exclude hidden
+                # webs, but include current web
+2561:           my @list = &amp;amp;TWiki::Store::getAllWebs( &amp;quot;&amp;quot; );
+2562:           my $item = &amp;quot;&amp;quot;;
+2563:           my $hidden = &amp;quot;&amp;quot;;
+2564:           foreach $item ( @list ) {
+2565:               $hidden =
+  &amp;amp;TWiki::Prefs::getPreferencesValue( &amp;quot;NOSEARCHALL&amp;quot;, $item );
+2566                # exclude topics that are hidden or start
+                    # with . or _ unless current web
+2567:               if( ( $item eq $TWiki::webName  ) ||
+                        ( ( ! $hidden ) &amp;amp;&amp;amp; ( $item =~
+                                      /^[^\.\_]/ ) ) ) {
+2568:                   push( @publicWebList, $item );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This looks promising. &lt;code&gt;c 2562&lt;/code&gt; and then &lt;code&gt;x @list&lt;/code&gt; to see that there are five list items.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;15&amp;gt; c 2562
+TWiki::getPublicWebList(/usr/share/perl5/TWiki.pm:2562):
+2562:           my $item = &amp;quot;&amp;quot;;
+  DB&amp;lt;16&amp;gt; x @list
+0  &#39;Main&#39;
+1  &#39;Sandbox&#39;
+2  &#39;TWiki&#39;
+3  &#39;Trash&#39;
+4  &#39;_default&#39;
+  DB&amp;lt;17&amp;gt; n
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, the &lt;code&gt;foreach()&lt;/code&gt; in line 2,564 will identify which of these are public. Getting warmer! You can &lt;code&gt;n&lt;/code&gt; several times to see the program flow. (Remember, after the first, you can press Enter.) If you run other commands, Enter still keeps its shortcut of &lt;code&gt;n&lt;/code&gt; or &lt;code&gt;s&lt;/code&gt;. If you &lt;code&gt;x $hidden&lt;/code&gt; after you&amp;rsquo;ve passed line 2,565 in each loop, you will see that they contain the empty string because &lt;code&gt;NOSEARCHALL&lt;/code&gt; is unset.&lt;/p&gt;
+
+&lt;p&gt;The expression in the following line tests the truth of &lt;code&gt;$hidden&lt;/code&gt; as per the comment.&lt;/p&gt;
+
+&lt;p&gt;Here is the solution. In my team&amp;rsquo;s original problem, we changed &lt;code&gt;NOSEARCHALL&lt;/code&gt; from &lt;code&gt;Yes&lt;/code&gt; to &lt;code&gt;No&lt;/code&gt;. The string &lt;code&gt;No&lt;/code&gt; certainly is still true. It took me a few runs through the code, testing values each time, to find it.&lt;/p&gt;
+
+&lt;p&gt;When I changed &lt;code&gt;NOSEARCHALL&lt;/code&gt; to &lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt; from &lt;code&gt;Yes&lt;/code&gt; in the config file, the hidden web immediately became unhidden. Problem solved. The entire process took no more than 45 minutes. Considering the number of lines of code in TWiki and its relative complexity, that isn&amp;rsquo;t bad.&lt;/p&gt;
+
+&lt;h3 id=&#34;results&#34;&gt;Results&lt;/h3&gt;
+
+&lt;p&gt;Yes, the problem was that we overlooked something &amp;ldquo;obvious.&amp;rdquo; True, I didn&amp;rsquo;t actually debug the code; I debugged my configuration. No matter. This is the way of a lot of debugging; the problem isn&amp;rsquo;t where you expect, and it&amp;rsquo;s obvious in retrospect. I hope with this simple example, I&amp;rsquo;ve shown how the debugger can tell you things you may not notice by code inspection or reading documentation.&lt;/p&gt;
+
+&lt;p&gt;This article has barely scratched the surface of the debugger&amp;rsquo;s capabilities; it can also do such things as automatically insert code that runs whenever you step forward, or automatically stop execution when an expression becomes true. You can insert lines of code into the program that exist only in the debugging instance. You can record your actions and play them back in other debugging sessions; or customize the debugger with your own preferences and aliases. There are also methods to run a debugger GUI on a remote server, and modules to harness debugging mod_perl and other programs that don&amp;rsquo;t run on the command line. Please see the references for more information about these features.&lt;/p&gt;
+
+&lt;h3 id=&#34;references-introductory-debugger-information-online&#34;&gt;References: Introductory Debugger Information Online&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.linuxjournal.com/article/7581/&#34;&gt;The Perl Debugger. Linux Journal. March 2005, 73-76&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perldebtut.html&#34;&gt;perldebtut&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perldebug.html&#34;&gt;perldebug&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/pub/2004/11/24/debugger_ref.html&#34;&gt;Perl Debugger Quick Reference&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Debugger Quick Reference</title>
+      <link>http://localhost:1313/pub/2004/11/24/debugger_ref.html/</link>
+      <pubDate>Wed, 24 Nov 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/11/24/debugger_ref.html/</guid>
+      <description>&lt;p&gt;Perl&amp;rsquo;s debugger is powerful but somewhat esoteric. The core &lt;a href=&#34;http://www.perlpod.com/5.8.4/pod/perldebtut.html&#34;&gt;perldebtut&lt;/a&gt; tutorial is a good introduction, but who wants to skim through pages of documentation when you only need a quick refresher on the syntax of a command?&lt;/p&gt;
+
+&lt;p&gt;Let this printable (PDF) &lt;a href=&#34;http://localhost:1313/media/_pub_2004_11_24_debugger_ref/debugger_ref.pdf&#34;&gt;Perl Debugger Quick Reference&lt;/a&gt; card, excerpted from Richard Foley&amp;rsquo;s &lt;a href=&#34;http://www.oreilly.com/catalog/perldebugpr/index.html&#34;&gt;Perl Debugger Pocket Reference&lt;/a&gt;, be your guide instead.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: Unix users, we&amp;rsquo;ve had reports that Adobe Acrobat 5 has trouble opening this file. We&amp;rsquo;re looking into this. In the meantime, xpdf and other tools appear to work correctly.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

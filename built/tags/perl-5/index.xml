@@ -1,0 +1,2149 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Perl 5 on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/perl-5/</link>
+    <description>Recent content in Perl 5 on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 10 Jan 2020 13:37:00 +0000</lastBuildDate>
+    <atom:link href="/tags/perl-5/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Porting a Dancer plugin to Dancer2</title>
+      <link>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</link>
+      <pubDate>Fri, 10 Jan 2020 13:37:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/porting-a-dancer-plugin-to-dancer2/</guid>
+      <description>
+
+&lt;p&gt;In my &lt;a href=&#34;https://metacpan.org/pod/Dancer2&#34;&gt;Dancer2&lt;/a&gt; web application, I want to know which requests come from smartphones.  There’s a plugin for that — but only in the older &lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer (v1)&lt;/a&gt; framework.  I’m no expert, but even I was easily able to port the Dancer plugin, &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin::MobileDevice&#34;&gt;Dancer::Plugin::MobileDevice&lt;/a&gt;, to Dancer2!  In this article, we’ll explore Dancer2 and the way it handles plugins.  We’ll get our hands dirty working with the framework, and examine the main changes I made to port the plugin from Dancer to Dancer2.  By the end of this article, you’ll be ready to rock &lt;em&gt;and&lt;/em&gt; you’ll have a handy reference to use when porting plugins yourself.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-dancer2-web-framework&#34;&gt;The Dancer2 web framework&lt;/h2&gt;
+
+&lt;p&gt;Dancer2 applications run on a Web server and process requests from a browser.  The application’s Perl code uses keywords in Dancer2’s domain-specific language (DSL) to access information about a request.&lt;/p&gt;
+
+&lt;p&gt;Try it out: Install &lt;a href=&#34;https://metacpan.org/pod/Task::Dancer2&#34;&gt;Task::Dancer2&lt;/a&gt;.  Then, save this as &lt;code&gt;app.psgi&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hello, &amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; (query_parameters&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{name} &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;world&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;!&amp;#39;&lt;/span&gt;;
+};
+to_app;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and run &lt;code&gt;plackup&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Enter the URL &lt;code&gt;http://localhost:5000&lt;/code&gt; in a browser and you will see “Hello, world!”, or visit &lt;code&gt;http://localhost:5000/?name=genius&lt;/code&gt; to see “Hello, genius!”.  The “genius” comes from &lt;code&gt;query_parameters&lt;/code&gt;, a DSL keyword that returns the values after the &lt;code&gt;?&lt;/code&gt; in the URL.  You can use those values when building a response to a request.&lt;/p&gt;
+
+&lt;h2 id=&#34;dancer-and-dancer2-plugins&#34;&gt;Dancer and Dancer2 plugins&lt;/h2&gt;
+
+&lt;p&gt;Dancer and Dancer2 plugins define new DSL keywords for the plugin’s users.  They also install “hooks,” subroutines that run while Dancer processes a request.  The hooks collect information for the DSL keywords to access.&lt;/p&gt;
+
+&lt;p&gt;For example, a hook in Dancer::Plugin::MobileDevice detects whether a request is coming from a mobile device.  The plugin defines the &lt;code&gt;is_mobile_device&lt;/code&gt; DSL keyword so your code can react appropriately. To port the plugin, I changed code for the keyword, the hooks, and the test suite.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-keywords&#34;&gt;Porting keywords&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins use the Dancer DSL and a &lt;a href=&#34;https://metacpan.org/pod/Dancer::Plugin&#34;&gt;plugin-specific DSL&lt;/a&gt; to define DSL keywords. In Dancer (v1), the &lt;code&gt;is_mobile_device&lt;/code&gt; keyword is created with the &lt;code&gt;register&lt;/code&gt; plugin-DSL function (code examples simplified to focus on the porting):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;register &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+};
+register_plugin;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 plugins are &lt;a href=&#34;https://metacpan.org/pod/Moo&#34;&gt;Moo&lt;/a&gt; objects, and new DSL keywords are member functions on those objects.  Therefore, I changed &lt;code&gt;is_mobile_device()&lt;/code&gt; to a member function:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;is_mobile_device&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;       &lt;span style=&#34;color:#75715e&#34;&gt;# get the plugin’s object instance&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ($self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;user_agent &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;/$regex/&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; ;
+}
+plugin_keywords &lt;span style=&#34;color:#e6db74&#34;&gt;qw(is_mobile_device)&lt;/span&gt;;   &lt;span style=&#34;color:#75715e&#34;&gt;# replaces register_plugin()&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the body of the function, the Dancer plugin directly accessed the DSL keyword &lt;code&gt;request&lt;/code&gt;.  The Dancer2 plugin instead accesses the request via &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;request&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-hooks&#34;&gt;Porting hooks&lt;/h2&gt;
+
+&lt;p&gt;Dancer plugins add hooks using the DSL &lt;code&gt;hook&lt;/code&gt; keyword.  For example, this &lt;code&gt;before_template&lt;/code&gt; hook makes &lt;code&gt;is_mobile_device&lt;/code&gt; available in templates:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;hook before_template &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_mobile_device&amp;#39;&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; is_mobile_device();
+};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 handles hooks very differently.  The plugin’s Moo constructor, &lt;code&gt;BUILD&lt;/code&gt;, is called when a plugin instance is created.  In &lt;code&gt;BUILD&lt;/code&gt;, the plugin registers the hook.  I added &lt;code&gt;BUILD&lt;/code&gt; and called
+&lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; to add the hook:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;BUILD&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $self &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    $self&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;dsl&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;hook( before_template_render &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tokens &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+        $tokens&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{is_mobile_device} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $plugin&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;is_mobile_device;
+    });
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If your hook functions are too long to move into &lt;code&gt;BUILD&lt;/code&gt;, you can leave them where they are and say &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook( hook_name =&amp;gt; \&amp;amp;sub_name );&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;porting-the-tests&#34;&gt;Porting the tests&lt;/h2&gt;
+
+&lt;p&gt;Dancer::Plugin::MobileDevice has a full test suite.  These tests are extremely useful to developers, as they allow you to to see if a Dancer2 port behaves the same as the Dancer original. That said, you have to port the tests themselves before you can use them to test your ported plugin! We’ll look at the Dancer way, then I’ll show you the Dancer2 changes.&lt;/p&gt;
+
+&lt;p&gt;The Dancer tests define a simple Web application using the plugin.  They exercise that application using helpers in &lt;a href=&#34;https://metacpan.org/pod/Dancer::Test&#34;&gt;Dancer::Test&lt;/a&gt;.  For example (simplified from &lt;code&gt;t/01-is-mobile-device.t&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;{   &lt;span style=&#34;color:#75715e&#34;&gt;# The simple application&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Plugin::MobileDevice;
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer::Test;
+
+$ENV{HTTP_USER_AGENT} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; dancer_response GET &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;# dancer_response() is from Dancer::Test&lt;/span&gt;
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{content}, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2, on the other hand, uses the &lt;a href=&#34;https://metacpan.org/pod/Plack&#34;&gt;Plack&lt;/a&gt; ecosystem for testing instead of its own helpers.  To work in that ecosystem, I changed the
+above test as described in the
+&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Manual#TESTING&#34;&gt;Dancer2 manual’s “testing” section&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Plack::Test;                        &lt;span style=&#34;color:#75715e&#34;&gt;# Additional testing modules&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; HTTP::Request::Common;
+{
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; TestApp;     &lt;span style=&#34;color:#75715e&#34;&gt;# Still a simple application, but now with a name&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Dancer2::Plugin::MobileDevice;
+
+    get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; is_mobile_device; };
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $dut &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Plack::Test&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;create(TestApp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_app);     &lt;span style=&#34;color:#75715e&#34;&gt;# a fake Web server&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $dut&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;request(GET &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;User-Agent&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;iPhone&amp;#39;&lt;/span&gt;);
+is( $response&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;content, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; );&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dancer2 tests use more boilerplate than Dancer tests, but Dancer2 tests are more modular and flexible than Dancer tests.  With Plack, you don’t have to use the global state (&lt;code&gt;%ENV&lt;/code&gt;) any more, and you can test more than one application or use case per &lt;code&gt;.t&lt;/code&gt; file.  Seeing the tests pass is good indication that your porting job is done.&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;I am a newbie at Dancer2, and have never used Dancer.  But I was able to port Dancer::Plugin::MobileDevice to Dancer2 in less than a day — including time to read the documentation and figure out how!  When you need a Dancer function in Dancer2, grab the quick reference below and you’ll be off and running!&lt;/p&gt;
+
+&lt;h2 id=&#34;acknowledgements&#34;&gt;Acknowledgements&lt;/h2&gt;
+
+&lt;p&gt;My thanks to Kelly Deltoro-White for her insights, and to the authors of Dancer::Plugin::MobileDevice and Dancer2 for a strong foundation to build on.&lt;/p&gt;
+
+&lt;h2 id=&#34;more-information-on-dancer2-plugins&#34;&gt;More information on Dancer2 plugins&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;“&lt;a href=&#34;http://advent.perldancer.org/2016/22&#34;&gt;The new Dancer2 plugin system&lt;/a&gt;” by Sawyer X, for an overview&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer2::Plugin&#34;&gt;Dancer2::Plugin&lt;/a&gt;, for details&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;quick-reference-porting-plugins-from-dancer-to-dancer2&#34;&gt;Quick reference: porting plugins from Dancer to Dancer2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Port keywords:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Make keywords freestanding &lt;code&gt;sub&lt;/code&gt;s, not arguments of &lt;code&gt;register&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Access data through &lt;code&gt;$self&lt;/code&gt; rather than DSL keywords&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;register_plugin&lt;/code&gt; to &lt;code&gt;plugin_keywords&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port hooks:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Add a &lt;code&gt;BUILD&lt;/code&gt; function&lt;/li&gt;
+&lt;li&gt;Move the hook functions into &lt;code&gt;BUILD&lt;/code&gt;, or refer to them from &lt;code&gt;BUILD&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Wrap each hook function in a &lt;code&gt;$self-&amp;gt;dsl-&amp;gt;hook&lt;/code&gt; call&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Port tests:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Import &lt;a href=&#34;https://metacpan.org/pod/Plack::Test&#34;&gt;Plack::Test&lt;/a&gt; and
+&lt;a href=&#34;https://metacpan.org/pod/HTTP::Request::Common&#34;&gt;HTTP::Request::Common&lt;/a&gt;
+instead of Dancer::Test&lt;/li&gt;
+&lt;li&gt;Give the application under test a &lt;code&gt;package&lt;/code&gt; statement&lt;/li&gt;
+&lt;li&gt;Create a Plack::Test instance representing the application&lt;/li&gt;
+&lt;li&gt;Create requests using HTTP::Request::Common methods&lt;/li&gt;
+&lt;li&gt;Change &lt;code&gt;$response-&amp;gt;{content}&lt;/code&gt; to &lt;code&gt;$response-&amp;gt;content&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>My Perl Wishlist: Invariant Sigils (Part 1)</title>
+      <link>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</link>
+      <pubDate>Sun, 27 Oct 2019 12:07:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/my-perl-wishlist-invariant-sigils-part-1/</guid>
+      <description>
+
+&lt;p&gt;Pop quiz!  Q: What was my mistake in this line?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is %HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;A: I had the answer right, but I messed up the sigil on &lt;code&gt;HASH&lt;/code&gt;.  It
+should be:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;is $HASH{answer}, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;forty-two&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%HASH properly filled&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#75715e&#34;&gt;#  ^ $, not %&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Unfortunately, on Perl v5.20+, both statements work the same way!  I
+didn&amp;rsquo;t catch the problem until I shipped this code and
+&lt;a href=&#34;http://matrix.cpantesters.org/?dist=vars-i+1.08-TRIAL&#34;&gt;cpantesters&lt;/a&gt;
+showed me my mistake.  It was an easy fix, but it reminded me that Perl&amp;rsquo;s
+&lt;a href=&#34;http://modernperlbooks.com/books/modern_perl/chapter_03.html#variablenamesandsigils&#34;&gt;variant sigils&lt;/a&gt;
+can trip up programmers at any level.  If I could change one thing about
+Perl 5, I would change to invariant sigils.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-current-situation&#34;&gt;The current situation&lt;/h2&gt;
+
+&lt;p&gt;In Perl, the sigil tells you
+&lt;a href=&#34;https://perldoc.perl.org/perlintro.html#Perl-variable-types&#34;&gt;how many things to expect&lt;/a&gt;.
+Scalars such as &lt;code&gt;$foo&lt;/code&gt; are single values.  Any single value in an array
+&lt;code&gt;@foo&lt;/code&gt; or hash &lt;code&gt;%foo&lt;/code&gt;, since it is only one thing,
+&lt;a href=&#34;https://perldoc.perl.org/perldata.html#Variable-names&#34;&gt;also uses &lt;code&gt;$&lt;/code&gt;&lt;/a&gt;,
+so &lt;code&gt;$foo&lt;/code&gt;, &lt;code&gt;@foo&lt;/code&gt;, and &lt;code&gt;%foo&lt;/code&gt; could all refer to different pieces of the
+same variable &amp;mdash; or to different variables.
+This technique of &amp;ldquo;variant sigils&amp;rdquo; works, but confuses
+new Perl users and tripped up yours truly.  To know what you
+are accessing in an array or hash, you have to look at both the sigil
+and the brackets.  As a reminder:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: the first element of array &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0, 1]&lt;/code&gt;: the list &lt;code&gt;($z[0], $z[1])&lt;/code&gt; of two elements from &lt;code&gt;@z&lt;/code&gt; (an &amp;ldquo;array slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt; of two elements from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0, 1]&lt;/code&gt;: the list &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt; of keys and two values from array &lt;code&gt;@z&lt;/code&gt; (a &amp;ldquo;hash slice&amp;rdquo;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}&lt;/code&gt;: the list &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt; of keys and values from hash &lt;code&gt;%z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;make-the-sigils-part-of-the-name&#34;&gt;Make the sigils part of the name&lt;/h2&gt;
+
+&lt;p&gt;To save myself from repeating my errors, I&amp;rsquo;d like the sigil to be part of a
+variable&amp;rsquo;s name.  This is not a new idea; scalars work this way in Perl, bash,
+and &lt;a href=&#34;https://docs.perl6.org/language/101-basics#sigil_and_identifier&#34;&gt;Raku&lt;/a&gt;
+(&lt;a href=&#34;https://github.com/perl6/problem-solving/blob/master/solutions/language/Path-to-Raku.md&#34;&gt;formerly Perl 6&lt;/a&gt;).
+That would make the above table look like:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Sigil&lt;/th&gt;
+&lt;th&gt;No brackets&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; (array access)&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; (hash access)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;$&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;@&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: An array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: the first element of &lt;code&gt;@z&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z{0}&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;%&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: A hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z[0]&lt;/code&gt;: N/A&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Simpler!  Any reference to &lt;code&gt;@z&lt;/code&gt; would always be doing &lt;em&gt;something&lt;/em&gt; with
+the array named &lt;code&gt;@z&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;but-what-about-slices&#34;&gt;But what about slices?&lt;/h2&gt;
+
+&lt;p&gt;Slices such as &lt;code&gt;@z[0,1]&lt;/code&gt; and &lt;code&gt;%z{qw(hello there)}&lt;/code&gt; return multiple
+values from an array or hash.  If sigils &lt;code&gt;@&lt;/code&gt; and &lt;code&gt;%&lt;/code&gt; are no longer
+available for slicing, we need an alternative.
+The Perl family currently provides two models: postfix dereferencing
+(&amp;ldquo;postderef&amp;rdquo;) syntax and postfix adverbs.&lt;/p&gt;
+
+&lt;p&gt;Perl v5.20+ support
+&lt;a href=&#34;https://www.effectiveperlprogramming.com/2014/09/use-postfix-dereferencing/&#34;&gt;postderef&lt;/a&gt;,
+which gives us one option.  Postderef separates the name from the slice:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Valid Perl v5.20+&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{a};      &lt;span style=&#34;color:#75715e&#34;&gt;# Scalar, element at index &amp;#34;a&amp;#34; of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;@{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;
+$hashref&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;%{a};     &lt;span style=&#34;color:#75715e&#34;&gt;# List including the key &amp;#34;a&amp;#34; and the &amp;#34;a&amp;#34; element of the hash pointed to by $hashref&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The type of slice comes after the reference, instead of as a sigil
+before the reference.  With non-references, that idea would give us slice
+syntax such as &lt;code&gt;@array@[1,2,3]&lt;/code&gt; or &lt;code&gt;%hash%{a}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Raku gives us another option: &amp;ldquo;adverbs&amp;rdquo; such as
+&lt;a href=&#34;https://docs.perl6.org/language/subscripts#:kv&#34;&gt;&lt;code&gt;:kv&lt;/code&gt;&lt;/a&gt;.  For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl6&#34; data-lang=&#34;perl6&#34;&gt;# Valid Raku
+%hash{&amp;#34;a&amp;#34;}          # Single value, element at index &amp;#34;a&amp;#34; of %hash
+%hash{&amp;#34;a&amp;#34;}:v;       # The same --- just the value
+%hash{&amp;#34;a&amp;#34;}:kv;      # The list including key &amp;#34;a&amp;#34; and the value of the &amp;#34;a&amp;#34; element of %hash&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The adverb (e.g., &lt;code&gt;:kv&lt;/code&gt;) goes in postfix position, immediately
+after the brackets or braces.  Following this model,
+slices would look like &lt;code&gt;@array[1,2,3]:l&lt;/code&gt; or &lt;code&gt;%hash{a}:kv&lt;/code&gt;.  (For clarity,
+I propose &lt;code&gt;:l&lt;/code&gt;, as in &lt;strong&gt;l&lt;/strong&gt;ist, instead of Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt;.  Raku&amp;rsquo;s &lt;code&gt;:v&lt;/code&gt; can return
+a scalar or a list.)&lt;/p&gt;
+
+&lt;p&gt;So, the choices I see are (postderef-inspired / Raku-inspired):&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;What you want&lt;/th&gt;
+&lt;th&gt;No subscript&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;[ ]&lt;/code&gt; access&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;{ }&lt;/code&gt; access&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Scalar&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;$z&lt;/code&gt;: a scalar, i.e., a single value&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z[0]&lt;/code&gt;: a single value from an array&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z{0}&lt;/code&gt;: the value in hash &lt;code&gt;%z&lt;/code&gt; at key &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of values&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z&lt;/code&gt;: an array, i.e., a list of value(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z@[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:l&lt;/code&gt;: the list currently written &lt;code&gt;($z[0], $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z@{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:l&lt;/code&gt;: the list currently written &lt;code&gt;($z{0}, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;List of key/value pairs&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z&lt;/code&gt;: a hash, i.e., a list of key/value pair(s)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;@z%[0, 1]&lt;/code&gt; / &lt;code&gt;@z[0, 1]:kv&lt;/code&gt;: the list currently written &lt;code&gt;(0, $z[0], 1, $z[1])&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;%z%{0, &amp;quot;foo&amp;quot;}&lt;/code&gt; / &lt;code&gt;%z{0, &amp;quot;foo&amp;quot;}:kv&lt;/code&gt;: the list currently written &lt;code&gt;(&amp;quot;0&amp;quot;, $z{0}, &amp;quot;foo&amp;quot;, $z{foo})&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;you-can-t-always-get-what-you-want&#34;&gt;You can&amp;rsquo;t always get what you want&lt;/h2&gt;
+
+&lt;p&gt;I prefer the adverb syntax.  It is easy to read, and it draws on
+all the expertise that has gone into the design of Raku.
+However, my preference has to be implementable.
+I&amp;rsquo;m not convinced that it is without major surgery.&lt;/p&gt;
+
+&lt;p&gt;The Perl parser decides how to interpret what is inside the brackets
+depending on the context provided by the slice.
+The parser interprets the &lt;code&gt;...&lt;/code&gt; in &lt;code&gt;@foo[...]&lt;/code&gt; as
+a list (&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L1143-L1148&#34;&gt;ref&lt;/a&gt;).
+In &lt;code&gt;$foo[...]&lt;/code&gt;, the parser sees the &lt;code&gt;...&lt;/code&gt; as a scalar expression
+(&lt;a href=&#34;https://github.com/Perl/perl5/blob/c58ad1f93e9ad7834d3735683462c07119aa87f5/perly.y#L958-L960&#34;&gt;ref&lt;/a&gt;).
+For any slice syntax, the Perl parser needs to know the desired
+type of result while parsing the subscript expression.  The adverb form,
+unfortunately, leaves the parser guessing until after the subscript
+is parsed.&lt;/p&gt;
+
+&lt;p&gt;You can, in fact, hack the Perl parser to save the subscript
+until it sees a postfix adverb.  The parser can then apply the correct
+context.  I wrote a
+&lt;a href=&#34;https://github.com/Perl/perl5/compare/9786385e68f7f14df6f4dd0f04d2c72c0d9a2511...cxw42:3cd904788536b445c9c3abe9b469e1b569942051&#34;&gt;proof-of-concept&lt;/a&gt;
+for &lt;code&gt;@arr[expr]:v&lt;/code&gt;.  It doesn&amp;rsquo;t execute any code, but it does parse
+a postfix-adverb slice without crashing!  However, while writing that code,
+I ran across a surprise: new syntax isn&amp;rsquo;t tied to a &lt;code&gt;use v5.xx&lt;/code&gt;
+directive.&lt;/p&gt;
+
+&lt;p&gt;It turns out the Perl parser lets code written against any Perl version
+use the latest syntax.  Both of the following command lines work on Perl v5.30:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ perl -Mstrict -Mwarnings -E &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#75715e&#34;&gt;#                           ^ -E: use all the latest features
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;$ perl -Mstrict -Mwarnings -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;my $z; $z-&amp;gt;@* = 10..20&amp;#39;&lt;/span&gt;   &lt;span style=&#34;color:#75715e&#34;&gt;# (!!!)
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;#                           ^ -e: not the latest features&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The second command line does not &lt;code&gt;use v5.30&lt;/code&gt;, so you can&amp;rsquo;t use &lt;code&gt;say&lt;/code&gt;
+(introduced in v5.10).  However, you can use postderef (from v5.20)!&lt;/p&gt;
+
+&lt;p&gt;Because the parser lets old programs use new syntax, any proposed addition
+to Perl&amp;rsquo;s syntax has to be meaningless in all previous Perl versions.
+A postfix adverb fails this test.  For example, the following is a valid
+Perl program:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;kv&lt;/span&gt; { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kv&amp;#34;&lt;/span&gt; }
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; @arr &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ? @arr[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;]:kv;
+        &lt;span style=&#34;color:#75715e&#34;&gt;# ^^^^^^^^^^^^ valid Perl 5 syntax, but not a slice :(&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;print&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;My preferred slice syntax could change the meaning of existing programs,
+so it looks like I can&amp;rsquo;t get my first choice.&lt;/p&gt;
+
+&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+
+&lt;p&gt;This is not the end of the story!  In Part 2, I will dig deeper into
+Perl&amp;rsquo;s parser and tokenizer.  I will share some surprises I discovered
+while investigating postderef.  I will then describe a possible path
+to invariant sigils and the simplicity they can provide.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>An Open Letter to the Perl Community</title>
+      <link>http://localhost:1313/article/an-open-letter-to-the-perl-community/</link>
+      <pubDate>Wed, 17 Jan 2018 08:22:27 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/an-open-letter-to-the-perl-community/</guid>
+      <description>
+
+&lt;p&gt;The past few months I&amp;rsquo;ve been wracking my brain on how to bring &lt;a href=&#34;https://www.perl.org&#34;&gt;Pumpkin Perl&amp;nbsp;5&lt;/a&gt; (or &lt;code&gt;perl&lt;/code&gt;, as in the version of Perl that is maintained by the Perl&amp;nbsp;5 Porters) and &lt;a href=&#34;https://www.perl6.org&#34;&gt;Rakudo Perl&amp;nbsp;6&lt;/a&gt; (or &lt;code&gt;perl6&lt;/code&gt;, as in the implementation of Perl&amp;nbsp;6 based on NQP and &lt;a href=&#34;http://moarvm.org&#34;&gt;MoarVM&lt;/a&gt;) closer together again. Yes, I haven&amp;rsquo;t given up on this idea, although my first attempt (organizing the &lt;a href=&#34;https://szabgab.com/perl-reunification-summit-2012.html&#34;&gt;Perl Reunification Summit in 2012&lt;/a&gt;) hasn&amp;rsquo;t really worked out the way I had hoped it would. But it did have some positive effects, because it brought together people from the Perl community that normally would never have been in a discussion, and some nice advances were made for Perl&amp;nbsp;6.&lt;/p&gt;
+
+&lt;p&gt;I am still interested in getting Perl&amp;nbsp;5 and Perl&amp;nbsp;6 together, because they both share the same Perl Mindset, a mix of just enough DWIM (Do What I Mean) and not too much of &lt;a href=&#34;https://www.destroyallsoftware.com/talks/wat&#34;&gt;WAT&lt;/a&gt; (What is it doing now???).&lt;/p&gt;
+
+&lt;p&gt;I know Perl&amp;nbsp;6 has had a complicated development process. You could argue that Perl&amp;nbsp;6 is the fourth implementation attempt. It is also the first Perl&amp;nbsp;6 implementation that actually works, interfaces seamlessly with &lt;a href=&#34;http://modules.perl6.org/dist/Inline::Perl5:cpan:NINE&#34;&gt;Perl&amp;nbsp;5&lt;/a&gt; and &lt;a href=&#34;https://github.com/niner/Inline-Python/blob/master/README.md&#34;&gt;Python&lt;/a&gt; or any &lt;a href=&#34;https://docs.perl6.org/language/nativecall&#34;&gt;external C library&lt;/a&gt; out of the box, is beating Perl&amp;nbsp;5 on more and more &lt;a href=&#34;http://news.perlfoundation.org/2017/11/perl-6-performance-and-reliabi-4.html&#34;&gt;micro-benchmarks&lt;/a&gt;, and is being used in production, especially in the area of &lt;a href=&#34;http://mi.cro.services&#34;&gt;Micro Services&lt;/a&gt; and &lt;a href=&#34;https://perl6advent.wordpress.com/2017/12/13/&#34;&gt;parsing of non-ASCII languages&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Some consider Perl 6 to be a sister language to Perl 5. Personally, I consider Perl 6 more of a genetically engineered daughter language with the best genes from many parents. A daughter with a difficult childhood, in which she alienated many, who is now getting out of puberty into early adulthood. But I digress.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-butterfly-perl-nbsp-5-project&#34;&gt;The Butterfly Perl&amp;nbsp;5 Project&lt;/h3&gt;
+
+&lt;p&gt;There is no clear upgrade path from Perl&amp;nbsp;5 to Perl&amp;nbsp;6 and this means that there is no chance of combining Perl&amp;nbsp;5 and Perl&amp;nbsp;6 to become more than the sum of their parts. The Perl&amp;nbsp;5 Porters are still adding features that are inspired by Perl&amp;nbsp;6, which further confuses the picture.&lt;/p&gt;
+
+&lt;p&gt;A radical idea would be that the Perl&amp;nbsp;5 Porters would go back to their original goal: &lt;strong&gt;porting&lt;/strong&gt; Perl&amp;nbsp;5. But this time, not to different operating systems, but porting Perl&amp;nbsp;5 to different Virtual Machines. Place a moratorium on new features, with development confined to maintenance on the current runtime. This would safeguard the most valued feature of Perl&amp;nbsp;5, its stability and backwards compatibility. But I digress again.&lt;/p&gt;
+
+&lt;p&gt;Porting Perl&amp;nbsp;5 to NQP (Not Quite Perl, one of the implementation languages of Rakudo Perl&amp;nbsp;6) would provide such a migration path. Basically this would be the revival of the &lt;a href=&#34;https://github.com/rakudo-p5/v5&#34;&gt;&amp;ldquo;use v5&amp;rdquo;&lt;/a&gt; project, which implements a version of Perl&amp;nbsp;5 as a slang (sub-language) of Perl&amp;nbsp;6. Such an effort would provide a clear migration path from the 30 year old &lt;code&gt;perl&lt;/code&gt; interpreter to a modern VM, allowing execution of Perl&amp;nbsp;5 source code on MoarVM, JVM and JavaScript backends. Thus guaranteeing a life for Perl&amp;nbsp;5 as a programming language way into the future, taking advantage of all the multi-processing features that a modern VM provides.&lt;/p&gt;
+
+&lt;p&gt;In the short term, it would still be slower than Perl&amp;nbsp;5, but in the long run it would be running faster. This is because of the Just-In-Time compilation of hot code, which optimizes all source code to machine code on the fly, rather than the path of hand-optimizing hot code into XS. Although I wholeheartedly would support a Butterfly Perl&amp;nbsp;5 Project, I&amp;rsquo;ve also come to the conclusion that it is no longer an itch I would want to scratch personally at this moment.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-cpan-butterfly-plan&#34;&gt;The CPAN Butterfly Plan&lt;/h3&gt;
+
+&lt;p&gt;But what does Perl&amp;nbsp;5 consist of anyway? It&amp;rsquo;s a runtime &lt;a href=&#34;https://github.com/Perl/perl5&#34;&gt;written in C and a Macro language&lt;/a&gt;. But it&amp;rsquo;s also a core &lt;a href=&#34;https://github.com/Perl/perl5/tree/blead/lib&#34;&gt;set of modules&lt;/a&gt; with defined APIs and documentation. To many, the modules on CPAN are an integral part of Perl 5. Many of these modules would need to be ported for a Butterfly Perl&amp;nbsp;5 Project. But porting them would be very useful to Perl&amp;nbsp;6 in and of itself because it would make porting user Perl 5 programs to Perl 6 much easier. Therefore I am starting an effort to mass-migrate Perl&amp;nbsp;5 modules to Perl&amp;nbsp;6, both core modules and others on CPAN.&lt;/p&gt;
+
+&lt;p&gt;We are developing a &amp;ldquo;How to port a Perl&amp;nbsp;5 Module to Perl&amp;nbsp;6&amp;rdquo; guide, covering things like naming conventions, exports, translating Perl&amp;nbsp;5 OO into Perl&amp;nbsp;6 OO, scoping gotchas and threading. Plus notes on various built-in features of Perl&amp;nbsp;6 which may be useful when porting semantics rather than code.&lt;/p&gt;
+
+&lt;p&gt;Next we&amp;rsquo;ll create a website to register contributors who will take responsibility for porting a Perl&amp;nbsp;5 module to Perl&amp;nbsp;6 (e.g. from the &lt;a href=&#34;https://github.com/perl6/perl6-most-wanted&#34;&gt;Most Wanted list&lt;/a&gt;). Contributors will link to a GitHub repo from where they&amp;rsquo;ll write the code, handle Pull Requests and give out commit bits. Ported modules would be uploaded to CPAN as new Perl 6 distributions.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll create a leaderboard which ranks contributors progress. The position on the leaderboard could be defined as the product of:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;size of the original Perl&amp;nbsp;5 module in lines of code + documentation + tests&lt;/li&gt;
+&lt;li&gt;% completion of the migration, to be indicated by the contributor and judged by a jury of peers&lt;/li&gt;
+&lt;li&gt;bonus points if the documentation and/or tests are improved on the fly&lt;/li&gt;
+&lt;li&gt;bonus points if XS code is involved and there is no Pure Perl implementation available&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Sponsors would match migrated code with donations to the &lt;a href=&#34;http://www.perlfoundation.org/perl_6_core_development_fund&#34;&gt;Perl&amp;nbsp;6 Core development fund&lt;/a&gt;, so that contributors not only get to support Perl&amp;nbsp;6 directly, but also indirectly support the further development of the core of Perl&amp;nbsp;6. Something in the order of a cent per converted line of Perl&amp;nbsp;5 code / documentation / tests, to be donated at the moment a jury of peers has decided the converted module is functional enough to be &amp;ldquo;published&amp;rdquo; as a 1.0 version.&lt;/p&gt;
+
+&lt;p&gt;The leaderboard would be backed by a website that that tracks all of this activity, along the lines of &lt;a href=&#34;https://alerts.perl6.org&#34;&gt;alerts.perl6.org&lt;/a&gt;, with an API and social media interface.&lt;/p&gt;
+
+&lt;p&gt;This should make 2018 the year that people really start to migrate their code from Perl&amp;nbsp;5 to Perl&amp;nbsp;6. Be it because they can, they want to try, or just to see how Perl&amp;nbsp;6 will work out for them.&lt;/p&gt;
+
+&lt;h3 id=&#34;winding-down&#34;&gt;Winding down&lt;/h3&gt;
+
+&lt;p&gt;I sincerely hope that enough people will support the CPAN Butterfly Plan, and maybe a Butterfly Perl&amp;nbsp;5 Project. So that we can all start moving forward in one direction, rather than two. If you&amp;rsquo;d like to get involved, please join us on the #perl6-dev channel on &lt;a href=&#34;http://freenode.net&#34;&gt;irc.freenode.net&lt;/a&gt;. If you don&amp;rsquo;t have an IRC app installed, you can talk to us in your browser via the &lt;a href=&#34;http://webchat.freenode.net/?channels=perl6-dev&amp;amp;nick=&#34;&gt;web-interface&lt;/a&gt; instead.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How to contribute to the exercism.io Perl 5 repo</title>
+      <link>http://localhost:1313/article/91/2014/5/22/How-to-contribute-to-the-exercism-io-Perl-5-repo/</link>
+      <pubDate>Thu, 22 May 2014 15:09:13 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/91/2014/5/22/How-to-contribute-to-the-exercism-io-Perl-5-repo/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;Earlier this week I rounded off our exercism.io article with a call to action to help port exercises into the Perl 5 repo. Today I&amp;rsquo;m going to walk through the porting process step-by-step and show you how easy it is to contribute.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;requirements&#34;&gt;Requirements&lt;/h3&gt;
+
+&lt;p&gt;You&amp;rsquo;ll need a GitHub account and Perl installed. That&amp;rsquo;s it!&lt;/p&gt;
+
+&lt;h3 id=&#34;fork-the-repo&#34;&gt;Fork the repo&lt;/h3&gt;
+
+&lt;p&gt;To contribute to a project on GitHub, we&amp;rsquo;ll use the &amp;ldquo;fork and pull&amp;rdquo; approach. First we&amp;rsquo;ll login to GitHub:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/91/github_1.png&#34; alt=&#34;&#34; title=&#34;Login to GitHub&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Next, search for the exercism/xperl5 repo:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/91/github_2.png&#34; alt=&#34;&#34; title=&#34;Search for exercism/xperl5&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/91/github_3.png&#34; alt=&#34;&#34; title=&#34;Click the fork button&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Click the &amp;ldquo;Fork&amp;rdquo; button to copy the repo into our own perltricks/xperl5 repo:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/91/github_4.png&#34; alt=&#34;&#34; title=&#34;Our own forked repo&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;get-the-exercises&#34;&gt;Get the exercises&lt;/h3&gt;
+
+&lt;p&gt;Now we&amp;rsquo;ve forked the repo, we can commit changes to our forked version. To start we&amp;rsquo;ll need to download the Perl exercises from our forked repo. We can do this from the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ git clone https:&lt;span style=&#34;color:#e6db74&#34;&gt;//gi&lt;/span&gt;thub&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/sillymoose/x&lt;/span&gt;perl5&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;git&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will download the xperl5 repo into a directory called &amp;ldquo;xperl5&amp;rdquo;. Next download the list of common exercises:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ git clone https:&lt;span style=&#34;color:#e6db74&#34;&gt;//gi&lt;/span&gt;thub&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/exercism/x&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;common&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;git&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will download the latest list of available exercises to the &amp;ldquo;x-common&amp;rdquo; directory, which contains a collection of readme files for the exercises. Any exercise that has a readme file in x-common that is missing from the xperl5 directory needs to be ported.&lt;/p&gt;
+
+&lt;h3 id=&#34;find-the-exercise-in-another-language&#34;&gt;Find the exercise in another language&lt;/h3&gt;
+
+&lt;p&gt;Once you&amp;rsquo;ve found an exercise that needs to be ported, you&amp;rsquo;ll want to find that exercise in one of the other languages repos. It&amp;rsquo;s far easier to translate an exercise than to write it from scratch yourself! The Ruby, Python and JavaScript repos have most of the exercises, so we&amp;rsquo;ll start with one of those. For example to download the Ruby exercises repo, just type this command:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ git clone https:&lt;span style=&#34;color:#e6db74&#34;&gt;//gi&lt;/span&gt;thub&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com&lt;span style=&#34;color:#e6db74&#34;&gt;/exercism/x&lt;/span&gt;ruby&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;git&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If the xruby directory doesn&amp;rsquo;t have the exercise you&amp;rsquo;re looking to port, try cloning xpython or xjavascript instead.&lt;/p&gt;
+
+&lt;h3 id=&#34;porting-the-exercise&#34;&gt;Porting the exercise&lt;/h3&gt;
+
+&lt;p&gt;To port an exercise you need to provide the exercise test file and an Example.pm module which passes the tests. Earlier this week I ported the &amp;ldquo;leap&amp;rdquo; exercise from Ruby to Perl. This involved three steps. First I created the new exercise subdirectory in the xperl5 directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ mkdir xperl5&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;leap&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Next, I translated the Ruby test file &amp;ldquo;xruby/leap/leap_test.rb&amp;rdquo;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;date&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;minitest/autorun&amp;#39;&lt;/span&gt;
+require_relative &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;year&amp;#39;&lt;/span&gt;
+
+class Date
+  def leap?
+    throw &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Try to implement this yourself instead of using Ruby&amp;#39;s implementation.&amp;#34;&lt;/span&gt;
+  end
+  
+  alias :gregorian_leap? :leap?
+  alias :julian_leap? :leap?
+end
+
+class YearTest &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; MiniTest::Unit::TestCase
+  def test_leap_year
+    assert Year&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;leap?(&lt;span style=&#34;color:#ae81ff&#34;&gt;1996&lt;/span&gt;)
+  end
+
+  def test_non_leap_year
+    skip
+    refute Year&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;leap?(&lt;span style=&#34;color:#ae81ff&#34;&gt;1997&lt;/span&gt;)
+  end
+  
+  def test_non_leap_even_year
+    skip
+    refute Year&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;leap?(&lt;span style=&#34;color:#ae81ff&#34;&gt;1998&lt;/span&gt;)
+  end
+
+  def test_century
+    skip
+    refute Year&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;leap?(&lt;span style=&#34;color:#ae81ff&#34;&gt;1900&lt;/span&gt;)
+  end
+
+  def test_fourth_century
+    skip
+    assert Year&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;leap?(&lt;span style=&#34;color:#ae81ff&#34;&gt;2400&lt;/span&gt;)
+  end
+end&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;to &amp;ldquo;xperl5/leap/leap.t&amp;rdquo;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Test::More tests &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $module &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $ENV{EXERCISM} ? &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Example&amp;#39;&lt;/span&gt; : &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Leap&amp;#39;&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $sub &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $module &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;::is_leap&amp;#39;&lt;/span&gt;;
+
+use_ok($module) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; BAIL_OUT (&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;You need to create a module called $module.pm.&amp;#34;&lt;/span&gt;);
+can_ok($module, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;is_leap&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; BAIL_OUT(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Missing package $module with sub is_leap().&amp;#34;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;no&lt;/span&gt; strict &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;refs&amp;#39;&lt;/span&gt;;
+    is &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, $sub&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1996&lt;/span&gt;), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1996 is a leap year&amp;#39;&lt;/span&gt;;
+    is &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, $sub&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1997&lt;/span&gt;), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1997 is not a leap year&amp;#39;&lt;/span&gt;;
+    is &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, $sub&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1998&lt;/span&gt;), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1998 is not a leap year&amp;#39;&lt;/span&gt;;
+    is &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, $sub&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1900&lt;/span&gt;), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1900 is not a leap year&amp;#39;&lt;/span&gt;;
+    is &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, $sub&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2400&lt;/span&gt;), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2400 is a leap year&amp;#39;&lt;/span&gt;;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Finally I ported the example answer &amp;ldquo;xruby/leap/example.rb&amp;rdquo;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;delegate&amp;#39;&lt;/span&gt;
+
+class Year &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; SimpleDelegator
+
+  def self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;leap?(number)
+    Year&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(number)&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;leap?
+  end 
+
+  def leap?
+    divisible_by?(&lt;span style=&#34;color:#ae81ff&#34;&gt;400&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; divisible_by?(&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;divisible_by?(&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;)
+  end
+
+  private
+
+  def divisible_by?(i)
+    (self % i) &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+  end 
+end&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here is the Perl version, &amp;ldquo;xperl5/leap/Example.pm&amp;rdquo;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;package&lt;/span&gt; Example;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; warnings;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; strict;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;is_leap&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $year &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+    divisible_by($year, &lt;span style=&#34;color:#ae81ff&#34;&gt;400&lt;/span&gt;)
+        &lt;span style=&#34;color:#f92672&#34;&gt;or&lt;/span&gt; divisible_by($year, &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;and&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;divisible_by($year, &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;)
+        ? &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; : &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;divisible_by&lt;/span&gt; {
+    $_[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] % &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;$&lt;/span&gt;_[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; ? &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; : &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+}
+
+__PACKAGE__;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Run the test file at the command line:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ EXERCISM&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; prove leap&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;t
+leap&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;t &lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt; ok   
+All tests successful&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;
+Files&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, Tests&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;,  &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; wallclock secs ( &lt;span style=&#34;color:#ae81ff&#34;&gt;0.02&lt;/span&gt; usr  &lt;span style=&#34;color:#ae81ff&#34;&gt;0.00&lt;/span&gt; sys &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;0.02&lt;/span&gt; cusr  &lt;span style=&#34;color:#ae81ff&#34;&gt;0.00&lt;/span&gt; csys &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;0.04&lt;/span&gt; CPU)
+Result: PASS&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All of our tests passed, so we can commit these files. I also &lt;a href=&#34;https://github.com/sillymoose/xperl6/tree/master/leap&#34;&gt;ported&lt;/a&gt; a Perl 6 version.&lt;/p&gt;
+
+&lt;h3 id=&#34;add-the-new-exercise-to-the-forked-repo&#34;&gt;Add the new exercise to the forked repo&lt;/h3&gt;
+
+&lt;p&gt;Now that we&amp;rsquo;ve ported the files, we need to add them to the forked xperl5 repository and commit the change. Here&amp;rsquo;s are the commands to do that:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ cd xperl5
+$ git add leap&lt;span style=&#34;color:#e6db74&#34;&gt;/Example.pm leap/&lt;/span&gt;leap&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;t
+$ git commit &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;am &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Added the leap exercise&amp;#39;&lt;/span&gt;
+$ git push origin master&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If the forked repo is out of sync with exercism/xperl5 you&amp;rsquo;ll need to &lt;a href=&#34;http://stackoverflow.com/questions/7244321/how-to-update-github-forked-repository&#34;&gt;rebase&lt;/a&gt; it.&lt;/p&gt;
+
+&lt;h3 id=&#34;create-a-pull-request&#34;&gt;Create a pull request&lt;/h3&gt;
+
+&lt;p&gt;Returning to GitHub, all we have to do is initiate a pull request from our forked repo at perltricks/xperl5. Clicking the &amp;ldquo;pull requests&amp;rdquo; link on the right of the screen brings us to the pull requests screen:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/91/github_5.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Clicking the &amp;ldquo;new pull request&amp;rdquo; button will create the pull request form, GitHub automatically knows that the pull request should go back to exercism/xperl5.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/91/github_6.png&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Clicking the &amp;ldquo;Send pull request&amp;rdquo; button submits the pull request and we&amp;rsquo;re done! The exercism repo committers usually respond within a couple of hours. So now you&amp;rsquo;ve seen how easy it is to port an exercise, be warned it can be addictive &amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Enjoyed this article? Help us out and &lt;a href=&#34;https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F91%2F2014%2F5%2F21%2FHow-to-contribute-to-the-exercism-io-Perl-5-repo&amp;amp;text=How+to+contribute+to+the+exercism.io+Perl+5+repo&amp;amp;tw_p=tweetbutton&amp;amp;url=http%3A%2F%2Fperltricks.com%2Farticle%2F91%2F2014%2F5%2F21%2FHow-to-contribute-to-the-exercism-io-Perl-5-repo&amp;amp;via=perltricks&#34;&gt;tweet&lt;/a&gt; about it!&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>New Features of Perl 5.14: Non-destructive Substitution</title>
+      <link>http://localhost:1313/pub/2011/05/new-features-of-perl-514-non-destructive-substitution.html/</link>
+      <pubDate>Wed, 18 May 2011 15:08:19 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/05/new-features-of-perl-514-non-destructive-substitution.html/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;http://news.perlfoundation.org/2011/05/perl-514.html&#34;&gt;Perl 5.14 is now available&lt;/a&gt;. While this latest major release of Perl 5 brings with it many bugfixes, updates to the core libraries, and the usual performance improvements, it also includes a few nice new features.&lt;/p&gt;
+
+&lt;p&gt;One such feature is non-destructive substitution:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use 5.014;
+
+    my $greeting  = &#39;Hello, world!&#39;;
+
+    # be more elite
+    say $greeting =~ tr/aeiou/4310V/r;
+
+    # then run away
+    say $greeting =~ s/Hello/Goodbye/r;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The new &lt;code&gt;/r&lt;/code&gt; modifier to the substitution and transliteration operators causes Perl to return the modified string, rather than modifying the original string in place. This replaces the idiomatic but unwieldy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my  $greeting  = &#39;Hello, world!&#39;;
+    my ($leetgreet = $greeting) =~ tr/aeiou/4310V/;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This feature is even more useful for avoiding two common problems with substitutions in &lt;code&gt;map&lt;/code&gt; expressions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @modified = map { s/foo/BAR/ } @original;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Not only does the substitution modify the values of &lt;code&gt;@original&lt;/code&gt; in place, but the substitution returns a true value if the substitution succeeded and a false value otherwise. While that code &lt;em&gt;looks&lt;/em&gt; correct, it&amp;rsquo;s very subtly wrong. The corrected version of this code in Perl 5.12 or earlier is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @modified = map { my $copy = $_; $copy =~ s/foo/BAR/; $copy } @original;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;5.14 requires the addition of a single character to produce the intended behavior:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @modified = map { s/foo/BAR/r } @original;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;See &lt;code&gt;perldoc perlop&lt;/code&gt; for documentation of the &lt;code&gt;/r&lt;/code&gt; modifier.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>New Features of Perl 5.14: package BLOCK</title>
+      <link>http://localhost:1313/pub/2011/05/new-features-of-perl-514-package-block.html/</link>
+      <pubDate>Mon, 16 May 2011 11:31:25 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/05/new-features-of-perl-514-package-block.html/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;http://news.perlfoundation.org/2011/05/perl-514.html&#34;&gt;Perl 5.14 is now available&lt;/a&gt;. While this latest major release of Perl 5 brings with it many bugfixes, updates to the core libraries, and the usual performance improvements, it also includes a few nice new features. This series of articles provides a quick introduction to several of these features.&lt;/p&gt;
+
+&lt;p&gt;One such feature is the package BLOCK syntax:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package My::Class
+    {
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you declare a package, you may now provide a block at the end of the declaration. Within that block, the current namespace will be the provided package name. Outside of that block, the previously effective namespace will be in effect. The block provides normal lexical scoping, so that any lexical variables declared within the block will be visible only inside the block. As well, any lexical pragmas will respect the block&amp;rsquo;s scoping.&lt;/p&gt;
+
+&lt;p&gt;You do not need a trailing semicolon after the closing curly brace.&lt;/p&gt;
+
+&lt;p&gt;You may combine this with the package VERSION syntax introduced in Perl 5.12:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package My::Class v2011.05.16
+    {
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The VERSION must be an integer, a real number (with a single decimal), or a dotted-decimal v-string as shown in the previous example. When present, the VERSION declaration sets the package-scoped &lt;code&gt;$VERSION&lt;/code&gt; variable within the given namespace to the provided value.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;perldoc -f package&lt;/code&gt; documents this syntax.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Visualizing Music with SDL and Perl</title>
+      <link>http://localhost:1313/pub/2011/01/visualizing-music-with-sdl-and-perl.html/</link>
+      <pubDate>Mon, 24 Jan 2011 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2011/01/visualizing-music-with-sdl-and-perl.html/</guid>
+      <description>
+
+&lt;h1 id=&#34;music-visualization-with-perl-and-sdl&#34;&gt;&lt;strong&gt;Music Visualization with Perl and SDL&lt;/strong&gt;&lt;/h1&gt;
+
+&lt;p&gt;Many users know SDL as a powerful cross-platform library for graphics programming and input, especially as the foundation of many open source games. Perl users know it as the technology behind the beloved &lt;a href=&#34;http://www.frozen-bubble.org/&#34;&gt;Frozen Bubble&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Perl and SDL can do far more than destroy an infinite onslaught of cartoon bubbles, however. The recently revitalized &lt;a href=&#34;http://sdlperl.ath.cx/projects/SDLPerl/&#34;&gt;SDL Perl&lt;/a&gt; project has taken up the challenge of demonstrating that everyone&amp;rsquo;s favorite system administration language is capable of producing powerful multimedia programs—including, but not limited to, games.&lt;/p&gt;
+
+&lt;p&gt;In this edited excerpt from the &lt;a href=&#34;http://sdlperl.ath.cx/releases/SDL_Manual.html&#34;&gt;SDL Perl manual&lt;/a&gt;, lead developer Kartik Thakore walks through a non-game application of SDL and Perl, building a music player with visualizations in just a few lines of code.&lt;/p&gt;
+
+&lt;h2 id=&#34;running-this-demo&#34;&gt;&lt;strong&gt;Running this Demo&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;To run this example software, you need:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Perl 5.10, with threading enabled&lt;/li&gt;
+&lt;li&gt;A curent installation of CPAN&lt;/li&gt;
+&lt;li&gt;The native libraries of libsdl, libsdl_mixer (with Ogg support), libsdl_gfx, and their development packages&lt;/li&gt;
+&lt;li&gt;SDL perl version 5.526 or newer&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/media/_pub_2011_01_visualizing-music-with-sdl-and-perl/music_visualizer.zip&#34;&gt;this article&amp;rsquo;s example files&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;With all of that installed, extract the example file and run the visualizer:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ cd music_visualiser/
+    $ perl visualiser.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;music-visualizer&#34;&gt;&lt;strong&gt;Music Visualizer&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The music visualizer example processes real-time sound data—data as it plays—and displays the wave form on the screen. It will look something like Figure 1.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2011_01_visualizing-music-with-sdl-and-perl/spectro-1.png&#34; alt=&#34;Simple Music Visualization&#34; /&gt;
+&lt;em&gt;Figure 1. A simple music visualization.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;the-code-and-comments&#34;&gt;&lt;strong&gt;The Code and Comments&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;The program begins with the usual boilerplate of an SDL Perl application:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use strict;
+    use warnings;
+
+    use Cwd;
+    use Carp;
+    use File::Spec;
+
+    use threads;
+    use threads::shared;
+
+    use SDL;
+    use SDL::Event;
+    use SDL::Events;
+
+    use SDL::Audio;
+    use SDL::Mixer;
+    use SDL::Mixer::Music;
+    use SDL::Mixer::Effects;
+
+    use SDLx::App;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It then creates an application with both audio and video support:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $app = SDLx::App-&amp;gt;new(
+        init   =&amp;gt; SDL_INIT_AUDIO | SDL_INIT_VIDEO,
+        width  =&amp;gt; 800,
+        height =&amp;gt; 600,
+        depth  =&amp;gt; 32,
+        title  =&amp;gt; &amp;quot;Sound Event Demo&amp;quot;,
+        eoq    =&amp;gt; 1,
+        dt     =&amp;gt; 0.2,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The application must initialize the audio system with a format matching the expected audio input. &lt;code&gt;AUDIO_S16&lt;/code&gt; provides a 16-bit signed integer array for the stream data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Initialize the Audio
+    unless ( SDL::Mixer::open_audio( 44100, AUDIO_S16, 2, 1024 ) == 0 ) {
+        Carp::croak &amp;quot;Cannot open audio: &amp;quot; . SDL::get_error();
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The music player needs the music files from the &lt;em&gt;data/music/&lt;/em&gt; directory:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Load our music files
+    my $data_dir = &#39;.&#39;;
+    my @songs    = glob &#39;data/music/*.ogg&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A music effect reads the music data into a stream array, shared between threads:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @stream_data :shared;
+
+    #  Music Effect to pull Stream Data
+    sub music_data {
+        my ( $channel, $samples, $position, @stream ) = @_;
+
+        {
+            lock(@stream_data);
+            push @stream_data, @stream;
+        }
+
+        return @stream;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and that effect gets registered as a callback with &lt;code&gt;SDL::Mixer::Effects&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $music_data_effect_id =
+          SDL::Mixer::Effects::register( MIX_CHANNEL_POST, &amp;quot;main::music_data&amp;quot;,
+            &amp;quot;main::done_music_data&amp;quot;, 0 );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The program&amp;rsquo;s single command-line option governs the number of lines to display in the visualizer. The default is 50.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $lines = $ARGV[0] || 50;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The drawing callback for the &lt;code&gt;SDLx::App&lt;/code&gt; runs while a song plays. It reads the stream data and displays it on the screen as a wave form. The math calculations produce a multi-colored bar graph representing slices of the music data. The remaining visualization code should be straightforward:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    #  Music Playing Callbacks
+    my $current_song = 0;
+    my $lines        = $ARGV[0] || 50;
+
+    my $current_music_callback = sub {
+        my ( $delta, $app ) = @_;
+
+        $app-&amp;gt;draw_rect( [ 0, 0, $app-&amp;gt;w(), $app-&amp;gt;h() ], 0x000000FF );
+        $app-&amp;gt;draw_gfx_text(
+            [ 5, $app-&amp;gt;h() - 10 ],
+            [ 255, 0, 0, 255 ],
+            &amp;quot;Playing Song: &amp;quot; . $songs[ $current_song - 1 ]
+        );
+
+        my @stream;
+        {
+            lock @stream_data;
+            @stream      = @stream_data;
+            @stream_data = ();
+        }
+
+        # To show the right amount of lines we choose a cut of the stream
+        # this is purely for asthetic reasons.
+
+        my $cut = @stream / $lines;
+
+        # The width of each line is calculated to use.
+        my $l_wdt = ( $app-&amp;gt;w() / $lines ) / 2;
+
+        for ( my $i = 0 ; $i &amp;lt; $#stream ; $i += $cut ) {
+
+            #  In stereo mode the stream is split between two alternating streams
+            my $left  = $stream[$i];
+            my $right = $stream[ $i + 1 ];
+
+            #  For each bar we calculate a Y point and a X point
+            my $point_y = ( ( ($left) ) * $app-&amp;gt;h() / 4 / 32000 ) + ( $app-&amp;gt;h / 2 );
+            my $point_y_r =
+              ( ( ($right) ) * $app-&amp;gt;h() / 4 / 32000 ) + ( $app-&amp;gt;h / 2 );
+            my $point_x = ( $i / @stream ) * $app-&amp;gt;w;
+
+            # Using the parameters
+            #   Surface, box coordinates and color as RGBA
+            SDL::GFX::Primitives::box_RGBA(
+                $app,
+                $point_x - $l_wdt,
+                $app-&amp;gt;h() / 2,
+                $point_x + $l_wdt,
+                $point_y, 40, 0, 255, 128
+            );
+            SDL::GFX::Primitives::box_RGBA(
+                $app,
+                $point_x - $l_wdt,
+                $app-&amp;gt;h() / 2,
+                $point_x + $l_wdt,
+                $point_y_r, 255, 0, 40, 128
+            );
+
+        }
+
+      $app-&amp;gt;flip();
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whenever a song finishes, &lt;code&gt;SDL::Mixer::Music::playing_music&lt;/code&gt; returns &lt;code&gt;0&lt;/code&gt;. The program detects this state change and calls &lt;code&gt;music_finished_playing()&lt;/code&gt;, where the program attaches the &lt;code&gt;$play_next_song_callback&lt;/code&gt; callback to switch to the next song gracefully:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $cms_move_callback_id;
+    my $pns_move_callback_id;
+    my $play_next_song_callback;
+
+    sub music_finished_playing {
+        SDL::Mixer::Music::halt_music();
+        $pns_move_callback_id = $app-&amp;gt;add_move_handler( $play_next_song_callback )
+            if defined $play_next_song_callback;
+    }
+
+    $play_next_song_callback = sub {
+        return $app-&amp;gt;stop() if $current_song &amp;gt;= @songs;
+
+        my $song = SDL::Mixer::Music::load_MUS($songs[$current_song++]);
+
+        SDL::Mixer::Music::hook_music_finished(&#39;main::music_finished_playing&#39;);
+        SDL::Mixer::Music::play_music($song, 0 );
+
+        $app-&amp;gt;remove_move_handler( $pns_move_callback_id )
+            if defined $pns_move_callback_id;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A move handler detects if music is playing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;add_move_handler(
+       sub {
+           my $music_playing = SDL::Mixer::Music::playing_music();
+           music_finished_playing() unless $music_playing;
+       }
+   );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first callback to trigger &lt;code&gt;$play_next_song_callback&lt;/code&gt; gets the first song:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;add_show_handler($current_music_callback);
+    $pns_move_callback_id = $app-&amp;gt;add_move_handler( $play_next_song_callback);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and a keyboard event handler for a keypress allows the user to move through songs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;add_event_handler(
+        sub {
+            my ($event, $app) = @_;
+
+            if ($event-&amp;gt;type == SDL_KEYDOWN &amp;amp;&amp;amp; $event-&amp;gt;key_sym == SDLK_DOWN)
+            {
+                # Indicate that we are done playing the music_finished_playing
+                music_finished_playing();
+            }
+        }
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;From there, the application is ready to run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $app-&amp;gt;run();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and the final code gracefully stops &lt;code&gt;SDL::Mixer&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    SDL::Mixer::Effects::unregister( MIX_CHANNEL_POST, $music_data_effect_id );
+    SDL::Mixer::Music::hook_music_finished();
+    SDL::Mixer::Music::halt_music();
+    SDL::Mixer::close_audio();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The result? Several dozen lines of code glue together the SDL mixer and display a real-time visualization of the music.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Welcome Rakudo Star</title>
+      <link>http://localhost:1313/pub/2010/07/welcome-rakudo-star.html/</link>
+      <pubDate>Thu, 29 Jul 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/07/welcome-rakudo-star.html/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;http://www.perl6.org/&#34;&gt;Perl 6&lt;/a&gt; has evolved over a long time. As originally conceived, it was to be a modest cleanup of Perl 5 semantics and implementation. By shrugging off a few of the less desirable features and misfeatures, Perl the language could evolve in new ways.&lt;/p&gt;
+
+&lt;p&gt;As it turns out, a language is more than a bundle of features. It&amp;rsquo;s a set of design principles which govern interlocking syntax and semantics and idioms. The greater the internal consistency of that philosophy, the greater the coherence of the language and its community and its ecosystem.&lt;/p&gt;
+
+&lt;p&gt;Given the chance to reinvent Perl one more time (the first reinvention was Perl 4 to Perl 5), could the community produce a language which could evolve to meet the needs of programmers for at least the next twenty years? Could we do so without all of the pain and tension between the need to retain backwards compatibility and the desire to improve based on real world experiences?&lt;/p&gt;
+
+&lt;p&gt;That task was larger than any of us could have predicted, but the results (Perl&amp;rsquo;s testing culture! Roles! Moose! Grammars!) demonstrate their utility even now, even in the Perl 5 world. Both languages feed off of the other. Both languages help us to research and define and refine what Perl is and what Perl can be.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://rakudo.org/announce/rakudo-star/2010.07&#34;&gt;Rakudo Star&lt;/a&gt; is a milestone in that process. We&amp;rsquo;re proud of what we&amp;rsquo;ve accomplished, and we&amp;rsquo;ve reached a point where we want to share it with the wider world.&lt;/p&gt;
+
+&lt;p&gt;People will complain. They don&amp;rsquo;t like twigils. (They don&amp;rsquo;t like sigils!) All they ever wanted was a better object system. They hate operators or Unicode operators. They don&amp;rsquo;t want to learn how multiple dispatch works. They miss the CPAN. They prefer homoiconicity of syntax. They feel betrayed that after ten years, Rakudo Star is the first of several distribution releases and not the final, it&amp;rsquo;s completely finished that&amp;rsquo;s it, install it to run your space station, release&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip; as if designing a language intended to evolve and change and adapt over the next several decades were a simple, three-month task to produce a perfect, static, never-needs-updating specification. (Implementation is merely a matter of hiring enough typists, you see.)&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s neither what Perl 6 is nor how it works. What matters now is that you—yes, you—can download and install and play with Perl 6 right now. It&amp;rsquo;s not complete, whatever that means. It&amp;rsquo;s not finished, because twenty years from now we&amp;rsquo;ll still release new versions to meet needs that we can&amp;rsquo;t possibly predict right now.&lt;/p&gt;
+
+&lt;p&gt;What we &lt;em&gt;can&lt;/em&gt; do is figure out what &lt;em&gt;you&lt;/em&gt; need. What works for you? What doesn&amp;rsquo;t? Are there bugs to fix? Are there particular optimizations you&amp;rsquo;d like to see? (Our next big task is optimization.) Now begins the work of polishing. What can we do to make Perl 6 even more amazing for you for the next release of &lt;a href=&#34;http://www.rakudo.org/&#34;&gt;Rakudo&lt;/a&gt; and the next and the next and the next?&lt;/p&gt;
+
+&lt;p&gt;Set aside your assumptions. Try Perl 6 yourself with Rakudo Star. Perl in every form is the work of a community willing to make amazing things happen. That task continues—help us make Perl more powerful, more flexible, more useful, and more fun.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Inside Perl 5.12</title>
+      <link>http://localhost:1313/pub/2010/04/inside-perl-512.html/</link>
+      <pubDate>Tue, 20 Apr 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/04/inside-perl-512.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;http://news.perlfoundation.org/2010/04/perl-512-released.html&#34;&gt;Perl 5.12 has just come out&lt;/a&gt;. A rejuvenated development process helps ensure a bright future for Perl as it enters its third decade of making easy things easy and hard things possible. Here&amp;rsquo;s what you can expect when you upgrade to the latest release.&lt;/p&gt;
+
+&lt;h2 id=&#34;release-schedule&#34;&gt;&lt;strong&gt;Release Schedule&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The largest change in Perl 5.12 isn&amp;rsquo;t code. It&amp;rsquo;s the new release schedule. Perl 5 now has monthly development releases on the 20th of every month. Perl 5.13.0 is almost out, as of the time of writing. These monthly releases are snapshots of the development process. They represent points at which people interested in what will become Perl 5.14 can test against their most important code.&lt;/p&gt;
+
+&lt;p&gt;The current plan is to release Perl 5.14 in a year. Sometime around March, the release manager will put together release candidates and start the countdown for final testing and release blocking bugs. The process will repeat.&lt;/p&gt;
+
+&lt;p&gt;The Perl 5.12.x family will have several new releases in the next year as well, though they will have only a few changes. Jesse Vincent described &lt;a href=&#34;http://www.nntp.perl.org/group/perl.perl5.porters/2010/04/msg158635.html&#34;&gt;the policy for what changes will go into Perl 5.12.x maintenance releases&lt;/a&gt; in a message to the Perl 5 Porters. 5.12.1 will come out in May 2010. It will contain fixes for bugs found in 5.12.0, but it will contain no new features or behaviors. 5.12.2 will follow in three months, and so on. It&amp;rsquo;s not clear if 5.12.4 (February 2011) will be the final release of the 5.12.x family.&lt;/p&gt;
+
+&lt;p&gt;These plans are subject to change, but the monthly releases have gone well, and the release process for 5.12 had little controversy. It&amp;rsquo;s likely the next year will proceed similarly.&lt;/p&gt;
+
+&lt;h2 id=&#34;improved-package-version-syntax&#34;&gt;&lt;strong&gt;Improved Package Version Syntax&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;In previous versions of Perl 5, individual packages set their version numbers by manipulating the package global variable &lt;code&gt;$VERSION&lt;/code&gt;. There were few rules for what this variable contained or how to parse this version number, and toolchain modules such as &lt;a href=&#34;https://metacpan.org/pod/ExtUtils::MakeMaker&#34;&gt;ExtUtils::MakeMaker&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Module::Build&#34;&gt;Module::Build&lt;/a&gt; have to perform several contortions to parse them with any degree of accuracy. David Golden&amp;rsquo;s &lt;a href=&#34;http://www.dagolden.com/index.php/369/version-numbers-should-be-boring/&#34;&gt;Version Numbers Should Be Boring&lt;/a&gt; gives copious detail on how to do version numbers right, if you can&amp;rsquo;t use 5.12.&lt;/p&gt;
+
+&lt;p&gt;An addition to the core &lt;a href=&#34;https://metacpan.org/pod/version&#34;&gt;version&lt;/a&gt; module enables a feature called &amp;ldquo;strict version numbers&amp;rdquo;, where these numbers conform to a few guidelines. The most important rule is that version numbers must be standard numbers with one decimal point (&lt;code&gt;1.23&lt;/code&gt;&amp;rdquo; &amp;gt;}}) &lt;em&gt;or&lt;/em&gt; version strings (&lt;code&gt;v1.234.5&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;You may only use strict version numbers with the new package version syntax:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package Perl::Improved 1.23;
+
+    package Perl::Improved v1.23.45;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Internally, Perl will parse these the same way as it does:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Perl::Improved 1.23;
+
+    use Perl::Improved v1.23.45;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; which is a benefit for consistency. As well, toolchain utilities can find and parse these version numbers with little effort, thanks in no small part to a canonical set of version number parsing regular expressions now found in &lt;a href=&#34;https://metacpan.org/pod/version&#34;&gt;version&lt;/a&gt;.
+&amp;ldquo; &amp;gt;}}
+Sadly, there&amp;rsquo;s currently no mechanism by which to add this syntax to 5.10, but in a couple of years this may be the preferred way of specifying version numbers in Perl 5.&lt;/p&gt;
+
+&lt;h2 id=&#34;strictures-by-default&#34;&gt;&lt;strong&gt;Strictures by Default&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Several CPAN modules enable features such as &lt;a href=&#34;https://metacpan.org/pod/strict&#34;&gt;strict&lt;/a&gt; when you use them, including &lt;a href=&#34;https://metacpan.org/pod/Moose&#34;&gt;Moose&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/perl5i&#34;&gt;perl5i&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Modern::Perl&#34;&gt;Modern::Perl&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Mojolicious&#34;&gt;Mojolicious&lt;/a&gt;. Perl 5.12 also enables strictures when it encounters &lt;code&gt;use 5.012;&lt;/code&gt;, along with other new language syntax features such as the &lt;code&gt;say&lt;/code&gt; and &lt;code&gt;given&lt;/code&gt;/&lt;code&gt;when&lt;/code&gt; keywords.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;use 5.012&lt;/code&gt; does &lt;em&gt;not&lt;/em&gt; enable warnings.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;-E&lt;/code&gt; flag &lt;em&gt;does&lt;/em&gt; enable new language features, but it does &lt;em&gt;not&lt;/em&gt; enable strictures.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;-M5.012&lt;/code&gt; flag &lt;em&gt;does&lt;/em&gt; enable strictures and new language features.&lt;/p&gt;
+
+&lt;h2 id=&#34;y2038-safety&#34;&gt;&lt;strong&gt;Y2038 Safety&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;While Perl itself did not have a Y2K problem, many programs written in Perl made assumptions that produced apparent Y2K problems. Unfortunately, Perl&amp;rsquo;s time handling relies on system libraries, and many of those systems exhaust their available capabilities when dealing with dates and times in the year 2038. (Developers who think they have decades to solve this problem should consider financial instruments such as 30-year mortgages.)&lt;/p&gt;
+
+&lt;p&gt;Perl 5.12 extends support for time and date handling in the core &lt;code&gt;localtime&lt;/code&gt; and &lt;code&gt;gmtime&lt;/code&gt; functions to manage dates beyond 2038 without overflow or truncation problems. Replacement libraries for earlier versions of Perl are available from the CPAN as &lt;a href=&#34;https://metacpan.org/pod/Time::y2038&#34;&gt;Time::y2038&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;core-support-for-language-mutation-extensions&#34;&gt;&lt;strong&gt;Core Support for Language Mutation Extensions&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Devel::Declare&#34;&gt;Devel::Declare&lt;/a&gt; is the basis for a handful of CPAN distributions which add new features to Perl 5 without the drawbacks of source filters. &lt;a href=&#34;https://metacpan.org/pod/signatures&#34;&gt;signatures&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/MooseX::Declare&#34;&gt;MooseX::Declare&lt;/a&gt; are two prime examples; they simplify common tasks in a very Perlish way and demonstrate how a few syntactic additions can remove a lot of repetitive code.
+&amp;ldquo; &amp;gt;}}
+Unlike source filters, they compose together well and don&amp;rsquo;t interfere with external code.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Devel::Declare&lt;/code&gt; works by hijacking part of the Perl 5 parsing process. Though this has required poking in Perl&amp;rsquo;s internals, Perl 5.12 includes a few APIs to make this behavior cleaner and better supported. In other words, it&amp;rsquo;s not only &lt;em&gt;okay&lt;/em&gt; for &lt;code&gt;Devel::Declare&lt;/code&gt; to exist, but it&amp;rsquo;s &lt;em&gt;important&lt;/em&gt; that it exist and work and continue to work.&lt;/p&gt;
+
+&lt;p&gt;Some developers have discussed the idea of bringing &lt;code&gt;Devel::Declare&lt;/code&gt; into the core in one form or another. This may or may not happen for Perl 5.14. Regardless, the process gives modules such as &lt;code&gt;signatures&lt;/code&gt; and &lt;code&gt;MooseX::Declare&lt;/code&gt; a further stability and support, and it provides opportunities for further syntax-bending extensions, some of which may enter the core themselves as new features.&lt;/p&gt;
+
+&lt;h2 id=&#34;deprecation-warnings-by-default&#34;&gt;&lt;strong&gt;Deprecation Warnings by Default&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Perl 5 development makes a priority of supporting syntactic constructs found in older versions of Perl, even going as far as to deprecate but not remove some. As a minor compatibility change in Perl 5.12, deprecated features now give warnings when you use them, even if you haven&amp;rsquo;t explicitly enabled deprecated warnings with &lt;code&gt;use warnings &#39;deprecated&#39;;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;You may still disable deprecated warnings with &lt;code&gt;no warnings &#39;deprecated&#39;;&lt;/code&gt;&amp;ndash;they&amp;rsquo;re still lexical warnings&amp;ndash;but now these deprecations will be more obvious to developers who upgrade to and test their existing code against new releases of Perl 5.&lt;/p&gt;
+
+&lt;p&gt;Deprecations do not necessarily imply any timeframe for removal of the deprecated feature, except as otherwise expressed explicitly in the appropriate release delta. See &lt;a href=&#34;https://perldoc.perl.org/perl5120delta.html&#34;&gt;perl5120delta&lt;/a&gt; for more details about specific deprecations in this release.
+&amp;ldquo; &amp;gt;}}&lt;/p&gt;
+
+&lt;h2 id=&#34;inc-reorganized&#34;&gt;&lt;strong&gt;@INC Reorganized&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Several of the core modules distributed with Perl 5 have dual lives on the CPAN. It&amp;rsquo;s possible (and often worthwhile) to update them separately from the rest of Perl 5. If you do, Perl has to be able to find the updated versions instead of the core versions. When you compile Perl 5 itself, &lt;code&gt;@INC&lt;/code&gt; contains a handful of default directories in which to look for modules. Some of these directories will contain core modules. Others contain modules you&amp;rsquo;ll install later (likely through a CPAN client).&lt;/p&gt;
+
+&lt;p&gt;A reorganization of the order of these directories in the default &lt;code&gt;@INC&lt;/code&gt; in Perl 5.12 makes Perl 5 prefer to load user-installed modules over core-supplied modules. This will make it easier to manage dual-lived modules, and should help distributions which package and redistribute Perl 5 to manage their installation paths appropriately. Unless you&amp;rsquo;re a Perl 5 distributor, you should see no difference except for the lack of strange problems.&lt;/p&gt;
+
+&lt;h2 id=&#34;deprecations&#34;&gt;&lt;strong&gt;Deprecations&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;A handful of core modules are now deprecated: &lt;a href=&#34;https://metacpan.org/pod/Class::ISA&#34;&gt;Class::ISA&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Pod::Plainer&#34;&gt;Pod::Plainer&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Switch&#34;&gt;Switch&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Shell&#34;&gt;Shell&lt;/a&gt;. They remain available from the CPAN, though consider using &lt;code&gt;given&lt;/code&gt;/&lt;code&gt;when&lt;/code&gt; (introduced in Perl 5.10.0&amp;rdquo; &amp;gt;}}) instead of &lt;code&gt;Switch&lt;/code&gt;. There&amp;rsquo;s no deprecation category quite strong enough to describe the recommendation against it.&lt;/p&gt;
+
+&lt;p&gt;The core has also included several libraries written in the Perl 4 era. They are now available from the CPAN in the &lt;a href=&#34;https://metacpan.org/pod/Perl4::CoreLibs&#34;&gt;Perl4::CoreLibs&lt;/a&gt; distribution. Though they are not &lt;em&gt;quite&lt;/em&gt; deprecated yet, they will be in Perl 5.14. In almost every case, Perl 5 era replacements exist under active maintenance.
+&amp;ldquo; &amp;gt;}}&lt;/p&gt;
+
+&lt;h2 id=&#34;unicode-improvements&#34;&gt;&lt;strong&gt;Unicode Improvements&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;As the Unicode standards change, so must Perl 5&amp;rsquo;s Unicode handling. The biggest change in Perl 5.12 is an update to support the latest standards and definitions, specifically Unicode properties, property values, and regular expression matches using Unicode properties.&lt;/p&gt;
+
+&lt;h2 id=&#34;miscellaneous&#34;&gt;&lt;strong&gt;Miscellaneous&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Many bugs have been fixed. Several performance improvements are present. More tests are available. Dual-lived modules have been updated. More documentation is available (including &lt;a href=&#34;https://perldoc.perl.org/perlperf.html&#34;&gt;perlperf&lt;/a&gt;, a detailed discussion of profiling and optimizing Perl 5 programs&amp;rdquo; &amp;gt;}}). Some 200 people have changed 750,000 lines in more than 3,000 files.&lt;/p&gt;
+
+&lt;p&gt;Even with all of those changes, Perl 5 remains a vibrant, powerful programming language. Programs written a decade ago will still run with few, if any, necessary changes, and almost all of the CPAN is ready to run on it.&lt;/p&gt;
+
+&lt;p&gt;Yet development still continues. Perl 5.13.0 will come out on 20 April 2010, with all of the concomitant possibilities for improvements, bug fixes, and even more practical pragmatism. Perl 5.12.1 and 5.13.1 will follow next month, with more bugs fixed, documentation improved, core modules updated, and the language always a little bit nicer to use.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>A Website in a Minute Using Dancer, the Effortless Web Framework</title>
+      <link>http://localhost:1313/pub/2010/04/a-website-in-a-minute-using-dancer-the-effortless-web-framework.html/</link>
+      <pubDate>Tue, 06 Apr 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/04/a-website-in-a-minute-using-dancer-the-effortless-web-framework.html/</guid>
+      <description>
+
+&lt;p&gt;While Perl has a few heavy hitters in the web framework world (&lt;a href=&#34;https://metacpan.org/pod/Catalyst&#34;&gt;Catalyst&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Jifty&#34;&gt;Jifty&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/CGI::Application&#34;&gt;CGI::App&lt;/a&gt;), sometimes they can seem like overkill. When writing a light web service or a high-end but not-as-complex website, you might want something smaller and simpler. This is where &lt;a href=&#34;http://www.perldancer.org/&#34;&gt;Dancer&lt;/a&gt; comes in.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt; is a web framework whose purpose is to let you get a website up and running within a minute, if not sooner. It started as a port of Ruby&amp;rsquo;s &lt;a href=&#34;http://www.sinatrarb.com/&#34;&gt;Sinatra&lt;/a&gt; but has since took its own path.&lt;/p&gt;
+
+&lt;p&gt;Dancer supports &lt;a href=&#34;http://plackperl.org/&#34;&gt;Plack&lt;/a&gt;/&lt;a href=&#34;http://plackperl.org/&#34;&gt;PSGI&lt;/a&gt; from an early version and has a built-in scaffolding script to help you get up and running within seconds. It creates deployment scripts for you, includes a guide for deployment situations to help you configure your webserver (whether &lt;a href=&#34;http://www.danga.com/perlbal&#34;&gt;Perlbal&lt;/a&gt;, &lt;a href=&#34;http://httpd.apache.org/&#34;&gt;Apache&lt;/a&gt;, &lt;a href=&#34;http://www.lighttpd.net/&#34;&gt;Lighttpd&lt;/a&gt; or anything else you might care to use) and has a default clean design to help you prototype your website faster.&lt;/p&gt;
+
+&lt;h2 id=&#34;dancing&#34;&gt;&lt;strong&gt;Dancing&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;The best way to learn, understand, and fall in love with Dancer is to get on the dance floor:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ cpan Dancer # or cpanp, or cpanm
+    $ dancer -a MyApp
+    + ./MyApp
+    + MyApp/views
+    + MyApp/views/index.tt
+    + MyApp/views/layouts
+    + MyApp/views/layouts/main.tt
+    + MyApp/environments
+    + MyApp/environments/development.yml
+    + MyApp/environments/production.yml
+    + MyApp/config.yml
+    + MyApp/app.psgi
+    + MyApp/MyApp.pm
+    + MyApp/MyApp.pl
+    + MyApp/public
+    + MyApp/public/css
+    + MyApp/public/css/style.css
+    + MyApp/public/css/error.css
+    + MyApp/public/images
+    + MyApp/public/404.html
+    + MyApp/public/dispatch.fcgi
+    + MyApp/public/dispatch.cgi
+    + MyApp/public/500.html
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;dancer&lt;/code&gt; application creates a &lt;em&gt;views&lt;/em&gt; folder, which contains layout and templates. It contains sane defaults you can use to start. It also creates a &lt;em&gt;config.yaml&lt;/em&gt; file and an &lt;em&gt;environments&lt;/em&gt; folder for environment-specific configurations. &lt;em&gt;MyApp.pm&lt;/em&gt; and &lt;em&gt;MyApp.pl&lt;/em&gt; are the main application files. &lt;em&gt;MyApp.pl&lt;/em&gt; includes a built-in webserver for the development (or even deployment!) of your application. The &lt;em&gt;public&lt;/em&gt; folder contains default CSS and images.&lt;/p&gt;
+
+&lt;p&gt;This directory tree includes a few other interesting files; these are dispatchers for various backends. The PSGI dispatcher is &lt;em&gt;app.psgi&lt;/em&gt;. The CGI and FCGI dispatchers are &lt;em&gt;public/dispatch.cgi&lt;/em&gt; and &lt;em&gt;public/dispatch.fcgi&lt;/em&gt;, respectively.&lt;/p&gt;
+
+&lt;p&gt;Look in &lt;em&gt;MyApp/MyApp.pm&lt;/em&gt;. Dancing really is this simple!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    package MyApp;
+    use Dancer;
+
+    get &#39;/&#39; =&amp;gt; sub {
+        template &#39;index&#39;;
+    };
+
+    true;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What does this all mean?&lt;/p&gt;
+
+&lt;h2 id=&#34;routes&#34;&gt;&lt;strong&gt;Routes&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer uses the notion of &lt;em&gt;routes&lt;/em&gt; to specify the paths your users might take in your website. All you need in order to write a Dancer application is to define routes. Routes are not only simple, but concise and versatile. They support variables (named matching, wildcard matching), regular expressions and even conditional matching.&lt;/p&gt;
+
+&lt;p&gt;Here are a few examples:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/&#39; =&amp;gt; sub {
+        return &#39;hello world!&#39;;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This route defines the root path of the application. If someone reaches &lt;a href=&#34;http://example.com/&#34;&gt;http://example.com/&lt;/a&gt;, it will match this route.&lt;/p&gt;
+
+&lt;p&gt;The word &lt;code&gt;get&lt;/code&gt; signifies the HTTP method (GET) for which the path exists. If you use a web form, you need a route for a POST method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    post &#39;/user/add/&#39; =&amp;gt; sub {
+        # create a user using the data from the form
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are a few more methods (&lt;strong&gt;del&lt;/strong&gt; for &lt;em&gt;DELETE&lt;/em&gt;, &lt;strong&gt;put&lt;/strong&gt; for &lt;em&gt;PUT&lt;/em&gt;). You can also use &lt;code&gt;any&lt;/code&gt; to provide a single route for all HTTP methods or for several specific methods:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    any [&#39;get&#39;, &#39;post&#39;] =&amp;gt; sub {
+        # both post and get will reach here!
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Variables are clean and simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/user/view/:username/&#39; =&amp;gt; sub {
+        my $username = params-&amp;gt;{username};
+        template &#39;users&#39; =&amp;gt; { username =&amp;gt; $username };
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This route matches &lt;a href=&#34;http://example.com/user/view/variable/&#34;&gt;http://example.com/user/view/variable/&lt;/a&gt;, while &lt;em&gt;variable&lt;/em&gt; can be of any type.&lt;/p&gt;
+
+&lt;p&gt;Of course, you can write a more complex wildcard matching:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/download/*.*&#39; =&amp;gt; sub {
+        # we extract the wild card matching using splat
+        my ( $file, $ext ) = splat;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you feel rambunctious, you can define a regular expression:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get r( &#39;/hello/([\w]+)&#39; ) =&amp;gt; sub {
+        my ($name) = splat;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that in these examples, the &lt;code&gt;splat&lt;/code&gt; keyword returns the values that the wildcards (the &lt;code&gt;*&lt;/code&gt; used in routes) or regular expressions (declared with &lt;code&gt;r()&lt;/code&gt;) match. As a convenience, note also that you do &lt;em&gt;not&lt;/em&gt; have to escape the forward slash regex delimiters used in &lt;code&gt;r()&lt;/code&gt;; Dancer escapes them for you.&lt;/p&gt;
+
+&lt;h2 id=&#34;multiple-routes&#34;&gt;&lt;strong&gt;Multiple Routes&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;When writing many routes, you might find it easier to separate them to different files according to their prefixes. Dancer provides &lt;code&gt;prefix&lt;/code&gt; and &lt;code&gt;load&lt;/code&gt; to help you with that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # in main Dancer application:
+    load &#39;UserRoutes.pm&#39;;
+
+    # in UserRoutes.pm:
+    use Dancer &#39;:syntax&#39;; # importing just the syntax to create routes
+    prefix &#39;/user&#39;;
+
+    get &#39;/view/&#39;   =&amp;gt; sub { ... };
+    get &#39;/edit/&#39;   =&amp;gt; sub { ... };
+    get &#39;/delete/&#39; =&amp;gt; sub { ... };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These will match &lt;a href=&#34;http://example.com/user/view/&#34;&gt;http://example.com/user/view/&lt;/a&gt;, &lt;a href=&#34;http://example.com/user/edit/&#34;&gt;http://example.com/user/edit/&lt;/a&gt; and &lt;a href=&#34;http://example.com/user/delete/&#34;&gt;http://example.com/user/delete/&lt;/a&gt;, respectively.&lt;/p&gt;
+
+&lt;h2 id=&#34;built-for-scalability&#34;&gt;&lt;strong&gt;Built for scalability&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer has a built-in route caching mechanism, making sure that even when you have a lot of routes, it will be able to serve them at almost the same speed as though you had only a few routes. This means that even if you have 600 routes, you do not have to worry about your application being slow!&lt;/p&gt;
+
+&lt;h2 id=&#34;variables&#34;&gt;&lt;strong&gt;Variables&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer supports internal variables. Declare them with &lt;code&gt;var&lt;/code&gt;, and you can later fetch them inside your routes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    var waiter =&amp;gt; &#39;sawyer&#39;;
+
+    get &#39;/welcome/&#39; =&amp;gt; sub {
+        my $name = vars-&amp;gt;{waiter};
+        return &amp;quot;Hi, I&#39;m $name and I&#39;ll be your waiter this evening.&amp;quot;;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;filters&#34;&gt;&lt;strong&gt;Filters&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Sometimes you want to be able to specify code to run before any route. &lt;a href=&#34;https://metacpan.org/pod/KiokuDB&#34;&gt;KiokuDB&lt;/a&gt;, for example, requires you to make a scope whenever you want to work with the database. This is easy to automate with the &lt;code&gt;before&lt;/code&gt; filter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    before sub {
+        var scope =&amp;gt; $dir-&amp;gt;new_scope;
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another common technique is to verify a session:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    before sub {
+        if ( !session(&#39;user&#39;) &amp;amp;&amp;amp; request-&amp;gt;path_info !~ m{^/login} ) {
+            # Pass the original path requested along to the handler:
+            var requested_path =&amp;gt; request-&amp;gt;path_info;
+            request-&amp;gt;path_info(&#39;/login&#39;);
+        }
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;templates&#34;&gt;&lt;strong&gt;Templates&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Dancer will return to the user agent whatever you return from a route, just like PSGI does. &amp;ldquo;Hello, world!&amp;rdquo; in Dancer is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/&#39; =&amp;gt; sub { &#39;Hello, world!&#39; };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Plain text isn&amp;rsquo;t always what you want, so Dancer has powerful support for templates. There are various template engines available (&lt;a href=&#34;https://metacpan.org/pod/Template&#34;&gt;Template::Toolkit&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Template::Tiny&#34;&gt;Template::Tiny&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Tenjin&#34;&gt;Tenjin&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/Text::Haml&#34;&gt;Text::Haml&lt;/a&gt;, and &lt;a href=&#34;https://metacpan.org/pod/Mason&#34;&gt;Mason&lt;/a&gt;, to name a few). Dancer also provides a default simple template engine called &lt;a href=&#34;https://metacpan.org/pod/Dancer::Template::Simple&#34;&gt;Dancer::Template::Simple&lt;/a&gt;. This gives you a simple self-contained template engine at no additional cost!&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;template&lt;/code&gt; keyword allows you to specify which template to process and which variables to pass to the template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    get &#39;/user/view/:name&#39; =&amp;gt; sub {
+        my $name = params-&amp;gt;{name};
+
+        # Dancer adds .tt automatically, but this is configurable
+        template &#39;show_user&#39; =&amp;gt; {
+            name =&amp;gt; $name,
+            user =&amp;gt; get_user($name),
+        };
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Dancer automatically supplies you an encompassing layout for your templates, much like &lt;a href=&#34;https://metacpan.org/pod/Template::Toolkit&#34;&gt;Template&lt;/a&gt;&amp;rsquo;s &lt;code&gt;WRAPPER&lt;/code&gt; option. This built-in template means you can use the layout with other template engines, such as &lt;a href=&#34;https://metacpan.org/pod/Template::Tiny&#34;&gt;Template::Tiny&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Dancer accomplishes this by rendering two templates: the one you provided and a (configurable) layout template. The layout template gets the output of rendering your template as a &lt;code&gt;content&lt;/code&gt; variable, then embeds that content in the general page layout.&lt;/p&gt;
+
+&lt;p&gt;The default templates that come with Dancer demonstrate this point very well. Here&amp;rsquo;s &lt;em&gt;main.tt&lt;/em&gt;, the default layout:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;!-- some default css --&amp;gt;&amp;lt;/head&amp;gt;
+    &amp;lt;body&amp;gt;
+    &amp;lt;% content %&amp;gt;
+    &amp;lt;/body&amp;gt;
+    &amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;serializers-make-resting-easier&#34;&gt;&lt;strong&gt;Serializers make RESTing easier&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;Serializers are a new feature in Dancer (available since version 1.170). They allow automatic serialization for your output in various forms (&lt;a href=&#34;https://metacpan.org/pod/Data::Dumper&#34;&gt;Data::Dumper&lt;/a&gt;, &lt;a href=&#34;https://metacpan.org/pod/YAML&#34;&gt;YAML&lt;/a&gt;, or &lt;a href=&#34;https://metacpan.org/pod/JSON&#34;&gt;JSON&lt;/a&gt;) to shorten the amount of code you have to write in your application.&lt;/p&gt;
+
+&lt;p&gt;When programming a RESTful service, the JSON serializer cuts down much of your code by automatically serializing your output. This makes your server-side AJAX code much more efficient and less boilerplate code for you to write.&lt;/p&gt;
+
+&lt;h2 id=&#34;file-uploads-are-fun&#34;&gt;&lt;strong&gt;File uploads are fun&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;File uploads exist since version 1.170. Within a route, write:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # several files
+    my @files = request-&amp;gt;upload();
+
+    # single file
+    my $file  = request-&amp;gt;upload();
+
+    # then you can do several things with that file
+    $file-&amp;gt;copy_to(&#39;/my/upload/folder&#39;);
+    my $fh       = $file-&amp;gt;file_handle;
+    my $content  = $file-&amp;gt;content;
+    my $filename = $file-&amp;gt;filename;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;easy-configuration&#34;&gt;&lt;strong&gt;Easy configuration&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;You can configure everything (logging, session handling, template layout, file locations) in Dancer using the main configuration file (&lt;em&gt;appdir/config.yml&lt;/em&gt;). There are configuration files for your specific environment (&lt;em&gt;production&lt;/em&gt; and &lt;em&gt;development&lt;/em&gt;) and you can provide environment-specific configurations in the corresponding file (&lt;em&gt;appdir/environments/development.yml&lt;/em&gt;, for example).&lt;/p&gt;
+
+&lt;h2 id=&#34;summary&#34;&gt;&lt;strong&gt;Summary&lt;/strong&gt;&lt;/h2&gt;
+
+&lt;p&gt;While Dancer is still evolving, it is already a production-ready simple-yet-powerful web framework lets you get from zero to web in record time. Put on your dancing shoes, define your steps, and bust a move!&lt;/p&gt;
+
+&lt;p&gt;Dancer is available on the CPAN (&lt;a href=&#34;https://metacpan.org/pod/Dancer&#34;&gt;Dancer&lt;/a&gt;), and &lt;a href=&#34;http://github.com/sukria/Dancer&#34;&gt;Dancer development takes place on Github&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Testing Perl 5.12.0 RC 1 with App::perlbrew</title>
+      <link>http://localhost:1313/pub/2010/03/testing-perl-5120-rc-1-with-appperlbrew.html/</link>
+      <pubDate>Tue, 30 Mar 2010 14:22:06 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/testing-perl-5120-rc-1-with-appperlbrew.html/</guid>
+      <description>&lt;p&gt;I&amp;rsquo;m working on a project with Curtis &amp;ldquo;Ovid&amp;rdquo; Poe and Adrian Howard. We use Perl 5.10.1, but because we control which version of Perl 5 we use, there&amp;rsquo;s no reason not to test with Perl 5.12.0 &amp;ndash; and if we find bugs, we can report them and get them fixed in the proper place.&lt;/p&gt;
+
+&lt;p&gt;This application has its own quirks for setup and installation. I managed to clean up some of the worst offenses as my first work on the project; it installs and passes tests on my server with Perl 5.10.1, so it should install cleanly if all of its dependencies work with Perl 5.12.&lt;/p&gt;
+
+&lt;p&gt;My first approach was to manage my own parallel installation of Perl 5 with &lt;a href=&#34;https://metacpan.org/pod/local::lib&#34;&gt;local::lib&lt;/a&gt; and a custom installation of Perl 5.12, but the manual intervention required to make all of that work was enough of a hassle that I took a tip from &lt;a href=&#34;http://chris.prather.org/&#34;&gt;Chris Prather&lt;/a&gt; and installed &lt;a href=&#34;https://metacpan.org/pod/App::perlbrew&#34;&gt;App::perlbrew&lt;/a&gt; to manage my various installations (system Perl 5.10.0 built with threading, custom Perl 5.10.1 without threads, and now Perl 5.12.0 RC1).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ cpan App::perlbrew
+    $ perlbrew init
+    $ echo &#39;source /home/chromatic/perl5/perlbrew/etc/bashrc&#39; &amp;gt;&amp;gt; ~/.bashrc
+    $ source /home/chromatic/perl5/perlbrew/etc/bashrc
+    $ perlbrew install perl-5.12.0-RC1 -as p512
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;-as p512&lt;/code&gt; option was optional; it lets me use &lt;code&gt;p512&lt;/code&gt; as a short name to refer to that particular installation when switching between versions.&lt;/p&gt;
+
+&lt;p&gt;After a while with no obvious output (which is fine), the end result is the ability to switch between parallel Perl 5 installations without them stomping on each other. They&amp;rsquo;re all installed locally in my own home directory, so I can use CPAN or &lt;a href=&#34;https://metacpan.org/pod/App::cpanminus&#34;&gt;cpanminus&lt;/a&gt; to install modules without worrying about root access or messing up the system for anyone else.&lt;/p&gt;
+
+&lt;p&gt;I had already installed &lt;a href=&#34;https://metacpan.org/pod/local::lib&#34;&gt;local::lib&lt;/a&gt;, but I&amp;rsquo;m not sure it&amp;rsquo;s necessary in this case.&lt;/p&gt;
+
+&lt;p&gt;With the changes to my &lt;em&gt;.bashrc&lt;/em&gt;, now &lt;code&gt;perl&lt;/code&gt; is a symlink. Switching my version with &lt;code&gt;perlbrew&lt;/code&gt; swaps a symlink, so every time I invoke &lt;code&gt;perl&lt;/code&gt; directly, it uses the intended version. Shebang lines remain unaffected, so anything which invokes a program directly will use a hard-coded version of Perl. Unfortunately, this includes &lt;code&gt;cpanm&lt;/code&gt;, so I took to using an alias which does &lt;code&gt;perl `which cpanm`&lt;/code&gt; as a temporary workaround. Miyagawa suggested &lt;em&gt;not&lt;/em&gt; using CPAN to install cpanminus. Instead, he recommends:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl -L http://cpanmin.us | perl - App::cpanminus
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that you&amp;rsquo;ll have to do this for every new version of Perl you install with perlbrew.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the nice part of perlbrew. I can also install Perl 5.10.1 through it (replacing my custom installation) and switch between the two with a simple command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ perlbrew switch p5101
+    $ perlbrew switch perl-5.10.1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see what you have installed with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ perlbrew installed
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For those of you curious as to the results of my experiments with 5.12.0, &lt;a href=&#34;https://metacpan.org/pod/Devel::Cover&#34;&gt;Devel::Cover&lt;/a&gt; doesn&amp;rsquo;t work correctly yet, but that&amp;rsquo;s not a requirement for this project. &lt;a href=&#34;https://metacpan.org/pod/Devel::BeginLift&#34;&gt;Devel::BeginLift&lt;/a&gt; needs a patch to build. Fortunately, that&amp;rsquo;s available in the RT queue. A manual build and test worked just fine. Other than that, a little bit of babysitting on the installation satisfied all of the dependencies.&lt;/p&gt;
+
+&lt;p&gt;If I&amp;rsquo;d had to manage the installation (and module paths and&amp;hellip;) of all of this software, I&amp;rsquo;d have spent a lot more time on the fiddly details of installing dependencies and not the interesting part. &lt;code&gt;App::perlbrew&lt;/code&gt; allowed me to concentrate on what really matters: does my software work?&lt;/p&gt;
+
+&lt;p&gt;Perl 5.12.0 will come out soon. Use &lt;code&gt;App::perlbrew&lt;/code&gt; to test code you care about with it.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>perl5i Makes More Simple Things Simple</title>
+      <link>http://localhost:1313/pub/2010/03/perl5i-makes-more-simple-things-simple.html/</link>
+      <pubDate>Tue, 23 Mar 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/perl5i-makes-more-simple-things-simple.html/</guid>
+      <description>&lt;p&gt;Suppose that you want to load a module dynamically (you have the name in a scalar), then alias a function from that module to a new name in another class. In other words, you want a renaming import. How do you do that in Perl 5?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+    no strict &#39;refs&#39;;
+    eval qq{require $class} or die $@;
+    *{$other_class.&amp;quot;::&amp;quot;.$alias} = $class-&amp;gt;can($func);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s a lot of magic going on there. Aliasing requires using symbolic refs which means turning off &lt;code&gt;strict&lt;/code&gt;. Because you want &lt;code&gt;strict&lt;/code&gt; off in as small a hunk of code as possible you have to enclose it in braces. Then, &lt;code&gt;require Class&lt;/code&gt; and &lt;code&gt;require $class&lt;/code&gt; work differently, so you have to trick &lt;code&gt;require&lt;/code&gt; into seeing a bareword by &lt;code&gt;eval&lt;/code&gt;ing it. Don&amp;rsquo;t forget to catch and rethrow the error! Finally, to do the aliasing you need to get a code ref with &lt;code&gt;can()&lt;/code&gt; and assign it to the symbol table via the magic of typeglobs.&lt;/p&gt;
+
+&lt;p&gt;Guh. There&amp;rsquo;s an idea in interface design called &lt;a href=&#34;http://www.usabilityfirst.com/glossary/gulf-of-execution/&#34;&gt;The Gulf of Execution&lt;/a&gt; which measures the distance between the user&amp;rsquo;s goal and the actions she must take to achieve that goal. The goals here are to:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Load a class from a variable.&lt;/li&gt;
+&lt;li&gt;Alias a function in that class.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The actions are:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Enclose the code in a block.&lt;/li&gt;
+&lt;li&gt;Turn off &lt;code&gt;strict&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;require $class&lt;/code&gt; in an &lt;code&gt;eval&lt;/code&gt; block to turn it into a bareword.&lt;/li&gt;
+&lt;li&gt;Catch and rethrow any error which might result.&lt;/li&gt;
+&lt;li&gt;Use &lt;code&gt;can()&lt;/code&gt; to get a reference to the function.&lt;/li&gt;
+&lt;li&gt;Construct a fully qualified name for the alias.&lt;/li&gt;
+&lt;li&gt;Turn that into a typeglob.&lt;/li&gt;
+&lt;li&gt;Assign the code ref to the typeglob.&lt;/li&gt;
+&lt;li&gt;Drink.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Try explaining that to a non-Perl guru.&lt;/p&gt;
+
+&lt;p&gt;Now consider the &lt;a href=&#34;https://metacpan.org/pod/perl5i&#34;&gt;perl5i&lt;/a&gt; (specifically perl5i::2) way:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$class-&amp;gt;require
+      -&amp;gt;can($func)
+      -&amp;gt;alias($other_class, $alias);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Release the breath you&amp;rsquo;ve been holding in for the last 15 years of Perl 5.&lt;/p&gt;
+
+&lt;p&gt;Through the magic of &lt;a href=&#34;https://metacpan.org/pod/autobox&#34;&gt;autoboxing&lt;/a&gt;, perl5i lets you call methods on unblessed scalars, hashes, arrays, regexes, references&amp;hellip; anything. It also implements some handy methods. Some, like &lt;code&gt;require()&lt;/code&gt;, are core functions redone as methods. Others, like &lt;code&gt;alias()&lt;/code&gt;, should be core functions never made it in for whatever reason. autoboxing gives perl5i the freedom to add handy features without polluting the global function/method namespace with new keywords.&lt;/p&gt;
+
+&lt;p&gt;Recall the goals:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Load a class from a variable.&lt;/li&gt;
+&lt;li&gt;Alias a function in that class.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&amp;hellip; and consider perl5i&amp;rsquo;s actions:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Call &lt;code&gt;require()&lt;/code&gt; to load the class.&lt;/li&gt;
+&lt;li&gt;Call &lt;code&gt;can()&lt;/code&gt; to get a reference to the function.&lt;/li&gt;
+&lt;li&gt;Call &lt;code&gt;alias()&lt;/code&gt; on that reference to alias it to the other class.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The gulf has narrowed to a stream you can hop over while hardly getting your feet wet.&lt;/p&gt;
+
+&lt;p&gt;The goal of perl5i is to bring modern conveniences back to Perl 5. In the 15 years since the release of Perl 5, we&amp;rsquo;ve learned a lot. Our views of good practices have changed. 15 years ago, aliasing a function was black magic available only to the wildest of gurus. Now it&amp;rsquo;s a technique many module authors take advantage of. Why should it remain complicated and error prone?&lt;/p&gt;
+
+&lt;p&gt;Autoboxing is a big part of perl5i, allowing it to add convenience methods without having to add new keywords. Adding new keywords&amp;ndash;which contracts the function names available to programmers&amp;ndash;is a big thing holding Perl 5 back! Every potential new keyword is a debate over compatibility. Autoboxing eliminates that debate. It takes off the brakes.&lt;/p&gt;
+
+&lt;p&gt;Some other examples: &lt;a href=&#34;https://perldoc.perl.org/perlfaq4.html#How-do-I-determine-whether-a-scalar-is-a-number/whole/integer/float?&#34;&gt;How do I check if a scalar contains a number, an integer, or a float?&lt;/a&gt; The Perl FAQ entry on the subject is two pages long offering five different possibilities, two of which require pasting code. Code in FAQs tends to rot, and perlfaq is no exception; without testing nobody noticed that those venerable regexes fail to catch &amp;ldquo;+1.23&amp;rdquo;. How does perl5i do it?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;say &amp;quot;It&#39;s a number&amp;quot;   if $thing-&amp;gt;is_number;
+say &amp;quot;It&#39;s an integer&amp;quot; if $thing-&amp;gt;is_integer;
+say &amp;quot;It&#39;s a decimal&amp;quot;  if $thing-&amp;gt;is_decimal;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s clear, simple, fast, and tested. TMTOWTDI is great and all, but FAQs are about getting things done, not about writing dissertations on the subject. perl5i picks one way that&amp;rsquo;s pretty good and makes it available with no fuss.&lt;/p&gt;
+
+&lt;p&gt;The bar for what is &amp;ldquo;simple&amp;rdquo; has moved since Perl 5 first came out. perl5i takes the goal of &amp;ldquo;simple things should be simple&amp;rdquo; and helps us all catch up.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Idioms, or How to Write Perlish Perl</title>
+      <link>http://localhost:1313/pub/2010/03/idioms-or-how-to-write-perlish-perl.html/</link>
+      <pubDate>Tue, 16 Mar 2010 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/idioms-or-how-to-write-perlish-perl.html/</guid>
+      <description>
+
+&lt;p&gt;Any language—programming or natural—develops &lt;em&gt;idioms&lt;/em&gt;, or common patterns of expression. The earth revolves, but we speak of the sun rising or setting. We talk of clever hacks and nasty hacks and slinging code. We ping each other on IRC to discuss spaghetti code, and we factor and refactor away the artifacts of copy pasta.&lt;/p&gt;
+
+&lt;p&gt;As you learn Perl 5 in more detail, you will begin to see and understand common idioms. They&amp;rsquo;re not quite language features—you don&amp;rsquo;t &lt;em&gt;have&lt;/em&gt; to use them—and they&amp;rsquo;re not quite large enough that you can encapsulate them away behind functions and methods. They&amp;rsquo;re something more than habits. They&amp;rsquo;re mannerisms. They&amp;rsquo;re our shared jargon of code. They&amp;rsquo;re ways of writing Perl with a Perlish accent.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-object-as-self&#34;&gt;&lt;strong&gt;The Object as &lt;code&gt;$self&lt;/code&gt;&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://learnperl.scratchcomputing.com/tutorials/objects/&#34;&gt;Perl 5&amp;rsquo;s object system&lt;/a&gt; treats the invocant of a method as a mundane parameter. The invocant of a class method (a string containing the name of the class) is that method&amp;rsquo;s first parameter. The invocant of an object or instance method, the object itself, is that method&amp;rsquo;s first parameter. You are free to use or ignore it as you see fit.&lt;/p&gt;
+
+&lt;p&gt;Idiomatic Perl 5 uses &lt;code&gt;$class&lt;/code&gt; as the name of the class method and &lt;code&gt;$self&lt;/code&gt; for the name of the object invocant. This is a convention not enforced by the language itself, but it is a convention strong enough that useful extensions such as &lt;a href=&#34;https://metacpan.org/pod/MooseX::Method::Signatures&#34;&gt;MooseX::Method::Signatures&lt;/a&gt; assume you will use &lt;code&gt;$self&lt;/code&gt; as the name of the invocant by default.&lt;/p&gt;
+
+&lt;p&gt;This is true even if you use &lt;a href=&#34;http://moose.perl.org/&#34;&gt;Moose&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;named-parameters&#34;&gt;&lt;strong&gt;Named Parameters&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Without a module such as &lt;a href=&#34;https://metacpan.org/pod/signatures&#34;&gt;signatures&lt;/a&gt; or &lt;a href=&#34;https://metacpan.org/pod/MooseX::MultiMethods&#34;&gt;MooseX::Multimethods&lt;/a&gt;, Perl 5&amp;rsquo;s argument passing mechanism is simple: all arguments flatten into a single list accessible through &lt;code&gt;@_&lt;/code&gt; (function_parameters). While this simplicity is occasionally too simple—named parameters can be very useful at times—it does not preclude the use of idioms to provide named parameters.&lt;/p&gt;
+
+&lt;p&gt;The list context evaluation and assignment of &lt;code&gt;@_&lt;/code&gt; allows you to unpack named parameters pairwise. Even though this function call is equivalent to passing a comma-separated or &lt;code&gt;qw//&lt;/code&gt;-created list, arranging the arguments as if they were true pairs of keys and values makes the caller-side look like the function supports named parameters:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    make_ice_cream_sundae(
+        whipped_cream =&amp;gt; 1,
+        sprinkles     =&amp;gt; 1,
+        banana        =&amp;gt; 0,
+        ice_cream     =&amp;gt; &#39;mint chocolate chip&#39;,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The callee side can unpack these parameters into a hash and treate the hash as if it were a single argument:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub make_ice_cream_sundae
+    {
+        my %args = @_;
+
+        my $ice_cream = get_ice_cream( $args{ice_cream}) );
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://books.google.com/books?id=yMMRnPQ7CSMC&#34;&gt;Perl Best Practices&lt;/a&gt; suggests passing a hash reference instead. This has one benefit of performing hash construction checking on the caller side, where it&amp;rsquo;s most likely you&amp;rsquo;ll make mistakes and another benefit of minimizing copying and memory use. The former benefit is compelling, if somewhat less common in practice.&lt;/p&gt;
+
+&lt;p&gt;This technique works well with &lt;a href=&#34;https://perldoc.perl.org/functions/import.html&#34;&gt;import()&lt;/a&gt;; you can process as many parameters as you like before slurping the remainder into a hash:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub import
+    {
+        my ($class, %args)  = @_;
+        my $calling_package = caller();
+
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note how this idiom falls naturally out of list assignment; that makes this idiom Perlish.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-schwartzian-transform&#34;&gt;&lt;strong&gt;The Schwartzian Transform&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;People new to Perl sometimes overlook the importance of lists and list processing as a fundamental component of expression evaluation (footnote: People explaining its importance in this fashion do not help). Put more simply, the ability for Perl programmers to chain expressions which evaluate to variable-length lists gives them countless ways to manipulate data effectively.&lt;/p&gt;
+
+&lt;p&gt;The &lt;em&gt;Schwartzian transform&lt;/em&gt; is an elegant demonstration of that principle as an idiom handily borrowed from the Lisp family of languages. (&lt;a href=&#34;http://groups.google.com/group/comp.unix.shell/browse_frm/thread/31da%0A970cebb30c6d?hl=en&amp;amp;pli=1&#34;&gt;Randal Schwartz&amp;rsquo;s initial posting of the Schwartzian transform&lt;/a&gt; mentions &amp;ldquo;Speak[ing] with a lisp in Perl.&amp;ldquo;)&lt;/p&gt;
+
+&lt;p&gt;Suppose you have a Perl hash which associates the names of your co-workers with their phone extensions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use 5.010;
+
+    my %extensions =
+    (
+        1004 =&amp;gt; &#39;Jerryd&#39;,
+        1005 =&amp;gt; &#39;Rudy&#39;,
+        1006 =&amp;gt; &#39;Juwan&#39;,
+        1007 =&amp;gt; &#39;Brandon&#39;,
+        1010 =&amp;gt; &#39;Joel&#39;,
+        1012 =&amp;gt; &#39;LaMarcus&#39;,
+        1021 =&amp;gt; &#39;Marcus&#39;,
+        1024 =&amp;gt; &#39;Andre&#39;,
+        1023 =&amp;gt; &#39;Martell&#39;,
+        1052 =&amp;gt; &#39;Greg&#39;,
+        1088 =&amp;gt; &#39;Nic&#39;,
+    );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Suppose you want to print a list of extensions and co-workers sorted by their names, not their extensions. In other words, you need to sort a hash by its keys. Sorting the values of the hash in string order is easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @sorted_names = sort values %extensions;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; but that loses the association of names with extensions. The beauty of the Schwartzian transform is that it solves this problem almost trivially. All you have to do is transform the data before and after sorting it to preserve the necessary information. This is most obvious when explained in multiple steps. First, convert the hash into a list of data structures which contain the vital information in sortable fashion. In this case, converting the hash pairs into two-element anonymous arrays will help:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @pairs = map { [ $_, $extensions{$_} ] } keys %extensions;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reversing the hash &lt;em&gt;in place&lt;/em&gt; would work if no one had the same name. In this case, that is no problem, but defensive coding anticipates data changes.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;sort&lt;/code&gt; gets the list of anonymous arrays and can compare the second elements (the names) with a stringwise comparison:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @sorted_pairs = sort { $a-&amp;gt;[1] cmp $b-&amp;gt;[1] } @pairs;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Given &lt;code&gt;@sorted_pairs&lt;/code&gt;, a second &lt;code&gt;map&lt;/code&gt; operation can convert the data structure to a more usable form:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my @formatted_exts = map { &amp;quot;$_-&amp;gt;[1], ext. $_-&amp;gt;[0]&amp;quot; } @sorted_pairs;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; and now you can print the whole thing:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    say for @formatted_exts;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, this uses several temporary variables (with admittedly bad names). It&amp;rsquo;s a worthwhile technique and good to understand, but the real magic is in the combination:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    say for
+        map  { &amp;quot; $_-&amp;gt;[1], ext. $_-&amp;gt;[0]&amp;quot;          }
+        sort {   $a-&amp;gt;[1] cmp   $b-&amp;gt;[1]           }
+        map  { [ $_      =&amp;gt;    $extensions{$_} ] }
+            keys %extensions;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Read the expression from right to left, in the order of evaluation. For each key in the extensions hash, make a two-item anonymous array containing the key and the value from the hash. Sort that list of anonymous arrays by their second elements, the values from the hash. Create a nicely formatted string of output from those sorted arrays.&lt;/p&gt;
+
+&lt;p&gt;The Schwartzian transform is this pipeline of &lt;code&gt;map&lt;/code&gt;-&lt;code&gt;sort&lt;/code&gt;-&lt;code&gt;map&lt;/code&gt; where you transform a data structure into another form easier for sorting and then transform it back into your preferred form for modification.&lt;/p&gt;
+
+&lt;p&gt;In this case the transformation is relatively simple. Consider the case where calculating the right value to sort is expensive in time or memory, such as calculating a cryptographic hash for a large file. In that case, the Schwartzian transform is also useful because you can perform those expensive operations once (in the rightmost &lt;code&gt;map&lt;/code&gt;), compare them repeatedly from a de-facto cache in the &lt;code&gt;sort&lt;/code&gt;, and then remove them in the leftmost &lt;code&gt;map&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The original example in the comp.lang.perl.misc shows an effective use of the transform, and a good programming technique in general. When the data you have isn&amp;rsquo;t in the optimal form for what you want to do with it, first transform it into that optimal form, then manipulate it.&lt;/p&gt;
+
+&lt;p&gt;Phrased that way, the technique is so obvious as to seem trivial&amp;hellip; but what is an idiom but a brilliant idea made vulgar by its ubiquity?&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>More Code, Less Cruft: Managing Distributions with Dist::Zilla</title>
+      <link>http://localhost:1313/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html/</link>
+      <pubDate>Tue, 09 Mar 2010 16:14:12 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html/</guid>
+      <description>
+
+&lt;p&gt;Every software distribution is a bunch of files written and maintained by programmers. The files are of three types: code, documentation, and crap—though this distinction is too subtle. Much of the documentation and code is crap, too. It&amp;rsquo;s pointless. It&amp;rsquo;s boring to write and to maintain, but convention dictates that it exist.&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s killer feature is the CPAN, and &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla&#34;&gt;Dist::Zilla&lt;/a&gt; is a tool for packaging code to release to the CPAN. The central notion of Dzil is that no programmer should ever have to waste his or her precious time on boring things like &lt;em&gt;README&lt;/em&gt; files, prerequisite accounting, duplicated license statements, or anything else other than solving real problems.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s worth noting, too, that the &amp;ldquo;CPAN distribution&amp;rdquo; format is useful even if your code never escapes to the CPAN. Libraries packaged &lt;em&gt;in any way&lt;/em&gt; are much easier to manage than their unpackaged counterpart, and any libraries package the CPAN way can interact with all the standard CPAN tools. As long are you&amp;rsquo;re going to package up your code, you might as well use the same tools as everyone else in the game.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-step-by-step-conversion&#34;&gt;&lt;strong&gt;A Step-by-Step Conversion&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Switching your old code to use Dist::Zilla is easy. You can be conservative and work in small steps, or you can go whole hog. This article demonstrates the process with one of my distributions, &lt;a href=&#34;https://metacpan.org/pod/Number::Nary&#34;&gt;Number::Nary&lt;/a&gt;. To follow along, clone its git repository and start with the commit tagged &lt;code&gt;pre-dzil&lt;/code&gt;. If you don&amp;rsquo;t want to use &lt;code&gt;git&lt;/code&gt;, that&amp;rsquo;s fine. You&amp;rsquo;ll still be able to see what&amp;rsquo;s going on.&lt;/p&gt;
+
+&lt;h4 id=&#34;replacing-makefile-pl&#34;&gt;&lt;strong&gt;Replacing Makefile.PL&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;The first thing to do is to replace &lt;em&gt;Makefile.PL&lt;/em&gt;, the traditional program for building and installing distributions (or &lt;em&gt;dists&lt;/em&gt;). If you started with a &lt;a href=&#34;https://metacpan.org/pod/Module::Build&#34;&gt;Module::Build&lt;/a&gt;-based distribution, you&amp;rsquo;d replace &lt;em&gt;Build.PL&lt;/em&gt;, instead. Dist::Zilla will build those files for you in the dist you ship so that installing users have them, but you&amp;rsquo;ll never need to think about them again.&lt;/p&gt;
+
+&lt;p&gt;I packaged &lt;code&gt;Number::Nary&lt;/code&gt; with &lt;a href=&#34;https://metacpan.org/pod/Module::Install&#34;&gt;Module::Install&lt;/a&gt;, the library that inspired me to build &lt;code&gt;Dist::Zilla&lt;/code&gt;. Its &lt;em&gt;Makefile.PL&lt;/em&gt; looked like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use inc::Module::Install;
+  all_from(&#39;lib/Number/Nary.pm&#39;);
+  requires(&#39;Carp&#39;            =&amp;gt; 0);
+  requires(&#39;Test::More&#39;      =&amp;gt; 0);
+  requires(&#39;List::MoreUtils&#39; =&amp;gt; 0.09);
+  requires(&#39;Sub::Exporter&#39;   =&amp;gt; 0.90);
+  requires(&#39;UDCode&#39;          =&amp;gt; 0);
+  auto_manifest;
+  extra_tests;
+  WriteAll;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If I&amp;rsquo;d used &lt;code&gt;ExtUtils::MakeMaker&lt;/code&gt;, it might&amp;rsquo;ve looked something like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use ExtUtils::MakeMaker;
+
+  WriteMakefile(
+    NAME      =&amp;gt; &#39;Number::Nary&#39;,
+    DISTNAME  =&amp;gt; &#39;Number-Nary&#39;,
+    AUTHOR    =&amp;gt; &#39;Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;&#39;,
+    ABSTRACT  =&amp;gt; &#39;encode and decode numbers as n-ary strings&#39;,
+    VERSION   =&amp;gt; &#39;0.108&#39;,
+    LICENSE   =&amp;gt; &#39;perl&#39;,
+    PREREQ_PM =&amp;gt; {
+      &#39;Carp&#39;                =&amp;gt; 0
+      &#39;List::MoreUtils&#39;     =&amp;gt; &#39;0.09&#39;,
+      &#39;Sub::Exporter&#39;       =&amp;gt; 0,
+      &#39;Test::More&#39;          =&amp;gt; 0,
+      &#39;UDCode&#39;              =&amp;gt; 0,
+    }
+  );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Delete that file and replace it with the file &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  name    = Number-Nary
+  version = 0.108
+  author  = Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;
+  license = Perl_5
+  copyright_holder = Ricardo Signes
+
+  [AllFiles]
+  [MetaYAML]
+  [MakeMaker]
+  [Manifest]
+
+  [Prereq]
+  Carp            = 0
+  Test::More      = 0
+  List::MoreUtils = 0.09
+  Sub::Exporter   = 0.90
+  UDCode          = 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yes, this file contains &lt;em&gt;more&lt;/em&gt; lines than the original version, but don&amp;rsquo;t worry—that won&amp;rsquo;t last long.&lt;/p&gt;
+
+&lt;p&gt;Most of this should be self-explanatory, but the cluster of square-bracketed names isn&amp;rsquo;t. Each line enables a Dzil plugin, and every plugin helps with part of the well-defined process of building your dist. The plugins I&amp;rsquo;ve used here enable the absolute minimum behavior needed to replace &lt;em&gt;Makefile.PL&lt;/em&gt;: they pull in all the files in your checkout. When you build the dist, they add the extra files you need to ship.&lt;/p&gt;
+
+&lt;p&gt;At this point, you can build a releasable tarball by running &lt;code&gt;dzil build&lt;/code&gt; (instead of &lt;code&gt;perl Makefile.PL &amp;amp;&amp;amp; make dist&lt;/code&gt;). There are more savings on the way, too.&lt;/p&gt;
+
+&lt;h4 id=&#34;eliminating-pointless-packaging-files&#34;&gt;&lt;strong&gt;Eliminating Pointless Packaging Files&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;The &lt;em&gt;MANIFEST.SKIP&lt;/em&gt; file tells other packaging tools which files to exclude when building a distribution. You can keep using it (with the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::ManifestSkip&#34;&gt;ManifestSkip&lt;/a&gt; plugin), but you can almost always just drop the file and use the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PruneCruft&#34;&gt;PruneCruft&lt;/a&gt; plugin instead. It prunes all the files people usually put in their skip file.&lt;/p&gt;
+
+&lt;p&gt;The CPAN community has a tradition of shipping lots of good documentation written in Pod. Even so, several tools expect you also to provide a plain &lt;em&gt;README&lt;/em&gt; file. The &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::Readme&#34;&gt;Readme&lt;/a&gt; plugin will generate one for you.&lt;/p&gt;
+
+&lt;p&gt;Downstream distributors (like Linux distributions) like to see really clear license statements, especially in the form of a &lt;em&gt;LICENSE&lt;/em&gt; file. Because your &lt;em&gt;dist.ini&lt;/em&gt; knows the details of your license, the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::License&#34;&gt;License&lt;/a&gt; plugin can generate this file for you.&lt;/p&gt;
+
+&lt;p&gt;All three of these plugins are part of the &lt;code&gt;Dist::Zilla&lt;/code&gt; distribution. Thus you can delete three whole files—&lt;em&gt;MANIFEST.SKIP&lt;/em&gt;, &lt;em&gt;LICENSE&lt;/em&gt;, and *README*—at the cost of a couple of extra lines in &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [PruneCruft]
+  [License]
+  [Readme]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s not bad, especially when you remember that now when you edit your dist version, license, or abstract, these generated files will &lt;em&gt;always&lt;/em&gt; contain the new data.&lt;/p&gt;
+
+&lt;h4 id=&#34;stock-tests&#34;&gt;&lt;strong&gt;Stock Tests&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;People expect CPAN authors to run several tests before releasing a distribution to the public. &lt;code&gt;Number::Nary&lt;/code&gt; had three of them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  xt/release/perl-critic.t
+  xt/release/pod-coverage.t
+  xt/release/pod-syntax.t
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Storing them under the &lt;em&gt;./xt/release&lt;/em&gt; directory indicates that only people interested in testing a new release should run them.)&lt;/p&gt;
+
+&lt;p&gt;These files are pretty simple, but the last thing you want is to find out that you&amp;rsquo;ve copied and pasted a slightly buggy version of the file around. Instead, you can generate these files as needed. If there&amp;rsquo;s a bug, fix the plugin once and everything gets the fix on the next rebuild. Once again, you can delete those three files in favor of three plugins:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [ExtraTests]
+  [CriticTests]
+  [PodTests]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;CriticTests&lt;/code&gt; and &lt;code&gt;PodTests&lt;/code&gt; add test files to your &lt;em&gt;./xt&lt;/em&gt; directory. &lt;code&gt;ExtraTests&lt;/code&gt; rewrites them to live in &lt;em&gt;./t&lt;/em&gt;, but only under the correct circumstances, such as during release testing.&lt;/p&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve customized your Pod coverage tests to consider certain methods trusted despite having no docs, you can move that configuration into your Pod itself. Add a line like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  =for Pod::Coverage some_method some_other_method this_is_covered_too
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::CriticTests&#34;&gt;CriticTests&lt;/a&gt; plugin, by the way, does not come with &lt;code&gt;Dist::Zilla&lt;/code&gt;. It&amp;rsquo;s a third party plugin, written by Jerome Quelin. There are a bunch of those on the CPAN, and they&amp;rsquo;re easy to install. &lt;code&gt;[CriticTests]&lt;/code&gt; tells &lt;code&gt;Dist::Zilla&lt;/code&gt; to load Dist::Zilla::Plugin::CriticTests. Install it with &lt;em&gt;cpan&lt;/em&gt; or your package manager and you&amp;rsquo;re ready to use the plugin.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-classic-bundle-and-cutting-releases&#34;&gt;&lt;strong&gt;The @Classic Bundle and Cutting Releases&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Because most of the time you want to use the same config everywhere, &lt;code&gt;Dist::Zilla&lt;/code&gt; makes it easy to reuse configuration. The current &lt;em&gt;dist.ini&lt;/em&gt; file is very close to the &amp;ldquo;Classic&amp;rdquo; old-school plugin bundle shipped with &lt;code&gt;Dist::Zilla&lt;/code&gt;. You ca replace all the plugin configuration (except for Prereq) with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [CriticTests]
+  [@Classic]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;which makes for a nice, small config file.&lt;/p&gt;
+
+&lt;p&gt;Classic enables a few other plugins, most of which aren&amp;rsquo;t worth mentioning right now. A notable exception is &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::UploadToCPAN&#34;&gt;UploadToCPAN&lt;/a&gt;. It enables the command &lt;code&gt;dzil release&lt;/code&gt;, which will build a tarball and upload it to the CPAN, assuming you have a &lt;em&gt;~/.dzil/config.ini&lt;/em&gt; which resembles:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [!release]
+  user     = rjbs
+  password = PeasAreDelicious
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;letting-dist-zilla-alter-your-modules&#34;&gt;&lt;strong&gt;Letting Dist::Zilla Alter Your Modules&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;So far, this &lt;code&gt;Dist::Zilla&lt;/code&gt; configuration builds extra files like tests and packaging files. You can get a lot more out of &lt;code&gt;Dist::Zilla&lt;/code&gt; if you also let it mess around with your library files.&lt;/p&gt;
+
+&lt;p&gt;Add the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PkgVersion&#34;&gt;PkgVersion&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::PodVersion&#34;&gt;PodVersion&lt;/a&gt; plugins to let &lt;code&gt;Dist::Zilla&lt;/code&gt; take care of setting the version in every library file. They find &lt;em&gt;.pm&lt;/em&gt; files and add a &lt;code&gt;our $VERSION = ...&lt;/code&gt; declaration and a &lt;code&gt;=head1 VERSION&lt;/code&gt; section to the Pod—which means you can delete all those lines from the code and not worry about keeping them up to date anymore.&lt;/p&gt;
+
+&lt;h4 id=&#34;prereq-detection&#34;&gt;&lt;strong&gt;Prereq Detection&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now the &lt;em&gt;dist.ini&lt;/em&gt; looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  name    = Number-Nary
+  version = 0.108
+  author  = Ricardo Signes &amp;lt;rjbs@cpan.org&amp;gt;
+  license = Perl_5
+  copyright_holder = Ricardo Signes
+
+  [CriticTests]
+  [PodVersion]
+  [PkgVersion]
+  [@Classic]
+
+  [Prereq]
+  Carp            = 0
+  Test::More      = 0
+  List::MoreUtils = 0.09
+  Sub::Exporter   = 0.90
+  UDCode          = 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Way too much of this file handles prerequisites. &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::AutoPrereq&#34;&gt;AutoPrereq&lt;/a&gt; fixes all of that by analyzing the code to determine all of the necessary dependencies and their versions. Install this third-party plugin (also by Jerome Quelin!) and replace &lt;code&gt;Prereq&lt;/code&gt; with &lt;code&gt;AutoPrereq&lt;/code&gt;. This plugin requires the use of the &lt;code&gt;use MODULE VERSION&lt;/code&gt; form for modules which require specific versions. This is actually a &lt;em&gt;very good&lt;/em&gt; thing, because it means that your code will no longer even &lt;em&gt;compile&lt;/em&gt; if Perl cannot meet those prerequisites. It also keeps code and installation data in sync. (Make sure that you&amp;rsquo;re requiring the right version in your code. Many dists require one version in the code and one in the prereq listing. Now that you have only one place to list the required version, make sure you get it right.)&lt;/p&gt;
+
+&lt;p&gt;You don&amp;rsquo;t have to modify &lt;em&gt;all&lt;/em&gt; &lt;code&gt;use&lt;/code&gt; statements to that form. In this example, it&amp;rsquo;s only necessary for &lt;code&gt;List::MoreUtils&lt;/code&gt; and &lt;code&gt;Sub::Exporter&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h4 id=&#34;pod-rewriting&#34;&gt;&lt;strong&gt;Pod Rewriting&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now it&amp;rsquo;s time to bring out some heavy guns. &lt;a href=&#34;https://metacpan.org/pod/Pod::Weaver&#34;&gt;Pod::Weaver&lt;/a&gt; is a system for rewriting documentation. It can add sections, rejigger existing sections, or even translate non-Pod syntax into Pod as needed. Its basic built-in configuration can take the place of PodVersion, which allows you to delete gobs of boring boilerplate Pod. For example, you can get rid of all the NAME sections. All you need to do is provide an abstract in a comment. If your library says:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Number::Nary;
+  # ABSTRACT: encode and decode numbers as n-ary strings
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; then you&amp;rsquo;ll get a &lt;code&gt;NAME&lt;/code&gt; section containing that abstract. You can document methods and attributes and functions with &lt;code&gt;=method&lt;/code&gt; and &lt;code&gt;=attr&lt;/code&gt; and &lt;code&gt;=func&lt;/code&gt; respectively. &lt;code&gt;Pod::Weaver&lt;/code&gt; will gather them up, put them under a top-level heading, and make them into real Pod.&lt;/p&gt;
+
+&lt;p&gt;You can delete your &amp;ldquo;License and Copyright&amp;rdquo; sections. &lt;code&gt;Pod::Weaver&lt;/code&gt; will generate those just like &lt;code&gt;Dist::Zilla&lt;/code&gt; generates a &lt;em&gt;LICENSE&lt;/em&gt; file. It&amp;rsquo;ll generate an &lt;code&gt;AUTHOR&lt;/code&gt; section, so you can drop that too.&lt;/p&gt;
+
+&lt;h4 id=&#34;release-automation&#34;&gt;&lt;strong&gt;Release Automation&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Now you&amp;rsquo;re in the home stretch, ready to understand the &amp;ldquo;maximum overkill&amp;rdquo; approach to using Dist::Zilla. First, get rid of the version setting in the &lt;em&gt;dist.ini&lt;/em&gt; and load the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::AutoVersion&#34;&gt;AutoVersion&lt;/a&gt; plugin. It will set a new version per day, or use any other sort of scheme you configure. Then add &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::Plugin::NextRelease&#34;&gt;NextRelease&lt;/a&gt;, which will update the changelog with every new release. In other words, the changelog file now starts with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  {{$NEXT}}
+            updated distribution to use Dist::Zilla
+            expect lots more releases now that it&#39;s so easy!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When you next run &lt;code&gt;dzil release&lt;/code&gt;, the distribution will pick a new version number and build a dist using it. It will replace &lt;code&gt;{{$NEXT}}&lt;/code&gt; with that version number (and the date and time of the build). After it has uploaded the release, it will update the changelog on disk to replace the marker with the release that was made and re-add it above, making room for notes on the next release.&lt;/p&gt;
+
+&lt;h4 id=&#34;version-control&#34;&gt;&lt;strong&gt;Version Control&lt;/strong&gt;&lt;/h4&gt;
+
+&lt;p&gt;Finally, you can tie the whole thing into your version control system. I use Git. (That&amp;rsquo;s convenient, because it&amp;rsquo;s the only VCS with a &lt;code&gt;Dist::Zilla&lt;/code&gt; plugin so far.) Add a single line to &lt;em&gt;dist.ini&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [@Git]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Git plugin bundle will refuse to cut a release if there are uncommitted changes in the working tree. Once the tree is clean for a release, Dzil will commit the changes to the changelog, tag the release, and push the changes and the new tag to the remote origin.&lt;/p&gt;
+
+&lt;p&gt;Like the CriticTests, the &lt;a href=&#34;https://metacpan.org/pod/Dist::Zilla::PluginBundle::Git&#34;&gt;Dzil Git plugins&lt;/a&gt; aren&amp;rsquo;t bundled with Dist::Zilla (thank Jerome Quelin one more time). The at sign in the plugin name indicates that it&amp;rsquo;s a &lt;em&gt;bundle&lt;/em&gt; of Dzil plugins, but you can load or install the whole thing at once. To install it, install &lt;code&gt;Dist::Zilla::PluginBundle::Git&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;total-savings&#34;&gt;&lt;strong&gt;Total Savings?&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;Switching this little dist to Dist::Zilla entirely eliminated seven files from the repository. It cleaned out a lot of garbage Pod that was a drag to maintain. It improved the chances that every dist will have consistent data throughout, and it made cutting a new release as easy as running &lt;code&gt;dzil release&lt;/code&gt;. That release command will do absolutely everything needed to make a pristine, installable CPAN distribution, apart from the actual programming.&lt;/p&gt;
+
+&lt;p&gt;All told, it takes under half an hour to upgrade a dist to Dist::Zilla, depending on the number of files from which you have to delete cruft. Once you&amp;rsquo;ve converted a few, explore some Dzil plugins. When you see how easy it is to write one, you&amp;rsquo;ll probably want make a few of your own. Pretty soon you may find your &lt;em&gt;dist.ini&lt;/em&gt; files contain exactly as much configuration as mine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  [@RJBS]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s the best kind of lazy.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Programming is Hard, Let&#39;s Go Scripting...</title>
+      <link>http://localhost:1313/pub/2007/12/06/soto-11.html/</link>
+      <pubDate>Thu, 06 Dec 2007 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2007/12/06/soto-11.html/</guid>
+      <description>
+
+&lt;p&gt;I think, to most people, scripting is a lot like obscenity. I can&amp;rsquo;t define it, but I&amp;rsquo;ll know it when I see it. Here are some common memes floating around:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Simple language
+    &amp;quot;Everything is a string&amp;quot;
+    Rapid prototyping
+    Glue language
+    Process control
+    Compact/concise
+    Worse-is-better
+    Domain specific
+    &amp;quot;Batteries included&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip;I don&amp;rsquo;t see any real center here, at least in terms of technology. If I had to pick one metaphor, it&amp;rsquo;d be easy onramps. And a slow lane. Maybe even with some optional fast lanes.&lt;/p&gt;
+
+&lt;h3 id=&#34;easy-onramps&#34;&gt;Easy Onramps&lt;/h3&gt;
+
+&lt;p&gt;But basically, scripting is not a technical term. When we call something a scripting language, we&amp;rsquo;re primarily making a linguistic and cultural judgment, not a technical judgment.&lt;/p&gt;
+
+&lt;p&gt;I see scripting as one of the humanities. It&amp;rsquo;s our linguistic roots showing through. So speaking of roots&amp;hellip;&lt;/p&gt;
+
+&lt;h3 id=&#34;the-past&#34;&gt;The Past&lt;/h3&gt;
+
+&lt;p&gt;Suppose you went back to Ada Lovelace and asked her the difference between a script and a program. She&amp;rsquo;d probably look at you funny, then say something like: Well, a script is what you give the actors, but a program is what you give the audience. That Ada was one sharp lady&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Since her time, we seem to have gotten a bit more confused about what we mean when we say scripting. It confuses even me, and I&amp;rsquo;m supposed to be one of the experts.&lt;/p&gt;
+
+&lt;p&gt;So I&amp;rsquo;m afraid all I can do is give you my own worm&amp;rsquo;s eye view of the past, the present, and the future. Let me warn you that I am not without a few prejudices here and there.&lt;/p&gt;
+
+&lt;h3 id=&#34;basic&#34;&gt;BASIC&lt;/h3&gt;
+
+&lt;p&gt;Now, however it was initially intended, I think BASIC turned out to be one of the first major scripting languages, especially the extended version that DEC put onto its minicomputers called BASIC/PLUS, which happily included recursive functions with arguments. I started out as a BASIC programmer. Some people would say that I&amp;rsquo;m permanently damaged. Some people are undoubtedly right.&lt;/p&gt;
+
+&lt;p&gt;But I&amp;rsquo;m not going to apologize for that. All language designers have their occasional idiosyncracies. I&amp;rsquo;m just better at it than most. &lt;code&gt;:-)&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;rsts-basic-plus&#34;&gt;RSTS BASIC/PLUS&lt;/h3&gt;
+
+&lt;p&gt;Anyway, when I was a RSTS programmer on a PDP-11, I certainly treated BASIC as a scripting language, at least in terms of rapid prototyping and process control. I&amp;rsquo;m sure it warped my brain forever. Perl&amp;rsquo;s statement modifiers are straight out of BASIC/PLUS. It even had some cute sigils on the ends of its variables to distinguish string and integer from floating point.&lt;/p&gt;
+
+&lt;p&gt;But you could do extreme programming. In fact, I had a college buddy I did pair programming with. We took a compiler writing class together and studied all that fancy stuff from the dragon book. Then of course the professor announced we would be implementing our own language, called PL/0. After thinking about it a while, we announced that we were going to do our project in BASIC. The professor looked at us like were insane. Nobody else in the class was using BASIC. And you know what? Nobody else in the class finished their compiler either. We not only finished but added I/O extensions, and called it PL 0.5. That&amp;rsquo;s rapid prototyping.&lt;/p&gt;
+
+&lt;h3 id=&#34;unix&#34;&gt;Unix?&lt;/h3&gt;
+
+&lt;p&gt;I remember one day our computer center got a letter from Bell Labs telling us that we could get a tape of Unix V6 for cheap, only $100 because they were coming out shortly with V7. We all looked at each other and said, Why would we ever want to use this thing called Unix? We have RSTS.&lt;/p&gt;
+
+&lt;h3 id=&#34;jam-no-not-that-one&#34;&gt;JAM (no not that one)&lt;/h3&gt;
+
+&lt;p&gt;My first scripting language was written in BASIC. For my job in the computer center I wrote a language that I called JAM, short for Jury-rigged All-purpose Meta-language. Story of my life&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;JAM was an inside-out text-processing language much like PHP, except that HTML hadn&amp;rsquo;t been invented yet. We mostly used it as a fancy macro processor for BASIC. Unlike PHP, it did not have 3,000 functions in one namespace. We wouldn&amp;rsquo;t have had the memory, for one thing.&lt;/p&gt;
+
+&lt;h3 id=&#34;lisp&#34;&gt;LISP&lt;/h3&gt;
+
+&lt;p&gt;For good or ill, when I went off to grad school, I studied linguistics, so the only computer language I used there was LISP. It was my own personal McCarthy era.&lt;/p&gt;
+
+&lt;p&gt;Is LISP a candidate for a scripting language? While you can certainly write things rapidly in it, I cannot in good conscience call LISP a scripting language. By policy, LISP has never really catered to mere mortals.&lt;/p&gt;
+
+&lt;p&gt;And, of course, mere mortals have never really forgiven LISP for not catering to them.&lt;/p&gt;
+
+&lt;h3 id=&#34;pascal-ada&#34;&gt;Pascal, Ada&lt;/h3&gt;
+
+&lt;p&gt;Once I got into industry, I wrote a compiler in Pascal for a discrete event simulator, and slavered over the forthcoming Ada specs. As a linguist, I don&amp;rsquo;t think of Ada as a big language. Now, English and Japanese, those are big languages. Ada is just a medium-sized language.&lt;/p&gt;
+
+&lt;h3 id=&#34;unix-shell&#34;&gt;Unix, shell&lt;/h3&gt;
+
+&lt;p&gt;After several years I finally became acquainted with Unix and its various scripting languages. OK, to be more precise, BSD, and csh.&lt;/p&gt;
+
+&lt;h3 id=&#34;bsd-csh&#34;&gt;BSD, csh&lt;/h3&gt;
+
+&lt;p&gt;Yeah, yeah, I know. More brain damage&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;I also learned a little C.&lt;/p&gt;
+
+&lt;h3 id=&#34;c&#34;&gt;C&lt;/h3&gt;
+
+&lt;p&gt;That&amp;rsquo;s because a little C is all there is. I&amp;rsquo;m still learning those libraries though.&lt;/p&gt;
+
+&lt;h3 id=&#34;shell-awk-sed-find-expr&#34;&gt;shell + awk + sed + find + expr&amp;hellip;&lt;/h3&gt;
+
+&lt;p&gt;But the frustrations of Unix shell programming led directly to the creation of Perl, which I don&amp;rsquo;t really have time to tell. But essentially, I found that shell scripting was intrinsically limited by the fact that most of its verbs are not under its control and hence largely inconsistent with each other. And the nouns are impoverished, restricted to strings and files, with who-knows-what typology.&lt;/p&gt;
+
+&lt;h3 id=&#34;c-xor-shell&#34;&gt;C xor shell&lt;/h3&gt;
+
+&lt;p&gt;More destructive was the mindset that it was a one-dimensional universe: you either programmed in C or you programmed in shell, because they&amp;rsquo;re obviously at opposite ends of the One True Continuum. Perl came about when I realized that scripting did not always have to viewed as the opposite of programming, but that a single language could be pretty good for both. That opened up a huge ecological niche. Many of you have seen my old clamshell diagram, with the two dimensions of manipulexity and whipuptitude.&lt;/p&gt;
+
+&lt;h3 id=&#34;tcl&#34;&gt;Tcl&lt;/h3&gt;
+
+&lt;p&gt;After Perl came Tcl, which in a sense is a purer scripting language than Perl. Perl just pretends that everything is a string when it&amp;rsquo;s convenient, but Tcl really believes that as a controlling metaphor. The string metaphor tends to have bad performance ramifications, but that&amp;rsquo;s not why Tcl languished, I think. There were two reasons for that.&lt;/p&gt;
+
+&lt;p&gt;First, Tcl stayed in the Unix mindset that controlling tools was the opposite of creating tools, so they didn&amp;rsquo;t optimize much. The fast parts can always be written in C, after all.&lt;/p&gt;
+
+&lt;p&gt;The second reason was the lack of a decent extension mechanism, so you ended up with separate executables for expect, incr-tcl, etc.&lt;/p&gt;
+
+&lt;p&gt;I must say, though, that I&amp;rsquo;ve always admired Tcl&amp;rsquo;s delegational model of semantics. But it fell into the same trap as LISP by expecting everyone to use the One True Syntax. Speaking of the One True Syntax:&lt;/p&gt;
+
+&lt;h3 id=&#34;python&#34;&gt;Python&lt;/h3&gt;
+
+&lt;p&gt;After Tcl came Python, which in Guido&amp;rsquo;s mind was inspired positively by ABC, but in the Python community&amp;rsquo;s mind was inspired negatively by Perl. I&amp;rsquo;m not terribly qualified to talk about Python however. I don&amp;rsquo;t really know much about Python. I only stole its object system for Perl 5. I have since repented.&lt;/p&gt;
+
+&lt;h3 id=&#34;ruby&#34;&gt;Ruby&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m much more qualified to talk about Ruby&amp;ndash;that&amp;rsquo;s because a great deal of Ruby&amp;rsquo;s syntax is borrowed from Perl, layered over Smalltalk semantics. I&amp;rsquo;ve always viewed Ruby as a much closer competitor for Perls ecological niche, not just because of the borrowed ideas, but because both Perl and Ruby take their functional programming support rather more seriously that Python does. On the other hand, I think Ruby kind of screwed up on its declaration syntax, among other things.&lt;/p&gt;
+
+&lt;h3 id=&#34;sh&#34;&gt;*sh&lt;/h3&gt;
+
+&lt;p&gt;Meanwhile, the Bourne shell was extended into the Korn shell and bash. I didn&amp;rsquo;t have much to do with those either. Thankfully. I will say that the continued evolution of the shell shows just how crufty a language can get when you just keep adding on ad hoc syntactic features.&lt;/p&gt;
+
+&lt;h3 id=&#34;php&#34;&gt;PHP&lt;/h3&gt;
+
+&lt;p&gt;We&amp;rsquo;ve also seen the rise of PHP, which takes the worse-is-better approach to dazzling new depths, as it were. By and large PHP seems to be making the same progression of mistakes as early Perl did, only slower. The one thing it does better is packaging. And when I say packaging, I don&amp;rsquo;t mean namespaces.&lt;/p&gt;
+
+&lt;h3 id=&#34;javascript&#34;&gt;JavaScript&lt;/h3&gt;
+
+&lt;p&gt;Then there&amp;rsquo;s JavaScript, a nice clean design. It has some issues, but in the long run JavaScript might actually turn out to be a decent platform for running Perl 6 on. Pugs already has part of a backend for JavaScript, though sadly that has suffered some bitrot in the last year. I think when the new JavaScript engines come out we&amp;rsquo;ll probably see renewed interest in a JavaScript backend.&lt;/p&gt;
+
+&lt;h3 id=&#34;monad-powershell&#34;&gt;Monad/PowerShell&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ve looked a bit at Microsoft&amp;rsquo;s Monad, and I&amp;rsquo;m pleased to note that it has object pipes like Perl 6. I just hope they don&amp;rsquo;t patent it.&lt;/p&gt;
+
+&lt;h3 id=&#34;lua-applescript&#34;&gt;Lua, AppleScript&lt;/h3&gt;
+
+&lt;p&gt;There are other scripting languages in wide use. Sadly, I must confess I never looked closely at Lua or AppleScript, probably because I&amp;rsquo;m not a game designer with a Mac.&lt;/p&gt;
+
+&lt;p&gt;Actually, I suspect it runs deeper than that, which brings us up to the present time.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-present&#34;&gt;The Present&lt;/h3&gt;
+
+&lt;p&gt;When I look at the present situation, what I see is the various scripting communities behaving a lot like neighboring tribes in the jungle, sometimes trading, sometimes warring, but by and large just keeping out of each other&amp;rsquo;s way in complacent isolation.&lt;/p&gt;
+
+&lt;p&gt;I tend to take an anthropological view of these things. Many of you here are Perl programmers, but some of you come from other programming tribes. And depending on your tribal history, you might think of a string as a pointer to a byte array if you&amp;rsquo;re a C programmer, or as a list if you&amp;rsquo;re a functional programmer, or as an object if you&amp;rsquo;re a Java programmer. I view a string as a Text, with a capital T.&lt;/p&gt;
+
+&lt;h3 id=&#34;text&#34;&gt;Text&lt;/h3&gt;
+
+&lt;p&gt;I read that word from a postmodern perspective. Of course, the term Postmodern is itself context-sensitive. Some folks think Postmodernism means little more than the Empowerment of the Vulgar. Some folks think the same about Perl.&lt;/p&gt;
+
+&lt;p&gt;But I take Postmodernism to mean that a Text, whether spoken or written, is an act of communication requiring intelligence on both ends, and sometimes in the middle too. I don&amp;rsquo;t want to talk to a stupid computer language. I want my computer language to understand the strings I type.&lt;/p&gt;
+
+&lt;p&gt;Perl is a postmodern language, and a lot of conservative folks feel like Postmodernism is a rather liberal notion. So it&amp;rsquo;s rather ironic that my views on Postmodernism were primarily informed by studying linguistics and translation as taught by missionaries, specifically, the Wycliffe Bible Translators. One of the things they hammered home is that there&amp;rsquo;s really no such thing as a primitive human language. By which they mean essentially that all human languages are Turing complete.&lt;/p&gt;
+
+&lt;p&gt;When you go out to so-called primitive tribes and analyze their languages, you find that structurally they&amp;rsquo;re just about as complex as any other human language. Basically, you can say pretty much anything in any human language, if you work at it long enough. Human languages are Turing complete, as it were.&lt;/p&gt;
+
+&lt;p&gt;Human languages therefore differ not so much in what you &lt;em&gt;can&lt;/em&gt; say but in what you &lt;em&gt;must&lt;/em&gt; say. In English, you are forced to differentiate singular from plural. In Japanese, you don&amp;rsquo;t have to distinguish singular from plural, but you do have to pick a specific level of politeness, taking into account not only your degree of respect for the person you&amp;rsquo;re talking to, but also your degree of respect for the person or thing you&amp;rsquo;re talking about.&lt;/p&gt;
+
+&lt;p&gt;So languages differ in what you&amp;rsquo;re forced to say. Obviously, if your language forces you to say something, you can&amp;rsquo;t be concise in that particular dimension using your language. Which brings us back to scripting.&lt;/p&gt;
+
+&lt;p&gt;How many ways are there for different scripting languages to be concise?&lt;/p&gt;
+
+&lt;p&gt;How many recipes for borscht are there in Russia?&lt;/p&gt;
+
+&lt;p&gt;Language designers have many degrees of freedom. I&amp;rsquo;d like to point out just a few of them.&lt;/p&gt;
+
+&lt;h3 id=&#34;early-binding-late-binding&#34;&gt;early binding / late binding&lt;/h3&gt;
+
+&lt;p&gt;Binding in this context is about exactly when you decide which routine you&amp;rsquo;re going to call for a given routine name. In the early days of computing, most binding was done fairly early for efficiency reasons, either at compile time, or at the latest, at link time. You still tend to see this approach in statically typed languages. With languages like Smalltalk, however, we began to see a different trend, and these days most scripting languages are trending towards later binding. That&amp;rsquo;s because scripting languages are trying to be dwimmy (Do What I Mean), and the dwimmiest decision is usually a late decision because you then have more available semantic and even pragmatic context to work with. Otherwise you have to predict the future, which is hard.&lt;/p&gt;
+
+&lt;p&gt;So scripting languages naturally tend to move toward an object-oriented point of view, where the binding doesn&amp;rsquo;t happen &amp;lsquo;til method dispatch time. You can still see the scars of conflict in languages like C++ and Java though. C++ makes the default method type non-virtual, so you have to say virtual explicitly to get late binding. Java has the notion of final classes, which force calls to the class to be bound at compile time, essentially. I think both of those approaches are big mistakes. Perl 6 will make different mistakes. In Perl 6 all methods are virtual by default, and only the application as a whole can tell the optimizer to finalize classes, presumably only after you know how all the classes are going to be used by all the other modules in the program.&lt;/p&gt;
+
+&lt;h3 id=&#34;single-dispatch-multiple-dispatch&#34;&gt;single dispatch / multiple dispatch&lt;/h3&gt;
+
+&lt;p&gt;In a sense, multiple dispatch is a way to delay binding even longer. You not only have to delay binding &amp;lsquo;til you know the type of the object, but you also have to know the types of all rest of the arguments before you can pick a routine to call. Python and Ruby always do single dispatch, while Dylan does multiple dispatch. Here is one dimension in which Perl 6 &lt;em&gt;forces&lt;/em&gt; the caller to be explicit for clarity. I think it&amp;rsquo;s an important distinction for the programmer to bear in mind, because single dispatch and multiple dispatch are philosophically very different ideas, based on different metaphors.&lt;/p&gt;
+
+&lt;p&gt;With single-dispatch languages, you are basically sending a message to an object, and the object decides what to do with that message. With multiple dispatch languages, however, there is no privileged object. All the objects involved in the call have equal weight. So one way to look at multiple dispatch is that the objects are completely passive. But if the objects aren&amp;rsquo;t deciding how to bind, who is?&lt;/p&gt;
+
+&lt;p&gt;Well, it&amp;rsquo;s sort of a democratic thing. All the routines of a given name get together and hold a political conference. (Well, not really, but this is how the metaphor works.) Each of the routines is a delegate to the convention. All the potential candidates put their names in the hat. Then all the routines vote on who the best candidate is, and the next best, and the next best after that. And eventually the routines themselves decide what the best routine to call is.&lt;/p&gt;
+
+&lt;p&gt;So basically, multiple dispatch is like democracy. It&amp;rsquo;s the worst way to do late binding, except for all the others.&lt;/p&gt;
+
+&lt;p&gt;But I really do think that&amp;rsquo;s true, and likely to become truer as time goes on. I&amp;rsquo;m spending a lot of time on this multiple dispatch issue because I think programming in the large is mutating away from the command-and-control model implicit in single dispatch. I think the field of computation as a whole is moving more toward the kinds of decisions that are better made by swarms of insects or schools of fish, where no single individual is in control, but the swarm as a whole has emergent behaviors that are somehow much smarter than any of the individual components.&lt;/p&gt;
+
+&lt;h3 id=&#34;eager-evaluation-lazy-evaluation&#34;&gt;eager evaluation / lazy evaluation&lt;/h3&gt;
+
+&lt;p&gt;Most languages evaluate eagerly, including Perl 5. Some languages evaluate all expressions as lazily as possible. Haskell is a good example of that. It doesn&amp;rsquo;t compute anything until it is forced to. This has the advantage that you can do lots of cool things with infinite lists without running out of memory. Well, at least until someone asks the program to calculate the whole list. Then you&amp;rsquo;re pretty much hosed in any language, unless you have a real Turing machine.&lt;/p&gt;
+
+&lt;p&gt;So anyway, in Perl 6 we&amp;rsquo;re experimenting with a mixture of eager and lazy. Interestingly, the distinction maps very nicely onto Perl 5&amp;rsquo;s concept of scalar context vs. list context. So in Perl 6, scalar context is eager and list context is lazy. By default, of course. You can always force a scalar to be lazy or a list to be eager if you like. But you can say things like &lt;code&gt;for 1..Inf&lt;/code&gt; as long as your loop exits some other way a little bit before you run into infinity.&lt;/p&gt;
+
+&lt;h3 id=&#34;eager-typology-lazy-typology&#34;&gt;eager typology / lazy typology&lt;/h3&gt;
+
+&lt;p&gt;Usually known as static vs. dynamic, but again there are various positions for the adjustment knob. I rather like the gradual typing approach for a number of reasons. Efficiency is one reason. People usually think of strong typing as a reason, but the main reason to put types into Perl 6 turns out not to be strong typing, but rather multiple dispatch. Remember our political convention metaphor? When the various candidates put their names in the hat, what distinguishes them? Well, each candidate has a political platform. The planks in those political platforms are the types of arguments they want to respond to. We all know politicians are only good at responding to the types of arguments they want to have&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s another way in which Perl 6 is slightly more lazy than Perl 5. We still have the notion of contexts, but exactly when the contexts are decided has changed. In Perl 5, the compiler usually knows at compile time which arguments will be in scalar context, and which arguments will be in list context. But Perl 6 delays that decision until method binding time, which is conceptually at run time, not at compile time. This might seem like an odd thing to you, but it actually fixes a great number of things that are suboptimal in the design of Perl 5. Prototypes, for instance. And the need for explicit references. And other annoying little things like that, many of which end up as frequently asked questions.&lt;/p&gt;
+
+&lt;h3 id=&#34;limited-structures-rich-structures&#34;&gt;limited structures / rich structures&lt;/h3&gt;
+
+&lt;p&gt;Awk, Lua, and PHP all limit their composite structures to associative arrays. That has both pluses and minuses, but the fact that awk did it that way is one of the reasons that Perl does it differently, and differentiates ordered arrays from unordered hashes. I just think about them differently, and I think a lot of other people do too.&lt;/p&gt;
+
+&lt;h3 id=&#34;symbolic-wordy&#34;&gt;symbolic / wordy&lt;/h3&gt;
+
+&lt;p&gt;Arguably APL is also a kind of scripting language, largely symbolic. At the other extreme we have languages that eschew punctuation in favor of words, such as AppleScript and COBOL, and to a lesser extent all the Algolish languages that use words to indicate blocks where the C-derived languages use curlies. I prefer a balanced approach here, where symbols and identifiers are each doing what theyre best at. I like it when most of the actual words are those chosen by the programmer to represent the problem at hand. I don&amp;rsquo;t like to see words used for mere syntax. Such syntactic functors merely obscure the real words. That&amp;rsquo;s one thing I learned when I switched from Pascal to C. Braces for blocks. It&amp;rsquo;s just right visually.&lt;/p&gt;
+
+&lt;p&gt;Actually, there are languages that do it even worse than COBOL. I remember one Pascal variant that required your keywords to be capitalized so that they would stand out. No, no, no, no, no! You don&amp;rsquo;t want your functors to stand out. It&amp;rsquo;s shouting the wrong words: IF! foo THEN! bar ELSE! baz END! END! END! END!&lt;/p&gt;
+
+&lt;p&gt;Anyway, in Perl 6 we&amp;rsquo;re raising the standard for where we use punctuation, and where we don&amp;rsquo;t. We&amp;rsquo;re getting rid of some of our punctuation that isn&amp;rsquo;t really pulling its weight, such as parentheses around conditional expressions, and most of the punctuational variables. And we&amp;rsquo;re making all the remaining punctuation work harder. Each symbol has to justify its existence according to Huffman coding.&lt;/p&gt;
+
+&lt;p&gt;Oddly, there&amp;rsquo;s one spot where we&amp;rsquo;re introducing new punctuation. After your sigil you can add a twigil, or secondary sigil. Just as a sigil tells you the basic structure of an object, a twigil tells you that a particular variable has a weird scope. This is basically an idea stolen from Ruby, which uses sigils to indicate weird scoping. But by hiding our twigils after our sigils, we get the best of both worlds, plus an extensible twigil system for weird scopes we haven&amp;rsquo;t thought of yet.&lt;/p&gt;
+
+&lt;p&gt;We think about extensibility a lot. We think about languages we don&amp;rsquo;t know how to think about yet. But leaving spaces in the grammar for new languages is kind of like reserving some of our land for national parks and national forests. Or like an archaeologist not digging up half the archaeological site because we know our descendants will have even better analytical tools than we have.&lt;/p&gt;
+
+&lt;p&gt;Really designing a language for the future involves a great deal of humility. As with science, you have to assume that, over the long term, a great deal of what you think is true will turn out not to be quite the case. On the other hand, if you don&amp;rsquo;t make your best guess now, you&amp;rsquo;re not really doing science either. In retrospect, we know APL had too many strange symbols. But we wouldn&amp;rsquo;t be as sure about that if APL hadn&amp;rsquo;t tried it first.&lt;/p&gt;
+
+&lt;h3 id=&#34;compile-time-run-time&#34;&gt;compile time / run time&lt;/h3&gt;
+
+&lt;p&gt;Many dynamic languages can eval code at run time. Perl also takes it the other direction and runs a lot of code at compile time. This can get messy with operational definitions. You don&amp;rsquo;t want to be doing much file I/O in your &lt;code&gt;BEGIN&lt;/code&gt; blocks, for instance. But that leads us to another distinction:&lt;/p&gt;
+
+&lt;h3 id=&#34;declarational-operational&#34;&gt;declarational / operational&lt;/h3&gt;
+
+&lt;p&gt;Most scripting languages are way over there on the operational side. I thought Perl 5 had an oversimplified object system till I saw Lua. In Lua, an object is just a hash, and there&amp;rsquo;s a bit of syntactic sugar to call a hash element if it happens to contain code. Thats all there is. They don&amp;rsquo;t even have classes. Anything resembling inheritance has to be handled by explicit delegation. That&amp;rsquo;s a choice the designers of Lua made to keep the language very small and embeddable. For them, maybe it&amp;rsquo;s the right choice.&lt;/p&gt;
+
+&lt;p&gt;Perl 5 has always been a bit more declarational than either Python or Ruby. I&amp;rsquo;ve always felt strongly that implicit scoping was just asking for trouble, and that scoped variable declarations should be very easy to recognize visually. Thats why we have &lt;code&gt;my&lt;/code&gt;. It&amp;rsquo;s short because I knew we&amp;rsquo;d use it frequently. Huffman coding. Keep common things short, but not too short. In this case, 0 is too short.&lt;/p&gt;
+
+&lt;p&gt;Perl 6 has more different kinds of scopes, so we&amp;rsquo;ll have more declarators like &lt;code&gt;my&lt;/code&gt; and &lt;code&gt;our&lt;/code&gt;. But appearances can be deceiving. While the language looks more declarative on the surface, we make most of the declarations operationally hookable underneath to retain flexibility. When you declare the type of a variable, for instance, you&amp;rsquo;re really just doing a kind of tie, in Perl 5 terms. The main difference is that you&amp;rsquo;re tying the implementation to the variable at compile time rather than run time, which makes things more efficient, or at least potentially optimizable.&lt;/p&gt;
+
+&lt;h3 id=&#34;immutable-classes-mutable-classes&#34;&gt;immutable classes / mutable classes&lt;/h3&gt;
+
+&lt;p&gt;Classes in Java are closed, which is one of the reasons Java can run pretty fast. In contrast, Ruby&amp;rsquo;s classes are open, which means you can add new things to them at any time. Keeping that option open is perhaps one of the reasons Ruby runs so slow. But that flexibility is also why Ruby has Rails.&lt;/p&gt;
+
+&lt;p&gt;Perl 6 will have an interesting mix of immutable generics and mutable classes here, and interesting policies on who is allowed to close classes when. Classes are never allowed to close or finalize themselves, for instance. Sorry, for some reason I keep talking about Perl 6. It could have something to do with the fact that we&amp;rsquo;ve had to think about all of these dimensions in designing Perl 6.&lt;/p&gt;
+
+&lt;h3 id=&#34;class-based-prototype-based&#34;&gt;class-based / prototype-based&lt;/h3&gt;
+
+&lt;p&gt;Here&amp;rsquo;s another dimension that can open up to allow both approaches. Some of you may be familiar with classless languages like Self or JavaScript. Instead of classes, objects just clone from their ancestors or delegate to other objects. For many kinds of modeling, it&amp;rsquo;s actually closer to the way the real world works. Real organisms just copy their DNA when they reproduce. They don&amp;rsquo;t have some DNA of their own, and an &lt;code&gt;@ISA&lt;/code&gt; array telling you which parent objects contain the rest of their DNA.&lt;/p&gt;
+
+&lt;p&gt;The meta-object protocol for Perl 6 defaults to class-based, but is flexible enough to set up prototype-based objects as well. Some of you have played around with &lt;a href=&#34;https://metacpan.org/pod/Moose&#34;&gt;Moose&lt;/a&gt; in Perl 5. Moose is essentially a prototype of Perl 6&amp;rsquo;s object model. On a semantic level, anyway. The syntax is a little different. Hopefully a little more natural in Perl 6.&lt;/p&gt;
+
+&lt;h3 id=&#34;passive-data-global-consistency-active-data-local-consistency&#34;&gt;passive data, global consistency / active data, local consistency&lt;/h3&gt;
+
+&lt;p&gt;Your view of data and control will vary with how functional or object-oriented your brain is. People just think differently. Some people think mathematically, in terms of provable universal truths. Functional programmers don&amp;rsquo;t much care if they strew implicit computation state throughout the stack and heap, as long as everything &lt;em&gt;looks&lt;/em&gt; pure and free from side-effects.&lt;/p&gt;
+
+&lt;p&gt;Other people think socially, in terms of cooperating entities that each have their own free will. And it&amp;rsquo;s pretty important to them that the state of the computation be stored with each individual object, not off in some heap of continuations somewhere.&lt;/p&gt;
+
+&lt;p&gt;Of course, some of us can&amp;rsquo;t make up our minds whether we&amp;rsquo;d rather emulate the logical Sherlock Holmes or sociable Dr. Watson. Fortunately, scripting is not incompatible with either of these approaches, because both approaches can be made more approachable to normal folk.&lt;/p&gt;
+
+&lt;h3 id=&#34;info-hiding-scoping-attachment&#34;&gt;info hiding / scoping / attachment&lt;/h3&gt;
+
+&lt;p&gt;And finally, if you&amp;rsquo;re designing a computer language, there are a couple bazillion ways to encapsulate data. You have to decide which ones are important. What&amp;rsquo;s the best way to let the programmer achieve separation of concerns?&lt;/p&gt;
+
+&lt;h3 id=&#34;object-class-aspect-closure-module-template-trait&#34;&gt;object / class / aspect / closure / module / template / trait&lt;/h3&gt;
+
+&lt;p&gt;You can use any of these various traditional encapsulation mechanisms.&lt;/p&gt;
+
+&lt;h3 id=&#34;transaction-reaction-dynamic-scope&#34;&gt;transaction / reaction / dynamic scope&lt;/h3&gt;
+
+&lt;p&gt;Or you can isolate information to various time-based domains.&lt;/p&gt;
+
+&lt;h3 id=&#34;process-thread-device-environment&#34;&gt;process / thread / device / environment&lt;/h3&gt;
+
+&lt;p&gt;You can attach info to various OS concepts.&lt;/p&gt;
+
+&lt;h3 id=&#34;screen-window-panel-menu-icon&#34;&gt;screen / window / panel / menu / icon&lt;/h3&gt;
+
+&lt;p&gt;You can hide info various places in your GUI. Yeah, yeah, I know, everything is an object. But some objects are more equal than others.&lt;/p&gt;
+
+&lt;h3 id=&#34;syntactic-scope-semantic-scope-pragmatic-scope&#34;&gt;syntactic scope / semantic scope / pragmatic scope&lt;/h3&gt;
+
+&lt;p&gt;Information can attach to various abstractions of your program, including, bizarrely, lexical scopes. Though if you think about it hard enough, you realize lexical scopes are also a funny kind of dynamic scope, or recursion wouldn&amp;rsquo;t work right. A &lt;code&gt;state&lt;/code&gt; variable is actually more purely lexical than a &lt;code&gt;my&lt;/code&gt; variable, because it&amp;rsquo;s shared by all calls to that lexical scope. But even state variables get cloned with closures. Only global variables can be truly lexical, as long as you refer to them only in a given lexical scope. Go figure.&lt;/p&gt;
+
+&lt;p&gt;So really, most of our scopes are semantic scopes that happen to be attached to a particular syntactic scope.&lt;/p&gt;
+
+&lt;p&gt;You may be wondering what I mean by a &lt;em&gt;pragmatic&lt;/em&gt; scope. That&amp;rsquo;s the scope of what the user of the program is storing in their brain, or in some surrogate for their brain, such as a game cartridge. In a sense, most of the web pages out there on the Internet are part of the pragmatic scope. As is most of the data in databases. The hallmark of the pragmatic scope is that you really don&amp;rsquo;t know the lifetime of the container. It&amp;rsquo;s just out there somewhere, and will eventually be collected by that Great Garbage Collector that collects all information that anyone forgets to remember. The Google cache can only last so long. Eventually we will forget the meaning of every URL. But we must not forget the &lt;em&gt;principle&lt;/em&gt; of the URL. That leads us to our next degree of freedom.&lt;/p&gt;
+
+&lt;h3 id=&#34;use-lingua-perligata&#34;&gt;use Lingua::Perligata;&lt;/h3&gt;
+
+&lt;p&gt;If you allow a language to mutate its own grammar within a lexical scope, how do you keep track of that cleanly? Perl 5 discovered one really bad way to do it, namely source filters, but even so we ended up with Perl dialects such as Perligata and Klingon. What would it be like if we actually did it right?&lt;/p&gt;
+
+&lt;p&gt;Doing it right involves treating the evolution of the language as a pragmatic scope, or as a set of pragmatic scopes. You have to be able to name your dialect, kind of like a URL, so there needs to be a universal root language, and ways of warping that universal root language into whatever dialect you like. This is actually near the heart of the vision for Perl 6. We don&amp;rsquo;t see Perl 6 as a single language, but as the root for a family of related languages. As a family, there are shared cultural values that can be passed back and forth among sibling languages as well as to the descendants.&lt;/p&gt;
+
+&lt;p&gt;I hope you&amp;rsquo;re all scared stiff by all these degrees of freedom. I&amp;rsquo;m sure there are other dimensions that are even scarier.&lt;/p&gt;
+
+&lt;p&gt;But&amp;hellip; I think its a manageable problem. I think its possible to still think of Perl 6 as a scripting language, with easy onramps.&lt;/p&gt;
+
+&lt;p&gt;And the reason I think its manageable is because, for each of these dimensions, it&amp;rsquo;s not just a binary decision, but a knob that can be positioned at design time, compile time, or even run time. For a given dimension X, different scripting languages make different choices, set the knob at different locations.&lt;/p&gt;
+
+&lt;h3 id=&#34;you-can-t-even-think-about-x&#34;&gt;You can&amp;rsquo;t even think about X!&lt;/h3&gt;
+
+&lt;p&gt;There&amp;rsquo;s only one way to do X!
+There&amp;rsquo;s more than one way to do X!
+There are too many ways to do X!&lt;/p&gt;
+
+&lt;p&gt;You may recognize some slogans in here.&lt;/p&gt;
+
+&lt;h3 id=&#34;curling-up&#34;&gt;Curling Up&lt;/h3&gt;
+
+&lt;p&gt;So I&amp;rsquo;m not suggesting that all scripting languages have to take all these dimensions into account, even if Perl 6 tries to. The scripting paradigm is not any one of these dimensions. According to various theories the universe may be laid out in ten or twenty dimensions, but generally we get by with only about three and a half of those dimensions. The rest are said to be curled up. Maybe we live in a scripting universe.&lt;/p&gt;
+
+&lt;p&gt;Most of the scripting languages we call Perl 6 will have most of these dimensions curled up most of the time. But unlike the real universe, where it takes huge machines to uncurl these dimensions, we&amp;rsquo;ll make the dimensions uncurl just by keeping our declarations straight. Well, we&amp;rsquo;ll try. And where that fails, we&amp;rsquo;ll rely on the culture to keep things straight.&lt;/p&gt;
+
+&lt;p&gt;For example, that&amp;rsquo;s exactly what happened already with Perl 5. We have the declarations, &lt;code&gt;use strict; use warnings;&lt;/code&gt;. But it&amp;rsquo;s the culture that decided to enforce the use of them. So much so that we&amp;rsquo;ve decided that they should be the default for most of Perl 6. It was one of those decisions by the hive. In this case the swarm turned out to be smarter than the language designer. And that&amp;rsquo;s as it should be.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-future&#34;&gt;The Future&lt;/h3&gt;
+
+&lt;p&gt;Well, so what&amp;rsquo;s the future of scripting?&lt;/p&gt;
+
+&lt;p&gt;In my completely unbiased opinion, that would be Perl 6. &lt;code&gt;:-)&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Seriously though, it&amp;rsquo;s always safe to predict that the ecological landscape will end up with many small languages and a few dominant ones. Some languages like AppleScript have particular ecological niches and are unlikely to grow out of them. Other languages get used outside their original niche. There will always be the generalists, like crows and mockingbirds, and the specialists, like penguins and dodos. (Well, maybe not always the dodos&amp;hellip;)&lt;/p&gt;
+
+&lt;p&gt;Among the generalists, the conventional wisdom is that the worse-is-better approach is more adaptive. Personally, I get a little tired of the argument: My worse-is-better is better than your worse-is-better because I&amp;rsquo;m better at being worser! Is it really true that the worse-is-better approach always wins? With Perl 6 we&amp;rsquo;re trying to sneak one better-is-better cycle in there and hope to come out ahead before reverting to the tried and true worse-is-better approach. Whether that works, only time will tell.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

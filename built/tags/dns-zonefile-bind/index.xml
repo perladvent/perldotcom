@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Dns Zonefile Bind on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/dns-zonefile-bind/</link>
+    <description>Recent content in Dns Zonefile Bind on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 20 Nov 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/dns-zonefile-bind/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Managing Bulk DNS Zones with Perl</title>
+      <link>http://localhost:1313/pub/2002/11/20/dns.html/</link>
+      <pubDate>Wed, 20 Nov 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/11/20/dns.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;a-history-of-forward-and-reverse-dns&#34;&gt;A History of Forward and Reverse DNS&lt;/h3&gt;
+
+&lt;p&gt;When an Internet server receives an incoming connection from a client, it may take a precaution of verifying the identity of the client. Some protocols simply trust the client to provide proper credentials to their identification (like SMTP). More complex protocols use a key exchange or a shared secret to communicate. Other protocols rely on the process of verifying the hostname of the client.&lt;/p&gt;
+
+&lt;p&gt;To do this, a server would take the IP address of the client, and perform a reverse DNS lookup to get the PTR records. Then, it would request the A record of the hostname returned from the PTR query. If the hostname matched the IP address in both queries, then the host was considered to be trusted.&lt;/p&gt;
+
+&lt;p&gt;As a means of host authentication, it was a half-hearted process at best. It relied heavily on external DNS servers, and it could easily be circumvented if false records were returned to the DNS resolvers that sent the queries. As such, it was only suitable for public Internet services like anonymous FTP or Web servers.&lt;/p&gt;
+
+&lt;p&gt;Another problem with this process was that it meant you would need to have matching forward and reverse DNS entries for all of your client hosts. Without the records, your logon could be delayed, or it could be refused altogether.&lt;/p&gt;
+
+&lt;p&gt;This became a burdeon for ISPs with large dial-up pools, or organizations with large LANs. Dozens, if not hundreds of IP addresses suddenly needed to have two DNS entries. DNS zones that originally contained 20 host records grew to hundreds of host records.&lt;/p&gt;
+
+&lt;p&gt;For example, let&amp;rsquo;s say we work in a large university environment. We have been given the 192.168.76.0/22 and 10.10.0.0/16 network blocks. Before any of these IP addresses are useful, we need to create forward and reverse DNS entries for them.&lt;/p&gt;
+
+&lt;p&gt;The network engineer writes a simple Perl script that will populate the zonefile with entries. The output from the script is then put in the domain &amp;ldquo;ips.university.edu&amp;rdquo;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$fmt=&amp;quot;%s\tIN\tA%s\n&amp;quot;;
+foreach $block (&amp;quot;192.168.76.&amp;quot;,&amp;quot;192.168.77.&amp;quot;,&amp;quot;192.168.78.&amp;quot;,&amp;quot;192.168.79.&amp;quot;)
+{
+    $host=$block;
+    $host=~s/\./-/g;
+    for ($n=0;$n&amp;lt;=255;$n++)
+    {
+        printf($fmt,$host.$n,$block.$n);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As a result of a script such as this, you&amp;rsquo;d find out that you have a host record for your IP that looks like this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;192-168-76-93.ips.university.edu
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It sure isn&amp;rsquo;t pretty, but it gets the job done.&lt;/p&gt;
+
+&lt;p&gt;As far as the DNS server is concerned, there is nothing wrong with this record. Some experienced network engineers will probably point out a couple of causes for concern.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;The record size is big. For each A record, we&amp;rsquo;re using anywhere from eight to 15 characters to represent a 32-bit integer.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The repeated &amp;ldquo;192-168-&amp;rdquo; pattern is wasteful. We could remove it from the entry, so 76-54.ips.university.edu points to 192.168.76.54, but that leads to a conflict when we create a DNS entry for 10.10.76.54?&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;We can correct that by creating seperate subdomains for both networks.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;76-54.n1.ips.university.edu.    IN  A   192.168.76.54
+76-54.n2.ips.university.edu.    IN  A   10.10.76.54
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using separate subdomains, we&amp;rsquo;ve reduced the size of the record. The XXX-XXX.nX portion can be anywhere from six to 10 characters. But we can still do a little more work to make it smaller.&lt;/p&gt;
+
+&lt;p&gt;The solution is to create a script that more accurately looks at the network block, and creates DNS entries based only on the host portion of the IP address in a block.&lt;/p&gt;
+
+&lt;h3 id=&#34;ip-addresses-and-net-netmask&#34;&gt;IP addresses and Net::Netmask&lt;/h3&gt;
+
+&lt;p&gt;IPv4 addresses are 32-bit integers. The IP address 192.168.76.55 can be represented in several ways:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Dottted Quad Notation&lt;/td&gt;
+&lt;td&gt;192.168.76.55&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Base 10 integer&lt;/td&gt;
+&lt;td&gt;3232255031&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Hexadecimal&lt;/td&gt;
+&lt;td&gt;c0a84c37&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Binary&lt;/td&gt;
+&lt;td&gt;11000000101010000100110000110111&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;For future mathematicians out there, dotted quad notation is really base-256 notation.&lt;/p&gt;
+
+&lt;p&gt;Network masks are also 32-bit integers. The 192.168.76.0/22 network number represents the following netmask:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;11111111111111111111110000000000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For any IP address within this block, the first 22 bits represent the network, the remaining 10 bits represent the host within the network. If we were to split the network and host values of the IP address 192.168.76.55, then we find:&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th&gt;&lt;br /&gt;
+&lt;/th&gt;
+&lt;th&gt;Network&lt;/th&gt;
+&lt;th&gt;Host&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Host IP&lt;/td&gt;
+&lt;td&gt;1100000010101000010011&lt;/td&gt;
+&lt;td&gt;0000110111&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Netmask&lt;/td&gt;
+&lt;td&gt;1111111111111111111111&lt;/td&gt;
+&lt;td&gt;0000000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Base 10&lt;/td&gt;
+&lt;td&gt;3156499&lt;/td&gt;
+&lt;td&gt;55&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Base 16&lt;/td&gt;
+&lt;td&gt;302a13&lt;/td&gt;
+&lt;td&gt;37&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;For the IP address 192.168.76.5, the host portion of the IP address is five.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th&gt;&lt;br /&gt;
+&lt;/th&gt;
+&lt;th&gt;Network&lt;/th&gt;
+&lt;th&gt;Host&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Host IP&lt;/td&gt;
+&lt;td&gt;1100000010101000010011&lt;/td&gt;
+&lt;td&gt;1100000010101000010011&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Netmask&lt;/td&gt;
+&lt;td&gt;1111111111111111111111&lt;/td&gt;
+&lt;td&gt;0000000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Base 10&lt;/td&gt;
+&lt;td&gt;3156499&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Base 16&lt;/td&gt;
+&lt;td&gt;c0a84c37&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;For the IP address 192.168.77.87, the host portion of the IP address is 343.&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th&gt;&lt;br /&gt;
+&lt;/th&gt;
+&lt;th&gt;Network&lt;/th&gt;
+&lt;th&gt;Host&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Host IP&lt;/td&gt;
+&lt;td&gt;1100000010101000010011&lt;/td&gt;
+&lt;td&gt;0101010111&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Netmask&lt;/td&gt;
+&lt;td&gt;1111111111111111111111&lt;/td&gt;
+&lt;td&gt;0000000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Base 10&lt;/td&gt;
+&lt;td&gt;3156499&lt;/td&gt;
+&lt;td&gt;343&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Base 16&lt;/td&gt;
+&lt;td&gt;c0a84c37&lt;/td&gt;
+&lt;td&gt;157&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;In order to get the host information about our address block, we will be using the Net::Netmask Perl module.&lt;/p&gt;
+
+&lt;p&gt;The Net::Netmask module was written to disseminate information about network blocks. By giving it an IP address and a netmask, it can tell you the network address, the broadcast address, of a given network. It can also tell us which IP address corresponds to which host number.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Net::Netmask;
+
+$block=Net::Netmask-&amp;gt;new(&amp;quot;192.168.76.0/22&amp;quot;);
+
+print(&amp;quot;Network can hold &amp;quot;,$block-&amp;gt;size(),&amp;quot; IP addresses\n&amp;quot;);
+print(&amp;quot;Host 5   is IP &amp;quot;,$block-&amp;gt;nth(5),&amp;quot;\n&amp;quot;);
+print(&amp;quot;Host 343 is IP &amp;quot;,$block-&amp;gt;nth(343),&amp;quot;\n&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The output of the program is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Network can hold 1024 IP addresses
+Host 5   is IP 192.168.76.5
+Host 343 is IP 192.168.77.87
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The nth() method returns the IP address corresponding to the host number.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-updated-script&#34;&gt;The Updated Script&lt;/h3&gt;
+
+&lt;p&gt;This new script accomplishes the same thing as the old script, but this time we use Net::Netmask to keep track of IPs in the block.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Net::Netmask;
+
+$network=&amp;quot;192.168.76.0/22&amp;quot;;
+$fmt=&amp;quot;%s\tIN\tA\t%s\n&amp;quot;;
+
+$block=Net::Netmask-&amp;gt;new($network);
+$size=$block-&amp;gt;size()-2;
+$index=1;
+while ($index &amp;lt;= $size)
+{
+    $host=sprintf(&amp;quot;h%x&amp;quot;,$index);
+    printf($fmt,$host,$block-&amp;gt;nth($index));
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which produces the following zonefile.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;h1      IN      A       192.168.76.1
+h2      IN      A       192.168.76.2
+h3      IN      A       192.168.76.3
+h4      IN      A       192.168.76.4
+....
+h35     IN      A       192.168.76.53
+h36     IN      A       192.168.76.54
+h37     IN      A       192.168.76.55
+h38     IN      A       192.168.76.56
+h39     IN      A       192.168.76.57
+h3a     IN      A       192.168.76.58
+....
+h3fb    IN      A       192.168.79.251
+h3fc    IN      A       192.168.79.252
+h3fd    IN      A       192.168.79.253
+h3fe    IN      A       192.168.79.254
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A couple of points to make.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;In the host record itself, we choose to represent $index in hexadecimal. This gives us a little more use out of the ASCII character set. We save one character on integers between 99 and 255.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;A prefix of &amp;ldquo;h&amp;rdquo; (for host) is used on every record, so we don&amp;rsquo;t have records that are just an integer. For example, a record like &amp;ldquo;1.n1.ips.university.edu&amp;rdquo; can be a problem depending on your resolver search settings. If you try to run &amp;ldquo;ping 1&amp;rdquo; from a command prompt, then it&amp;rsquo;s unclear whether you meant the host record &amp;ldquo;1,&amp;rdquo; or the actual IP address &amp;ldquo;0.0.0.1&amp;rdquo;.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The above script doesn&amp;rsquo;t produce records for the network address or the broadcast address. It is left for the DNS administrator to create them or just ignore them.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Using the example 192.168.76.0/22 network, the zonefile created by the second script is roughly 70 percent of the size of the zonefile created by the first script.&lt;/p&gt;
+
+&lt;h3 id=&#34;creating-the-reverse-dns&#34;&gt;Creating the Reverse DNS&lt;/h3&gt;
+
+&lt;p&gt;We can use Net::Netmask to create the reverse DNS as well, but the process is a little tricker.&lt;/p&gt;
+
+&lt;p&gt;Reverse DNS zones are delegated on the octet boundaries of the IP address, so it usually means that a zonefile will cover a full /24 network. If your network is larger than a /24, then you&amp;rsquo;ll need to create multiple zonefiles. If your network is smaller, then your data will probably be inserted to a zonefile that already exists for the other hosts in the network.&lt;/p&gt;
+
+&lt;p&gt;Note: While it is possible for DNS reverse zones to be delegated for networks smaller than a /24, the discussion of setting up the CNAME or NS records for those situations is outside the scope of this article.&lt;/p&gt;
+
+&lt;p&gt;This makes the creation of reverse DNS a little tricky. When you created the forward DNS, all of your data ended up in one zonefile. For the reverse DNS, the data could be in one or more zonefiles depending on the size of the network.&lt;/p&gt;
+
+&lt;p&gt;The Net::Netmask module has a feature that makes it a little easier to work this out. The inaddr() function returns data on the reverse DNS zones that the current netblock would occupy. For each /24 block your network covers, it returns the reverse DNS zone name, the starting IP address, and the ending IP address of the block.&lt;/p&gt;
+
+&lt;p&gt;So if we were looking at the 192.178.76.0/22 network, the inaddr() function would return:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;76.168.192.in-addr.arpa
+0
+255
+77.168.192.in-addr.arpa.
+0
+255
+78.178.192.in-addr.arpa
+0
+255
+79.178.192.in-addr.arpa
+0
+255
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;However, if we were looking at the 192.168.76.0/26 network, the inaddr() function would return:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;76.178.192.in-addr.arpa
+0
+63
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using this function, we can create a baseline program that at least tells us which zones we would need to create reverse DNS for.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$block=Net::Netmask-&amp;gt;new(&amp;quot;192.168.76.0/22&amp;quot;);
+
+(@data)=$block-&amp;gt;inaddr();
+while (($zone,$start,$end)=splice(@data,0,3))
+{
+    print(&amp;quot;; Reverse zone: $zone\n&amp;quot;);
+    for ($loop=$start;$loop&amp;lt;=$end;$loop++)
+    {
+        # Create the individual entries
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The outside loop runs once for every possible /24 network we will be filling with PTR records. The inner loop begins an iteration from the starting IP address and the ending IP address.&lt;/p&gt;
+
+&lt;p&gt;If you remember, the nth() method of Net::Netmask returns an IP address based on a host number. The match() method is the exact opposite; it returns a host number based on an IP address.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;use Net::Netmask;
+
+$block=Net::Netmask-&amp;gt;new(&amp;quot;192.168.76.0/22&amp;quot;);
+
+print(&amp;quot;IP 192.168.76.5  is Host &amp;quot;,$block-&amp;gt;match(&amp;quot;192.168.76.5&amp;quot;),&amp;quot;\n&amp;quot;);
+print(&amp;quot;IP 192.168.77.87 is Host &amp;quot;,$block-&amp;gt;match(&amp;quot;192.168.77.87&amp;quot;),&amp;quot;\n&amp;quot;);
+
+IP 192.168.76.5  is Host 5
+IP 192.168.77.87 is Host 343
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In order to get the host number, we would need to provide the match() function with a full IP address. This is the part where we have to do a little string cheating.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$block=Net::Netmask-&amp;gt;new(&amp;quot;192.168.76.0/22&amp;quot;);
+
+sub flip
+{
+my ($zone)=shift;
+my ($network,@rz,@ipc);
+(@rz)=split(/\./,$zone);
+(@ipc)=reverse(splice(@rz,0,3));
+$network=join(&amp;quot;.&amp;quot;,@ipc);
+return $network;
+}
+
+$domain=&amp;quot;.n1.ips.university.edu.&amp;quot;;
+$fmt=&amp;quot;%s\tIN\tPTR\t%s\n&amp;quot;;
+(@data)=$block-&amp;gt;inaddr();
+
+while (($zone,$start,$end)=splice(@data,0,3))
+{
+        print(&amp;quot;; Reverse zone: $zone\n&amp;quot;);
+    $network=flip($zone);
+        for ($loop=$start;$loop&amp;lt;=$end;$loop++)
+        {
+        # Create the invidivual entries
+        $ip=&amp;quot;$network.$loop&amp;quot;;
+        $order=$block-&amp;gt;match($ip);
+        $host=sprintf(&amp;quot;h%x%s&amp;quot;,$order,$domain);
+        printf($fmt,$loop,$host);
+        }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The confusing part is probably the flip() subroutine. All that does is take a reverse DNS zone name (like 76.168.192.in-addr.arpa), and returns the quads in forward form (192.168.76). We use this string as a prefix to combine with $loop so we have a valid IP address for the match() method.&lt;/p&gt;
+
+&lt;p&gt;The program run gives us:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;;Reverse Zone: 76.168.192.in-addr.arpa
+
+1       IN      PTR     h1.n1.ips.university.edu.
+2       IN      PTR     h2.n1.ips.university.edu.
+3       IN      PTR     h3.n1.ips.university.edu.
+4       IN      PTR     h4.n1.ips.university.edu.
+5       IN      PTR     h5.n1.ips.university.edu.
+6       IN      PTR     h6.n1.ips.university.edu
+....
+53      IN      PTR     h35.n1.ips.university.edu.
+54      IN      PTR     h36.n1.ips.university.edu.
+55      IN      PTR     h37.n1.ips.university.edu.
+56      IN      PTR     h38.n1.ips.university.edu.
+57      IN      PTR     h39.n1.ips.university.edu.
+58      IN      PTR     h3a.n1.ips.university.edu.
+;Reverse Zone: 79.168.192.in-addr.arpa
+
+0       IN      PTR     h300.n1.ips.university.edu.
+1       IN      PTR     h301.n1.ips.university.edu.
+2       IN      PTR     h302.n1.ips.university.edu.
+3       IN      PTR     h303.n1.ips.university.edu.
+4       IN      PTR     h304.n1.ips.university.edu.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;other-tricks&#34;&gt;Other Tricks&lt;/h3&gt;
+
+&lt;p&gt;We used hexadecimal numbers in the host records to save space in the zonefile, and to make the record a little more obscure to the casual observer. To make it a even more obscure, try using a subroutine that will create base32 numbers (0-9,a-v), or base36 (0-9,a-z) numbers.&lt;/p&gt;
+
+&lt;p&gt;To make it easier to identify the size of the network, create two A records for the zone itself, and populate it with the starting IP address, and the ending IP address.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;;
+; Forward DNS for 192.168.96.0/21 network
+$ORIGIN n3.ips.university.edu.
+
+    IN  NS  ns1.university.edu.
+    IN  NS  ns2.university.edu.
+
+    IN  A   192.168.96.0
+    IN  A   192.168.103.255
+
+h1  IN  A   192.168.96.1
+h2  IN  A   192.168.96.2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Net::Netmask has two functions, base() and broadcast(), which can be used to obtain these values.&lt;/p&gt;
+
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;Your DNS records need to match in order to satisfy forward/reverse host authentication. It doesn&amp;rsquo;t matter what the values are, just as long as they agree. It seems like a large hassel, especially when you consider that the practice of forward/reverse host authentication is considered highly untrustworthy by security administrators. Some hostmasters would say that the process is a waste of time. Keep in mind that there will always be one or two users that will demand that their desktop system be given forward and reverse DNS entries.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s easy to automate the process of creating the zonefiles. Once the data is put in place, it almost never needs to be updated. I&amp;rsquo;ve seen a lot of DNS entries out there that simply replicate the IP address. Check the logs of a popular Web server and see for yourself.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, it&amp;rsquo;s unlikely that these records will change in the future, unless the network allocation actually changes to another entity. In the meantime, the code examples above can be used to easily create new zones for future network allocations.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

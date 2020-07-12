@@ -1,0 +1,924 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Debugging on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/categories/debugging/</link>
+    <description>Recent content in Debugging on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 06 Apr 2006 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/categories/debugging/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Unraveling Code with the Debugger</title>
+      <link>http://localhost:1313/pub/2006/04/06/debugger.html/</link>
+      <pubDate>Thu, 06 Apr 2006 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2006/04/06/debugger.html/</guid>
+      <description>
+
+&lt;p&gt;Many people who work with Perl code never touch the debugger. My goal in this article is to provide reasoned argument for adding the Perl debugger to your set of tools, as well as pointers on how to do so. Many people are most comfortable with adding debugging variables and print statements to their code. These are fine techniques; I use them too, when they are appropriate. At other times, the debugger has saved me from tearing my hair out.&lt;/p&gt;
+
+&lt;p&gt;To mangle an old saying, with apologies to Sartre, &amp;ldquo;Hell is other people&amp;rsquo;s code.&amp;rdquo; Other people think differently than I do; they use weird idioms, and sometimes their comments are incomprehensible. Invoking the debugger on someone&amp;rsquo;s code is like having a conversation with the author. It opens the code to the questions I want answered, in real time&amp;ndash;and there&amp;rsquo;s another party in the conversation, the Perl interpreter. The debugger makes it easy to try things out, even quicker than writing a one-liner, because the environment&amp;rsquo;s already set up for the running program.&lt;/p&gt;
+
+&lt;p&gt;This article is a case example of using the Perl debugger in a production environment. In this situation, we had problems with CGI scripts on a machine I don&amp;rsquo;t maintain. I wanted to go in, solve the problem, and get out quickly, without unnecessarily changing anybody&amp;rsquo;s code.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve written the article so that you can follow along yourself, if you wish. To do so, you need a Linux/Unix system with Perl 5.8, Apache (any version), and a basic &lt;a href=&#34;http://www.twiki.org/&#34;&gt;TWiki&lt;/a&gt; installation. (I&amp;rsquo;m using version 20040902-3.) TWiki is quite easy to install from packages; it took me 3 minutes under Ubuntu, including answering a few installation questions. If you&amp;rsquo;re installing for this walk-through, enable the sample data set, which installs into the default TWiki directories (&lt;em&gt;/var/lib/twiki/data&lt;/em&gt; and &lt;em&gt;/var/www/twiki/pub&lt;/em&gt; on Debian and Ubuntu).&lt;/p&gt;
+
+&lt;p&gt;Additionally, for any use of the debugger, you should install the Perl modules &lt;a href=&#34;https://metacpan.org/pod/Term::ReadLine&#34;&gt;Term::ReadLine&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Term::ReadKey&#34;&gt;Term::ReadKey&lt;/a&gt; from &lt;a href=&#34;https://metacpan.org/&#34;&gt;MetaCPAN&lt;/a&gt;. These will give you bash/csh-like cursor control, history browsing with up and down arrows, and tab completion on variables and functions.&lt;/p&gt;
+
+&lt;h3 id=&#34;statement-of-the-problem&#34;&gt;Statement of the Problem&lt;/h3&gt;
+
+&lt;p&gt;Our production installation of TWiki had a problem with a hidden web: a section that users could reach only by using its URL, rather than through the usual list of public webs (on the left side of each page). The problem appeared when we tried to make the hidden web public; it remained hidden. We lived with this for a few weeks, convinced that TWiki had a sticky setting somewhere that we didn&amp;rsquo;t know about, or perhaps TWiki had a bug. The documentation, while excellent, didn&amp;rsquo;t seem to address our problem. A number of people looked at the configuration files without seeing the solution.&lt;/p&gt;
+
+&lt;p&gt;Above all, it was important to fix this quickly, because we couldn&amp;rsquo;t spend much effort on this relatively minor annoyance. We were almost at the point of asking for help within the TWiki community, but as we didn&amp;rsquo;t find evidence anybody else was having this problem, it likely wouldn&amp;rsquo;t be a quick fix. (As you&amp;rsquo;re reading, you may see the answer, but please keep reading; the utility of the debugger extends far beyond such an easy problem.)&lt;/p&gt;
+
+&lt;h3 id=&#34;initial-look&#34;&gt;Initial Look&lt;/h3&gt;
+
+&lt;p&gt;To create a hidden web within TWiki, set &lt;code&gt;NOSEARCHALL = yes&lt;/code&gt; in the web&amp;rsquo;s &lt;code&gt;WebPreferences&lt;/code&gt; page. Setting &lt;code&gt;NOSEARCHALL = no&lt;/code&gt; still left the web hidden.&lt;/p&gt;
+
+&lt;p&gt;The documentation suggested that the only configuration variable involved was &lt;code&gt;NOSEARCHALL&lt;/code&gt;. My next step was grepping the data directory, and then the TWiki source code&amp;ndash;which turned up the likely code responsible, a certain function &lt;code&gt;TWiki::getPublicWebList&lt;/code&gt;. Looking at that code didn&amp;rsquo;t make the answer clear. (If you&amp;rsquo;re following along, go ahead and run &lt;code&gt;perldoc -m TWiki&lt;/code&gt; to see if you can spot the problem by inspection.)&lt;/p&gt;
+
+&lt;p&gt;Back in the web browser, I noted that the URL for normal TWiki page viewing was &lt;code&gt;http://hostname/cgi-bin/twiki/view/Main/WebHome&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;From my initial look at the code, I knew the CGI that produced this was in &lt;em&gt;/usr/lib/cgi-bin/twiki/view&lt;/em&gt;. Could I run it from the command line? Changing to that directory, I ran &lt;code&gt;./view&lt;/code&gt; and saw the expected HTML for the front page.&lt;/p&gt;
+
+&lt;h3 id=&#34;debugger&#34;&gt;Debugger&lt;/h3&gt;
+
+&lt;p&gt;Next, I fired up the debugger on the file: &lt;code&gt;perl -d view&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip; which didn&amp;rsquo;t work, because the program uses taint mode. (If you try, you&amp;rsquo;ll see the warning, &lt;em&gt;&amp;rdquo;-T&amp;rdquo; is on the #! line, it must also be used on the command line at view line 1.&lt;/em&gt;) That was easy to fix by running &lt;code&gt;perl -dT view&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If you try that, you&amp;rsquo;ll see the debugger interface:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Loading DB routines from perl5db.pl version 1.28
+Editor support available.
+
+Enter h or `h h&#39; for help, or `man perldebug&#39; for more help.
+
+main::(view:38):        my $query = new CGI;
+  DB&amp;lt;1&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The major elements here are: an introductory message; the package, filename, and line number; the command the debugger is about to run; and a prompt showing your command-history number.&lt;/p&gt;
+
+&lt;p&gt;Press &lt;code&gt;c&lt;/code&gt; (for continue) and Enter. The program will run through to completion, finishing with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Debugged program terminated.  Use q to quit or R to restart,
+  use O inhibit_exit to avoid stopping after program termination,
+  h q, h R or h O to get additional info.
+  DB&amp;lt;1&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Press &lt;code&gt;R&lt;/code&gt; to restart the program &amp;hellip; which normally would work, but you can&amp;rsquo;t restart programs with taint mode enabled. No matter. Restart the debugger with &lt;code&gt;perl -dT view&lt;/code&gt; again.&lt;/p&gt;
+
+&lt;p&gt;Next, press &lt;code&gt;l&lt;/code&gt; for a code listing with line numbers. The default is ten lines of code. You&amp;rsquo;ll notice an arrow by the line prepared to execute next. Some lines have a trailing colon (&lt;code&gt;:&lt;/code&gt;), which means that you can interrupt execution at that line. Pressing &lt;code&gt;l&lt;/code&gt; again will show the next ten lines, and so on. &lt;code&gt;l&lt;/code&gt; can also handle listing a range (such as &lt;code&gt;l 1-40&lt;/code&gt;) or a function (such as &lt;code&gt;l TWiki::initialize&lt;/code&gt;). You can move the current display back to the execution point with a period (&lt;code&gt;.&lt;/code&gt;) or back ten lines with minus (&lt;code&gt;-&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Start running the program, slowly. Press &lt;code&gt;n&lt;/code&gt;, for next, and the display will change to show the subsequent line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;8&amp;gt; n
+main::(view:40):        my $thePathInfo = $query-&amp;gt;path_info();
+  DB&amp;lt;8&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;n&lt;/code&gt; will always bring you to the next executable line. This command is used frequently enough that you can press Enter to repeat it. If you try this, on the fifth execution you&amp;rsquo;ll see that multiline commands break up nicely on the screen:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;1&amp;gt;
+main::(view:45):       my( $topic, $webName, $scriptUrlPath, $userName ) =
+main::(view:46):          TWiki::initialize( $thePathInfo, $theRemoteUser,
+main::(view:47):                             $theTopic, $theUrl, $query );
+  DB&amp;lt;1&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Only the first of those lines is breakable, however. Another &lt;code&gt;n&lt;/code&gt; would skip ahead to line 49; but don&amp;rsquo;t do that yet.&lt;/p&gt;
+
+&lt;p&gt;The next feature is code evaluation. At the debugger prompt, you may enter any Perl code to execute in the current context. This can include modifying the running program, such as defining functions or variables.&lt;/p&gt;
+
+&lt;p&gt;You can also run functions or examine data using normal Perl syntax. There is a special command to evaluate and dump expressions in a list context, &lt;code&gt;x&lt;/code&gt;. Try it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;1&amp;gt; x $query-&amp;gt;url;
+0  &#39;http://localhost/view&#39;
+  DB&amp;lt;2&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice that the command history number increments from 1 to 2, because this is the first nontrivial command you&amp;rsquo;ve executed. Reexecute any prior command with the shortcut &lt;code&gt;!number&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;0&lt;/code&gt; signifies the array index of each element, which is useful with lists. &lt;code&gt;x&lt;/code&gt; will also do the right thing for data structures. Try viewing your CGI object:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;2&amp;gt; x $query
+0  CGI=HASH(0x8aef668)
+   &#39;.charset&#39; =&amp;gt; &#39;ISO-8859-1&#39;
+   &#39;.fieldnames&#39; =&amp;gt; HASH(0x8a83034)
+        empty hash
+   &#39;.parameters&#39; =&amp;gt; ARRAY(0x8b32aa4)
+        empty array
+   &#39;.path_info&#39; =&amp;gt; &#39;&#39;
+   &#39;escape&#39; =&amp;gt; 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For deep data, you might prefer restricting the depth walking to two levels: &lt;code&gt;x 2 $query&lt;/code&gt; .&lt;/p&gt;
+
+&lt;p&gt;The next feature, which goes along with &lt;code&gt;n&lt;/code&gt;, is &lt;code&gt;s&lt;/code&gt;, for single-stepping &lt;em&gt;into&lt;/em&gt; a function. &lt;code&gt;s&lt;/code&gt; will replace the current running context with that context of the subroutine. After one &lt;code&gt;s&lt;/code&gt;, you&amp;rsquo;re within &lt;code&gt;TWiki::initialize&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;4&amp;gt; s
+TWiki::initialize(/usr/share/perl5/TWiki.pm:333):
+333:        my ( $thePathInfo, $theRemoteUser, $theTopic,
+                               $theUrl, $theQuery ) = @_;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The description line has changed, showing that you&amp;rsquo;re in a new package, function, and file. Press Enter; note that &lt;code&gt;s&lt;/code&gt; also repeats with Enter. Three more repeats will get you two levels deeper:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;4&amp;gt;
+TWiki::initialize(/usr/share/perl5/TWiki.pm:336):
+336:            basicInitialize();
+  DB&amp;lt;4&amp;gt;
+TWiki::basicInitialize(/usr/share/perl5/TWiki.pm:490):
+490:        setupLocale();
+  DB&amp;lt;4&amp;gt;
+TWiki::setupLocale(/usr/share/perl5/TWiki.pm:515):
+515:        $siteCharset = &#39;ISO-8859-1&#39;;
+               # Default values if locale mis-configured
+  DB&amp;lt;4&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you are deep inside the TWiki module. Imagine tracking this program execution by hand; it would be considerably more tedious. Instead, you have the sometimes challenging task of figuring out where the program has taken you. Fortunately, the debugger has tools for making this easier. Note that the indenting isn&amp;rsquo;t any judge of the execution depth; to find that, use &lt;code&gt;T&lt;/code&gt; for trace:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;1&amp;gt; T
+. = TWiki::setupLocale() called from file
+    `/usr/share/perl5/TWiki.pm&#39; line 490
+. = TWiki::basicInitialize() called from file
+    `/usr/share/perl5/TWiki.pm&#39; line 336
+@ = TWiki::initialize(&#39;&#39;, undef, undef, &#39;http://localhost/view&#39;,
+    ref(CGI)) called from file `view&#39; line 45
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The backtrace has the following format: the first character is the calling context; &lt;code&gt;.&lt;/code&gt;, &lt;code&gt;$&lt;/code&gt;, and &lt;code&gt;@&lt;/code&gt; signify void, scalar, and list contexts respectively. Next is function name, including the arguments passed, if any. Finally comes the calling filename and line number. These lines go from deepest to shallowest execution depth.&lt;/p&gt;
+
+&lt;p&gt;Perhaps you went too deep. Use &lt;code&gt;r&lt;/code&gt; to return from a function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;8&amp;gt; r
+void context return from TWiki::setupLocale
+TWiki::basicInitialize(/usr/share/perl5/TWiki.pm:491):
+491:        setupRegexes();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here you can see that &lt;code&gt;r&lt;/code&gt; shows the return value and its context. This can be quite useful, as the calling context can occasionally surprise even experienced programmers. With inspection, you can verify that this output makes sense compared to the trace above, because it&amp;rsquo;s one line beyond the caller from the first line of that trace.&lt;/p&gt;
+
+&lt;p&gt;Use &lt;code&gt;r&lt;/code&gt; again twice, to get back to the top. Now it&amp;rsquo;s clear that &lt;code&gt;initialize()&lt;/code&gt; returns a list to the caller:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;1&amp;gt; r
+list context return from TWiki::initialize:
+0  &#39;WebHome&#39;
+1  &#39;Main&#39;
+2  &#39;/cgi-bin/twiki&#39;
+3  &#39;guest&#39;
+4  &#39;/var/lib/twiki/data&#39;
+main::(view:49):        TWiki::UI::View::view( $webName,
+                            $topic, $userName, $query );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you were tracking the initialization routine, you might remind yourself what the caller was doing with the command &lt;code&gt;-&lt;/code&gt; to show the calling line again; but that&amp;rsquo;s not necessary now, so continue!&lt;/p&gt;
+
+&lt;p&gt;Take a step back. You know you&amp;rsquo;re looking for the function &lt;code&gt;TWiki::getPublicWebList&lt;/code&gt;. You can take a shortcut to get there. The debugger command &lt;code&gt;c&lt;/code&gt; can take arguments, either line numbers or subroutine names.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;5&amp;gt; c TWiki::getPublicWebList
+TWiki::getPublicWebList(/usr/share/perl5/TWiki.pm:2559):
+2559:       if( ! @publicWebList ) {
+  DB&amp;lt;6&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, you&amp;rsquo;ve switched modules again, into &lt;em&gt;TWiki.pm&lt;/em&gt;. Take a look around:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;3&amp;gt; l
+2559==&amp;gt;     if( ! @publicWebList ) {
+2560            # build public web list, e.g. exclude hidden
+                # webs, but include current web
+2561:           my @list = &amp;amp;TWiki::Store::getAllWebs( &amp;quot;&amp;quot; );
+2562:           my $item = &amp;quot;&amp;quot;;
+2563:           my $hidden = &amp;quot;&amp;quot;;
+2564:           foreach $item ( @list ) {
+2565:               $hidden =
+  &amp;amp;TWiki::Prefs::getPreferencesValue( &amp;quot;NOSEARCHALL&amp;quot;, $item );
+2566                # exclude topics that are hidden or start
+                    # with . or _ unless current web
+2567:               if( ( $item eq $TWiki::webName  ) ||
+                        ( ( ! $hidden ) &amp;amp;&amp;amp; ( $item =~
+                                      /^[^\.\_]/ ) ) ) {
+2568:                   push( @publicWebList, $item );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This looks promising. &lt;code&gt;c 2562&lt;/code&gt; and then &lt;code&gt;x @list&lt;/code&gt; to see that there are five list items.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  DB&amp;lt;15&amp;gt; c 2562
+TWiki::getPublicWebList(/usr/share/perl5/TWiki.pm:2562):
+2562:           my $item = &amp;quot;&amp;quot;;
+  DB&amp;lt;16&amp;gt; x @list
+0  &#39;Main&#39;
+1  &#39;Sandbox&#39;
+2  &#39;TWiki&#39;
+3  &#39;Trash&#39;
+4  &#39;_default&#39;
+  DB&amp;lt;17&amp;gt; n
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, the &lt;code&gt;foreach()&lt;/code&gt; in line 2,564 will identify which of these are public. Getting warmer! You can &lt;code&gt;n&lt;/code&gt; several times to see the program flow. (Remember, after the first, you can press Enter.) If you run other commands, Enter still keeps its shortcut of &lt;code&gt;n&lt;/code&gt; or &lt;code&gt;s&lt;/code&gt;. If you &lt;code&gt;x $hidden&lt;/code&gt; after you&amp;rsquo;ve passed line 2,565 in each loop, you will see that they contain the empty string because &lt;code&gt;NOSEARCHALL&lt;/code&gt; is unset.&lt;/p&gt;
+
+&lt;p&gt;The expression in the following line tests the truth of &lt;code&gt;$hidden&lt;/code&gt; as per the comment.&lt;/p&gt;
+
+&lt;p&gt;Here is the solution. In my team&amp;rsquo;s original problem, we changed &lt;code&gt;NOSEARCHALL&lt;/code&gt; from &lt;code&gt;Yes&lt;/code&gt; to &lt;code&gt;No&lt;/code&gt;. The string &lt;code&gt;No&lt;/code&gt; certainly is still true. It took me a few runs through the code, testing values each time, to find it.&lt;/p&gt;
+
+&lt;p&gt;When I changed &lt;code&gt;NOSEARCHALL&lt;/code&gt; to &lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt; from &lt;code&gt;Yes&lt;/code&gt; in the config file, the hidden web immediately became unhidden. Problem solved. The entire process took no more than 45 minutes. Considering the number of lines of code in TWiki and its relative complexity, that isn&amp;rsquo;t bad.&lt;/p&gt;
+
+&lt;h3 id=&#34;results&#34;&gt;Results&lt;/h3&gt;
+
+&lt;p&gt;Yes, the problem was that we overlooked something &amp;ldquo;obvious.&amp;rdquo; True, I didn&amp;rsquo;t actually debug the code; I debugged my configuration. No matter. This is the way of a lot of debugging; the problem isn&amp;rsquo;t where you expect, and it&amp;rsquo;s obvious in retrospect. I hope with this simple example, I&amp;rsquo;ve shown how the debugger can tell you things you may not notice by code inspection or reading documentation.&lt;/p&gt;
+
+&lt;p&gt;This article has barely scratched the surface of the debugger&amp;rsquo;s capabilities; it can also do such things as automatically insert code that runs whenever you step forward, or automatically stop execution when an expression becomes true. You can insert lines of code into the program that exist only in the debugging instance. You can record your actions and play them back in other debugging sessions; or customize the debugger with your own preferences and aliases. There are also methods to run a debugger GUI on a remote server, and modules to harness debugging mod_perl and other programs that don&amp;rsquo;t run on the command line. Please see the references for more information about these features.&lt;/p&gt;
+
+&lt;h3 id=&#34;references-introductory-debugger-information-online&#34;&gt;References: Introductory Debugger Information Online&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.linuxjournal.com/article/7581/&#34;&gt;The Perl Debugger. Linux Journal. March 2005, 73-76&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perldebtut.html&#34;&gt;perldebtut&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://perldoc.perl.org/perldebug.html&#34;&gt;perldebug&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://localhost:1313/pub/2004/11/24/debugger_ref.html&#34;&gt;Perl Debugger Quick Reference&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>An Introduction to Quality Assurance</title>
+      <link>http://localhost:1313/pub/2005/01/13/quality_assurance.html/</link>
+      <pubDate>Thu, 13 Jan 2005 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2005/01/13/quality_assurance.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;on-being-wrong&#34;&gt;On Being Wrong&lt;/h3&gt;
+
+&lt;p&gt;When I decided to study computer science, I installed Linux on my computer and bought a copy of &amp;ldquo;The C Programming Language&amp;rdquo; by Kernighan and Ritchie. I have been trying to solve software problems ever since. After much heartache, I decided that if I was to continue programming I would have to come to terms with being wrong, because I quickly discovered that being wrong is a big part of the development cycle: you code, compile, view the errors, and then code some more. I found it helpful to actually say &amp;ldquo;I am wrong&amp;rdquo; when the compiler complained, to remind myself where the fault lay. It made finding problems a lot easier when I accepted responsibility for the errors.&lt;/p&gt;
+
+&lt;h3 id=&#34;enjoy-the-ride&#34;&gt;Enjoy the Ride&lt;/h3&gt;
+
+&lt;p&gt;To deal with the frustration of constantly being wrong, I began to view programming more as a game that I enjoyed than as an epic battle, and I started looking at things from the compiler&amp;rsquo;s perspective. This view has improved my overall approach to software immensely. I was also fortunate to discover &lt;em&gt;&lt;a href=&#34;http://www.perldebugged.com/&#34;&gt;Perl Debugged&lt;/a&gt;&lt;/em&gt; by Peter Scott and Ed Wright. The authors provide a wealth of information about debugging and testing Perl scripts, but they also emphasize that the right mental attitude is often the key to a programmer&amp;rsquo;s success. Basically, they say that you should enjoy what you do.&lt;/p&gt;
+
+&lt;p&gt;Bugs come in many flavors, from syntax errors to errors of logic. Perl&amp;rsquo;s interpreter will catch most typos, especially if you &lt;code&gt;use warnings&lt;/code&gt;, but some can be tricky&amp;ndash;and errors of logic are often even harder to tease out.&lt;/p&gt;
+
+&lt;p&gt;Here is a common syntax error:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;if ($two_plus_two = 5) {
+   print &amp;quot;two plus two is five&amp;quot;; 
+} else {
+   # I never seem to get here...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here is common logical error:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;I know of software companies that let their customers find their bugs for them.&lt;/li&gt;
+&lt;li&gt;These companies are worth millions of dollars.&lt;/li&gt;
+&lt;li&gt;If I let my customers find my bugs for me, I will be worth millions of dollars.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;This particular error can lead to embarrassing code such as the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub handle_error() {
+
+print &amp;lt;&amp;lt;END;
+
+   Dear Friend,
+      We realize this may be a difficult time 
+      for you, but there has been an SQL error. 
+      Please email us for further assistance, 
+      or try entering your obituary again. 
+      Thank you. 
+
+END
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, anyone who wants to sleep easy at night will want to avoid shameful code like this, because slowly but surely, users are becoming less tolerant of buggy code. If you haven&amp;rsquo;t done so already, you will want to read through Michael G. Schwern&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Test::Tutorial&#34;&gt;Test::Tutorial&lt;/a&gt; and get started. Test-based development, combined with quality assurance, can enable a company to offer its customers a rare and valuable commodity: reliable software. In the future, the world of software may very well be divided between the companies that incorporate testing into their development cycle and those that used to be in business.&lt;/p&gt;
+
+&lt;h3 id=&#34;parts-of-a-test&#34;&gt;Parts of a Test&lt;/h3&gt;
+
+&lt;p&gt;When the compiler stops complaining, many developers are happy to declare victory and move on to the next project, but for the tester (often just the developer with his hat on backwards), things are just becoming interesting. Testers begin by breaking the program into sections, as Lydia Ash does in &lt;em&gt;&lt;a href=&#34;http://www.wiley.com/WileyCDA/WileyTitle/productCd-0471430218.html&#34;&gt;The Web Testing Companion&lt;/a&gt;&lt;/em&gt;. She notes the following five basic software functions:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Accepting input&lt;/li&gt;
+&lt;li&gt;Giving output&lt;/li&gt;
+&lt;li&gt;Saving data&lt;/li&gt;
+&lt;li&gt;Manipulating data&lt;/li&gt;
+&lt;li&gt;Removing data&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;To begin testing, start at the top of the list and work down, one section at a time. At this point in the process, you really understand why everyone always tells you to write modular code. It is much easier to work through the list if you&amp;rsquo;ve broken your program into the functions &lt;code&gt;get_input()&lt;/code&gt;, &lt;code&gt;display_members()&lt;/code&gt;, &lt;code&gt;add_member()&lt;/code&gt;, &lt;code&gt;update_info()&lt;/code&gt;, and &lt;code&gt;delete_member()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;where-to-look&#34;&gt;Where to Look&lt;/h3&gt;
+
+&lt;p&gt;When asked where to look for bugs, software testers sometimes speak of the &amp;ldquo;joints&amp;rdquo; between program components, &amp;ldquo;equivalence classes,&amp;rdquo; and &amp;ldquo;edge values.&amp;rdquo; These are the primary points of weakness in an application.&lt;/p&gt;
+
+&lt;p&gt;An example of a joint is the place where your software interacts with a third-party module. It&amp;rsquo;s important to make sure that all of the components send and receive what you think they should.&lt;/p&gt;
+
+&lt;p&gt;An equivalence class is a class of data that follows the same data path through the program. Consider a program that divides the number 50 by whatever number the user enters and either returns a positive integer or tells them why the answer is not a positive integer. You might have the following classes: negative numbers; the number zero; the numbers 1, 2, 5, 10, 25, and 50; numbers greater than 50; and non-numbers. Consider the following incomplete but well-intentioned code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sub factor_of_50 {
+    my $divisor = shift;
+    my $result  = 50 / $divisor;
+
+    return $result if $result == int( $result );
+    return &amp;quot;$divisor is negative&amp;quot; if $result &amp;lt; 0;
+    return &amp;quot;$result is not an integer&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this case, good tests should start with -1, 0, 1, 49, and 51, the edge values for this program, to test the different paths through the code. Edge values define the limits of the program, values near and past the stated minimum and maximum that the program should handle. In the example above, you&amp;rsquo;d also want to enter a string of letters and punctuation to see how the program handles it. Then, compare the test results to the program&amp;rsquo;s specification, which tells you which inputs should work and what outputs the users should see.&lt;/p&gt;
+
+&lt;h3 id=&#34;specifications&#34;&gt;Specifications&lt;/h3&gt;
+
+&lt;p&gt;Any non-trivial program needs to have a specified list of what it should do. This list of requirements lays a foundation on which to build the software and against which testers can test. There must be a specification of quality from the beginning, or else there is no way to tell if the program has passed or failed a given test. Functional specifications tell you about the program&amp;rsquo;s logic, while non-functional specifications include things like the speed of the application, usability issues for a user interface, and security.&lt;/p&gt;
+
+&lt;h3 id=&#34;writing-tests&#34;&gt;Writing Tests&lt;/h3&gt;
+
+&lt;p&gt;Once you have a specification, you can make a test inventory&amp;ndash;a list of all the tests you need to write in order to prove that the software meets the specifications. Of course, you need to eliminate all the bugs that crash the program and as many more as you can find, but when do you say enough is enough?&lt;/p&gt;
+
+&lt;p&gt;In &lt;em&gt;&lt;a href=&#34;http://he-cda.wiley.com/WileyCDA/HigherEdTitle/productCd-047143020X,courseCd-CX4700.html&#34;&gt;Software Testing Fundamentals&lt;/a&gt;&lt;/em&gt;, Marnie Hutcheson describes her Most Important Tests method. This process tries to determine which tests will be most valuable to run. Essentially, it is a way to present management with the opportunity to weigh the tradeoffs between further testing and pushing the product to market sooner.&lt;/p&gt;
+
+&lt;h3 id=&#34;reporting&#34;&gt;Reporting&lt;/h3&gt;
+
+&lt;p&gt;Reporting is, of course, crucial to testing. You test, trying to get the software to fail, so that you can report the bugs you find back to the development team, so they can fix things before the software&amp;rsquo;s release. A clear, informative bug report is the only one worth writing. Here is a template for a web application&amp;rsquo;s bug report from &lt;em&gt;The Web Testing Companion&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;SERVER CONFIG
+Operating System: &amp;lt;Operating system and hardware, if applicable.&amp;gt;
+Software Build: &amp;lt;Build-number of your software.&amp;gt;
+Topology: &amp;lt;If you have multiple topologies where you test your server in-house.&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;CLIENT
+OS: &amp;lt;Operating system, service packs, and other dependent DLL versions, if applicable&amp;gt;
+Browser: &amp;lt;Browser and version&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;DESCRIPTION
+&amp;lt;Brief description of the problem&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;Repro (short for reproduction)&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&amp;lt;Very descriptive steps showing how to recreate the problem&amp;gt;&lt;/li&gt;
+&lt;li&gt; &lt;/li&gt;
+&lt;li&gt; &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Result:
+&amp;lt;Description of exactly what happens after the last repro step&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;Expected Results:
+&amp;lt;Description of what should have happened after the last repro step&amp;gt;&lt;/p&gt;
+
+&lt;p&gt;Notes:
+&amp;lt;Add any information about when this was last verified or what this might be related to here&amp;gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h3&gt;
+
+&lt;p&gt;When all the tests have finshed, the tester turns the repro reports in to the development team and starts looking forward to the next project. If there are any bugs found, the developer is back to square one: debugging. The process has come full circle. Hopefully, after a few more iterations, everyone can go out and have a paintball war.&lt;/p&gt;
+
+&lt;p&gt;Software development and software testing require two different mindsets. Sometimes it is hard for one person to switch back and forth between them, but testing is essential to the success of any non-trivial software project in the same way that editing is essential for any non-trivial writing project. Without it, progress is ponderous, at best.&lt;/p&gt;
+
+&lt;p&gt;In conclusion, I&amp;rsquo;d like to list the nine debugging rules from David J. Agans&amp;rsquo; excellent book, &lt;em&gt;&lt;a href=&#34;http://www.debuggingrules.com/Debugging_CH1.PDF&#34;&gt;Debugging&lt;/a&gt;&lt;/em&gt;. His book clarifies these essential debugging concepts and is mandatory reading for anyone who fixes things:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Understand the system&lt;/li&gt;
+&lt;li&gt;Make it fail&lt;/li&gt;
+&lt;li&gt;Quit thinking and look&lt;/li&gt;
+&lt;li&gt;Divide and conquer&lt;/li&gt;
+&lt;li&gt;Change one thing at a time&lt;/li&gt;
+&lt;li&gt;Keep an audit trail&lt;/li&gt;
+&lt;li&gt;Check the plug&lt;/li&gt;
+&lt;li&gt;Get a fresh view&lt;/li&gt;
+&lt;li&gt;If you didn&amp;rsquo;t fix it, it isn&amp;rsquo;t fixed&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&#34;bibliography&#34;&gt;Bibliography&lt;/h3&gt;
+
+&lt;p&gt;Agans, David J. &lt;em&gt;Debugging&lt;/em&gt;, American Management Association, 2002&lt;/p&gt;
+
+&lt;p&gt;Ash, Lydia. &lt;em&gt;The Web Testing Companion&lt;/em&gt;, Wiley, 2003&lt;/p&gt;
+
+&lt;p&gt;Hutcheson, Marnie L. &lt;em&gt;Software Testing Fundamentals&lt;/em&gt;, Wiley, 2003&lt;/p&gt;
+
+&lt;p&gt;Scott, Peter J.; Wright, Ed. &lt;em&gt;Perl Debugged&lt;/em&gt;, Addison-Wesley Pub Co, 2001&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Perl Debugger Quick Reference</title>
+      <link>http://localhost:1313/pub/2004/11/24/debugger_ref.html/</link>
+      <pubDate>Wed, 24 Nov 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/11/24/debugger_ref.html/</guid>
+      <description>&lt;p&gt;Perl&amp;rsquo;s debugger is powerful but somewhat esoteric. The core &lt;a href=&#34;http://www.perlpod.com/5.8.4/pod/perldebtut.html&#34;&gt;perldebtut&lt;/a&gt; tutorial is a good introduction, but who wants to skim through pages of documentation when you only need a quick refresher on the syntax of a command?&lt;/p&gt;
+
+&lt;p&gt;Let this printable (PDF) &lt;a href=&#34;http://localhost:1313/media/_pub_2004_11_24_debugger_ref/debugger_ref.pdf&#34;&gt;Perl Debugger Quick Reference&lt;/a&gt; card, excerpted from Richard Foley&amp;rsquo;s &lt;a href=&#34;http://www.oreilly.com/catalog/perldebugpr/index.html&#34;&gt;Perl Debugger Pocket Reference&lt;/a&gt;, be your guide instead.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Editor&amp;rsquo;s note: Unix users, we&amp;rsquo;ve had reports that Adobe Acrobat 5 has trouble opening this file. We&amp;rsquo;re looking into this. In the meantime, xpdf and other tools appear to work correctly.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Retire your debugger, log smartly with Log::Log4perl!</title>
+      <link>http://localhost:1313/pub/2002/09/11/log4perl.html/</link>
+      <pubDate>Wed, 11 Sep 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/09/11/log4perl.html/</guid>
+      <description>
+
+&lt;p&gt;You&amp;rsquo;ve rolled out an application and it produces mysterious, sporadic errors? That&amp;rsquo;s pretty common, even if fairly well-tested applications are exposed to real-world data. How can you track down when and where exactly your problem occurs? What kind of user data is it caused by? A debugger won&amp;rsquo;t help you there.&lt;/p&gt;
+
+&lt;p&gt;And you don&amp;rsquo;t want to keep track of only &lt;em&gt;bad&lt;/em&gt; cases. It&amp;rsquo;s helpful to log all types of meaningful incidents while your system is running in production, in order to extract statistical data from your logs later. Or, what if a problem only happens after a certain sequence of &amp;lsquo;good&amp;rsquo; cases? Especially in dynamic environments like the Web, anything can happen at any time and you want a footprint of every event later, when you&amp;rsquo;re counting the corpses.&lt;/p&gt;
+
+&lt;p&gt;What you need is well-architected &lt;em&gt;logging&lt;/em&gt;: Log statements in your code and a logging package like &lt;code&gt;Log::Log4perl&lt;/code&gt; providing a &amp;ldquo;remote-control,&amp;rdquo; which allows you to turn on previously inactive logging statements, increase or decrease their verbosity independently in different parts of the system, or turn them back off entirely. Certainly without touching your system&amp;rsquo;s code &amp;ndash; and even &lt;em&gt;without restarting&lt;/em&gt; it.&lt;/p&gt;
+
+&lt;p&gt;However, with traditional logging systems, the amount of data written to the logs can be overwhelming. In fact, turning on low-level-logging on a system under heavy load can cause it to slow down to a crawl or even crash.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Log::Log4perl&lt;/code&gt; is different. It is a pure Perl port of the widely popular Apache/Jakarta &lt;code&gt;log4j&lt;/code&gt; library [3] for Java, a project made public in 1999, which has been actively supported and enhanced by a team around head honcho &lt;em&gt;Ceki Gülcü&lt;/em&gt; during the years.&lt;/p&gt;
+
+&lt;p&gt;The comforting facts about &lt;code&gt;log4j&lt;/code&gt; are that it&amp;rsquo;s really well thought out, it&amp;rsquo;s the alternative logging standard for Java and it&amp;rsquo;s been in use for years with numerous projects. If you don&amp;rsquo;t like Java, then don&amp;rsquo;t worry, you&amp;rsquo;re not alone &amp;ndash; the &lt;code&gt;Log::Log4perl&lt;/code&gt; authors (yours truly among them) are all Perl &lt;em&gt;hardliners&lt;/em&gt; who made sure &lt;code&gt;Log::Log4perl&lt;/code&gt; is &lt;em&gt;real&lt;/em&gt; Perl.&lt;/p&gt;
+
+&lt;p&gt;In the spirit of &lt;code&gt;log4j&lt;/code&gt;, &lt;code&gt;Log::Log4perl&lt;/code&gt; addresses the shortcomings of typical ad-hoc or homegrown logging systems by providing three mechanisms to control the amount of data being logged and where it ends up at:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Levels&lt;/em&gt; allow you to specify the &lt;em&gt;priority&lt;/em&gt; of log messages. Low-priority messages are suppressed when the system&amp;rsquo;s setting allows for only higher-priority messages.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Categories&lt;/em&gt; define which parts of the system you want to enable logging in. Category inheritance allows you to elegantly reuse and override previously defined settings of different parts in the category hierarchy.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Appenders&lt;/em&gt; allow you to choose which output devices the log data is being written to, once it clears the previously listed hurdles.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In combination, these three control mechanisms turn out to be very powerful. They allow you to control the logging behavior of even the most complex applications at a granular level. However, it takes time to get used to the concept, so let&amp;rsquo;s start the easy way:&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-getting-your-feet-wet-with-log4p-getting-your-feet-wet-with-log4perl-span&#34;&gt;&lt;span id=&#34;Getting_your_feet_wet_with_Log4p&#34;&gt;Getting Your Feet Wet With Log4perl&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you&amp;rsquo;ve used logging before, then you&amp;rsquo;re probably familiar with logging priorities or &lt;em&gt;levels&lt;/em&gt; . Each log incident is assigned a level. If this incident level is higher than the system&amp;rsquo;s logging level setting (typically initialized at system startup), then the message is logged, otherwise it is suppressed.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Log::Log4perl&lt;/code&gt; defines five logging levels, listed here from low to high:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    DEBUG
+    INFO
+    WARN
+    ERROR
+    FATAL
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s assume that you decide at system startup that only messages of level WARN and higher are supposed to make it through. If your code then contains a log statement with priority DEBUG, then it won&amp;rsquo;t ever be executed. However, if you choose at some point to bump up the amount of detail, then you can just set your system&amp;rsquo;s logging priority to DEBUG and you will see these DEBUG messages starting to show up in your logs, too.&lt;/p&gt;
+
+&lt;p&gt;Listing &lt;code&gt;drink.pl&lt;/code&gt; shows an example. &lt;code&gt;Log::Log4perl&lt;/code&gt; is called with the &lt;code&gt;qw(:easy)&lt;/code&gt; target to provide a beginner&amp;rsquo;s interface for us. We initialize the logging system with &lt;code&gt;easy_init($ERROR)&lt;/code&gt;, telling it to suppress all messages except those marked &lt;code&gt;ERROR&lt;/code&gt; and higher (&lt;code&gt;ERROR&lt;/code&gt; and &lt;code&gt;FATAL&lt;/code&gt; that is). In easy mode, &lt;code&gt;Log::Log4perl&lt;/code&gt; exports the scalars &lt;code&gt;$DEBUG&lt;/code&gt;, &lt;code&gt;$INFO&lt;/code&gt; etc. to allow the user to easily specify the desired priority.&lt;/p&gt;
+
+&lt;h4 id=&#34;listing-1-drink-pl&#34;&gt;Listing 1: drink.pl&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;    01 use Log::Log4perl qw(:easy);
+    02
+    03 Log::Log4perl-&amp;gt;easy_init($ERROR);
+    04
+    05 drink();
+    06 drink(&amp;quot;Soda&amp;quot;);
+    07
+    08 sub drink {
+    09     my($what) = @_;
+    10
+    11     my $logger = get_logger();
+    12
+    13     if(defined $what) {
+    14         $logger-&amp;gt;info(&amp;quot;Drinking &amp;quot;, $what);
+    15     } else {
+    16         $logger-&amp;gt;error(&amp;quot;No drink defined&amp;quot;);
+    17     }
+    18 }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;drink.pl&lt;/code&gt; defines a function, &lt;code&gt;drink()&lt;/code&gt;, which takes a beverage as an argument and complains if it didn&amp;rsquo;t get one. In the &lt;code&gt;Log::Log4perl&lt;/code&gt; world, logger &lt;em&gt;objects&lt;/em&gt; do the work. They can be obtained by the &lt;code&gt;get_logger()&lt;/code&gt; function, returning a reference to them.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s no need to pass around logger references between your system&amp;rsquo;s functions. This effectively avoids cluttering up your beautifully crafted functions/methods with parameters unrelated to your implementation. &lt;code&gt;get_logger()&lt;/code&gt; can be called by &lt;em&gt;every&lt;/em&gt; function/method directly with little overhead in order to obtain a logger. &lt;code&gt;get_logger&lt;/code&gt; makes sure that no new object is created unnecessarily. In most cases, it will just cheaply return a reference to an already existing object (singleton mechanism).&lt;/p&gt;
+
+&lt;p&gt;The logger obtained by &lt;code&gt;get_logger()&lt;/code&gt; (also exported by &lt;code&gt;Log::Log4perl&lt;/code&gt; in &lt;code&gt;:easy&lt;/code&gt; mode) can then be used to trigger logging incidents using the following methods, each taking one or more messages, which they just concatenate when it comes to printing them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $logger-&amp;gt;debug($message, ...);
+    $logger-&amp;gt;info($message, ...);
+    $logger-&amp;gt;warn($message, ...);
+    $logger-&amp;gt;error($message, ...);
+    $logger-&amp;gt;fatal($message, ...);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The method names are corresponding with messages priorities: &lt;code&gt;debug()&lt;/code&gt; logs with level &lt;code&gt;DEBUG&lt;/code&gt;, &lt;code&gt;info&lt;/code&gt; with &lt;code&gt;INFO&lt;/code&gt; and so forth. You might think that five levels are not enough to effectively block the clutter and let through what you actually need. But before screaming for more, read on. &lt;code&gt;Log::Log4perl&lt;/code&gt; has different, more powerful mechanisms to control the amount of output you&amp;rsquo;re generating.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;drink.pl&lt;/code&gt; uses &lt;code&gt;$logger-&amp;gt;error()&lt;/code&gt; to log an error if a parameter is missing and &lt;code&gt;$logger-&amp;gt;info()&lt;/code&gt; to tell what it&amp;rsquo;s doing in case everything&amp;rsquo;s OK. In &lt;code&gt;:easy&lt;/code&gt; mode, log messages are just written to STDERR, so the output we&amp;rsquo;ll see from &lt;code&gt;drink.pl&lt;/code&gt; will be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    2002/08/04 11:43:09 ERROR&amp;gt; drink.pl:16 main::drink - No drink defined
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Along with the current date and time, this informs us that in line 16 of &lt;code&gt;drink.pl&lt;/code&gt;, inside the function &lt;code&gt;main::drink()&lt;/code&gt;, a message of priority ERROR was submitted to the log system. Why isn&amp;rsquo;t there a another message for the second call to &lt;code&gt;drink()&lt;/code&gt;, which provides the beverage as required? Right, we&amp;rsquo;ve set the system&amp;rsquo;s logging priority to &lt;code&gt;ERROR&lt;/code&gt;, so &lt;code&gt;INFO&lt;/code&gt;-messages are being suppressed. Let&amp;rsquo;s correct that and change line 3 in &lt;code&gt;drink.pl&lt;/code&gt; to:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Log::Log4perl-&amp;gt;easy_init($INFO);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This time, both messages make it through:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    2002/08/04 11:44:59 ERROR&amp;gt; drink.pl:14 main::drink - No drink defined
+    2002/08/04 11:44:59 INFO&amp;gt; drink.pl:16 main::drink - Drinking Soda
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Also, please note that the &lt;code&gt;info()&lt;/code&gt; function was called with two arguments but just concatenated them to form a single message string.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-moving-on-to-the-big-leagues-moving-on-to-the-big-leagues-span&#34;&gt;&lt;span id=&#34;Moving_on_to_the_big_leagues&#34;&gt;Moving On to the Big Leagues&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;:easy&lt;/code&gt; target brings beginners up to speed with &lt;code&gt;Log::Log4perl&lt;/code&gt; quickly. But what if you don&amp;rsquo;t want to log your messages solely to STDERR, but to a logfile, to a database or simply STDOUT instead? Or, if you&amp;rsquo;d like to enable or disable logging in certain parts of your system independently? Let&amp;rsquo;s talk about categories and appenders for a second.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-logger-categories-logger-categories-span&#34;&gt;&lt;span id=&#34;Logger_Categories&#34;&gt;Logger Categories&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In &lt;code&gt;Log::Log4perl&lt;/code&gt;, every logger has a category assigned to it. Logger Categories are a way of identifying loggers in different parts of the system in order to change their behavior from a central point, typically in the system startup section or a configuration file.&lt;/p&gt;
+
+&lt;p&gt;Every logger has has its place in the logger hierarchy. Typically, this hierarchy resembles the class hierarchy of the system. So if your system defines a class hierarchy &lt;code&gt;Groceries&lt;/code&gt;, &lt;code&gt;Groceries::Food&lt;/code&gt; and &lt;code&gt;Groceries::Drinks&lt;/code&gt;, then chances are that your loggers follow the same scheme.&lt;/p&gt;
+
+&lt;p&gt;To obtain a logger that belongs to a certain part of the hierarchy, just call &lt;code&gt;get_logger&lt;/code&gt; with a string specifying the category:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ######### System initialization section ###
+    use Log::Log4perl qw(get_logger :levels);
+
+    my $food_logger = get_logger(&amp;quot;Groceries::Food&amp;quot;);
+    $food_logger-&amp;gt;level($INFO);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This snippet is from the initialization section of the system. It defines the logger for the category &lt;code&gt;Groceries::Food&lt;/code&gt; and sets its priority to &lt;code&gt;INFO&lt;/code&gt; with the &lt;code&gt;level()&lt;/code&gt; method.&lt;/p&gt;
+
+&lt;p&gt;Without the &lt;code&gt;:easy&lt;/code&gt; target, we have to pass the arguments &lt;code&gt;get_logger&lt;/code&gt; and &lt;code&gt;:levels&lt;/code&gt; to &lt;code&gt;use Log::Log4perl&lt;/code&gt; in order to get the &lt;code&gt;get_logger&lt;/code&gt; function and the level scalars (&lt;code&gt;$DEBUG&lt;/code&gt;, &lt;code&gt;$INFO&lt;/code&gt;, etc.) imported to our program.&lt;/p&gt;
+
+&lt;p&gt;Later, most likely inside functions or methods in a package called &lt;code&gt;Groceries::Food&lt;/code&gt;, you&amp;rsquo;ll want to obtain the logger instance and send messages to it. Here&amp;rsquo;s two methods, &lt;code&gt;new()&lt;/code&gt; and &lt;code&gt;consume()&lt;/code&gt;, that both grab the (yes, one) instance of the &lt;code&gt;Groceries::Food&lt;/code&gt; logger in order to let the user know what&amp;rsquo;s going on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ######### Application section #############
+    package Groceries::Food;
+
+    use Log::Log4perl qw(get_logger);
+
+    sub new {
+        my($class, $what) = @_;
+
+        my $logger = get_logger(&amp;quot;Groceries::Food&amp;quot;);
+
+        if(defined $what) {
+            $logger-&amp;gt;debug(&amp;quot;New food: $what&amp;quot;);
+            return bless { what =&amp;gt; $what }, $class;
+        }
+
+        $logger-&amp;gt;error(&amp;quot;No food defined&amp;quot;);
+        return undef;
+    }
+
+    sub consume {
+        my($self) = @_;
+
+        my $logger = get_logger(&amp;quot;Groceries::Food&amp;quot;);
+        $logger-&amp;gt;info(&amp;quot;Eating $self-&amp;gt;{what}&amp;quot;);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since we&amp;rsquo;ve defined the &lt;code&gt;Groceries::Food&lt;/code&gt; logger earlier to carry priority &lt;code&gt;$INFO&lt;/code&gt;, all messages of priority &lt;code&gt;INFO&lt;/code&gt; and higher are going to be logged, but &lt;code&gt;DEBUG&lt;/code&gt; messages won&amp;rsquo;t make it through &amp;ndash; at least not in the &lt;code&gt;Groceries::Food&lt;/code&gt; part of the system.&lt;/p&gt;
+
+&lt;p&gt;So do you have to initialize loggers for all possible classes of your system? Fortunately, &lt;code&gt;Log::Log4perl&lt;/code&gt; uses inheritance to make it easy to specify the behavior of entire armies of loggers. In the above case, we could have just said:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    ######### System initialization section ###
+    use Log::Log4perl qw(get_logger :levels);
+
+    my $food_logger = get_logger(&amp;quot;Groceries&amp;quot;);
+    $food_logger-&amp;gt;level($INFO);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and not only the logger defined with category &lt;code&gt;Groceries&lt;/code&gt; would carry the priority &lt;code&gt;INFO&lt;/code&gt;, but also all of its descendants &amp;ndash; loggers defined with categories &lt;code&gt;Groceries::Food&lt;/code&gt;, &lt;code&gt;Groceries::Drinks::Beer&lt;/code&gt; and all of their subloggers will inherit the level setting from the &lt;code&gt;Groceries&lt;/code&gt; parent logger (see figure 1).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_09_11_log4perl/levels.gif&#34; alt=&#34;Figure 1&#34; width=&#34;475&#34; height=&#34;302&#34; /&gt;
+&lt;span class=&#34;secondary&#34;&gt; &lt;/span&gt;
+&lt;strong&gt;Figure 1: Explicitly set vs. inherited priorities&lt;/strong&gt;
+Of course, any child logger can choose to override the parent&amp;rsquo;s &lt;code&gt;level()&lt;/code&gt; setting &amp;ndash; in this case the child&amp;rsquo;s setting takes priority. We&amp;rsquo;ll talk about typical use cases shortly.&lt;/p&gt;
+
+&lt;p&gt;At the top of the logger hierarchy sits the so-called &lt;em&gt;root logger&lt;/em&gt;, which doesn&amp;rsquo;t have a name. This is what we&amp;rsquo;ve used earlier with the &lt;code&gt;:easy&lt;/code&gt; target: It initializes the root logger that we will retrieve later via &lt;code&gt;get_logger()&lt;/code&gt; (without arguments). By the way, nobody forces you to name your logger categories after your system&amp;rsquo;s class hierarchy. But if you&amp;rsquo;re developing a system in object-oriented style, then using the class hierarchy is usually the best choice. Think about the people taking over your code one day: The class hierarchy is probably what they know up front, so it&amp;rsquo;s easy for them to tune the logging to their needs.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s summarize: Every logger belongs to a category, which is either the root category or one of its direct or indirect descendants. A category can have several children but only one parent, except the root category, which doesn&amp;rsquo;t have a parent. In the system&amp;rsquo;s initialization section, loggers can define their priority using the &lt;code&gt;level()&lt;/code&gt; method and one of the scalars &lt;code&gt;$DEBUG&lt;/code&gt;, &lt;code&gt;$INFO&lt;/code&gt;, etc. which can be imported from &lt;code&gt;Log::Log4perl&lt;/code&gt; using the &lt;code&gt;:levels&lt;/code&gt; target.&lt;/p&gt;
+
+&lt;p&gt;While loggers &lt;em&gt;must&lt;/em&gt; be assigned to a category, they may choose &lt;em&gt;not&lt;/em&gt; to set a &lt;em&gt;level&lt;/em&gt;. If their &lt;em&gt;actual&lt;/em&gt; level isn&amp;rsquo;t set, then they inherit the level of the first parent or ancestor with a defined level. This will be their &lt;em&gt;effective&lt;/em&gt; priority. At the top of the category hierarchy resides the &lt;em&gt;root logger&lt;/em&gt;, which always carries a default priority of &lt;code&gt;DEBUG&lt;/code&gt;. If no one else defines a priority, then all unprioritized loggers inherit their priority from the root logger.&lt;/p&gt;
+
+&lt;p&gt;Categories allow you to modify the effective priorities of all your loggers in the system from a central location. With a few commands in the system initialization section (or, as we will see soon, in a &lt;code&gt;Log::Log4perl&lt;/code&gt; configuration file), you can remote-control low-level debugging in a small system component without changing any code. Category inheritance enables you to modify larger parts of the system with just a few keystrokes.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-appenders-appenders-span&#34;&gt;&lt;span id=&#34;Appenders&#34;&gt;Appenders&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;But just a logger with a priority assigned to it won&amp;rsquo;t log your message anywhere. This is what &lt;em&gt;appenders&lt;/em&gt; are for. Every logger (including the root logger) can have one or more appenders attached to them, objects, that take care of sending messages without further ado to output devices like the screen, files or the syslog daemon. Once a logger has decided to fire off a message because the incident&amp;rsquo;s effective priority is higher or equal than the logger level, &lt;em&gt;all&lt;/em&gt; appenders attached to this logger will receive the message &amp;ndash; in order to forward it to each appender&amp;rsquo;s area of expertise.&lt;/p&gt;
+
+&lt;p&gt;Moreover, and this is &lt;em&gt;very&lt;/em&gt; important, &lt;code&gt;Log::Log4perl&lt;/code&gt; will walk up the hierarchy and forward the message to every appender attached to one of the logger&amp;rsquo;s parents or ancestors.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Log::Log4perl&lt;/code&gt; makes use of all appenders defined in the &lt;code&gt;Log::Dispatch&lt;/code&gt; namespace, a separate set of modules, created by &lt;em&gt;Dave Rolsky&lt;/em&gt; and others, all freely available on CPAN. There&amp;rsquo;s appenders to write to the screen (&lt;code&gt;Log::Dispatch::Screen&lt;/code&gt;), to a file (&lt;code&gt;Log::Dispatch::File&lt;/code&gt;), to a database (&lt;code&gt;Log::Dispatch::DBI&lt;/code&gt;), to send messages via e-mail (&lt;code&gt;Log::Dispatch::Email&lt;/code&gt;), and many more.&lt;/p&gt;
+
+&lt;p&gt;New appenders are defined using the &lt;code&gt;Log::Log4perl::Appender&lt;/code&gt; class. The exact number and types of parameters required depends on the type of appender used, here&amp;rsquo;s the syntax for one of the most common ones, the logfile appender, which appends its messages to a log file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        # Appenders
+    my $appender = Log::Log4perl::Appender-&amp;gt;new(
+        &amp;quot;Log::Dispatch::File&amp;quot;,
+        filename =&amp;gt; &amp;quot;test.log&amp;quot;,
+        mode     =&amp;gt; &amp;quot;append&amp;quot;,
+    );
+
+    $food_logger-&amp;gt;add_appender($appender);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will create a new appender of the class &lt;code&gt;Log::Dispatch::File&lt;/code&gt;, which will &lt;em&gt;append&lt;/em&gt; messages to the file &lt;code&gt;test.log&lt;/code&gt;. If we had left out the &lt;code&gt;mode =&amp;gt; &amp;quot;append&amp;quot;&lt;/code&gt; pair, then it would just overwrite the file each time at system startup.&lt;/p&gt;
+
+&lt;p&gt;The wrapper class &lt;code&gt;Log::Log4perl::Appender&lt;/code&gt; provides the necessary glue around &lt;code&gt;Log::Dispatch&lt;/code&gt; modules to make them usable by &lt;code&gt;Log::Log4perl&lt;/code&gt; as appenders. This tutorial shows only the most common ones: &lt;code&gt;Log::Dispatch::Screen&lt;/code&gt; to write messages to STDOUT/STDERR and &lt;code&gt;Log::Dispatch::File&lt;/code&gt;, to print to a log file. However, you can use &lt;em&gt;any&lt;/em&gt; &lt;code&gt;Log::Dispatch&lt;/code&gt;-Module with &lt;code&gt;Log::Log4perl&lt;/code&gt;. To find out what&amp;rsquo;s available and how to their respective parameter settings are, please refer to the detailed &lt;code&gt;Log::Dispatch&lt;/code&gt; documentation. Using &lt;code&gt;add_appender()&lt;/code&gt;, you can attach as many appenders to &lt;em&gt;any&lt;/em&gt; logger as you like.&lt;/p&gt;
+
+&lt;p&gt;After passing the newly created appender to the logger&amp;rsquo;s &lt;code&gt;add_appender()&lt;/code&gt; method like in&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $food_logger-&amp;gt;add_appender($appender);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;it is attached to the logger and will handle its messages if the logger decides to fire. Also, it will handle messages percolating up the hierarchy if a logger further down decides to fire.&lt;/p&gt;
+
+&lt;p&gt;This will cause our &lt;code&gt;Log::Dispatch::File&lt;/code&gt; appender to add the following line&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    INFO - Eating Sushi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;to the logfile &lt;code&gt;test.log&lt;/code&gt;. But wait &amp;ndash; where did the nice formatting with date, time, source file name, line number and function go we saw earlier on in &lt;code&gt;:easy&lt;/code&gt; mode? By simply specifying an appender without defining its &lt;em&gt;layout&lt;/em&gt;, &lt;code&gt;Log::Log4perl&lt;/code&gt; just assumed we wanted the no-frills log message layout &lt;code&gt;SimpleLayout&lt;/code&gt;, which just logs the incident priority and the message, separated by a dash.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-layouts-layouts-span&#34;&gt;&lt;span id=&#34;Layouts&#34;&gt;Layouts&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If we want to get fancier (the previously shown &lt;code&gt;:easy&lt;/code&gt; target did this behind our back), then we need to use the more flexible &lt;code&gt;PatternLayout&lt;/code&gt; instead. It takes a format string as an argument, in which it will &amp;ndash; similar to &lt;code&gt;printf()&lt;/code&gt; &amp;ndash; replace a number of placeholders by their actual values when it comes down to log the message. Here&amp;rsquo;s how to attach a layout to our appender:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        # Layouts
+    my $layout =
+      Log::Log4perl::Layout::PatternLayout-&amp;gt;new(
+                     &amp;quot;%d %p&amp;gt; %F{1}:%L %M - %m%n&amp;quot;);
+    $appender-&amp;gt;layout($layout);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since &lt;code&gt;%d&lt;/code&gt; stands for date and time, &lt;code&gt;%p&lt;/code&gt; for priority, &lt;code&gt;%F&lt;/code&gt; for the source file name, &lt;code&gt;%M&lt;/code&gt; for the method executed, &lt;code&gt;%m&lt;/code&gt; for the log message and &lt;code&gt;%n&lt;/code&gt; for a newline, this layout will cause the appender to write the message like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    2002/08/06 08:26:23 INFO&amp;gt; eat:56 Groceries::Food::consume - Eating Sushi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;%F{1}&lt;/code&gt; is special in that it takes the right-most component of the file, which usually consists of the full path &amp;ndash; just like the &lt;code&gt;basename()&lt;/code&gt; function does.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s it &amp;ndash; we&amp;rsquo;ve got &lt;code&gt;Log::Log4perl&lt;/code&gt; ready for the big league. Listing &lt;code&gt;eat.pl&lt;/code&gt; shows the entire &amp;ldquo;system&amp;rdquo;: Startup code, the main program and the application wrapped into the &lt;code&gt;Groceries::Food&lt;/code&gt; class.&lt;/p&gt;
+
+&lt;h4 id=&#34;listing-2-eat-pl&#34;&gt;Listing 2: eat.pl&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;    01 ######### System initialization section ###
+    02 use Log::Log4perl qw(get_logger :levels);
+    03
+    04 my $food_logger = get_logger(&amp;quot;Groceries::Food&amp;quot;);
+    05 $food_logger-&amp;gt;level($INFO);
+    06
+    07     # Appenders
+    08 my $appender = Log::Log4perl::Appender-&amp;gt;new(
+    09     &amp;quot;Log::Dispatch::File&amp;quot;,
+    10     filename =&amp;gt; &amp;quot;test.log&amp;quot;,
+    11     mode     =&amp;gt; &amp;quot;append&amp;quot;,
+    12 );
+    13
+    14 $food_logger-&amp;gt;add_appender($appender);
+    15
+    16     # Layouts
+    17 my $layout =
+    18   Log::Log4perl::Layout::PatternLayout-&amp;gt;new(
+    19                  &amp;quot;%d %p&amp;gt; %F{1}:%L %M - %m%n&amp;quot;);
+    20 $appender-&amp;gt;layout($layout);
+    21
+    22 ######### Run it ##########################
+    23 my $food = Groceries::Food-&amp;gt;new(&amp;quot;Sushi&amp;quot;);
+    24 $food-&amp;gt;consume();
+    25
+    26 ######### Application section #############
+    27 package Groceries::Food;
+    28
+    29 use Log::Log4perl qw(get_logger);
+    30
+    31 sub new {
+    32     my($class, $what) = @_;
+    33
+    34     my $logger = get_logger(&amp;quot;Groceries::Food&amp;quot;);
+    35
+    36     if(defined $what) {
+    37         $logger-&amp;gt;debug(&amp;quot;New food: $what&amp;quot;);
+    38         return bless { what =&amp;gt; $what }, $class;
+    39     }
+    40
+    41     $logger-&amp;gt;error(&amp;quot;No food defined&amp;quot;);
+    42     return undef;
+    43 }
+    44
+    45 sub consume {
+    46     my($self) = @_;
+    47
+    48     my $logger = get_logger(&amp;quot;Groceries::Food&amp;quot;);
+    49     $logger-&amp;gt;info(&amp;quot;Eating $self-&amp;gt;{what}&amp;quot;);
+    50 }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-beginner-s-pitfalls-beginner-s-pitfalls-span&#34;&gt;&lt;span id=&#34;Beginner_s_Pitfalls&#34;&gt;Beginner&amp;rsquo;s Pitfalls&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Remember when we said that if a logger decides to fire, then it forwards the message to all of its appenders and also has it bubble up the hierarchy to hit all other appenders it meets on the way up?&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t underestimate the ramifications of this statement. It usually puzzles &lt;code&gt;Log::Log4perl&lt;/code&gt; beginners. Imagine the following logging requirements for a new system:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Messages of level FATAL are supposed to be written to STDERR, no matter which subsystem has issued them.&lt;/li&gt;
+&lt;li&gt;Messages issued by the &lt;code&gt;Groceries&lt;/code&gt; category, priorized DEBUG and higher need to be appended to a log file for debugging purposes.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Easy enough: Let&amp;rsquo;s set the root logger to &lt;code&gt;FATAL&lt;/code&gt; and attach a &lt;code&gt;Log::Dispatch::Screen&lt;/code&gt; appender to it. Then, let&amp;rsquo;s set the &lt;code&gt;Groceries&lt;/code&gt; logger to &lt;code&gt;DEBUG&lt;/code&gt; and attach a &lt;code&gt;Log::Dispatch::File&lt;/code&gt; appender to it.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2002_09_11_log4perl/pitfalls.gif&#34; alt=&#34;Figure 2&#34; width=&#34;475&#34; height=&#34;262&#34; /&gt;
+&lt;span class=&#34;secondary&#34;&gt; &lt;/span&gt;
+&lt;strong&gt;Figure 2: A Groceries::Food and a root appender&lt;/strong&gt;
+Now, if any logger anywhere in the system issues a &lt;code&gt;FATAL&lt;/code&gt; message and decides to &amp;lsquo;fire,&amp;rsquo; the message will bubble up to the top of the logger hierarchy, be caught by every appender on the way and ultimately end up at the root logger&amp;rsquo;s appender, which will write it to STDERR as required. Nice.&lt;/p&gt;
+
+&lt;p&gt;But what happens to DEBUG messages originating within &lt;code&gt;Groceries&lt;/code&gt;? Not only will the &lt;code&gt;Groceries&lt;/code&gt; logger &amp;lsquo;fire&amp;rsquo; and forward the message to its appender, but it will also percolate up the hierarchy and end up at the appender attached to the root logger. And, it&amp;rsquo;s going to fill up STDERR with DEBUG messages from &lt;code&gt;Groceries&lt;/code&gt;, whoa!&lt;/p&gt;
+
+&lt;p&gt;This kind of unwanted appender chain reaction causes duplicated logs. Here&amp;rsquo;s two mechanisms to keep it in check:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Each appender carries an &lt;em&gt;additivity&lt;/em&gt; flag. If this is set to a false value, like in&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $appender-&amp;gt;additivity(0);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then the message won&amp;rsquo;t bubble up further in the hierarchy after the appender is finished.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Each appender can define a so-called &lt;em&gt;appender threshold&lt;/em&gt;, a minimum level required for an oncoming message to be honored by the appender:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $appender-&amp;gt;threshold($ERROR);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the level doesn&amp;rsquo;t meet the appender&amp;rsquo;s threshold, then it is simply ignored by this appender.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In the case above, setting the additivity flag of the &lt;code&gt;Groceries&lt;/code&gt;-Appender to a false value won&amp;rsquo;t have the desired effect, because it will stop FATAL messages of the &lt;code&gt;Groceries&lt;/code&gt; category to be forwarded to the root appender. However, setting the root logger&amp;rsquo;s threshold to &lt;code&gt;FATAL&lt;/code&gt; will do the trick: DEBUG messages bubbling up from &lt;code&gt;Groceries&lt;/code&gt; will simply be ignored.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-compact-logger-setups-with-confi-compact-logger-setups-with-configuration-files-span&#34;&gt;&lt;span id=&#34;Compact_logger_setups_with_confi&#34;&gt;Compact Logger Setups With Configuration Files&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Configuring &lt;code&gt;Log::Log4perl&lt;/code&gt; can be accomplished outside of your program in a configuration file. In fact, this is the most compact and the most common way of specifying the behavior of your loggers. Because &lt;code&gt;Log::Log4perl&lt;/code&gt; originated out of the Java-based &lt;code&gt;log4j&lt;/code&gt; system, it understands &lt;code&gt;log4j&lt;/code&gt; configuration files:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    log4perl.logger.Groceries=DEBUG, A1
+    log4perl.appender.A1=Log::Dispatch::File
+    log4perl.appender.A1.filename=test.log
+    log4perl.appender.A1.mode=append
+    log4perl.appender.A1.layout=Log::Log4perl::Layout::PatternLayout
+    log4perl.appender.A1.layout.ConversionPattern=%d %p&amp;gt; %F{1}:%L %M - %m%n
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This defines a logger of the category &lt;code&gt;Groceries&lt;/code&gt;, whichs priority is set to DEBUG. It has the appender &lt;code&gt;A1&lt;/code&gt; attached to it, which is later resolved to be a new &lt;code&gt;Log::Dispatch::File&lt;/code&gt; appender with various settings and a PatternLayout with a user-defined format (&lt;code&gt;ConversionPattern&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;If you store this in &lt;code&gt;eat.conf&lt;/code&gt; and initialize your system with&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Log::Log4perl-&amp;gt;init(&amp;quot;eat.conf&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;then you&amp;rsquo;re done. The system&amp;rsquo;s compact logging setup is now separated from the application and can be easily modified by people who don&amp;rsquo;t need to be familiar with the code, let alone Perl.&lt;/p&gt;
+
+&lt;p&gt;Or, if you store the configuration description in &lt;code&gt;$string&lt;/code&gt;, then you can initialize it with&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Log::Log4perl-&amp;gt;init(\$string);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can even have your application check the configuration file in regular intervals (this obviously works only with files, not with strings):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Log::Log4perl-&amp;gt;init_and_watch(&amp;quot;eat.conf&amp;quot;, 60);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;checks &lt;code&gt;eat.conf&lt;/code&gt; every 60 seconds upon log requests and reloads everything and re-initializes itself if it detects a change in the configuration file. With this, it&amp;rsquo;s possible to tune your logger settings &lt;em&gt;while&lt;/em&gt; the system is running without restarting it!&lt;/p&gt;
+
+&lt;p&gt;The compatibility of &lt;code&gt;Log::Log4perl&lt;/code&gt; with &lt;code&gt;log4j&lt;/code&gt; goes so far that &lt;code&gt;Log::Log4perl&lt;/code&gt; even understands &lt;code&gt;log4j&lt;/code&gt; Java classes as appenders and maps them, if possible, to the corresponding ones in the &lt;code&gt;Log::Dispatch&lt;/code&gt; namespace. &lt;code&gt;Log::Log4perl&lt;/code&gt; will happily process the following Java-fied version of the configuration shown at the beginning of this section:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    log4j.logger.Groceries=DEBUG, A1
+    log4j.appender.A1=org.apache.log4j.FileAppender
+    log4j.appender.A1.File=test.log
+    log4j.appender.A1.layout=org.apache.log4j.PatternLayout
+    log4j.appender.A1.layout.ConversionPattern=%F %L %p %t %c - %m%n
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Java-specific &lt;code&gt;FileAppender&lt;/code&gt; class will be mapped by &lt;code&gt;Log::Log4perl&lt;/code&gt; to &lt;code&gt;Log::Dispatch::File&lt;/code&gt; behind the scenes and the parameters adjusted (The Java-specific &lt;code&gt;File&lt;/code&gt; will become &lt;code&gt;filename&lt;/code&gt; and an additional parameter &lt;code&gt;mode&lt;/code&gt; will be set to &lt;code&gt;&amp;quot;append&amp;quot;&lt;/code&gt; for the &lt;code&gt;Log::Dispatch&lt;/code&gt; world).&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-typical-use-cases-typical-use-cases-span&#34;&gt;&lt;span id=&#34;Typical_use_cases&#34;&gt;Typical Use Cases&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The configuration file format is more compact than the Perl code, so let&amp;rsquo;s use it to illustrate some real-world cases (although you could do the same things in Perl, of course!):&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ve seen before that a configuration line like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    log4perl.logger.Groceries=DEBUG, A1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;will turn on logging in &lt;code&gt;Groceries::Drink&lt;/code&gt; and &lt;code&gt;Groceries::Food&lt;/code&gt; (and all of their descendants if they exist) with priority DEBUG via inheritance. What if &lt;code&gt;Groceries::Drink&lt;/code&gt; gets a bit too noisy and you want to raise its priority to at least INFO while keeping the DEBUG setting for &lt;code&gt;Groceries::Food&lt;/code&gt;? That&amp;rsquo;s easy, no need to change your code, just modify the configuration file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    log4perl.logger.Groceries.Drink=INFO, A1
+    log4perl.logger.Groceries.Food=DEBUG, A1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or, you could use inheritance to accomplish the same thing. You define INFO as the priority for &lt;code&gt;Groceries&lt;/code&gt; and override &lt;code&gt;Groceries.Food&lt;/code&gt; with a less restrictive setting:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    log4perl.logger.Groceries=INFO, A1
+    log4perl.logger.Groceries.Food=DEBUG, A1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Groceries::Food&lt;/code&gt; will be still on &lt;code&gt;DEBUG&lt;/code&gt; after that, while &lt;code&gt;Groceries&lt;/code&gt; and &lt;code&gt;Groceries::Drinks&lt;/code&gt; will be on &lt;code&gt;INFO&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Or, you could choose to turn on detailed DEBUG logging all over the system and just bump up the minimum level for the noisy &lt;code&gt;Groceries.Drink&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    log4perl.logger=DEBUG, A1
+    log4perl.logger.Groceries.Drink=INFO, A1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This sets the root logger to &lt;code&gt;DEBUG&lt;/code&gt;, which all other loggers in the system will inherit. Except &lt;code&gt;Groceries.Drink&lt;/code&gt; and its descendents, of course, which will carry the &lt;code&gt;INFO&lt;/code&gt; priority.&lt;/p&gt;
+
+&lt;p&gt;Or, similarily to what we&amp;rsquo;ve talked about in the &lt;a href=&#34;#Beginner_s_Pitfalls&#34;&gt;Beginner&amp;rsquo;s Pitfalls&lt;/a&gt; section, let&amp;rsquo;s say you wanted to print FATAL messages system-wide to STDOUT, while turning on detailed logging under &lt;code&gt;Groceries::Food&lt;/code&gt; and writing the messages to a log file? Use this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    log4perl.logger=FATAL, Screen
+    log4perl.logger.Groceries.Food=DEBUG, Log
+
+    log4perl.appender.Screen=Log::Dispatch::Screen
+    log4perl.appender.Screen.stderr=0
+    log4perl.appender.Screen.Threshold=FATAL
+    log4perl.appender.Screen.layout=Log::Log4perl::Layout::SimpleLayout
+
+    log4perl.appender.Log=Log::Dispatch::File
+    log4perl.appender.Log.filename=test.log
+    log4perl.appender.Log.mode=append
+    log4perl.appender.Log.layout=Log::Log4perl::Layout::SimpleLayout
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As mentioned in &lt;a href=&#34;#Appenders&#34;&gt;Appenders&lt;/a&gt;, setting the appender threshold of the screen appender to FATAL keeps &lt;code&gt;DEBUG&lt;/code&gt; messages out of the root appender and so effectively prevents message duplication.&lt;/p&gt;
+
+&lt;p&gt;According to the &lt;code&gt;Log::Dispatch::Screen&lt;/code&gt; documentation, setting its &lt;code&gt;stderr&lt;/code&gt; attribute to a false value causes it log to STDOUT instead of STDERR. &lt;code&gt;log4perl.appender.XXX.layout&lt;/code&gt; is the configuration file way to specify the no-frills Layout seen earlier.&lt;/p&gt;
+
+&lt;p&gt;You could also have multiple appenders attached to one category, like in&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    log4perl.logger.Groceries=DEBUG, Log, Database, Emailer
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;if you had &lt;code&gt;Log::Dispatch&lt;/code&gt;-type appenders defined for &lt;code&gt;Log&lt;/code&gt;, &lt;code&gt;Database&lt;/code&gt; and &lt;code&gt;Emailer&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-performance-penalties-and-how-to-performance-penalties-and-how-to-minimize-them-span&#34;&gt;&lt;span id=&#34;Performance_penalties_and_how_to&#34;&gt;Performance Penalties and How to Minimize Them&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Logging comes with a (small) price tag: We figure out at &lt;em&gt;runtime&lt;/em&gt; if a message is going to be logged or not. &lt;code&gt;Log::Log4perl&lt;/code&gt;&amp;rsquo;s primary design directive has been to run this check at maximum speed in order to avoid slowing down the application. Internally, it has been highly optimized so that even if you&amp;rsquo;re using large category hierarchies, the impact of a call to e.g. &lt;code&gt;$logger-&amp;gt;debug()&lt;/code&gt; in non-&lt;code&gt;DEBUG&lt;/code&gt; mode is negligable.&lt;/p&gt;
+
+&lt;p&gt;While &lt;code&gt;Log::Log4perl&lt;/code&gt; tries hard not to impose a runtime penalty on your application, it has no control over the code leading to &lt;code&gt;Log::Log4perl&lt;/code&gt; calls and needs your cooperation with that. For example, take a look at this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   use Data::Dumper;
+   $log-&amp;gt;debug(&amp;quot;Dump: &amp;quot;, Dumper($resp));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Passing arguments to the logging functions can impose a severe runtime penalty, because there&amp;rsquo;s often expensive operations going on before the arguments are actually passed on to &lt;code&gt;Log::Log4perl&lt;/code&gt;&amp;rsquo;s logging functions. The snippet above will have &lt;code&gt;Data::Dumper&lt;/code&gt; completely unravel the structure of the object behind &lt;code&gt;$resp&lt;/code&gt;, pass the whole slew on to &lt;code&gt;debug()&lt;/code&gt;, which might then very well decide to throw it away. If the effective debug level for the current category isn&amp;rsquo;t high enough to actually forward the message to the appropriate &lt;code&gt;appender(s),&lt;/code&gt; then we should have never called &lt;em&gt;Dumper()&lt;/em&gt; in the first place.&lt;/p&gt;
+
+&lt;p&gt;With this in mind, the logging functions don&amp;rsquo;t only accept strings as arguments, but also subroutine references which, in case the logger is actually firing, it will call the subroutine behind the reference and take its output as a message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   $log-&amp;gt;debug(&amp;quot;Dump: &amp;quot;, sub { Dumper($resp) } );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The snippet above won&amp;rsquo;t call &lt;code&gt;Dumper()&lt;/code&gt; right away, but pass on the subroutine reference to the logger&amp;rsquo;s &lt;code&gt;DEBUG&lt;/code&gt; method instead. Perl&amp;rsquo;s closure mechanism will make sure that the value of &lt;code&gt;$resp&lt;/code&gt; will be preserved, even if the subroutine will be handed over to &lt;code&gt;Log::Log4perl&lt;/code&gt;s lower level functions. Once &lt;code&gt;Log::Log4perl&lt;/code&gt; will decide that the message is indeed going to be logged, it will execute the subroutine, take its return value as a string and log it.&lt;/p&gt;
+
+&lt;p&gt;Also, your application can help out and check if it&amp;rsquo;s necessary to pass &lt;em&gt;any&lt;/em&gt; parameters at all:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;   if($log-&amp;gt;is_debug()) {
+       $log-&amp;gt;debug(&amp;quot;Interpolation: @long_array&amp;quot;);
+   }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At the cost of a little code duplication, we avoid interpolating a huge array into the log string in case the effective log level prevents the message from being logged anyway.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-installation-installation-span&#34;&gt;&lt;span id=&#34;Installation&#34;&gt;Installation&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;Log::Log4perl&lt;/code&gt; is freely available from CPAN. It also requires the presence of two other modules, &lt;code&gt;Log::Dispatch&lt;/code&gt; (2.00 or better, which is a bundle itself) and &lt;code&gt;Time::HiRes&lt;/code&gt; (1.20 or better). If you&amp;rsquo;re using the CPAN shell to install &lt;code&gt;Log::Log4perl&lt;/code&gt;, then it will resolve these and other recursive dependencies for you automatically and download the required modules one by one from CPAN.&lt;/p&gt;
+
+&lt;p&gt;At the time this article went to print, 0.22 was the stable release of &lt;code&gt;Log::Log4perl&lt;/code&gt;, available from [1] and CPAN. Also on [1], the CVS source tree is publicly available for those who want the (sometimes shaky) bleeding development edge. The CPAN releases, on the other hand are guaranteed to be stable.&lt;/p&gt;
+
+&lt;p&gt;If you have questions, requests for new features, or if you want to contribute a patch to &lt;code&gt;Log::Log4perl&lt;/code&gt;, then please send them to our mailing list at &lt;a href=&#34;MAILTO:log4perl-devel@lists.sourceforge.net&#34;&gt;log4perl-devel@lists.sourceforge.net&lt;/a&gt; on SourceForge.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-project-status-and-similar-modul-project-status-and-similar-modules-span&#34;&gt;&lt;span id=&#34;Project_Status_and_similar_Modul&#34;&gt;Project Status and Similar Modules&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;Log::Log4perl&lt;/code&gt; has been inspired by &lt;em&gt;Tatsuhiko Miyagawa&lt;/em&gt;&amp;rsquo;s clever &lt;code&gt;Log::Dispatch::Config&lt;/code&gt; module, which provides a wrapper around the &lt;code&gt;Log::Dispatch&lt;/code&gt; bundle and understands a subset of the &lt;code&gt;log4j&lt;/code&gt; configuration file syntax. However, &lt;code&gt;Log::Dispatch::Config&lt;/code&gt; does not provide a full Perl API to &lt;code&gt;log4j&lt;/code&gt; &amp;ndash; and this is a key issue which &lt;code&gt;Log::Log4perl&lt;/code&gt; has been designed to address. &lt;code&gt;Log::Log4perl&lt;/code&gt; is a &lt;code&gt;log4j&lt;/code&gt; &lt;em&gt;port&lt;/em&gt;, not just a subset.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;Log::Log4perl&lt;/code&gt; project is still under development, but its API has reached a fairly mature state, where we will change things only for (very) good reasons. There&amp;rsquo;s still a few items on the to-do list, but these are mainly esoteric features of &lt;code&gt;log4j&lt;/code&gt; that still need to find their way into &lt;code&gt;Log::Log4perl&lt;/code&gt;, since the overall goal is to keep it compatible. Also, &lt;code&gt;Log::Log4perl&lt;/code&gt; isn&amp;rsquo;t thread safe yet &amp;ndash; but we&amp;rsquo;re working on it.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-thanks-thanks-span&#34;&gt;&lt;span id=&#34;Thanks&#34;&gt;Thanks&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Special thanks go to fellow Log4perl founder Kevin Goess &lt;a href=&#34;MAILTO:cpan@goess.org,&#34;&gt;(cpan@goess.org),&lt;/a&gt; who wrote half of the code, helped generously to correct the manuscript for this article and invented these crazy performance improvements, making log4j jealous!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-mission-mission-span&#34;&gt;&lt;span id=&#34;Mission&#34;&gt;Mission&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Scatter plenty of debug statements all over your code &amp;ndash; and put them to sleep via the &lt;code&gt;Log::Log4perl&lt;/code&gt; configuration. Let the INFO, ERROR and FATAL statements print to a log file. If you run into trouble, then lower the level in selected parts of the system, and redirect the additional messages to a different file. The dormant DEBUG statements won&amp;rsquo;t cost you anything &amp;ndash; but if you run into trouble, then they might save the day, because your system will have an embedded debugger on demand. Have fun!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-infos-infos-span&#34;&gt;&lt;span id=&#34;Infos&#34;&gt;Infos&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item__1_&#34;&gt;[1]&lt;/span&gt;&lt;/strong&gt; The &lt;code&gt;log4perl&lt;/code&gt; project page: &lt;a href=&#34;http://log4perl.com&#34;&gt;http://log4perl.com&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item__2_&#34;&gt;[2]&lt;/span&gt;&lt;/strong&gt; The &lt;a href=&#34;https://metacpan.org/pod/Log::Log4perl&#34;&gt;Log::Log4perl&lt;/a&gt; documentation
+&lt;strong&gt;&lt;span id=&#34;item__3_&#34;&gt;[3]&lt;/span&gt;&lt;/strong&gt; The &lt;code&gt;log4j&lt;/code&gt; project page on the Apache site: &lt;a href=&#34;https://logging.apache.org/log4j/2.x/&#34;&gt;https://logging.apache.org/log4j/2.x/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item__4_&#34;&gt;[4]&lt;/span&gt;&lt;/strong&gt; Documentation to &lt;a href=&#34;https://metacpan.org/pod/Log::Dispatch&#34;&gt;Log::Dispatch&lt;/a&gt; modules&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

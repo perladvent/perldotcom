@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Profiling on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/profiling/</link>
+    <description>Recent content in Profiling on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 24 Jun 2004 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/profiling/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Profiling Perl</title>
+      <link>http://localhost:1313/pub/2004/06/25/profiling.html/</link>
+      <pubDate>Thu, 24 Jun 2004 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2004/06/25/profiling.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; &lt;a href=&#34;http://www.perl.org/about/whitepapers/perl-profiling.html&#34;&gt;Perl Profiling&lt;/a&gt; has evolved since this article was written, please see &lt;a href=&#34;http://www.perl.org/about/whitepapers/perl-profiling.html&#34;&gt;http://www.perl.org/about/whitepapers/perl-profiling.html&lt;/a&gt; for the latest information.&lt;/p&gt;
+
+&lt;p&gt;Everyone wants their Perl code to run faster. Unfortunately, without understanding why the code is taking so long to start with, it&amp;rsquo;s impossible to know where to start optimizing it. This is where &amp;ldquo;profiling&amp;rdquo; comes in; it lets us know what our programs are doing.&lt;/p&gt;
+
+&lt;p&gt;We&amp;rsquo;ll look at why and how to profile programs, and then what to do with the profiling information once we&amp;rsquo;ve got it.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-why-profile-why-profile-span&#34;&gt;&lt;span id=&#34;Why_Profile?&#34;&gt;Why Profile?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;There&amp;rsquo;s nothing worse than setting off a long-running Perl program and then not knowing what it&amp;rsquo;s doing. I&amp;rsquo;ve recently been working on a new, mail-archiving program for the &lt;code&gt;perl.org&lt;/code&gt; mailing lists, and so I&amp;rsquo;ve had to import a load of old email into the database. Here&amp;rsquo;s the code I used to do this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use File::Slurp;
+    use Email::Store &amp;quot;dbi:SQLite:dbname=mailstore.db&amp;quot;;
+    use File::Find::Rule;
+
+    for (File::Find::Rule-&amp;gt;file-&amp;gt;name(qr/\d+/)-&amp;gt;in(&amp;quot;perl6-language&amp;quot;)) {
+        Email::Store::Mail-&amp;gt;store(scalar read_file($_));
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s an innocent little program &amp;ndash; it looks for all the files in the &lt;em&gt;perl6-language&lt;/em&gt; directory whose names are purely numeric (this is how messages are stored in an ezmlm archive), reads the contents of the files into memory with &lt;code&gt;File::Slurp::read_file&lt;/code&gt;, and then uses &lt;a href=&#34;https://metacpan.org/pod/Email::Store&#34;&gt;&lt;code&gt;Email::Store&lt;/code&gt;&lt;/a&gt; to put them into a database. You start it running, and come back a few hours later and it&amp;rsquo;s done.&lt;/p&gt;
+
+&lt;p&gt;All through, though, you have this nervous suspicion that it&amp;rsquo;s not doing the right thing; or at least, not doing it very quickly. Sure there&amp;rsquo;s a lot of mail, but should it really be taking this long? What&amp;rsquo;s it actually spending its time doing? We can add some &lt;code&gt;print&lt;/code&gt; statements to help us feel more at ease:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use File::Slurp;
+    use Email::Store &amp;quot;dbi:SQLite:dbname=mailstore.db&amp;quot;;
+    use File::Find::Rule;
+
+    print &amp;quot;Starting run...\n&amp;quot;;
+    $|++;
+    for (File::Find::Rule-&amp;gt;file-&amp;gt;name(qr/\d+/)-&amp;gt;in(&amp;quot;perl6-language&amp;quot;)) {
+        print &amp;quot;Indexing $_...&amp;quot;;
+        Email::Store::Mail-&amp;gt;store(scalar read_file($_));
+        print &amp;quot; done\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can at least see more progress, but we still don&amp;rsquo;t know if this program is working to full efficiency, and the reason for this is that there&amp;rsquo;s an awful lot going on in the underlying modules that we can&amp;rsquo;t immediately see. Is it the &lt;code&gt;File::Find::Rule&lt;/code&gt; that&amp;rsquo;s taking up all the time? Is it the storing process? Which part of the storing process? By profiling the code we&amp;rsquo;ll identify, and hopefully smooth over, some of the bottlenecks.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-simple-profiling-simple-profiling-span&#34;&gt;&lt;span id=&#34;Simple_Profiling&#34;&gt;Simple Profiling&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The granddaddy of Perl profiling tools is &lt;a href=&#34;https://metacpan.org/pod/Devel::DProf&#34;&gt;&lt;code&gt;Devel::DProf&lt;/code&gt;&lt;/a&gt;. To profile a code run, add the &lt;code&gt;-d:DProf&lt;/code&gt; argument to your Perl command line and let it go:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    % perl -d:DProf store_archive
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The run will now take slightly longer than normal as Perl collects and writes out information on your program&amp;rsquo;s subroutine calls and exits, and at the end of your job, you&amp;rsquo;ll find a file called &lt;em&gt;tmon.out&lt;/em&gt; in the current directory; this contains all the profiling information.&lt;/p&gt;
+
+&lt;p&gt;A couple of notes about this:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;It&amp;rsquo;s important to control the length of the run; in this case, I&amp;rsquo;d probably ensure that the mail archive contained about ten or fifteen mails to store. (I used seven in this example.) If your run goes on too long, you will end up processing a vast amount of profiling data, and not only will it take a lot time to read back in, it&amp;rsquo;ll take far too long for you to wade through all the statistics. On the other hand, if the run&amp;rsquo;s too short, the main body of the processing will be obscured by startup and other &amp;ldquo;fixed costs.&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;The other problem you might face is that &lt;code&gt;Devel::DProf&lt;/code&gt;, being somewhat venerable, occasionally has problems keeping up on certain recent Perls, (particularly the 5.6.x series) and may end up segfaulting all over the place. If this affects you, download the &lt;a href=&#34;https://metacpan.org/pod/Devel::Profiler&#34;&gt;&lt;code&gt;Devel::Profiler&lt;/code&gt;&lt;/a&gt; module from CPAN, which is a pure-Perl replacement for it.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The next step is to run the preprocessor for the profiler output, &lt;code&gt;dprofpp&lt;/code&gt;. This will produce a table of where our time has been spent:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Total Elapsed Time = 13.89525 Seconds
+    User+System Time = 9.765255 Seconds
+  Exclusive Times
+  %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+   24.1   2.355  4.822     38   0.0620 0.1269  File::Find::_find_dir
+   20.5   2.011  2.467  17852   0.0001 0.0001  File::Find::Rule::__ANON__
+   7.82   0.764  0.764    531   0.0014 0.0014  DBI::st::execute
+   4.73   0.462  0.462  18166   0.0000 0.0000  File::Spec::Unix::splitdir
+   2.92   0.285  0.769    109   0.0026 0.0071  base::import
+   2.26   0.221  0.402    531   0.0004 0.0008  Class::DBI::transform_sql
+   2.09   0.204  0.203   8742   0.0000 0.0000  Class::Data::Inheritable::__ANON__
+   1.72   0.168  0.359  18017   0.0000 0.0000  Class::DBI::Column::name_lc
+   1.57   0.153  0.153  18101   0.0000 0.0000  Class::Accessor::get
+   1.42   0.139  0.139     76   0.0018 0.0018  Cwd::abs_path
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first two lines tell us how long the program ran for: around 14 seconds, but it was actually only running for about 10 of those &amp;ndash; the rest of the time other programs on the system were in the foreground.&lt;/p&gt;
+
+&lt;p&gt;Next we have a table of subroutines, in descending order of time spent; perhaps surprisingly, we find that &lt;code&gt;File::Find&lt;/code&gt; and &lt;code&gt;File::Find::Rule&lt;/code&gt; are the culprits for eating up 20% of running time each. We&amp;rsquo;re also told the number of &amp;ldquo;exclusive seconds,&amp;rdquo; which is the amount of time spent in one particular subroutine, and &amp;ldquo;cumulative seconds.&amp;rdquo; This might better be called &amp;ldquo;inclusive seconds,&amp;rdquo; since it&amp;rsquo;s the amount of time the program spent in a particular subroutine and all the other routines called from it.&lt;/p&gt;
+
+&lt;p&gt;From the statistics above, we can guess that &lt;code&gt;File::Find::_find_dir&lt;/code&gt; itself took up 2 seconds of time, but during its execution, it called an anonymous subroutine created by &lt;code&gt;File::Find::Rule&lt;/code&gt;, and this subroutine also took up 2 seconds, making a cumulative time of 4 seconds. We also notice that we&amp;rsquo;re making an awful lot of calls to &lt;code&gt;File::Find::Rule&lt;/code&gt;, &lt;code&gt;splitdir&lt;/code&gt;, and some &lt;code&gt;Class::DBI&lt;/code&gt; and &lt;code&gt;Class::Accessor&lt;/code&gt; routines.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-what-to-do-now-what-to-do-now-span&#34;&gt;&lt;span id=&#34;What_to_do_now&#34;&gt;What to Do Now&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Now we have some profiling information, and we see a problem with &lt;code&gt;File::Find::Rule&lt;/code&gt;. &amp;ldquo;Aha,&amp;rdquo; we might think, &amp;ldquo;Let&amp;rsquo;s replace our use of &lt;code&gt;File::Find::Rule&lt;/code&gt; with a simple globbing operation, and we can shave 4 seconds off our runtime!&amp;ldquo;. So, just for an experiment, we try it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use File::Slurp;
+    use Email::Store &amp;quot;dbi:SQLite:dbname=mailstore.db&amp;quot;;
+    $|=1;
+    for (&amp;lt;perl6-language/archive/0/*&amp;gt;) {
+        next unless /\d+/;
+        print &amp;quot;$_ ...&amp;quot;;
+        Email::Store::Mail-&amp;gt;store(scalar read_file($_));
+        print &amp;quot;\n&amp;quot;;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now this looks a bit better:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Total Elapsed Time = 9.559537 Seconds
+   User+System Time = 5.329537 Seconds
+ Exclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  13.1   0.703  0.703    531   0.0013 0.0013  DBI::st::execute
+  5.54   0.295  0.726    109   0.0027 0.0067  base::import
+  5.52   0.294  0.294  18101   0.0000 0.0000  Class::Accessor::get
+  3.45   0.184  1.930  19443   0.0000 0.0001  Class::Accessor::__ANON__
+  3.13   0.167  0.970    531   0.0003 0.0018  DBIx::ContextualFetch::st::_untain
+                                              t_execute
+  3.10   0.165  1.324   1364   0.0001 0.0010  Class::DBI::get
+  2.98   0.159  0.376    531   0.0003 0.0007  Class::DBI::transform_sql
+  2.61   0.139  0.139     74   0.0019 0.0019  Cwd::abs_path
+  2.23   0.119  0.119   8742   0.0000 0.0000  Class::Data::Inheritable::__ANON__
+  2.06   0.110  0.744   2841   0.0000 0.0003  Class::DBI::__ANON__
+  1.95   0.104  0.159   2669   0.0000 0.0001  Class::DBI::ColumnGrouper::group_cols
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now to be honest, I would never have guessed that removing &lt;code&gt;File::Find::Rule&lt;/code&gt; would shave 4 seconds off my code run. This is the first rule of profiling: You actually need to profile before optimizing, because &lt;strong&gt;you never know where the hotspots are going to turn out to be.&lt;/strong&gt; We&amp;rsquo;ve also exercised the second rule of profiling: &lt;strong&gt;Review what you&amp;rsquo;re using.&lt;/strong&gt; By using another technique instead of &lt;code&gt;File::Find::Rule&lt;/code&gt;, we&amp;rsquo;ve reduced our running time by a significant amount.&lt;/p&gt;
+
+&lt;p&gt;This time, it looks as though we&amp;rsquo;re doing reasonably well &amp;ndash; the busiest thing is writing to a database, and that&amp;rsquo;s basically what this application does, so that&amp;rsquo;s fair enough. There&amp;rsquo;s also a lot of busy calls that are to do with &lt;code&gt;Class::DBI&lt;/code&gt;, and we know that we use &lt;code&gt;Class::DBI&lt;/code&gt; as a deliberate tradeoff between convenience and efficiency. If we were being ruthlessly determined to make this program faster, we&amp;rsquo;d start looking at using plain &lt;code&gt;DBI&lt;/code&gt; instead of &lt;code&gt;Class::DBI&lt;/code&gt;, but that&amp;rsquo;s a tradeoff I don&amp;rsquo;t think is worth making at the moment.&lt;/p&gt;
+
+&lt;p&gt;This is the third rule of profiling: &lt;strong&gt;Hotspots happen.&lt;/strong&gt; If you got rid of all the hotspots in your code, it wouldn&amp;rsquo;t do anything. There are a certain reasonable number of things that your program should be doing for it to be useful, and you simply can&amp;rsquo;t get rid of them; additionally there are any number of tradeoffs that we deliberately or subconsciously make in order to make our lives easier at some potential speed cost &amp;ndash; for instance, writing in Perl or C instead of machine code.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-from-exclusive-to-inclusive-from-exclusive-to-inclusive-span&#34;&gt;&lt;span id=&#34;From_exclusive_to_inclusive&#34;&gt;From Exclusive to Inclusive&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The default report produced by &lt;em&gt;dprofpp&lt;/em&gt; is sorted by exclusive subroutine time, and is therefore good at telling us about individual subroutines that are called a lot and take up disproportionate amounts of time. This can be useful, but it doesn&amp;rsquo;t actually give us an overall view of what our code is doing. If we want to do that, we need to move from looking at exclusive to looking at inclusive times, and we do this by adding the &lt;code&gt;-I&lt;/code&gt; option to &lt;em&gt;dprofpp&lt;/em&gt;. This produces something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Total Elapsed Time = 9.559537 Seconds
+   User+System Time = 5.329537 Seconds
+ Inclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  83.8   0.009  4.468      7   0.0013 0.6383  Email::Store::Mail::store
+  80.8   0.061  4.308     35   0.0017 0.1231  Module::Pluggable::Ordered::__ANON
+                                              __
+  46.3       -  2.472      3        - 0.8239  main::BEGIN
+  43.4       -  2.314      7        - 0.3306  Mail::Thread::thread
+  43.4       -  2.314      7        - 0.3305  Email::Store::Thread::on_store
+  36.2   0.184  1.930  19443   0.0000 0.0001  Class::Accessor::__ANON__
+  28.9   0.006  1.543    531   0.0000 0.0029  Email::Store::Thread::Container::_
+                                              _ANON__
+  27.3   0.068  1.455    105   0.0006 0.0139  UNIVERSAL::require
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This tells us a number of useful facts. First, we find that 84% of the program&amp;rsquo;s runtime is spent in the &lt;code&gt;Email::Store::Mail::store&lt;/code&gt; subroutine and its descendants, which is the main, tight loop of the program. This means, quite logically, that 16% is not spent in the main loop, and that&amp;rsquo;s a good sign &amp;ndash; this means that we have a 1-second fixed cost in starting up and loading the appropriate modules, and this will amortize nicely against a longer run than 10 seconds. After all, if processing a massive amount of mail takes 20 minutes, the first 1-second startup becomes insignificant. It means we can pretty much ignore everything outside the main loop.&lt;/p&gt;
+
+&lt;p&gt;We also find that threading the emails is costly; threading involves a lot of manipulation of &lt;code&gt;Email::Store::Thread::Container&lt;/code&gt; objects, which are database backed. This means that a lot of the database stores and executes that we saw in the previous, exclusive report are probably something to do with threading. After all, we now spend 2 seconds out of our 4 seconds of processing time on threading in &lt;code&gt;Mail::Thread::thread&lt;/code&gt;, and even though we only call this seven times, we do 531 things with the container objects. This is bad.&lt;/p&gt;
+
+&lt;p&gt;Now, I happen to know (because I wrote the module) that &lt;code&gt;Email::Store::Thread::Container&lt;/code&gt; uses a feature of &lt;code&gt;Class::DBI&lt;/code&gt; called &lt;code&gt;autoupdate&lt;/code&gt;. This means that while we do a lot of fetches and stores that we could conceivably do in memory and commit to the database once we&amp;rsquo;re done, we instead hit the database every single time.&lt;/p&gt;
+
+&lt;p&gt;So, just as an experiment, we do two things to optimize &lt;code&gt;Email::Store::Thread::Container&lt;/code&gt;. First, we know that we&amp;rsquo;re going to be doing a lot of database fetches, sometimes of the same container multiple times, so we cache the fetch. We turn this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub new { 
+        my ($class, $id) = @_;
+        $class-&amp;gt;find_or_create({ message =&amp;gt; $id });
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Into this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my %container_cache = ();
+    sub new {
+        my ($class, $id) = @_;
+        $container_cache{$id} 
+            ||= $class-&amp;gt;find_or_create({ message =&amp;gt; $id });
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a standard caching technique, and will produce another tradeoff: we trade memory (in filling up &lt;code&gt;%container_cache&lt;/code&gt; with a bunch of objects) for speed (in not having to do as many costly database fetches).&lt;/p&gt;
+
+&lt;p&gt;Then we turn &lt;code&gt;autoupdate&lt;/code&gt; off, and provide a way of updating the database manually. The reason we wanted to turn off &lt;code&gt;autoupdate&lt;/code&gt; is that because all these containers form a tree structure (since they represent mails in a thread which, naturally, form a tree structure), it&amp;rsquo;s a pain to traverse the tree and update all the containers once we&amp;rsquo;re done.&lt;/p&gt;
+
+&lt;p&gt;However, with this cache in place, we know that we already have a way to get at all the containers in one go: we just look at the values of &lt;code&gt;%container_hash&lt;/code&gt;, and there are all the objects we&amp;rsquo;ve used. So we can now add a &lt;code&gt;flush&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub flush {
+        (delete $container_cache{$_})-&amp;gt;update for keys %container_cache;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This both empties the cache and updates the database. The only remaining problem is working out where to call &lt;code&gt;flush&lt;/code&gt;. If we&amp;rsquo;re dealing with absolutely thousands of emails, it might be worth calling &lt;code&gt;flush&lt;/code&gt; after every &lt;code&gt;store&lt;/code&gt;, or else &lt;code&gt;%container_hash&lt;/code&gt; will get huge. However, since we&amp;rsquo;re not, we just call &lt;code&gt;flush&lt;/code&gt; in an &lt;code&gt;END&lt;/code&gt; block to catch the container objects before they get destroyed by the garbage collector:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    END { Email::Store::Thread::Container-&amp;gt;flush; }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running &lt;em&gt;dprofpp&lt;/em&gt; again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; Total Elapsed Time = 7.741969 Seconds
+   User+System Time = 3.911969 Seconds
+ Inclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  65.4       -  2.559      7        - 0.3656  Email::Store::Mail::store
+  62.9   0.014  2.461     35   0.0004 0.0703  Module::Pluggable::Ordered::__ANON
+                                              __
+  56.2   0.020  2.202      3   0.0065 0.7341  main::BEGIN
+  31.8   0.028  1.247    105   0.0003 0.0119  UNIVERSAL::require
+  29.4   0.004  1.150      7   0.0006 0.1642  Email::Store::Entity::on_store
+  22.7   0.025  0.890    100   0.0003 0.0089  Class::DBI::create
+  21.0   0.031  0.824    100   0.0003 0.0082  Class::DBI::_create
+  18.3   0.235  0.716    109   0.0022 0.0066  base::import
+  15.1       -  0.594    274        - 0.0022  DBIx::ContextualFetch::st::execute
+  15.1       -  0.592      7        - 0.0846  Mail::Thread::thread
+  15.1       -  0.592      7        - 0.0845  Email::Store::Thread::on_store
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We find that we&amp;rsquo;ve managed to shave another second-and-a-half off, and we&amp;rsquo;ve also swapped a per-mail cost (of updating the threading containers every time) to a once-per-run fixed cost (of updating them all at the end of the run). This has taken the business of threading down from two-and-a-half seconds per run to half a second per run, and it means that 35% of our running time is outside the main loop; again, this will amortize nicely on large runs.&lt;/p&gt;
+
+&lt;p&gt;We started with a program that runs for 10 seconds, and now it runs for 4. Through judicious use of the profiler, we&amp;rsquo;ve identified the hotspots and eliminated the most troublesome ones. We&amp;rsquo;ve looked at both exclusive and inclusive views of the profiling data, but there are still a few other things that &lt;em&gt;dprofpp&lt;/em&gt; can tell us. For instance, the &lt;code&gt;-S&lt;/code&gt; option gives us a call tree, showing what gets called from what. These trees can be incredibly long and tedious, but if the two views we&amp;rsquo;ve already looked at haven&amp;rsquo;t identified potential trouble spots, then wading through the tree might be your only option.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-writing-your-own-profiler-writing-your-own-profiler-span&#34;&gt;&lt;span id=&#34;Writing_your_own_profiler&#34;&gt;Writing your Own Profiler&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;At least, that is, if you want to use &lt;em&gt;dprofpp&lt;/em&gt;; until yesterday, that was the only way of reading profiling data. Yesterday, however, I released &lt;a href=&#34;https://metacpan.org/pod/Devel::DProfPP&#34;&gt;&lt;code&gt;Devel::DProfPP&lt;/code&gt;&lt;/a&gt;, which provides an event-driven interface to reading &lt;em&gt;tmon.out&lt;/em&gt; files. I intended to use it to write a new version of &lt;em&gt;dprofpp&lt;/em&gt; because I find the current profiler intolerably slow; ironically, though, I haven&amp;rsquo;t profiled it yet.&lt;/p&gt;
+
+&lt;p&gt;Anyway, &lt;code&gt;Devel::DProfPP&lt;/code&gt; allows you to specify callbacks to be run every time the profiling data shows Perl entering or exiting a subroutine, and provides access to the same timing and call stack information used by &lt;em&gt;dprofpp&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;So, for instance, I like visualization of complicated data. I&amp;rsquo;d prefer to see what&amp;rsquo;s calling what as a graph that I can print out and pore over, rather than as a listing. So, I pull together &lt;code&gt;Devel::DProfPP&lt;/code&gt; and the trusty &lt;a href=&#34;https://metacpan.org/pod/GraphViz&#34;&gt;&lt;code&gt;Graphviz&lt;/code&gt;&lt;/a&gt; module, and create my own profiler:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; use GraphViz;
+ use Devel::DProfPP;
+
+ my $graph = GraphViz-&amp;gt;new();
+ my %edges = ();
+ Devel::DProfPP-&amp;gt;new(enter =&amp;gt; sub {
+     my $pp = shift;
+     my @stack = $pp-&amp;gt;stack;
+     my $to = $stack[-1]-&amp;gt;sub_name;
+     my $from = @stack &amp;gt; 1 ? $stack[-2]-&amp;gt;sub_name : &amp;quot;MAIN BODY&amp;quot;;
+     $graph-&amp;gt;add_edge($from =&amp;gt; $to) unless $edges{$from.&amp;quot; -&amp;gt; &amp;quot;.$to}++;
+ })-&amp;gt;parse;
+
+ print $graph-&amp;gt;as_png;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Every time we enter a subroutine, we look at the call stack so far. We pick the top frame of the stack, and ask for its subroutine name. If there&amp;rsquo;s another subroutine on the stack, we take that off too; otherwise we&amp;rsquo;re being called from the main body of the code. Then we add an edge on our graph between the two subroutines, unless we&amp;rsquo;ve already got one. Finally, we print out the graph as a PNG file for me to print out and stick on the wall.&lt;/p&gt;
+
+&lt;p&gt;There are any number of other things you can do with &lt;code&gt;Devel::DProfPP&lt;/code&gt; if the ordinary profiler doesn&amp;rsquo;t suit your needs for some reason; but as we&amp;rsquo;ve seen, just judicious application of profiling and highlighting hotspots in your code can cut the running time of a long-running Perl program by 50% or so, and can also help you to understand what your code is spending all its time doing.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

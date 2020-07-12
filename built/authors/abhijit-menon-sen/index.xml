@@ -1,0 +1,837 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Abhijit Menon Sen on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/abhijit-menon-sen/</link>
+    <description>Recent content in Abhijit Menon Sen on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 01 Oct 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/abhijit-menon-sen/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How Hashes Really Work</title>
+      <link>http://localhost:1313/pub/2002/10/01/hashes.html/</link>
+      <pubDate>Tue, 01 Oct 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/10/01/hashes.html/</guid>
+      <description>
+
+&lt;p&gt;It&amp;rsquo;s easy to take hashes for granted in Perl. They are simple, fast, and they usually &amp;ldquo;just work,&amp;rdquo; so people never need to know or care about how they are implemented. Sometimes, though, it&amp;rsquo;s interesting and rewarding to look at familiar tools in a different light. This article follows the development of a simple hash class in Perl in an attempt to find out how hashes really work.&lt;/p&gt;
+
+&lt;p&gt;A hash is an unordered collection of values, each of which is identified by a unique key. A value can be retrieved by its key, and one can add to or delete from the collection. A data structure with these properties is called a dictionary, and some of the many ways to implement them are outlined below.&lt;/p&gt;
+
+&lt;p&gt;Many objects are naturally identified by unique keys (like login names), and it is convenient to use a dictionary to address them in this manner. Programs use their dictionaries in different ways. A compiler&amp;rsquo;s symbol table (which records the names of functions and variables encountered during compilation) might hold a few hundred names that are looked up repeatedly (since names usually occur many times in a section of code). Another program might need to store 64-bit integers as keys, or search through several thousands of filenames.&lt;/p&gt;
+
+&lt;p&gt;How can we build a generally useful dictionary?&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-implementing-dictionaries-implementing-dictionaries-span&#34;&gt;&lt;span id=&#34;implementing_dictionaries&#34;&gt;Implementing Dictionaries&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One simple way to implement a dictionary is to use a linked list of keys and values (that is, a list where each element contains a key and the corresponding value). To find a particular value, one would need to scan the list sequentially, comparing the desired key with each key in turn until a match is found, or we reach the end of the list.&lt;/p&gt;
+
+&lt;p&gt;This approach becomes progressively slower as more values are added to the dictionary, because the average number of elements we need to scan to find a match keeps increasing. We would discover that a key was not in the dictionary only after scanning every element in it. We could make things faster by performing binary searches on a sorted array of keys instead of using a linked list, but performance would still degrade as the dictionary grew larger.&lt;/p&gt;
+
+&lt;p&gt;If we could transform every possible key into a unique array index (for example, by turning the string &amp;ldquo;red&amp;rdquo; into the index 14328.), then we could store each value in a corresponding array entry. All searches, insertions and deletions could then be performed with a single array lookup, irrespective of the number of keys. But although this strategy is simple and fast, it has many disadvantages and is not always useful.&lt;/p&gt;
+
+&lt;p&gt;For one thing, calculating an index must be fast, and independent of the size of the dictionary (or we would lose all that we gained by not using a linked list). Unless the keys are already unique integers, however, it isn&amp;rsquo;t always easy to quickly convert them into array indexes (especially when the set of possible keys is not known in advance, which is common). Furthermore, the number of keys actually stored in the dictionary is usually minute in comparison to the total number of possible keys, so allocating an array that could hold everything is wasteful.&lt;/p&gt;
+
+&lt;p&gt;For example, although a typical symbol table could contain a few hundred entries, there are about 50 billion alphanumeric names with six or fewer characters. Memory may be cheap enough for an occasional million-element array, but 50 billion elements (of which most remain unused) is still definitely overkill.&lt;/p&gt;
+
+&lt;p&gt;(Of course, there are many different ways to implement dictionaries. For example, red-black trees provide different guarantees about expected and worst-case running times, that are most appropriate for certain kinds of applications. This article does not discuss these possibilities further, but future articles may explore them in more detail.)&lt;/p&gt;
+
+&lt;p&gt;What we need is a practical compromise between speed and memory usage; a dictionary whose memory usage is proportional to the number of values it contains, but whose performance doesn&amp;rsquo;t become progressively worse as it grows larger.&lt;/p&gt;
+
+&lt;p&gt;Hashes represent just such a compromise.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-hashes-hashes-span&#34;&gt;&lt;span id=&#34;hashes&#34;&gt;Hashes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Hashes are arrays (entries in it are called slots or buckets), but they do not require that every possible key correspond directly to a unique entry. Instead, a function (called a hashing function) is used to calculate the index corresponding to a particular key. This index doesn&amp;rsquo;t have to be unique, i.e., the function may return the same hash value for two or more keys. (We disregard this possibility for a while, but return to it later, since it is of great importance.)&lt;/p&gt;
+
+&lt;p&gt;We can now look up a value by computing the hash of its key, and looking at the corresponding bucket in the array. As long as the running time of our hashing function is independent of the number of keys, we can always perform dictionary operations in constant time. Since hashing functions make no uniqueness guarantees, however, we need some way to to resolve collisions (i.e., the hashed value of a key pointing to an occupied bucket).&lt;/p&gt;
+
+&lt;p&gt;The simple way to resolve collisions is to avoid storing keys and values directly in buckets, and to use per-bucket linked lists instead. To find a particular value, its key is hashed to find the index of a bucket, and the linked list is scanned to find the exact key. The lists are known as chains, and this technique is called chaining.&lt;/p&gt;
+
+&lt;p&gt;(There are other ways to handle collisions, e.g. via open addressing, in which colliding keys are stored in the first unoccupied slot whose index can be recursively derived from that of an occupied one. One consequence is that the hash can contain only as many values as it has buckets. This technique is not discussed here, but references to relevant material are included below.)&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-hashing-functions-hashing-functions-span&#34;&gt;&lt;span id=&#34;hashing_functions&#34;&gt;Hashing Functions&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Since chaining repeatedly performs linear searches through linked lists, it is important that the chains always remain short (that is, the number of collisions remains low). A good hashing function would ensure that it distributed keys uniformly into the available buckets, thus reducing the probability of collisions.&lt;/p&gt;
+
+&lt;p&gt;In principle, a hashing function returns an array index directly; in practice, it is common to use its (arbitrary) return value modulo the number of buckets as the actual index. (Using a prime number of buckets that is not too close to a power of two tends to produce a sufficiently uniform key distribution.)&lt;/p&gt;
+
+&lt;p&gt;Another way to keep chains remain short is to use a technique known as dynamic hashing: adding more buckets when the existing buckets are all used (i.e., when collisions become inevitable), and using a new hashing function that distributes keys uniformly into all of the buckets (it is usually possible to use the same hashing function, but compute indexes modulo the new number of buckets). We also need to re-distribute keys, since the corresponding indices will be different with the new hashing function.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the hashing function used in Perl 5.005:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Return the hashed value of a string: $hash = perlhash(&amp;quot;key&amp;quot;)
+  # (Defined by the PERL_HASH macro in hv.h)
+  sub perlhash
+  {
+      $hash = 0;
+      foreach (split //, shift) {
+          $hash = $hash*33 + ord($_);
+      }
+      return $hash;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;More recent versions use a function designed by Bob Jenkins, and his Web page (listed below) does an excellent job of explaining how it and other hashing functions work.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-representing-hashes-in-perl-representing-hashes-in-perl-span&#34;&gt;&lt;span id=&#34;representing_hashes_in_perl&#34;&gt;Representing Hashes in Perl&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;We can represent a hash as an array of buckets, where each bucket is an array of &lt;code&gt;[$key, $value]&lt;/code&gt; pairs (there&amp;rsquo;s no particular need for chains to be linked lists; arrays are more convenient). As an exercise, let us add each of the keys in &lt;code&gt;%example&lt;/code&gt; below into three empty buckets.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  %example = (
+      ab =&amp;gt; &amp;quot;foo&amp;quot;, cd =&amp;gt; &amp;quot;bar&amp;quot;,
+      ef =&amp;gt; &amp;quot;baz&amp;quot;, gh =&amp;gt; &amp;quot;quux&amp;quot;
+  );
+
+  @buckets = ( [],[],[] );
+
+  while (($k, $v) = each(%example)) {
+      $hash  = perlhash($k);
+      $chain = $buckets[ $hash % @buckets ];
+
+      $entry = [ $k, $v ];
+      push @$chain, $entry;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We end up with the following structure (you may want to verify that the keys are correctly hashed and distributed), in which we can identify any key-value pair in the hash with one index into the array of buckets and a second index into the entries therein. Another index serves to access either the key or the value.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  @buckets = (
+      [ [ &amp;quot;ef&amp;quot;, &amp;quot;baz&amp;quot; ]                   ],    # Bucket 0: 1 entry
+      [ [ &amp;quot;cd&amp;quot;, &amp;quot;bar&amp;quot; ]                   ],    # Bucket 1: 1 entry
+      [ [ &amp;quot;ab&amp;quot;, &amp;quot;foo&amp;quot; ], [ &amp;quot;gh&amp;quot;, &amp;quot;quux&amp;quot; ] ],    # Bucket 2: 2 entries
+  );
+  $key = $buckets[2][1][0];   # $key = &amp;quot;gh&amp;quot;
+  $val = $buckets[2][1][1];   # $val = $hash{$key}
+  $buckets[0][0][1] = &amp;quot;zab&amp;quot;;  # $hash{ef} = &amp;quot;zab&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-building-toy-hashes-building-toy-hashes-span&#34;&gt;&lt;span id=&#34;building_toy_hashes&#34;&gt;Building Toy Hashes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In this section, we&amp;rsquo;ll use the representation discussed above to write a tied hash class that emulates the behavior of real Perl hashes. For the sake of brevity, the code doesn&amp;rsquo;t check for erroneous input. My comments also gloss over details that aren&amp;rsquo;t directly relevant to hashing, so you may want to have a copy of &lt;em&gt;perltie&lt;/em&gt; handy to fill in blanks.&lt;/p&gt;
+
+&lt;p&gt;(All of the code in the class is available at the URL mentioned below.)&lt;/p&gt;
+
+&lt;p&gt;We begin by writing a tied hash constructor that creates an empty hash, and another function to empty an existing hash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  package Hash;
+
+  # We&#39;ll reuse the perlhash() function presented previously.
+
+  # Create a tied hash. (Analogous to newHV in hv.c)
+  sub TIEHASH
+  {
+      $h = {
+          keys    =&amp;gt; 0,                         # Number of keys
+          buckets =&amp;gt; [ [],[],[],[],[],[],[] ],  # Seven empty buckets
+          current =&amp;gt; [ undef, undef ]           # Current iterator entry
+      };                                        # (Explained below)
+      return bless $h, shift;
+  }
+
+  # Empty an existing hash. (See hv.c:hv_clear)
+  sub CLEAR
+  {
+      ($h) = @_;
+
+         $h-&amp;gt;{keys}      = 0;
+      @{ $h-&amp;gt;{buckets} } = ([],[],[],[],[],[],[]);
+      @{ $h-&amp;gt;{current} } = (undef, undef);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For convenience, we also write a function that looks up a given key in a hash and returns the indices of its bucket and the correct entry within. Both indexes are undefined if the key is not found in the hash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Look up a specified key in a hash.
+  sub lookup
+  {
+      ($h, $key) = @_;
+
+      $buckets = $h-&amp;gt;{buckets};
+      $bucket  = perlhash($key) % @$buckets;
+
+      $entries = @{ $buckets-&amp;gt;[$bucket] };
+      if ($entries &amp;gt; 0) {
+          # Look for the correct entry inside the bucket.
+          $entry = 0;
+          while ($buckets-&amp;gt;[$bucket][$entry][0] ne $key) {
+              if (++$entry == $entries) {
+                  # None of the entries in the bucket matched.
+                  $bucket = $entry = undef;
+                  last;
+              }
+          }
+      }
+      else {
+          # The relevant bucket was empty, so the key doesn&#39;t exist.
+          $bucket = $entry = undef;
+      }
+
+      return ($bucket, $entry);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;lookup&lt;/code&gt; function makes it easy to write &lt;code&gt;EXISTS&lt;/code&gt;, &lt;code&gt;FETCH&lt;/code&gt;, and &lt;code&gt;DELETE&lt;/code&gt; methods for our class:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Check whether a key exists in a hash. (See hv.c:hv_exists)
+  sub EXISTS
+  {
+      ($h, $key) = @_;
+      ($bucket, $entry) = lookup($h, $key);
+
+      # If $bucket is undefined, the key doesn&#39;t exist.
+      return defined $bucket;
+  }
+
+  # Retrieve the value associated with a key. (See hv.c:hv_fetch)
+  sub FETCH
+  {
+      ($h, $key) = @_;
+
+      $buckets = $h-&amp;gt;{buckets};
+      ($bucket, $entry) = lookup($h, $key);
+
+      if (defined $bucket) {
+          return $buckets-&amp;gt;[$bucket][$entry][1];
+      }
+      else {
+          return undef;
+      }
+  }
+
+  # Delete a key-value pair from a hash. (See hv.c:hv_delete)
+  sub DELETE
+  {
+      ($h, $key) = @_;
+
+      $buckets = $h-&amp;gt;{buckets};
+      ($bucket, $entry) = lookup($h, $key);
+
+      if (defined $bucket) {
+          # Remove the entry from the bucket, and return its value.
+          $entry = splice(@{ $buckets-&amp;gt;[$bucket] }, $entry, 1);
+          return $entry-&amp;gt;[1];
+      }
+      else {
+          return undef;
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;STORE&lt;/code&gt; is a little more complex. It must either update the value of an existing key (which is just an assignment), or add an entirely new entry (by pushing an arrayref into a suitable bucket). In the latter case, if the number of keys exceeds the number of buckets, then we create more buckets and redistribute existing keys (under the assumption that the hash will grow further; this is how we implement dynamic hashing).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Store a key-value pair in a hash. (See hv.c:hv_store)
+  sub STORE
+  {
+      ($h, $key, $val) = @_;
+
+      $buckets = $h-&amp;gt;{buckets};
+      ($bucket, $entry) = lookup($h, $key);
+
+      if (defined $bucket) {
+          $buckets-&amp;gt;[$bucket][$entry][1] = $val;
+      }
+      else {
+          $h-&amp;gt;{keys}++;
+          $bucket = perlhash($key) % @$buckets;
+          push @{ $buckets-&amp;gt;[$bucket] }, [ $key, $val ];
+
+          # Expand the hash if all the buckets are full. (See hv.c:S_hsplit)
+          if ($h-&amp;gt;{keys} &amp;gt; @$buckets) {
+              # We just double the number of buckets, as Perl itself does
+              # (and disregard the number becoming non-prime).
+              $newbuckets = [];
+              push(@$newbuckets, []) for 1..2*@$buckets;
+
+              # Redistribute keys
+              foreach $entry (map {@$_} @$buckets) {
+                  $bucket = perlhash($entry-&amp;gt;[0]) % @$newbuckets;
+                  push @{$newbuckets-&amp;gt;[$bucket]}, $entry;
+              }
+              $h-&amp;gt;{buckets} = $newbuckets;
+          }
+      }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For completeness, we implement an iteration mechanism for our class. The &lt;code&gt;current&lt;/code&gt; element in each hash identifies a single entry (by its bucket and entry indices). &lt;code&gt;FIRSTKEY&lt;/code&gt; sets it to an initial (undefined) state, and leaves all the hard work to &lt;code&gt;NEXTKEY&lt;/code&gt;, which steps through each key in turn.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Return the first key in a hash. (See hv.c:hv_iterinit)
+  sub FIRSTKEY
+  {
+      $h = shift;
+      @{ $h-&amp;gt;{current} } = (undef, undef);
+      return $h-&amp;gt;NEXTKEY(@_);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If &lt;code&gt;NEXTKEY&lt;/code&gt; is called with the hash iterator in its initial state (by &lt;code&gt;FIRSTKEY&lt;/code&gt;), it returns the first key in the first occupied bucket. On subsequent calls, it returns either the next key in the current chain, or the first key in the next occupied bucket.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  # Return the next key in a hash. (See hv.c:hv_iterkeysv et al.)
+  sub NEXTKEY
+  {
+      $h = shift;
+      $buckets = $h-&amp;gt;{buckets};
+      $current = $h-&amp;gt;{current};
+
+      ($bucket, $entry) = @{ $current };
+
+      if (!defined $bucket || $entry+1 == @{ $buckets-&amp;gt;[$bucket] }) {
+      FIND_NEXT_BUCKET:
+          do {
+              if (++$current-&amp;gt;[0] == @$buckets) {
+                  @{ $current } = (undef, undef);
+                  return undef;
+              }
+          } while (@{ $buckets-&amp;gt;[$current-&amp;gt;[0]] } == 0);
+          $current-&amp;gt;[1] = 0;
+      }
+      else {
+          $current-&amp;gt;[1]++;
+      }
+
+      return $buckets-&amp;gt;[$current-&amp;gt;[0]][$current-&amp;gt;[1]][0];
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;do&lt;/code&gt; loop at &lt;code&gt;FIND_NEXT_BUCKET&lt;/code&gt; finds the next occupied bucket if the iterator is in its initial undefined state, or if the current entry is at the end of a chain. When there are no more keys in the hash, it resets the iterator and returns &lt;code&gt;undef&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;We now have all the pieces required to use our Hash class exactly as we would a real Perl hash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  tie %h, &amp;quot;Hash&amp;quot;;
+
+  %h = ( foo =&amp;gt; &amp;quot;bar&amp;quot;, bar =&amp;gt; &amp;quot;foo&amp;quot; );
+  while (($key, $val) = each(%h)) {
+      print &amp;quot;$key =&amp;gt; $val\n&amp;quot;;
+  }
+  delete $h{foo};
+
+  # ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;span-id-the-perl-internals-perl-internals-span&#34;&gt;&lt;span id=&#34;the_perl_internals&#34;&gt;Perl Internals&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;If you want to learn more about the hashes inside Perl, then the &lt;code&gt;FakeHash&lt;/code&gt; module by Mark-Jason Dominus and a copy of &lt;em&gt;hash.c&lt;/em&gt; from Perl 1.0 are good places to start. The PerlGuts Illustrated Web site by Gisle Aas is also an invaluable resource in exploring the Perl internals. (References to all three are included below.)&lt;/p&gt;
+
+&lt;p&gt;Although our &lt;code&gt;Hash&lt;/code&gt; class is based on Perl&amp;rsquo;s hash implementation, it is not a faithful reproduction; and while a detailed discussion of the Perl source is beyond the scope of this article, parenthetical notes in the code above may serve as a starting point for further exploration.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-history-history-span&#34;&gt;&lt;span id=&#34;history&#34;&gt;History&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Donald Knuth credits H. P. Luhn at IBM for the idea of hash tables and chaining in 1953. About the same time, the idea also occurred to another group at IBM, including Gene Amdahl, who suggested open addressing and linear probing to handle collisions. Although the term &amp;ldquo;hashing&amp;rdquo; was standard terminology in the 1960s, the term did not actually appear in print until 1967 or so.&lt;/p&gt;
+
+&lt;p&gt;Perl 1 and 2 had &amp;ldquo;two and a half data types&amp;rdquo;, of which one half was an &amp;ldquo;associative array.&amp;rdquo; With some squinting, associative arrays look very much like hashes. The major differences were the lack of the &lt;code&gt;%&lt;/code&gt; symbol on hash names, and that one could only assign to them one key at a time. Thus, one would say &lt;code&gt;$foo{&#39;key&#39;} = 1;&lt;/code&gt;, but only &lt;code&gt;@keys = keys(foo);&lt;/code&gt;. Familiar functions like &lt;code&gt;each&lt;/code&gt;, &lt;code&gt;keys&lt;/code&gt;, and &lt;code&gt;values&lt;/code&gt; worked as they do now (and &lt;code&gt;delete&lt;/code&gt; was added in Perl 2).&lt;/p&gt;
+
+&lt;p&gt;Perl 3 had three whole data types: it had the &lt;code&gt;%&lt;/code&gt; symbol on hash names, allowed an entire hash to be assigned to at once, and added &lt;code&gt;dbmopen&lt;/code&gt; (now deprecated in favour of &lt;code&gt;tie&lt;/code&gt;). Perl 4 used comma-separated hash keys to emulate multidimensional arrays (which are now better handled with array references).&lt;/p&gt;
+
+&lt;p&gt;Perl 5 took the giant leap of referring to associative arrays as hashes. (As far as I know, it is the first language to have referred to the data structure thus, rather than &amp;ldquo;hash table&amp;rdquo; or something similar.) Somewhat ironically, it also moved the relevant code from &lt;em&gt;hash.c&lt;/em&gt; into &lt;em&gt;hv.c&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-nomenclature-nomenclature-span&#34;&gt;&lt;span id=&#34;nomenclature&#34;&gt;Nomenclature&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Dictionaries, as explained earlier, are unordered collections of values indexed by unique keys. They are sometimes called associative arrays or maps. They can be implemented in several ways, one of which is by using a data structure known as a hash table (and this is what Perl refers to as a hash).&lt;/p&gt;
+
+&lt;p&gt;Perl&amp;rsquo;s use of the term &amp;ldquo;hash&amp;rdquo; is the source of some potential confusion, because the output of a hashing function is also sometimes called a hash (especially in cryptographic contexts), and because hash tables aren&amp;rsquo;t usually called hashes anywhere else.&lt;/p&gt;
+
+&lt;p&gt;To be on the safe side, refer to the data structure as a hash table, and use the term &amp;ldquo;hash&amp;rdquo; only in obvious, Perl-specific contexts.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-further-resources-further-resources-span&#34;&gt;&lt;span id=&#34;further_resources&#34;&gt;Further Resources&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_algorithms&#34;&gt;Introduction to Algorithms (Cormen, Leiserson and Rivest)&lt;/span&gt;&lt;/strong&gt;&lt;br /&gt;
+Chapter 12 of this excellent book discusses hash tables in detail.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_programming&#34;&gt;The Art of Computer Programming (Donald E. Knuth)&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Volume 3 (&amp;ldquo;Sorting and Searching&amp;rdquo;) devotes a section (�6.4) to an exhaustive description, analysis, and a historical perspective on various hashing techniques.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fperl%2eplover%2ecom%2fbadhash%2epl&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://perl.plover.com/badhash.pl&#34;&gt;http://perl.plover.com/badhash.pl&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&amp;ldquo;When Hashes Go Wrong&amp;rdquo; by Mark-Jason Dominus demonstrates a pathological case of collisions, by creating a large number of keys that hash to the same value, and effectively turn the hash into a very long linked list.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fburtleburtle%2enet%2fbob%2fhash%2fdoo&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://burtleburtle.net/bob/hash/doobs.html&#34;&gt;http://burtleburtle.net/bob/hash/doobs.html&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Current versions of Perl use a hashing function designed by Bob Jenkins. His web page explains how the function was constructed, and provides an excellent overview of how various hashing functions perform in practice.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fperl%2eplover%2ecom%2ffakehash%2f&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://perl.plover.com/FakeHash/&#34;&gt;http://perl.plover.com/FakeHash/&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This module, by Mark-Jason Dominus, is a more faithful re-implementation of Perl&amp;rsquo;s hashes in Perl, and is particularly useful because it can draw pictures of the data structures involved.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fwww%2eetla%2eorg%2fretroperl%2fperl1%&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://www.etla.org/retroperl/perl1/perl-1.0.tar.gz&#34;&gt;http://www.etla.org/retroperl/perl1/perl-1.0.tar.gz&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;It might be instructive to read &lt;em&gt;hash.c&lt;/em&gt; from the much less cluttered (and much less capable) Perl 1.0 source code, before going through the newer &lt;em&gt;hv.c&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fgisle%2eaas%2eno%2fperl%2fillguts%2fh&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://gisle.aas.no/perl/illguts/hv.png&#34;&gt;http://gisle.aas.no/perl/illguts/hv.png&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This image, from Gisle Aas&amp;rsquo;s &amp;ldquo;PerlGuts Illustrated&amp;rdquo;, depicts the layout of the various structures that comprise hashes in the core. The entire web site is a treasure trove for people exploring the internals.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_http%3a%2f%2fams%2ewiw%2eorg%2fsrc%2fhash%2epm&#34;&gt;&lt;/span&gt;&lt;a href=&#34;http://ams.wiw.org/src/Hash.pm&#34;&gt;http://ams.wiw.org/src/Hash.pm&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The source code for the tied Hash class developed in this article.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>This Week on p5p 2001/10/21</title>
+      <link>http://localhost:1313/pub/2001/10/p5pdigest/20011021.html/</link>
+      <pubDate>Sun, 21 Oct 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/10/p5pdigest/20011021.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-this-fortnight-on-perl5-porters-08-21-october-2001-this-fortnight-on-perl5-porters-08-21-october-2001-span&#34;&gt;&lt;span id=&#34;This_fortnight_on_perl5_porters_08_21_October_2001&#34;&gt;This fortnight on perl5-porters (08-21 October 2001)&lt;/span&gt;&lt;/h3&gt;
+
+&lt;h3 id=&#34;span-id-notes-notes-span&#34;&gt;&lt;span id=&#34;Notes&#34;&gt;Notes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;This Week on P5P&lt;/p&gt;
+&lt;p&gt;• &lt;a href=&#34;#580_TODO&#34;&gt;5.8.0 TODO&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#POD&#34;&gt;POD&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#Testing&#34;&gt;Testing&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#TAINT&#34;&gt;${^TAINT}&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#AUTOLOAD_and_packages&#34;&gt;AUTOLOAD and packages&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#BParrot&#34;&gt;B::Parrot&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#Miscellaneous&#34;&gt;Miscellaneous&lt;/a&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Changes and additions to the perl5-porters biographies are particularly welcome.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-580-todo-5-8-0-todo-span&#34;&gt;&lt;span id=&#34;580_TODO&#34;&gt;5.8.0 TODO&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Jarkko posted a &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00391.html&#34;&gt;list of things to do&lt;/a&gt; before the 5.8.0 release (later, he posted another, &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00971.html&#34;&gt;shorter TODO list&lt;/a&gt;.) The main remaining issues are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;PerlIO, Threading, and Multiplicity&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Attributes are Broken&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Basic Unicode Support&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;FAQ Updates&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Nick Ing-Simmons, who was unable to work on Perl for a while because of intellectual property restrictions at his new job, is back, and working very hard on &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00887.html&#34;&gt;fixing the PerlIO issues&lt;/a&gt;. Arthur Bergman has quietly but steadily been making &lt;code&gt;threads::shared&lt;/code&gt; work well enough to be shipped with 5.8.0. Damian has suitably evil plans for attributes, which Arthur and I plan to assimilate into the core.&lt;/p&gt;
+
+&lt;p&gt;Jarkko, apparently working all alone, has made considerable progress towards making Perl comply with &amp;ldquo;Level 1 - Basic Unicode Support&amp;rdquo;, as defined by the Unicode standard, &lt;a href=&#34;http://www.unicode.org/unicode/reports/tr18/&#34;&gt;TR#18 &amp;ldquo;Unicode Regular Expression Guidelines&amp;rdquo;&lt;/a&gt;. Some features remain unimplemented, though, including character class subtraction and end-of-line matching.&lt;/p&gt;
+
+&lt;p&gt;The Perl FAQ needs extensive updates, to remove obsolete material and add new material where appropriate.&lt;/p&gt;
+
+&lt;p&gt;Any volunteers?&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-pod-pod-span&#34;&gt;&lt;span id=&#34;POD&#34;&gt;POD&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;In August, as he embarked on a rewrite of the POD documentation, Sean M. Burke said:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;A markup language without a clear specification simply invites everyone, including implementors, to have their own shaky idea of what the language means. And that, along with the general tendency for markup language parsing to produce write-only code, explains much of the upsetting current state of Pod::* modules.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;After several revisions, Sean has now released the final draft of his changes, which include a complete rewrite of the &lt;code&gt;perlpod&lt;/code&gt; manpage (a POD reference suitable for module authors), and the new &lt;code&gt;perlpodspec&lt;/code&gt; manpage (a more formal POD specification). The documents attempt to formalise best current practice in parsing and rendering POD, without introducing any radically new features. They were greeted with sighs of relief, and have been incorporated into perl-current.&lt;/p&gt;
+
+&lt;p&gt;This is an excellent step towards alleviating the upsetting state of the &lt;code&gt;Pod::*&lt;/code&gt; modules, but there is still a lot of work to be done. Patches towards making the core documentation comply with the new specification are particularly welcome.&lt;/p&gt;
+
+&lt;p&gt;Brad Appleton (the author of &lt;code&gt;Pod::Parser&lt;/code&gt; and &lt;code&gt;Pod::Checker&lt;/code&gt;) may not be able to hack on his POD modules for a while, and welcomes help. I am sure many of the other module authors could use a hand with testing and updating their modules in light of &lt;code&gt;perlpodspec&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If you want to help, or are interested in seeing what&amp;rsquo;s going on, Sean recommends that you join the &lt;a href=&#34;http://lists.perl.org/showlist.cgi?name=pod-people&#34;&gt;pod-people&lt;/a&gt; mailing list.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-testing-testing-span&#34;&gt;&lt;span id=&#34;Testing&#34;&gt;Testing&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Perl has been doing better and better in tests, and H. Merijn Brand sums up the situation nicely:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;pre&gt;&lt;code&gt;    **Lot&#39;s* of &#39;O&#39;s :))
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;We got a full set of &amp;lsquo;O&amp;rsquo;s (OK) for various AIX and HP-UX systems with their native compilers (and later, with gcc 3 under HP-UX). Hal Morris reports that perl passes all tests under Linux/390, while a few failures remain under UTS and VMS.&lt;/p&gt;
+
+&lt;p&gt;More test reports from weird platforms are most welcome.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-taint-taint-span&#34;&gt;&lt;span id=&#34;TAINT&#34;&gt;${^TAINT}&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;When Perl is running in taint mode (because it was started with the &lt;code&gt;-T&lt;/code&gt; switch), a global variable (in the core) named &lt;code&gt;PL_tainting&lt;/code&gt; is set to 1 (it is usually 0). Michael G. Schwern posted &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00316.html&#34;&gt;a patch to make this value accessible to Perl programs&lt;/a&gt; as &lt;code&gt;${^TAINT}&lt;/code&gt;. Jarkko said:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&amp;lt;troll&amp;gt;Why ${^TAINT} is read-only? It would be *so* convenient to &amp;hellip;&amp;lt;/troll&amp;gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Of course, my HTML-hating email program stripped the &amp;lt;troll&amp;gt; tags, so I had to post &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00347.html&#34;&gt;a patch to make ${^TAINT} writable&lt;/a&gt; (thereby making &lt;code&gt;local ${^TAINT} = 0&lt;/code&gt; work as expected). The patch made Jarkko go temporarily blind (but not blind enough to accidentally apply it).&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;magic_get()/set()&lt;/code&gt; functions in &lt;code&gt;mg.c&lt;/code&gt; retrieve and set the values of special variables like &lt;code&gt;${^TAINT}&lt;/code&gt; and &lt;code&gt;$^S&lt;/code&gt; (where &amp;ldquo;specialness&amp;rdquo; is defined by the &lt;code&gt;is_gv_magical()&lt;/code&gt; function in &lt;code&gt;gv.c&lt;/code&gt;). Both functions are big &lt;code&gt;switch&lt;/code&gt; statements which try to recognise the name of a variable, and then take some appropriate action. Schwern&amp;rsquo;s patch made &lt;code&gt;magic_get()&lt;/code&gt; assign the value of &lt;code&gt;PL_tainting&lt;/code&gt; to &lt;code&gt;${^TAINT}&lt;/code&gt; and make it read-only; mine removed the read-only markings, and taught &lt;code&gt;magic_set()&lt;/code&gt; to update PL_tainting when &lt;code&gt;${TAINT}&lt;/code&gt; is assigned to.&lt;/p&gt;
+
+&lt;p&gt;It might be an interesting exercise to pick a special variable (say, &lt;code&gt;$^W&lt;/code&gt;) and figure out what Perl does to get or set its value. Rusty grep skills can be further polished by figuring out when and where the get and set functions are called. If you&amp;rsquo;re still bored, figure out how the value of &lt;code&gt;PL_tainting&lt;/code&gt; is computed and used.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-autoload-and-packages-autoload-and-packages-span&#34;&gt;&lt;span id=&#34;AUTOLOAD_and_packages&#34;&gt;AUTOLOAD and packages&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Paul Johnson posted a message about &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00811.html&#34;&gt;some weird AUTOLOAD behaviour&lt;/a&gt;. What should the following code do?&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;package P1;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    *P2::AUTOLOAD = sub {
+        print &amp;quot;|$::AUTOLOAD|$P1::AUTOLOAD|$P2::AUTOLOAD|\n&amp;quot;;
+    };
+
+    P2-&amp;gt;foo();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Nobody was very sure, but perl-current behaves differently from 5.6.1, so something must be broken.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-bparrot-b-parrot-span&#34;&gt;&lt;span id=&#34;BParrot&#34;&gt;B::Parrot&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Will somebody please write a &lt;code&gt;B::Parrot&lt;/code&gt; module and post it to P5P, so that I can write about it in the summary? (Rather than just make things up, as certain unscrupulous individuals suggest I should do.)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-miscellaneous-miscellaneous-span&#34;&gt;&lt;span id=&#34;Miscellaneous&#34;&gt;Miscellaneous&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Michael G. Schwern released &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00612.html&#34;&gt;Test::Simple 0.32&lt;/a&gt;. In the process, he introduced &lt;code&gt;$ENV{PERL_CORE}&lt;/code&gt;, to enable modules distributed both in the core and on the CPAN to use the same tests everywhere, thereby simplifying life greatly.&lt;/p&gt;
+
+&lt;p&gt;Johan Vromans released &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00846.html&#34;&gt;Getopt::Long 2.26_02&lt;/a&gt;, a prerelease of version 2.27. Its guts have been redesigned to make room for expansion; testers and bug reports are particularly welcome.&lt;/p&gt;
+
+&lt;p&gt;Russ Allbery released &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00839.html&#34;&gt;podlators 1.11&lt;/a&gt;, with several bug-fixes and some new features. (Russ still has a pile of mail to dig through, and he hopes to release another version soon.)&lt;/p&gt;
+
+&lt;p&gt;Jarkko promptly assimilated all three, and found the time to release no less than seven snapshots.&lt;/p&gt;
+
+&lt;p&gt;Kirrily Robert also submitted final drafts of some new documentation: &lt;code&gt;perlintro&lt;/code&gt; (a Perl introduction for beginners), and &lt;code&gt;perlmodstyle&lt;/code&gt; (a discussion of the current &amp;ldquo;best practices&amp;rdquo; in writing modules).&lt;/p&gt;
+
+&lt;p&gt;Gisle Aas made a brief appearance to post &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00805.html&#34;&gt;an ExtUtils::MakeMaker patch&lt;/a&gt; which causes &lt;code&gt;$ENV{PERL_MM_USE_DEFAULT}&lt;/code&gt;, when set, to instruct &lt;code&gt;ExtUtils::MakeMaker::prompt&lt;/code&gt; to return the default answer to every question without waiting for input.&lt;/p&gt;
+
+&lt;p&gt;Randolph Werner ported perl to 64-bit Windows (!).&lt;/p&gt;
+
+&lt;p&gt;Perl 5.6.1 is now installed by default with HP-UX 11.00.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&#34;http://lists.perl.org/showlist.cgi?name=perl5-changes&#34;&gt;perl5-changes&lt;/a&gt; mailing list records each patch to Perl when it is committed into the repository. It is highly recommended (Pumpking approved! 100% signal!) for people who want to keep in touch with perl-current. (Speaking of lists, a passing remark that P5P mail should have a &lt;a href=&#34;http://www.unicom.com/pw/reply-to-harmful.html&#34;&gt;munged Reply-To&lt;/a&gt; fortunately did not elicit any, er&amp;hellip; strong opinions.)&lt;/p&gt;
+
+&lt;p&gt;Charles Lane fixed some niggling problems under VMS, and Craig A. Berry found some new ones. VMSperl now builds with PerlIO as the default, and it is possible to &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00601.html&#34;&gt;configure it for 64-bitness&lt;/a&gt; (although this causes a colourful test failure, evidently due to bugs in the system&amp;rsquo;s &lt;code&gt;gcvt()&lt;/code&gt; function, used to stringify numbers).&lt;/p&gt;
+
+&lt;p&gt;Mikhail Zabaluev patched &lt;code&gt;perldoc&lt;/code&gt; to use &lt;code&gt;File::Temp&lt;/code&gt; instead of creating temporary files in an ad-hoc fashion. Tim Jenness tried to convince him that he should fix &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00959.html&#34;&gt;various other things&lt;/a&gt; in &lt;code&gt;perldoc&lt;/code&gt;, but Mikhail didn&amp;rsquo;t fall for it. Does anyone else want to try? (One of the changes, to use &lt;code&gt;Pod::Man&lt;/code&gt; rather than the &lt;code&gt;pod2man&lt;/code&gt; program, is similar to Schwern&amp;rsquo;s &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00823.html&#34;&gt;recent change to installhtml&lt;/a&gt;.)&lt;/p&gt;
+
+&lt;p&gt;Perlbug posted an intriguing, but somewhat hard-to-decipher &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00315.html&#34;&gt;overview of the bug database&lt;/a&gt;, before dying again. Several &amp;ldquo;Hello, is this thing on?&amp;rdquo; messages and a flood of pent-up bug reports later, it is reported to be working again.&lt;/p&gt;
+
+&lt;p&gt;Perl 5 had its seventh birthday on October 17th, 2001.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;a href=&#34;mailto:ams@wiw.org&#34;&gt;Abhijit Menon-Sen&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>This Week on p5p 2001/10/07</title>
+      <link>http://localhost:1313/pub/2001/10/p5pdigest/20011010.html/</link>
+      <pubDate>Wed, 10 Oct 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/10/p5pdigest/20011010.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-notes-notes-span&#34;&gt;&lt;span id=&#34;Notes&#34;&gt;Notes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;table&gt;
+&lt;colgroup&gt;
+&lt;col width=&#34;100%&#34; /&gt;
+&lt;/colgroup&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;span class=&#34;headline&#34;&gt;&lt;/span&gt;
+This Week on P5P&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;&lt;p&gt;• &lt;a href=&#34;#chromatic&#34;&gt;chromatic&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#Call_for_PerlIO_bugs&#34;&gt;Call for PerlIO bugs&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#Attributes_are_broken&#34;&gt;Attributes are broken&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#Multiple_FETCHes&#34;&gt;Multiple FETCHes&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#Code_cleanups&#34;&gt;Code cleanups&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+• &lt;a href=&#34;#Various&#34;&gt;Various&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Changes and additions to the perl5-porters biographies are particularly welcome.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-chromatic-chromatic-span&#34;&gt;&lt;span id=&#34;chromatic&#34;&gt;chromatic&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;P5P is in awe of the patience and test writing ability of chromatic, who has, in a very short time, given us exhaustive new tests for &lt;code&gt;B::Terse&lt;/code&gt;, &lt;code&gt;Dumpvalue&lt;/code&gt;, &lt;code&gt;CGI::Fast&lt;/code&gt;, &lt;code&gt;CGI::Push&lt;/code&gt;, &lt;code&gt;CPAN::Nox&lt;/code&gt;, &lt;code&gt;Term::Cap&lt;/code&gt;, &lt;code&gt;Tie::Scalar&lt;/code&gt;, &lt;code&gt;Term::Complete&lt;/code&gt;, &lt;code&gt;ExtUtils::Command&lt;/code&gt;, &lt;code&gt;less&lt;/code&gt;, &lt;code&gt;open&lt;/code&gt;, &lt;code&gt;filetest&lt;/code&gt;, &lt;code&gt;sigtrap&lt;/code&gt;, &lt;code&gt;warnings::register&lt;/code&gt;, and a bunch of patches to older tests. Thank you!&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-call-for-perlio-bugs-call-for-perlio-bugs-span&#34;&gt;&lt;span id=&#34;Call_for_PerlIO_bugs&#34;&gt;Call for PerlIO bugs&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Nicholas Clark found some people at a London.pm meeting who knew of unfixed PerlIO bugs, and suggested the following call-for-bugs:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;If you are aware of a PerlIO bug that perl5-porters isn&amp;rsquo;t aware of, please would you tell perl5-porters about it, preferably in the form of a regression test that will print &amp;ldquo;ok\n&amp;rdquo; once it is fixed. Else don&amp;rsquo;t be surprised if 5.8.0 ships with the bug still present.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;(While you&amp;rsquo;re at it, report any other lurking bugs you know about.)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-attributes-are-broken-attributes-are-broken-span&#34;&gt;&lt;span id=&#34;Attributes_are_broken&#34;&gt;Attributes are broken&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Arthur Bergman explained again why &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00051.html&#34;&gt;attributes are broken&lt;/a&gt;. The problem is that the &lt;code&gt;MODIFY_*_ATTRIBUTE&lt;/code&gt; subs (used to set attributes for a variable) are called at compile time. Thus, in the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub MODIFY_SCALAR_ATTRIBUTE {
+        ...
+        tie $obj, $class;
+    }
+
+    for (1..10) {
+        my $foo : bar = &amp;quot;BAZ&amp;quot;;
+
+        ...
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The variable &lt;code&gt;$foo&lt;/code&gt; would be tied only on the first iteration of the loop, after which the scope cleanup mechanism would remove its magic, and the variable would remain untied for the remaining iterations.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-multiple-fetches-multiple-fetches-span&#34;&gt;&lt;span id=&#34;Multiple_FETCHes&#34;&gt;Multiple FETCHes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Jeff &amp;lsquo;japhy&amp;rsquo; Pinyan attacked some instances of &lt;code&gt;FETCH&lt;/code&gt; being called multiple times on tied variables (for &lt;code&gt;$tied++&lt;/code&gt;, &lt;code&gt;$tied || $untied&lt;/code&gt;), thus causing potentially undesirable side-effects (Read an &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00070.html&#34;&gt;analysis of the problem&lt;/a&gt; and &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00178.html&#34;&gt;the proposed solution&lt;/a&gt;). Several people pointed out the &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00190.html&#34;&gt;problems with this approach&lt;/a&gt;, but no better solution has been found yet.&lt;/p&gt;
+
+&lt;p&gt;Jeff also wanted to optimise &lt;code&gt;grep&lt;/code&gt; when called in boolean context ( &lt;code&gt;if (grep EXPR, LIST)&lt;/code&gt;) to avoid iterating over the entire LIST, and just return the first time &lt;code&gt;EXPR&lt;/code&gt; was true, but the &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00129.html&#34;&gt;potentially desirable side-effects&lt;/a&gt; of &lt;code&gt;EXPR&lt;/code&gt; make this optimisation infeasible.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-code-cleanups-code-cleanups-span&#34;&gt;&lt;span id=&#34;Code_cleanups&#34;&gt;Code cleanups&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Casey West embarked on a &lt;code&gt;pod/*&lt;/code&gt; cleanup, to make the example code use strict where appropriate, be generally pleasing to the eye, and easy to understand. Despite this noble goal, his patches were met with some suspicion.&lt;/p&gt;
+
+&lt;p&gt;Jeff Pinyan said the example shouldn&amp;rsquo;t use &lt;code&gt;$a&lt;/code&gt;, the &lt;code&gt;sort&lt;/code&gt; variable, but Jarkko didn&amp;rsquo;t want to encourage cargo-cult programming by punishing the poor innocent &lt;code&gt;$a&lt;/code&gt; for the vagaries of &lt;code&gt;sort&lt;/code&gt;. Abigail didn&amp;rsquo;t think the patches accomplished anything useful, but Jarkko said that consistency and following our own suggestions (in &lt;code&gt;perlstyle&lt;/code&gt;) are obviously good things.&lt;/p&gt;
+
+&lt;p&gt;Casey posted an explanation:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;I feel that my style is a generally acceptable one that everyone can understand. In that light, I don&amp;rsquo;t think it&amp;rsquo;s a bad thing if I make some minor changes (single versus double quotes) in the process of making a whole document better.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Nobody said anything after that.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-various-various-span&#34;&gt;&lt;span id=&#34;Various&#34;&gt;Various&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Andy Dougherty suggested an optional &lt;code&gt;make torture_test&lt;/code&gt; target to run tests which were not portable. (Schwern hasn&amp;rsquo;t noticed yet.)&lt;/p&gt;
+
+&lt;p&gt;Arthur Bergman is running the LXR cross referencing tools on the perl source. The result: PXR, the &lt;a href=&#34;http://pxr.perl.org/source/&#34;&gt;Perl Cross Reference&lt;/a&gt;. It will eventually contain cross references of perl-current, the latest stable release, and the Parrot source.&lt;/p&gt;
+
+&lt;p&gt;Brian Ingerson (of Inline fame) posted his first P5P patch, implementing the oft-requested &lt;code&gt;Data::Dumper&lt;/code&gt; feature to allow hash keys to be sorted. He even got the indentation right the first time!&lt;/p&gt;
+
+&lt;p&gt;Craig Berry provided a patch to fix &lt;code&gt;%ENV&lt;/code&gt; tainting on VMS. (Only five tests fail on VMS now, and a couple of them are bogus failures.)&lt;/p&gt;
+
+&lt;p&gt;Jarkko released two snapshots: 12307 and 12340. (The latest snapshot can be retrieved via rsync from &amp;ldquo;ftp.funet.fi::perlsnap&amp;rdquo;.)&lt;/p&gt;
+
+&lt;p&gt;Michael Schwern sought a philosophical solution to the finding the path to the running perl interpreter. Instead, he found that the contents of &lt;code&gt;$^X&lt;/code&gt; are system dependent when perl is invoked by a #!-line.&lt;/p&gt;
+
+&lt;p&gt;Nicholas Clark continued to submit lots of little patches, one of which became change #12345. This is entirely fitting, because Nick is a hoopy frood who knows exactly where his towel is.&lt;/p&gt;
+
+&lt;p&gt;Paul Marquess and Robin Barker are investigating a &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00104.html&#34;&gt;DB_File bug&lt;/a&gt; involving filtered keys.&lt;/p&gt;
+
+&lt;p&gt;Stas Bekman is hunting down interesting &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00257.html&#34;&gt;MakeMaker&lt;/a&gt; (and &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00352.html&#34;&gt;related&lt;/a&gt;) bugs. He also found a &lt;a href=&#34;http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-10/msg00209.html&#34;&gt;scoping problem in the warnings pragma&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, P5P was specially selected to receive a free mini-vacation to any of fifteen exciting destinations, along with several other people whose email addresses contained &amp;ldquo;per.&amp;rdquo;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;a href=&#34;mailto:ams@wiw.org&#34;&gt;Abhijit Menon-Sen&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Symmetric Cryptography in Perl</title>
+      <link>http://localhost:1313/pub/2001/07/10/crypto.html/</link>
+      <pubDate>Tue, 10 Jul 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/07/10/crypto.html/</guid>
+      <description>
+
+&lt;p&gt;Having purchased the $250 cookie recipe from Neiman-Marcus, Alice wants to send it to Bob, but keep it away from Eve, who snoops on everyone&amp;rsquo;s network traffic from the cubicle down the hall.&lt;/p&gt;
+
+&lt;p&gt;How can Perl help her?&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-ciphers-ciphers-span&#34;&gt;&lt;span id=&#34;ciphers&#34;&gt;Ciphers&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Cryptographic algorithms, or &lt;em&gt;ciphers&lt;/em&gt;, offer Alice one way to protect her data. By encrypting the recipe before sending it over the network, she can render it useless to anyone but Bob, who alone possesses the secret information required to decrypt it.&lt;/p&gt;
+
+&lt;p&gt;Ciphers were once closely guarded secrets, but relying on the secrecy of an algorithm is a risky proposition. If your security were somehow compromised, adversaries could read all of your past messages, and (if you ever discovered the breach) you must find an entirely different algorithm to use in future.&lt;/p&gt;
+
+&lt;p&gt;Modern ciphers, usually publicly known and widely studied, rely on the secrecy of a &lt;em&gt;key&lt;/em&gt; instead. They encrypt the same plaintext differently for each key; to decrypt a ciphertext, you must know the key used to produce it. New keys are easy to generate, so the compromise of a single key is a smaller problem. Although messages encrypted with the stolen key are rendered readable, the algorithm itself can be reused.&lt;/p&gt;
+
+&lt;p&gt;Algorithms that use the same key for both encryption and decryption are called &lt;em&gt;symmetric ciphers&lt;/em&gt;. To use such an algorithm, Alice and Bob must agree on a key to use before they can exchange messages. Since decryption depends only on the knowledge of this key, they must ensure that they share the key by a &lt;em&gt;secure channel&lt;/em&gt; that Eve cannot access (Alice could whisper the key into Bob&amp;rsquo;s ear over dinner, for example).&lt;/p&gt;
+
+&lt;p&gt;Most well-known symmetric ciphers are &lt;em&gt;block ciphers&lt;/em&gt;. The plaintext to be encrypted must be split into fixed-length blocks (usually 64 or 128 bits long) and fed to the cipher one at a time. The resulting blocks (of the same length) are concatenated to form the ciphertext.&lt;/p&gt;
+
+&lt;p&gt;The ciphers in widespread use today vary in strength, key length, block size and their approach to encrypting data. Some of the popular ciphers (IDEA, Twofish, Rijndael) are implemented by eponymous modules in the Crypt:: namespace on the CPAN (Crypt::IDEA and so on).&lt;/p&gt;
+
+&lt;p&gt;To decide which cipher to use for a particular application, one must consider the strength and speed required, and the computational resources available. The decision cannot be made without research, but IDEA is often considered the best practical choice for a general purpose cipher.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-keys-keys-span&#34;&gt;&lt;span id=&#34;keys&#34;&gt;Keys&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Symmetric ciphers usually use randomly generated keys (typically between 64 and 256 bits in length), and computers are notoriously bad at truly random number generation. Fortunately, many modern systems have some support for the generation of cryptographically secure random numbers, ranging from expensive hardware to device drivers that gather entropy from the timing delay between interrupts.&lt;/p&gt;
+
+&lt;p&gt;Crypt::Random, available from the CPAN, is a convenient interface to the &lt;code&gt;/dev/random&lt;/code&gt; device on many Unix systems. Once installed, it is simple to use:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Crypt::Random qw( makerandom );
+
+    $key = makerandom( Size =&amp;gt; 128, Strength =&amp;gt; 1);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For cryptographic key generation, the &lt;code&gt;Strength&lt;/code&gt; parameter should always be 1. The &lt;code&gt;Size&lt;/code&gt; in bits of the desired key depends on the cipher you want to use the key with. Typical symmetric key sizes range from 128 to 256 bits.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-how-can-i-use-these-in-perl-how-can-i-use-these-in-perl-span&#34;&gt;&lt;span id=&#34;how can i use these in perl&#34;&gt;How Can I Use These in Perl?&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;Crypt&lt;/code&gt; modules all support the same simple interface: &lt;code&gt;new($key)&lt;/code&gt; creates a cipher object, and the &lt;code&gt;encrypt()&lt;/code&gt; and &lt;code&gt;decrypt()&lt;/code&gt; methods operate on single blocks of data. The responsibility for key generation and sharing, providing suitable blocks, and the transmission of the ciphertext, lies with the user. In the examples below, we will use the Crypt::Twofish module. Twofish is a free, unpatented 128-bit block cipher with a 128, 192, or 256-bit key.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Crypt::Twofish;
+
+    # Create a new Crypt::Twofish object with the 128-bit key generated
+    # above.
+    $cipher = Crypt::Twofish-&amp;gt;new($key);
+
+    # Encrypt a block full of 0s...
+    $ciphertext = $cipher-&amp;gt;encrypt(pack &amp;quot;H*&amp;quot;, &amp;quot;00&amp;quot;x16);
+
+    # And then decrypt the result.
+    print unpack &amp;quot;H*&amp;quot;, $cipher-&amp;gt;decrypt($ciphertext);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The implementation raises an important issue: What does one do with the second chunk of an 18-byte file? Twofish cannot operate on anything less than a 16-byte block, so &lt;em&gt;padding&lt;/em&gt; must be added to the end of the last block to make it 16 bytes long. NULs (\000) are usually used to pad the block, but the value used doesn&amp;rsquo;t matter, because the padding is removed after the ciphertext is decrypted.&lt;/p&gt;
+
+&lt;p&gt;Alice can now use this code to encrypt her recipe:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Assume that $key contains a previously-generated key, and that
+    # PLAINTEXT and CIPHERTEXT are filehandles opened for reading and
+    # writing respectively.
+
+    $cipher = Crypt::Twofish-&amp;gt;new($key);
+
+    while (read(PLAINTEXT, $block, 16)) {
+        $len   = length $block;
+        $size += $len;
+
+        # Add padding if necessary
+        $block .= &amp;quot;\000&amp;quot;x(16-$len) if $len &amp;lt; 16;
+
+        $ciphertext .= $cipher-&amp;gt;encrypt($block);
+    }
+
+    # Record the size of the plaintext, so that the recipient knows how
+    # much padding to remove.
+    print CIPHERTEXT &amp;quot;$size\n&amp;quot;;
+    print CIPHERTEXT $ciphertext;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The output of this program can be safely sent across the network to Bob, perhaps as an e-mail attachment. Bob, having received the secret key by some other means, can then use the following code to decrypt the message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $cipher = Crypt::Twofish-&amp;gt;new($key);
+
+    $size = &amp;lt;CIPHERTEXT&amp;gt;;
+
+    while (read(CIPHERTEXT, $ct, 16)) {
+        $pt .= $cipher-&amp;gt;decrypt($ct);
+    }
+
+    # Write only $size bytes of the output; ignore padding.
+    print PLAINTEXT substr($pt, 0, $size);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is really all we need for symmetric cryptography in Perl. Using a different cipher is simply a matter of installing another module and changing the ``Twofish&amp;rdquo; above. From a cryptographic perspective, however, there are still some problems we must consider.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-cipher-modes-cipher-modes-span&#34;&gt;&lt;span id=&#34;cipher modes&#34;&gt;Cipher Modes&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The code above uses the Twofish cipher in Electronic Code Book (ECB) mode, meaning that &lt;code&gt;n&lt;/code&gt;th ciphertext block depends only on the key and the &lt;code&gt;n&lt;/code&gt;th plaintext block. For a particular key, one could build an exhaustive table (or Code Book) of plaintext blocks and their ciphertext counterparts. Then, instead of actually encrypting the plaintext, one could simply look at the relevant entries in the table to find the ciphertext.&lt;/p&gt;
+
+&lt;p&gt;Because of the highly repetitive nature of most texts, plaintext blocks and their corresponding blocks in the ciphertext tend to be repeated quite often. Further, it is often possible to make informed guesses about parts of the plaintext (Eve knows, for example, that Alice&amp;rsquo;s messages all have a long Tolkien quote in the signature).&lt;/p&gt;
+
+&lt;p&gt;Given enough patience and ciphertext, Eve can start to build a code book that maps ciphertext blocks to plaintext ones. Then, without knowing either the algorithm or the key, she could simply look up the relevant blocks in the intercepted ciphertext and write down large parts of the original plaintext!&lt;/p&gt;
+
+&lt;p&gt;Several new cipher modes have been invented to address this problem. One of the most generally useful ones is Cipher Block Chaining. &lt;em&gt;CBC&lt;/em&gt; starts by generating a random block (called an Initializ,ation Vector, or &lt;em&gt;IV&lt;/em&gt;) and encrypting it. The first plaintext block is XORed with the encrypted IV before being encrypted. Thereafter, each block is XORed with the ciphertext of the block preceding it, and then encrypted.&lt;/p&gt;
+
+&lt;p&gt;Here, each ciphertext block depends on the preceding ciphertext block, and the plaintext blocks so far. Thus, the blocks must be decrypted in order, and none of the patterns displayed by ECB are present. The IV itself does not need to be kept secret, and is usually transmitted with the ciphertext like &lt;code&gt;$size&lt;/code&gt; above.&lt;/p&gt;
+
+&lt;p&gt;Decryption of the ciphertext proceeds in the opposite order. The first ciphertext block is decrypted and XORed with the IV to form the first plaintext block, and each ciphertext block thereafter is XORed with the previous one to form a plaintext block. Other modes are similar in intent, but vary in detail, including the way errors in transmission affect the ciphertext, and the amount of feedback or dependency on previous blocks.&lt;/p&gt;
+
+&lt;p&gt;Alice and Bob could alter their code to perform cipher block chaining, but the handy Crypt::CBC module can save them the trouble. The module, available from the CPAN, is used in conjunction with a symmetric cipher module (like Crypt::Twofish). It handles padding, IV generation and all other details. The user only needs to specify a key, and the data to be encrypted or decrypted.&lt;/p&gt;
+
+&lt;p&gt;Thus, Alice could just do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Crypt::CBC;
+    $cipher = new Crypt::CBC ($key, &#39;Twofish&#39;);
+    undef $/; $plaintext = &amp;lt;PLAINTEXT&amp;gt;;
+    print CIPHERTEXT $cipher-&amp;gt;encrypt($plaintext);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And Bob could do:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    use Crypt::CBC;
+    $cipher = new Crypt::CBC ($key, &#39;Twofish&#39;);
+    undef $/; $ciphertext = &amp;lt;CIPHERTEXT&amp;gt;;
+    print PLAINTEXT $cipher-&amp;gt;decrypt($ciphertext);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Much simpler!&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-asymmetric-cryptography-asymmetric-cryptography-span&#34;&gt;&lt;span id=&#34;asymmetric cryptography&#34;&gt;Asymmetric Cryptography&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;Asymmetric (or public-key) ciphers use a pair of mathematically related keys, and the algorithms are so designed that data encrypted with one half of the key pair can only be decrypted by the other. Bob can generate a key pair and keep one half secret, while publishing the other half. Alice can then encrypt the recipe with Bob&amp;rsquo;s public key, knowing that it can only be decrypted with the secret half. Although this eliminates the need to share keys over a secure channel, it has its problems, too. For one, most public key encryption schemes require much longer keys (often 2048 bits or more) and are much slower.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;Crypt&lt;/code&gt; namespace contains modules for public key cryptography as well. &lt;code&gt;Crypt::RSA&lt;/code&gt; is a portable implementation of the (now free) RSA algorithm, one of the most widely studied public-key encryption schemes. There are interfaces to various versions of PGP (&lt;code&gt;Crypt::PGP2&lt;/code&gt;, &lt;code&gt;Crypt::PGP5&lt;/code&gt;, &lt;code&gt;Crypt::GPG&lt;/code&gt;), as well as implementations of public-key based signature algorithms (&lt;code&gt;Crypt::DSA&lt;/code&gt;).&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-cryptanalysis-cryptanalysis-span&#34;&gt;&lt;span id=&#34;cryptanalysis&#34;&gt;Cryptanalysis&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;Unfortunately, our implicit assumption that the ciphertext is useless to Eve is not always true. Depending on the information and resources that are available to her, she can try various means to retrieve the recipe. The simplest strategy is to try and guess the key Alice used. This is known as a &lt;em&gt;brute-force attack&lt;/em&gt;, and involves repeatedly generating random keys and trying to decrypt the ciphertext with each one.&lt;/p&gt;
+
+&lt;p&gt;The effectiveness of this approach depends on the size of the key: the longer it is, the more possible keys there are, and the more guesses will be required, on average, to find the right one. Thus, the only possible defense is to use a key long enough to make a key search computationally impractical.&lt;/p&gt;
+
+&lt;p&gt;How long is a safe key? DES with 56-bit keys was recently cracked in a little less than a day, but the 128-bit keyspace (range of possible keys) is &lt;code&gt;4 * 10**21&lt;/code&gt; times larger still. Although computing power is becoming cheaper, it seems likely that 128-bit keys will be safe from brute-force attacks for many years to come.&lt;/p&gt;
+
+&lt;p&gt;Of course, there are far more sophisticated attacks that they may be vulnerable to. As we saw in the description of ECB, cryptanalysts can often exploit patterns in the plaintext (long signatures, repeated phrases) or ciphertext (repeated blocks) to great advantage, or they may look for weaknesses (or exploit known ones) in the algorithm. Often, a combination of such techniques reduces the potential keyspace enough that a brute-force attack becomes practical.&lt;/p&gt;
+
+&lt;p&gt;Cryptanalysis and cryptographic techniques advanced hand-in-hand; new ciphers are designed to withstand old attacks, and newer attacks are attempted all the time. This makes it very important to stay abreast of current advances in cryptographic technology if you are serious about protecting your data for long periods of time.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-further-resources-further-resources-span&#34;&gt;&lt;span id=&#34;further resources&#34;&gt;Further Resources&lt;/span&gt;&lt;/h1&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_google%2Ecom&#34;&gt;google.com&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The Great God Google knows enough about cryptography-related material to keep you occupied for a considerable amount of time.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_perl%2Dcrypto%2Dsubscribe%40perl%2Eorg&#34;&gt;&lt;/span&gt;&lt;a href=&#34;mailto:perl-crypto-subscribe@perl.org&#34;&gt;perl-crypto-subscribe@perl.org&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The perl-crypto mailing list, although not very active at the moment, is intended for discussion of all aspects (both user and developer level) of cryptography with Perl.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;span id=&#34;item_Crypt%3A%3ATwofish&#34;&gt;Crypt::Twofish&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The Crypt::Twofish module, which has benefited from the inputs of several people, is a good example of how to write a portable cipher implementation.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

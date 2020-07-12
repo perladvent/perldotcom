@@ -1,0 +1,82 @@
+#!/usr/bin/env perl
+
+use Mojolicious::Lite;
+use WWW::Twilio::TwiML;
+
+my %list = ( 1 => { name => 'Ryan',
+                    number => '+19165557720' },
+             2 => { name => 'Liz',
+                    number => '+19165551211' },
+             3 => { name => 'Jason',
+                    number => '+19285550122' },
+             4 => { name => 'Erin',
+                    number => '+19285551729' },
+             5 => { name => 'Rachel',
+                    number => '+18015553992' },
+             6 => { name => 'Gilligan',
+                    recording => 'http://www.televisiontunes.com/themesongs/Gilligans%20Island.mp3' },
+             7 => { name => 'Potsie',
+                    recording => 'http://www.televisiontunes.com/themesongs/Happy%20Days%20-%20Season%202.mp3' },
+           );
+
+get '/menu' => sub {
+    my $self = shift;
+
+    my $msg = join '. ',
+      map { "Press $_ for $list{$_}->{name}" }
+        sort keys %list;
+
+    my $tw = new WWW::Twilio::TwiML;
+    my $resp = $tw->Response;
+    $resp->Gather({action => $self->url_for('/menu_handler'),
+                   method => 'GET',
+                   numDigits => 1})
+      ->Say({voice => 'woman'}, $msg);
+
+    $resp->Say("You need to make a choice or hang up.");
+    $resp->Redirect("/menu");
+
+    $self->render(format => 'xml',
+                  text   => $tw->to_string);
+};
+
+get '/menu_handler' => sub {
+    my $self = shift;
+    my $choice = $self->param('Digits') || 0;
+
+    my $tw = new WWW::Twilio::TwiML;
+    my $resp = $tw->Response;
+
+    unless( exists $list{$choice} ) {
+        $resp->Say({voice => 'woman'},
+                   "Sorry, that's not a valid option.");
+
+        $resp->Redirect({method => 'GET'}, "/menu");
+
+        $self->render(format => 'xml',
+                      text   => $tw->to_string);
+        return;
+    }
+
+    $resp->Say({voice => 'woman'},
+               "I'll try connecting you now.");
+
+    if( $list{$choice}->{number} ) {
+        $resp->Dial($list{$choice}->{number});
+    }
+
+    elsif( $list{$choice}->{recording} ) {
+        $resp->Play($list{$choice}->{recording});
+    }
+
+    else {
+        $resp->Say({voice => 'woman'},
+                   "Sorry, that option isn't working.");
+        $resp->Redirect({method => 'GET'}, "/menu");
+    }
+
+    $self->render(format => 'xml',
+                  text   => $tw->to_string);
+};
+
+app->start;

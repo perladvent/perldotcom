@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kelvin Param on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/kelvin-param/</link>
+    <description>Recent content in Kelvin Param on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 19 Dec 2001 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/authors/kelvin-param/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Building a Bridge to the Active Directory</title>
+      <link>http://localhost:1313/pub/2001/12/19/xmlrpc.html/</link>
+      <pubDate>Wed, 19 Dec 2001 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2001/12/19/xmlrpc.html/</guid>
+      <description>
+
+&lt;h3 id=&#34;span-id-introduction-introduction-span&#34;&gt;&lt;span id=&#34;introduction&#34;&gt;Introduction&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Active Directory of Windows 2000&amp;rsquo;s directory service, allowing organizations to keep and share information about networked resources and users. One significant feature of the Active Directory is that it is LDAP-compliant. Unfortunately, it is still very difficult to access the Active Directory without using the Active Directory Services Interface (ADSI). As a COM component, ADSI is very partial to the Windows operating system.&lt;/p&gt;
+
+&lt;p&gt;What if you want to access information in your organization&amp;rsquo;s Active Directory from a host that is not running Windows? One option is to build a piece of middleware (a daemon) to bridge a non-Windows host to the Active Directory. This article describes how to build such a daemon, and how to build a simple client would communicate with that daemon.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-xmlrpc-and-active-perl-to-the-rescue-xml-rpc-and-active-perl-to-the-rescue-span&#34;&gt;&lt;span id=&#34;xmlrpc and active perl to the rescue&#34;&gt;XML-RPC and Active Perl to the Rescue&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;XML-RPC is a mechanism that enables platform-independent and language-independent distributed computing. It serializes function calls and their associated arguments into an XML stream, and transports the stream via the ubiquitous HTTP protocol. Although it might be an over-simplification, XML-RPC provides some of the power of CORBA without the associated pain.&lt;/p&gt;
+
+&lt;p&gt;The aim of this article is to walk you through the construction of a daemon that accesses data from the Active Directory using ADSI and passes on this data to other non-Windows clients via XML-RPC. This daemon must, of necessity, run on a Windows host.&lt;/p&gt;
+
+&lt;p&gt;A daemon isn&amp;rsquo;t much good unless there is a client with which to communicate. As such, I will also walk you through the construction of a simple client application.&lt;/p&gt;
+
+&lt;p&gt;Since Visual Basic is the de facto standard for writing Windows applications, it would seem natural to build the daemon in Visual Basic. However, I&amp;rsquo;m just not comfortable with Visual Basic, even though I had used it on several projects. Fortunately, ActivePerl from ActiveState has a very well developed COM interface that can be used to interact with ADSI.&lt;/p&gt;
+
+&lt;p&gt;Before we get into the details of our Active Directory Daemon and Active Directory Client, here are the links to the source code, so that you can refer to it as we discuss the code and the logic behind it.&lt;/p&gt;
+
+&lt;p&gt;Active Directory Daemon: &lt;a href=&#34;http://localhost:1313/media/_pub_2001_12_19_xmlrpc/activedirectory_daemon.pl&#34;&gt;activedirectory_daemon.pl&lt;/a&gt;
+Active Directory Client: &lt;a href=&#34;http://localhost:1313/media/_pub_2001_12_19_xmlrpc/activedirectory_client.pl&#34;&gt;activedirectory_client.pl&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-active-directory-daemon-the-active-directory-daemon-span&#34;&gt;&lt;span id=&#34;the active directory daemon&#34;&gt;The Active Directory Daemon&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Our daemon will be able to do the following:&lt;/p&gt;
+
+&lt;p&gt;a. Authenticate a user against the Active Directory using the user ID and password. A successful login will result in the salient data (e.g. surname, given name and email address) associated with the user ID being returned.&lt;/p&gt;
+
+&lt;p&gt;b. Return the chain of command (the user&amp;rsquo;s immediate boss, the immediate boss&amp;rsquo;s immediate boss, etc).&lt;/p&gt;
+
+&lt;p&gt;First, we need to load the modules below, and we also invoke the strict pragma.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use strict;
+  use Win32::OLE;
+  use Win32::OLE::Const &#39;Microsoft ActiveX Data Objects&#39;;
+  use Frontier::Daemon;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first two are part of Active Perl, while the third module is available from CPAN.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;AuthenticateUser&lt;/code&gt; subroutine authenticates the user against the active directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  sub AuthenticateUser {
+        my $strUserID       = shift || &amp;quot;someuserid&amp;quot;; 
+        my $strUserPassword = shift || &amp;quot;Somepassword1&amp;quot;;
+        my $strADsPath      = shift || 
+           &#39;LDAP://OU=somedivision,OU=somedepartment,DC=someuniversity,DC=edu&#39;;
+        my $strDomain       = shift || &amp;quot;\@someuniversity.edu&amp;quot;;
+        my $strAttributeName = &amp;quot;userPrincipalName&amp;quot;;
+        my $strAttributeValue = $strUserID;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;ve assigned default values to some of the scalars above to provide an example of how arguments will be used at various points in the process of querying the Active Directory. There are several ways of interacting with ADSI. In this bit of code, we bind directly to ADSI. Later on, we will show how we can use ADO to bind to ADSI. It is important to note that each method of interacting with ADSI has its own peculiarities.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;         my $objNameSpace = Win32::OLE-&amp;gt;GetObject (&#39;LDAP:&#39;) 
+                or die (&amp;quot;Cannot create LDAP object&amp;quot;);.
+         my $objObjSec = $objNameSpace-&amp;gt;OpenDSObject($strADsPath, $strUserID,
+   $strUserPassword, 1);
+         my %hashAdRecord;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We use &lt;code&gt;Win32::OLE-&amp;gt;GetObject(&#39;LDAP:&#39;)&lt;/code&gt; to utilize the LDAP services of ADSI. ADSI supports several directory services such as Novell NDS, and Windows NT4 amongst others. Next we try to access the Active Directory record associated with our user ID and password. The $strADsPath variable specifies what is roughly the domain name of the Windows 2000 forest, and how far down the forest one wants to begin searching. The DC=someuniversity,DC=edu is the LDAP analog of a DNS style domain name i.e. someuniversity.edu. In this example, we want to access the Active Directory starting at the organizational unit somedepartment that is a child of the organization unit somedivision.&lt;/p&gt;
+
+&lt;p&gt;We use &lt;code&gt;$objNameSpace-&amp;gt;OpenDSObject($strADsPath, $strUserID, $strUserPassword, 1)&lt;/code&gt; to access the Active Directory and retrieve the relevant record. The last argument in this subroutine is set to 1. It indicates that we are using an unencryted password.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if (Win32::OLE-&amp;gt;LastError()==0) {
+        $refAdRecord =
+            GetUserData($strAttributeName,$strAttributeValue,$strADsPath,$strDomain);
+    } else {
+        %hashAdRecord =(&#39;result&#39; =&amp;gt; &#39;failed&#39;);
+        $refAdRecord = \%hashAdRecord;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We use &lt;code&gt;Win32::OLE-&amp;gt;LastError()&lt;/code&gt; to ascertain if we have a valid user. &lt;code&gt;Win32::OLE-&amp;gt;LastError()&lt;/code&gt; is ActivePerl&amp;rsquo;s implementation of Visual Basic&amp;rsquo;s &lt;code&gt;Err.Number&lt;/code&gt;. Up to now, everything is pretty straightforward. Deciphering the error codes is a little tricky. Here&amp;rsquo;s how the error logic works. &lt;code&gt;Win32::OLE-&amp;gt;LastError()&lt;/code&gt; returns a non-zero only if the password is invalid. However, supplying a non-existent user ID will result in zero being returned. As such this bit of code is only good for detecting an invalid password. So, how do we detect a non-existent user ID? Our &lt;code&gt;GetUserData&lt;/code&gt; subroutine serves a dual purpose. It not only detects a non-existent user ID, but also returns data from the Active Directory object that is associated with a valid user ID.&lt;/p&gt;
+
+&lt;p&gt;We can only return references to the XML-RPC client, so we need to define a scalar variable to which we can assign a reference of the return value. Furthermore, the scalar variable has to be global to the XML-RPC daemon program. In our case, the scalar variable is &lt;code&gt;$refAdRecord&lt;/code&gt;. If the user id and password are valid, the reference to the hash returned by the subroutine &lt;code&gt;GetUserData&lt;/code&gt; is assigned to the scalar &lt;code&gt;$refAdRecord&lt;/code&gt;. On the other hand, if the user id and password are not valid, we insert the &lt;code&gt;&#39;result&#39; =&amp;gt; &#39;failed&#39;&lt;/code&gt; key-value pair to the &lt;code&gt;%hashAdRecord&lt;/code&gt; hash variable, and subsequently assign the reference of that hash variable to &lt;code&gt;$refAdRecord&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $objObjSec-&amp;gt;Close;
+    $objNameSpace-&amp;gt;Close;
+    return $refAdRecord;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And, it&amp;rsquo;s time to destroy the ADSI objects that we created earlier.&lt;/p&gt;
+
+&lt;p&gt;Now, we move on to the XML-RPC specific bits of the daemon program.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my $methods = {
+    &#39;activedirectory_daemon1.GetUserData&#39; =&amp;gt; \&amp;amp;GetUserData,
+    &#39;activedirectory_daemon1.GetCommandChain&#39; =&amp;gt; \&amp;amp;GetCommandChain,
+    &#39;activedirectory_daemon1.AuthenticateUser&#39; =&amp;gt; \&amp;amp;AuthenticateUser
+
+    };
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We declare a hash of subroutines that are accessible to the XML-RPC client. The key of each entry is the name of the method prefixed by an identifier using the dot convention. In our case, we arbitrarily use the name of the daemon file as the identifier. The value part of each hash entry is the de-referenced pointer to the corresponding method. This hash serves as a sort of look up table for requests to methods made at the XML-RPC client. The subroutines besides &lt;code&gt;AuthenticateUser&lt;/code&gt; will be discussed later in this article.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Frontier::Daemon-&amp;gt;new(LocalPort =&amp;gt; 8080, methods =&amp;gt; $methods) 
+           or die (&amp;quot;Cannot start HTTP daemon: $!&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At this juncture, we insert the code that fires up the XML-RPC daemon. We do so creating a new &lt;code&gt;Frontier::Daemon&lt;/code&gt; instance. The constructor subroutine takes two arguments, each as a key-value pair. The first argument is the port used by the daemon. Since the host may already be running a web server, we&amp;rsquo;ll use port 8080. The second argument is the set of subroutines to be published for use by the XML-RPC client (see above).&lt;/p&gt;
+
+&lt;p&gt;Besides the &lt;code&gt;AuthenticateUser&lt;/code&gt; subroutine, we&amp;rsquo;ve also included a couple of subroutines that retrieve useful information about a user. &lt;code&gt;GetUserData&lt;/code&gt; retrieves data like the user&amp;rsquo;s email address, telephone number, etc. Although we call &lt;code&gt;GetUserData&lt;/code&gt; from other subroutines (&lt;code&gt;AuthenticateUser&lt;/code&gt; and &lt;code&gt;GetCommandChain&lt;/code&gt;) within the daemon program, &lt;code&gt;GetUserData&lt;/code&gt; may also be called from an XML-RPC client to retrieve data in the Active Directory about any user whose record is accessible. Instead of binding directly with ADSI, in this case, we use ADO to bind with the Active Directory, just so that the retreived data is presented as a record like if the data was retrieved from a relational database.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub GetUserData {
+        my $strAttributeName  = shift; #could be userPrincipalName, cn etc
+        my $strAttributeValue = shift; #could be user ID, cn value etc
+        my $strADsPath        = shift; #could be
+        # &amp;quot;LDAP://OU=somedivision,OU=somedepartment,DC=someuniversity,DC=edu&amp;quot;
+
+        my $strDomain         = shift; #could be &amp;quot;someuniversity.edu&amp;quot;
+
+        if ($strAttributeName eq &amp;quot;userPrincipalName&amp;quot;) { 
+            $strAttributeValue = $strAttributeValue . $strDomain; s
+        }
+
+        my $strProvider = &amp;quot;Active Directory Provider&amp;quot;;
+
+        my $strConnectionString = $strProvider;
+
+        my $strFilter = &amp;quot;(&amp;quot; . $strAttributeName . &amp;quot;=&amp;quot; . $strAttributeValue . &amp;quot;)&amp;quot;;
+
+        my $strAttribs =
+             &amp;quot;userPrincipalName,sn,givenName,cn,department,telephoneNumber,mail,title,manager&amp;quot;;
+
+        my $strScope = &amp;quot;subtree&amp;quot;;
+
+        my $strCommandText = &amp;quot;&amp;lt;&amp;quot; . $strADsPath . &amp;quot;E&amp;gt;;&amp;quot; . $strFilter . &amp;quot;
+        ;&amp;quot; . $strAttribs . &amp;quot;;&amp;quot; . $strScope;
+
+        my $objConnection = Win32::OLE-&amp;gt;new (&amp;quot;ADODB.Connection&amp;quot;) 
+             or die (&amp;quot;Cannot create ADODB object!&amp;quot;);
+
+        my $objRecordset = Win32::OLE-&amp;gt;new (&amp;quot;ADODB.Recordset&amp;quot;)
+             or die (&amp;quot;Cannot create ADODB recordset!&amp;quot;);
+
+        my $objCommand = Win32::OLE-E&amp;lt;gt&amp;gt;new (&amp;quot;ADODB.Command&amp;quot;) 
+             or die (&amp;quot;Cannot create ADODB command!&amp;quot;);
+
+        my %hashAdRecord;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The above code snippet from the &lt;code&gt;GetUserData&lt;/code&gt; subroutine shows what values are assigned to varaibles. This subroutine has four arguments:&lt;/p&gt;
+
+&lt;p&gt;a. $strAttributeName&lt;/p&gt;
+
+&lt;p&gt;b. $strAttributeValue&lt;/p&gt;
+
+&lt;p&gt;c. $strADsPath&lt;/p&gt;
+
+&lt;p&gt;d. $strDomain&lt;/p&gt;
+
+&lt;p&gt;At this juncture, I&amp;rsquo;ll try to explain how the above variables are used. In our case, we will search the Active Directory for the record that contains a given value for the userPrincipalName. As such, &lt;code&gt;$strAttributeName = &amp;quot;userPrincipalName&amp;quot;&lt;/code&gt;. If the user ID is &lt;em&gt;jsmith12&lt;/em&gt;, then &lt;code&gt;$strAttributeValue = &amp;quot;jsmith12&amp;quot;&lt;/code&gt;. Alternatively, if we call the &lt;code&gt;GetUserData&lt;/code&gt; subroutine from inside the AuthenticateUser subroutine, we declare &lt;code&gt;$strAttributeValue = $strUserID&lt;/code&gt; in the AuthenticateUser subroutine.&lt;/p&gt;
+
+&lt;p&gt;Since we have used the user ID instead of the full &lt;code&gt;userPrincipalName&lt;/code&gt;, we need to append &lt;em&gt;@somedomain&lt;/em&gt; to the user ID. Hence we get,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    if ($strAttributeName eq &amp;quot;userPrincipalName&amp;quot;) { 
+        $strAttributeValue = $strAttributeValue . $strDomain; 
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The remainder of the above variable declarations with the exception of &lt;code&gt;%hashAdRecord&lt;/code&gt; are required to enable ADO to bind with ADSI. I&amp;rsquo;ll try to explain what&amp;rsquo;s happening there. First we create the following objects:&lt;/p&gt;
+
+&lt;p&gt;a. ADODB connection object&lt;/p&gt;
+
+&lt;p&gt;b. ADODB Recordset object&lt;/p&gt;
+
+&lt;p&gt;c. ADODB Command object&lt;/p&gt;
+
+&lt;p&gt;Once these objects have been created, we assign values to selected properties of the ADODB Connection object.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $objConnection-&amp;gt;{Provider} = (&amp;quot;ADsDSOObject&amp;quot;);
+    $objConnection-&amp;gt;{ConnectionString} = ($strConnectionString);
+
+    $objConnection-&amp;gt;Open();
+    $objCommand-&amp;gt;{ActiveConnection} = ($objConnection);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We open the ADODB connection, and assign the ADODB Connection object to the ActiveConnection property of the ADODB Command object.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $objCommand-&amp;gt;{CommandText} = ($strCommandText);
+
+    $objRecordset = $objCommand-&amp;gt;Execute($strCommandText) 
+        or die (&amp;quot;Cannot execute!&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We assign $strCommandText to the CommandText property of the ADODB Command object, and next, we run the Execute method of the ADODB Command object.The $strCommandText variable is the argument of the Execute method. The value of the $strCommandText is the Active Directory analog of an SQL statement use to query an relational database. $strCommandText comprises four elements:&lt;/p&gt;
+
+&lt;p&gt;a. $strADsPath&lt;/p&gt;
+
+&lt;p&gt;b. $strFilter&lt;/p&gt;
+
+&lt;p&gt;c. $strAttribs&lt;/p&gt;
+
+&lt;p&gt;d. $strScope&lt;/p&gt;
+
+&lt;p&gt;$strADsPath contains the address of the Active Directory server, and the subset of the total set of records one wishes to search through. The address of the Active Directory server is specified by splitting the domain name up. And the result is &lt;code&gt;DC=someuniversity,DC=edu&lt;/code&gt;. The subset of the records in the Active Directory is defined by listing the hierarchy of OUs (Organizational Units) e.g. &lt;code&gt;OU=somedivision,OU=somedepartment&lt;/code&gt;. The syntax of the entire $strADsPath string complies with the LDAP RFC 2307 syntax. However, many programming or scripting languages do not seem to support this syntax as yet. Instead, the LDAP RFC 2251 syntax is widely supported.&lt;/p&gt;
+
+&lt;p&gt;$strFilter specificies the Active Directory records that we are interested in. In this instance, we are interested in the record where &lt;code&gt;userPrincipalName&lt;/code&gt; is equal to &lt;code&gt;someuserid@someuniversity.edu&lt;/code&gt;. Hence, this relationship is expressed as&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $strFilter=&amp;quot;(&amp;quot; . $strAttributeName . &amp;quot;=&amp;quot; . $strAttributeValue . &amp;quot;)&amp;quot;.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;$strAttribs contains the list of fields that we want to retrieve from the query. If the query is successful, the result will be returned in ADODB Recordset object, and we can use the methods in the ADODB Recordset objects to retrieve the data.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;$strScope=&amp;quot;subtree&amp;quot;&lt;/code&gt; indicates that the scope of the search is limited to the subtree that has been specified in &lt;code&gt;$strADsPath&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Finally, we turn our attention to getting a list of a user&amp;rsquo;s superiors. This is possible because each user&amp;rsquo;s record in the Active Directory has a &lt;code&gt;manager&lt;/code&gt; field that contains the canonical name or &lt;code&gt;CN&lt;/code&gt; (amongst other bits of data) of the user&amp;rsquo;s immediate superior. The &lt;code&gt;GetCommandChain&lt;/code&gt; subroutine returns an array of a user&amp;rsquo;s superiors. This subroutine takes two arguments:&lt;/p&gt;
+
+&lt;p&gt;a. $refAdRecord&lt;/p&gt;
+
+&lt;p&gt;b. $strApexTitle&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub GetManagerString {
+        my %hashAdRecord = %$refAdRecord;
+        my $strManagerString=$hashAdRecord{&amp;quot;manager&amp;quot;};
+        return $strManagerString;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;$refAdRecord is the reference of the user&amp;rsquo;s data returned by &lt;code&gt;GetUserData&lt;/code&gt;. $strApexTitle is the highest office (e.g. ``Division Manager&amp;rdquo;) relevant to the search. The logic within this subroutine is quite simple. We make use of the &lt;code&gt;GetManagerString&lt;/code&gt; subroutine to retrieve the data that was obtained from the &lt;code&gt;Manager&lt;/code&gt; field in the Active Directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub GetManagerCN {
+        my $strManagerString=shift;
+        $strManagerString =~ /\bCN=([-_#@%\&amp;amp;\$\*\.a-zA-Z0-9\s]+)/;
+        return $1;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next we use the &lt;code&gt;GetManagerCN&lt;/code&gt; subroutine to extract the canonical name from the string returned by the &lt;code&gt;GetManagerString&lt;/code&gt; subroutine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    do {
+        $refAdRecord =
+        &amp;lt;GetUserData&amp;gt;(&amp;quot;cn&amp;quot;,$strManagerCN,&amp;quot;LDAP://OU=somedivision,
+        OU=somedepartment,DC=someuniversity,DC=edu&amp;quot;,
+        &amp;quot;\@someuniversity.edu&amp;quot;);
+        %hashAdRecord=%$refAdRecord;
+
+        $strTitle = $hashAdRecord{&amp;quot;title&amp;quot;};
+
+        push @arrCommandChain, {%hashAdRecord};
+        $strManagerString = GetManagerString($refAdRecord);
+        $strManagerCN = GetManagerCN($strManagerString); 
+    } until ($strTitle eq $strApexTitle);
+    $refCommandChain = \@arrCommandChain;
+    return $refCommandChain;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A &lt;code&gt;do&lt;/code&gt; loop is used to traverse up the management hierarchy till we reach the user record that has a title value which matches the value in &lt;code&gt;$strApexTitle&lt;/code&gt;. Over each iteration, we store the hash of the data retreived from the Active Directory into the array &lt;code&gt;@arrCommandChain&lt;/code&gt;. Finally, we return the reference to this array as &lt;code&gt;$refCommandChain&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In the next section we will examine how the client uses the XML-RPC mechanism to make requests of the daemon.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-the-client-in-perl-the-client-in-perl-span&#34;&gt;&lt;span id=&#34;the client in perl&#34;&gt;The Client in Perl&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;Since most of the work is done by the active directory daemon, the active directory client in Perl is relatively simple. Because we&amp;rsquo;ve used the XML-RPC protocol, the client can be written in various languages, e.g. PHP 4, Python, Java, etc. However we shall continue with Perl to be consistent with the theme of this web site.&lt;/p&gt;
+
+&lt;p&gt;As with the daemon, we invoke the strict pragma, and load the Frontier::Client module.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $strDaemon_url = &amp;quot;http://www.someuniversity.edu:8080/RPC2&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make use of the subroutines in the Active Directory daemon, we need to provide a url to the daemon. In our case we&amp;rsquo;ve assigned the url to the &lt;code&gt;$strDaemon_url&lt;/code&gt; variable. As discussed in the Daemon section of this article, we&amp;rsquo;ve assigned port 8080 for our daemon&amp;rsquo;s use. The &lt;code&gt;Frontier::Daemon&lt;/code&gt; package has also assigned a default virtual directory, RPC2.&lt;/p&gt;
+
+&lt;p&gt;Next, we create a new instance of the XML RPC client by passing $strDaemon_url as the value part of the key-value pair of a hash entry.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $objServer = Frontier::Client-&amp;gt;new(url =&amp;gt; $strDaemon_url);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can utilize the published subroutines in the Active Directory daemon.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$refAdRecord=$objServer-&amp;gt;call(&#39;activedirectory_daemon.AuthenticateUser&#39;,&#39;someuserid&#39;,
+&#39;Somepassword1&#39;,&#39;LDAP://OU=somedivision,OU=somedepartment,DC=someuniversity,DC=edu&#39;,
+&amp;quot;\@someuniversity.edu&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first argument in the &lt;code&gt;$objServer-&amp;gt;call&lt;/code&gt; subroutine is the qualified daemon subroutine name. The rest of the arguments are the arguments of the daemon subroutine.&lt;/p&gt;
+
+&lt;p&gt;As mentioned earlier, the XML-RPC daemon, can only return references. As such, we need to convert references to hashes, or arrays as appropriate. For example, &lt;code&gt;%hashAdRecord = %$refAdRecord&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-conclusion-conclusion-span&#34;&gt;&lt;span id=&#34;conclusion&#34;&gt;Conclusion&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;XML-RPC is a much more than an effective mechanism to enable distributed computing. We can use it to provide access to platform specific services. In our case, we used XML-RPC to enable a non-Windows host to access data and services in the Active Directory. Furthermore, XML-RPC is simple to implement. I&amp;rsquo;ve made forays into distributed computing several years ago by way of Java&amp;rsquo;s RMI and Microsoft&amp;rsquo;s DCOM. In my experience, XML-RPC is by far the cleanest and most fuss-free mechanism of the three.&lt;/p&gt;
+
+&lt;p&gt;So, if you&amp;rsquo;re a Perl programmer, and are looking to leveraging off a service that only runs on the Windows platform, give Active Perl and XML-RPC a go. You&amp;rsquo;ll be pleasantly surprised.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-resources-resources-span&#34;&gt;&lt;span id=&#34;resources&#34;&gt;Resources&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.cpan.org&#34;&gt;http://www.cpan.org&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.activestate.com&#34;&gt;http://www.activestate.com&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://xmlrpc-c.sourceforge.net/xmlrpc-howto/xmlrpc-howto.html&#34;&gt;http://xmlrpc-c.sourceforge.net/xmlrpc-howto/xmlrpc-howto.html&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

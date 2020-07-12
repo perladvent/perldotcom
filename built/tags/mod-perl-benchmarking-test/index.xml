@@ -1,0 +1,837 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mod Perl Benchmarking Test on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/tags/mod-perl-benchmarking-test/</link>
+    <description>Recent content in Mod Perl Benchmarking Test on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 16 Jul 2002 00:00:00 -0800</lastBuildDate>
+    <atom:link href="/tags/mod-perl-benchmarking-test/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Improving mod_perl Sites&#39; Performance: Part 3</title>
+      <link>http://localhost:1313/pub/2002/07/16/mod_perl.html/</link>
+      <pubDate>Tue, 16 Jul 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/07/16/mod_perl.html/</guid>
+      <description>
+
+&lt;p&gt;In this article we will continue the topic started in the previous article. This time we talk about tools that help us with code profiling and memory usage measuring.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-code-profiling-techniques-code-profiling-techniques-span&#34;&gt;&lt;span id=&#34;code_profiling_techniques&#34;&gt;Code Profiling Techniques&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;The profiling process helps you to determine which subroutines or just snippets of code take the longest time to execute and which subroutines are called most often. You will probably just want to optimize those.&lt;/p&gt;
+
+&lt;p&gt;When do you need to profile your code? You do that when you suspect that some part of your code is being called very often and so there may be a need to optimize it to significantly improve the overall performance.&lt;/p&gt;
+
+&lt;p&gt;For example, you might have used the &lt;code&gt;diagnostics&lt;/code&gt; pragma, which extends the terse diagnostics normally emitted by both the Perl compiler and the Perl interpreter, augmenting them with the more verbose and endearing descriptions found in the &lt;code&gt;perldiag&lt;/code&gt; manpage. If you&amp;rsquo;ve ever done so, then you know that it might slow your code down tremendously, so let&amp;rsquo;s first see whether or not it actually does.&lt;/p&gt;
+
+&lt;p&gt;We will run a benchmark, once with diagnostics enabled and once disabled, on a subroutine called &lt;em&gt;test_code&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The code inside the subroutine does an arithmetic and a numeric comparison of two strings. It assigns one string to another if the condition tests true but the condition always tests false. To demonstrate the &lt;code&gt;diagnostics&lt;/code&gt; overhead the comparison operator is intentionally &lt;em&gt;wrong&lt;/em&gt;. It should be a string comparison, not a numeric one.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Benchmark;
+  use diagnostics;
+  use strict;
+
+  my $count = 50000;
+
+  disable diagnostics;
+  my $t1 = timeit($count,\&amp;amp;test_code);
+
+  enable  diagnostics;
+  my $t2 = timeit($count,\&amp;amp;test_code);
+
+  print &amp;quot;Off: &amp;quot;,timestr($t1),&amp;quot;\n&amp;quot;;
+  print &amp;quot;On : &amp;quot;,timestr($t2),&amp;quot;\n&amp;quot;;
+
+  sub test_code{
+    my ($a,$b) = qw(foo bar);
+    my $c;
+    if ($a == $b) {
+      $c = $a;
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For only a few lines of code we get:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Off:  1 wallclock secs ( 0.81 usr +  0.00 sys =  0.81 CPU)
+  On : 13 wallclock secs (12.54 usr +  0.01 sys = 12.55 CPU)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With &lt;code&gt;diagnostics&lt;/code&gt; enabled, the subroutine &lt;code&gt;test_code()&lt;/code&gt; is 16 times slower than with &lt;code&gt;diagnostics&lt;/code&gt; disabled!&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s fix the comparison the way it should be, by replacing &lt;code&gt;==&lt;/code&gt; with &lt;code&gt;eq&lt;/code&gt;, so we get:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    my ($a,$b) = qw(foo bar);
+    my $c;
+    if ($a eq $b) {
+      $c = $a;
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and run the same benchmark again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Off:  1 wallclock secs ( 0.57 usr +  0.00 sys =  0.57 CPU)
+  On :  1 wallclock secs ( 0.56 usr +  0.00 sys =  0.56 CPU)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now there is no overhead at all. The &lt;code&gt;diagnostics&lt;/code&gt; pragma slows things down only when warnings are generated.&lt;/p&gt;
+
+&lt;p&gt;After we have verified that using the &lt;code&gt;diagnostics&lt;/code&gt; pragma might adds a big overhead to execution runtime, let&amp;rsquo;s use the code profiling to understand why this happens. We are going to use &lt;code&gt;Devel::DProf&lt;/code&gt; to profile the code. Let&amp;rsquo;s use this code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  diagnostics.pl
+  --------------
+  use diagnostics;
+  print &amp;quot;Content-type: text/html\n\n&amp;quot;;
+  test_code();
+  sub test_code{
+    my ($a,$b) = qw(foo bar);
+    my $c;
+    if ($a == $b) {
+      $c = $a;
+    }
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Run it with the profiler enabled, and then create the profiling stastics with the help of dprofpp:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl -d:DProf diagnostics.pl
+  % dprofpp
+
+  Total Elapsed Time = 0.342236 Seconds
+    User+System Time = 0.335420 Seconds
+  Exclusive Times
+  %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+   92.1   0.309  0.358      1   0.3089 0.3578  main::BEGIN
+   14.9   0.050  0.039   3161   0.0000 0.0000  diagnostics::unescape
+   2.98   0.010  0.010      2   0.0050 0.0050  diagnostics::BEGIN
+   0.00   0.000 -0.000      2   0.0000      -  Exporter::import
+   0.00   0.000 -0.000      2   0.0000      -  Exporter::export
+   0.00   0.000 -0.000      1   0.0000      -  Config::BEGIN
+   0.00   0.000 -0.000      1   0.0000      -  Config::TIEHASH
+   0.00   0.000 -0.000      2   0.0000      -  Config::FETCH
+   0.00   0.000 -0.000      1   0.0000      -  diagnostics::import
+   0.00   0.000 -0.000      1   0.0000      -  main::test_code
+   0.00   0.000 -0.000      2   0.0000      -  diagnostics::warn_trap
+   0.00   0.000 -0.000      2   0.0000      -  diagnostics::splainthis
+   0.00   0.000 -0.000      2   0.0000      -  diagnostics::transmo
+   0.00   0.000 -0.000      2   0.0000      -  diagnostics::shorten
+   0.00   0.000 -0.000      2   0.0000      -  diagnostics::autodescribe
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s not easy to see what is responsible for this enormous overhead, even if &lt;code&gt;main::BEGIN&lt;/code&gt; seems to be running most of the time. To get the full picture we must see the OPs tree, which shows us who calls whom, so we run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % dprofpp -T
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the output is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt; main::BEGIN
+   diagnostics::BEGIN
+      Exporter::import
+         Exporter::export
+   diagnostics::BEGIN
+      Config::BEGIN
+      Config::TIEHASH
+      Exporter::import
+         Exporter::export
+   Config::FETCH
+   Config::FETCH
+   diagnostics::unescape
+   .....................
+   3159 times [diagnostics::unescape] snipped
+   .....................
+   diagnostics::unescape
+   diagnostics::import
+ diagnostics::warn_trap
+   diagnostics::splainthis
+      diagnostics::transmo
+      diagnostics::shorten
+      diagnostics::autodescribe
+ main::test_code
+   diagnostics::warn_trap
+      diagnostics::splainthis
+         diagnostics::transmo
+         diagnostics::shorten
+         diagnostics::autodescribe
+   diagnostics::warn_trap
+      diagnostics::splainthis
+         diagnostics::transmo
+         diagnostics::shorten
+        diagnostics::autodescribe
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we see that two executions of &lt;code&gt;diagnostics::BEGIN&lt;/code&gt; and 3161 of &lt;code&gt;diagnostics::unescape&lt;/code&gt; are responsible for most of the running overhead.&lt;/p&gt;
+
+&lt;p&gt;If we comment out the &lt;code&gt;diagnostics&lt;/code&gt; module, we get:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Total Elapsed Time = 0.079974 Seconds
+    User+System Time = 0.059974 Seconds
+  Exclusive Times
+  %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+   0.00   0.000 -0.000      1   0.0000      -  main::test_code
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It is possible to profile code running under mod_perl with the &lt;code&gt;Devel::DProf&lt;/code&gt; module, available on CPAN. However, you must have apache version 1.3b3 or higher and the &lt;code&gt;PerlChildExitHandler&lt;/code&gt; enabled during the httpd build process. When the server is started, &lt;code&gt;Devel::DProf&lt;/code&gt; installs an &lt;code&gt;END&lt;/code&gt; block to write the &lt;em&gt;tmon.out&lt;/em&gt; file. This block will be called at server shutdown. Here is how to start and stop a server with the profiler enabled:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % setenv PERL5OPT -d:DProf
+  % httpd -X -d `pwd` &amp;amp;
+  ... make some requests to the server here ...
+  % kill `cat logs/httpd.pid`
+  % unsetenv PERL5OPT
+  % dprofpp
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;Devel::DProf&lt;/code&gt; package is a Perl code profiler. It will collect information on the execution time of a Perl script and of the subs in that script (remember that &lt;code&gt;print()&lt;/code&gt; and &lt;code&gt;map()&lt;/code&gt; are just like any other subroutines you write, but they come bundled with Perl!)&lt;/p&gt;
+
+&lt;p&gt;Another approach is to use &lt;code&gt;Apache::DProf&lt;/code&gt;, which hooks &lt;code&gt;Devel::DProf&lt;/code&gt; into mod_perl. The &lt;code&gt;Apache::DProf&lt;/code&gt; module will run a &lt;code&gt;Devel::DProf&lt;/code&gt; profiler inside each child server and write the &lt;em&gt;tmon.out&lt;/em&gt; file in the directory &lt;code&gt;$ServerRoot/logs/dprof/$$&lt;/code&gt; when the child is shutdown (where &lt;code&gt;$$&lt;/code&gt; is the number of the child process). All it takes is to add to &lt;em&gt;httpd.conf&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlModule Apache::DProf
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember that any PerlHandler that was pulled in before &lt;code&gt;Apache::DProf&lt;/code&gt; in the &lt;em&gt;httpd.conf&lt;/em&gt; or &lt;em&gt;startup.pl&lt;/em&gt;, will not have its code debugging information inserted. To run &lt;code&gt;dprofpp&lt;/code&gt;, chdir to &lt;code&gt;$ServerRoot/logs/dprof/$$&lt;/code&gt; and run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % dprofpp
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Lookup the &lt;code&gt;ServerRoot&lt;/code&gt; directive&amp;rsquo;s value in &lt;em&gt;httpd.conf&lt;/em&gt; to figure out what your &lt;code&gt;$ServerRoot&lt;/code&gt; is.)&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-measuring-the-memory-of-the-process-measuring-the-memory-of-the-process-span&#34;&gt;&lt;span id=&#34;measuring_the_memory_of_the_process&#34;&gt;Measuring the Memory of the Process&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;One very important aspect of performance tuning is to make sure that your applications don&amp;rsquo;t use much memory, since if they do you cannot run many servers and therefore in most cases under a heavy load the overall performance degrades.&lt;/p&gt;
+
+&lt;p&gt;In addition the code may not be clean and leak memory, which is even worse. In this case, the same process serves many requests and after each request more memory is used. After a while all your RAM will be used and machine will start swapping (use the swap partition) which is a very undesirable event, since it may lead to a machine crash.&lt;/p&gt;
+
+&lt;p&gt;The simplest way to figure out how big the processes are and see whether they grow is to watch the output of &lt;code&gt;top(1)&lt;/code&gt; or &lt;code&gt;ps(1)&lt;/code&gt; utilities.&lt;/p&gt;
+
+&lt;p&gt;For example the output of top(1):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    8:51am  up 66 days,  1:44,  1 user,  load average: 1.09, 2.27, 2.61
+  95 processes: 92 sleeping, 3 running, 0 zombie, 0 stopped
+  CPU states: 54.0% user,  9.4% system,  1.7% nice, 34.7% idle
+  Mem:  387664K av, 309692K used,  77972K free, 111092K shrd,  70944K buff
+  Swap: 128484K av,  11176K used, 117308K free                170824K cached
+
+     PID USER PRI NI SIZE  RSS SHARE STAT LIB %CPU %MEM   TIME COMMAND
+  29225 nobody 0  0  9760 9760  7132 S      0 12.5  2.5   0:00 httpd_perl
+  29220 nobody 0  0  9540 9540  7136 S      0  9.0  2.4   0:00 httpd_perl
+  29215 nobody 1  0  9672 9672  6884 S      0  4.6  2.4   0:01 httpd_perl
+  29255 root   7  0  1036 1036   824 R      0  3.2  0.2   0:01 top
+    376 squid  0  0 15920  14M   556 S      0  1.1  3.8 209:12 squid
+  29227 mysql  5  5  1892 1892   956 S N    0  1.1  0.4   0:00 mysqld
+  29223 mysql  5  5  1892 1892   956 S N    0  0.9  0.4   0:00 mysqld
+  29234 mysql  5  5  1892 1892   956 S N    0  0.9  0.4   0:00 mysqld
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which starts with overall information of the system and then displays the most active processes at the given moment. So for example if we look at the &lt;code&gt;httpd_perl&lt;/code&gt; processes we can see the size of the resident (&lt;code&gt;RSS&lt;/code&gt;) and shared (&lt;code&gt;SHARE&lt;/code&gt;) memory segments. This sample was taken on the production server running linux.&lt;/p&gt;
+
+&lt;p&gt;But of course we want to see all the apache/mod_perl processes, and that&amp;rsquo;s where &lt;code&gt;ps(1)&lt;/code&gt; comes to help. The options of this utility vary from one Unix flavor to another, and some flavors provide their own tools. Let&amp;rsquo;s check the information about mod_perl processes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ps -o pid,user,rss,vsize,%cpu,%mem,ucomm -C httpd_perl
+    PID USER      RSS   VSZ %CPU %MEM COMMAND
+  29213 root     8584 10264  0.0  2.2 httpd_perl
+  29215 nobody   9740 11316  1.0  2.5 httpd_perl
+  29216 nobody   9668 11252  0.7  2.4 httpd_perl
+  29217 nobody   9824 11408  0.6  2.5 httpd_perl
+  29218 nobody   9712 11292  0.6  2.5 httpd_perl
+  29219 nobody   8860 10528  0.0  2.2 httpd_perl
+  29220 nobody   9616 11200  0.5  2.4 httpd_perl
+  29221 nobody   8860 10528  0.0  2.2 httpd_perl
+  29222 nobody   8860 10528  0.0  2.2 httpd_perl
+  29224 nobody   8860 10528  0.0  2.2 httpd_perl
+  29225 nobody   9760 11340  0.7  2.5 httpd_perl
+  29235 nobody   9524 11104  0.4  2.4 httpd_perl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you can see the resident (&lt;code&gt;RSS&lt;/code&gt;) and virtual (&lt;code&gt;VSZ&lt;/code&gt;) memory segments (and shared memory segment if you ask for it) of all mod_perl processes. Please refer to the &lt;code&gt;top(1)&lt;/code&gt; and &lt;code&gt;ps(1)&lt;/code&gt; man pages for more information.&lt;/p&gt;
+
+&lt;p&gt;You probably agree that using &lt;code&gt;top(1)&lt;/code&gt; and &lt;code&gt;ps(1)&lt;/code&gt; are cumbersome if we want to use memory size sampling during the benchmark test. We want to have a way to print memory sizes during the program execution at desired places. If you have &lt;code&gt;GTop&lt;/code&gt; modules installed, which is a perl glue to the &lt;code&gt;libgtop&lt;/code&gt; library, it&amp;rsquo;s exactly what we need.&lt;/p&gt;
+
+&lt;p&gt;Note: &lt;code&gt;GTop&lt;/code&gt; requires the &lt;code&gt;libgtop&lt;/code&gt; library but is not available for all platforms. Visit &lt;a href=&#34;http://www.home-of-linux.org/gnome/libgtop/&#34;&gt;http://www.home-of-linux.org/gnome/libgtop/&lt;/a&gt; to check whether your platform/flavor is supported.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;GTop&lt;/code&gt; provides an API for retrieval of information about processes and the whole system. We are only interested in memory sampling API methods. To print all the process related memory information we can execute the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use GTop;
+  my $gtop = GTop-&amp;gt;new;
+  my $proc_mem = $gtop-&amp;gt;proc_mem($$);
+  for (qw(size vsize share rss)) {
+      printf &amp;quot;   %s =&amp;gt; %d\n&amp;quot;, $_, $proc_mem-&amp;gt;$_();
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When executed we see the following output (in bytes):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;      size =&amp;gt; 1900544
+     vsize =&amp;gt; 3108864
+     share =&amp;gt; 1392640
+       rss =&amp;gt; 1900544
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So if we are interested in to print the process resident memory segment before and after some event we just do it: For example if we want to see how much extra memory was allocated after a variable creation we can write the following code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use GTop;
+  my $gtop = GTop-&amp;gt;new;
+  my $before = $gtop-&amp;gt;proc_mem($$)-&amp;gt;rss;
+  my $x = &#39;a&#39; x 10000;
+  my $after  = $gtop-&amp;gt;proc_mem($$)-&amp;gt;rss;
+  print &amp;quot;diff: &amp;quot;,$after-$before, &amp;quot; bytes\n&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and the output&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  diff: 20480 bytes
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we can see that Perl has allocated extra 20480 bytes to create &lt;code&gt;$x&lt;/code&gt; (of course the creation of &lt;code&gt;after&lt;/code&gt; needed a few bytes as well, but it&amp;rsquo;s insignificant compared to a size of &lt;code&gt;$x&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;Apache::VMonitor&lt;/code&gt; module with help of the &lt;code&gt;GTop&lt;/code&gt; module allows you to watch all your system information using your favorite browser from anywhere in the world without a need to telnet to your machine. If you are looking into what information you can retrieve with &lt;code&gt;GTop&lt;/code&gt;, you should examine &lt;code&gt;Apache::VMonitor&lt;/code&gt;, as it deploys a big part of the API that &lt;code&gt;GTop&lt;/code&gt; provides.&lt;/p&gt;
+
+&lt;p&gt;If you are running a true BSD system, you may use &lt;code&gt;BSD::Resource::getrusage&lt;/code&gt; instead of &lt;code&gt;GTop&lt;/code&gt;. For example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  print &amp;quot;used memory = &amp;quot;.(BSD::Resource::getrusage)[2].&amp;quot;\n&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For more information refer to the &lt;code&gt;BSD::Resource&lt;/code&gt; manpage.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-measuring-the-memory-usage-of-subroutines-measuring-the-memory-usage-of-subroutines-span&#34;&gt;&lt;span id=&#34;measuring_the_memory_usage_of_subroutines&#34;&gt;Measuring the Memory Usage of Subroutines&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;With help of &lt;code&gt;Apache::Status&lt;/code&gt; you can find out the size of each and every subroutine.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Build and install mod_perl as you always do, make sure it&amp;rsquo;s version 1.22 or higher.&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Configure /perl-status if you haven&amp;rsquo;t already:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  &amp;lt;Location /perl-status&amp;gt;
+    SetHandler perl-script
+    PerlHandler Apache::Status
+    order deny,allow
+    #deny from all
+    #allow from ...
+  &amp;lt;/Location&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Add to httpd.conf&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlSetVar StatusOptionsAll On
+  PerlSetVar StatusTerse On
+  PerlSetVar StatusTerseSize On
+  PerlSetVar StatusTerseSizeMainSummary On
+
+  PerlModule B::TerseSize
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Start the server (best in httpd -X mode)&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;From your favorite browser fetch &lt;a href=&#34;http://localhost/perl-status&#34;&gt;http://localhost/perl-status&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Click on &amp;lsquo;Loaded Modules&amp;rsquo; or &amp;lsquo;Compiled Registry Scripts&amp;rsquo;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Click on the module or script of your choice (you might need to run some script/handler before you will see it here unless it was preloaded)&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Click on &amp;lsquo;Memory Usage&amp;rsquo; at the bottom&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;You should see all the subroutines and their respective sizes.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Now you can start to optimize your code, or test which of several implementations is of the least size.&lt;/p&gt;
+
+&lt;p&gt;For example let&amp;rsquo;s compare &lt;code&gt;CGI.pm&lt;/code&gt;&amp;rsquo;s OO vs. procedural interfaces:&lt;/p&gt;
+
+&lt;p&gt;As you will see below the first OO script uses about 2k bytes while the second script (procedural interface) uses about 5k.&lt;/p&gt;
+
+&lt;p&gt;Here are the code examples and the numbers:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;cgi_oo.pl
+      &amp;mdash;&amp;mdash;&amp;mdash;
+      use CGI ();
+      my $q = CGI-&amp;gt;new;
+      print $q-&amp;gt;header;
+      print $q-&amp;gt;b(&amp;ldquo;Hello&amp;rdquo;);&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;cgi_mtd.pl
+      &amp;mdash;&amp;mdash;&amp;mdash;
+      use CGI qw(header b);
+      print header();
+      print b(&amp;ldquo;Hello&amp;rdquo;);&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;After executing each script in single server mode (-X) the results are:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Totals: 1966 bytes | 27 OPs&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  handler 1514 bytes | 27 OPs
+  exit     116 bytes |  0 OPs
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Totals: 4710 bytes | 19 OPs&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  handler  1117 bytes | 19 OPs
+  basefont  120 bytes |  0 OPs
+  frameset  120 bytes |  0 OPs
+  caption   119 bytes |  0 OPs
+  applet    118 bytes |  0 OPs
+  script    118 bytes |  0 OPs
+  ilayer    118 bytes |  0 OPs
+  header    118 bytes |  0 OPs
+  strike    118 bytes |  0 OPs
+  layer     117 bytes |  0 OPs
+  table     117 bytes |  0 OPs
+  frame     117 bytes |  0 OPs
+  style     117 bytes |  0 OPs
+  Param     117 bytes |  0 OPs
+  small     117 bytes |  0 OPs
+  embed     117 bytes |  0 OPs
+  font      116 bytes |  0 OPs
+  span      116 bytes |  0 OPs
+  exit      116 bytes |  0 OPs
+  big       115 bytes |  0 OPs
+  div       115 bytes |  0 OPs
+  sup       115 bytes |  0 OPs
+  Sub       115 bytes |  0 OPs
+  TR        114 bytes |  0 OPs
+  td        114 bytes |  0 OPs
+  Tr        114 bytes |  0 OPs
+  th        114 bytes |  0 OPs
+  b         113 bytes |  0 OPs
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Note, that the above is correct if you didn&amp;rsquo;t precompile all &lt;code&gt;CGI.pm&lt;/code&gt;&amp;rsquo;s methods at server startup. Since if you did, the procedural interface in the second test will take up to 18k and not 5k as we saw. That&amp;rsquo;s because the whole of &lt;code&gt;CGI.pm&lt;/code&gt;&amp;rsquo;s namespace is inherited and it already has all its methods compiled, so it doesn&amp;rsquo;t really matter whether you attempt to import only the symbols that you need. So if you have:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use CGI  qw(-compile :all);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;in the server startup script. Having:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use CGI qw(header);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;or&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use CGI qw(:all);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;is essentially the same. You will have all the symbols precompiled at startup imported even if you ask for only one symbol. It seems to me like a bug, but probably that&amp;rsquo;s how &lt;code&gt;CGI.pm&lt;/code&gt; works.&lt;/p&gt;
+
+&lt;p&gt;BTW, you can check the number of opcodes in the code by a simple command line run. For example comparing &amp;lsquo;my %hash&amp;rsquo; vs. &amp;lsquo;my %hash = ()&amp;rsquo;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % perl -MO=Terse -e &#39;my %hash&#39; | wc -l
+  -e syntax OK
+      4
+
+  % perl -MO=Terse -e &#39;my %hash = ()&#39; | wc -l
+  -e syntax OK
+     10
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first one has fewer opcodes.&lt;/p&gt;
+
+&lt;p&gt;Note that you shouldn&amp;rsquo;t use &lt;code&gt;Apache::Status&lt;/code&gt; module on production server as it adds quite a bit of overhead to each request.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The mod_perl site&amp;rsquo;s URL: &lt;a href=&#34;http://perl.apache.org&#34;&gt;http://perl.apache.org&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Devel::DProf&#34;&gt;Devel::DProf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Apache::DProf&#34;&gt;Apache::DProf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Apache::VMonitor&#34;&gt;Apache::VMonitor&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/GTop&#34;&gt;GTop&lt;/a&gt;
+The home of the C library: &lt;a href=&#34;http://www.home-of-linux.org/gnome/libgtop/&#34;&gt;http://www.home-of-linux.org/gnome/libgtop/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/BSD::Resource&#34;&gt;BSD::Resource&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Improving mod_perl Sites&#39; Performance: Part 2</title>
+      <link>http://localhost:1313/pub/2002/06/19/mod_perl.html/</link>
+      <pubDate>Wed, 19 Jun 2002 00:00:00 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2002/06/19/mod_perl.html/</guid>
+      <description>
+
+&lt;p&gt;&lt;em&gt;In this article we will talk about tools that we need before we can start working on the performance of our service.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-essential-tools-essential-tools-span&#34;&gt;&lt;span id=&#34;essential_tools&#34;&gt;Essential Tools&lt;/span&gt;&lt;/h2&gt;
+
+&lt;p&gt;In order to improve performance, we need measurement tools. The main tool categories are benchmarking and code profiling.&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s important to understand that, in a large number of the benchmarking tests that we will execute, we will not look at the absolute result numbers but the relation between two or more result sets. The purpose of the benchmarks is to try to show which coding approach is preferable. You shouldn&amp;rsquo;t try to compare the &lt;strong&gt;absolute&lt;/strong&gt; results presented in the articles with those that you get while running the same benchmarks on your machine, since you won&amp;rsquo;t have the exact hardware and software setup anyway. This kind of comparison would be misleading. If you compare the relative results from the tests running on your machine, then you will do the right thing.&lt;/p&gt;
+
+&lt;h3 id=&#34;span-id-benchmarking-applications-benchmarking-applications-span&#34;&gt;&lt;span id=&#34;benchmarking_applications&#34;&gt;Benchmarking Applications&lt;/span&gt;&lt;/h3&gt;
+
+&lt;p&gt;How much faster is mod_perl than mod_cgi (aka plain Perl/CGI)? There are many ways to benchmark the two. I&amp;rsquo;ll present a few examples and numbers below. Check out the &lt;code&gt;benchmark&lt;/code&gt; directory of the mod_perl distribution for more examples.&lt;/p&gt;
+
+&lt;p&gt;There is no need to write a special benchmark though. If you want to impress your boss or colleagues, then just take some heavy CGI script you have (e.g. a script that crunches some data and prints the results to STDOUT), open two xterms and call the same script in mod_perl mode in one xterm and in mod_cgi mode in the other. You can use &lt;code&gt;lwp-get&lt;/code&gt; from the &lt;code&gt;LWP&lt;/code&gt; package to emulate the browser. The &lt;code&gt;benchmark&lt;/code&gt; directory of the mod_perl distribution includes such an example.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-benchmarking-perl-code-benchmarking-perl-code-span&#34;&gt;&lt;span id=&#34;benchmarking_perl_code&#34;&gt;Benchmarking Perl Code&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;If you are going to write your own benchmarking utility, then use the &lt;code&gt;Benchmark&lt;/code&gt; module and the &lt;code&gt;Time::HiRes&lt;/code&gt; module where you need better time precision (&amp;lt;10msec).&lt;/p&gt;
+
+&lt;p&gt;An example of the &lt;code&gt;Benchmark.pm&lt;/code&gt; module usage:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  benchmark.pl
+  ------------
+  use Benchmark;
+
+  timethis (1_000,
+   sub {
+    my $x = 100;
+    my $y = log ($x ** 100)  for (0..10000);
+  });
+
+  % perl benchmark.pl
+  timethis 1000: 25 wallclock secs (24.93 usr +  0.00 sys = 24.93 CPU)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you want to get the benchmark results in microseconds, then you will have to use the &lt;code&gt;Time::HiRes&lt;/code&gt; module. Its usage is similar to &lt;code&gt;Benchmark&lt;/code&gt;&amp;rsquo;s.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  use Time::HiRes qw(gettimeofday tv_interval);
+  my $start_time = [ gettimeofday ];
+  sub_that_takes_a_teeny_bit_of_time();
+  my $end_time = [ gettimeofday ];
+  my $elapsed = tv_interval($start_time,$end_time);
+  print &amp;quot;The sub took $elapsed seconds.&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-benchmarking-a-graphic-hits-counter-with-persistent-db-connections-benchmarking-a-graphic-hits-counter-with-persistent-db-connections-span&#34;&gt;&lt;span id=&#34;benchmarking_a_graphic_hits_counter_with_persistent_db_connections&#34;&gt;Benchmarking a Graphic Hits Counter with Persistent DB Connections&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;Here are the numbers from Michael Parker&amp;rsquo;s mod_perl presentation at the Perl Conference (Aug, 98). The script is a standard hits counter, but it logs the counts into a mysql relational DataBase:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    Benchmark: timing 100 iterations of cgi, perl...  [rate 1:28]
+
+    cgi: 56 secs ( 0.33 usr 0.28 sys = 0.61 cpu)
+    perl: 2 secs ( 0.31 usr 0.27 sys = 0.58 cpu)
+
+    Benchmark: timing 1000 iterations of cgi,perl...  [rate 1:21]
+
+    cgi: 567 secs ( 3.27 usr 2.83 sys = 6.10 cpu)
+    perl: 26 secs ( 3.11 usr 2.53 sys = 5.64 cpu)
+
+    Benchmark: timing 10000 iterations of cgi, perl   [rate 1:21]
+
+    cgi: 6494 secs (34.87 usr 26.68 sys = 61.55 cpu)
+    perl: 299 secs (32.51 usr 23.98 sys = 56.49 cpu)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We don&amp;rsquo;t know what server configurations were used for these tests, but I guess the numbers speak for themselves.&lt;/p&gt;
+
+&lt;p&gt;The source code of the script was available online, but, sadly, isn&amp;rsquo;t anymore. However, you can reproduce the same performance speedup with pretty much any CGI script written in Perl.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-benchmarking-response-times-with-apachebench-benchmarking-response-times-with-apachebench-span&#34;&gt;&lt;span id=&#34;benchmarking_response_times_with_apachebench&#34;&gt;Benchmarking Response Times With ApacheBench&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;ApacheBench (&lt;strong&gt;ab&lt;/strong&gt;) is a tool for benchmarking your Apache HTTP server. It is designed to give you an idea of the performance that your current Apache installation can give. In particular, it shows you how many requests per second your Apache server is capable of serving. The &lt;strong&gt;ab&lt;/strong&gt; tool comes bundled with the Apache source distribution.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s try it. We will simulate 10 users concurrently requesting a light script at &lt;code&gt;www.example.com/perl/test.pl&lt;/code&gt;. Each simulated user makes 10 requests.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./ab -n 100 -c 10 www.example.com/perl/test.pl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The results are:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  Document Path:          /perl/test.pl
+  Document Length:        319 bytes
+
+  Concurrency Level:      10
+  Time taken for tests:   0.715 seconds
+  Complete requests:      100
+  Failed requests:        0
+  Total transferred:      60700 bytes
+  HTML transferred:       31900 bytes
+  Requests per second:    139.86
+  Transfer rate:          84.90 kb/s received
+
+  Connection Times (ms)
+                min   avg   max
+  Connect:        0     0     3
+  Processing:    13    67    71
+  Total:         13    67    74
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can see that under load of 10 concurrent users our server is capable of processing 140 requests per second. Of course, this benchmark is correct only when the script under test is used. We can also learn about the average processing time, which in this case was 67 milliseconds. Other numbers reported by &lt;code&gt;ab&lt;/code&gt; may or may not be of interest to you.&lt;/p&gt;
+
+&lt;p&gt;For example, if we believe that the script &lt;em&gt;perl/test.pl&lt;/em&gt; is not efficient, then we will try to improve it and run the benchmark again to see whether we have any improvement in performance.&lt;/p&gt;
+
+&lt;h4 id=&#34;span-id-benchmarking-response-times-with-httperf-benchmarking-response-times-with-httperf-span&#34;&gt;&lt;span id=&#34;benchmarking_response_times_with_httperf&#34;&gt;Benchmarking Response Times With httperf&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;httperf is a utility written by David Mosberger. Just like ApacheBench, it measures the performance of the Web server.&lt;/p&gt;
+
+&lt;p&gt;A sample command line is shown below:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  httperf --server hostname --port 80 --uri /test.html \
+   --rate 150 --num-conn 27000 --num-call 1 --timeout 5
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This command causes httperf to use the Web server on the host with IP name &lt;code&gt;hostname&lt;/code&gt;, running at port 80. The Web page being retrieved is &lt;em&gt;/test.html&lt;/em&gt; and, in this simple test, the same page is retrieved repeatedly. The rate at which requests are issued is 150 per second. The test involves initiating a total of 27,000 TCP connections and on each connection one HTTP call is performed. A call consists of sending a request and receiving a reply.&lt;/p&gt;
+
+&lt;p&gt;The timeout option defines the number of seconds that the client is willing to wait to hear back from the server. If this timeout expires, then the tool considers the corresponding call to have failed. Note that with a total of 27,000 connections and a rate of 150 per second, the total test duration will be approximately 180 seconds (27,000/150), independently of what load the server can actually sustain. Here is a result that one might get:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;     Total: connections 27000 requests 26701 replies 26701 test-duration 179.996 s
+
+     Connection rate: 150.0 conn/s (6.7 ms/conn, &amp;lt;=47 concurrent connections)
+     Connection time [ms]: min 1.1 avg 5.0 max 315.0 median 2.5 stddev 13.0
+     Connection time [ms]: connect 0.3
+
+     Request rate: 148.3 req/s (6.7 ms/req)
+     Request size [B]: 72.0
+
+     Reply rate [replies/s]: min 139.8 avg 148.3 max 150.3 stddev 2.7 (36 samples)
+     Reply time [ms]: response 4.6 transfer 0.0
+     Reply size [B]: header 222.0 content 1024.0 footer 0.0 (total 1246.0)
+     Reply status: 1xx=0 2xx=26701 3xx=0 4xx=0 5xx=0
+
+     CPU time [s]: user 55.31 system 124.41 (user 30.7% system 69.1% total 99.8%)
+     Net I/O: 190.9 KB/s (1.6*10^6 bps)
+
+     Errors: total 299 client-timo 299 socket-timo 0 connrefused 0 connreset 0
+     Errors: fd-unavail 0 addrunavail 0 ftab-full 0 other 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-benchmarking-response-times-with-http-load-benchmarking-response-times-with-http-load-span&#34;&gt;&lt;span id=&#34;benchmarking_response_times_with_http_load&#34;&gt;Benchmarking Response Times With http_load&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;http_load&lt;/code&gt; is yet another utility that does Web server load testing. It can simulate a 33.6 modem connection (&lt;em&gt;-throttle&lt;/em&gt;) and allows you to provide a file with a list of URLs, which we be fetched randomly. You can specify how many parallel connections to run using the &lt;em&gt;-parallel N&lt;/em&gt; option, or you can specify the number of requests to generate per second with &lt;em&gt;-rate N&lt;/em&gt; option. Finally, you can tell the utility when to stop by specifying either the test time length (&lt;em&gt;-seconds N&lt;/em&gt;) or the total number of fetches (&lt;em&gt;-fetches N&lt;/em&gt;).&lt;/p&gt;
+
+&lt;p&gt;A sample run with the file &lt;em&gt;urls&lt;/em&gt; including:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  http://www.example.com/foo/
+  http://www.example.com/bar/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We ask to generate three requests per second and run for only two seconds. Here is the generated output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  % ./http_load -rate 3 -seconds 2 urls
+  http://www.example.com/foo/: check-connect SUCCEEDED, ignoring
+  http://www.example.com/bar/: check-connect SUCCEEDED, ignoring
+  http://www.example.com/bar/: check-connect SUCCEEDED, ignoring
+  http://www.example.com/bar/: check-connect SUCCEEDED, ignoring
+  http://www.example.com/foo/: check-connect SUCCEEDED, ignoring
+  5 fetches, 3 max parallel, 96870 bytes, in 2.00258 seconds
+  19374 mean bytes/connection
+  2.49678 fetches/sec, 48372.7 bytes/sec
+  msecs/connect: 1.805 mean, 5.24 max, 0.79 min
+  msecs/first-response: 291.289 mean, 560.338 max, 34.349 min
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So you can see that it has reported 2.5 requests per second. Of course, for the real test you will want to load the server heavily and run the test for a longer time to get more reliable results.&lt;/p&gt;
+
+&lt;p&gt;Note that when you provide a file with a list of URLs make sure that you don&amp;rsquo;t have empty lines in it. If you do, then the utility won&amp;rsquo;t work, complaining:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  ./http_load: unknown protocol -
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-benchmarking-response-times-with-the-crashme-script-benchmarking-response-times-with-crashme-script-span&#34;&gt;&lt;span id=&#34;benchmarking_response_times_with_the_crashme_script&#34;&gt;Benchmarking Response Times With crashme Script&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;This is another crashme suite originally written by Michael Schilli (and was located at &lt;a href=&#34;http://www.linux-magazin.de&#34;&gt;http://www.linux-magazin.de&lt;/a&gt; site, but now the link has gone). I made a few modifications, mostly adding &lt;code&gt;my()&lt;/code&gt; operators. I also allowed it to accept more than one url to test, since sometimes you want to test more than one script.&lt;/p&gt;
+
+&lt;p&gt;The tool provides the same results as &lt;strong&gt;ab&lt;/strong&gt; above but it also allows you to set the timeout value, so requests will fail if not served within the time out period. You also get values for &lt;strong&gt;Latency&lt;/strong&gt; (seconds per request) and &lt;strong&gt;Throughput&lt;/strong&gt; (requests per second). It can do a complete simulation of your favorite Netscape browser :) and give you a better picture.&lt;/p&gt;
+
+&lt;p&gt;I have noticed while running these two benchmarking suites, that &lt;strong&gt;ab&lt;/strong&gt; gave me results from two and a half to three times better. Both suites were run on the same machine, with the same load and the same parameters, but the implementations were different.&lt;/p&gt;
+
+&lt;p&gt;Sample output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  URL(s):          http://www.example.com/perl/access/access.cgi
+  Total Requests:  100
+  Parallel Agents: 10
+  Succeeded:       100 (100.00%)
+  Errors:          NONE
+  Total Time:      9.39 secs
+  Throughput:      10.65 Requests/sec
+  Latency:         0.85 secs/Request
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  #!/usr/bin/perl -w
+
+  use LWP::Parallel::UserAgent;
+  use Time::HiRes qw(gettimeofday tv_interval);
+  use strict;
+
+  ###
+  # Configuration
+  ###
+
+  my $nof_parallel_connections = 10;
+  my $nof_requests_total = 100;
+  my $timeout = 10;
+  my @urls = (
+            &#39;http://www.example.com/perl/faq_manager/faq_manager.pl&#39;,
+            &#39;http://www.example.com/perl/access/access.cgi&#39;,
+           );
+
+
+  ##################################################
+  # Derived Class for latency timing
+  ##################################################
+
+  package MyParallelAgent;
+  @MyParallelAgent::ISA = qw(LWP::Parallel::UserAgent);
+  use strict;
+
+  ###
+  # Is called when connection is opened
+  ###
+  sub on_connect {
+    my ($self, $request, $response, $entry) = @_;
+    $self-&amp;gt;{__start_times}-&amp;gt;{$entry} = [Time::HiRes::gettimeofday];
+  }
+
+  ###
+  # Are called when connection is closed
+  ###
+  sub on_return {
+    my ($self, $request, $response, $entry) = @_;
+    my $start = $self-&amp;gt;{__start_times}-&amp;gt;{$entry};
+    $self-&amp;gt;{__latency_total} += Time::HiRes::tv_interval($start);
+  }
+
+  sub on_failure {
+    on_return(@_);  # Same procedure
+  }
+
+  ###
+  # Access function for new instance var
+  ###
+  sub get_latency_total {
+    return shift-&amp;gt;{__latency_total};
+  }
+
+  ##################################################
+  package main;
+  ##################################################
+  ###
+  # Init parallel user agent
+  ###
+  my $ua = MyParallelAgent-&amp;gt;new();
+  $ua-&amp;gt;agent(&amp;quot;pounder/1.0&amp;quot;);
+  $ua-&amp;gt;max_req($nof_parallel_connections);
+  $ua-&amp;gt;redirect(0);    # No redirects
+
+  ###
+  # Register all requests
+  ###
+  foreach (1..$nof_requests_total) {
+    foreach my $url (@urls) {
+      my $request = HTTP::Request-&amp;gt;new(&#39;GET&#39;, $url);
+      $ua-&amp;gt;register($request);
+    }
+  }
+
+  ###
+  # Launch processes and check time
+  ###
+  my $start_time = [gettimeofday];
+  my $results = $ua-&amp;gt;wait($timeout);
+  my $total_time = tv_interval($start_time);
+
+  ###
+  # Requests all done, check results
+  ###
+
+  my $succeeded     = 0;
+  my %errors = ();
+
+  foreach my $entry (values %$results) {
+    my $response = $entry-&amp;gt;response();
+    if($response-&amp;gt;is_success()) {
+      $succeeded++; # Another satisfied customer
+    } else {
+      # Error, save the message
+      $response-&amp;gt;message(&amp;quot;TIMEOUT&amp;quot;) unless $response-&amp;gt;code();
+      $errors{$response-&amp;gt;message}++;
+    }
+  }
+
+  ###
+  # Format errors if any from %errors
+  ###
+  my $errors = join(&#39;,&#39;, map &amp;quot;$_ ($errors{$_})&amp;quot;, keys %errors);
+  $errors = &amp;quot;NONE&amp;quot; unless $errors;
+
+  ###
+  # Format results
+  ###
+
+  #@urls = map {($_,&amp;quot;.&amp;quot;)} @urls;
+  my @P = (
+        &amp;quot;URL(s)&amp;quot;          =&amp;gt; join(&amp;quot;\n\t\t &amp;quot;, @urls),
+        &amp;quot;Total Requests&amp;quot;  =&amp;gt; &amp;quot;$nof_requests_total&amp;quot;,
+        &amp;quot;Parallel Agents&amp;quot; =&amp;gt; $nof_parallel_connections,
+        &amp;quot;Succeeded&amp;quot;       =&amp;gt; sprintf(&amp;quot;$succeeded (%.2f%%)\n&amp;quot;,
+                                   $succeeded * 100 / $nof_requests_total),
+        &amp;quot;Errors&amp;quot;          =&amp;gt; $errors,
+        &amp;quot;Total Time&amp;quot;      =&amp;gt; sprintf(&amp;quot;%.2f secs\n&amp;quot;, $total_time),
+        &amp;quot;Throughput&amp;quot;      =&amp;gt; sprintf(&amp;quot;%.2f Requests/sec\n&amp;quot;,
+                                   $nof_requests_total / $total_time),
+        &amp;quot;Latency&amp;quot;         =&amp;gt; sprintf(&amp;quot;%.2f secs/Request&amp;quot;,
+                                   ($ua-&amp;gt;get_latency_total() || 0) /
+                                   $nof_requests_total),
+       );
+
+  my ($left, $right);
+  ###
+  # Print out statistics
+  ###
+  format STDOUT =
+  @&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt; @*
+  &amp;quot;$left:&amp;quot;,        $right
+  .
+
+  while(($left, $right) = splice(@P, 0, 2)) {
+    write;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;span-id-benchmarking-perlhandlers-benchmarking-perlhandlers-span&#34;&gt;&lt;span id=&#34;benchmarking_perlhandlers&#34;&gt;Benchmarking PerlHandlers&lt;/span&gt;&lt;/h4&gt;
+
+&lt;p&gt;The &lt;code&gt;Apache::Timeit&lt;/code&gt; module does &lt;code&gt;PerlHandler&lt;/code&gt; Benchmarking. With the help of this module you can log the time taken to process the request, just like you&amp;rsquo;d use the &lt;code&gt;Benchmark&lt;/code&gt; module to benchmark a regular Perl script. Of course, you can extend this module to perform more advanced processing like putting the results into a database for a later processing. But all it takes is adding this configuration directive inside &lt;em&gt;httpd.conf&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  PerlFixupHandler Apache::Timeit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since scripts running under &lt;code&gt;Apache::Registry&lt;/code&gt; are running inside the PerlHandler these are benchmarked as well.&lt;/p&gt;
+
+&lt;p&gt;An example of the lines which show up in the &lt;em&gt;error_log&lt;/em&gt; file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;  timing request for /perl/setupenvoff.pl:
+    0 wallclock secs ( 0.04 usr +  0.01 sys =  0.05 CPU)
+  timing request for /perl/setupenvoff.pl:
+    0 wallclock secs ( 0.03 usr +  0.00 sys =  0.03 CPU)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;Apache::Timeit&lt;/code&gt; package is a part of the &lt;em&gt;Apache-Perl-contrib&lt;/em&gt; files collection available from CPAN.&lt;/p&gt;
+
+&lt;h2 id=&#34;span-id-references-references-span&#34;&gt;&lt;span id=&#34;references&#34;&gt;References&lt;/span&gt;&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The mod_perl site&amp;rsquo;s URL:
+&lt;a href=&#34;http://perl.apache.org&#34;&gt;http://perl.apache.org&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;httperf &amp;ndash; webserver Benchmarking tool
+&lt;a href=&#34;http://www.hpl.hp.com/personal/David_Mosberger/httperf.html&#34;&gt;http://www.hpl.hp.com/personal/David_Mosberger/httperf.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;http_load &amp;ndash; another webserver Benchmarking tool
+&lt;a href=&#34;http://www.acme.com/software/http_load/&#34;&gt;http://www.acme.com/software/http_load/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Apache-Perl-contrib package
+&lt;a href=&#34;http://perl.apache.org/dist/contrib/&#34;&gt;http://perl.apache.org/dist/contrib/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://metacpan.org/pod/Time::HiRes&#34;&gt;Time::HiRes&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/Benchmark&#34;&gt;Benchmark&lt;/a&gt; is a part of the Core Perl&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;LWP&lt;/code&gt; (libwww-perl)
+&lt;a href=&#34;https://metacpan.org/release/libwww-perl&#34;&gt;https://metacpan.org/release/libwww-perl&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Return to &lt;a href=&#34;http://localhost:1313/&#34;&gt;Perl.com&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

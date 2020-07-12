@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Joel Berger on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/joel-berger/</link>
+    <description>Recent content in Joel Berger on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 02 Feb 2016 13:41:18 +0000</lastBuildDate>
+    <atom:link href="/authors/joel-berger/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Get an in-browser remote desktop with Mojolicious and noVNC</title>
+      <link>http://localhost:1313/article/212/2016/2/2/Get-an-in-browser-remote-desktop-with-Mojolicious-and-noVNC/</link>
+      <pubDate>Tue, 02 Feb 2016 13:41:18 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/212/2016/2/2/Get-an-in-browser-remote-desktop-with-Mojolicious-and-noVNC/</guid>
+      <description>
+
+&lt;p&gt;While SSH is a staple of remote system administration, sometimes only a GUI will do. Perhaps the remote system doesn&amp;rsquo;t have a terminal environment to connect to; perhaps the target application doesn&amp;rsquo;t present an adequate command line interface; perhaps there is an existing GUI session you need to interact with. There can be all kinds of reasons.&lt;/p&gt;
+
+&lt;p&gt;For this purpose, a generic type of remote desktop service called VNC is commonly used. The servers are easy to install, start on seemingly all platforms and lots of hardware has a VNC server embedded for remote administration. Clients are similarly easy to use, but when building a management console in the web, wouldn&amp;rsquo;t it be nice to have the console view right in your browser?&lt;/p&gt;
+
+&lt;p&gt;Luckily there is a pure JavaScript VNC client called &lt;a href=&#34;https://github.com/kanaka/noVNC&#34;&gt;noVNC&lt;/a&gt; noVNC listens for VNC traffic over WebSockets, which is convenient for browsers but isn&amp;rsquo;t supported by most VNC servers. To overcome this problem they provide a command-line application called &lt;a href=&#34;https://github.com/kanaka/websockify&#34;&gt;Websockify&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Websockify is a relay that connects to a TCP connection (the VNC server) and exposes the traffic as a WebSocket stream such that a browser client can listen on. While this does fix the problem it isn&amp;rsquo;t an elegant solution. Each VNC Server needs its own instance of Websockify requiring a separate port. Further you either need to leave these connected at all times in case of a web client or else spawn them on demand and clean them up later.&lt;/p&gt;
+
+&lt;h2 id=&#34;mojolicious-to-the-rescue&#34;&gt;Mojolicious to the Rescue&lt;/h2&gt;
+
+&lt;p&gt;Mojolicious has a built-in event-based &lt;a href=&#34;http://mojoliciou.us/perldoc/Mojo/IOLoop/Client&#34;&gt;TCP Client&lt;/a&gt; and native &lt;a href=&#34;http://mojolicious.org/perldoc/Mojolicious/Guides/Tutorial#WebSockets&#34;&gt;WebSocket&lt;/a&gt; handling. If you are already serving your site with Mojolicious, why not let it do the TCP/WebSocket relay work too? Even if you aren&amp;rsquo;t, the on-demand nature of the solution I&amp;rsquo;m going to show would be useful as a stand-alone app for this single purpose versus the websockify application.&lt;/p&gt;
+
+&lt;p&gt;Here is a &lt;a href=&#34;http://mojolicio.us/perldoc/Mojolicious/Guides/Tutorial&#34;&gt;Mojolicious::Lite&lt;/a&gt; application which serves the noVNC client when you request a url like &lt;code&gt;/192.168.0.1&lt;/code&gt;. When the page loads, the client requests the WebSocket route at &lt;code&gt;/proxy?target=192.168.0.1&lt;/code&gt; which establishes the bridge. This example is bundled with my forthcoming wrapper module with a working name of &lt;a href=&#34;https://github.com/jberger/Mojo-Websockify/blob/master/ex/client.pl&#34;&gt;Mojo::Websockify&lt;/a&gt;. The code is remarkably simple:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Mojolicious::Lite;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Mojo::IOLoop;
+
+websocket &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/proxy&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;render_later&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;on(finish &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { warn &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;websocket closing&amp;#39;&lt;/span&gt; });
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $tx &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;tx;
+  $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;with_protocols(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;binary&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $host &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;target&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;127.0.0.1&amp;#39;&lt;/span&gt;;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $port &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $host &lt;span style=&#34;color:#f92672&#34;&gt;=~&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;s{:(\d+)$}{}&lt;/span&gt; ? $1 : &lt;span style=&#34;color:#ae81ff&#34;&gt;5901&lt;/span&gt;;
+
+  Mojo::IOLoop&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;client(address &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $host, port &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $port, &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($loop, $err, $tcp) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+    $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;finish(&lt;span style=&#34;color:#ae81ff&#34;&gt;4500&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;TCP connection error: $err&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $err;
+    $tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;on(error &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;finish(&lt;span style=&#34;color:#ae81ff&#34;&gt;4500&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;TCP error: $_[1]&amp;#34;&lt;/span&gt;) });
+
+    $tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;on(read &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($tcp, $bytes) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+      $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;send({binary &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $bytes});
+    });
+
+    $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;on(binary &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($tx, $bytes) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+      $tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;write($bytes);
+    });
+
+    $tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;on(finish &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+      $tcp&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;close;
+      undef $tcp;
+      undef $tx;
+    });
+  });
+};
+
+get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/*target&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $target &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;stash(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;target&amp;#39;&lt;/span&gt;);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;url_for(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;proxy&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;query(target &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $target);
+  $url&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;path&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;leading_slash(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;# novnc assumes no leading slash :(&lt;/span&gt;
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;render(
+    vnc  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;
+    base &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;tx&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;req&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;url&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_abs,
+    path &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $url,
+  );
+};
+
+app&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;start;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;get&lt;/code&gt; route shown at the bottom and isn&amp;rsquo;t very exciting. It&amp;rsquo;s the frontend route that renders the noVNC client and tells it the WebSocket url.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;websocket&lt;/code&gt; route is the more interesting one, which I will explain in detail. After shifting off the controller, we tell the server not to attempt to render a template (&lt;code&gt;render_later&lt;/code&gt;), then subscribe to the finish handler. This is actually a hint to the server that we intend to initiate a WebSocket connection later. Typically this is done by either subscribing to one of the message events or else by sending data upon connection, but in this case we won&amp;rsquo;t do either until the TCP connection is established. Then after extracting the target host and port from the query argument we are ready to make the TCP connection.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://mojolicious.org/perldoc/Mojo/IOLoop#client&#34;&gt;&lt;code&gt;Mojo::IOLoop-&amp;gt;client&lt;/code&gt;&lt;/a&gt; simply takes connection arguments and a callback for what to do once connected. We use this callback to establish our relay. The WebSocket protocol reserves all closing statuses below 4000 for internal use, so I&amp;rsquo;ve taken to using the standard HTTP statuses and prepending a 4 to them. Thus when setting up the TCP error handling, either on initially connecting or for subsequent errors, the status passed to the WebSocket &lt;code&gt;finish&lt;/code&gt; method is 4500.&lt;/p&gt;
+
+&lt;p&gt;The relay itself is the next two method calls. First, when the TCP socket emits a &lt;code&gt;read&lt;/code&gt; event, we take its raw bytes and send them (as binary messages) to the WebSocket client. Then when the WebSocket emits a binary frame (i.e. when it receives a binary message) we write that back to the TCP connection. Finally when the Websocket is closed, we also close the TCP connection and cleanup our handlers.&lt;/p&gt;
+
+&lt;p&gt;Simple, isn&amp;rsquo;t it?!&lt;/p&gt;
+
+&lt;h2 id=&#34;additional-notes&#34;&gt;Additional Notes&lt;/h2&gt;
+
+&lt;p&gt;There are a few things missing. First is that I haven&amp;rsquo;t addressed security in this example. If any part of the stream is publicly available you will want to encrypt the traffic and put the servers behind authentication. Another risk is the issue of &amp;ldquo;back pressure&amp;rdquo; where a stream starts sending floods of data.&lt;/p&gt;
+
+&lt;p&gt;You may have noticed I skipped one line, which until a recent version of Chrome wasn&amp;rsquo;t necessary. When the WebSocket connection is first established it calls &lt;code&gt;with_protocols(&#39;binary&#39;)&lt;/code&gt;. Early versions of noVNC also supported sending the TCP traffic as base64 encoded text, since early implementations of WebSockets didn&amp;rsquo;t distinguish between text and binary frame types as the modern ones do. The WebSocket protocol allows the client to request an application-defined &amp;ldquo;sub-protocol&amp;rdquo; which noVNC used to request binary or base64, the latter of which has long since been deprecated and removed. The client still asks for the binary sub-protocol and recent versions of Chrome have started to refuse to connect if the server doesn&amp;rsquo;t indicate that it can handle this request.&lt;/p&gt;
+
+&lt;h2 id=&#34;shouldn-t-this-be-on-cpan&#34;&gt;Shouldn&amp;rsquo;t This Be On CPAN?&lt;/h2&gt;
+
+&lt;p&gt;I&amp;rsquo;m hoping to wrap this TCP/WebSocket bridge logic up as a module called &lt;code&gt;Mojo::Websockify&lt;/code&gt; and include the noVNC client as an example. It turns out however, that the logic which is simple to show here is remarkably hard to package in a generic, extensible way. For example, you may want to check if the TCP service is already in use via some database-locking table, or to allow remote-takeover of sessions using a message broker between clients. I&amp;rsquo;ll probably just simplify things for the common case and build in some protection for the &amp;ldquo;back pressure&amp;rdquo; problem. In the meantime I hope you have enjoyed seeing how beautifully simple Mojolicious&amp;rsquo; WebSocket and TCP services are.&lt;/p&gt;
+
+&lt;p&gt;Happy Perling!&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>How to send verification emails using Mojolicious</title>
+      <link>http://localhost:1313/article/193/2015/9/18/How-to-send-verification-emails-using-Mojolicious/</link>
+      <pubDate>Fri, 18 Sep 2015 11:46:46 +0000</pubDate>
+      
+      <guid>http://localhost:1313/article/193/2015/9/18/How-to-send-verification-emails-using-Mojolicious/</guid>
+      <description>
+
+&lt;p&gt;Everyone has signed up for a website which confirms your email address by sending you a verification email. This is a simple process: if you can respond to this email, you must have access to the email address. Yet for its simplicity, writing such a system might not seem as easy.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s look at an example. I&amp;rsquo;m going to use &lt;a href=&#34;http://mojolicio.us&#34;&gt;Mojolicious&lt;/a&gt; since it is the web framework that I prefer (and contribute to) but also since its ecosystem is suited to this task. If you&amp;rsquo;d like to follow along as I go, check out the finished &lt;a href=&#34;https://gist.github.com/jberger/91a853ee223737c1a1d1&#34;&gt;script&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;user-storage&#34;&gt;User Storage&lt;/h3&gt;
+
+&lt;p&gt;The example application is going to need a persistent mechanism to store user information. A tool I reach for in examples and prototyping is &lt;a href=&#34;https://metacpan.org/pod/DBM::Deep&#34;&gt;DBM::Deep&lt;/a&gt;. It is a file-backed system for storing Perl data structures. To use it, simply create an instance (or &lt;code&gt;tie&lt;/code&gt; one) and use it as a hash reference (array references are possible too); any changes will be saved automagically!&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $db &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; DBM::Deep&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;filename.db&amp;#39;&lt;/span&gt;);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I&amp;rsquo;ll store this object in a helper, named &lt;code&gt;users&lt;/code&gt;. In Mojolicious, a helper is a subroutine that can be called as a method on a controller instance or the app itself, or called as a function in a template. They are often used for linkages between application and business or model logic, though here it is providing database access. When the time comes to need access to user data, say from a controller instance &lt;code&gt;$c&lt;/code&gt;, it is as simple as:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $user &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;users&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$username};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And likewise to create a user, simply assign to it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;users&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$username} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+  email     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $email,
+  password  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;bcrypt($password),
+  confirmed &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;More fields would be stored in a more complete app but this is all that is needed for this example.&lt;/p&gt;
+
+&lt;h3 id=&#34;password-encryption&#34;&gt;Password encryption&lt;/h3&gt;
+
+&lt;p&gt;I use an encryption called &lt;code&gt;bcrypt&lt;/code&gt; to store the password. &lt;a href=&#34;https://metacpan.org/pod/Mojolicious::Plugin::Bcrypt&#34;&gt;Mojolicious::Plugin::Bcrypt&lt;/a&gt; is a handy plugin to use Bcrypt encryption with Mojolicious; you load it by simply writing &lt;code&gt;plugin &#39;Bcrypt&#39;;&lt;/code&gt;. This plugin provides two helpers, &lt;code&gt;bcrypt&lt;/code&gt; for encryption and &lt;code&gt;bcrypt_validate&lt;/code&gt; for checking that another value is valid.&lt;/p&gt;
+
+&lt;p&gt;Bcrypt is one of many hashing algorithms with properties that are useful for security. There is no &lt;code&gt;decrypt&lt;/code&gt; function, since this is a one-way algorithm. When validating the password, the best you can know is that if some future input hashes to the same result then it must have been the original password. Storing passwords in this way is good because if a hacker gets database access, they don&amp;rsquo;t get the passwords, just the hashes; they can&amp;rsquo;t be leaked because you simply don&amp;rsquo;t have them.&lt;/p&gt;
+
+&lt;h3 id=&#34;sending-an-email&#34;&gt;Sending an email&lt;/h3&gt;
+
+&lt;p&gt;CPAN is replete with modules which can send email. For this example I employ &lt;a href=&#34;https://metacpan.org/pod/Email::Sender&#34;&gt;Email::Sender&lt;/a&gt;, which is the current recommended module (for &lt;a href=&#34;http://shadow.cat/blog/matt-s-trout/mstpan-15/&#34;&gt;example&lt;/a&gt;). Written by our reigning Perl Pumpking Ricardo Signes, this module makes it very easy to send email.&lt;/p&gt;
+
+&lt;p&gt;The app declares a helper to send an email, cleverly called &lt;code&gt;send_email&lt;/code&gt; which takes a target email address, a subject, and a body.&lt;/p&gt;
+
+&lt;p&gt;A nice feature of Email::Sender is that you can specify &lt;a href=&#34;https://metacpan.org/pod/Email::Sender::Manual::QuickStart#specifying-transport-in-the-environment&#34;&gt;transport via the environment&lt;/a&gt;. For prototyping purposes, by setting an environment variable, the email is &amp;ldquo;sent&amp;rdquo; to the terminal. Meanwhile, the Mojolicious &lt;a href=&#34;http://mojolicio.us/perldoc/Mojolicious/Command/eval&#34;&gt;eval&lt;/a&gt; command is a handy way to perform one-line scripts with your app. If I combine these features together, I can see what the resulting email would look like with a one liner:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ EMAIL_SENDER_TRANSPORT&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Print &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;app&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl eval &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;app-&amp;gt;send_email(q[me@spam.org], &amp;#34;Care for some SPAM?&amp;#34;, &amp;#34;Well how about it?&amp;#34;)&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;the-email-body&#34;&gt;The email body&lt;/h3&gt;
+
+&lt;p&gt;Now that the app can send an email, what should it send? Remember that I would like to send an email with a hyperlink that the user can click to confirm their registration. The hyperlink URL needs to be able to identify the transaction, but since it is being sent in clear text it is important to know that the contents haven&amp;rsquo;t been tampered with. A &lt;a href=&#34;http://jwt.io/&#34;&gt;JSON Web Token&lt;/a&gt;, or JWT, lets you store a data structure as a url-safe string and sign it so that you can be sure that it isn&amp;rsquo;t altered.&lt;/p&gt;
+
+&lt;p&gt;Since the user won&amp;rsquo;t be logged in, I need some other way to know which username to confirm! In this example the JWT payload is only going to contain the username, sent on a round trip to the client&amp;rsquo;s email.&lt;/p&gt;
+
+&lt;p&gt;If instead the app were sending a password reset token I would also want to include a timeout on the JWT to prevent replay attacks. For a simple confirmation though that is probably not necessary.&lt;/p&gt;
+
+&lt;p&gt;I create a helper which initializes an instance of &lt;a href=&#34;https://metacpan.org/pod/Mojo::JWT&#34;&gt;Mojo::JWT&lt;/a&gt; and uses the application&amp;rsquo;s primary &lt;a href=&#34;https://metacpan.org/pod/Mojolicious#secrets&#34;&gt;secret&lt;/a&gt; as its secret. The JWT can also use some other secret, but this is convenient. Note that the example app uses the default set of secrets, but yours should change it to something only you know.&lt;/p&gt;
+
+&lt;p&gt;To create the confirmation URL, the app first sets the claims and encodes to a JWT encoded string containing the data structure.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $jwt &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;jwt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;claims({username &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $username})&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;encode;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then it generates a URL to the &amp;ldquo;confirm&amp;rdquo; route, makes it absolute, and appends the query/value pair to the end:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;url_for(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;confirm&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_abs&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;query(jwt &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $jwt);&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Later when the URL is clicked, the app can retrieve the username from the JWT encoded query parameter like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $username &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;jwt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;decode($c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;jwt&amp;#39;&lt;/span&gt;))&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{username};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note that if the JWT (contained in the query parameter) doesn&amp;rsquo;t pass validation on decoding, an exception is thrown; this way you know that if the code succeeds the JWT hasn&amp;rsquo;t been tampered with.&lt;/p&gt;
+
+&lt;p&gt;From there it is a simple matter to mark the user&amp;rsquo;s account as confirmed.&lt;/p&gt;
+
+&lt;h3 id=&#34;the-job-queue&#34;&gt;The job queue&lt;/h3&gt;
+
+&lt;p&gt;Many tasks that happen as a result of a web request can be quite slow. Sending email is often a slow process and I don&amp;rsquo;t want to slow down the server in order to add email functionality. Mojolicious employs a non-blocking ioloop internally for performance and one thing you never want to do is block the loop for long periods of time.&lt;/p&gt;
+
+&lt;p&gt;A job queue is a system by which you can push the actual work of doing slow work onto another process. Typically a job queue functions by inserting a record into a database indicating which task is to be done and parameters to be passed to it. The job worker then knows how to perform that task and watches the database until a job needs doing.&lt;/p&gt;
+
+&lt;p&gt;Mojolicious has a job queue spinoff project, named &lt;a href=&#34;https://metacpan.org/pod/Minion&#34;&gt;Minion&lt;/a&gt;. It is the perfect tool for sending email from a job worker to keep the site responsive. Minion ships with a Postgres backend but for this example I will be using the SQLite backend from CPAN. &lt;em&gt;(N.B an earlier version of this article used a file backend that has since been removed).&lt;/em&gt; The task is declared as a subroutine reference to &lt;code&gt;add_task&lt;/code&gt; and later jobs can be created by &lt;code&gt;enqueue&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The app declares a task, called &lt;code&gt;email_task&lt;/code&gt; which is a wrapper for the &lt;code&gt;send_email&lt;/code&gt; helper. It also declare a helper named &lt;code&gt;email&lt;/code&gt;, a nicely Huffmanized name, which enqueues the job (and takes the same arguments). (I&amp;rsquo;ve called the task &lt;code&gt;email_task&lt;/code&gt; to make it clear where that name is used; it could as easily simply have been called &lt;code&gt;email&lt;/code&gt;, but I didn&amp;rsquo;t want the name to be confused with the helper).&lt;/p&gt;
+
+&lt;p&gt;This helper then is all that is needed to send an email via a job worker, well that and a worker. While prototyping, it is handy to start a worker in another terminal by running:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ EMAIL_SENDER_TRANSPORT&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;Print &lt;span style=&#34;color:#f92672&#34;&gt;./&lt;/span&gt;app&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl minion worker&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Again by setting the transport to &lt;code&gt;Print&lt;/code&gt;, the result will be output in the terminal. The progress of the job can then be tracked via the &lt;code&gt;minion&lt;/code&gt; command as well.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;myapp&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl minion job
+$ &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;./&lt;/span&gt;myapp&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pl minion job &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;&amp;lt;id&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&#34;putting-it-all-together&#34;&gt;Putting it all together&lt;/h3&gt;
+
+&lt;p&gt;The rest of the web application is a fairly standard Mojolicious app. One thing that I employ is a helper that redirects to the landing (index) page and optionally accepts a message to be displayed after redirect. This message is called a &amp;ldquo;flash&amp;rdquo; message and is stored in the session cookie, valid only on the next request. Using this helper I can easily start the sign-in/sign-up cycle again and tell the user what happened, good or bad. Because setters in Mojolicious are chainable, the helper is simply:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;helper to_index &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { shift&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;flash(message &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; shift)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;redirect_to(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;index&amp;#39;&lt;/span&gt;) };&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the template, if the flash message is defined from the previous request, it is used otherwise a default is presented&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;p&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;%&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; flash(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;message&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Sign in or sign up!&amp;#39;&lt;/span&gt; %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;gt;&amp;lt;/&lt;/span&gt;p&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then if the username is already taken, for example, I can stop processing immediately by:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Username $username is taken&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;users&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$username};&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now that you know how the pieces work, check out the final &lt;a href=&#34;https://gist.github.com/jberger/91a853ee223737c1a1d1&#34;&gt;script&lt;/a&gt;, or have a look below. Happy Perling!&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-perl&#34; data-lang=&#34;perl&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Mojolicious::Lite;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; DBM::Deep;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;use&lt;/span&gt; Mojo::JWT;
+
+plugin &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Bcrypt&amp;#39;&lt;/span&gt;;
+plugin &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Minion&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {SQLite &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;minion.db&amp;#39;&lt;/span&gt;};
+
+helper users &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { state $db &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; DBM::Deep&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;users.db&amp;#39;&lt;/span&gt;) };
+
+helper send_email &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; ($c, $address, $subject, $body) &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; @_;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; Email::Simple;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt; Email::Sender::Simple;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $email &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Email::Simple&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;create(
+    header &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [
+      To      &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $address,
+      From    &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;me@nobody.com&amp;#39;&lt;/span&gt;,
+      Subject &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $subject,
+    ],
+    body &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $body,
+  );
+  Email::Sender::Simple&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;send($email);
+};
+
+helper jwt &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { Mojo::JWT&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt;(secret &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; shift&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;app&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;secrets&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; die) };
+
+app&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;minion&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;add_task(email_task &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { shift&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;app&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;send_email(@_) });
+
+helper email &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { shift&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;minion&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;enqueue(email_task &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; [@_]) };
+
+helper to_index &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { shift&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;flash(message &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; shift)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;redirect_to(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;index&amp;#39;&lt;/span&gt;) };
+
+any &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;render(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;logged_in&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;session(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;username&amp;#39;&lt;/span&gt;);
+} &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;index&amp;#39;&lt;/span&gt;;
+
+any &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/logout&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; { shift&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;session(expires &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index };
+
+post &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/sign_in&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $username &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;username&amp;#39;&lt;/span&gt;);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Username $username not found&amp;#34;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $user &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;users&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$username};
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Username $username has not been confirmed&amp;#34;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $user&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{confirmed};
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Password not correct&amp;#39;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;bcrypt_validate($c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;password&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;, $user&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{password});
+
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;session(username &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $username)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index;
+};
+
+post &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/sign_up&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $username &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;username&amp;#39;&lt;/span&gt;);
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Username $username is taken&amp;#34;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;users&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$username};
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Password cannot be blank&amp;#39;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $password &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;password&amp;#39;&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Email cannot be blank&amp;#39;&lt;/span&gt;)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;unless&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $email &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;email&amp;#39;&lt;/span&gt;);
+
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;users&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$username} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+    email     &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $email,
+    password  &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;bcrypt($password),
+    confirmed &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+  };
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $jwt &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;jwt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;claims({username &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $username})&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;encode;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $url &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;url_for(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;confirm&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_abs&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;query(jwt &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; $jwt);
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;email($email, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Confirm registration&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Please visit $url to confirm&amp;#34;&lt;/span&gt;);
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;registration complete, please confirm via email&amp;#39;&lt;/span&gt;);
+};
+
+get &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/confirm&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sub&lt;/span&gt; {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $c &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shift;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;my&lt;/span&gt; $username &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;jwt&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;decode($c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;param(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;jwt&amp;#39;&lt;/span&gt;))&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{username};
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;users&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;{$username}{confirmed} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+  $c&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;to_index(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;registration confirmed, please log in&amp;#39;&lt;/span&gt;);
+};
+
+app&lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;start;
+
+__DATA__
+
+@@ index&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ep
+
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;p&amp;gt;&lt;/span&gt;Hello Guest&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;p&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;%&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; flash(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;message&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Sign in or sign up!&amp;#39;&lt;/span&gt; %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;gt;&amp;lt;/&lt;/span&gt;p&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+
+%&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; form_for sign_in &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; begin
+  %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; label_for username &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Username&amp;#39;&lt;/span&gt;
+  %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; text_field &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;username&amp;#39;&lt;/span&gt;
+
+  %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; label_for password &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Password&amp;#39;&lt;/span&gt;
+  %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; password_field &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;password&amp;#39;&lt;/span&gt;
+
+  %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; label_for email &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Email&amp;#39;&lt;/span&gt;
+  %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; email_field &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;email&amp;#39;&lt;/span&gt;, placeholder &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;sign up only&amp;#39;&lt;/span&gt;
+
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;br&amp;gt;&lt;/span&gt;
+  %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; submit_button &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Sign In&amp;#39;&lt;/span&gt;
+  %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; submit_button &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Sign Up&amp;#39;&lt;/span&gt;, formaction &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; url_for(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;sign_up&amp;#39;&lt;/span&gt;)
+% end
+
+@@ logged_in&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;html&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ep
+
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;p&amp;gt;&lt;/span&gt;Welcome back &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;%&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; session &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;username&amp;#39;&lt;/span&gt; %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;gt;!&amp;lt;/&lt;/span&gt;p&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;lt;p&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;%&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;=&lt;/span&gt; link_to &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Log out&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;logout&amp;#39;&lt;/span&gt; %&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;gt;&amp;lt;/&lt;/span&gt;p&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;This article was originally posted on &lt;a href=&#34;http://perltricks.com&#34;&gt;PerlTricks.com&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+

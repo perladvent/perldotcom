@@ -1,0 +1,1351 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ron Savage on Perl.com - programming news, code and culture</title>
+    <link>http://localhost:1313/authors/ron-savage/</link>
+    <description>Recent content in Ron Savage on Perl.com - programming news, code and culture</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 31 Jan 2013 18:50:54 -0800</lastBuildDate>
+    <atom:link href="/authors/ron-savage/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Lexing and Parsing Continued</title>
+      <link>http://localhost:1313/pub/2013/01/lexing-and-parsing-continued.html/</link>
+      <pubDate>Thu, 31 Jan 2013 18:50:54 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2013/01/lexing-and-parsing-continued.html/</guid>
+      <description>
+
+&lt;p&gt;This article is the second part of a series which started with &lt;a href=&#34;http://localhost:1313/pub/2012/10/an-overview-of-lexing-and-parsing.html&#34;&gt;An Overview of Lexing and Parsing&lt;/a&gt;. That article aimed to discuss lexing and parsing in general terms, while trying to minimize the amount on how to actually use Marpa::R2 to do the work. In the end, however, it did have quite a few specifics. This article has yet more detail with regard to working with both a lexer and a parser. BTW, Marpa&amp;rsquo;s blog&lt;/p&gt;
+
+&lt;p&gt;(For more information, see the Marpa blog or download the example files for this article.)&lt;/p&gt;
+
+&lt;h3 id=&#34;brief-recap-the-two-grammars&#34;&gt;Brief Recap: The Two Grammars&lt;/h3&gt;
+
+&lt;p&gt;Article 1 defined the first sub-grammar as the one which identifies tokens and the second sub-grammar as the one which specifies which combinations of tokens are legal within the target language. As I use these terms, the lexer implements the first sub-grammar and the parser implements the second.&lt;/p&gt;
+
+&lt;h3 id=&#34;some-context&#34;&gt;Some Context&lt;/h3&gt;
+
+&lt;p&gt;Consider this image:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://savage.net.au/Ron/html/graphviz2.marpa/teamwork.svg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s actually a copy of the image of a manual page for &lt;a href=&#34;https://metacpan.org/pod/Graph::Easy&#34;&gt;Graph::Easy&lt;/a&gt;. Note: My module &lt;a href=&#34;https://metacpan.org/pod/Graph::Easy::Marpa&#34;&gt;Graph::Easy::Marpa&lt;/a&gt; is a complete re-write of &lt;code&gt;Graph::Easy&lt;/code&gt;. After I offered to take over maintenance of the latter, I found the code so complex I literally couldn&amp;rsquo;t understand any of it.&lt;/p&gt;
+
+&lt;p&gt;There are three ways (of interest to us) to specify the contents of this image:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;As a Perl program using the &lt;a href=&#34;https://metacpan.org/pod/GraphViz2&#34;&gt;GraphViz2&lt;/a&gt; module&lt;/li&gt;
+&lt;li&gt;As a Graphviz DOT file written in a little language&lt;/li&gt;
+&lt;li&gt;As a DOT file&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This article is about using &lt;code&gt;GraphViz2::Marpa&lt;/code&gt; to parse DOT files.&lt;/p&gt;
+
+&lt;p&gt;Of course the Graphviz package itself provides a set of programs which parse DOT files in order to render them into many different formats. Why then would someone write a new parser for DOT? One reason is to practice your Marpa skills. Another is, perhaps, to write an on-line editor for Graphviz files.&lt;/p&gt;
+
+&lt;p&gt;Alternately you might provide add-on services to the Graphviz package. For instance, some users might want to find all clusters of nodes, where a cluster is a set of nodes connected to each other, but not connected to any nodes outside the cluster. Yet other uses might want to find all paths of a given length emanating from a given node.&lt;/p&gt;
+
+&lt;p&gt;I myself have written algorithms which provide these last two features. See the module &lt;a href=&#34;https://metacpan.org/pod/GraphViz2::Marpa::PathUtils&#34;&gt;GraphViz2::Marpa::PathUtils&lt;/a&gt; and the &lt;a href=&#34;http://savage.net.au/Perl-modules/html/graphviz2.pathutils/index.html&#34;&gt;PathUtils demo page&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;But back to using &lt;code&gt;Marpa::R2&lt;/code&gt; from within &lt;code&gt;GraphViz2::Marpa&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;scripts-for-testing&#34;&gt;Scripts for Testing&lt;/h2&gt;
+
+&lt;p&gt;The code being developed obviously needs to be tested thoroughly, because any such little language has many ways to get things right and a horrendously large number of ways to get things slightly wrong, or worse. Luckily, because graphs specified in DOT can be very brief, it&amp;rsquo;s a simple matter to make up many samples. Further, other more complex samples can be copied from the Graphviz distro&amp;rsquo;s &lt;em&gt;graphs/directed/&lt;/em&gt; and &lt;em&gt;graphs/undirected/&lt;/em&gt; directories.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;GraphViz2::Marpa&lt;/code&gt; distro I developed includes with 86 &lt;em&gt;data/*.gv&lt;/em&gt; (input) files and the 79 corresponding &lt;em&gt;data/*.lex&lt;/em&gt;, &lt;em&gt;data/*.parse&lt;/em&gt;, &lt;em&gt;data/*.rend&lt;/em&gt;, and &lt;em&gt;html/*.svg&lt;/em&gt; (output) files. The missing files are due to deliberate errors in the input files, so they do not have output files. The distribution also includes obvious scripts such as &lt;em&gt;lex.pl&lt;/em&gt; (lex a file), &lt;em&gt;parse.pl&lt;/em&gt; (parse a lexed file), rend.pl (render a parsed file back into DOT), and one named vaguely after the package, &lt;em&gt;g2m.pl&lt;/em&gt;, which runs the lexer and the parser.&lt;/p&gt;
+
+&lt;p&gt;Why a rend.pl? If the code &lt;em&gt;can&amp;rsquo;t&lt;/em&gt; reconstruct the input DOT file, something got lost in translation&amp;hellip;.&lt;/p&gt;
+
+&lt;p&gt;The distribution also includes scripts which operate on a set of files.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;data/*.gv&lt;/em&gt; -&amp;gt; &lt;em&gt;dot2lex.pl&lt;/em&gt; -&amp;gt; runs &lt;em&gt;lex.pl&lt;/em&gt; once per file -&amp;gt; &lt;em&gt;data/*.lex&lt;/em&gt; (CSV files).&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;data/*.lex&lt;/em&gt; -&amp;gt; &lt;em&gt;lex2parse.pl&lt;/em&gt; -&amp;gt; runs &lt;em&gt;parse.pl&lt;/em&gt; once per file -&amp;gt; &lt;em&gt;data/*.parse&lt;/em&gt; (CSV files).&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;data/*.parse&lt;/em&gt; -&amp;gt; &lt;em&gt;parse2rend.pl&lt;/em&gt; -&amp;gt; runs &lt;em&gt;rend.pl&lt;/em&gt; once per file -&amp;gt; &lt;em&gt;data/*.rend&lt;/em&gt; (dot files).&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;data/*.rend&lt;/em&gt; -&amp;gt; &lt;em&gt;rend2svg.pl&lt;/em&gt; -&amp;gt; &lt;em&gt;html/*.svg&lt;/em&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Finally, &lt;em&gt;generate.demo.pl&lt;/em&gt; creates &lt;a href=&#34;http://savage.net.au/Perl-modules/html/graphviz2.marpa/&#34;&gt;the GraphViz2 Marpa demo page&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Normal users will use &lt;em&gt;g2m.pl&lt;/em&gt; exclusively. The other scripts help developers with testing. See the &lt;a href=&#34;http://savage.net.au/Perl-modules/html/GraphViz2/Marpa.html#Scripts&#34;&gt;GraphViz2 Marpa scripts documentation&lt;/a&gt; for more information.&lt;/p&gt;
+
+&lt;h3 id=&#34;some-modules&#34;&gt;Some Modules&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://metacpan.org/pod/GraphViz2:Marpa::Lexer::DFA&#34;&gt;GraphViz2::Marpa::Lexer::DFA&lt;/a&gt; is a wrapper around &lt;a href=&#34;https://metacpan.org/pod/Set::FA::Element&#34;&gt;Set::FA::Element&lt;/a&gt;. It has various tasks to do:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Process the State Transition Table (STT)&lt;/li&gt;
+&lt;li&gt;Transform the STT from the input form (spreadsheet/CSV file) into what Set::FA::Element expects&lt;/li&gt;
+&lt;li&gt;Set up the logger&lt;/li&gt;
+&lt;li&gt;Provide the code for all the functions which handle enter-state and exit-state events&lt;/li&gt;
+&lt;li&gt;Run the DFA&lt;/li&gt;
+&lt;li&gt;Check the result of that run&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Here is some sample data which ships with &lt;code&gt;GraphViz2::Marpa&lt;/code&gt;, formatted for maximum clarity:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;A DOT file, &lt;em&gt;data/27.gv&lt;/em&gt;, which is input to the lexer:&lt;/li&gt;
+&lt;li&gt;A token file, &lt;em&gt;data/27.lex&lt;/em&gt;, which is output from the lexer:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can see the details on &lt;a href=&#34;http://savage.net.au/Perl-modules/html/graphviz2.marpa/&#34;&gt;the GraphViz2 Marpa demo page&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;some-notes-on-the-stt&#34;&gt;Some Notes on the STT&lt;/h2&gt;
+
+&lt;p&gt;Firstly, note that the code allows whole-line comments (matching &lt;code&gt;m!^(?:#|//)!&lt;/code&gt;. These lines are discarded when the input file is read, and so do not appear in the STT.&lt;/p&gt;
+
+&lt;h3 id=&#34;working-with-an-incomplete-bnf&#34;&gt;Working With An Incomplete BNF&lt;/h3&gt;
+
+&lt;p&gt;Suppose you&amp;rsquo;ve gone to all of the work to find or create a BNF (&lt;a href=&#34;http://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form&#34;&gt;Backus-Naur Form&lt;/a&gt;) grammar for your input language. You might encounter the situation where you can use BNF to specify your language in general, but not precisely in every situation. DOT is one offender.&lt;/p&gt;
+
+&lt;p&gt;DOT IDs can be surrounded by double-quotes, and in some case &lt;em&gt;must&lt;/em&gt; be surrounded by double-quotes. To be more specific, if we regard an attribute declaration to be of the form &lt;code&gt;key=value&lt;/code&gt;, &lt;em&gt;both&lt;/em&gt; the key and the value can be embedded in double-quotes, and sometimes the value &lt;em&gt;must&lt;/em&gt; be.&lt;/p&gt;
+
+&lt;p&gt;Even worse, IDs can be attributes. For instance, you might want your font color to be green. That appears to be simple, but note: attributes &lt;em&gt;must&lt;/em&gt; be attached to some component of the graph, something like &lt;code&gt;node_27_1 [fontcolor = green]&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the pain. In DOT, the &lt;em&gt;thing&lt;/em&gt; to which the attribute belongs &lt;em&gt;may be omitted&lt;/em&gt; as implied. That is, the name of the thing&amp;rsquo;s owner is &lt;em&gt;optional&lt;/em&gt;. For instance, you might want a graph which is six inches square. Here&amp;rsquo;s how you can specify that requirement:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;graph [size = &amp;quot;6,6&amp;quot;]&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;[size = &amp;quot;6,6&amp;quot;]&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;size = &amp;quot;6,6&amp;quot;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;But wait, there&amp;rsquo;s more! The &lt;em&gt;value&lt;/em&gt; of the attribute can be omitted, if it&amp;rsquo;s true. Hence the distro, and the demo page, have a set of tests, called &lt;em&gt;data/42.*.gv&lt;/em&gt;, which test that feature of the code. Grrrr.&lt;/p&gt;
+
+&lt;p&gt;All this means is that when the terminator of the attribute declaration (in the input stream) is detected, and we switch states from &lt;code&gt;within-attribute&lt;/code&gt; to &lt;code&gt;after-attribute&lt;/code&gt;, the code which emits output from the lexer has to have some knowledge of what the hell is going on, so that it can pretend it received the first of these three forms even if it received the second or third form. It &lt;em&gt;must&lt;/em&gt; output &lt;code&gt;graph&lt;/code&gt; (the graph as a whole) as the owner of the attribute in question.&lt;/p&gt;
+
+&lt;p&gt;As you&amp;rsquo;ve seen, any attribute declaration can contain a set of attribute &lt;code&gt;key=value&lt;/code&gt; pairs as in &lt;code&gt;node_27_2 [ color = green fontcolor = red ]&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;You can&amp;rsquo;t solve this with regexps, unless you have amazing superpowers and don&amp;rsquo;t care if anyone else can maintain your code. Instead, be prepared to add code in two places:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;At switch of state&lt;/li&gt;
+&lt;li&gt;After all input has been parsed&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;understanding-the-state-transition-table&#34;&gt;Understanding the State Transition Table&lt;/h3&gt;
+
+&lt;p&gt;I included this diagram in the first article:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;             DOT&#39;s Grammar
+                  |
+                  V
+        ---------------------
+        |                   |
+     strict                 |
+        |                   |
+        ---------------------
+                  |
+                  V
+        ---------------------
+        |                   |
+     digraph     or       graph
+        |                   |
+        ---------------------
+                  |
+                  V
+        ---------------------
+        |                   |
+       $id                  |
+        |                   |
+        ---------------------
+                  |
+                  V
+                {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A dot file starts with an optional &lt;code&gt;strict&lt;/code&gt;, followed by either &lt;code&gt;graph&lt;/code&gt; or &lt;code&gt;digraph&lt;/code&gt;. (Here &lt;code&gt;di&lt;/code&gt; stands for directed, meaning edges between nodes have arrowheads on them. Yes, there are many attributes which can be attached to edges. See &lt;a href=&#34;http://www.graphviz.org/content/attrs&#34;&gt;http://www.graphviz.org/content/attrs&lt;/a&gt; and look for an &lt;code&gt;E&lt;/code&gt; (edge) in the second column of the table of attribute names).&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;/(di|)graph/&lt;/code&gt; is in turn followed by an optional ID.&lt;/p&gt;
+
+&lt;h4 id=&#34;line-one&#34;&gt;Line One&lt;/h4&gt;
+
+&lt;p&gt;From the first non-heading line of the STT, you can see how I ended up with:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;A start state flag =&amp;gt; &lt;code&gt;Yes&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;An accept flag =&amp;gt; &lt;code&gt;&#39;&#39;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;A state name =&amp;gt; &lt;code&gt;initial&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;An event =&amp;gt; &lt;code&gt;strict&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;A next state =&amp;gt; &lt;code&gt;graph&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;An entry function =&amp;gt; &lt;code&gt;&#39;&#39;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;An exit function =&amp;gt; &lt;code&gt;save_prefix&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;A regexp =&amp;gt; &lt;code&gt;(?:&amp;quot;[^&amp;quot;]*&amp;quot;|&amp;lt;\s*&amp;lt;.*?&lt;/code&gt;\s*&amp;gt;|[a-zA-Z_][a-zA-Z_0-9]*|-?(?:\.[0-9]+|[0-9]+(?:\.[0-9])*))&amp;gt;&lt;/li&gt;
+&lt;li&gt;An interpretation =&amp;gt; &lt;code&gt;ID&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&#34;line-two&#34;&gt;Line Two&lt;/h4&gt;
+
+&lt;p&gt;The event in the second line, &lt;code&gt;/(?:graph|digraph)/&lt;/code&gt;, indicates what to do if the &lt;code&gt;strict&lt;/code&gt; is absent from the input stream.&lt;/p&gt;
+
+&lt;p&gt;To clarify this point, recall that the DFA matches entries in the Event column one at a time, from the first listed against the name of the state&amp;ndash;here, &lt;code&gt;/(?:strict)/&lt;/code&gt;&amp;ndash;down to the last for the given state&amp;ndash;here, &lt;code&gt;/(?:\s+)/&lt;/code&gt;. The first regexp to match wins, in that the first regexp to match will triggersthe &lt;em&gt;exit&lt;/em&gt; state logic and that its entry in the Next column specifies the next state to enter, which in turn specifies the (next) state&amp;rsquo;s &lt;em&gt;entry&lt;/em&gt; function to call, if any.&lt;/p&gt;
+
+&lt;p&gt;If &lt;code&gt;strict&lt;/code&gt; is not at the head of the input stream, and it can definitely be absent, as is seen in the above diagram, this regexp&amp;ndash;&lt;code&gt;/(?:graph|digraph)/&lt;/code&gt;&amp;ndash;is the next one tested by the DFA&amp;rsquo;s logic.&lt;/p&gt;
+
+&lt;h4 id=&#34;line-three&#34;&gt;Line Three&lt;/h4&gt;
+
+&lt;p&gt;The hard-to-read regexp &lt;code&gt;\/\*.*\*\/&lt;/code&gt; says to skip C-language-style multi-line (&lt;code&gt;/* ... */&lt;/code&gt;) comments. The skip takes place because the Next state is &lt;code&gt;initial&lt;/code&gt;, the current state. In other words, discard any text at the head of the input stream which this regexp will gobble.&lt;/p&gt;
+
+&lt;p&gt;Why does it get discarded? That&amp;rsquo;s the way &lt;code&gt;Set::FA::Element&lt;/code&gt; operates. Looping &lt;em&gt;within&lt;/em&gt; a state does &lt;em&gt;not&lt;/em&gt; trigger the exit-state and enter-state functions, and so there is no opportunity to stockpile the matched text. That&amp;rsquo;s good in this case. There&amp;rsquo;s no reason to save it, because it&amp;rsquo;s a comment.&lt;/p&gt;
+
+&lt;p&gt;Think about the implications for a moment. Once the code has discarded a comment (or anything else), you can never recreate the verbatim input stream from the stockpiled text. Hence you should only discard something once you fully understand the consequences. If you&amp;rsquo;re parsing code to execute it (whatever that means), fine. If you&amp;rsquo;re writing a pretty printer or indenter, you cannot discard comments.&lt;/p&gt;
+
+&lt;p&gt;Lastly, we can say this regexp is used often, meaning we accept such comments at many places in the input stream.&lt;/p&gt;
+
+&lt;h4 id=&#34;line-four&#34;&gt;Line Four&lt;/h4&gt;
+
+&lt;p&gt;The regexp &lt;code&gt;\s+&lt;/code&gt; says to skip spaces (in front of or between interesting tokens). As with the previous line, we skip to the very same state.&lt;/p&gt;
+
+&lt;p&gt;This state has four regexps attached to it.&lt;/p&gt;
+
+&lt;h3 id=&#34;more-states&#34;&gt;More States&lt;/h3&gt;
+
+&lt;p&gt;Re-examining the STT shows two introductory states, for input with and without a (leading) &lt;code&gt;strict&lt;/code&gt;. I&amp;rsquo;ve called these states by the arbitrary names &lt;code&gt;initial&lt;/code&gt; and &lt;code&gt;graph&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If the initial &lt;code&gt;strict&lt;/code&gt; is present, state &lt;code&gt;initial&lt;/code&gt; handles it (in the exit function) and jumps to state &lt;code&gt;graph&lt;/code&gt; to handle what comes next. If, however, &lt;code&gt;strict&lt;/code&gt; is absent, state &lt;code&gt;initial&lt;/code&gt; still handles the input, but then jumps to state &lt;code&gt;graph_id&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;A (repeated) word of warning about &lt;code&gt;Set::FA::Element&lt;/code&gt;. A loop &lt;em&gt;within&lt;/em&gt; a state does &lt;em&gt;not&lt;/em&gt; trigger the exit-state and enter-state functions. Sometimes this can actually be rather unfortunate. You can see elsewhere in the STT where I have had to use pairs of almost-identically named states (such as &lt;code&gt;statement_list_1&lt;/code&gt; and &lt;code&gt;statement_list_2&lt;/code&gt;), and designed the logic to rock the STT back and forth between them, just to allow the state machine to gobble up certain input sequences. You may have to use this technique yourself. Be aware of it.&lt;/p&gt;
+
+&lt;p&gt;Proceeding in this fashion, driven by the BNF of the input language, eventually you can construct the whole STT. Each time a new enter-state or exit-state function is needed, write the code, then run a small demo to test it. There is no substitute for that testing.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-graph-state&#34;&gt;The &lt;code&gt;graph&lt;/code&gt; State&lt;/h4&gt;
+
+&lt;p&gt;You reach this state simply by the absence of a leading &lt;code&gt;strict&lt;/code&gt; in the input stream. Apart from not bothering to cater for comments (as did the &lt;code&gt;initial&lt;/code&gt; state), this state is really the same as the &lt;code&gt;initial&lt;/code&gt; state.&lt;/p&gt;
+
+&lt;p&gt;A few paragraphs back I warned about a feature designed into Set::FA::Element, looping within a state. That fact is why the &lt;code&gt;graph&lt;/code&gt; state exists. If the &lt;code&gt;initial&lt;/code&gt; state could have looped to itself upon detecting &lt;code&gt;strict&lt;/code&gt;, &lt;em&gt;and&lt;/em&gt; executed the exit or entry functions, there would be no need for the &lt;code&gt;graph&lt;/code&gt; state.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-graph-id-state&#34;&gt;The &lt;code&gt;graph_id&lt;/code&gt; State&lt;/h4&gt;
+
+&lt;p&gt;Next, look for an optional graph id, at the current head of the input stream (because anything which matched previously is gone).&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the first use of a formula: Cell H2 contains &lt;code&gt;(?:&amp;quot;[^&amp;quot;]*&amp;quot;|&amp;lt;[^&amp;gt;]*&amp;gt;|[a-zA-Z_][a-zA-Z_0-9]*|-?(?:\.[0-9]+|[0-9]+(?:\.[0-9])*))&lt;/code&gt;. This accepts a double-quoted ID, or an ID quoted with &lt;code&gt;&amp;lt;&lt;/code&gt; and &lt;code&gt;&amp;gt;&lt;/code&gt;, or an alphanumeric (but not starting with a digit) ID, or a number.&lt;/p&gt;
+
+&lt;p&gt;When the code sees such a token, it jumps to the &lt;code&gt;open_brace&lt;/code&gt; state, meaning the very next non-whitespace character had better (barring comments) be a &lt;code&gt;{&lt;/code&gt;, or there&amp;rsquo;s an error, so the code will die. Otherwise, it accepts &lt;code&gt;{&lt;/code&gt; without an ID and jumps to the &lt;code&gt;statement_list_1&lt;/code&gt; state, or discards comments and spaces by looping within the &lt;code&gt;graph_id&lt;/code&gt; state.&lt;/p&gt;
+
+&lt;h4 id=&#34;the-remaining-states&#34;&gt;The Remaining States&lt;/h4&gt;
+
+&lt;p&gt;What follows in the STT gets complex, but in reality is more of the same. Several things should be clear by now:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The development of the STT is iterative&lt;/li&gt;
+&lt;li&gt;You need lots of tiny but different test data files, to test these steps&lt;/li&gt;
+&lt;li&gt;You need quite a lot of patience, which, unfortunately, can&amp;rsquo;t be downloaded from the internet&amp;hellip;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;lexer-actions-callbacks&#34;&gt;Lexer Actions (Callbacks)&lt;/h2&gt;
+
+&lt;p&gt;Matching something with a DFA only makes sense if you can capture the matched text for processing. Hence the use of state-exit and state-entry callback functions. In these functions, you must decide what text to output for each recognized input token.&lt;/p&gt;
+
+&lt;p&gt;To help with this, I use a method called &lt;code&gt;items()&lt;/code&gt;, accessed in each function via &lt;code&gt;$myself&lt;/code&gt;. This method manages an stack (array) of items of type &lt;code&gt;Set::Array&lt;/code&gt;. Each element in this array is a hashref:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    {
+        count =&amp;gt; $integer, # 1 .. N.
+        name  =&amp;gt; &#39;&#39;,       # Unused.
+        type  =&amp;gt; $string,  # The type of the token.
+        value =&amp;gt; $value,   # The value from the input stream.
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whenever a token is recognized, push a new item onto the stack. The value of the &lt;code&gt;type&lt;/code&gt; string is the result of the DFA&amp;rsquo;s work identifying the token. This identification process uses the first of the two sub-grammars mentioned in the first article.&lt;/p&gt;
+
+&lt;h3 id=&#34;a-long-exit-state-function&#34;&gt;A long Exit-state Function&lt;/h3&gt;
+
+&lt;p&gt;The &lt;code&gt;save_prefix&lt;/code&gt; function looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    # Warning: This is a function (i.e. not a method).
+
+    sub save_prefix
+    {
+        my($dfa)   = @_;
+        my($match) = trim($dfa -&amp;gt; match);
+
+        # Upon each call, $match will be 1 of:
+        # * strict.
+        # * digraph.
+        # * graph.
+
+        # Note: Because this is a function, $myself is a global alias to $self.
+
+        $myself -&amp;gt; log(debug =&amp;gt; &amp;quot;save_prefix($match)&amp;quot;);
+
+        # Input     =&amp;gt; Output (a new item, i.e. a hashref):
+        # o strict  =&amp;gt; {name =&amp;gt; strict,  value =&amp;gt; yes}.
+        # o digraph =&amp;gt; {name =&amp;gt; digraph, value =&amp;gt; yes}.
+        # o graph   =&amp;gt; {name =&amp;gt; digraph, value =&amp;gt; no}.
+
+        if ($match eq &#39;strict&#39;)
+        {
+            $myself -&amp;gt; new_item($match, &#39;yes&#39;);
+        }
+        else
+        {
+            # If the first token is &#39;(di)graph&#39; (i.e. there was no &#39;strict&#39;),
+            # jam a &#39;strict&#39; into the output stream.
+
+            if ($myself -&amp;gt; items -&amp;gt; length == 0) # Output stream is empty.
+            {
+                $myself -&amp;gt; new_item(&#39;strict&#39;, &#39;no&#39;);
+            }
+
+            $myself -&amp;gt; new_item(&#39;digraph&#39;, $match eq &#39;digraph&#39; ? &#39;yes&#39; : &#39;no&#39;);
+        }
+
+    } # End of save_prefix.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;a-tiny-exit-state-function&#34;&gt;A tiny Exit-state Function&lt;/h3&gt;
+
+&lt;p&gt;Here&amp;rsquo;s one of the shorter exit functions, attached in the STT to the &lt;code&gt;open_brace&lt;/code&gt; and &lt;code&gt;start_statement&lt;/code&gt; states:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub start_statements
+    {
+        my($dfa) = @_;
+
+        $myself -&amp;gt; new_item(&#39;open_brace&#39;, $myself -&amp;gt; increment_brace_count);
+
+    } # End of start_statements.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The code to push a new item onto the stack is just:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub new_item
+    {
+        my($self, $type, $value) = @_;
+
+        $self -&amp;gt; items -&amp;gt; push
+            ({
+                count =&amp;gt; $self -&amp;gt; increment_item_count,
+                name  =&amp;gt; &#39;&#39;,
+                type  =&amp;gt; $type,
+                value =&amp;gt; $value,
+             });
+
+    } # End of new_item.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;using-marpa-in-the-lexer&#34;&gt;Using Marpa in the Lexer&lt;/h2&gt;
+
+&lt;p&gt;Yes, you can use Marpa in the lexer, as discussed in the first article. I prefer to use a spreadsheet full of regexps&amp;ndash;but enough of the lexer. It&amp;rsquo;s time to discuss the parser.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-parser-s-structure&#34;&gt;The Parser&amp;rsquo;s Structure&lt;/h2&gt;
+
+&lt;p&gt;The parser incorporates the second sub-grammar and uses &lt;code&gt;Marpa::R2&lt;/code&gt; to validate the output from the lexer against this grammar. The parser&amp;rsquo;s structure is very similar to that of the lexer:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Initialize using the parameters to &lt;code&gt;new()&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Declare the grammar&lt;/li&gt;
+&lt;li&gt;Run Marpa&lt;/li&gt;
+&lt;li&gt;Save the output&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;marpa-actions-callbacks&#34;&gt;Marpa Actions (Callbacks)&lt;/h2&gt;
+
+&lt;p&gt;As with the lexer, the parser works via callbacks, which are functions named within the grammar and called by &lt;code&gt;Marpa::R2&lt;/code&gt; whenever the input sequence of lexed items matches some component of the grammar. Consider these four &lt;em&gt;rule descriptors&lt;/em&gt; in the grammar declared in &lt;code&gt;GraphViz2::Marpa::Parser&lt;/code&gt;&amp;rsquo;s &lt;code&gt;grammar()&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [
+    ...
+    {   # Prolog stuff.
+        lhs =&amp;gt; &#39;prolog_definition&#39;,
+        rhs =&amp;gt; [qw/strict_definition digraph_definition graph_id_definition/],
+    },
+    {
+        lhs    =&amp;gt; &#39;strict_definition&#39;,
+        rhs    =&amp;gt; [qw/strict/],
+        action =&amp;gt; &#39;strict&#39;, # &amp;lt;== Callback.
+    },
+    {
+        lhs    =&amp;gt; &#39;digraph_definition&#39;,
+        rhs    =&amp;gt; [qw/digraph/],
+        action =&amp;gt; &#39;digraph&#39;, # &amp;lt;== Callback.
+    },
+    {
+        lhs    =&amp;gt; &#39;graph_id_definition&#39;,
+        rhs    =&amp;gt; [qw/graph_id/],
+        action =&amp;gt; &#39;graph_id&#39;, # &amp;lt;== Callback. See sub graph_id() just below.
+    },
+    ...
+    ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In each case the &lt;code&gt;lhs&lt;/code&gt; is a name I&amp;rsquo;ve chosen so that I can refer to each rule descriptor in other rule descriptors. That&amp;rsquo;s how I chain rules together to make a tree structure. (See the &lt;em&gt;Chains and Trees&lt;/em&gt; section of the previous article.)&lt;/p&gt;
+
+&lt;p&gt;This grammar fragment expects the input stream of items from the lexer to consist (at the start of the stream, actually) of three components: a strict thingy, a digraph thingy, and a graph_id thingy. Because I wrote the lexer, I can ensure that this is exactly what the lexer produces.&lt;/p&gt;
+
+&lt;p&gt;To emphasise, the grammar says that these the items are the only things it will accept at this point in the input stream, and that only if they are in the given order, and that they must literally consist of the three tokens (see &lt;code&gt;rhs&lt;/code&gt;): &lt;em&gt;strict&lt;/em&gt;, &lt;em&gt;digraph&lt;/em&gt; and &lt;em&gt;graph_id&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;These latter three come from the &lt;em&gt;type&lt;/em&gt; key in the array of hashrefs built by the lexer. The three corresponding &lt;em&gt;value&lt;/em&gt; keys in those hashrefs are &lt;code&gt;yes&lt;/code&gt; or &lt;code&gt;no&lt;/code&gt; for &lt;em&gt;strict&lt;/em&gt;, &lt;code&gt;yes&lt;/code&gt; or &lt;code&gt;no&lt;/code&gt; for &lt;em&gt;digraph&lt;/em&gt;, and an id or the empty string for &lt;em&gt;graph_id&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;As with the lexer, when in incoming token (&lt;em&gt;type&lt;/em&gt;) matches expectations, &lt;code&gt;Marpa::R2&lt;/code&gt; triggers a call to an &lt;em&gt;action&lt;/em&gt;, here called (for clarity) the same as the &lt;code&gt;rhs&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Consider one of those functions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    sub graph_id
+    {
+        my($stash, $t1, undef, $t2)  = @_;
+
+        $myself -&amp;gt; new_item(&#39;graph_id&#39;, $t1);
+
+        return $t1;
+
+    } # End of graph_id.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The parameter list is courtesy of how &lt;code&gt;Marpa::R2&lt;/code&gt; manages callbacks. &lt;code&gt;$t1&lt;/code&gt; is the incoming graph id. In &lt;em&gt;data/27.gv&lt;/em&gt; (shown earlier), that is &lt;code&gt;graph_27&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Marpa does not supply the string &lt;code&gt;graph_id&lt;/code&gt; to this function, because there&amp;rsquo;s no need. I designed the grammar such that this function is only called when the value of the incoming &lt;em&gt;type&lt;/em&gt; is &lt;code&gt;graph_id&lt;/code&gt;, so I know precisely under what circumstances this function was called. That&amp;rsquo;s why I could hard-code the string &lt;code&gt;graph_id&lt;/code&gt; in the body of the &lt;code&gt;graph_id()&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-grammar-in-practice&#34;&gt;The Grammar in Practice&lt;/h2&gt;
+
+&lt;p&gt;Now you might be thinking: Just a second! That code seems to be doing no more than copying the input token to the output stream. Well, you&amp;rsquo;re right, sort of.&lt;/p&gt;
+
+&lt;p&gt;True understanding comes when you realize that Marpa calls that code only at the appropriate point precisely because the &lt;em&gt;type&lt;/em&gt; &lt;code&gt;graph_id&lt;/code&gt; and its &lt;em&gt;value&lt;/em&gt; &lt;code&gt;graph_27&lt;/code&gt; were at exactly the right place in the input stream. By that I mean that the location of the pair:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    (type =&amp;gt; value)
+    (&#39;graph_id&#39; =&amp;gt; &#39;graph_27&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;in the input stream was exactly where it had to be to satisfy the grammar initialized by &lt;code&gt;Marpa::R2::Grammar&lt;/code&gt;. If it had not been there, Marpa would have thrown an exception, which we would recognize as a syntax error&amp;ndash;a syntax error in the input stream fed into the &lt;em&gt;lexer&lt;/em&gt;, but which Marpa picked up by testing that input stream against the grammar declared in the &lt;em&gt;parser&lt;/em&gt;. The role of the lexer as an intermediary is to simplify the logic of the code as a whole with a divide-and-conquer strategy.&lt;/p&gt;
+
+&lt;p&gt;In other words, it&amp;rsquo;s no accident that that function gets called at a particular point in time during the parser&amp;rsquo;s processing of its input stream.&lt;/p&gt;
+
+&lt;p&gt;Consider another problem which arises as you build up the set of &lt;em&gt;rule descriptors&lt;/em&gt; within the grammar.&lt;/p&gt;
+
+&lt;h2 id=&#34;trees-have-leaves&#34;&gt;Trees Have Leaves&lt;/h2&gt;
+
+&lt;p&gt;The first article discussed chains and trees (see the &lt;code&gt;prolog_definition&lt;/code&gt; mentioned earlier in this article). Briefly, each &lt;em&gt;rule descriptor&lt;/em&gt; must be chained to other &lt;em&gt;rule descriptors&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The astute reader will have already seen a problem: How do you define the meanings of the leaves of this tree when the chain of definitions must end at each leaf?&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s part of the &lt;em&gt;data/27.lex&lt;/em&gt; input file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;type&amp;quot;,&amp;quot;value&amp;quot;
+    strict          , &amp;quot;no&amp;quot;
+    digraph         , &amp;quot;yes&amp;quot;
+    graph_id        , &amp;quot;graph_27&amp;quot;
+    start_scope     , &amp;quot;1&amp;quot;
+    node_id         , &amp;quot;node_27_1&amp;quot;
+    open_bracket    , &amp;quot;[&amp;quot;
+    attribute_id    , &amp;quot;color&amp;quot;
+    equals          , &amp;quot;=&amp;quot;
+    attribute_value , &amp;quot;red&amp;quot;
+    attribute_id    , &amp;quot;fontcolor&amp;quot;
+    equals          , &amp;quot;=&amp;quot;
+    attribute_value , &amp;quot;green&amp;quot;
+    close_bracket   , &amp;quot;]&amp;quot;
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The corresponding rules descriptors look like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    [
+    ...
+    {
+        lhs =&amp;gt; &#39;attribute_statement&#39;,
+        rhs =&amp;gt; [qw/attribute_key has attribute_val/],
+    },
+    {
+        lhs    =&amp;gt; &#39;attribute_key&#39;,
+        rhs    =&amp;gt; [qw/attribute_id/], # &amp;lt;=== This is a terminal.
+        min    =&amp;gt; 1,
+        action =&amp;gt; &#39;attribute_id&#39;,
+    },
+    {
+        lhs    =&amp;gt; &#39;has&#39;,
+        rhs    =&amp;gt; [qw/equals/],
+        min    =&amp;gt; 1,
+    },
+    {
+        lhs    =&amp;gt; &#39;attribute_val&#39;,
+        rhs    =&amp;gt; [qw/attribute_value/], # &amp;lt;=== And so is this.
+        min    =&amp;gt; 1,
+        action =&amp;gt; &#39;attribute_value&#39;,
+    },
+    ...
+    ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The items marked as terminals (standard parsing terminology) have no further definitions, so &lt;code&gt;attribute_key&lt;/code&gt; and &lt;code&gt;attribute_val&lt;/code&gt; are leaves in the tree of &lt;em&gt;rule descriptors&lt;/em&gt;. What does that mean? The terminals &lt;code&gt;attribute_id&lt;/code&gt; and &lt;code&gt;attribute_value&lt;/code&gt; must appear literally in the input stream.&lt;/p&gt;
+
+&lt;p&gt;Switching between &lt;code&gt;attribute_key&lt;/code&gt; and &lt;code&gt;attribute_id&lt;/code&gt; is a requirement of Marpa to avoid ambiguity in the statement of the grammar. Likewise for &lt;code&gt;attribute_val&lt;/code&gt; and &lt;code&gt;attribute_value&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;min&lt;/code&gt; makes the attributes mandatory. Not in the sense that nodes and edges &lt;em&gt;must&lt;/em&gt; have attributes, they don&amp;rsquo;t, but in the sense that if the input stream has an &lt;code&gt;attribute_id&lt;/code&gt; token, then it &lt;em&gt;must&lt;/em&gt; have an &lt;code&gt;attribute_value&lt;/code&gt; token and vice versa.&lt;/p&gt;
+
+&lt;p&gt;Remember the earlier section &amp;ldquo;Working With An Incomplete BNF&amp;rdquo;? If the original &lt;em&gt;*.gv&lt;/em&gt; file used one of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    size = &amp;quot;6,6&amp;quot;
+    [size = &amp;quot;6,6&amp;quot;]
+    graph [size = &amp;quot;6,6&amp;quot;]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; then the one chosen really represents the graph attribute:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    graph [size = &amp;quot;6,6&amp;quot;]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make this work, the lexer must force the output to be:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    &amp;quot;type&amp;quot;,&amp;quot;value&amp;quot;
+    ...
+    class_id        , &amp;quot;graph&amp;quot;
+    open_bracket    , &amp;quot;[&amp;quot;
+    attribute_id    , &amp;quot;size&amp;quot;
+    equals          , &amp;quot;=&amp;quot;
+    attribute_value , &amp;quot;6,6&amp;quot;
+    close_bracket   , &amp;quot;]&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This matches the requirements, in that both &lt;code&gt;attribute_id&lt;/code&gt; and &lt;code&gt;attribute_value&lt;/code&gt; are present, is their (so to speak) owner, the object itself, which is identified by the &lt;em&gt;type&lt;/em&gt; &lt;code&gt;class_id&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;All of this should reinforce the point that the design of the lexer is intimately tied to the design of the parser. By taking decisions like this in the lexer you can standardize its output and simplify the work that the parser needs to don.&lt;/p&gt;
+
+&lt;h2 id=&#34;where-to-go-from-here&#34;&gt;Where to go from here&lt;/h2&gt;
+
+&lt;p&gt;The recently released Perl module &lt;a href=&#34;https://metacpan.org/pod/MarpaX::Simple::Rules&#34;&gt;MarpaX::Simple::Rules&lt;/a&gt; takes a BNF and generates the corresponding grammar in the format expected by &lt;code&gt;Marpa::R2&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Jeffrey Kegler (author of Marpa) &lt;a href=&#34;http://jeffreykegler.github.com/Ocean-of-Awareness-blog/individual/2012/06/the-useful-the-playful-the-easy-the-hard-and-the-beautiful.html%3E&#34;&gt;has blogged about MarpaX::Simple::Rules&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is a very interesting development, because it automates the laborious process of converting a BNF into a set of Marpa&amp;rsquo;s &lt;em&gt;rule descriptors&lt;/em&gt;. Consequently, it makes sense for anyone contemplating using &lt;code&gt;Marpa::R2&lt;/code&gt; to investigate how appropriate it would be to do so via &lt;code&gt;MarpaX::Simple::Rules&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;wrapping-up-and-winding-down&#34;&gt;Wrapping Up and Winding Down&lt;/h2&gt;
+
+&lt;p&gt;You&amp;rsquo;ve seen samples of lexer output and some parts of the grammar which both define the second sub-grammar of what to expect and what should match precisely the input from that lexer. If they don&amp;rsquo;t match, it is in fact the parser which issues the dread syntax error message, because only it (not the lexer) knows which combinations of input tokens are acceptable.&lt;/p&gt;
+
+&lt;p&gt;Just like in the lexer, callback functions stockpile items which have passed Marpa::R2&amp;rsquo;s attempt to match up input tokens with rule descriptors. This technique records exactly which rules fired in which order. After Marpa::R2 has run to completion, you have a stack of items whose elements are a (lexed and) parsed version of the original file. Your job is then to output that stack to a file, or await the caller of the parser to ask for the stack as an array reference. From there, the world.&lt;/p&gt;
+
+&lt;p&gt;For more details, consult &lt;a href=&#34;http://savage.net.au/Ron/html/writing.graph.easy.marpa.html%3E&#34;&gt;my July 2011 article on Marpa::R2&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-lexer-and-the-state-transition-table-revisited&#34;&gt;The Lexer and the State Transition Table - Revisited&lt;/h2&gt;
+
+&lt;p&gt;The complexity of the STT in &lt;code&gt;GraphViz2::Marpa&lt;/code&gt; justifies the decision to split the lexer and the parser into separate modules. Clearly that will not always be the case. Given a sufficiently simple grammar, the lexer phase may be redundant. Consider this test data file, &lt;em&gt;data/sample.1.ged&lt;/em&gt;, from &lt;a href=&#34;https://metacpan.org/pod/Genealogy::Gedcom&#34;&gt;Genealogy::Gedcom&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    0 HEAD
+    1 SOUR Genealogy::Gedcom
+    2 NAME Genealogy::Gedcom::Reader
+    2 VERS V 1.00
+    2 CORP Ron Savage
+    3 ADDR Box 3055
+    4 STAE Vic
+    4 POST 3163
+    4 CTRY Australia
+    3 EMAIL ron@savage.net.au
+    3 WWW http://savage.net.au
+    2 DATA
+    3 COPR Copyright 2011, Ron Savage
+    1 NOTE
+    2 CONT This file is based on test data in Paul Johnson&#39;s Gedcom.pm
+    2 CONT Gedcom.pm is Copyright 1999-2009, Paul Johnson (paul@pjcj.net)
+    2 CONT Version 1.16 - 24th April 2009
+    2 CONT
+    2 CONT Ron&#39;s modules under the Genealogy::Gedcom namespace are free
+    2 CONT
+    2 CONT The latest versions of these modules are available from
+    2 CONT my homepage http://savage.net.au and http://metacpan.org
+    1 GEDC
+    2 VERS 5.5.1-5
+    2 FORM LINEAGE-LINKED
+    1 DATE 10-08-2011
+    1 CHAR ANSEL
+    1 SUBM @SUBM1@
+    0 TRLR
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each line matches &lt;code&gt;/^(\d+)\s([A-Z]{3,4})\s(.+)$/&lt;/code&gt;: an integer, a keyword, and a string. In this case I&amp;rsquo;d skip the lexer, and have the parser tokenize the input. So, horses for courses. (GEDCOM defines genealogical data; see &lt;a href=&#34;http://wiki.webtrees.net/File:Ged551-5.pdf%3E&#34;&gt;the GEDCOM definition&lt;/a&gt; for more details).&lt;/p&gt;
+
+&lt;h2 id=&#34;sample-output&#34;&gt;Sample Output&lt;/h2&gt;
+
+&lt;p&gt;I&amp;rsquo;ve provided several links of sample output for your perusal.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://savage.net.au/Perl-modules/html/graphviz2/&#34;&gt;GraphViz2 (non-Marpa)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://savage.net.au/Perl-modules/html/graphviz2.marpa/&#34;&gt;GraphViz2::Marpa&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://savage.net.au/Perl-modules/html/graphviz2.pathutils/&#34;&gt;GraphViz2::Marpa::PathUtils&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://savage.net.au/Perl-modules/html/graph.easy.marpa/&#34;&gt;Graph::Easy::Marpa&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Happy lexing and parsing!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>An Overview of Lexing and Parsing</title>
+      <link>http://localhost:1313/pub/2012/10/an-overview-of-lexing-and-parsing.html/</link>
+      <pubDate>Mon, 01 Oct 2012 06:00:01 -0800</pubDate>
+      
+      <guid>http://localhost:1313/pub/2012/10/an-overview-of-lexing-and-parsing.html/</guid>
+      <description>
+
+&lt;p&gt;Perl programmers spend a lot of time munging data: reading it in, transforming it, and writing out the results. Perl&amp;rsquo;s great at this ad hoc text transformation, with all sorts of string manipulation tools, including regular expressions.&lt;/p&gt;
+
+&lt;p&gt;Regular expressions will only get you so far: witness the repeated advice that you cannot parse HTML or XML with regular expressions themselves. When Perl&amp;rsquo;s builtin text processing tools aren&amp;rsquo;t enough, you have to turn to something more powerful.&lt;/p&gt;
+
+&lt;p&gt;That something is &lt;em&gt;parsing&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h1 id=&#34;an-overview-of-lexing-and-parsing&#34;&gt;An Overview of Lexing and Parsing&lt;/h1&gt;
+
+&lt;p&gt;For a more formal discussion of what exactly lexing and parsing are, start with Wikipedia&amp;rsquo;s definitions: &lt;a href=&#34;http://en.wikipedia.org/wiki/Lexing&#34;&gt;Lexing&lt;/a&gt; and &lt;a href=&#34;http://en.wikipedia.org/wiki/Parsing&#34;&gt;Parsing&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, when people use the word parsing, they sometimes include the idea of lexing. Other times they don&amp;rsquo;t. This can cause confusion, but I&amp;rsquo;ll try to keep them clear. Such situations arise with other words, and our minds usually resolve the specific meaning intended by analysing the context in which the word is used. So, keep your mind in mind.&lt;/p&gt;
+
+&lt;p&gt;The lex phase and the parse phase can be combined into a single process, but I advocate always keeping them separate. Trust me for a moment; I&amp;rsquo;ll explain shortly. If you&amp;rsquo;re having trouble keeping the ideas separate, note that the phases very conveniently run in alphabetical order: first we lex, and then we parse.&lt;/p&gt;
+
+&lt;h1 id=&#34;a-history-lesson-in-absentia&#34;&gt;A History Lesson - In Absentia&lt;/h1&gt;
+
+&lt;p&gt;At this point, an article such as this would normally provide a summary of historical developments in this field, to explain how the world ended up where it is. I won&amp;rsquo;t do that, especially as I first encountered parsing many years ago, when the only tools (lex, bison, yacc) were so complex to operate I took the pledge to abstain. Nevertheless, it&amp;rsquo;s good to know such tools are still available, so here are a few references:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://directory.fsf.org/wiki/Flex&#34;&gt;Flex&lt;/a&gt; is a successor to &lt;a href=&#34;http://en.wikipedia.org/wiki/Lex_programming_tool&#34;&gt;lex&lt;/a&gt;, and &lt;a href=&#34;http://www.gnu.org/software/bison/&#34;&gt;Bison&lt;/a&gt; is a successor to &lt;a href=&#34;http://en.wikipedia.org/wiki/Yacc&#34;&gt;yacc&lt;/a&gt;. These are well-established (old) tools to keep you from having to build a lexer or parser by hand. This article explains why I (still) don&amp;rsquo;t use any of these.&lt;/p&gt;
+
+&lt;h1 id=&#34;but-why-study-lexing-and-parsing&#34;&gt;But Why Study Lexing and Parsing?&lt;/h1&gt;
+
+&lt;p&gt;There are many situations where the only path to a solution requires a lexer and a parser:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Running a program&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;This is trivial to understand, but not to implement. In order to run a program we need to set up a range of pre-conditions:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Define the language, perhaps called Perl&lt;/li&gt;
+&lt;li&gt;Write a compiler (combined lexer and parser) for that language&amp;rsquo;s grammar&lt;/li&gt;
+&lt;li&gt;Write a program in that language&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Lex and parse&lt;/em&gt; the source code&lt;/p&gt;
+
+&lt;p&gt;After all, it must be syntactically correct before we run it. If not, we display syntax errors. The real point of this step is to determine the programmer&amp;rsquo;s &lt;em&gt;intention&lt;/em&gt;, that is, the reason for writing the code. We don&amp;rsquo;t &lt;em&gt;run&lt;/em&gt; the code in this step, but we do get output. How do we do that?&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Run the code&lt;/p&gt;
+
+&lt;p&gt;Then we can gaze at the output which, hopefully, is correct. Otherwise, perhaps, we must find and fix logic errors.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Rendering a web page of HTML + content&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;The steps are identical to those of the first example, with HTML replacing Perl, although I can&amp;rsquo;t bring myself to call writing HTML writing a program.&lt;/p&gt;
+
+&lt;p&gt;This time, we&amp;rsquo;re asking: What is the web page designer&amp;rsquo;s &lt;em&gt;intention&lt;/em&gt;. What would they like to render and how? Of course, syntax checking is far looser that with a programming language, but must still be undertaken. For instance, here&amp;rsquo;s an example of clearly-corrupt HTML which can be parsed by &lt;a href=&#34;http://www.jeffreykegler.com/marpa&#34;&gt;Marpa&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        &amp;lt;title&amp;gt;Short&amp;lt;/title&amp;gt;&amp;lt;p&amp;gt;Text&amp;lt;/head&amp;gt;&amp;lt;head&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;See &lt;a href=&#34;https://metacpan.org/pod/Marpa::HTML&#34;&gt;Marpa::HTML&lt;/a&gt; for more details. So far, I have used &lt;a href=&#34;https://metacpan.org/pod/Marpa::R2&#34;&gt;Marpa::R2&lt;/a&gt; in all my work, which does not involve HTML.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Rendering an image, perhaps in SVG&lt;/p&gt;
+
+&lt;p&gt;Consider this file, written in the &lt;a href=&#34;http://www.graphviz.org/content/dot-language&#34;&gt;DOT&lt;/a&gt; language, as used by the &lt;a href=&#34;http://www.graphviz.org/&#34;&gt;Graphviz&lt;/a&gt; graph visualizer (&lt;em&gt;teamwork.dot&lt;/em&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        digraph Perl
+        {
+        graph [ rankdir=&amp;quot;LR&amp;quot; ]
+        node  [ fontsize=&amp;quot;12pt&amp;quot; shape=&amp;quot;rectangle&amp;quot; style=&amp;quot;filled, solid&amp;quot; ]
+        edge  [ color=&amp;quot;grey&amp;quot; ]
+        &amp;quot;Teamwork&amp;quot; [ fillcolor=&amp;quot;yellow&amp;quot; ]
+        &amp;quot;Victory&amp;quot;  [ fillcolor=&amp;quot;red&amp;quot; ]
+        &amp;quot;Teamwork&amp;quot; -&amp;gt; &amp;quot;Victory&amp;quot; [ label=&amp;quot;is the key to&amp;quot; ]
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Given this &amp;ldquo;program&amp;rdquo;, a renderer give effects to the author&amp;rsquo;s &lt;em&gt;intention&lt;/em&gt; by rendering an image:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/images/_pub_2012_10_an-overview-of-lexing-and-parsing/teamwork.svg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;What&amp;rsquo;s required to do that? As above, &lt;em&gt;lex&lt;/em&gt;, &lt;em&gt;parse&lt;/em&gt;, &lt;em&gt;render&lt;/em&gt;. Using Graphviz&amp;rsquo;s &lt;code&gt;dot&lt;/code&gt; command to carry out these tasks, we would run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        shell&amp;gt; dot -Tsvg teamwork.dot &amp;gt; teamwork.svg
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note: Files used in these examples can be downloaded from &lt;a href=&#34;http://savage.net.au/Ron/html/graphviz2.marpa/teamwork.tgz&#34;&gt;http://savage.net.au/Ron/html/graphviz2.marpa/teamwork.tgz&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The link to the DOT language points to a definition of DOT&amp;rsquo;s syntax, written in a somewhat casual version of BNF: &lt;a href=&#34;http://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form&#34;&gt;Backus-Naur Form&lt;/a&gt;. This is significant, as it&amp;rsquo;s usually straight-forward to translate a BNF description of a language into code within a lexer and parser.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Rendering that same image, using a different language in the input file&lt;/p&gt;
+
+&lt;p&gt;Suppose that you decide that the Graphviz language is too complex, and hence you write a wrapper around it, so end users can code in a simplified version of that language. This actually happened, with the original effort available in the now-obsolete Perl module &lt;a href=&#34;https://metacpan.org/pod/Graph::Easy&#34;&gt;Graph::Easy&lt;/a&gt;. Tels, the author, devised his own very clever &lt;a href=&#34;http://en.wikipedia.org/wiki/Little_languages&#34;&gt;little language&lt;/a&gt;, which he called &lt;a href=&#34;http://bloodgate.com/perl/graph/manual/&#34;&gt;&lt;code&gt;Graph::Easy&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;When I took over maintenance of &lt;a href=&#34;https://metacpan.org/pod/Graph::Easy&#34;&gt;Graph::Easy&lt;/a&gt;, I found the code too complex to read, let alone work on, so I wrote another implementation of the lexer and parser, released as &lt;a href=&#34;https://metacpan.org/pod/Graph::Easy::Marpa&#34;&gt;Graph::Easy::Marpa&lt;/a&gt;. I&amp;rsquo;ll have much more to say about that in another article. For now, let&amp;rsquo;s discuss the previous graph rewritten in &lt;code&gt;Graph::Easy&lt;/code&gt; (&lt;em&gt;teamwork.easy&lt;/em&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        graph {rankdir: LR}
+        node {fontsize: 12pt; shape: rectangle; style: filled, solid}
+        edge {color: grey}
+        [Teamwork]{fillcolor: yellow}
+        -&amp;gt; {label: is the key to}
+        [Victory]{fillcolor: red}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s simpler for sure, but how does &lt;a href=&#34;https://metacpan.org/pod/Graph::Easy::Marpa&#34;&gt;Graph::Easy::Marpa&lt;/a&gt; work? Easy: &lt;em&gt;lex&lt;/em&gt;, &lt;em&gt;parse&lt;/em&gt;, render. More samples of &lt;a href=&#34;https://metacpan.org/pod/Graph::Easy::Marpa&#34;&gt;Graph::Easy::Marpa&lt;/a&gt;&amp;rsquo;s work are &lt;a href=&#34;http://savage.net.au/Perl-modules/html/graph.easy.marpa/index.html&#34;&gt;my Graph::Easy::Marpa examples&lt;/a&gt;.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;It should be clear by now that lexing and parsing are in fact widespread, although they often operate out of sight, with only their rendered output visible to the average programmer, user, or web surfer.&lt;/p&gt;
+
+&lt;p&gt;All of these problems have in common a complex but well-structured source text format, with a bit of hand-waving over the tacky details available to authors of documents in HTML. In each case, it is the responsibility of the programmer writing the lexer and parser to honour the intention of the original text&amp;rsquo;s author. We can only do that by recognizing each token in the input as a discrete unit of meaning (where a word such as &lt;code&gt;print&lt;/code&gt; &lt;em&gt;means&lt;/em&gt; to output something of the author&amp;rsquo;s choosing), and by bringing that meaning to fruition (for &lt;code&gt;print&lt;/code&gt;, to make the output visible on a device).&lt;/p&gt;
+
+&lt;p&gt;With all that I can safely claim that the ubiquity and success of lexing and parsing justify their recognition as vital constituents in the world of software engineering. Why study them indeed!&lt;/p&gt;
+
+&lt;h1 id=&#34;good-solutions-and-home-grown-solutions&#34;&gt;Good Solutions and Home-grown Solutions&lt;/h1&gt;
+
+&lt;p&gt;There&amp;rsquo;s another—more significant— reason to discuss lexing and parsing: to train programmers, without expertise in such matters, to resist the understandable urge to opt for using tools they are already familiar with, with regexps being the obvious choice.&lt;/p&gt;
+
+&lt;p&gt;Sure, regexps suit many simple cases, and the old standbys of flex and bison are always available, but now there&amp;rsquo;s a new kid on the block: &lt;a href=&#34;http://www.jeffreykegler.com/marpa&#34;&gt;Marpa&lt;/a&gt;. Marpa draws heavily from theoretical work done over many decades, and comes in various forms:&lt;/p&gt;
+
+&lt;p&gt;libmarpa&lt;br /&gt;
+Hand-crafted in C.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Marpa::XS&lt;/code&gt;&lt;br /&gt;
+The Perl and C-based interface to the previous version of libmarpa.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Marpa::R2&lt;/code&gt;&lt;br /&gt;
+The Perl and C-based interface to the most recent version of libmarpa. This is the version I use.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Marpa::R2::Advanced::Thin&lt;/code&gt;&lt;br /&gt;
+The newest and thinnest interface to libmarpa, which documents how to make Marpa accessible to non-Perl languages.&lt;/p&gt;
+
+&lt;p&gt;The problem, of course, is whether or not any of these are a good, or even excellent, choice. Good news! Marpa&amp;rsquo;s advantages are huge. It&amp;rsquo;s well tested, which alone is of great significance. It has a Perl interface, so that I can specify my task in Perl and let Marpa handle the details. It has its own &lt;a href=&#34;http://groups.google.com/group/marpa-parser?hl=en&#34;&gt;Marpa Google Group&lt;/a&gt;. It&amp;rsquo;s already used by various modules on the CPAN (see &lt;a href=&#34;https://metacpan.org/search?q=Marpa&#34;&gt;a search for Marpa on the CPAN&lt;/a&gt;); Open Source says you can see exactly how other people use it.&lt;/p&gt;
+
+&lt;p&gt;Even better, Marpa has a very simple syntax, once you get used to it, of course! If you&amp;rsquo;re having trouble, just post on the Google Group. (If you&amp;rsquo;ve ever worked with flex and bison, you&amp;rsquo;ll be astonished at how simple it is to drive Marpa.) Marpa is also very fast, with libmarpa written in C. Its speed is a bit surprising, because new technology usually needs some time to surpass established technology while delivering the all-important stability.&lt;/p&gt;
+
+&lt;p&gt;Finally, Marpa is being improved all the time. For instance, recently the author eliminated the dependency on Glib, to improve portability. His work continues, so that users can expect a series of incremental improvements for some time to come.&lt;/p&gt;
+
+&lt;p&gt;I myself use Marpa in &lt;a href=&#34;https://metacpan.org/pod/Graph::Easy::Marpa&#34;&gt;Graph::Easy::Marpa&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/GraphViz2::Marpa&#34;&gt;GraphViz2::Marpa&lt;/a&gt;, but this is not an article on Marpa in specific.&lt;/p&gt;
+
+&lt;h1 id=&#34;the-lexer-s-job-description&#34;&gt;The Lexer&amp;rsquo;s Job Description&lt;/h1&gt;
+
+&lt;p&gt;As I mentioned earlier, the stages conveniently, run in English alphabetical order. First you lex. Then you parse.&lt;/p&gt;
+
+&lt;p&gt;Here, I use &lt;em&gt;lexing&lt;/em&gt; to mean the comparatively simple (compared to parsing) process of tokenising a stream of text, which means chopping that input stream into discrete tokens and identifying the type of each. The output is a new stream, this time of stand-alone tokens. (Lexing is comparatively simpler than parsing.)&lt;/p&gt;
+
+&lt;p&gt;Lexing does nothing more than identify tokens. Questions about the meanings of those tokens or their acceptable order or anything else are matters for the parser. The lexer will say: I have found another token and have identified it as being of some type T. Hence, for each recognized token, the lexer will produce two items:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The type of the token&lt;/li&gt;
+&lt;li&gt;The value of the token&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Because the lexing process happens repeatedly, the lexer will produce an output of an array of token elements, with each element needing at least these two components: type and value.&lt;/p&gt;
+
+&lt;p&gt;In practice, I prefer to represent these elements as a hashref:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        {
+                count =&amp;gt; $integer, # 1 .. N.
+                name  =&amp;gt; &#39;&#39;,       # Unused.
+                type  =&amp;gt; $string,  # The type of the token.
+                value =&amp;gt; $value,   # The value from the input stream.
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; with the array managed by an object of type &lt;a href=&#34;https://metacpan.org/pod/Set::Tiny&#34;&gt;Set::Tiny&lt;/a&gt;. The latter module has many nice methods, making it very suitable for such work. Up until recently I used &lt;a href=&#34;https://metacpan.org/pod/Set::Array&#34;&gt;Set::Array&lt;/a&gt;, which I did not write but which I do now maintain. However, insights from a recent report of mine, &lt;a href=&#34;http://savage.net.au/Perl-modules/html/setops.report.html&#34;&gt;Set-handling modules&lt;/a&gt;, comparing a range of similar modules, has convinced me to switch to &lt;a href=&#34;https://metacpan.org/pod/Set::Tiny&#34;&gt;Set::Tiny&lt;/a&gt;. For an application which might best store its output in a tree, the Perl module &lt;a href=&#34;https://metacpan.org/pod/Tree::DAG_Node&#34;&gt;Tree::DAG_Node&lt;/a&gt; is superb.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;count&lt;/code&gt; field, apparently redundant, is sometimes useful in the clean-up phase of the lexer, which may need to combine tokens unnecessarily split by the regexps used in lexing. Also, it is available to the parser if needed, so I always include it in the hashref.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;name&lt;/code&gt; field really is unused, but gives people who fork or sub-class my code a place to work with their own requirements, without worrying that their edits will affect the fundamental code.&lt;/p&gt;
+
+&lt;h1 id=&#34;the-parser-s-job-description&#34;&gt;The Parser&amp;rsquo;s Job Description&lt;/h1&gt;
+
+&lt;p&gt;The parser concerns itself with the context in which each token appears, which is a way of saying it cares about whether or not the sequence and combination of tokens actually detected fits the expected grammar.&lt;/p&gt;
+
+&lt;p&gt;Ideally, the grammar is provided in BNF Form. This makes it easy to translate into the form acceptable to Marpa. If you have a grammar in another form, your work will probably be more difficult, simply because someone else has &lt;em&gt;not&lt;/em&gt; done the hard work of formalizing the grammar.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s a parser. What&amp;rsquo;s a grammar?&lt;/p&gt;
+
+&lt;h1 id=&#34;grammars-and-sub-grammars&#34;&gt;Grammars and Sub-grammars&lt;/h1&gt;
+
+&lt;p&gt;I showed an example grammar earlier, for the &lt;a href=&#34;http://www.graphviz.org/content/dot-language&#34;&gt;DOT&lt;/a&gt; format. How does a normal person understand a block of text written in BNF? Training helps. Besides that, I&amp;rsquo;ve gleaned a few things from practical experience. To us beginners eventually comes the realization that grammars, no matter how formally defined, contain within them two sub-grammars:&lt;/p&gt;
+
+&lt;h2 id=&#34;sub-grammar-1&#34;&gt;Sub-grammar #1&lt;/h2&gt;
+
+&lt;p&gt;One sub-grammar specifies what a token looks like, meaning the range of forms it can assume in the input stream. If the lexer detects an incomprehensible candidate, the lexer can generate an error, or it can activate a strategy called &lt;a href=&#34;http://blogs.perl.org/users/jeffrey_kegler/2011/11/marpa-and-the-ruby-slippers.html&#34;&gt;Ruby Slippers&lt;/a&gt; (no relation to the Ruby programming language). This technique was named by Jeffrey Kegler, the author of Marpa.&lt;/p&gt;
+
+&lt;p&gt;In simple terms, the Ruby Slippers strategy fiddles the current token (or an even larger section of the input stream) in a way that satisfies the grammar and restarts processing at the new synthesized token. Marpa is arguably unique in being able to do this.&lt;/p&gt;
+
+&lt;h2 id=&#34;sub-grammar-2&#34;&gt;Sub-grammar #2&lt;/h2&gt;
+
+&lt;p&gt;The other sub-grammar specifies the allowable ways in which these tokens may combine, meaning if they don&amp;rsquo;t conform to the grammar, the code generates a syntax error of some sort.&lt;/p&gt;
+
+&lt;p&gt;Easy enough?&lt;/p&gt;
+
+&lt;p&gt;I split the grammar into two sub-grammars because it helps me express my Golden Rule of Lexing and Parsing: &lt;em&gt;encode the first sub-grammar into the lexer and the second into the parser&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;If you know what tokens look like, you can tokenize the input stream by splitting it into separate tokens using a lexer. Then you give those tokens to the parser for (more) syntax checking, and for interpretation of what the user presumably intended with that specific input stream (combination of tokens).&lt;/p&gt;
+
+&lt;p&gt;That separation between lexing and parsing gives a clear plan-of-attack for any new project.&lt;/p&gt;
+
+&lt;p&gt;In case you think this is going to be complex, truly it only &lt;em&gt;sounds&lt;/em&gt; complicated. Yes, I&amp;rsquo;ve introduced a few new concepts (and will introduce a few more), but don&amp;rsquo;t despair. It&amp;rsquo;s not really that difficult.&lt;/p&gt;
+
+&lt;p&gt;For any given grammar, you must somehow and somewhere manage the complexity of the question &amp;ldquo;Is this a valid document?&amp;rdquo; Recognizing a token with a regex is easy. (That&amp;rsquo;s probably why so many people stop at the point of using regexes to pick at documents instead of moving to parsing.) Keeping track of the context in which that token appeared, and the context in which a grammar allows that token, is hard.&lt;/p&gt;
+
+&lt;p&gt;The complexity of setting up and managing a formal grammar and its implementation seems like a lot of work, but it&amp;rsquo;s a specified and well understood mechanism you don&amp;rsquo;t have to reinvent every time. The lexer and parser approach limits the code you have to write to two things: a set of rules for how to construct tokens within a grammar and a set of rules for what happens when we construct a valid combination of tokens. This limit allows you to focus on the important part of the application—determining what a document which conforms to the grammar means (the author&amp;rsquo;s &lt;em&gt;intention&lt;/em&gt;)—and less on the mechanics of verifying that a document matches the grammar.&lt;/p&gt;
+
+&lt;p&gt;In other words, you can focus on &lt;em&gt;what&lt;/em&gt; you want to do with a document more than &lt;em&gt;how&lt;/em&gt; to do something with it.&lt;/p&gt;
+
+&lt;h1 id=&#34;coding-the-lexer&#34;&gt;Coding the Lexer&lt;/h1&gt;
+
+&lt;p&gt;The lexer&amp;rsquo;s job is to recognise tokens. Sub-grammar #1 specifies what those tokens look like. Any lexer will have to examine the input stream, possibly one character at a time, to see if the current input, appended to the immediately preceding input, fits the definition of a token.&lt;/p&gt;
+
+&lt;p&gt;A programmer can write a lexer in many ways. I do so by combining regexps with a DFA (&lt;a href=&#34;http://en.wikipedia.org/wiki/Deterministic_finite_automaton&#34;&gt;Discrete Finite Automaton&lt;/a&gt;) module. The blog entry &lt;a href=&#34;http://blogs.perl.org/users/andrew_rodland/2012/01/more-marpa-madness.html&#34;&gt;More Marpa Madness&lt;/a&gt; discusses using Marpa in the lexer (as well as in the parser, which is where I use it).&lt;/p&gt;
+
+&lt;p&gt;What is a DFA? Abusing any reasonable definition, let me describe them thusly. The &lt;em&gt;Deterministic&lt;/em&gt; part means that given the same input at the same stage, you&amp;rsquo;ll always get the same result. The &lt;em&gt;Finite&lt;/em&gt; part means the input stream only contains a limited number of different tokens, which simplifies the code. The &lt;em&gt;Automata&lt;/em&gt; is, essentially, a software machine—a program. DFAs are also often called STTs (State Transition Tables).&lt;/p&gt;
+
+&lt;p&gt;How do you make this all work in Perl? &lt;a href=&#34;https://metacpan.org/&#34;&gt;MetaCPAN&lt;/a&gt; is your friend! In particular, I like to use &lt;a href=&#34;https://metacpan.org/pod/Set::FA::Element&#34;&gt;Set::FA::Element&lt;/a&gt; to drive the process. For candidate alternatives I assembled a list of Perl modules with relevance in the area, while cleaning up the docs for &lt;code&gt;Set::FA&lt;/code&gt;. See &lt;a href=&#34;https://metacpan.org/pod/Set::FA#See-Also&#34;&gt;Alternatives to Set::FA&lt;/a&gt;. I did not write &lt;a href=&#34;https://metacpan.org/pod/Set::FA&#34;&gt;Set::FA&lt;/a&gt;, nor &lt;a href=&#34;https://metacpan.org/pod/Set::FA::Element&#34;&gt;Set::FA::Element&lt;/a&gt;, but I now maintain them.&lt;/p&gt;
+
+&lt;p&gt;Transforming a grammar from BNF (or whatever form you use) into a DFA provides:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Insight into the problem&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;To cast BNF into regexps means you must understand exactly what the grammar definition is saying.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Clarity of formulation&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;You end up with a spreadsheet which simply and clearly encodes your understanding of tokens.&lt;/p&gt;
+
+&lt;p&gt;Spreadsheet? Yes, I store the derived regexps, along with other information, in a spreadsheet. I even incorporate this spreadsheet into the source code.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&#34;back-to-the-finite-automaton&#34;&gt;Back to the Finite Automaton&lt;/h1&gt;
+
+&lt;p&gt;In practice, building a lexer is a process of reading and rereading, many times, the definition of the BNF (here the &lt;a href=&#34;http://www.graphviz.org/content/dot-language&#34;&gt;DOT&lt;/a&gt; language) to build up the corresponding set of regexps to handle each case. This is laborious work, no doubt about it.&lt;/p&gt;
+
+&lt;p&gt;For example, by using a regexp like &lt;code&gt;/[a-zA-Z_][a-zA-Z_0-9]*/&lt;/code&gt;, you can get Perl&amp;rsquo;s regexp engine to intelligently gobble up characters as long as they fit the definition. In plain English, this regexp says: start with a letter, upper- or lower-case, or an underline, followed by 0 or more letters, digits or underlines. Look familiar? It&amp;rsquo;s very close to the Perl definition of &lt;code&gt;\w&lt;/code&gt;, but it disallows leading digits. Actually, &lt;a href=&#34;http://www.graphviz.org/content/dot-language&#34;&gt;DOT&lt;/a&gt; disallows them (in certain circumstances), but DOT does allow pure numbers in certain circumstances.&lt;/p&gt;
+
+&lt;p&gt;What is the result of all of these hand-crafted regexps? They&amp;rsquo;re &lt;em&gt;data&lt;/em&gt; fed into the DFA, along with the input stream. The output of the DFA is a flag that signifies Yes or No, the input stream matches/doesn&amp;rsquo;t match the token definitions specified by the given regexps. Along the way, the DFA calls a callback functions each time it recognizes a token, stockpiling them. At the end of the run, you can output them as a stream of tokens, each with its identifying type, as per The Lexer&amp;rsquo;s Job Description I described earlier.&lt;/p&gt;
+
+&lt;p&gt;A note about callbacks: Sometimes it&amp;rsquo;s easier to design a regexp to capture more than seems appropriate, and to use code in the callback to chop up what&amp;rsquo;s been captured, outputting several token elements as a consequence.&lt;/p&gt;
+
+&lt;p&gt;Because developing the state transition table is such an iterative process, I recommend creating various test files with all sorts of example programs, as well as scripts with very short names to run the tests (short names because you&amp;rsquo;re going to be running these scripts an unbelievable number of times&amp;hellip;).&lt;/p&gt;
+
+&lt;h1 id=&#34;states&#34;&gt;States&lt;/h1&gt;
+
+&lt;p&gt;What are states and why do you care about them?&lt;/p&gt;
+
+&lt;p&gt;At any moment, the STT (automation, software machine) is in precisely &lt;em&gt;on)&lt;/em&gt; state. Perhaps it has not yet received even one token (so that it&amp;rsquo;s in the start state), or perhaps it has just finished processing the previous one. Whatever the case, the code maintains information so as to know exactly what state it is in, and this leads to knowing exactly what set of tokens is now acceptable. That is, it has a set of tokens, any of which will be legal in its current state.&lt;/p&gt;
+
+&lt;p&gt;The implication is this: you must associate each regexp with a specific state and visa versa. Furthermore, the machine will remain in its current state as long as each new input character matches a regexp belonging to the current state. It will jump (make a transition) to a new state when that character does not match.&lt;/p&gt;
+
+&lt;h1 id=&#34;sample-lexer-code&#34;&gt;Sample Lexer Code&lt;/h1&gt;
+
+&lt;p&gt;Consider this simplistic code from the synopsis of &lt;a href=&#34;https://metacpan.org/pod/Set::FA::Element&#34;&gt;Set::FA::Element&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my($dfa) = Set::FA::Element -&amp;gt; new
+        (
+                accepting   =&amp;gt; [&#39;baz&#39;],
+                start       =&amp;gt; &#39;foo&#39;,
+                transitions =&amp;gt;
+                [
+                        [&#39;foo&#39;, &#39;b&#39;, &#39;bar&#39;],
+                        [&#39;foo&#39;, &#39;.&#39;, &#39;foo&#39;],
+                        [&#39;bar&#39;, &#39;a&#39;, &#39;foo&#39;],
+                        [&#39;bar&#39;, &#39;b&#39;, &#39;bar&#39;],
+                        [&#39;bar&#39;, &#39;c&#39;, &#39;baz&#39;],
+                        [&#39;baz&#39;, &#39;.&#39;, &#39;baz&#39;],
+                ],
+        );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the &lt;em&gt;transitions&lt;/em&gt; parameter the first line says: &amp;ldquo;foo&amp;rdquo; is a state&amp;rsquo;s name, and &amp;ldquo;b&amp;rdquo; is a regexp. Jump to state &amp;ldquo;bar&amp;rdquo; if the next input char matches that regexp. Other lines are similar.&lt;/p&gt;
+
+&lt;p&gt;To use &lt;a href=&#34;https://metacpan.org/pod/Set::FA::Element&#34;&gt;Set::FA::Element&lt;/a&gt;, you must prepare that transitions parameter matching this format. Now you see the need for states and regexps.&lt;/p&gt;
+
+&lt;p&gt;This is code I&amp;rsquo;ve used, taken directly from &lt;a href=&#34;https://metacpan.org/pod/GraphViz2::Marpa::Lexer::DFA&#34;&gt;GraphViz2::Marpa::Lexer::DFA&lt;/a&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        Set::FA::Element -&amp;gt; new
+        (
+                accepting   =&amp;gt; \@accept,
+                actions     =&amp;gt; \%actions,
+                die_on_loop =&amp;gt; 1,
+                logger      =&amp;gt; $self -&amp;gt; logger,
+                start       =&amp;gt; $self -&amp;gt; start,
+                transitions =&amp;gt; \@transitions,
+                verbose     =&amp;gt; $self -&amp;gt; verbose,
+        );
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s discuss these parameters.&lt;/p&gt;
+
+&lt;p&gt;accepting&lt;br /&gt;
+This is an arrayref of state names. After processing the entire input stream, if the machine ends up in one of these states, it has accepted that input stream. All that means is that every input token matched an appropriate regexp, where &amp;ldquo;appropriate&amp;rdquo; means every char matched the regexp belonging to the current state, whatever the state was at the instant that char was input.&lt;/p&gt;
+
+&lt;p&gt;actions&lt;br /&gt;
+This is a hashref of function names so that the machine can call a function, optionally, upon entering or leaving any state. That&amp;rsquo;s how the stockpile for recognized tokens works.&lt;/p&gt;
+
+&lt;p&gt;Because I wrote these functions myself and wrote the rules to attach each to a particular combination of state and regexp, I encoded into each function the knowledge of what type of token the DFA has matched. That&amp;rsquo;s how the stockpile ends up with (token, type) pairs to output at the end of the run.&lt;/p&gt;
+
+&lt;p&gt;die_on_loop&lt;br /&gt;
+This flag, if true, tells the DFA to stop if none of the regexps belonging to the current state match the current input char. Rather than looping forever, stop. Throw an exception.&lt;/p&gt;
+
+&lt;p&gt;You might wonder what stopping automatically is not the default, or even mandatory. The default behavior allows you to try to recover from this bad state, or at least give a reasonable error message, before dying.&lt;/p&gt;
+
+&lt;p&gt;logger&lt;br /&gt;
+This is an (optional) logger object.&lt;/p&gt;
+
+&lt;p&gt;start&lt;br /&gt;
+This is the name of the state in which the STT starts, so the code knows which regexp(s) to try upon receiving the very first character of input.&lt;/p&gt;
+
+&lt;p&gt;transitions&lt;br /&gt;
+This is a potentially large arrayref which lists separately for all states all the regexps which may possibly match the current input char.&lt;/p&gt;
+
+&lt;p&gt;verbose&lt;br /&gt;
+Specifies how much to report if the logger object is not defined.&lt;/p&gt;
+
+&lt;p&gt;With all of that configured, the next problem is how to prepare the grammar in such a way as to fit into this parameter list.&lt;/p&gt;
+
+&lt;h1 id=&#34;coding-the-lexer-revisited&#34;&gt;Coding the Lexer - Revisited&lt;/h1&gt;
+
+&lt;p&gt;The coder thus needs to develop regexps etc which can be fed directly into the chosen DFA, here &lt;a href=&#34;https://metacpan.org/pod/Set::FA::Element&#34;&gt;Set::FA::Element&lt;/a&gt;, or which can be transformed somehow into a format acceptable to that module. So far I haven&amp;rsquo;t actually said how I do that, but now it&amp;rsquo;s time to be explicit.&lt;/p&gt;
+
+&lt;p&gt;I use a spreadsheet with nine columns:&lt;/p&gt;
+
+&lt;p&gt;Start&lt;br /&gt;
+This contains one word, &amp;ldquo;Yes&amp;rdquo;, against the name of the state which is the start state.&lt;/p&gt;
+
+&lt;p&gt;Accept&lt;br /&gt;
+This contains the word &amp;ldquo;Yes&amp;rdquo; against the name of any state which will be an accepting state (the machine has matched an input stream).&lt;/p&gt;
+
+&lt;p&gt;State&lt;br /&gt;
+This is the name of the state.&lt;/p&gt;
+
+&lt;p&gt;Event&lt;br /&gt;
+This is a regexp. The event will fire the current input char matches this regexp.&lt;/p&gt;
+
+&lt;p&gt;Because the regexp belongs to a given state, we know the DFA will only process regexps associated with the current state, of which there will be usually one or or at most a few.&lt;/p&gt;
+
+&lt;p&gt;When there are multiple regexps per state, I leave all other columns empty.&lt;/p&gt;
+
+&lt;p&gt;Next&lt;br /&gt;
+The name of the &amp;ldquo;next&amp;rdquo; state to which the STT will jump if the current char matches the regexp given on the same line of the spreadsheet (in the current state of course).&lt;/p&gt;
+
+&lt;p&gt;Entry&lt;br /&gt;
+The optional name of the function the DFA is to call upon (just before) entry to the (new) state.&lt;/p&gt;
+
+&lt;p&gt;Exit&lt;br /&gt;
+The optional name of the function the DFA is to call upon exiting from the current state.&lt;/p&gt;
+
+&lt;p&gt;Regexp&lt;br /&gt;
+This is a working column, in which I put formulas so that I can refer to them in various places in the Event column. It is not passed to the DFA in the transitions parameter.&lt;/p&gt;
+
+&lt;p&gt;Interpretation&lt;br /&gt;
+Comments to myself.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve put the STT for &lt;a href=&#34;http://savage.net.au/Perl-modules/html/graphviz2.marpa/default.stt.html&#34;&gt;STT for GraphViz2::Marpa&lt;/a&gt; online.&lt;/p&gt;
+
+&lt;p&gt;This spreadsheet has various advantages:&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Legibility.&lt;/em&gt; It is very easy to read and to work with. Don&amp;rsquo;t forget, to start with you&amp;rsquo;ll be basically switching back and forth between the grammar definition document (hopefully in BNF) and this spreadsheet. I don&amp;rsquo;t do much (any) coding at this stage.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Exportability.&lt;/em&gt; Because I have no code yet, there are several possibilities. I could read the spreadsheet directly. The two problems with this approach are the complexity of the code (in the external module which does the reading of course), and the slowness of loading and running this code.&lt;/p&gt;
+
+&lt;p&gt;Because I use &lt;a href=&#34;http://www.libreoffice.org/&#34;&gt;LibreOffice&lt;/a&gt; I can either force end-users to install &lt;a href=&#34;https://metacpan.org/pod/OpenOffice::OODoc&#34;&gt;OpenOffice::OODoc&lt;/a&gt;, or export the spreadsheet as an Excel file, in order to avail themselves of this option. I have chosen to not support reading the&lt;em&gt;.ods&lt;/em&gt; file directly in the modules (&lt;a href=&#34;https://metacpan.org/pod/Graph::Easy::Marpa&#34;&gt;Graph::Easy::Marpa&lt;/a&gt; and &lt;a href=&#34;https://metacpan.org/pod/GraphViz2::Marpa&#34;&gt;GraphViz2::Marpa&lt;/a&gt;) I ship.&lt;/p&gt;
+
+&lt;p&gt;I could alternately export the spreadsheet to a CSV file first. This way, we can read a CSV file into the DFA fairly quickly, without loading the module which reads spreadsheets.
+Be careful here with LibreOffice, because it forces you to use Unicode for the spreadsheet but exports odd character sequences, such as double-quotes as the three byte sequence 0xe2, 0x80, 0x9c. When used in a regexp, this sequence will never match a &lt;em&gt;real&lt;/em&gt; double-quote in your input stream. Sigh. Do No Evil. If only.&lt;/p&gt;
+
+&lt;p&gt;I could also incorporate the spreadsheet directly into my code. This is my favorite approach. I do this in two stages. I export my data to a CSV file, then append that file to the end of the source code of the module, after the &lt;code&gt;__DATA__&lt;/code&gt; token.&lt;/p&gt;
+
+&lt;p&gt;Such in-line data can be accessed effortlessly by the very neat and very fast module &lt;a href=&#34;https://metacpan.org/pod/Data::Section::Simple&#34;&gt;Data::Section::Simple&lt;/a&gt;. Because Perl has already loaded the module—and is executing it—there is essentially no overhead whatsoever in reading data from within it. Don&amp;rsquo;t you just love Perl! And MetaCPAN of course. And a community which contributes such wondrous code.&lt;/p&gt;
+
+&lt;p&gt;An advantage of this alternative is that it allows end users to edit the shipped &lt;em&gt;.csv&lt;/em&gt; or &lt;em&gt;.ods&lt;/em&gt; files, after which they can use a command line option on scripts to read their own file, overriding the built-in STT.&lt;/p&gt;
+
+&lt;p&gt;After all this, it&amp;rsquo;s just a matter of code to read and validate the structure of the STT&amp;rsquo;s data, then to reformat it into what &lt;a href=&#34;https://metacpan.org/pod/Set::FA::Element&#34;&gt;Set::FA::Element&lt;/a&gt; demands.&lt;/p&gt;
+
+&lt;h1 id=&#34;coding-the-parser&#34;&gt;Coding the Parser&lt;/h1&gt;
+
+&lt;p&gt;At this point, you know how to incorporate the first sub-grammar into the design and code of the lexer. You also know that the second sub-grammar must be encoded into the parser, for that&amp;rsquo;s how the parser performs syntax checking.&lt;/p&gt;
+
+&lt;p&gt;How you do this depends intimately on which pre-existing module, if any, you choose to use to aid the development of the parser. Because I choose Marpa (currently &lt;a href=&#34;https://metacpan.org/pod/Marpa::R2&#34;&gt;Marpa::R2&lt;/a&gt;), I am orienting this article to that module. However, only in the next article will I deal in depth with Marpa.&lt;/p&gt;
+
+&lt;p&gt;Whichever tool you choose, think of the parsing process like this: Your input stream is a set of pre-defined tokens (probably but necessarily output from the lexer). You must now specify all possible legal combinations of those tokens. This is the &lt;em&gt;syntax&lt;/em&gt; of the language (or, more accurately, the &lt;em&gt;remainder&lt;/em&gt; of the syntax, because the first sub-grammar has already handled all of the definitions of legal tokens). At this point, assume all incoming tokens are legal. In other words, the parser will not try to parse and run a program containing token-based syntax errors, although it may contain logic errors (even if written in Perl :-).&lt;/p&gt;
+
+&lt;p&gt;A combination of tokens which does not match any of the given legal combinations can be immediately rejected as a syntax error. Keep in mind that the friendliest compilers find as many syntax errors as possible per parse.&lt;/p&gt;
+
+&lt;p&gt;Because this check takes place on a token-by-token basis, you (ought to) know precisely which token triggered the error, which means that you can emit a nice error message, identifying the culprit and its context.&lt;/p&gt;
+
+&lt;h1 id=&#34;sample-parser-code&#34;&gt;Sample Parser Code&lt;/h1&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a sample of a &lt;code&gt;Marpa::R2&lt;/code&gt; grammar (adapted from its synopsis):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my($grammar) = Marpa::R2::Grammar -&amp;gt; new
+        ({
+                actions =&amp;gt; &#39;My_Actions&#39;,
+                start   =&amp;gt; &#39;Expression&#39;,
+                rules   =&amp;gt;
+                [
+                        { lhs =&amp;gt; &#39;Expression&#39;, rhs =&amp;gt; [qw/Term/] },
+                        { lhs =&amp;gt; &#39;Term&#39;,       rhs =&amp;gt; [qw/Factor/] },
+                        { lhs =&amp;gt; &#39;Factor&#39;,     rhs =&amp;gt; [qw/Number/] },
+                        { lhs =&amp;gt; &#39;Term&#39;,       rhs =&amp;gt; [qw/Term Add Term/],
+                                action =&amp;gt; &#39;do_add&#39;
+                        },
+                        { lhs =&amp;gt; &#39;Factor&#39;,     rhs =&amp;gt; [qw/Factor Multiply Factor/],
+                                action =&amp;gt; &#39;do_multiply&#39;
+                        },
+                ],
+                default_action =&amp;gt; &#39;do_something&#39;,
+        });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Despite the differences between this and the calls to &lt;code&gt;Set::FA::Element     -&amp;gt; new()&lt;/code&gt; in the lexer example, these two snippets are basically the same:&lt;/p&gt;
+
+&lt;p&gt;actions&lt;br /&gt;
+This is the name of a Perl package in which Marpa will look for actions such as &lt;code&gt;do_add()&lt;/code&gt; and &lt;code&gt;do_multiply()&lt;/code&gt;. (Okay, the lexer has no such option, as it defaults to the current package.)&lt;/p&gt;
+
+&lt;p&gt;start&lt;br /&gt;
+This is the &lt;em&gt;lhs&lt;/em&gt; name of the rule to start with, as with the lexer.&lt;/p&gt;
+
+&lt;p&gt;rules&lt;br /&gt;
+This is an arrayref of &lt;em&gt;rule descriptors&lt;/em&gt; defining the syntax of the grammar. This is the lexer&amp;rsquo;s &lt;em&gt;transitions&lt;/em&gt; parameter.&lt;/p&gt;
+
+&lt;p&gt;default_action&lt;br /&gt;
+Use this (optional) callback as the action for any rule element which does not explicitly specify its own action.&lt;/p&gt;
+
+&lt;p&gt;The real problem is recasting the syntax from BNF, or whatever, into a set of &lt;em&gt;rule descriptors&lt;/em&gt;. How do you think about this problem? I suggest contrast-and-compare real code with what the grammar says it must be.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the &lt;em&gt;teamwork.dot&lt;/em&gt; file I explained earlier.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        digraph Perl
+        {
+        graph [ rankdir=&amp;quot;LR&amp;quot; ]
+        node  [ fontsize=&amp;quot;12pt&amp;quot; shape=&amp;quot;rectangle&amp;quot; style=&amp;quot;filled, solid&amp;quot; ]
+        edge  [ color=&amp;quot;grey&amp;quot; ]
+        &amp;quot;Teamwork&amp;quot; [ fillcolor=&amp;quot;yellow&amp;quot; ]
+        &amp;quot;Victory&amp;quot;  [ fillcolor=&amp;quot;red&amp;quot; ]
+        &amp;quot;Teamwork&amp;quot; -&amp;gt; &amp;quot;Victory&amp;quot; [ label=&amp;quot;is the key to&amp;quot; ]
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In general, a valid &lt;a href=&#34;http://www.graphviz.org/&#34;&gt;Graphviz&lt;/a&gt; (DOT) graph must start with one of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        strict digraph $id {...} # Case 1. $id is a variable.
+        strict digraph     {...}
+        strict   graph $id {...} # Case 3
+        strict   graph     {...}
+               digraph $id {...} # Case 5
+               digraph     {...}
+                 graph $id {...} # Case 7
+                 graph     {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&amp;hellip; as indeed this real code does. The graph&amp;rsquo;s id is &lt;em&gt;Perl&lt;/em&gt;, which is case 5. If you&amp;rsquo;ve ever noticed that you can write a BNF as a tree (right?), you can guess what comes next. I like to write my &lt;em&gt;rule descriptors&lt;/em&gt; from the root down.&lt;/p&gt;
+
+&lt;p&gt;Drawing this as a tree gives:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;             DOT&#39;s Grammar
+                  |
+                  V
+        ---------------------
+        |                   |
+     strict                 |
+        |                   |
+        ---------------------
+                  |
+                  V
+        ---------------------
+        |                   |
+     digraph     or       graph
+        |                   |
+        ---------------------
+                  |
+                  V
+        ---------------------
+        |                   |
+       $id                  |
+        |                   |
+        ---------------------
+                  |
+                  V
+                {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;connecting-the-parser-back-to-the-lexer&#34;&gt;Connecting the Parser back to the Lexer&lt;/h1&gt;
+
+&lt;p&gt;Wait, what&amp;rsquo;s this? Didn&amp;rsquo;t I say that &lt;em&gt;strict&lt;/em&gt; is optional. It&amp;rsquo;s not optional, not in the parser. It is optional in the DOT language, but I designed the lexer, and I therein ensured it would necessarily output &lt;em&gt;strict =&amp;gt; no&lt;/em&gt; when the author of the graph omitted the &lt;em&gt;strict&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;By the time the parser runs, &lt;em&gt;strict&lt;/em&gt; is no longer optional. I did this to make the life easier for consumers of the lexer&amp;rsquo;s output stream, such as authors of parsers. (Making the parser work less is often good.)&lt;/p&gt;
+
+&lt;p&gt;Likewise, for &lt;em&gt;digraph&lt;/em&gt; &amp;lsquo;v&amp;rsquo; &lt;em&gt;graph&lt;/em&gt;, I designed the lexer to output &lt;em&gt;digraph =&amp;gt; &amp;lsquo;yes&amp;rsquo;&lt;/em&gt; in one case and &lt;em&gt;digraph =&amp;gt; &amp;lsquo;no&amp;rsquo;&lt;/em&gt; in the other. What does that mean? For &lt;em&gt;teamwork.dot&lt;/em&gt;, the lexer will output (in some convenient format) the equivalent of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        strict   =&amp;gt; no
+        digraph  =&amp;gt; yes
+        graph_id =&amp;gt; Perl
+        ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I chose &lt;em&gt;graph_id&lt;/em&gt; because the DOT language allows other types of ids, such as for nodes, edges, ports, and compass points.&lt;/p&gt;
+
+&lt;p&gt;All of this produces the first six Marpa-friendly rules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        [
+        {   # Root-level stuff.
+                lhs =&amp;gt; &#39;graph_grammar&#39;,
+                rhs =&amp;gt; [qw/prolog_and_graph/],
+        },
+        {
+                lhs =&amp;gt; &#39;prolog_and_graph&#39;,
+                rhs =&amp;gt; [qw/prolog_definition graph_sequence_definition/],
+        },
+        {   # Prolog stuff.
+                lhs =&amp;gt; &#39;prolog_definition&#39;,
+                rhs =&amp;gt; [qw/strict_definition digraph_definition graph_id_definition/],
+        },
+        {
+                lhs    =&amp;gt; &#39;strict_definition&#39;,
+                rhs    =&amp;gt; [qw/strict/],
+                action =&amp;gt; &#39;strict&#39;, # &amp;lt;== Callback.
+        },
+        {
+                lhs    =&amp;gt; &#39;digraph_definition&#39;,
+                rhs    =&amp;gt; [qw/digraph/],
+                action =&amp;gt; &#39;digraph&#39;, # &amp;lt;== Callback.
+        },
+        {
+                lhs    =&amp;gt; &#39;graph_id_definition&#39;,
+                rhs    =&amp;gt; [qw/graph_id/],
+                action =&amp;gt; &#39;graph_id&#39;, # &amp;lt;== Callback.
+        },
+        ...
+        ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In English, all of this asserts that the graph as a whole consists of a prolog thingy, then a graph sequence thingy. (Remember, I made up the names &lt;code&gt;prolog_and_graph&lt;/code&gt;, etc.&lt;/p&gt;
+
+&lt;p&gt;Next, a prolog consists of a strict thingy, which is now not optional, and then. a digraph thingy, which will turn out to match the lexer input of &lt;code&gt;/^(di|)graph$/&lt;/code&gt;, and the lexer output of &lt;code&gt;digraph =&amp;gt;     /^(yes|no)$/&lt;/code&gt;, and then a graph_id, which is optional, and then some other stuff which will be the precise definition of real live graphs, represented by &lt;code&gt;{...}&lt;/code&gt; in the list of the eight possible formats for the prolog.&lt;/p&gt;
+
+&lt;p&gt;Whew.&lt;/p&gt;
+
+&lt;h1 id=&#34;something-fascinating-about-rule-descriptors&#34;&gt;Something Fascinating about Rule Descriptors&lt;/h1&gt;
+
+&lt;p&gt;Take another look at those rule descriptors. They say &lt;em&gt;nothing&lt;/em&gt; about the values of the tokens! For instance, in &lt;em&gt;graph_id =&amp;gt; Perl&lt;/em&gt; what happens to ids such as &lt;em&gt;Perl&lt;/em&gt;. Nothing. They are ignored. That&amp;rsquo;s just how these grammars work.&lt;/p&gt;
+
+&lt;p&gt;Recall: it&amp;rsquo;s the job of the &lt;em&gt;lexer&lt;/em&gt; to identify valid graph ids based on the first sub-grammar. By the time the data hits the parser, we know we have a valid graph id, and as long as it plugs in to the &lt;em&gt;structure&lt;/em&gt; of the grammar in the right place, we are prepared to accept &lt;em&gt;any valid&lt;/em&gt; graph id. Hence &lt;a href=&#34;https://metacpan.org/pod/Marpa::R2&#34;&gt;Marpa::R2&lt;/a&gt; does not even look at the graph id, which is a way of saying this one grammar works with &lt;em&gt;every&lt;/em&gt; valid graph id.&lt;/p&gt;
+
+&lt;p&gt;This point also raises the tricky discussion of whether a specific implementation of lexer/parser code can or must keep the two phases separate, or whether in fact you can roll them into one without falling into the premature optimisation trap. I&amp;rsquo;ll just draw a veil over that discussion, as I&amp;rsquo;ve already declared my stance: my implementation uses two separate modules.&lt;/p&gt;
+
+&lt;h1 id=&#34;chains-and-trees&#34;&gt;Chains and Trees&lt;/h1&gt;
+
+&lt;p&gt;If these rules have to be chained into a tree, how do you handle the root? Consider this call to &lt;a href=&#34;https://metacpan.org/pod/Marpa::R2&#34;&gt;Marpa::R2&lt;/a&gt;&amp;rsquo;s &lt;code&gt;new()&lt;/code&gt; method:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        my($grammar) = Marpa::R2::Grammar -&amp;gt; new(... start =&amp;gt; &#39;graph_grammar&#39;, ...);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;graph_grammar&lt;/em&gt; is precisely the &lt;em&gt;lhs&lt;/em&gt; in the first rule descriptor.&lt;/p&gt;
+
+&lt;p&gt;After that, every rule&amp;rsquo;s &lt;em&gt;rhs&lt;/em&gt;, including the root&amp;rsquo;s, must be defined later in the list of rule descriptors. These definitions form the links in the chain. If you draw this, you&amp;rsquo;ll see the end result is a tree.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the full &lt;a href=&#34;https://metacpan.org/pod/Marpa::R2&#34;&gt;Marpa::R2&lt;/a&gt; grammar for DOT (as used in the &lt;a href=&#34;https://metacpan.org/pod/GraphViz2::Marpa&#34;&gt;GraphViz2::Marpa&lt;/a&gt; module) as an image: &lt;a href=&#34;http://savage.net.au/Ron/html/graphviz2.marpa/Marpa.Grammar.svg&#34;&gt;http://savage.net.au/Ron/html/graphviz2.marpa/Marpa.Grammar.svg&lt;/a&gt;. I created this image with (you guessed it!) &lt;a href=&#34;http://www.graphviz.org/&#34;&gt;Graphviz&lt;/a&gt; via &lt;a href=&#34;https://metacpan.org/pod/GraphViz2&#34;&gt;GraphViz2&lt;/a&gt;. I&amp;rsquo;ve added numbers to node names in the tree, otherwise Graphviz would regard any two identical numberless names as one and the same node.&lt;/p&gt;
+
+&lt;h1 id=&#34;less-coding-more-design&#34;&gt;Less Coding, More Design&lt;/h1&gt;
+
+&lt;p&gt;Here I&amp;rsquo;ll stop building the tree of the grammar (see the next article), and turn to some design issues.&lt;/p&gt;
+
+&lt;h1 id=&#34;my-rules-of-thumb-for-writing-lexers-parsers&#34;&gt;My Rules-of-Thumb for Writing Lexers/Parsers&lt;/h1&gt;
+
+&lt;p&gt;The remainder of this document is to help beginners orient their thinking when tackling a problem they don&amp;rsquo;t yet have much experience in. Of course, if you&amp;rsquo;re an expert in lexing and parsing, feel free to ignore everything I say, and if you think I&amp;rsquo;ve misused lexing/parsing terminology here, please let me know.&lt;/p&gt;
+
+&lt;h2 id=&#34;eschew-premature-optimisation&#34;&gt;Eschew Premature Optimisation&lt;/h2&gt;
+
+&lt;p&gt;Yep, this old one again. It has various connotations:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;The lexer and the parser&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t aim to combine the lexer and parser, even though that might eventually happen. Do wait until the design of each is clear and finalized, before trying to jam them into a single module (or program).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;The lexer and the tokens&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Do make the lexer identify the existence of tokens, but not identify their ultimate role or meaning.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;The lexer and context&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t make the lexer do context analysis. Do make the parser disambiguate tokens with multiple meanings, by using the context. Let the lexer do the hard work of identifying tokens.&lt;/p&gt;
+
+&lt;p&gt;And &lt;a href=&#34;http://en.wikipedia.org/wiki/Context_analysis&#34;&gt;context analysis for businesses&lt;/a&gt;, for example, is probably not what you want either.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;The lexer and syntax&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t make the lexer do syntax checking. This is effectively the same as the last point.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;The lexer and its output&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Don&amp;rsquo;t minimize the lexer&amp;rsquo;s output stream. For instance, don&amp;rsquo;t force the code which reads the lexer&amp;rsquo;s output to guess whether or not a variable-length set of tokens has ended. Output a specific token as a set terminator. The point of this token is to tell the parser exactly what&amp;rsquo;s going on. Without such a token, the next token has to do double-duty: Firstly it tells the parser the variable-length part has finished and secondly, it represents itself. Such overloading is unnecessary.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;em&gt;The State Transition Table&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;In the STT, don&amp;rsquo;t try to minimize the number of states, at least not until the code has stabilized (that is, it&amp;rsquo;s no longer under [rapid] development).&lt;/p&gt;
+
+&lt;p&gt;I develop my STTs in a spreadsheet program, which means a formula (regexp) stored in one cell can be referred to by any number of other cells. This is &lt;em&gt;very&lt;/em&gt; convenient.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;divide-and-conquer&#34;&gt;Divide and Conquer&lt;/h2&gt;
+
+&lt;p&gt;Hmmm, another ancient &lt;a href=&#34;http://en.wikipedia.org/wiki/Aphorism&#34;&gt;aphorism&lt;/a&gt;. Naturally, these persist precisely because they&amp;rsquo;re telling us something important. Here, it means study the problem carefully, and deal with each part (lexer, parser) of it separately. Enough said.&lt;/p&gt;
+
+&lt;h2 id=&#34;don-t-reinvent-the-wheel&#34;&gt;Don&amp;rsquo;t Reinvent the Wheel&lt;/h2&gt;
+
+&lt;p&gt;Yes, I know &lt;em&gt;you&amp;rsquo;d&lt;/em&gt; never do that.&lt;/p&gt;
+
+&lt;p&gt;The CPAN has plenty of Perl modules to help with things like the STT, such as &lt;a href=&#34;https://metacpan.org/pod/Set::FA::Element&#34;&gt;Set::FA::Element&lt;/a&gt;. Check its See Also (in &lt;a href=&#34;https://metacpan.org/pod/Set::FA&#34;&gt;Set::FA&lt;/a&gt;, actually) for other STT helpers.&lt;/p&gt;
+
+&lt;h2 id=&#34;be-patient-with-the-stt&#34;&gt;Be Patient with the STT&lt;/h2&gt;
+
+&lt;p&gt;Developing the STT takes many iterations:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;The test cases&lt;/p&gt;
+
+&lt;p&gt;For each iteration, prepare a separate test case.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The tiny script&lt;/p&gt;
+
+&lt;p&gt;Have a tiny script which runs a single test. Giving it a short—perhaps temporary—name, makes each test just that little bit easier to run. You can give it a meaningful name later, when including it in the distro.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The wrapper script&lt;/p&gt;
+
+&lt;p&gt;Have a script which runs all tests.&lt;/p&gt;
+
+&lt;p&gt;I keep the test data files in the data/ dir, and the scripts in the scripts/ dir. Then, creating tests in the t/ dir can perhaps use these two sets of helpers.&lt;/p&gt;
+
+&lt;p&gt;Because I&amp;rsquo;ve only used &lt;a href=&#34;https://metacpan.org/pod/Marpa::R2&#34;&gt;Marpa::R2&lt;/a&gt; for graphical work, the output of the wrapper is a web page, which makes viewing the results simple. I like to include (short) input or output text files on such a page, beside the SVG images. That way I can see at a glance what the input was and hence I can tell what the output should be without switching to the editor&amp;rsquo;s window.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s a little bit of effort initially, but after that it&amp;rsquo;s &lt;em&gt;so&lt;/em&gt; easy to check the output of the latest test.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I&amp;rsquo;ve made available sample output from my wrapper scripts:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://savage.net.au/Perl-modules/html/graphviz2/&#34;&gt;GraphViz2 (non-Marpa)&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://savage.net.au/Perl-modules/html/graphviz2.marpa/&#34;&gt;GraphViz2::Marpa&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://savage.net.au/Perl-modules/html/graph.easy.marpa/&#34;&gt;Graph::Easy::Marpa&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;be-patient-with-the-grammar&#34;&gt;Be Patient with the Grammar&lt;/h2&gt;
+
+&lt;p&gt;As with the STT, creating a grammar is at least for me very much a trial-and-error process. I offer a few tips:&lt;/p&gt;
+
+&lt;p&gt;Tips:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Paper, not code&lt;/p&gt;
+
+&lt;p&gt;A good idea is not to start by coding with your editor, but to draw the grammar as a tree, on paper.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Watch out for alternatives&lt;/p&gt;
+
+&lt;p&gt;This refers to when one of several tokens can appear in the input stream. Learn exactly how to draw that without trying to minimize the number of branches in the tree.&lt;/p&gt;
+
+&lt;p&gt;Of course, you will still need to learn how to code such a construct. Here&amp;rsquo;s a bit of code from &lt;a href=&#34;https://metacpan.org/pod/Graph::Easy::Marpa&#34;&gt;Graph::Easy::Marpa&lt;/a&gt; which deals with this (note: we&amp;rsquo;re back to the &lt;code&gt;Graph::Easy&lt;/code&gt; language from here on!):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        {   # Graph stuff.
+                lhs =&amp;gt; &#39;graph_definition&#39;,
+                rhs =&amp;gt; [qw/graph_statement/],
+        },
+        {
+                lhs =&amp;gt; &#39;graph_statement&#39;, # 1 of 3.
+                rhs =&amp;gt; [qw/group_definition/],
+        },
+        {
+                lhs =&amp;gt; &#39;graph_statement&#39;, # 2 of 3.
+                rhs =&amp;gt; [qw/node_definition/],
+        },
+        {
+                lhs =&amp;gt; &#39;graph_statement&#39;, # 3 of 3.
+                rhs =&amp;gt; [qw/edge_definition/],
+        },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is telling you that a graph thingy can be any one of a group, node, or edge. It&amp;rsquo;s &lt;a href=&#34;https://metacpan.org/pod/Marpa::R2&#34;&gt;Marpa::R2&lt;/a&gt;&amp;rsquo;s job to try these alternatives in order to see which (if any) matches the input stream. This ruleset represents a point in the input stream where one of several &lt;em&gt;alternatives&lt;/em&gt; can appear.&lt;/p&gt;
+
+&lt;p&gt;The tree looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;                        graph_definition
+                               |
+                               V
+                        graph_statement
+                               |
+                               V
+            ---------------------------------------
+            |                  |                  |
+            V                  V                  V
+     group_definition   node_definition    edge_definition
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My comment &lt;code&gt;3 of 3&lt;/code&gt; says an edge can stand alone.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Watch out for sequences&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip; but consider the &lt;em&gt;node_definition&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        {   # Node stuff.
+                lhs =&amp;gt; &#39;node_definition&#39;,
+                rhs =&amp;gt; [qw/node_sequence/],
+                min =&amp;gt; 0,
+        },
+        {
+                lhs =&amp;gt; &#39;node_sequence&#39;, # 1 of 4.
+                rhs =&amp;gt; [qw/node_statement/],
+        },
+        {
+                lhs =&amp;gt; &#39;node_sequence&#39;, # 2 of 4.
+                rhs =&amp;gt; [qw/node_statement daisy_chain_node/],
+        },
+        {
+                lhs =&amp;gt; &#39;node_sequence&#39;, # 3 of 4.
+                rhs =&amp;gt; [qw/node_statement edge_definition/],
+        },
+        {
+                lhs =&amp;gt; &#39;node_sequence&#39;, # 4 of 4.
+                rhs =&amp;gt; [qw/node_statement group_definition/],
+        },
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here &lt;code&gt;3 of 4&lt;/code&gt; tells you that nodes can be followed by edges.&lt;/p&gt;
+
+&lt;p&gt;A realistic sample is: &lt;code&gt;[node_1] -&amp;gt; [node_2]&lt;/code&gt;, where &lt;code&gt;[x]&lt;/code&gt; is a node and &lt;code&gt;-&amp;gt;&lt;/code&gt; is an edge, because an edge can be followed by a node (applying &lt;code&gt;3 of 4&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;This full example represents a point in the input stream where one of several specific &lt;em&gt;sequences&lt;/em&gt; of tokens are allowed/expected. Here&amp;rsquo;s the &lt;em&gt;edge_definition&lt;/em&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        {   # Edge stuff.
+                lhs =&amp;gt; &#39;edge_definition&#39;,
+                rhs =&amp;gt; [qw/edge_sequence/],
+                min =&amp;gt; 0,
+        },
+        {
+                lhs =&amp;gt; &#39;edge_sequence&#39;, # 1 of 4.
+                rhs =&amp;gt; [qw/edge_statement/],
+        },
+        {
+                lhs =&amp;gt; &#39;edge_sequence&#39;, # 2 of 4.
+                rhs =&amp;gt; [qw/edge_statement daisy_chain_edge/],
+        },
+        {
+                lhs =&amp;gt; &#39;edge_sequence&#39;, # 3 of 4.
+                rhs =&amp;gt; [qw/edge_statement node_definition/],
+        },
+        {
+                lhs =&amp;gt; &#39;edge_sequence&#39;, # 4 of 4.
+                rhs =&amp;gt; [qw/edge_statement group_definition/],
+        },
+        {
+                lhs =&amp;gt; &#39;edge_statement&#39;,
+                rhs =&amp;gt; [qw/edge_name attribute_definition/],
+        },
+        {
+                lhs    =&amp;gt; &#39;edge_name&#39;,
+                rhs    =&amp;gt; [qw/edge_id/],
+                action =&amp;gt; &#39;edge_id&#39;,
+        },
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;But, I have to stop somewhere, so&amp;hellip;&lt;/p&gt;
+
+&lt;h1 id=&#34;wrapping-up-and-winding-down&#34;&gt;Wrapping Up and Winding Down&lt;/h1&gt;
+
+&lt;p&gt;I hope I&amp;rsquo;ve clarified what can be a complex and daunting part of programming, and I also hope I&amp;rsquo;ve convinced you that working in Perl, with the help of a spreadsheet, is the modern (or &amp;ldquo;only&amp;rdquo;) path to lexer and parser bliss.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;&lt;a href=&#34;http://savage.net.au/index.html&#34;&gt;Ron Savage&lt;/a&gt;&lt;/em&gt; is a longtime Perl programmer and prolific CPAN contributor.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
+
