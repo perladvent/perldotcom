@@ -314,7 +314,7 @@ Using the example methods of get\_color and set\_color, it should be obvious how
 
 ### Builder methods
 
-A builder method is an internal subroutine that is used to set the value of an object attribute at construction. A convention used by Perl programmers is to denote internal methods by prepending an underscore to their name. Let's add a builder method to Shape.pm that sets the creation datetime, using the [Time::Piece](http://perldoc.perl.org/Time/Piece.html) core module:
+A builder method is an internal subroutine that is used to set the value of an object attribute at construction. A convention used by Perl programmers is to denote internal methods by prepending an underscore to their name. Let's add a builder method to Shape.pm that sets the creation datetime, using the [Time::Piece]({{< mcpan "Time::Piece" }}) core module:
 
 ```perl
 package Shape;

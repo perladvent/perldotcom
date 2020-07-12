@@ -47,7 +47,7 @@ multi sub MAIN('generate') {
 }
 ```
 
-We don’t need to parse the command-line options ourselves, nor use any modules such as `Getopt::Long` to do it for us. Moreover, Raku emits "usage" help text if the program is run with incorrect or missing arguments:
+We don’t need to parse the command-line options ourselves, nor use any modules such as [Getopt::Long]({{< mcpan "Getopt::Long" >}}) to do it for us. Moreover, Raku emits "usage" help text if the program is run with incorrect or missing arguments:
 
 ```bash
 $ ./covid.raku

@@ -17,11 +17,11 @@
 }
 
 
-Scripts are practically Perl's raison d'être, and so naturally it has some great scripting tools. [Getopt::Long](http://perldoc.perl.org/Getopt/Long.html) is a module for parsing command line arguments (similar to Python's [argparse](https://docs.python.org/dev/library/argparse.html)). Using Getopt::Long, you can quickly define a standard Unix-like interface for your program. With just a few lines of code you can parse, type-check and assign the parameters passed to your program. Sounds good? Read on to find out how.
+Scripts are practically Perl's raison d'être, and so naturally it has some great scripting tools. [Getopt::Long]({{< mcpan "Getopt::Long" >}}) is a module for parsing command line arguments (similar to Python's [argparse](https://docs.python.org/dev/library/argparse.html)). Using [Getopt::Long]({{< mcpan "Getopt::Long" >}}), you can quickly define a standard Unix-like interface for your program. With just a few lines of code you can parse, type-check and assign the parameters passed to your program. Sounds good? Read on to find out how.
 
 ### Building a basic app
 
-Let's imagine I wanted to create a program for creating software licenses, like [App::Software::License]({{<mcpan "App::Software::License" >}}). The user will run the program and it will print the software license text, with the license text customized for the user. To do this, the program will need to process a few arguments from the user - a perfect use case for Getopt::Long! Let's start with the license holder's name:
+Let's imagine I wanted to create a program for creating software licenses, like [App::Software::License]({{<mcpan "App::Software::License" >}}). The user will run the program and it will print the software license text, with the license text customized for the user. To do this, the program will need to process a few arguments from the user—a perfect use case for [Getopt::Long]({{< mcpan "Getopt::Long" >}})! Let's start with the license holder's name:
 
 ```perl
 #!/usr/bin/env perl
@@ -34,7 +34,7 @@ GetOptions(
 print "$holder_name\n";
 ```
 
-I start by importing [Getopt::Long]({{<mcpan "Getopt::Long" >}}), it's part of the core Perl distribution, so if you have Perl installed, you should already have it. The `GetOptions` function from Getopt::Long is where the magic happens. It takes a hash of parameter names and variable references which define the program's API. The string `holder=s` tells Getopt::Long to accept an argument like `--holder` and assign it to `$holder_name`. If we receive any arguments that are not defined in `GetOptions`, the code dies and prints out an exception message (terminating the exception message with a newline stops Perl from printing the line reference of the exception). The final line just prints out the value. I'll save the script as `license` and test it out:
+I start by importing [Getopt::Long]({{<mcpan "Getopt::Long" >}}), it's part of the core Perl distribution, so if you have Perl installed, you should already have it. The `GetOptions` function from [Getopt::Long]({{< mcpan "Getopt::Long" >}}) is where the magic happens. It takes a hash of parameter names and variable references which define the program's API. The string `holder=s` tells [Getopt::Long]({{< mcpan "Getopt::Long" >}}) to accept an argument like `--holder` and assign it to `$holder_name`. If we receive any arguments that are not defined in `GetOptions`, the code dies and prints out an exception message (terminating the exception message with a newline stops Perl from printing the line reference of the exception). The final line just prints out the value. I'll save the script as `license` and test it out:
 
 ```perl
 $ chmod a+x license
@@ -48,7 +48,7 @@ On Windows, you'll need to type:
 > perl license --holder "David Farrell"
 ```
 
-By default Getopt::Long also recognizes the short form of arguments, so this works too:
+By default [Getopt::Long]({{< mcpan "Getopt::Long" >}}) also recognizes the short form of arguments, so this works too:
 
 ```perl
 $ ./license -h "David Farrell"
@@ -57,7 +57,7 @@ David Farrell
 
 ### Type checking
 
-Getopt::Long provides basic type checking for strings, integers and floating point numbers. I've already added a string argument for the license holder's name, so I'll add an integer option for the license year:
+[Getopt::Long]({{< mcpan "Getopt::Long" >}}) provides basic type checking for strings, integers and floating point numbers. I've already added a string argument for the license holder's name, so I'll add an integer option for the license year:
 
 ```perl
 #!/usr/bin/env perl
@@ -78,7 +78,7 @@ Running the program again, it will now accept a `--year` argument:
 David Farrell 2014
 ```
 
-Note how I was able to pass `-y 2014` and Getopt::Long knew to assign it to `$year`. Getopt::Long will also do basic type checking, so if a non-integer value is passed, it will print and warning and the script will die.
+Note how I was able to pass `-y 2014` and [Getopt::Long]({{< mcpan "Getopt::Long" >}}) knew to assign it to `$year`. [Getopt::Long]({{< mcpan "Getopt::Long" >}}) will also do basic type checking, so if a non-integer value is passed, it will print and warning and the script will die.
 
 ```perl
 ./license -h "David Farrell" --year abcd
@@ -103,7 +103,7 @@ print "$holder_name $year $type\n";
 
 ### Boolean options
 
-Finally I want to add a boolean option for whether to print out the full license text or not. To use boolean options with Getopt::Long, it's the same as with other options except that you don't specify the type after the option name:
+Finally I want to add a boolean option for whether to print out the full license text or not. To use boolean options with [Getopt::Long]({{< mcpan "Getopt::Long" >}}), it's the same as with other options except that you don't specify the type after the option name:
 
 ```perl
 #!/usr/bin/env perl
@@ -155,7 +155,7 @@ I've added the [Time::Piece]({{<mcpan "Time::Piece" >}}) module, which is a [use
 
 ### Mandatory parameters
 
-So far so good, but what about mandatory parameters? This script will not work unless the user passes the license holder information. For mandatory parameters I have to check for their presence myself, Getopt::Long can't help me here. Luckily it's a simple check:
+So far so good, but what about mandatory parameters? This script will not work unless the user passes the license holder information. For mandatory parameters I have to check for their presence myself, [Getopt::Long]({{< mcpan "Getopt::Long" >}}) can't help me here. Luckily it's a simple check:
 
 ```perl
 #!/usr/bin/env perl
@@ -185,7 +185,7 @@ In case you're wondering, the variable `$0` is a special variable that is the pr
 
 ### Help text
 
-We're almost done, but Getopt::Long has more tricks up its sleeve. I'll add some basic documentation to this script, in [Pod]({{< perldoc "perlpod" >}}):
+We're almost done, but [Getopt::Long]({{< mcpan "Getopt::Long" >}}) has more tricks up its sleeve. I'll add some basic documentation to this script, in [Pod]({{< perldoc "perlpod" >}}):
 
 ```perl
 #!/usr/bin/env perl
@@ -235,7 +235,7 @@ license - get license texts at the command line!
 =cut
 ```
 
-The documentation is pretty minimal, just the program name, synopsis of its arguments and a version number. I've replaced the print statement with a stub function `print_license`, which is where the main program would be implemented. I've replaced the `die` calls with the Getopt::Long function `HelpMessage`. This will print a usage help text and exit the program when called. Let's try it out:
+The documentation is pretty minimal, just the program name, synopsis of its arguments and a version number. I've replaced the print statement with a stub function `print_license`, which is where the main program would be implemented. I've replaced the `die` calls with the [Getopt::Long]({{< mcpan "Getopt::Long" >}}) function `HelpMessage`. This will print a usage help text and exit the program when called. Let's try it out:
 
 ```perl
 $ ./license -k

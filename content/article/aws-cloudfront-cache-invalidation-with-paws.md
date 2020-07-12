@@ -108,7 +108,7 @@ The `s3-upload` script prints the keys it updated on STDOUT, and `cf-invalid` ca
 | ./cf-invalid --distribution-id e9d4922bd9120 --region us-east-1
 ```
 
-And because the scripts use Getopt::Long, the option names can be shortened:
+And because the scripts use [Getopt::Long]({{< mcpan "Getopt::Long" >}}), the option names can be shortened:
 
 ```
 ./s3-upload -f static -b example.com -r us-east-1 | ./cf-invalid -d e9d4922bd9120 -r us-east-1

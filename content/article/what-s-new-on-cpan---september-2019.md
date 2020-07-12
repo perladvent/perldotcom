@@ -44,7 +44,7 @@ Development & Version Control
 * [FFI::Platypus::Record::StringArray](https://metacpan.org/pod/FFI::Platypus::Record::StringArray) provides experimental support for arrays of C strings for FFI record classes
 * Get true tail recursion with [Keyword::TailRecurse](https://metacpan.org/pod/Keyword::TailRecurse), wow!
 * [Long::Jump](https://metacpan.org/pod/Long::Jump) return to a specific point from a deeply nested stack
-* [MooX::Role::CliOptions](https://metacpan.org/pod/MooX::Role::CliOptions) combines Moo classes with Getopt::Long for object oriented scripting
+* [MooX::Role::CliOptions](https://metacpan.org/pod/MooX::Role::CliOptions) combines Moo classes with [Getopt::Long]({{< mcpan "Getopt::Long" >}}) for object oriented scripting
 * [Net::Curl::Promiser](https://metacpan.org/pod/Net::Curl::Promiser) provides a promise-based interface for Net::Curl::Multi
 
 

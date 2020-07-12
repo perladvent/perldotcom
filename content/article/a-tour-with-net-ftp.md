@@ -168,7 +168,7 @@ $ perl upload.pl file1.txt file2.txt`.
 
 ## Put things together
 
-I propose a more complete client with some command-line parsing and more actions. In addition to the previous code for listing and uploading, here I added a way to view a file. [Getopt::Long](https://metacpan.org/pod/Getopt::Long) to handle command line parameters.
+I propose a more complete client with some command-line parsing and more actions. In addition to the previous code for listing and uploading, here I added a way to view a file. [Getopt::Long]({{< mcpan "Getopt::Long" >}}) to handle command line parameters.
 
 ```perl
 #!/usr/bin/env perl
