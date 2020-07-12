@@ -126,7 +126,7 @@ All recent CPAN uploads, as well as all test results, are forwarded to the `cpan
 
 Test reports on the mailing list are automatically recorded in a ever-growing database. [http://www.cpantesters.org/](http://www.cpantesters.org/) is its search interface, where you can query by distribution name, version, or the testing platform.
 
-Theoretically, you can query that database before installing any CPAN module, to see whether it works on your platform, and check for associated bug reports. The same information is also present at each module's page in <https://metacpan.org/>, and maybe <http://rt.cpan.org/> in the near future.
+Theoretically, you can query that database before installing any CPAN module, to see whether it works on your platform, and check for associated bug reports. The same information is also present at each module's page in [MetaCPAN](https://metacpan.org/), and maybe [CPAN RT](http://rt.cpan.org/) in the near future.
 
 Alas, while this system certainly works, it is far from perfect. Here are some of its shortcomings:
 
