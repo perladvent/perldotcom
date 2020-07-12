@@ -312,9 +312,9 @@ Almost done, I'll use the Makefile to clean up the build files:
     perl perl.exe \
     perlmain.c pm_to_blib \
     pm_to_blib.ts so_locations \
-    tmon.out 
+    tmon.out
     rm -rf \
-      blib 
+      blib
     mv Makefile Makefile.old > /dev/null 2>&1
 
 ### Upload to CPAN
