@@ -21,7 +21,7 @@ Everyone knows that Perl works particularly well as a text processing language, 
 
 In this short series of two articles, we'll take a look through some of the less well-known or less understood parts of the regular expression language, and see how they can be used to solve problems with more power and less fuss.
 
-If you're not too familiar with the basics of the regexp language, a good place to start is [perlretut]({{</* perldoc "perlretut" */>}}), which comes as part of the Perl distribution. We're going to assume that you know about anchors, character classes, repetition, bracketing, and alternation. Where can we go from here?
+If you're not too familiar with the basics of the regexp language, a good place to start is [perlretut]({{< perldoc "perlretut" >}}), which comes as part of the Perl distribution. We're going to assume that you know about anchors, character classes, repetition, bracketing, and alternation. Where can we go from here?
 
 ### <span id="multiline_strings">Multi-line strings</span>
 

@@ -22,7 +22,7 @@
 }
 
 
-I love Perl's [split]({{</* perlfunc "split" */>}}) function. Far more powerful than its feeble cousin [join]({{</* perlfunc "join" */>}}), split has some wonderful features that should make it a regular feature of any Perl programmer's toolbox. Let's look at some examples.
+I love Perl's [split]({{< perlfunc "split" >}}) function. Far more powerful than its feeble cousin [join]({{< perlfunc "join" >}}), split has some wonderful features that should make it a regular feature of any Perl programmer's toolbox. Let's look at some examples.
 
 ### Split a sentence into words
 
@@ -112,7 +112,7 @@ for (@full_names)
 
 ### Conclusion
 
-These are just a few examples of Perl's versatile `split` function. Check out the official documentation [online]({{</* perlfunc "split" */>}}) or via the terminal with `$ perldoc -f split`.
+These are just a few examples of Perl's versatile `split` function. Check out the official documentation [online]({{< perlfunc "split" >}}) or via the terminal with `$ perldoc -f split`.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

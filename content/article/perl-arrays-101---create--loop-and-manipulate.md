@@ -91,7 +91,7 @@ foreach my $element (@names_start_with_j) {
 # Jennifer
 ```
 
-Other common functions for looping through arrays are [grep]({{</* perlfunc "grep" */>}}) and [map]({{</* perlfunc "map" */>}}).
+Other common functions for looping through arrays are [grep]({{< perlfunc "grep" >}}) and [map]({{< perlfunc "map" >}}).
 
 ### shift, unshift, push and pop
 

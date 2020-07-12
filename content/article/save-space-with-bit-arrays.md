@@ -136,7 +136,7 @@ sub get_toppings {
 
 I create a class called `Pizza::Order`. The `%toppings` hash stores names of pizza toppings and their associated bitmask. I could only think of 14 toppings, leaving 18 spare slots for the future (if we want to stick to 32 bit integers). The `new` subroutine is a constructor which creates a blessed scalar as the `Pizza::Order` object.
 
-The `print_state` method uses [printf]({{</* perlfunc "printf" */>}}) to print the Pizza::Order object state as a binary number. This is a really useful feature of `printf` which many other languages don't have (C & Python for example). Both `add_topping` and `get_toppings` use the techniques described earlier to set and check for set bits.
+The `print_state` method uses [printf]({{< perlfunc "printf" >}}) to print the Pizza::Order object state as a binary number. This is a really useful feature of `printf` which many other languages don't have (C & Python for example). Both `add_topping` and `get_toppings` use the techniques described earlier to set and check for set bits.
 
 More interesting perhaps, is the `remove_topping` method. This uses bitwise not (`~`) to invert a bitmask and then bitwise and (`&`) equals to unset it. Pretty nifty, huh? Here's a quick script to test it:
 
@@ -215,8 +215,8 @@ Finally, in order to get the data back out of a bit array it needs to be tested 
 ### References
 
 * Wikipedia has useful entries on [bit arrays](https://en.wikipedia.org/wiki/Bit_array) and [bitwise operators](https://en.wikipedia.org/wiki/Bitwise_operation)
-* Use Perl's builtin functions [sprintf]({{</* perlfunc "sprintf" */>}}) (`perldoc -f sprintf`) and [printf]({{</* perlfunc "printf" */>}}) (`perldoc -f printf`) to inspect binary values
 * Perl's official [operator documentation]({{< perldoc "perlop" >}}) covers the bitwise operators. You can read it in the terminal with the command `perldoc perlop`
+* Use Perl's builtin functions [sprintf]({{< perlfunc "sprintf" >}}) (`perldoc -f sprintf`) and [printf]({{< perlfunc "printf" >}}) (`perldoc -f printf`) to inspect binary values
 * Stringifying / printing numbers as binary isn't the only nice binary feature Perl has over other languages. Another is the ability to write binary numbers inline, just like octal and hexadecimal numbers, for example: `0b00001000`. This is great for comparing binary numbers
 * [bigint]({{<mcpan "bigint" >}}) is one of several modules on CPAN for working with large integers, see [using bit arrays with large integers](http://perltricks.com/article/using-bitmasks-with-large-integers/)
 

@@ -131,7 +131,7 @@ With this Apache daemon tying up your command prompt, simply browse to your appl
 
 Perl's debugger is very similar to other debuggers you may have used. You can step through your code line by line, skip entire subroutines, set break points, and display and/or change the value of variables with it.
 
-It might be useful to read through [`man perldebtut`]({{</* perldoc "perldebtut" */>}}), a introductory tutorial on using the debugger. For a more complete reference to all of the available commands, see [`man perldebug`]({{</* perldoc "perldebug" */>}}). This list should be just enough to get you started:
+It might be useful to read through [`man perldebtut`]({{< perldoc "perldebtut" >}}), a introductory tutorial on using the debugger. For a more complete reference to all of the available commands, see [`man perldebug`]({{< perldoc "perldebug" >}}). This list should be just enough to get you started:
 
 | Command        | Description                                                                                                                                                                                                                                                                                           |
 |----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

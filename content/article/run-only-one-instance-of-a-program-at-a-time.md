@@ -27,7 +27,7 @@ Programs can use the lock file principle to prevent multiple instances of themse
 
 ### File locking in Perl
 
-Perl provides the [flock]({{</* perlfunc "flock" */>}}) function for file locking. It takes a filehandle and a constant value for the lock type. So to get an exclusive lock on a file, I could do:
+Perl provides the [flock]({{< perlfunc "flock" >}}) function for file locking. It takes a filehandle and a constant value for the lock type. So to get an exclusive lock on a file, I could do:
 
 ```perl
 open my $file, ">", "app.lock" or die $!;

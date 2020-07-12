@@ -129,7 +129,7 @@ If either test fails, the code calls `croak` to throw a fatal exception.
 
 Otherwise the integer value is extracted from the scalar (`SvIVX`) and added
 to `RETVAL`. If all of these C macros look strange to you, don't worry, they are
-weird! They are part of the Perl C API, and they're documented in [perlapi]({{</* perldoc "perlapi" */>}}).
+weird! They are part of the Perl C API, and they're documented in [perlapi]({{< perldoc "perlapi" >}}).
 
 ### Edge cases
 

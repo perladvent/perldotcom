@@ -45,7 +45,7 @@ If a terminal redirect is not specific enough for your needs, you can use one of
 
 ### Redirect STDOUT using select
 
-Perl's built-in function [select]({{</* perlfunc "select" */>}}) changes the standard output filehandle to the filehandle provided as an argument. This makes it easy to globally redirect and restore standard output.
+Perl's built-in function [select]({{< perlfunc "select" >}}) changes the standard output filehandle to the filehandle provided as an argument. This makes it easy to globally redirect and restore standard output.
 
 ```perl
 use feature qw/say/;
@@ -67,7 +67,7 @@ say 'This should show in the terminal';
 
 ### Redirect STDOUT using local
 
-Perl's [local]({{</* perlfunc "local" */>}}) built-in function is another option for redirecting STDOUT. The local function creates a lexically-scoped copy of any variable passed to it. By enclosing local in a do block, the code below limits the STDOUT redirect to the block scope and STDOUT is automatically restored after the closing block brace ("}"). By definition this is not a global solution for redirecting STDOUT.
+Perl's [local]({{< perlfunc "local" >}}) built-in function is another option for redirecting STDOUT. The local function creates a lexically-scoped copy of any variable passed to it. By enclosing local in a do block, the code below limits the STDOUT redirect to the block scope and STDOUT is automatically restored after the closing block brace ("}"). By definition this is not a global solution for redirecting STDOUT.
 
 ```perl
 use feature qw/say/;

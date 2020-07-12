@@ -144,7 +144,7 @@ But it's even worse, because those numbers aren't what the documentation says th
 
 ### Fake random numbers
 
-Perl has a [rand]({{</* perlfunc "rand" */>}}) function. It claims to return "a random fractional number greater than or equal to 0", but it doesn't. It's not random. It's fake random in a way that might work if you only want to use one of them to complete a homework assignment in a beginning programming course in middle school. Although the documentation includes a footnote saying "You should not rely on it in security-sensitive situations", it does not say "Don't ever use this." like it should. Try this program:
+Perl has a [rand]({{< perlfunc "rand" >}}) function. It claims to return "a random fractional number greater than or equal to 0", but it doesn't. It's not random. It's fake random in a way that might work if you only want to use one of them to complete a homework assignment in a beginning programming course in middle school. Although the documentation includes a footnote saying "You should not rely on it in security-sensitive situations", it does not say "Don't ever use this." like it should. Try this program:
 
 	$ perl -le 'srand(137); print rand for 1 .. 10'
 

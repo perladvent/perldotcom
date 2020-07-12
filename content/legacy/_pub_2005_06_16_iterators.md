@@ -309,11 +309,11 @@ Becomes:
 
 ### <span id="see_also">See Also</span>
 
--   "[Closure on Closures](http://perlmonks.org/?node_id=268891)," by [broquaint](http://perlmonks.org/?node=broquaint)
--   "[Recursively Generated Iterators](http://perlmonks.org/index.pl?node_id=458418)," by [Roy Johnson](http://perlmonks.org/index.pl?node_id=300037)
--   [`perlsub`]({{</* perldoc "perlsub" */>}}) (`perldoc perlsub`)
--   [`glob`]({{</* perlfunc "glob" */>}}) (`perldoc -f glob`)
--   "[Range Operators](http://perldoc.perl.org/perlop.html#Range-Operators)" (`perldoc perlop`)
+-   [Closure on Closures](http://perlmonks.org/?node_id=268891), by [broquaint](http://perlmonks.org/?node=broquaint)
+-   [Recursively Generated Iterators](http://perlmonks.org/index.pl?node_id=458418), by [Roy Johnson](http://perlmonks.org/index.pl?node_id=300037)
+-   [perlsub]({{< perldoc "perlsub" >}}) (`perldoc perlsub`)
+-   [glob]({{< perlfunc "glob" >}}) (`perldoc -f glob`)
+-   [Range Operators](http://perldoc.perl.org/perlop.html#Range-Operators) (`perldoc perlop`)
 -   [Higher Order Perl](http://perl.plover.com/hop/), by [Dominus](http://perlmonks.org/?node=Dominus)
     A great book that covers the concept of iterators and a whole lot more.
 

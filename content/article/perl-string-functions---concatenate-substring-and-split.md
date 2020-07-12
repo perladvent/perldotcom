@@ -52,7 +52,7 @@ my $verb        = substr($joke, 8, 5, 'runs'); # walks
 print $joke; # A horse runs into a bar.
 ```
 
-The [perldoc]({{</* perlfunc "substr" */>}}) page for substr has many more useful examples.
+The [perldoc]({{< perlfunc "substr" >}}) page for substr has many more useful examples.
 
 ### Split
 

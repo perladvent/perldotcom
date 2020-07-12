@@ -17,9 +17,9 @@ Have you ever had the experience of doing something a certain way for a long tim
 { open my $session_file, '>', 'path/to/sessionfile' }
 ```
 
-This opens a write filehandle on the file, effectively setting its length to zero. I put the call to [open]({{</* perlfunc "open" */>}}) between curly braces in order to minimize the scope of the filehandle, `$session_file`. After that statement, the block closes, and `$session_file` variable goes out of scope, automatically closing the filehandle. As the block looks a little strange, I include an explanatory comment.
+This opens a write filehandle on the file, effectively setting its length to zero. I put the call to [open]({{< perlfunc "open" >}}) between curly braces in order to minimize the scope of the filehandle, `$session_file`. After that statement, the block closes, and `$session_file` variable goes out of scope, automatically closing the filehandle. As the block looks a little strange, I include an explanatory comment.
 
-The other day though, I came across the [truncate]({{</* perlfunc "truncate" */>}}) function. This does exactly what you'd think it does: truncates files. It takes two arguments: the file path (or filehandle), and the length. So if you need to truncate a file, you can do:
+The other day though, I came across the [truncate]({{< perlfunc "truncate" >}}) function. This does exactly what you'd think it does: truncates files. It takes two arguments: the file path (or filehandle), and the length. So if you need to truncate a file, you can do:
 
 ```perl
 truncate 'path/to/sessionfile', 0;

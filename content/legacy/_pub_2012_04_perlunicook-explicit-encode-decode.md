@@ -20,7 +20,7 @@
 
 While the [standard Perl Unicode preamble](/pub/2012/04/perlunicook-standard-preamble.html) makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. On rare occasions, such as a database read, you may be given encoded text you need to decode.
 
-The core [Encode]({{</* perldoc "Encode" */>}}) module offers two functions to handle these conversions. (Remember that `decode()` means to convert octets from a known encoding into Perl's internal Unicode form and `encode()` means to convet from Perl's internal form into a known encoding.)
+The core [Encode]({{< perldoc "Encode" >}}) module offers two functions to handle these conversions. (Remember that `decode()` means to convert octets from a known encoding into Perl's internal Unicode form and `encode()` means to convet from Perl's internal form into a known encoding.)
 
       use Encode qw(encode decode);
 

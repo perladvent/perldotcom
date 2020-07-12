@@ -59,7 +59,7 @@ The callee side can unpack these parameters into a hash and treate the hash as i
 
 [Perl Best Practices](http://books.google.com/books?id=yMMRnPQ7CSMC) suggests passing a hash reference instead. This has one benefit of performing hash construction checking on the caller side, where it's most likely you'll make mistakes and another benefit of minimizing copying and memory use. The former benefit is compelling, if somewhat less common in practice.
 
-This technique works well with [import()]({{</* perlfunc "import" */>}}); you can process as many parameters as you like before slurping the remainder into a hash:
+This technique works well with [import()]({{< perlfunc "import" >}}); you can process as many parameters as you like before slurping the remainder into a hash:
 
         sub import
         {

@@ -20,7 +20,7 @@
 
 Unicode defines several characters as providing vertical whitespace, like the carriage return or newline characters. Unicode also gathers several characters under the banner of a *linebreak sequence*. A Unicode linebreak matches the two-character CRLF grapheme or any of the seven vertical whitespace characters.
 
-As documented in [perldoc perlrebackslash]({{</* perldoc "perlrebackslash" */>}}), the `\R` regex backslash sequence matches any Unicode linebreak sequence. (Similarly, the `\v` sequence matches any single character of vertical whitespace.)
+As documented in [perldoc perlrebackslash]({{< perldoc "perlrebackslash" >}}), the `\R` regex backslash sequence matches any Unicode linebreak sequence. (Similarly, the `\v` sequence matches any single character of vertical whitespace.)
 
 This is useful for dealing with textﬁles coming from diﬀerent operating systems:
 

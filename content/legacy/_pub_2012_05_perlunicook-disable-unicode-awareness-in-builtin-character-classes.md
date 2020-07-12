@@ -20,7 +20,7 @@
 
 Many regex tutorials gloss over the fact that builtin character classes include far more than ASCII characters. In particular, classes such as "word character" (`\w`), "word boundary" (`\b`), "whitespace" (`\s`), and "digit" (`\d`) respect Unicode.
 
-Perl 5.14 added the `/a` regex modifier to disable `\w`, `\b`, `\s`, `\d`, and the POSIX classes from working correctly on Unicode. This restricts these classes to mach only ASCII characters. Use the [re]({{</* perldoc "re" */>}}) pragma to restrict these claracter classes in a lexical scope:
+Perl 5.14 added the `/a` regex modifier to disable `\w`, `\b`, `\s`, `\d`, and the POSIX classes from working correctly on Unicode. This restricts these classes to mach only ASCII characters. Use the [re]({{< perldoc "re" >}}) pragma to restrict these claracter classes in a lexical scope:
 
      use v5.14;
      use re "/a";

@@ -271,7 +271,7 @@ method dump ( $ds, Int $depth = 0 --> Str ) {
   }
 ```
 
-As I got further into this code, I looked at Perl 5's [Data::Dumper]({{<mcpan "Data::Dumper" >}}), but discovered that this isn't the same sort of thing. That module outputs Perl code that I could [eval]({{</* perlfunc "eval" */>}}) to get back the same data structure. I didn't want that [can of worms](https://www.masteringperl.org/2012/12/the-storable-security-problem/) in my module.
+As I got further into this code, I looked at Perl 5's [Data::Dumper]({{<mcpan "Data::Dumper" >}}), but discovered that this isn't the same sort of thing. That module outputs Perl code that I could [eval]({{< perlfunc "eval" >}}) to get back the same data structure. I didn't want that [can of worms](https://www.masteringperl.org/2012/12/the-storable-security-problem/) in my module.
 
 Beyond what I've shown here, I've been fiddling with formatting and other minor things as I run into problems. If there's something that you'd like to do with the code, you can contribute through the [PrettyDump GitHub repo](https://github.com/briandfoy/perl6-PrettyDump), or even fork my code as the basis for your own experiments.
 

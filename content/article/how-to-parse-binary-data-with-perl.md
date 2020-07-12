@@ -56,7 +56,7 @@ Now comes the fun part. I've got to split out the data in `$bytes` into separate
 >
 > <cite>Tzfile manual</cite>
 
-The `unpack` function takes a template of the binary data to read (this is defined in the pack [documentation]({{</* perlfunc "pack" */>}})) and returns Perl variables. I'm going to match up the header description with the template codes to design the template.
+The `unpack` function takes a template of the binary data to read (this is defined in the pack [documentation]({{< perlfunc "pack" >}})) and returns Perl variables. I'm going to match up the header description with the template codes to design the template.
 
 
 | Description  |   Example  | Type       | Length | Template Code|
@@ -97,7 +97,7 @@ This gives you a chance to inspect the data byte by byte and see if it matches y
 
 The other thing to be aware of is [endianness](https://en.wikipedia.org/wiki/Endianness) of the data. Often man pages will say a variable is in "standard" or "network" order. This means big endian. Tzfiles have several 32 bit signed integers in big endian order. There is no `unpack` template code which matches that type. To match it I need to use `l>`. The `l` matches signed 32 bit integers and the `>` is a modifier which tells Perl the value is big endian.
 
-Between Perl's built-in template [types]({{</* perlfunc "pack" */>}}) and the modifiers, you can match any binary data.
+Between Perl's built-in template [types]({{< perlfunc "pack" >}}) and the modifiers, you can match any binary data.
 
 ### More binary parsing examples
 

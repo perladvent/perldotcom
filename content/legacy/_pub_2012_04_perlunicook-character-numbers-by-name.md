@@ -18,7 +18,7 @@
 ℞ 7: Get character number by name
 ---------------------------------
 
-Unicode allows you to refer to characters by number or by name. Computers don't care, but humans do. When you have a character name, you can translate it to its number with the [charnames]({{</* perldoc "charnames" */>}}) pragma:
+Unicode allows you to refer to characters by number or by name. Computers don't care, but humans do. When you have a character name, you can translate it to its number with the [charnames]({{< perldoc "charnames" >}}) pragma:
 
      use charnames ();
     my $number = charnames::vianame("GREEK CAPITAL LETTER SIGMA");

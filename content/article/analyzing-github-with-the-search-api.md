@@ -140,7 +140,7 @@ for (sort { $languages{$b} <=> $languages{$a} } keys %languages) {
 
 Let's walk through this code. First of all, I changed the search argument to limit results to repos created since September 2014 using the `created` qualifier. This was to ensure we didn't hit the 1,000 result search limit. The GitHub search API supports a whole range of useful [search qualifiers](https://developer.github.com/v3/search/#parameters) (although it's not documented, `created` will take a full timestamp like `2014-09-01T00:00:00Z`).
 
-Next I declared the `%languages` hash and iterated through the results, extracting each repo's language. Where language was `undef`, I labelled the repo "Other". Finally I sorted the results and printed them using [printf]({{</* perlfunc "printf" */>}})to get a nicely formatted output. Here are the results:
+Next I declared the `%languages` hash and iterated through the results, extracting each repo's language. Where language was `undef`, I labelled the repo "Other". Finally I sorted the results and printed them using [printf]({{< perlfunc "printf" >}})to get a nicely formatted output. Here are the results:
 
 ```perl
      Shell:   238

@@ -20,7 +20,7 @@ The 7th edition of [Learning Perl](https://www.learning-perl.com/) is due to be 
 
 ### 1. Stacked file test operators
 
-You probably know that Perl supports a bunch of [file test operators]({{</* perlfunc "-X" */>}}) that do useful things like check if a file exists, if it's readable and so on:
+You probably know that Perl supports a bunch of [file test operators]({{< perlfunc "-X" >}}) that do useful things like check if a file exists, if it's readable and so on:
 
 ```perl
   if (-e $filepath && -r $filepath) {
@@ -36,7 +36,7 @@ But did you know that since version 5.10, you can stack file test operators?
   }
 ```
 
-This way is cleaner and shorter. Oh and bonus! file test operators work on filehandles too. Stacked file operators are not part of the [feature]({{</* perldoc "feature" */>}}) pragma, so an explicit `use 5.10.0;` is not required, although if your code is going to be shared, you should probably include it.
+This way is cleaner and shorter. Oh and bonus! file test operators work on filehandles too. Stacked file operators are not part of the [feature]({{< perldoc "feature" >}}) pragma, so an explicit `use 5.10.0;` is not required, although if your code is going to be shared, you should probably include it.
 
 ### 2. Glob's checkered past
 
@@ -116,7 +116,7 @@ Woah, mine is pretty out of date. I should upgrade ...
 
 ### 5. Avoiding the shell for system commands
 
-The Perl built-in functions [exec]({{</* perlfunc "exec" */>}}) and [system]({{</* perlfunc "system" */>}}) *may* invoke the shell when running a system command. Generally you want to avoid this as invoking the shell is slower than executing the command directly. Perl looks at the first argument passed to `exec` or `system` and if it contains shell [metacharacters](http://faculty.salina.k-state.edu/tim/unix_sg/shell/metachar.html) invokes the shell.
+The Perl built-in functions [exec]({{< perlfunc "exec" >}}) and [system]({{< perlfunc "system" >}}) *may* invoke the shell when running a system command. Generally you want to avoid this as invoking the shell is slower than executing the command directly. Perl looks at the first argument passed to `exec` or `system` and if it contains shell [metacharacters](http://faculty.salina.k-state.edu/tim/unix_sg/shell/metachar.html) invokes the shell.
 
 ```perl
 my $command = join " ", $program, $arg1, $arg2;

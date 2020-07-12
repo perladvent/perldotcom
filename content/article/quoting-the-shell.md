@@ -21,7 +21,7 @@ By some alignment of the stars, lately I've run into the same problem in differe
 
 Ever wonder why web forms have weird restrictions on whitespace? It's probably because the backend can't deal with values with whitespace or other special characters. Or, at some point the programmer dealt with such a system and it scarred them for life; they are spacephobic. The mechanics of some underlying mechanism leak through and infect the application-level experience.
 
-We tend to assume that we can interpolate strings into a command line and everything will be fine, even if we actually know how that can be dangerous. I explain some of those dangers in [Mastering Perl](https://www.masteringperl.org) when I write about Perl's taint checking. You can also read about some of that in [perlsec]({{</* perldoc "perlsec" */>}}). I'll ignore all that for this short article.
+We tend to assume that we can interpolate strings into a command line and everything will be fine, even if we actually know how that can be dangerous. I explain some of those dangers in [Mastering Perl](https://www.masteringperl.org) when I write about Perl's taint checking. You can also read about some of that in [perlsec]({{< perldoc "perlsec" >}}). I'll ignore all that for this short article.
 
 My example here uses a macOS command that I have been playing with, but this applies to just about any Unix-ish external command. On Windows, you have additional concerns because you have to know what `cmd` is going to do as well has a particular program will handle its own argument string.
 
@@ -105,7 +105,7 @@ shellwords.pl
 vicunas.txt                    	Orange
 ```
 
-At one point I figured that I'd just [quotemeta]({{</* perlfunc "quotemeta" */>}}) the whole thing even though I knew that was designed to protect strings in regular expressions:
+At one point I figured that I'd just [quotemeta]({{< perlfunc "quotemeta" >}}) the whole thing even though I knew that was designed to protect strings in regular expressions:
 
 ```perl
 foreach my $file ( @ARGV ) {
@@ -158,7 +158,7 @@ foreach my $file ( @ARGV ) {
 
 Blerg. That works in this case but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). And it probably misses some other special cases, such as `$` for shell interpolation and shell backticks. Single quotes might fix that in Unix but won't in Windows. I'll show [String::ShellQuote]({{< mcpan "String::ShellQuote" >}}) later.
 
-I can open a pipe to the command and specify the command and its arguments as a list. This requires neither quoting nor escaping anything because each argument in Perl is one argument in the command (like [system]({{</* perlfunc "system" */>}}) in its list form):
+I can open a pipe to the command and specify the command and its arguments as a list. This requires neither quoting nor escaping anything because each argument in Perl is one argument in the command (like [system]({{< perlfunc "system" >}}) in its list form):
 
 ```perl
 foreach my $file ( @ARGV ) {
@@ -178,7 +178,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-Be careful with an array, though! An array of one element is not the list form! There's a slightly weird syntax to get around this. But the first array element in braces followed by the array. I explain this more in the "Secure Programming Techniques" chapter of [Mastering Perl](https://www.masteringperl.org), but the [exec docs]({{</* perlfunc "exec" */>}}) explain it too:
+Be careful with an array, though! An array of one element is not the list form! There's a slightly weird syntax to get around this. But the first array element in braces followed by the array. I explain this more in the "Secure Programming Techniques" chapter of [Mastering Perl](https://www.masteringperl.org), but the [exec docs]({{< perlfunc "exec" >}}) explain it too:
 
 ```perl
 my @array = ( "tag $file" );

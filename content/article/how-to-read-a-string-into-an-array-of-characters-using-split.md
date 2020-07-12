@@ -24,7 +24,7 @@ my $word = 'camel';
 my @letters = split(//, $word);
 ```
 
-Perl's official documentation has more on the split function. You can read it [online]({{</* perlfunc "split" */>}}) or by running the following command at the terminal:
+Perl's official documentation has more on the split function. You can read it [online]({{< perlfunc "split" >}}) or by running the following command at the terminal:
 
 ```perl
 perldoc -f split

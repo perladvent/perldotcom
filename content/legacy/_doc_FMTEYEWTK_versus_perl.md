@@ -15,7 +15,7 @@
 
 Back in the Perl4 days I made a list of the greatest 'gotchas' in Perl. Almost all of those have been subsequently fixed in current incarnations of Perl, some to my deep and abiding amazement. In that same spirit, here's of my current list of what's--um... let's be charitable and just say 'suboptimal' in Perl from a reasonably serious programming languages design point of view. I believe these are real gotchas, and not always obvious. A few of these are fixable through programming rigor; a few of them are rumored to be fixed in Larry's own copy of 5.002 :-); but a few are simply inherent design decisions that quite possibly cannot be solved without breaking what the language is, much as csh's design flaws cannot be solved.
 
-Of course, for many many kinds of apps, there's also so very much more that's *right* with Perl to make it not only a reasonable but often even the best choice from what's in the field today. I'm just trying to provide perspective here; think of it as eventual updates for the [perltrap]({{</* perldoc "perltrap" */>}}).
+Of course, for many many kinds of apps, there's also so very much more that's *right* with Perl to make it not only a reasonable but often even the best choice from what's in the field today. I'm just trying to provide perspective here; think of it as eventual updates for the [perltrap]({{< perldoc "perltrap" >}}).
 
 ### 1. Implicit Behaviours and Hidden Context Dependencies
 

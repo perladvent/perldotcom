@@ -82,12 +82,12 @@ Article subheadings are size `h2`. So use the following construct:
 
 Create links to CPAN modules with the `mcpan` shortcode:
 
-    [Business::ISBN]({{</* mcpan "Business::ISBN" */>}})
+    [Business::ISBN]({{< mcpan "Business::ISBN" >}})
 
 Create links to the official Perl documentation with either `perldoc` or `perlfunc` shortcodes:
 
-    [perldelta]({{</* perldoc "perldelta" */>}})
-    [sort]({{</* perlfunc "sort" */>}})
+    [perldelta]({{< perldoc "perldelta" >}})
+    [sort]({{< perlfunc "sort" >}})
 
 Internal references to other articles can be created using [relref](https://gohugo.io/extras/crossreferences/). So to link to the article "save space with bit arrays":
 

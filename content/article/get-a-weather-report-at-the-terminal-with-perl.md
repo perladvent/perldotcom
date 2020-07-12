@@ -158,7 +158,7 @@ for (@{ $w->hourly })
 }
 ```
 
-I've updated the code to store a default location called `$home_location`. I then ask the user to enter a City or zip code, making sure to [chomp]({{</* perlfunc "chomp" */>}}) the result. Later in the API call, the code: `$location || $home_location` will submit the home location unless the user has entered a location. Running the script now, I can get the weather for London easily:
+I've updated the code to store a default location called `$home_location`. I then ask the user to enter a City or zip code, making sure to [chomp]({{< perlfunc "chomp" >}}) the result. Later in the API call, the code: `$location || $home_location` will submit the home location unless the user has entered a location. Running the script now, I can get the weather for London easily:
 
 ```perl
 $ weather

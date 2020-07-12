@@ -19,7 +19,7 @@
 }
 
 
-The Perl [eval function]({{</* perlfunc "eval" */>}}) will execute any Perl code contained in a string that is passed to it. This article shows how eval can be used to execute Perl code stored in text files.
+The Perl [eval function]({{< perlfunc "eval" >}}) will execute any Perl code contained in a string that is passed to it. This article shows how eval can be used to execute Perl code stored in text files.
 
 Let's imagine that we want to execute this Perl statement stored in 'print.txt':
 

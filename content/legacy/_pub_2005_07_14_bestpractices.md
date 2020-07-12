@@ -537,7 +537,7 @@ Note, however, that the contents of paragraphs are only of secondary importance 
 
 ### 8. Throw Exceptions Instead of Returning Special Values or Setting Flags
 
-Returning a special error value on failure, or setting a special error flag, is a very common error-handling technique. Collectively, they're the basis for virtually all error notification from Perl's own built-in functions. For example, the built-ins `eval`, `exec`, `flock`, `open`, `print`, `stat`, and `system` all return special values on error. Unfortunately, they don't all use the same special value. Some of them also set a flag on failure. Sadly, it's not always the same flag. See the [perlfunc]({{</* perldoc "perlfunc" */>}}) manpage for the gory details.
+Returning a special error value on failure, or setting a special error flag, is a very common error-handling technique. Collectively, they're the basis for virtually all error notification from Perl's own built-in functions. For example, the built-ins `eval`, `exec`, `flock`, `open`, `print`, `stat`, and `system` all return special values on error. Unfortunately, they don't all use the same special value. Some of them also set a flag on failure. Sadly, it's not always the same flag. See the [perlfunc]({{< perldoc "perlfunc" >}}) manpage for the gory details.
 
 Apart from the obvious consistency problems, error notification via flags and return values has another serious flaw: developers can silently ignore flags and return values, and ignoring them requires absolutely no effort on the part of the programmer. In fact, in a void context, ignoring return values is Perl's default behavior. Ignoring an error flag that has suddenly appeared in a special variable is just as easy: you simply don't bother to check the variable.
 

@@ -20,7 +20,7 @@
 
 While the [standard Perl Unicode preamble](/pub/2012/04/perlunicook-standard-preamble.html) makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. The command-line arguments to your programs, available through `@ARGV`, may also need decoding.
 
-You can have Perl handle this operation for you automatically in two ways, and may do it yourself manually. As documented in [perldoc perlrun]({{</* perldoc "perlrun" */>}}), the `-C` flag controls Unicode features. Use the `A` modifier for Perl to treat your arguments as UTF-8 strings:
+You can have Perl handle this operation for you automatically in two ways, and may do it yourself manually. As documented in [perldoc perlrun]({{< perldoc "perlrun" >}}), the `-C` flag controls Unicode features. Use the `A` modifier for Perl to treat your arguments as UTF-8 strings:
 
          $ perl -CA ...
 

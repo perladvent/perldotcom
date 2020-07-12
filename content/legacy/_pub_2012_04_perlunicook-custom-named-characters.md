@@ -18,7 +18,7 @@
 ℞ 10: Custom named characters
 -----------------------------
 
-As several other recipes demonstrate, the [charnames]({{</* perldoc "charnames" */>}}) pragma offers considerable power to use and manipulate Unicode characters by their names. Its `:alias` option allows you to give your own lexically scoped nicknames to existing characters, or even to give unnamed private-use characters useful names:
+As several other recipes demonstrate, the [charnames]({{< perldoc "charnames" >}}) pragma offers considerable power to use and manipulate Unicode characters by their names. Its `:alias` option allows you to give your own lexically scoped nicknames to existing characters, or even to give unnamed private-use characters useful names:
 
      use charnames ":full", ":alias" => {
          ecute => "LATIN SMALL LETTER E WITH ACUTE",

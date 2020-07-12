@@ -303,7 +303,7 @@ This will delete all the build files and reset the working directory to normal.
 - [perlapi]({{< perldoc "perlapi" >}}) : C macros used to interact with Perl data structures (and the interpreter)
 - The [stdlib.h](http://pubs.opengroup.org/onlinepubs/9699919799/) man page defines the C standard library functions and types
 - For writing Makefile.PL files: ExtUtils::MakeMaker [docs]({{<mcpan "ExtUtils::MakeMaker" >}}) are invaluable
-- Perl's built-in [rand]({{</* perlfunc "rand" */>}}) and [srand]({{</* perlfunc "srand" */>}}) functions
+- Perl's built-in [rand]({{< perlfunc "rand" >}}) and [srand]({{< perlfunc "srand" >}}) functions
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

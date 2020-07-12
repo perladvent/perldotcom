@@ -132,7 +132,7 @@ Indeed it has haunted us since then, but that's not the end of the story.
 
 ### Variations
 
-Randal's use of the anonymous array is interesting, but it's not the only way to decorate the original value. You could compute the values and store them in a hash. Joseph Hall came up with something called the Orcish Maneuver - a clever pun on [Orc](http://lotr.wikia.com/wiki/Orcs) (perhaps) and "OR Cache". This doesn't use the [map]({{</* perlfunc "map" */>}}) function  or references:
+Randal's use of the anonymous array is interesting, but it's not the only way to decorate the original value. You could compute the values and store them in a hash. Joseph Hall came up with something called the Orcish Maneuver - a clever pun on [Orc](http://lotr.wikia.com/wiki/Orcs) (perhaps) and "OR Cache". This doesn't use the [map]({{< perlfunc "map" >}}) function  or references:
 
 ```perl
 my @sorted = sort {

@@ -35,7 +35,7 @@ You can convert any typical Perl script into a standalone app, as long as it doe
 #!/usr/bin/env perl
 ```
 
-This shebang line will call the "env" program passing "perl" as a parameter. This deals with the issue of the Perl binary beng installed in different locations on platforms as it will use the Perl binary in the user's $PATH. This is documented in [perlrun]({{</* perldoc "perlrun" */>}}). It is also compatible with Perlbrew.
+This shebang line will call the "env" program passing "perl" as a parameter. This deals with the issue of the Perl binary beng installed in different locations on platforms as it will use the Perl binary in the user's $PATH. This is documented in [perlrun]({{< perldoc "perlrun" >}}). It is also compatible with Perlbrew.
 
 ### Producing the single file app
 
