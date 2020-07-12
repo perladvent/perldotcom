@@ -76,7 +76,7 @@ In my world, PHP can be a good solution, and Perl can be a good solution, becaus
 <span id="more stories">More Stories</span>
 -------------------------------------------
 
-Here's another example, I think of the same thing. If you look in perlfaq4, you'll see a question that says \`\`[How do I handle linked lists?](https://perldoc.perl.org/perlfaq4.html#How%20do%20I%20handle%20linked%20lists%3f)'' The answer begins by saying \`\`In general, you usually don't need a linked list in Perl,'' which is exactly the right answer, and then goes on to explain how Perl arrays serve most of the purposes of linked lists. For example, people like to use linked lists to represent stacks in C; in Perl, the right approach is to use the `push()` and `pop()` functions on an array instead.
+Here's another example, I think of the same thing. If you look in perlfaq4, you'll see a question that says \`\`[How do I handle linked lists?]({{< perldoc "perlfaq4" "How-do-I-handle-linked-lists%3f" >}})'' The answer begins by saying \`\`In general, you usually don't need a linked list in Perl,'' which is exactly the right answer, and then goes on to explain how Perl arrays serve most of the purposes of linked lists. For example, people like to use linked lists to represent stacks in C; in Perl, the right approach is to use the `push()` and `pop()` functions on an array instead.
 
 But after explaining that linked lists are rarely useful in Perl, the manual goes on to show an implementation of linked lists: \`\`If you really, really wanted, you could use structures...'' and then the code follows. Avi recently asked me why it bothers to show an implementation, when it says before and after that the implementation is not useful for anything.
 
