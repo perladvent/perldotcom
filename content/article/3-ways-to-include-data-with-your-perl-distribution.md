@@ -120,18 +120,18 @@ WriteMakefile(
     VERSION_FROM     => 'lib/Data/Dir.pm',
     ABSTRACT_FROM    => 'lib/Data/Dir.pm',
     LICENSE          => 'Artistic_2_0',
-    PL_FILES         => {}, 
+    PL_FILES         => {},
     MIN_PERL_VERSION => 5.006,
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => 0,
-    },  
+    },
     BUILD_REQUIRES => {
         'Test::More' => 0,
-    },  
+    },
     PREREQ_PM => {
         #'ABC'              => 1.6,
         #'Foo::Bar::Module' => 5.0401,
-    },  
+    },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Data-Dir-*' },
 );
@@ -161,11 +161,11 @@ my $builder = Module::Build->new(
     },
     build_requires => {
         'Test::More' => 0,
-    },  
+    },
     requires => {
         #'ABC'              => 1.6,
         #'Foo::Bar::Module' => 5.0401,
-    },  
+    },
     add_to_cleanup     => [ 'Data-File-*' ],
     create_makefile_pl => 'traditional',
     share_dir => 'share',
@@ -183,17 +183,17 @@ package Data::File;
 use strict;
 use warnings;
 use YAML::XS;
-use File::Share ':all'; 
-    
-sub read_data {         
+use File::Share ':all';
+
+sub read_data {
     my $data_location = dist_file('Data-File', 'perl_tiobe.yaml');
     open (my $DATA, '<', $data_location) or die $!;
     my $yaml = do { local $/; <$DATA> };
-    my $data = Load $yaml; 
-    
+    my $data = Load $yaml;
+
     do { ... };
-}   
-        
+}
+
 1;
 ```
 

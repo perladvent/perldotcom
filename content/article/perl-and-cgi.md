@@ -58,7 +58,7 @@ print <<'END';
 END
 ```
 
-Of course, you don't have to just send HTML text. 
+Of course, you don't have to just send HTML text.
 
 ```perl
 #!/usr/bin/env perl
@@ -182,7 +182,7 @@ I use Template Toolkit for all my server-side web work. It's also the default in
 
 To use CGI, your web server should have [mod_cgi](http://httpd.apache.org/docs/current/mod/mod_cgi.html) installed. Once installed, you will have to to configure your server to execute CGI programs.
 
-The first way is to have `cgi-bin` directories where every file gets executed instead of transferred. 
+The first way is to have `cgi-bin` directories where every file gets executed instead of transferred.
 
     <Directory "/home/*/www/cgi-bin">
         Options ExecCGI
@@ -211,7 +211,7 @@ So that `foo.pl` will transfer but `foo.cgi` will run, even if both are executab
 
 It was marked deprecated with 5.20 and removed from Core with 5.22. This is not catastrophic; it is still available in CPAN, so you would have to install it, or have your administrator install it, depending on your circumstances.
 
-So, why did CGI drop from "state of the art" to discouraged by its own maintainers? 
+So, why did CGI drop from "state of the art" to discouraged by its own maintainers?
 
 There are two big issues with CGI: speed and complexity. Every HTTP request triggers the forking of a new process on the web server, which is costly for server resources. A more efficient and faster way is to use a multi-process daemon which does its forking on startup and maintains a pool of processes to handle requests.
 
