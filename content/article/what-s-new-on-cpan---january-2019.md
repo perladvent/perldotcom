@@ -17,37 +17,37 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 
 APIs & Apps
 -----------
-* [App::Perlambda](https://metacpan.org/pod/App::Perlambda) manages Perl AWS lambda functions - woot!
-* Tidy your MacOS Time Machine backups with [App::tmclean](https://metacpan.org/pod/distribution/App-tmclean/script/tmclean)
-* Use the Cisco Broadworks OCI-P API with [Broadworks::OCIP](https://metacpan.org/pod/Broadworks::OCIP)
-* [Kubernetes::REST](https://metacpan.org/pod/Kubernetes::REST) is a client for the Kubernetes REST API
-* [WebService::DailyConnect](https://metacpan.org/pod/WebService::DailyConnect) provides a client to download events from Daily Connect, the daycare information service
-* [WebService::Auth0](https://metacpan.org/pod/WebService::Auth0) is a client for auth0.com, the identification platform
-* [Win32::Backup::Robocopy](https://metacpan.org/pod/Win32::Backup::Robocopy) is a simple backup solution with a wrapper around robocopy
+* [App::Perlambda]({{< mcpan "App::Perlambda" >}}) manages Perl AWS lambda functions - woot!
+* Tidy your MacOS Time Machine backups with [App::tmclean]({{< mcpan "distribution/App-tmclean/script/tmclean" >}})
+* Use the Cisco Broadworks OCI-P API with [Broadworks::OCIP]({{< mcpan "Broadworks::OCIP" >}})
+* [Kubernetes::REST]({{< mcpan "Kubernetes::REST" >}}) is a client for the Kubernetes REST API
+* [WebService::DailyConnect]({{< mcpan "WebService::DailyConnect" >}}) provides a client to download events from Daily Connect, the daycare information service
+* [WebService::Auth0]({{< mcpan "WebService::Auth0" >}}) is a client for auth0.com, the identification platform
+* [Win32::Backup::Robocopy]({{< mcpan "Win32::Backup::Robocopy" >}}) is a simple backup solution with a wrapper around robocopy
 
 
 Config & Devops
 ---------------
-* [App::Dothe](https://metacpan.org/pod/App::Dothe) is a YAML-based task runner inspired by go-task
-* Generate and provide a CPAN::SQLite database using [WWW::CPAN::SQLite](https://metacpan.org/pod/WWW::CPAN::SQLite)
-* [Dir::Manifest](https://metacpan.org/pod/Dir::Manifest) can manage files conveniently via a manifest
+* [App::Dothe]({{< mcpan "App::Dothe" >}}) is a YAML-based task runner inspired by go-task
+* Generate and provide a CPAN::SQLite database using [WWW::CPAN::SQLite]({{< mcpan "WWW::CPAN::SQLite" >}})
+* [Dir::Manifest]({{< mcpan "Dir::Manifest" >}}) can manage files conveniently via a manifest
 
 
 Development & Version Control
 -----------------------------
-* Monitor `@INC` modification with [Acme::AtIncPolice](https://metacpan.org/pod/Acme::AtIncPolice)
-* Yet another class accessor generator: [Class::Data::Lite](https://metacpan.org/pod/Class::Data::Lite)
-* [Devel::Probe](https://metacpan.org/pod/Devel::Probe) is a quick & dirty code probe implementation
-* Trace calls in your code, optionally filtering CORE calls with [Devel::TRay](https://metacpan.org/pod/Devel::TRay)
-* Generate unique, expiring keys for your software with [Enterprise::Licence](https://metacpan.org/pod/Enterprise::Licence)
+* Monitor `@INC` modification with [Acme::AtIncPolice]({{< mcpan "Acme::AtIncPolice" >}})
+* Yet another class accessor generator: [Class::Data::Lite]({{< mcpan "Class::Data::Lite" >}})
+* [Devel::Probe]({{< mcpan "Devel::Probe" >}}) is a quick & dirty code probe implementation
+* Trace calls in your code, optionally filtering CORE calls with [Devel::TRay]({{< mcpan "Devel::TRay" >}})
+* Generate unique, expiring keys for your software with [Enterprise::Licence]({{< mcpan "Enterprise::Licence" >}})
 
 
 Web
 ---
-* Measure how long blocking/non-blocking Mojo ops take with [Devel::MojoProf](https://metacpan.org/pod/Devel::MojoProf)
-* Encode/decode short urls via bijection using [Short::URL](https://metacpan.org/pod/Short::URL)
-* Parse Kubernetes swagger/OpenAPI schema files with [Swagger::Schema::Kubernetes](https://metacpan.org/pod/Swagger::Schema::Kubernetes)
-* [Test::Mojo::Role::StopOnFail](https://metacpan.org/pod/Test::Mojo::Role::StopOnFail) stops Mojo tests after the first failure
-* Make URI parse unix websockets (ws+unix) using [URI::ws_Punix](https://metacpan.org/pod/URI::ws_Punix)
+* Measure how long blocking/non-blocking Mojo ops take with [Devel::MojoProf]({{< mcpan "Devel::MojoProf" >}})
+* Encode/decode short urls via bijection using [Short::URL]({{< mcpan "Short::URL" >}})
+* Parse Kubernetes swagger/OpenAPI schema files with [Swagger::Schema::Kubernetes]({{< mcpan "Swagger::Schema::Kubernetes" >}})
+* [Test::Mojo::Role::StopOnFail]({{< mcpan "Test::Mojo::Role::StopOnFail" >}}) stops Mojo tests after the first failure
+* Make URI parse unix websockets (ws+unix) using [URI::ws_Punix]({{< mcpan "URI::ws_Punix" >}})
 
 

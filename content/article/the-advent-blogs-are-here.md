@@ -24,7 +24,7 @@ The [Perl 6 Advent](https://perl6advent.wordpress.com/) has been going since 200
 
 Mojolicious
 -----------
-Recently celebrating its version 8 release, the [Mojolicious](https://metacpan.org/pod/Mojolicious) team are running an advent for the second year in a row on their [blog](https://mojolicious.io/blog/). It's not simply a web framework though: Sebastian Riedel and the Mojo team have created Mojo modules which are useful in their own right, such as for [parsing HTML](https://mojolicious.io/blog/2018/12/05/compound-selectors/). There is also the async job queue app, [Minion](https://mojolicious.io/blog/2018/12/10/minion-stands-alone/).
+Recently celebrating its version 8 release, the [Mojolicious]({{< mcpan "Mojolicious" >}}) team are running an advent for the second year in a row on their [blog](https://mojolicious.io/blog/). It's not simply a web framework though: Sebastian Riedel and the Mojo team have created Mojo modules which are useful in their own right, such as for [parsing HTML](https://mojolicious.io/blog/2018/12/05/compound-selectors/). There is also the async job queue app, [Minion](https://mojolicious.io/blog/2018/12/10/minion-stands-alone/).
 
 All three blogs will have new articles each day through December 24th. You can also jump to new articles in our convenient community article sidebar `--->`
 

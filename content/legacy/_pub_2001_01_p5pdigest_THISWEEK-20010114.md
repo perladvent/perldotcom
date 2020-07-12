@@ -41,7 +41,7 @@ In the end, Nick Ing-Simmons came up with a patch which provided roughly `sigset
 
 Alan did some more fiddling with optimization and Solaris configuration, and managed to get what he claimed was a 30% overall speedup - 18% due to `setjmp` and 12% due to optimizer settings. Numbers like that immediately sparked a debate on how you can conceivably benchmark a programming language manually; it's well known that the test suites exercises Perl in a number of non-standard ways, and really doesn't represent real world use. Alan said that his tests had been done on a real XS module for dealilng with Solaris accounting.
 
-Nicholas Clark asked what a sensible benchmark would be; he suggested Gisle's [perlbench](https://metacpan.org/search?q=perlbench), which was at least designed to try to be a fair test for Perl, but it seemed there was some confusion as to how it was supposed to work. Doug Bagley's [programming language shootout](http://www.bagley.org/~doug/shootout/) was also mentioned.
+Nicholas Clark asked what a sensible benchmark would be; he suggested Gisle's [perlbench]({{< mcpan PerlBench >}}), which was at least designed to try to be a fair test for Perl, but it seemed there was some confusion as to how it was supposed to work. Doug Bagley's [programming language shootout](http://www.bagley.org/~doug/shootout/) was also mentioned.
 
 Jarkko nailed the question, in the end : "The problem with all artificial benchmarks is that they are artificial." [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg00401.html)
 

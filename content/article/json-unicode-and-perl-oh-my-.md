@@ -25,8 +25,8 @@ my $decoded = Cpanel::JSON::XS->new()->decode($json)->[0];
 print Dumper( $json, $decoded );
 ```
 You might think this a reasonable enough round-trip, just using two
-different JSON libraries, [Mojo::JSON](https://metacpan.org/pod/Mojo::JSON)
-and [Cpanel::JSON::XS](https://metacpan.org/pod/Cpanel::JSON::XS).
+different JSON libraries, [Mojo::JSON]({{< mcpan "Mojo::JSON" >}})
+and [Cpanel::JSON::XS]({{< mcpan "Cpanel::JSON::XS" >}}).
 In fact, though, when you run
 this you’ll see that $decode in the above is `"\x{c3}\x{83}\x{c2}\x{a9}"`,
 not just the `"\xc3\xa9"` that we started with.
@@ -92,7 +92,7 @@ This will print:
 $VAR1 = "[\"\303\203\302\251\"]";
 $VAR2 = "[\"\x{c3}\x{a9}\"]";
 ```
-(Note that [Data::Dumper](https://metacpan.org/pod/Data::Dumper)
+(Note that [Data::Dumper]({{< mcpan "Data::Dumper" >}})
 outputs one string using octal escapes
 and the other using hex. This reflects another Perl interpreter
 implementation detail which, for now, is of no concern.)
@@ -225,7 +225,7 @@ About That Flag Behind the Curtain …
 ------------------------------------
 
 If you run the output from our two encoder methods through
-[Devel::Peek](https://metacpan.org/pod/Devel::Peek), you’ll
+[Devel::Peek]({{< mcpan "Devel::Peek" >}}), you’ll
 see something like this for Mojo::JSON’s output:
 ```
 SV = PV(0x7fdc27802f30) at 0x7fdc27e59c58
@@ -260,10 +260,10 @@ That being said,
 in limited contexts it _may_ work to imitate the distinction between string
 types in languages like Python and JavaScript by regarding
 UTF8-flagged strings as “character strings” and non-UTF8-flagged strings as
-“byte strings”—indeed, [multiple](https://metacpan.org/pod/Sereal::Encoder)
-[serializers](https://metacpan.org/pod/CBOR::XS)
-[on](https://metacpan.org/pod/CBOR::Free)
-[CPAN](https://metacpan.org/pod/CBOR::PP), including two of my own,
+“byte strings”—indeed, [multiple]({{< mcpan "Sereal::Encoder" >}})
+[serializers]({{< mcpan "CBOR::XS" >}})
+[on]({{< mcpan "CBOR::Free" >}})
+[CPAN]({{< mcpan "CBOR::PP" >}}), including two of my own,
 do exactly this. This isn’t
 a supported model, though, for using Perl strings, and any code that
 depends on it may behave differently in different Perl versions. Caveat
@@ -321,25 +321,25 @@ TOML is fairly new, and its specification is still in flux; nevertheless,
 it already undergirds a number of high-profile
 software projects like Rust’s [Cargo](https://doc.rust-lang.org/cargo/)
 package manager and [Hugo](https://gohugo.io/)—which powers this site! CPAN
-[hosts](https://metacpan.org/pod/TOML::Tiny)
-[several](https://metacpan.org/pod/TOML::Parser)
-[implementations](https://metacpan.org/pod/TOML) of this serialization.
+[hosts]({{< mcpan "TOML::Tiny" >}})
+[several]({{< mcpan "TOML::Parser" >}})
+[implementations]({{< mcpan "TOML" >}}) of this serialization.
 
 The aforementioned [CBOR](https://cbor.io) improves upon JSON’s efficiency and
 also allows for storage of binary strings. Whereas JSON encoders must
 stringify numbers and escape all strings, CBOR stores numbers “literally”
 and prefixes strings with their length, which obviates the need to escape those
 strings. These dramatically simplify both encoding and decoding. As with
-TOML and YAML, CPAN hosts [multiple](https://metacpan.org/pod/CBOR::XS)
-[CBOR](https://metacpan.org/pod/CBOR::Free)
-[implementations](https://metacpan.org/pod/CBOR::PP).
+TOML and YAML, CPAN hosts [multiple]({{< mcpan "CBOR::XS" >}})
+[CBOR]({{< mcpan "CBOR::Free" >}})
+[implementations]({{< mcpan "CBOR::PP" >}}).
 (Full disclosure: Two of these are of my own authorship.)
 
 [Sereal](https://github.com/Sereal/Sereal) is another great JSON substitute
 that confers most of CBOR’s benefits and can even serialize more
 “Perl-specific” items like regular expressions. This makes it ideal
 for Perl-to-Perl IPC. The reference implementation is CPAN’s
-[Sereal](https://metacpan.org/pod/Sereal) distribution.
+[Sereal]({{< mcpan "Sereal" >}}) distribution.
 Sereal isn’t as well-supported as CBOR outside Perl,
 though, so if you need to communicate with non-Perl code, Sereal may
 not work as well for you.
@@ -347,8 +347,8 @@ not work as well for you.
 [YAML](https://yaml.org/) is another format that humans can maintain easily.
 Unlike TOML, YAML supports binary strings; in fact, it’s flexible enough
 to replace Data::Dumper in many cases. CPAN includes
-a [number](https://metacpan.org/pod/YAML::XS)
-[of](https://metacpan.org/pod/YAML::PP)
-[libraries](https://metacpan.org/pod/YAML::Old) that implement YAML.
+a [number]({{< mcpan "YAML::XS" >}})
+[of]({{< mcpan "YAML::PP" >}})
+[libraries]({{< mcpan "YAML::Old" >}}) that implement YAML.
 
 Thank you for reading!
