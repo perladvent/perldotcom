@@ -67,7 +67,7 @@ The issue with this code is that if `$file` has the value of `ARGV`, the diamond
 
 The piping open behavior is well documented in [open]({{< perlfunc "open" >}}), [perlipc]({{< perldoc "perlipc" "Using-open%28%29-for-IPC" >}}) and [perlsec]({{< perldoc "perlsec" >}}). Chapter 2 of [Mastering Perl](http://masteringperl.org) also covers it. It's a useful feature when you want to efficiently process a lot of data from an external command: just like a shell pipe, it creates a socket between the Perl program and the external binary, avoiding the need to read the entire output into memory at once.
 
-Netanel also identified a SQL injection vulnerability in Bugzilla. The weakness was caused by a poorly coded function which failed to properly validate input used in a dynamic SQL query. The developers should have used the safer pass-by-parameter [DBI]({{<mcpan "DBI" >}}) `prepare` and `execute` functions.
+Netanel also identified a SQL injection vulnerability in Bugzilla. The weakness was caused by a poorly-coded function which failed to properly validate input used in a dynamic SQL query. The developers should have used the safer pass-by-parameter [DBI]({{<mcpan "DBI" >}}) `prepare` and `execute` functions.
 
 In both cases Perl provided methods for securely parsing untrusted input, but the developers didn't use them.
 

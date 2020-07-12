@@ -19,7 +19,7 @@
 *brian d foy is is a prolific Perl author, programmer and trainer whose new book, the second edition of Mastering Perl was recently published by O'Reilly. We caught up with brian to discuss the new book, his thoughts on technical writing and find out what other projects he's working on.*
 
 **Let's talk about the elephant in the room, that new cover of Mastering Perl. Do you like it?**
- I saw the change when the book was nearing completion, because they usually save that activity for the end of the publication process. I haven't seen it in print yet, but I don't think it will influence people that much, as people tend to buy technical books based on the title and the content rather than the cover. It seems similar to what Apple did with iOS 7—make everything very thin and flat. I'm getting old so I need everything to be bigger! It's something different than what people have seen before and I think it will take a while for the style to take hold and then people will identify it with the Perl series much like the previous style.
+I saw the change when the book was nearing completion, because they usually save that activity for the end of the publication process. I haven't seen it in print yet, but I don't think it will influence people that much, as people tend to buy technical books based on the title and the content rather than the cover. It seems similar to what Apple did with iOS 7—make everything very thin and flat. I'm getting old so I need everything to be bigger! It's something different than what people have seen before and I think it will take a while for the style to take hold and then people will identify it with the Perl series much like the previous style.
 
 ![](/images/67/mastering_perl_first_second_cover.png)
 
@@ -65,7 +65,7 @@ I'm not sure I would say I enjoy it more, it's a different sort of enjoyment. I 
 
 **The chapter structure of Mastering Perl is largely the same as before, do you think you got it right the first time around? I know there was a public development process that was involved.**
 
-I think we did. In the first edition of Mastering Perl I had a lot of input from Alison Randal (the editor) and she was a big name in the Perl community. Unfortunately she's moved on to other things, but she really knew Perl, the community, and how to program in Perl. So when we sat down to talk about the book, she had great ideas and input about how to organize things, and what to put and leave out.
+I think we did. In the first edition of Mastering Perl I had a lot of input from Alison Randal (the editor) and she was a big name in the Perl community. Unfortunately she's moved on to other things, but she really knew Perl, the community, and how to program in Perl. So when we sat down to talk about the book, she had great ideas and input about how to organize things, and what to put in or leave out.
 
 We ran the book completely in the open. As I wrote things I let people see it (which is a very dangerous thing to do!) and people were not shy in telling me what they thought. Which is great, because you want them to say it before the book is published and not afterwards in an Amazon review. So that process really shaped the book.
 
@@ -73,7 +73,7 @@ When I got to writing the second edition of Mastering Perl, I put it online agai
 
 The thing to remember for any book is that no book is going to give you everything. Learning Perl is a very targeted book. There's that Randal Schwartz quote: "80% of the behavior of Perl can be described in 20% of the documentation"<sup>[[1]](#1)</sup>.
 
-In Intermediate Perl we move on to how to write Perl with people in teams, reusable code, how to share it and references. But they're both very short books of about three hundred pages each and Mastering Perl is about the same size.
+In Intermediate Perl we move on to how to write Perl with people in teams, reusable code, how to share it, and references. But they're both very short books of about three hundred pages each and Mastering Perl is about the same size.
 
 If you look in some other languages and look at their books, they've got these gargantuan things that are a thousand pages or more. I know in Programming Perl we were limited to a certain page count because they couldn't physically bind it otherwise.
 
@@ -119,7 +119,7 @@ I think my book [Effective Perl Programming](http://www.effectiveperlprogramming
 
 Syntax highlighting is a personal decision though. For example in my terminal I have a black background and 30% opacity and yellow text. I work mostly in [BBEdit](http://www.barebones.com/products/bbedit/), and I just use the default syntax highlighting settings. Keywords are blue and comments are red and documentation is grey (I think). But when I look at code presented at conferences, there's all kinds of things going on: braces are a particular color, etc. Everyone has their own particular way that they expect to see things so if I choose one syntax highlighting scheme in the book, it's probably not going to work for anybody. Even the highlighting in Effective Perl Programming didn't work out because they didn't want to use red ink as they're worried about people who have trouble seeing red (it can appear as grey). So the publishers changed the color, and now the things that would have usually been red are cyan and it makes me feel weird reading it. Syntax highlighting is a personal preference, and choosing any one particular style will not work for the majority of readers of the book.
 
-I've always maintained that people should use whatever tools and settings they want to use. With the proviso that their choice does not affect anybody else. If I use BBEdit that's great as long as people using VI, Emacs or Komodo or whatever they want to use aren't affected.
+I've always maintained that people should use whatever tools and settings they want to use with the proviso that their choice does not affect anybody else. If I use BBEdit that's great as long as people using VI, Emacs or Komodo or whatever they want to use aren't affected.
 
 If we had really fancy ebooks—which I'm still waiting for as ebooks now are still mostly static content—but if we had really fancy ones where we could load our code settings into it where we could see the code in our preferred syntax highlighting style. But we don't have a way yet to inject a personal CSS into an ebook. I think there are huge missed opportunities there and I don't think we're going to get them now that Steve Jobs has passed on as I don't think anyone cares as much as he did about how things look.
 
