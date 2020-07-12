@@ -97,7 +97,7 @@ say fib(40);
 
 ### An END block in a looping one liner - Josh Goldberg
 
-Josh submitted a looping Perl one liner with a twist - once it has finished looping, the one liner executes a final block of code using Perl's [END](http://perldoc.perl.org/perlmod.html#BEGIN,-UNITCHECK,-CHECK,-INIT-and-END) block. For example this can be used to process a web server log, and then summarize the log statistics:
+Josh submitted a looping Perl one liner with a twist - once it has finished looping, the one liner executes a final block of code using Perl's [END]({{< perldoc "perlmod" "BEGIN,-UNITCHECK,-CHECK,-INIT-and-END" >}}) block. For example this can be used to process a web server log, and then summarize the log statistics:
 
 ```perl
 $ cat /var/log/httpd/access_log |perl -lne '/20\d\d:\d\d:\d\d/;$counts{$&}++;$t++}END { for (sort keys %counts) { print "$_: $counts{$_} (".sprintf("%.02f",$counts{$_}/$t*100)."%)" }'

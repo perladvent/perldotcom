@@ -105,7 +105,7 @@ Between Perl's built-in template [types]({{</* perlfunc "pack" */>}}) and the mo
 * There are some useful replies on the Perl Monks thread [Confession of a Perl Hacker](http://www.perlmonks.org/?node_id=53473).
 * The Perl Monks [Pack/Unpack tutorial](http://www.perlmonks.org/?node_id=224666) has some great information on the template types.
 * Entry 117 "Use pack and unpack for data munging" from [Effective Perl Programming](http://www.effectiveperlprogramming.com/) shows how to use `unpack` for fixed width data.
-* The official Perl documentation also has a pack/unpack [tutorial](http://perldoc.perl.org/perlpacktut.html).
+* The official Perl documentation also has a pack/unpack [tutorial]({{< perldoc "perlpacktut" >}}).
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

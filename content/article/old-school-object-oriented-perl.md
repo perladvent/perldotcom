@@ -489,7 +489,7 @@ say $circle->get_area;
 
 ### Wrap up
 
-This article has explored some of the core object oriented Perl functionality. For more information the official Perl documentation has a [tutorial](http://perldoc.perl.org/perlootut.html) and a [more detailed reference](perldoc.perl.org/perlobj.html). The definitive text on old school object oriented Perl is Damian Conway's [Object Oriented Perl](http://www.manning.com/conway/) (Manning, 1999).
+This article has explored some of the core object-oriented Perl functionality. For more information the official Perl documentation has a [OO tutorial]({{< perldoc "perlootut" >}}) and a [more detailed reference]({{< perldoc "perlobj" >}}). The definitive text on old school object oriented Perl is Damian Conway's [Object Oriented Perl](http://www.manning.com/conway/) (Manning, 1999).
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

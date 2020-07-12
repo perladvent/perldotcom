@@ -64,13 +64,13 @@ read $fh, my $file_content, -s $fh;
 
 ### PerlIO Layers
 
-When slurping a file, you may want to add a PerlIO layer [instruction](http://perldoc.perl.org/PerlIO.html) to the open argument:
+When slurping a file, you may want to add a PerlIO layer [instruction]({{< perldoc "PerlIO" >}}) to the open argument:
 
 ```perl
 open my $fh, '<:unix', 'text_document.txt' or die "Couldn't open $filename: $!";
 ```
 
-With this code the first line looks the same except `:unix` has been appended to the file open direction. You can read more about the PerlIO layers [here](http://perldoc.perl.org/PerlIO.html).
+With this code the first line looks the same except `:unix` has been appended to the file open direction. You can read more about the PerlIO layers [here]({{< perldoc "PerlIO" >}}).
 
 ### Yet another way
 

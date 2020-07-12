@@ -185,7 +185,7 @@ In case you're wondering, the variable `$0` is a special variable that is the pr
 
 ### Help text
 
-We're almost done, but Getopt::Long has more tricks up its sleeve. I'll add some basic documentation to this script, in [Pod](http://perldoc.perl.org/perlpod.html):
+We're almost done, but Getopt::Long has more tricks up its sleeve. I'll add some basic documentation to this script, in [Pod]({{< perldoc "perlpod" >}}):
 
 ```perl
 #!/usr/bin/env perl

@@ -43,7 +43,7 @@ I think ever since it came out it has been the best-selling Perl book. But nowhe
 
 **In the new edition of Mastering Perl, there is a lot of new content. Which parts of that content were you most happy with or excited to tell other people about?**
 
-The big changes were in the "Lightweight Persistence" and "Regular Expressions" chapters. In "Lightweight Persistence" we finally admitted to the community that [Storable](http://perldoc.perl.org/Storable.html#SECURITY-WARNING) has a a huge problem with security because in the Storable format we can inject various things to make Perl do things, especially with duplicate keys and class names that don't exist. I had to rewrite all of the book's content for Storable, and it was interesting to track that information down.
+The big changes were in the "Lightweight Persistence" and "Regular Expressions" chapters. In "Lightweight Persistence" we finally admitted to the community that [Storable]({{< perldoc "Storable" "SECURITY-WARNING" >}}) has a a huge problem with security because in the Storable format we can inject various things to make Perl do things, especially with duplicate keys and class names that don't exist. I had to rewrite all of the book's content for Storable, and it was interesting to track that information down.
 
 There's a lot that's happened between 2005 and now; for example JSON just exploded. It seems everyone is using it and not so much YAML anymore. So I had to add JSON in. In my programming, JSON features a lot in what I'm doing now. It's easy to exchange into other languages, to throw at your browser, and it's decent to read (at least, it's not that bad).
 

@@ -27,7 +27,7 @@ exercism comes with a command line app that downloads programming exercises and 
 
 When you are done and have submitted your Perl module via the command line app, you and other programmers can "nitpick" your code and comment on it. Once you feel you have gotten enough comments, you can finalize your submission and view other programmer's solutions for the same exercise. The kicker is that you only receive one programming exercise at a time, and cannot access another exercise until you complete the current one.
 
-Perl's TIMTOWTDI nature means that there are several correct solutions for the exercises and you can often learn something from viewing other programmers' solutions. For example in one exercise I used a regular expression only to find that the simpler [transliteration](http://perldoc.perl.org/perlop.html#Quote-and-Quote-like-Operators) operator worked just as well. The exercise difficulty varies from easy to hard, but the real challenge is finding a clean, generalized solution for the spec.
+Perl's TIMTOWTDI nature means that there are several correct solutions for the exercises and you can often learn something from viewing other programmers' solutions. For example in one exercise I used a regular expression only to find that the simpler [transliteration]({{< perldoc "perlop" "Quote-and-Quote-like-Operators" >}}) operator worked just as well. The exercise difficulty varies from easy to hard, but the real challenge is finding a clean, generalized solution for the spec.
 
 ### Try it out
 

@@ -170,7 +170,7 @@ happened to our `rand` xsub:
     }
 
 `xsubpp` has replaced our XS code with some rather ugly C macros! These macros
-are part of the Perl interpreter's C API. Many are documented in [perlapi](http://perldoc.perl.org/perlapi.html)
+are part of the Perl interpreter's C API. Many are documented in [perlapi]({{< perldoc "perlapi" >}})
 and they are usually defined in `XSUB.h` or `perl.h` in the Perl source code.
 
 So what are these macros doing? At a high level, `dVAR` and `dXSARGS` setup
@@ -299,8 +299,8 @@ This will delete all the build files and reset the working directory to normal.
 
 - This article and code are on CPAN as [XS::Tutorial::One]({{<mcpan "XS::Tutorial::One" >}})
 - XS Mechanics by Steven W. McDougall is my second favorite :) XS [tutorial](http://world.std.com/~swmcd/steven/perl/pm/xs/intro/)
-- [perlxs](http://perldoc.perl.org/perlxs.html) defines the keywords recognized by [xsubpp]({{<perldoc "xsubpp" >}})
-- [perlapi](http://perldoc.perl.org/perlapi.html) : C macros used to interact with Perl data structures (and the interpreter)
+- [perlxs]({{< perldoc "perlxs" >}}) defines the keywords recognized by [xsubpp]({{<perldoc "xsubpp" >}})
+- [perlapi]({{< perldoc "perlapi" >}}) : C macros used to interact with Perl data structures (and the interpreter)
 - The [stdlib.h](http://pubs.opengroup.org/onlinepubs/9699919799/) man page defines the C standard library functions and types
 - For writing Makefile.PL files: ExtUtils::MakeMaker [docs]({{<mcpan "ExtUtils::MakeMaker" >}}) are invaluable
 - Perl's built-in [rand]({{</* perlfunc "rand" */>}}) and [srand]({{</* perlfunc "srand" */>}}) functions

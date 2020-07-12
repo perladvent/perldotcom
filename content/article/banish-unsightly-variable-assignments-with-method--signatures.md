@@ -17,7 +17,7 @@
 }
 
 
-One drawback of Perl is that its subroutines and methods do not have signatures (ignoring [prototypes](http://perldoc.perl.org/perlsub.html#Prototypes)). This means that Perl developers have to write their own code for variable assignment and type checking which leads to repetitive and verbose code. This article shows how by using the [Method::Signatures]({{<mcpan "Method::Signatures" >}}) module developers can banish this boilerplate forever.
+One drawback of Perl is that its subroutines and methods do not have signatures (ignoring [prototypes]({{< perldoc "perlsub" "Prototypes" >}})). This means that Perl developers have to write their own code for variable assignment and type checking which leads to repetitive and verbose code. This article shows how by using the [Method::Signatures]({{<mcpan "Method::Signatures" >}}) module developers can banish this boilerplate forever.
 
 ### The func subroutine
 

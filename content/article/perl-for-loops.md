@@ -165,7 +165,7 @@ foreach (@perlvariable_regexes ){
 }
 ```
 
-For further detail on Perl's for loops, check out the [official Perl documentation](http://perldoc.perl.org/perlsyn.html#For-Loops)
+For further detail on Perl's for loops, check out the [official Perl documentation]({{< perldoc "perlsyn" "For-Loops" >}})
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

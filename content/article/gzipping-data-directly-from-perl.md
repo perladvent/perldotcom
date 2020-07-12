@@ -55,7 +55,7 @@ That's the general form that I can use with any sort of command. It has the draw
 
 ### Reading gzipped data
 
-To read a gzippped file in Perl, I can use the `gzip` I/O layer (see [perlopen](http://perldoc.perl.org/perlopentut.html)). Once I open the file, I can read its lines (assuming it's text) like I would a "normal" text file:
+To read a gzippped file in Perl, I can use the `gzip` I/O layer (see [perlopen]({{< perldoc "perlopentut" >}})). Once I open the file, I can read its lines (assuming it's text) like I would a "normal" text file:
 
 ```perl
 use PerlIO::gzip;

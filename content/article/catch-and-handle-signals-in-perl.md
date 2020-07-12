@@ -109,7 +109,7 @@ sub signal_handler {
 }
 ```
 
-There is a lot more to sigtrap, check out the [sigtrap perldoc entry](http://perldoc.perl.org/sigtrap.html) for more details about its functionality.
+There is a lot more to sigtrap, check out the [sigtrap perldoc entry]({{< perldoc "sigtrap" >}}) for more details about its functionality.
 
 ### Useful signal handling behavior
 

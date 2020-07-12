@@ -88,7 +88,7 @@ that's where the `CODE` section comes in. Here we can write C code which
 forms the body of the function. In this example, I add the two subroutine
 parameters together and assign the result to `RETVAL`.
 
-[RETVAL](https://perldoc.perl.org/perlxs.html#The-RETVAL-Variable) ("RETurn VALue") is a special variable that is declared by the xsub processor
+[RETVAL]({{< perldoc "perlxs" "The-RETVAL-Variable" >}}) ("RETurn VALue") is a special variable that is declared by the xsub processor
 (xsubpp). The `OUTPUT` section accepts the return variable for the xsub, placing
 it on the stack, so that calling code will receive it.
 
@@ -214,6 +214,6 @@ you have enough to get started writing your own XS code.
 ### References
 
 - This documentation and code is on CPAN ([XS::Tutorial]({{< mcpan "XS::Tutorial" >}}))
-- [perlxs](http://perldoc.perl.org/perlxs.html) defines the keywords recognized by [xsubpp]({{<perldoc "xsubpp" >}})
-- [perlapi](http://perldoc.perl.org/perlapi.html) lists the C macros used to interact with Perl data structures (and the interpreter)
+- [perlxs]({{< perldoc "perlxs" >}}) defines the keywords recognized by [xsubpp]({{<perldoc "xsubpp" >}})
+- [perlapi]({{< perldoc "perlapi" >}}) lists the C macros used to interact with Perl data structures (and the interpreter)
 - The [stdint.h](http://pubs.opengroup.org/onlinepubs/009695399/basedefs/stdint.h.html) C library provides sets of portable integer types

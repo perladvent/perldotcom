@@ -251,7 +251,7 @@ using
 octal escapes but Cpanel::JSON::XS’s using hex: Data::Dumper recognizes the
 UTF8 flag and renders its output based on it.
 
-As [perldoc perlunifaq](https://perldoc.perl.org/perlunifaq.html#What-is-%22the-UTF8-flag%22%3f) makes clear, though, the UTF8 flag is **not** meant for
+As [perldoc perlunifaq]({{< perldoc "perlunifaq" "What-is-%22the-UTF8-flag%22%3f" >}}) makes clear, though, the UTF8 flag is **not** meant for
 consumption by Perl code. Perl applications should regard strings as
 simple sequences of code points, without regard for how the
 Perl interpreter may store those strings in memory.

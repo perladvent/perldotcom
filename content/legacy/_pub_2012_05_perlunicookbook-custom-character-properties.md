@@ -20,7 +20,7 @@
 
 [Match Unicode Properties in Regex](/pub/2012/05/perlunicook-match-unicode-properties-in-regex.html) explained that ever Unicode character has one or more properties, specified by the Unicode consortium. You may extend these rule to define your own properties such that Perl can use them.
 
-A custom property is a function given a name beginning with `In` or `Is` which returns a string conforming to a special format. The ["User-Defined Character Properties" section of perldoc perlunicode](http://perldoc.perl.org/perlunicode.html#User-Defined-Character-Properties) describes this format in more detail.
+A custom property is a function given a name beginning with `In` or `Is` which returns a string conforming to a special format. The ["User-Defined Character Properties" section of perldoc perlunicode]({{< perldoc "perlunicode" "User-Defined-Character-Properties" >}}) describes this format in more detail.
 
 To deﬁne at compile-time your own custom character properties for use in regexes:
 

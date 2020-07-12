@@ -215,8 +215,8 @@ Finally, in order to get the data back out of a bit array it needs to be tested 
 ### References
 
 * Wikipedia has useful entries on [bit arrays](https://en.wikipedia.org/wiki/Bit_array) and [bitwise operators](https://en.wikipedia.org/wiki/Bitwise_operation)
-* Perl's official [operator documentation](http://perldoc.perl.org/perlop.html) covers the bitwise operators. You can read it in the terminal with the command `perldoc perlop`
 * Use Perl's builtin functions [sprintf]({{</* perlfunc "sprintf" */>}}) (`perldoc -f sprintf`) and [printf]({{</* perlfunc "printf" */>}}) (`perldoc -f printf`) to inspect binary values
+* Perl's official [operator documentation]({{< perldoc "perlop" >}}) covers the bitwise operators. You can read it in the terminal with the command `perldoc perlop`
 * Stringifying / printing numbers as binary isn't the only nice binary feature Perl has over other languages. Another is the ability to write binary numbers inline, just like octal and hexadecimal numbers, for example: `0b00001000`. This is great for comparing binary numbers
 * [bigint]({{<mcpan "bigint" >}}) is one of several modules on CPAN for working with large integers, see [using bit arrays with large integers](http://perltricks.com/article/using-bitmasks-with-large-integers/)
 

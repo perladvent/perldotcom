@@ -70,7 +70,7 @@ CHECK {
 }
 ```
 
-Walking through this code, you might be wondering what that strange `CHECK` block is for. This ensures that the code within the block is loaded after the program compilation phase has finished, reducing the risk of the program loading another module after DidYouMean.pm has already exported it's `AUTOLOAD` subroutine. Perl defines several named code [blocks](http://perldoc.perl.org/perlmod.html#BEGIN%2c-UNITCHECK%2c-CHECK%2c-INIT-and-END) (you are probably familiar with `BEGIN`). The downside of using a check block is if the module is loaded using `require` instead of `use`, this block will not be executed at all.
+Walking through this code, you might be wondering what that strange `CHECK` block is for. This ensures that the code within the block is loaded after the program compilation phase has finished, reducing the risk of the program loading another module after DidYouMean.pm has already exported it's `AUTOLOAD` subroutine. Perl defines several named code [blocks]({{< perldoc "perlmod" "BEGIN%2c-UNITCHECK%2c-CHECK%2c-INIT-and-END" >}}) (you are probably familiar with `BEGIN`). The downside of using a check block is if the module is loaded using `require` instead of `use`, this block will not be executed at all.
 
 The code then adds the `AUTOLOAD`subroutine to main (the namespace of the executing program) and every other namespace in the symbol table. I got the syntax for this from the "Dynamic Subroutines" chapter of [Mastering Perl](http://shop.oreilly.com/product/0636920012702.do).
 

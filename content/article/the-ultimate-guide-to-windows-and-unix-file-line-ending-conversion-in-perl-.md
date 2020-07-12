@@ -79,7 +79,7 @@ We also had to use the quoting operator ("q()") to quote our content instead of 
 
 ### Further Reading
 
-Perl's offical documentation "perlrun" entry has a lot of detail on Perl's command line switches. Access it [online](http://perldoc.perl.org/perlrun.html) or at the command line by typing: "perldoc perlrun"
+Perl's offical documentation "perlrun" entry has a lot of detail on Perl's command line switches. Access it [online]({{< perldoc "perlrun" >}}) or at the command line by typing: "perldoc perlrun"
 
 Peteris Krummins' [website](http://www.catonmat.net/) provides loads of Perl one liners. His new book [Perl One-Liners: 130 Programs That Get Things Done](http://www.amazon.com/gp/product/159327520X/ref=as_li_qf_sp_asin_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=159327520X&linkCode=as2&tag=perltrickscom-20) has just been published (affiliate link). It contains many useful one liners, but also 9 pages of detailed guidance on running one liners on Windows - highly recommended!
 

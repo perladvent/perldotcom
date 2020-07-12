@@ -49,7 +49,7 @@ Because Perl's `cmp` operator does only a bit comparison not an alphabetic one, 
 
 The problem is that that `cmp` for the record's `SURNAME` field is *not* an alphabetic comparison. It's merely a code point comparison. That means it works like C's `strcmp` function or Java's `String.compareTo` method. Although commonly referred to as a "lexicographic" comparison, this is a gross misnomer: it's about as far away from the way *real* lexicographers sort dictionary entries as you can get without flipping a coin.
 
-Fortunately, you don't have to come up with your own algorithm for dictionary sorting, because Perl provides a standard class to do this for you: [Unicode::Collate](https://perldoc.perl.org/Unicode/Collate.html). Don't let the name throw you, because while it was first invented for Unicode, it works great on regular ASCII text, too, and does a better job at making lexicographers happy than a plain old `sort` ever manages.
+Fortunately, you don't have to come up with your own algorithm for dictionary sorting, because Perl provides a standard class to do this for you: [Unicode::Collate]({{< mcpan "Unicode::Collate" >}). Don't let the name throw you, because while it was first invented for Unicode, it works great on regular ASCII text, too, and does a better job at making lexicographers happy than a plain old `sort` ever manages.
 
 If you have code that purports to sort text that looks like this:
 

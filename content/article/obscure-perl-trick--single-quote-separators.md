@@ -10,7 +10,7 @@
     "categories": "development"
   }
 
-One of the delights of working in an old language with penchant for backwards-compatibility is discovering some of the artifacts that remain. A couple of weeks ago I was reading [perlmod](http://perldoc.perl.org/perlmod.html) and came across this:
+One of the delights of working in an old language with penchant for backwards-compatibility is discovering some of the artifacts that remain. A couple of weeks ago I was reading [perlmod]({{< perldoc "perlmod" >}}) and came across this:
 
    > The old package delimiter was a single quote ... which was there
    > to make Ada programmers feel like they knew what was going on ...
@@ -50,7 +50,7 @@ You can see that the single quote can replace both namespace separators in the p
 ### References
 
 * A detailed [account](http://archive.adaic.com/pol-hist/history/holwg-93/holwg-93.htm) of the Higher Order Language Working Group that produced Ada
-* You can read perlmod [online](http://perldoc.perl.org/perlmod.html) or at the command line by typing `perldoc perlmod`.
+* You can read perlmod [online]({{< perldoc "perlmod" >}}) or at the command line by typing `perldoc perlmod`.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

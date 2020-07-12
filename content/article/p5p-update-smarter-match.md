@@ -13,7 +13,7 @@
 
 *This post will be part of a new communication channel between p5p and the community. We hope to share more with you and keep you up-to-date using this platform.*
 
-On December 20th, 2017, we released Perl 5.27.7, which included a massive change to [smartmatch](http://perldoc.perl.org/perlop.html#Smartmatch-Operator). Since then it has been reverted. What happened?
+On December 20th, 2017, we released Perl 5.27.7, which included a massive change to [smartmatch]({{< perldoc "perlop" "Smartmatch-Operator" >}}). Since then it has been reverted. What happened?
 
 Smartmatch has a long history. It was introduced in 5.10 back in December 2007 and significantly revised in 5.10.1. It was a good idea, but ended up causing more harm than good to the point it was deemed unreliable.
 

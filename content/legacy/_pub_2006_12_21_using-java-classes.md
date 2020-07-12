@@ -117,7 +117,7 @@ The code adds static fields by modifying the symbol table so that the wrappers p
     *BINARY = *Java::JCR::javax::jcr::PropertyType::BINARY;
     *LONG = *Java::JCR::javax::jcr::PropertyType::LONG;
 
-For those who may not know, the first line makes the name `Java::JCR::PropertyType::STRING` exactly identical to using the longer name, `Java::JCR::javax::jcr::Property::STRING` by modifying the [symbol table](http://perldoc.perl.org/perlmod.html#Symbol-Tables-symbol-table-stash-%25%3a%3a-%25main%3a%3a-typeglob-glob-alias) directly.
+For those who may not know, the first line makes the name `Java::JCR::PropertyType::STRING` exactly identical to using the longer name, `Java::JCR::javax::jcr::Property::STRING` by modifying the [symbol table]({{< perldoc "perlmod" "Symbol-Tables-symbol-table-stash-%25%3a%3a-%25main%3a%3a-typeglob-glob-alias" >}}) directly.
 
 OK, looking at that, you probably want to know why all the `Inline::Java` stubs now have `Java::JCR` on the front of them. The reason is that in the generated code, I use the `study_classes()` routine to import the Java code and specify that the base package for the import should be `Java::JCR`:
 

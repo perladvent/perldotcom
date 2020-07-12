@@ -51,7 +51,7 @@ When editing a throwaway script, I start by deleting the terminator word ("EOF" 
 
 * The Wikipedia [here-docs entry](https://en.wikipedia.org/wiki/Heredoc#Unix_shells) has examples of shell here-doc syntax.
 * The bash manpage (`man bash`) has a concise but useful entry on shell here-docs and the different types.
-* The more common way to use here-docs is inside Perl code. Read about _those_ in [perlop](http://perldoc.perl.org/perlop.html), the official Perl documentation.Read it in the terminal with `perldoc perlop`.
+* The more common way to use here-docs is inside Perl code. Read about _those_ in [perlop]({{< perldoc "perlop" >}}), the official Perl documentation.Read it in the terminal with `perldoc perlop`.
 * [HTTP::Tiny]({{<mcpan "HTTP::Tiny" >}}) is a lightweight, _fast_ Perl user agent that comes bundled with Perl (since version 5.14.0). You probably have it installed already, so you can read it's documentation with `perldoc HTTP::Tiny`.
 
 N.B. When reading documentation in the terminal, type `/search-term<enter>` to jump to the next search match. Pressing `n` will jump to the next match and `N` the previous match. Pressing `h` will display the help page. (all of this assumes your terminal reader is `less`, which is typical).

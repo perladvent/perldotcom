@@ -31,7 +31,7 @@ N.B. on Windows `truncate` requires the file to not be open elsewhere on the sys
 
 ### Looking up Perl functions
 
-Do you know Perl has around 220 built in functions? You can read about them all in [perlfunc](http://perldoc.perl.org/perlfunc.html), or at the terminal with `perldoc perlfunc`. Read more about the [truncate]({{</* perlfunc "truncate" */>}}) function at the terminal with `perldoc -f truncate`.
+Do you know Perl has around 220 built in functions? You can read about them all in [perlfunc]({{< perldoc "perlfunc" >}}), or at the terminal with `perldoc perlfunc`. Read more about the [truncate]({{< perlfunc "truncate" >}}) function at the terminal with `perldoc -f truncate`.
 
 **Vim users** if you're editing Perl code and want to lookup a function, place the cursor on the function word and type `Shift-k` to lookup the function in perldoc (works for Python, Ruby, C etc too).
 

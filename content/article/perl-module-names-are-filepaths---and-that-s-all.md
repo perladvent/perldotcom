@@ -18,7 +18,7 @@ require Test::More; # load Test/More.pm
 Test::More::ok 1; # call the ok function in the Test::More namespace
 ```
 
-In this example, `Test::More` appears twice, but it really refers to two separate things; the first is a filepath, the second is a symbol namespace. They do not have to have the same name. Unfortunately [perlmod](http://perldoc.perl.org/perlmod.html) perpetuates this myth:
+In this example, `Test::More` appears twice, but it really refers to two separate things; the first is a filepath, the second is a symbol namespace. They do not have to have the same name. Unfortunately [perlmod]({{< perldoc "perlmod" >}}) perpetuates this myth:
 
 > A module is just a set of related functions in a library file, i.e., a
 > Perl package with the same name as the file.

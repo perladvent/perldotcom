@@ -15,7 +15,7 @@
 Today's hidden gem is Tom Christiansen's Perl [style guide]({{< relref "_doc_FMTEYEWTK_style_slide-index.md" >}}). It's a collection of 44 slides of Tom's advice regarding Perl style, from specific rules ("Uncuddled elses") to general philosphy:
 
 > Strive always to create code that is functional, minimal, flexible, and understandable – not necessarily in that order
-> 
+>
 
 Dating from 1998, the guide is twenty years old and at times, shows its age. For example, the recommendation to use `#!/usr/bin/perl -w` instead of the warnings pragma. I wonder what Tom would change if he had the opportunity to review it.
 
@@ -27,5 +27,5 @@ Much of the advice however, is timeless. It's peppered with quotes from various 
 I also encountered several ideas I wasn't previously aware of ("Name hashes for their values, not their keys"). Given the guide's age, perhaps these concepts are assumed knowledge, or maybe they fell out of fashion. Give Tom's [style guide]({{< relref "_doc_FMTEYEWTK_style_slide-index.md" >}}) a read, and judge for yourself.
 
 \
-N.B. Two other popular sources of Perl style are Damian Conway's [Perl Best Practices](http://shop.oreilly.com/product/9780596001735.do) and [perlstyle](http://perldoc.perl.org/perlstyle.html).
+N.B. Two other popular sources of Perl style are Damian Conway's [Perl Best Practices](http://shop.oreilly.com/product/9780596001735.do) and [perlstyle]({{< perldoc "perlstyle" >}}).
 

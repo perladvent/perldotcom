@@ -76,7 +76,7 @@ The goal of perl5i is to bring modern conveniences back to Perl 5. In the 15 yea
 
 Autoboxing is a big part of perl5i, allowing it to add convenience methods without having to add new keywords. Adding new keywords--which contracts the function names available to programmers--is a big thing holding Perl 5 back! Every potential new keyword is a debate over compatibility. Autoboxing eliminates that debate. It takes off the brakes.
 
-Some other examples: [how do I check if a scalar contains a number, an integer, or a float?](http://perldoc.perl.org/perlfaq4.html#How-do-I-determine-whether-a-scalar-is-a-number/whole/integer/float?) The Perl FAQ entry on the subject is two pages long offering five different possibilities, two of which require pasting code. Code in FAQs tends to rot, and perlfaq is no exception; without testing nobody noticed that those venerable regexes fail to catch "+1.23". How does perl5i do it?
+Some other examples: [How do I check if a scalar contains a number, an integer, or a float?]({{< perldoc "perlfaq4" "How-do-I-determine-whether-a-scalar-is-a-number/whole/integer/float?" >}}) The Perl FAQ entry on the subject is two pages long offering five different possibilities, two of which require pasting code. Code in FAQs tends to rot, and perlfaq is no exception; without testing nobody noticed that those venerable regexes fail to catch "+1.23". How does perl5i do it?
 
     say "It's a number"   if $thing->is_number;
     say "It's an integer" if $thing->is_integer;
