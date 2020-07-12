@@ -29,7 +29,7 @@ If I'm using [Mojo::UserAgent](http://mojolicio.us/perldoc/Mojo/UserAgent), I ca
 use Mojo::UserAgent;
 my $ua = Mojo::UserAgent->new;
 
-my $dom = $ua->get( 'http://search.cpan.org/~bdfoy/' )
+my $dom = $ua->get( 'https://metacpan.org/author/BDFOY' )
     ->res
     ->dom;
 ```
@@ -57,183 +57,178 @@ print $module_list;
 Once I have the `$dom` object, I can use `find` to select elements. I give `find` a [CSS3 selector](http://mojolicio.us/perldoc/Mojo/DOM/CSS#SELECTORS), in this case just `a` to find all the anchor links. `find` returns a [Mojo::Collection](="http://mojolicio.us/perldoc/Mojo/Collection") object, a fancy way to store a list and do things do it. The Mojolicious style makes heavy use of method chaining so it needs a way to call methods on the result. In this example, I merely `join` the elements with a newline. These are the results:
 
 ```perl
-<a href="/"><img alt="CPAN" src="http://st.pimg.net/tucs/img/cpan_banner.png"></a>
-<a href="/">Home</a>
-<a href="/author/">Authors</a>
-<a href="/recent">Recent</a>
-<a href="http://log.perl.org/cpansearch/">News</a>
-<a href="/mirror">Mirrors</a>
-<a href="/faq.html">FAQ</a>
-<a href="/feedback">Feedback</a>
-<a href="Acme-BDFOY-0.01/">Acme-BDFOY-0.01</a>
-<a href="/CPAN/authors/id/B/BD/BDFOY/Acme-BDFOY-0.01.tar.gz">Download</a>
-<a href="/src/BDFOY/Acme-BDFOY-0.01/">Browse</a>
+<a data-target=".slidepanel" data-toggle="slidepanel" href="#">
+<i class="fa fa-bars icon-slidepanel"></i></a>
+<a href="/"><img alt="MetaCPAN icon" src="/static/icons/metacpan-icon.png">Home</a>
+<a href="https://grep.metacpan.org"><i class="fa fa-search"></i>grep::cpan</a>
+<a href="/recent"><i class="fa fa-history"></i>Recent</a>
+<a href="/about"><i class="fa fa-info"></i>About</a>
+<a href="/about/faq"><i class="fa fa-question"></i>FAQ</a>
+...
 ```
 
-That's a good start, but I extracted all of the links. I want to limit it to the links to my distributions. Looking at the HTML, I see that the link I want is in the first `td` tag in a `tr`:
+That's a good start, but I extracted all of the links. I want to limit it to the links to my distributions. Looking at the HTML, I see that there is a table with id `author_releases`:
 
 ```perl
-<tr class=s>
-    <td><a href="Data-Constraint-1.17/">Data-Constraint-1.17</a></td>
-    <td>prototypical value checking</td>
-    <td><small>[<a href="/CPAN/authors/id/B/BD/BDFOY/Data-Constraint-1.17.tar.gz">Download</a>] [<a
-      href="/src/BDFOY/Data-Constraint-1.17/">Browse</a>]</small></td>
-    <td nowrap>26 Aug 2014</td>
-   </tr>
+    <table  id="author_releases"
+  data-default-sort="1,0"
+  class="table table-condensed table-striped table-releases tablesorter">
+    <thead>
+    <tr>
+      <th class="river-gauge"><span class="sr-only">River gauge</span></th>
+      <th class="name pull-left-phone">Release</th>
+      <th class="hidden-phone invisible no-sort"></th>
+      <th class="date">Uploaded</th>
+    </tr>
+  </thead>
+  <tbody>
 ```
 
 I change my selector to look for the first anchor in the first table cell in a table row:
 
 ```perl
 my $module_list = $dom
-    ->find('tr td:first-child a:first-child')
+    ->find('table#author_releases tr td.name a.ellipsis')
     ->join("\n");
+
+print $module_list;
 ```
 
 Now I have a list of the links I want, but with the anchor HTML and text:
 
 ```perl
-<a href="Acme-BDFOY-0.01/">Acme-BDFOY-0.01</a>
-<a href="Apache-Htaccess-1.4/">Apache-Htaccess-1.4</a>
-<a href="Apache-iTunes-0.11/">Apache-iTunes-0.11</a>
-<a href="App-Module-Lister-0.15/">App-Module-Lister-0.15</a>
-<a href="App-PPI-Dumper-1.02/">App-PPI-Dumper-1.02</a>
+<a class="ellipsis" href="/release/App-Module-Lister" title="BDFOY/App-Module-Lister-0.153">App-Module-Lister-0.153</a>
+<a class="ellipsis" href="/release/App-PPI-Dumper" title="BDFOY/App-PPI-Dumper-1.021">App-PPI-Dumper-1.021</a>
+<a class="ellipsis" href="/release/App-scriptdist" title="BDFOY/App-scriptdist-0.242">App-scriptdist-0.242</a>
+<a class="ellipsis" href="/release/App-unichar" title="BDFOY/App-unichar-0.012">App-unichar-0.012</a>
+<a class="ellipsis" href="/release/App-url" title="BDFOY/App-url-1.004">App-url-1.004</a>
+<a class="ellipsis" href="/release/Brick" title="BDFOY/Brick-0.228">Brick-0.228</a>
+<a class="ellipsis" href="/release/Bundle-BDFOY" title="BDFOY/Bundle-BDFOY-20190721">Bundle-BDFOY-20190721</a>
 ```
 
 I still have a bit of work to do. I want to extract the value of the `href` attribute. I can do that with the `map` method from [Mojo::Collection](http://mojolicio.us/perldoc/Mojo/Collection):
 
 ```perl
 my $module_list = $dom
-    ->find('tr td:first-child a:first-child')
-    ->map( attr => 'href' )
+    ->find('table#author_releases tr td.name a.ellipsis')
+    ->map( 'text' )
     ->join("\n");
+
+print $module_list;
 ```
 
-Each element in the collection is actually a [Mojo::DOM](http://mojolicio.us/perldoc/Mojo/DOM) object. The first argument to `map` is the method to call on each element and the remaining arguments pass through to that method. In this case, I'm calling `attr('href')` on each object. Now I mostly have the values I want:
+Each element in the collection is actually a [Mojo::DOM](http://mojolicio.us/perldoc/Mojo/DOM) object. The first argument to `map` is the method to call on each element and the remaining arguments pass through to that method. In this case, I'm calling `text` on each node to get the string between the opening and closing `A` tags. Now I have my list of distributions:
 
 ```perl
-Acme-BDFOY-0.01/
-Apache-Htaccess-1.4/
-Apache-iTunes-0.11/
-App-Module-Lister-0.15/
-App-PPI-Dumper-1.02/
-```
-
-I don't want that trailing slash. I can use another `map`, but with an anonymous subroutine. The result of the subroutine replaces the element in the collection. I use the [`/r` of the substitution operator to return the modified string](http://www.effectiveperlprogramming.com/2010/09/use-the-r-substitution-flag-to-work-on-a-copy/) instead of the number of substitutions (best Perl enhancement ever):
-
-```perl
-use v5.14;
-
-my $module_list = $dom
-    ->find('tr td:first-child a:first-child')
-    ->map( attr => 'href' )
-    ->map( sub { s|/\z||r } )
-    ->join("\n");
-```
-
-Now I have my list of distributions:
-
-```perl
-Acme-BDFOY-0.01
-Apache-Htaccess-1.4
-Apache-iTunes-0.11
-App-Module-Lister-0.15
-App-PPI-Dumper-1.02
+App-Module-Lister-0.153
+App-PPI-Dumper-1.021
+App-scriptdist-0.242
+App-unichar-0.012
+App-url-1.004
+Brick-0.228
+Bundle-BDFOY-20190721
+Business-ISBN-3.005
+Business-ISBN-Data-20191107
+...
 ```
 
 That's still as one string since I ended the method chain with `join("\n")`. To get a list, I use `each` to get the list, which I join myself later:
 
 ```perl
 my @module_list = $dom
-    ->find('tr td:first-child a:first-child')
-    ->map( attr => 'href' )
-    ->map( sub { s|/\z||r } )
+    ->find('table#author_releases tr td.name a.ellipsis')
+    ->map( 'text' )
     ->each;
 
 print join "\n", @module_list;
 ```
 
-I can get even fancier. Instead of the distribution name with the version, I can break it up with [CPAN::DistnameInfo]({{<mcpan "CPAN::DistnameInfo" >}}). I'll turn every found link into a tuple of name and version. Since that module wants to deal with a distribution filename, I tack on *.tar.gz* to make it work out:
+I could have also used `to_array` to get an array reference instead.
+
+Instead of the distribution name with the version, I can break it up with [CPAN::DistnameInfo]({{<mcpan "CPAN::DistnameInfo" >}}). I'll turn every found link into a tuple of name and version. Since that module wants to deal with a distribution filename, I tack on *.tar.gz* to make it work out:
 
 ```perl
-use Data::Printer;
 use CPAN::DistnameInfo;
+use Mojo::Util qw(dumper);
 
 my $dom = Mojo::DOM->new( $string );
 
 my @module_list = $dom
-    ->find('tr td:first-child a:first-child')
-    ->map( attr => 'href' )
-    ->map( sub { s|/\z||r } )
-    ->map( sub { 
+    ->find('table#author_releases tr td.name a.ellipsis')
+    ->map( 'text' )
+    ->map( sub {
         my $d = CPAN::DistnameInfo->new( "$_.tar.gz" );
         [ map { $d->$_() } qw(dist version) ];
          } )
     ->each;
 
-p @module_list;
+say dumper( \@module_list );
 ```
 
 The `each` extracts each element from the collection and returns it. I use [Data::Printer]({{<mcpan "Data::Printer" >}}) to display the array:
 
 ```perl
 [
-    [0]   [
-        [0] "Acme-BDFOY",
-        [1] 0.01
-    ],
-    [1]   [
-        [0] "Apache-Htaccess",
-        [1] 1.4
-    ],
-    [2]   [
-        [0] "Apache-iTunes",
-        [1] 0.11
-    ],
-    [3]   [
-        [0] "App-Module-Lister",
-        [1] 0.15
-    ],
+  [
+    "App-Module-Lister",
+    "0.153"
+  ],
+  [
+    "App-PPI-Dumper",
+    "1.021"
+  ],
+  [
+    "App-scriptdist",
+    "0.242"
+  ],
+  [
+    "App-unichar",
+    "0.012"
+  ],
+  ...
+]
 ```
 
-If I want only the distributions that are development versions, I can use [Mojo::Collection](http://mojolicio.us/perldoc/Mojo/Collection)'s `grep`:
+If I want only the distributions that are beta versions (or whatever you want to call pre-1.0 releases), I can use [Mojo::Collection](http://mojolicio.us/perldoc/Mojo/Collection)'s `grep`:
 
 ```perl
 my @module_list = $dom
-    ->find('tr td:first-child a:first-child')
-    ->map( attr => 'href' )
-    ->map( sub { s|/\z||r } )
-    ->map( sub { 
+    ->find('table#author_releases tr td.name a.ellipsis')
+    ->map( 'text' )
+    ->map( sub {
         my $d = CPAN::DistnameInfo->new( "$_.tar.gz" );
         [ map { $d->$_() } qw(dist version) ];
          } )
-    ->grep( sub { $_->[-1] =~ /_/ } )
+    ->grep( sub { $_->[-1] < 1 } )
     ->each;
 ```
 
-The `grep` selects each element of the collection for which the subroutine returns a true value:
+The `grep` filters the collection for which the subroutine returns a true value:
 
 ```perl
 [
-    [0]  [
-        [0] "Brick",
-        [1] "0.227_01"
-    ],
-    [1]  [
-        [0] "Distribution-Guess-BuildSystem",
-        [1] "0.12_02"
-    ],
-    [2]  [
-        [0] "File-Fingerprint",
-        [1] "0.10_02"
-    ],
-    [3]  [
-        [0] "Geo-GeoNames",
-        [1] "1.01_01"
-    ],
+[
+  [
+    "App-Module-Lister",
+    "0.153"
+  ],
+  [
+    "App-scriptdist",
+    "0.242"
+  ],
+  [
+    "App-unichar",
+    "0.012"
+  ],
+  [
+    "Brick",
+    "0.228"
+  ],
+...
+]
 ```
 
-That's the process. No HTML shows up in my code. The rest is figuring out how to select the particular element that I want.
+That's the process. No HTML shows up in my code. The rest is figuring out how to select the particular element that I want. If you are interesting in more [Mojo::Collection](http://mojolicio.us/perldoc/Mojo/Collection) examples, you can check out [Mojo Web Clients](https://leanpub.com/mojo_web_clients).
 
 \
-*This article was originally posted on [PerlTricks.com](http://perltricks.com).*
+*This article was originally posted on [PerlTricks.com](http://perltricks.com). In it's original form, it worked with *search.cpan.org*, which had a different table and HTML. It was updated to work with MetaCPAN. See the [entire history of the article](https://github.com/tpf/perldotcom/blob/master/content/article/extracting-from-html-with-mojo--dom.md)*
