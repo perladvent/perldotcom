@@ -142,7 +142,7 @@ use File::ShareDir::Install 'postamble';
 
 In the Makefile we import File::ShareDir:Install, and pass our "share" directory as an argument to the "install\_share" function. The strange last two lines of the Makefile include a package declaration for MY and an import of File::ShareDir::Install's "postamble" method. Be sure to include those two lines else the data files will not be copied.
 
-If you are using [Module::Build]({{<mcpan "Module::Build::API" >}}), update Build.PL file with the [share\_dir]({{<mcpan "{{< mcpan "Module::Build::API#share_dir" >}}" >}}) directive. Here's a vanilla Build.PL for a fictional module "Data::File":
+If you are using [Module::Build]({{<mcpan "Module::Build::API" >}}), update Build.PL file with the `share\_dir` directive. Here's a vanilla Build.PL for a fictional module "Data::File":
 
 ```perl
 use 5.006;

@@ -44,7 +44,7 @@ The example Shape class must be saved in a file called 'Shape.pm'.
 
 ### The constructor method
 
-The constructor method is a Perl subroutine that returns an object which is an instance of the class. It is convention to name the constructor method 'new', but it can be any valid subroutine name. The constructor method works by using the [bless]({{</* perlfunc "bless" */>}}) function on a hash reference and the class name (the package name). When new is called, the package name 'Shape' is in the default array @\_ and [shift]({{</* perlfunc "shift" */>}}) is used to take the package name from @\_ and pass it to the bless function. Let's modify the constructor method to convey this behaviour more clearly:
+The constructor method is a Perl subroutine that returns an object which is an instance of the class. It is convention to name the constructor method 'new', but it can be any valid subroutine name. The constructor method works by using the [bless]({{< perlfunc "bless" >}}) function on a hash reference and the class name (the package name). When new is called, the package name 'Shape' is in the default array @\_ and [shift]({{< perlfunc "shift" >}}) is used to take the package name from @\_ and pass it to the bless function. Let's modify the constructor method to convey this behaviour more clearly:
 
 ```perl
 package Shape;
@@ -314,7 +314,7 @@ Using the example methods of get\_color and set\_color, it should be obvious how
 
 ### Builder methods
 
-A builder method is an internal subroutine that is used to set the value of an object attribute at construction. A convention used by Perl programmers is to denote internal methods by prepending an underscore to their name. Let's add a builder method to Shape.pm that sets the creation datetime, using the [Time::Piece]({{< mcpan "Time::Piece" }}) core module:
+A builder method is an internal subroutine that is used to set the value of an object attribute at construction. A convention used by Perl programmers is to denote internal methods by prepending an underscore to their name. Let's add a builder method to Shape.pm that sets the creation datetime, using the [Time::Piece]({{< mcpan "Time::Piece" >}}) core module:
 
 ```perl
 package Shape;
