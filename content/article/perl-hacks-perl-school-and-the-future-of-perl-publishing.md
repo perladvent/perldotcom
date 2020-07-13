@@ -75,8 +75,7 @@ would have. I thought there was some nice detective work in there.
 
 The post that got the most response was called [You Must Hate Version
 Control
-Systems](https://perlhacks.com/2012/03/you-must-hate-version-control-
-systems/). The title was taken from a Perl job ad from a company that
+Systems](https://perlhacks.com/2012/03/you-must-hate-version-control-systems/). The title was taken from a Perl job ad from a company that
 no-one seemed to want to work for. The person who posted the ad turned
 up in the comments and tried to explain why he wrote that, but I don't
 think anyone was convinced. This was the one time that I regretted
