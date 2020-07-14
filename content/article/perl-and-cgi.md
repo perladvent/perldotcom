@@ -1,5 +1,5 @@
 {
-   "thumbnail" : "/images/perl-and-cgi/thumb_cgi-official-guide-book-cover.jpg",
+   "thumbnail" : null,
    "date" : "2018-11-12T10:36:08",
    "categories" : "web",
    "draft" : false,
@@ -16,7 +16,7 @@
       "mojolicious",
       "template-toolkit"
    ],
-   "image" : "/images/perl-and-cgi/cgi-official-guide-book-cover.jpg"
+   "image" : null
 }
 
 CGI stands for [Common Gateway Interface](https://tools.ietf.org/html/rfc3875#section-6.2.1), it's a protocol for executing scripts via web requests, and in the late 1990's was the main way to write dynamic programs for the Web. It's also the name of the Perl [module]({{< mcpan "CGI" >}}) we used (and for me, still use) to code for the web.
@@ -225,6 +225,6 @@ CGI also contains a security [vulnerability](https://metacpan.org/pod/distributi
 
 The "good" parts of CGI.pm, the header creation and parameter parsing, are well-explained in the module's [documentation](https://metacpan.org/pod/CGI). As for the deprecated HTML generation functions, they are documented [separately](https://metacpan.org/pod/CGI::HTML::Functions).
 
-Lincoln Stein, the creator of CGI.pm also wrote the [Official Guide](https://www.amazon.com/Official-Guide-Programming-CGI-pm-Lincoln/dp/0471247448), the front cover of which adorns this article. The book is 20 years old, and out of date but remains a clear and concise resource about CGI.pm.
+Lincoln Stein, the creator of CGI.pm also wrote the [Official Guide](https://www.amazon.com/Official-Guide-Programming-CGI-pm-Lincoln/dp/0471247448). The book is 20 years old, and out of date but remains a clear and concise resource about CGI.pm.
 
 Lee Johnson, the current maintainer of CGI.pm wrote a long form blog [post](https://leejo.github.io/2016/02/22/all_software_is_legacy/) about the history of CGI, its current state and future.

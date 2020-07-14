@@ -63,10 +63,9 @@ Before you start, you need to have a few things installed from CPAN. These inclu
 
 First, you must create the database. For the sake of this experiment^H^H^H^Harticle, I use Sqlite. In the real world, you would probably want to use MySQL/PostgreSQL instead.
 
-Download the [*handel.sqlite.sql*](http://handelframework.com/svn/CPAN/Handel/tags/0.26/sql/handel.sqlite.sql) schema script to your hard drive. Now, in your favorite shell, type the following to create the database:
+Download the [*handel.sqlite.sql*](https://fastapi.metacpan.org/source/CLACO/Handel-1.00014/sql/handel.sqlite.sql) schema script to your hard drive. Now, in your favorite shell, type the following to create the database:
 
-    [claco@cypher ~] $ wget
-        http://handelframework.com/svn/CPAN/Handel/tags/0.26/sql/handel.sqlite.sql
+    [claco@cypher ~] $ wget https://fastapi.metacpan.org/source/CLACO/Handel-1.00014/sql/handel.sqlite.sql
     handel.sqlite.sql                             100% of 2300  B  115 kBps
     [claco@cypher ~] $
     [claco@cypher ~] $ sqlite3 handel.db < handel.sqlite.sql

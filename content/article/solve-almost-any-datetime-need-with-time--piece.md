@@ -33,12 +33,12 @@ $ cpan Time::Piece
 
 ### Create a Time::Piece object
 
-To create a new Time::Piece object with the current system time, use new:
+To create a new Time::Piece object with the current system time, use the version of localtime exported by Time::Piece:
 
 ```perl
 use Time::Piece;
 
-my $time = Time::Piece->new;
+my $time = localtime;
 ```
 
 ### Get a datetime string in any format
@@ -60,7 +60,7 @@ If you need to get the datetime in a custom format, Time::Piece provides a "strf
 ```perl
 use Time::Piece;
 
-my $time = Time::Piece->new;
+my $time = localtime;
 $time->strftime('%y/%m/%d %H:%M'); # 14/01/09 21:21
 $time->strftime('%y_%m_%d');       # 14_01_09
 $time->strftime('%s');             # 1389320496 (Unix time)
@@ -108,7 +108,7 @@ This is easy. Just initialize two Time::Piece objects and compare them with an o
 ```perl
 use Time::Piece;
 
-my $today = Time::Piece->new;
+my $today = localtime;
 my $yesterday = Time::Piece->strptime('01/08/2014', '%m/%d/%Y');
 
 if ($today > $yesterday) {
@@ -125,7 +125,7 @@ Time::Piece provides a couple of methods for adding months and years ("add\_mont
 ```perl
 use Time::Piece;
 
-my $datetime = Time::Piece->new;
+my $datetime = localtime;
 my $nextMonth   = $datetime->add_months(1);   # plus one month
 my $lastQuarter = $datetime->add_months(-3);  # minus three months
 my $nextDecade  = $datetime->add_years(10);   # plus 10 years
@@ -140,7 +140,7 @@ Let's see how to use the constants:
 use Time::Piece;
 use Time::Seconds;
 
-my $time = Time::Piece->new;
+my $time = localtime;
 my $tomorrow  = $time + ONE_DAY;
 my $lastWeek  = $time - ONE_WEEK;
 my $lastMonth = $time - ONE_MONTH;
@@ -151,8 +151,8 @@ If you need to change the datetime by seconds, with you can simply use integer a
 ```perl
 use Time::Piece;
 
-my $now = Time::Piece->new;
-my $30SecondsAgo = $now - 30; 
+my $now = localtime;
+my $thirtySecsAgo = $now - 30; 
 ```
 
 ### Documentation
@@ -162,8 +162,6 @@ my $30SecondsAgo = $now - 30;
 ```perl
 $ perldoc Time::Piece
 ```
-
-**Updated:** *Added timezone strptime example 2015-01-28. Added timezone semicolon handling 2016-03-17.*
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

@@ -97,16 +97,24 @@ If you're not sure how to format something, grep the `content/article` directory
 
 ### View your article locally
 
-It's all well and good drafting an article in Markdown, but it only comes to life when you can see how it looks in a browser. You can do that by running a local version of the site on your computer. You'll need to install [Hugo](http://gohugo.io). **Warning** package managers' versions of hugo are often very out of date, you're usually better off with a pre-compiled binary. The site has been tested and build with Hugo versions 0.31.0 - 0.54.0.
+It's all well and good drafting an article in Markdown, but it only comes to life when you can see how it looks in a browser. You can do that by running a local version of the site on your computer. You'll need to install [Hugo](http://gohugo.io). **Warning** package managers' versions of hugo are often very out of date, you're usually better off with a pre-compiled binary. The site has been tested with v0.59.0 and should build with the latest version of Hugo.
 
 From the root project directory, launch a local version of the site:
 
-    $ hugo server --buildDrafts
+    $ hugo server --buildDrafts --buildFuture
     ...
     Web Server is available at http://localhost:1313/ (bind address 127.0.0.1)
     Press Ctrl+C to stop
 
-Pay careful attention to the program output - if you see any errors, it probably means your draft article is not correctly formatted. Once those are fixed, navigate with a browser to the localhost address shown in the output, and you should see a version of Perl.com running on your computer with your draft article at the top of the homepage!
+Pay careful attention to the program output—if you see any errors, it probably means your draft article is not correctly formatted. Once those are fixed, navigate with a browser to the localhost address shown in the output, and you should see a version of Perl.com running on your computer with your draft article at the top of the homepage!
+
+If your page does not appear, check that Hugo sees it well:
+
+    $ hugo list drafts
+
+Or
+
+    $ hugo list future
 
 ### Refining your article
 
