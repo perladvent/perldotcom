@@ -10,7 +10,7 @@
       "pure-ftpd"
    ],
    "draft" : false,
-   "description" : "Install and configure a FTP server then access it with Net::FTP",
+   "description" : "How to write an FTP client in Perl",
    "authors" : [
       "thibault-duponchelle"
    ]
