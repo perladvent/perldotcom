@@ -1,15 +1,20 @@
-
-  {
-    "title"       : "A tour with Net::FTP",
-    "authors"     : ["thibault-duponchelle"],
-    "date"        : "2020-05-31T11:48:52",
-    "tags"        : ["FTP", "Net::FTP", "pure-ftpd"],
-    "draft"       : true,
-    "image"       : "",
-    "thumbnail"   : "/images/a-tour-with-net-ftp/kidyes.jpg",
-    "description" : "Install and configure a FTP server then access it with Net::FTP",
-    "categories"  : "development"
-  }
+{
+   "image" : "/images/a-tour-with-net-ftp/kidyes.jpg",
+   "thumbnail" : "/images/a-tour-with-net-ftp/thumb_kidyes.jpg",
+   "date" : "2020-07-13T11:48:52",
+   "categories" : "development",
+   "title" : "A tour with Net::FTP",
+   "tags" : [
+      "ftp",
+      "net-ftp",
+      "pure-ftpd"
+   ],
+   "draft" : false,
+   "description" : "Install and configure a FTP server then access it with Net::FTP",
+   "authors" : [
+      "thibault-duponchelle"
+   ]
+}
 
 When we want to have a way to exchange files between machines, we often think about rsync, scp, git or even something slow and complex (looking at you Artifactory and S3), but the answer is often right in front of your eyes: FTP!
 
@@ -239,5 +244,5 @@ if($options{'action'} eq 'list') {
 
 ## More about design and security
 
-This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP](https://metacpan.org/pod/Net::FTP)!
+This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real guarantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP](https://metacpan.org/pod/Net::FTP)!
 
