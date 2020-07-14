@@ -57,7 +57,7 @@ Speaking of real solutions™, check out [bare]({{<mcpan "bare" >}}) which remov
 
 ### Hardware
 
-CPAN advanced more in hardware-related modules than perhaps any other area. YAPC NA 2014 was awash with drones. This really does seem like a promising area for Perl to lay claim. Several modules stand out in particular. Let's start with the shiny: Timm Murray's [UAV::Pilot::ARDrone]({{<mcpan "UAV::Pilot::ARDrone" >}}) and [UAV::Pilot::WumpusRover](https://metacpan.org/release/UAV-Pilot-WumpusRoverr) enables WiFi remote control (with video) of drones! Timm's [Device::WebIO]({{<mcpan "Device::WebIO" >}}) provides a standardized interface for accessing many devices with drivers available for Raspberry Pi and Arduino among others.
+CPAN advanced more in hardware-related modules than perhaps any other area. YAPC NA 2014 was awash with drones. This really does seem like a promising area for Perl to lay claim. Several modules stand out in particular. Let's start with the shiny: Timm Murray's [UAV::Pilot::ARDrone]({{<mcpan "UAV::Pilot::ARDrone" >}}) and [UAV::Pilot::WumpusRover]({{<mcpan "UAV::Pilot::WumpusRover" >}}) enables WiFi remote control (with video) of drones! Timm's [Device::WebIO]({{<mcpan "Device::WebIO" >}}) provides a standardized interface for accessing many devices with drivers available for Raspberry Pi and Arduino among others.
 
 Another significant development was Paul Evan's [Device::BusPirate]({{<mcpan "Device::BusPirate" >}}), for the Bus Pirate hardware tool. Finally, check out [VIC]({{<mcpan "VIC" >}}), Vikas Kumar's amazing DSL for PIC micro-controllers.
 

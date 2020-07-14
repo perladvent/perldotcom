@@ -19,7 +19,7 @@
    "title" : "Spidering websites with Headless Chrome and Selenium"
 }
 
-Over the holidays I was working on a project that needed to download content from different websites. I needed a web spider, but the typical Perl options like [WWW:Mechanize]({{< mcpan "WWW:Mechanize" >}}) wouldn't cut it, as with JavaScript controlling the content on many websites, I needed a JavaScript-enabled browser. But browsers consume lots of memory - what to do?
+Over the holidays I was working on a project that needed to download content from different websites. I needed a web spider, but the typical Perl options like [WWW:Mechanize]({{< mcpan "WWW::Mechanize" >}}) wouldn't cut it, as with JavaScript controlling the content on many websites, I needed a JavaScript-enabled browser. But browsers consume lots of memory - what to do?
 
 The answer was to use headless Chrome, which works exactly like normal except it has no graphical display, reducing its memory footprint. I can control it using [Selenium::Remote::Driver]({{< mcpan "Selenium::Remote::Driver" >}}) and Selenium server. Here's how I did it.
 
