@@ -6,6 +6,7 @@ no warnings qw(experimental::signatures);
 use Getopt::Long;
 use Mojo::IOLoop;
 use Mojo::UserAgent;
+use Mojo::Util qw(dumper);
 use Time::HiRes qw(tv_interval gettimeofday);
 
 =head1 NAME
@@ -91,9 +92,10 @@ You can use this under the terms of the Artistic License 2.0.
 my $ua = Mojo::UserAgent->new;
 
 my %connections;
-$connections{max}    = 4;
+$connections{max}    = 10;
 $connections{active} = 0;
 
+my $base;
 my $verbose                  = 0;
 my $elapsed                  = 0;
 my $report                   = 0;
@@ -102,18 +104,22 @@ my $always_treat_as_markdown = 0;
 my $always_treat_as_html     = 0;
 
 GetOptions(
-	"max=i"       => \ $connections{max},    # numeric
-	"verbose"     => \ $verbose,
-	"elapsed"     => \ $elapsed,
-	"report"      => \ $report,
+	"max=i"         => \ $connections{max},    # numeric
+	"verbose"       => \ $verbose,
+	"elapsed"       => \ $elapsed,
+	"report"        => \ $report,
 	"json_report=s" => \ $json_report,
-	"markdown"    => \ $always_treat_as_markdown,
-	"html"        => \ $always_treat_as_html,
+	"markdown"      => \ $always_treat_as_markdown,
+	"html"          => \ $always_treat_as_html,
+	"base=s"        => \ $base,
 	) or die "Error in command line arguments\n";
 
 if( $always_treat_as_html and $always_treat_as_markdown ) {
 	die "Cannot specify --html and --markdown at the same time\n";
 	}
+
+my $stdin = ! @ARGV;
+say "Reading from STDIN" if $stdin;
 
 package Channel {
 	sub new      ( $class )         { bless { queue => [], open => 1 }, $class }
@@ -163,29 +169,75 @@ my %Seen;
 my %loop_ids = ();
 my $channel = Channel->new;
 
-$loop_ids{'file_reader'} = Mojo::IOLoop->recurring(
-	0 => sub {
-		unless( @ARGV ) {
-			verbose( "No more files! Removing" );
-			$channel->close;
-			Mojo::IOLoop->remove( $loop_ids{'file_reader'} );
-			return;
-			}
+$loop_ids{'reader'} = do {
+	   if( @ARGV  ) { make_file_reader()  }
+	elsif( $stdin ) { make_stdin_reader() }
+	};
 
-		my $file = shift @ARGV;
-		verbose( "Trying file: $file" );
+sub make_stdin_reader {
+	Mojo::IOLoop->recurring(
+		0 => sub {
+			while( <STDIN> ) {
+				chomp;
+				my $url = Mojo::URL->new( $_ );
+				$url->base( $base ) if( defined $base and ! $url->is_abs );
+				my $job = Job->new( 'stdin', $url );
+				$channel->emit( $job ) if $url->is_abs;
+				}
+			Mojo::IOLoop->remove( $loop_ids{'reader'} );
+		});
+	}
 
-		my $code_ref = do {
-			   if( $always_treat_as_html )     { \&links_from_html     }
-			elsif( $always_treat_as_markdown ) { \&links_from_markdown }
-			elsif( $file =~ m/\.md\z/ )        { \&links_from_markdown }
-			elsif( $file =~ m/\.html\z/ )      { \&links_from_html     }
-			else { warn "Don't know how to treat file '$file'\n"; sub {} }
-			};
+sub make_file_reader {
+	Mojo::IOLoop->recurring(
+		0 => sub {
+			unless( @ARGV ) {
+				verbose( "No more files! Removing" );
+				$channel->close;
+				Mojo::IOLoop->remove( $loop_ids{'reader'} );
+				return;
+				}
 
-		$code_ref->( $file, $channel );
-		},
-	);
+			my $file = shift @ARGV;
+			verbose( "Trying file: $file" );
+
+			my $code_ref = do {
+				   if( $always_treat_as_html     ) { \&links_from_html     }
+				elsif( $always_treat_as_markdown ) { \&links_from_markdown }
+				elsif( $file =~ m/\.md\z/        ) { \&links_from_markdown }
+				elsif( $file =~ m/\.html\z/      ) { \&links_from_html     }
+				else { warn "Don't know how to treat file '$file'\n"; sub {} }
+				};
+
+			$code_ref->( $file, $channel );
+			},
+		);
+	}
+
+sub links_from_html ( $file, $channel ) {
+	state $rc1 = require Mojo::DOM;
+	state $rc  = require Mojo::File;
+	state $rc2 = require Mojo::URL;
+
+	my $data = Mojo::File->new( $file )->slurp;
+	my $dom = Mojo::DOM->new( $data );
+	my $base = do {
+		my $c1 = $dom->find( 'base' )->map( attr => 'href' );
+		my $c2 = $dom->find( 'meta[property="og:url"]' )->map( attr => 'content' );
+		my $base = eval { $c1->[0] // $c2->[0] };
+		$base ? Mojo::URL->new( $base ) : ();
+		};
+
+	$dom
+		->find( 'a' )
+		->map( attr => 'href' )
+		->each( sub {
+			my $url = Mojo::URL->new( $_ );
+			$url->base( $base ) if( defined $base and ! $url->is_abs );
+			my $job = Job->new( $file, $url );
+			$channel->emit( $job ) if $url->is_abs;
+			} );
+	}
 
 sub links_from_html ( $file, $channel ) {
 	state $rc1 = require Mojo::DOM;
@@ -233,16 +285,35 @@ $loop_ids{'status'} = Mojo::IOLoop->recurring(
 		}
 	);
 
+$SIG{INT} = sub { $channel->close; exit };
+
+$loop_ids{'channel'} = Mojo::IOLoop->recurring(
+	3 => sub {
+		if( $channel->is_empty ) {
+			$channel->close;
+			Mojo::IOLoop->remove( $loop_ids{'channel'} );
+			Mojo::IOLoop->remove( $loop_ids{'status'} );
+			}
+		}
+	);
+
 $loop_ids{'url'} = Mojo::IOLoop->recurring(
-	0 => sub {
+	1 => sub {
+		state %LastSeen;
 		if( my $count = $channel->poll ) {
 			my $new_connections = $connections{max} - $connections{active};
 			foreach ( 1 .. $new_connections ) {
+				next if $channel->is_empty;
 				my $job = $channel->receive;
 				$Seen{$job->url}{files}{$job->file}++;
 				next if $Seen{$job->url}{code};
 
+				my $host = $job->url->host;
+				sleep( 2 + rand 5 ) if( (time - $LastSeen{$host}) < 3 );
+
+
 				$connections{active}++;
+				$LastSeen{$host} = time;
 
 				$job->set_fetch_time;
 				$ua->get( $job->url, sub ( $ua, $tx ) {
