@@ -58,7 +58,7 @@ That's the general form that I can use with any sort of command. It has the draw
 To read a gzippped file in Perl, I can use the `gzip` I/O layer (see [perlopen](http://perldoc.perl.org/perlopentut.html)). Once I open the file, I can read its lines (assuming it's text) like I would a "normal" text file:
 
 ```perl
-open my $fh, '<:gzip' $filename 
+open my $fh, '<:gzip', $filename 
     or die "Could not read from $filename: $!";
 
 while( <$fh> ) {
