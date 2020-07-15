@@ -71,7 +71,7 @@ Or, I can read octets if the data aren't text:
 
 ```perl
 use PerlIO::gzip;
-open my $fh, '<:gzip',$filename 
+open my $fh, '<:gzip', $filename 
     or die "Could not read from $filename: $!";
 
 while( read( $fh, $buffer, 1024 ) ) {
