@@ -51,8 +51,8 @@ And it's clearly not a valid Perl file.
 
 If you don't believe me, we can check this with a quick syntax check `perl -c iampython.pl` that will give us :
 
-```bash
-perl -c iampython.pl 
+```
+$ perl -c iampython.pl 
 syntax error at iampython.pl line 4, near "environ["
 iampython.pl had compilation errors.
 ```
@@ -62,8 +62,8 @@ So I'm telling the truth ! :D
 
 When you execute this file with perl, surprisingly, everything goes fine... because `perl` is smart enough to give the script to `python` !
 
-```bash
-perl iampython.pl
+```
+$ perl iampython.pl
 I'm a snake : /bin/bash /usr/bin/perl
 ```
 And if we want to check which interpreter really runs this script :
@@ -142,6 +142,7 @@ overridebang.pl syntax OK
 
 Ok now what if we have conflicting options like a shebang that disables warnings `#!/usr/bin/perl -X` and a command line with warning switch `perl -w disablewarnings.pl` ? 
 
+#### Shebang 1 - 0 Command line
 With a `disablewarnings.pl` file like this  :
 
 ```perl 
@@ -150,7 +151,38 @@ With a `disablewarnings.pl` file like this  :
 $str = "will produce a warning";
 ```
 
-The command line is taken in priority versus the shebang and no warning is reported.
+The shebang (`-X`) is taken in priority versus the command line and no warning is reported.
+Same if we execute the file with `perl -W disablewarnings.pl`.
+
+We could imagine that's a rule to resolve conflicts with "last seen" parameter but wait, it's not that simple. 
+
+#### Shebang 1 - 1 Command line 
+Let's try the contrary, with a file `enablewarnings.pl`:  
+
+```perl 
+#!/usr/bin/perl -w
+
+$str = "will produce a warning";
+```
+
+This time `perl -X enablewarnings.pl` does not produce any warning.
+
+Then this time the command line was stronger than shebang.
+
+#### Shebang 2 - 1 Command line 
+To confuse you (and me) a bit more, if we put `-W` (= "disable all warning") instead of `-w`, this time the shebang `-W` wins...
+
+```perl 
+#!/usr/bin/perl -W
+
+$str = "will produce a warning";
+```
+
+This is what we get:
+```bash
+$ perl -X enableallwarnings.pl 
+Name "main::str" used only once: possible typo at enableallwarnings.pl line 3.
+```
 
 ## Hashbang limitations
 
@@ -182,7 +214,7 @@ What the hell is this black magic ?
 
 This is actually very smart `perl` scripts openings...
 
-Very smart because this code is correct for both **shells** (with or without shebang support) AND **perl**.
+Very smart because this code is **"polyglot"** means correct for both **shells** (with or without shebang support) AND **perl**.
 
 (not totally true actually, `csh` seems to require a modified version for instance)
 
@@ -222,7 +254,7 @@ Why "never reach third line" ?
 Because in shell script the newline terminates the command (!) and exec will replace the current execution by `perl`.
 
 In this case the following code :
-```
+```bash
 #!/usr/bin/perl
 eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
     if $running_under_some_shell;
@@ -243,7 +275,7 @@ In this article we had fun with perl interpreter and shebang, but `perl` has a `
 
 This `-x` option tells Perl that the program to execute is actually embedded in a larger chunk of unrelated text to ignore.
 
-### -X is fun
+### -x is fun
 
 (pun based on [XS is fun](https://github.com/xsawyerx/xs-fun))
 
@@ -296,7 +328,7 @@ $ ./minusx.pl
 ```
 
 Will produce an error :
-```bash
+```
 Can't emulate -x on #! line.
 ```
 
@@ -316,7 +348,7 @@ print "$]\n";
 
 This cool trick will execute my code with my own perl binary or fallback to vendor perl.
 
-*Why does it work this time whereas it failed in the first attempt ?*
+*Why does the "perl -x-ception" worked this time whereas it failed in the first attempt ?*
 
 Because the `perl -x` is now executed in a shell process and not interpreted by perl binary like previously.
 
