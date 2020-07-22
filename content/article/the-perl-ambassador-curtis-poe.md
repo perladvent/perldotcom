@@ -9,8 +9,8 @@
    "tags" : [
    ],
    "image" : "/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg",
-   "description" : "The person behind the news of Perl",
-   "date" : "2020-07-15T07:30:00"
+   "description" : "The person behind the text-based Massive Multiplayer Online Browser Game (MMOBG), Tau Station",
+   "date" : "2020-07-22T04:40:00"
 }
 
 As a part of monthly series of interview, today we are talking to none
@@ -91,6 +91,48 @@ As for my motivation, like many developers, I was waiting for Stevan Little to f
 I tried to refine some of the syntax from Moo/se, but honestly, Moo/se has some serious limitations. Some are design decisions which can be easily corrected, but some are due to limitations in the Perl language itself. Once I had Sawyer's backing, I realized that I didn't just have to steal syntax, I could invent syntax, though I have done so very cautiously. It's important that Cor still be Perl, but just a tiny sprinkling of syntactic sugar in the right spots makes a world of difference. So far it looks promising.
 
 And Sawyer said he hopes a v1 will be available under a feature guard in 7.2 or 7.4. With Perl 8, the feature guard would be removed.
+
+\
+\
+
+#### How does your company "All around the world" help people with Perl background?
+
+The consulting world is a mess. Anyone can call themselves a consultant and presto, they're a consultant. This means that for the vast majority of consulting firms out there, quality is very hit-or-miss. So most companies hiring consultants are taking a huge gamble. But banks, insurance companies, and other "enterprise" companies prefer to stick with high-end consulting firms. From what I've seen, their code is more likely to do what you want it to do, but that's only if you can afford them.
+
+So we decided to try a different approach. We can give our customers the reliability they want but at a more reasonable price if we do two things. First, we only hire the handful of senior developers who can pass both our technical test and a structured interview. Second, we limit the number of projects we take so we can dedicate serious attention to each customer. I'll put our team's quality up against the top-tier consulting firms any day of the week. But we're going to cost a much less than they do and we'll deliver faster, too.
+
+To give a concrete example, we had a client who had two weeks to improve their performance by an order of magnitude. They had worked with us before, so they turned to us. Here's the case study of that project. It's a fun read and gives you a lot of insight into how top-level developers really work.
+
+I should also note that while we have a deep specialization in Perl, we have also done work in quite a few other languages and technologies, such as Golang, C++, Lua, Node, Angular, and so on.
+
+\
+\
+
+#### How is "Tau Station" going and how much Perl helped in building the game?
+
+For those not familiar with it, Tau Station is a free to play narrative MMORPG with the backend written entirely in Perl. It's a beautiful sci-fi universe (unlike anything you've ever played before) and has all the stars within 20 light years of Earth. We're around half a million lines of code and we're still in open alpha. We're currently in the "final stretch" of building what we feel we need, so we anticipate the launch by the end of this year. Perl's tremendous flexibility has made it very easy to build out many of the features that we've needed. For example, we have a declarative system for building out many of the behaviors. Here's how you refuel a spaceship:
+
+```perl
+        Steps(
+            Area(      $character => is_in            => 'docks' ),
+            Ship(      $ship      => is_owned_by      => $character ),
+            Ship(      $ship      => is_docked_on     => $character->station ),
+            Character( $character => not_onboard_ship => $ship ),
+            Ship(      $ship      => 'needs_refueling' ),
+            Money(     $character => pay              => $ship->get_refuel_price ),
+            Ship(      $ship      => 'refuel' ),
+            Character(
+                $character => set_cooldown => {
+                    cooldown_type  => 'ship_refuel',
+                    period         => $ship->get_refuel_time,
+                },
+            ),
+        )
+```
+
+People are sometimes surprised to learn that this is Perl code because it's so easy to read, but they'd be even more surprised to learn that much of this would be harder to write in early-binding languages such as Java.
+
+And by creating standard components like that, the developer who creates a new kind of behavior for the game often doesn't need to worry about database transactions, exceptions, or messages to the character. Instead, they can quickly assemble these "steps" in the correct order and you have new gameplay. If we ever had the time, we'd love to release the above framework as open source, but that would take time and we need to keep our clients happy, first.
 
 \
 \
