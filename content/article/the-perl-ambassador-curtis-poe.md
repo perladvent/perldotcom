@@ -13,32 +13,15 @@
    "date" : "2020-07-22T04:40:00"
 }
 
-As a part of monthly series of interview, today we are talking to none
-other than **Curtis 'Ovid' Poe** himself. He is one of the tallest
-leader of Perl community.
+This month's interview victim is Curtis 'Ovid' Poe, one of the most-respected and well-known leaders in the Perl community.
 
-If you'd like me to interview you, or know someone you'd like me to
-interview, let me know. Take the same set of questions and send me your
-answers!
+Curtis has been building software for decades. He specializes in building database-driven websites through his global development and consulting firm, [All Around The World](https://allaroundtheworld.fr/). He's the main developer behind [Tau Station](https://taustation.space/), a text-based Massive Multiplayer Online Browser Game (MMOBG) set in a vibrant, far-future universe.
 
-**Curtis** has been building software for decades. He specialize in
-building database-driven Websites. He joined The Perl Foundation
-[boards of directors](https://news.perlfoundation.org/post/new_board_member)
-in 2009. He also runs the global global development and consulting firm,
-[All Around The World](https://allaroundtheworld.fr/).
+He's the author of [Beginning Perl](https://www.amazon.com/Beginning-Perl-Curtis-Poe/dp/1118013840/) and [Perl Hacks](https://www.amazon.com/Perl-Hacks-Programming-Debugging-Surviving/dp/0596526741/). You can out more about his activites at [https://ovid.github.io/](https://ovid.github.io/).
 
-He wrote some of the very popular books on Perl like
-[Beginning Perl](https://www.amazon.com/Beginning-Perl-Curtis-Poe/dp/1118013840/)
-and [Perl Hacks](https://www.amazon.com/Perl-Hacks-Programming-Debugging-Surviving/dp/0596526741/).
+He joined The Perl Foundation [boards of directors](https://news.perlfoundation.org/post/new_board_member) in 2009.
 
-He is also the man behind [Tau Station](https://taustation.space/),
-text-based Massive Multiplayer Online Browser Game (MMOBG) set in a
-vibrant far future universe.
-
-You can find him blogging [here](https://ovid.github.io/blog.html). If
-are interested in the technical blog then you please check out his
-[collections](https://ovid.github.io/articles.html). How about his
-[public speaking video](https://ovid.github.io/publicspeaking.html) as well.
+If you'd like me to interview you, or know someone you'd like me to interview, let me know. Take the same set of questions and send me your answers!
 
 \
 \
@@ -63,7 +46,7 @@ So long as we manage to protect businesses currently using Perl (and that means 
 
 #### What inspired you to start the project "Cor"? When are you planning to release it?
 
-First, for those who are not familiar with Cor, you can read about it at https://github.com/Ovid/Cor/wiki. In short, Cor is a plan to add modern OO to the Perl core. But the motto is "'Good enough' is not good enough." We have to stop settling for what we can have and start dreaming about what we want. For a trivial example, here's a naïve LRU cache implementation in Cor:
+First, for those who are not familiar with Cor, you can read about it at [https://github.com/Ovid/Cor/wiki](https://github.com/Ovid/Cor/wiki). In short, Cor is a plan to add modern OO to the Perl core. But the motto is "'Good enough' is not good enough." We have to stop settling for what we can have and start dreaming about what we want. For a trivial example, here's a naïve LRU cache implementation in Cor:
 
 ```perl
 class Cache::LRU {
@@ -95,7 +78,7 @@ And Sawyer said he hopes a v1 will be available under a feature guard in 7.2 or 
 \
 \
 
-#### How does your company "All around the world" help people with Perl background?
+#### How does your company "All around the world" help people with Perl?
 
 The consulting world is a mess. Anyone can call themselves a consultant and presto, they're a consultant. This means that for the vast majority of consulting firms out there, quality is very hit-or-miss. So most companies hiring consultants are taking a huge gamble. But banks, insurance companies, and other "enterprise" companies prefer to stick with high-end consulting firms. From what I've seen, their code is more likely to do what you want it to do, but that's only if you can afford them.
 
@@ -110,7 +93,7 @@ I should also note that while we have a deep specialization in Perl, we have als
 
 #### How is "Tau Station" going and how much Perl helped in building the game?
 
-For those not familiar with it, Tau Station is a free to play narrative MMORPG with the backend written entirely in Perl. It's a beautiful sci-fi universe (unlike anything you've ever played before) and has all the stars within 20 light years of Earth. We're around half a million lines of code and we're still in open alpha. We're currently in the "final stretch" of building what we feel we need, so we anticipate the launch by the end of this year. Perl's tremendous flexibility has made it very easy to build out many of the features that we've needed. For example, we have a declarative system for building out many of the behaviors. Here's how you refuel a spaceship:
+For those not familiar with it, [Tau Station](https://taustation.space) is a free to play narrative MMORPG with the backend written entirely in Perl. It's a beautiful sci-fi universe (unlike anything you've ever played before) and has all the stars within 20 light years of Earth. We're around half a million lines of code and we're still in open alpha. We're currently in the "final stretch" of building what we feel we need, so we anticipate the launch by the end of this year. Perl's tremendous flexibility has made it very easy to build out many of the features that we've needed. For example, we have a declarative system for building out many of the behaviors. Here's how you refuel a spaceship:
 
 ```perl
         Steps(
@@ -139,16 +122,16 @@ And by creating standard components like that, the developer who creates a new k
 
 #### Which Perl modules are you constantly using? How do they make your life easier?
 
-Test::Class::Moose (TCM) is a go to module for me. Most Perl developers learn how to test modules, not applications. With TCM, large test suites become easier to build and manage and, when it's written correctly, many test suites can be an order of magnitude faster.
+[Test::Class::Moose]({<% mcpan Test::Class::Moose %>}) is a go to module for me. Most Perl developers learn how to test modules, not applications. With [Test::Class::Moose]({<% mcpan Test::Class::Moose %>}), large test suites become easier to build and manage and, when it's written correctly, many test suites can be an order of magnitude faster.
 
-I also have a module I write for personal code called Less::Boilerplate. It's not on the CPAN because it's too fine-tuned for my personal needs, but naturally it enables strict, warnings, signatures, autodie, and other features without having to type everything out by hand. And it pleases me to have the double meaning of "use Less::Boilerplate" at the top of my code. Yet it's part of the issue that Sawyer's pointed out with Perl. New Perl developers don't know the strange incantations experienced Perl developers put at the top of their code to get Perl to be reasonable. That hurts the language because they get a poor "out of the box" experience.
+I also have a module I write for personal code called `Less::Boilerplate`. It's not on the CPAN because it's too fine-tuned for my personal needs, but naturally it enables [strict]({<% mcpan strict %>}), [warnings]({<% mcpan warnings %>}), signatures, [autodie]({<% mcpan autodie %>}), and other features without having to type everything out by hand. And it pleases me to have the double meaning of `use Less::Boilerplate` at the top of my code. Yet it's part of the issue that Sawyer's pointed out with Perl. New Perl developers don't know the strange incantations experienced Perl developers put at the top of their code to get Perl to be reasonable. That hurts the language because they get a poor "out of the box" experience.
 
 \
 \
 
 #### Which Perl feature do you overuse?
 
-It used to be the punctuation variables that I would sprinkle around my code like magic pixie dust. Things like local $" = ', ' were natural to me. But I've stopped doing that because honestly, it's not readable. I do a lot of client work so I take care to ensure that my code is (as much as I can), easy to read and maintain. I've even rewritten some of my code to "dumb it down" because I want to ensure that it's maintainable.
+It used to be the punctuation variables that I would sprinkle around my code like magic pixie dust. Things like local `$" = ', '` were natural to me. But I've stopped doing that because honestly, it's not readable. I do a lot of client work so I take care to ensure that my code is (as much as I can), easy to read and maintain. I've even rewritten some of my code to "dumb it down" because I want to ensure that it's maintainable.
 
 \
 \
