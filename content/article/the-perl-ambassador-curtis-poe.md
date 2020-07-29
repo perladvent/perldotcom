@@ -13,11 +13,11 @@
    "date" : "2020-07-22T04:40:00"
 }
 
-This month's interview victim is Curtis 'Ovid' Poe, one of the most-respected and well-known leaders in the Perl community.
+This month's interview is Curtis 'Ovid' Poe, one of the most-respected and well-known leaders in the Perl community.
 
 Curtis has been building software for decades. He specializes in building database-driven websites through his global development and consulting firm, [All Around The World](https://allaroundtheworld.fr/). He's the main developer behind [Tau Station](https://taustation.space/), a text-based Massive Multiplayer Online Browser Game (MMOBG) set in a vibrant, far-future universe.
 
-He's the author of [Beginning Perl](https://www.amazon.com/Beginning-Perl-Curtis-Poe/dp/1118013840/) and [Perl Hacks](https://www.amazon.com/Perl-Hacks-Programming-Debugging-Surviving/dp/0596526741/). You can out more about his activites at [https://ovid.github.io/](https://ovid.github.io/).
+He's the author of [Beginning Perl](https://www.amazon.com/Beginning-Perl-Curtis-Poe/dp/1118013840/) and [Perl Hacks](https://www.amazon.com/Perl-Hacks-Programming-Debugging-Surviving/dp/0596526741/). You can out more about his activities at [https://ovid.github.io/](https://ovid.github.io/).
 
 He joined The Perl Foundation [boards of directors](https://news.perlfoundation.org/post/new_board_member) in 2009.
 
