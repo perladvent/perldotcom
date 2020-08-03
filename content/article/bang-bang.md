@@ -52,7 +52,7 @@ And it's clearly not a valid Perl file.
 If you don't believe me, we can check this with a quick syntax check `perl -c iampython.pl` that will give us :
 
 ```
-$ perl -c iampython.pl 
+$ perl -c iampython.pl
 syntax error at iampython.pl line 4, near "environ["
 iampython.pl had compilation errors.
 ```
@@ -69,7 +69,7 @@ I'm a snake : /bin/bash /usr/bin/perl
 And if we want to check which interpreter really runs this script :
 
 ```bash
-ps aux | grep "iampytho[n].pl"
+$ ps aux | grep "iampytho[n].pl"
 tduponc+  5647  0.0  0.0  33208  7024 pts/0    S    13:04   0:00 /usr/bin/python iampython.pl
 ```
 
@@ -91,7 +91,7 @@ while (1) { sleep 5; }
 This is a valid Perl file but `python` interpreter does not make the hand over to `perl` and just returns an error :
 
 ```bash
-python iamperl.py 
+$ python iamperl.py
   File "iamperl.py", line 3
     my $str = "I'm a jewel";
        ^
@@ -143,6 +143,7 @@ overridebang.pl syntax OK
 Ok now what if we have conflicting options like a shebang that disables warnings `#!/usr/bin/perl -X` and a command line with warning switch `perl -w disablewarnings.pl` ? 
 
 #### Shebang 1 - 0 Command line
+
 With a `disablewarnings.pl` file like this  :
 
 ```perl 
@@ -157,6 +158,7 @@ Same if we execute the file with `perl -W disablewarnings.pl`.
 We could imagine that's a rule to resolve conflicts with "last seen" parameter but wait, it's not that simple. 
 
 #### Shebang 1 - 1 Command line 
+
 Let's try the contrary, with a file `enablewarnings.pl`:  
 
 ```perl 
@@ -170,6 +172,7 @@ This time `perl -X enablewarnings.pl` does not produce any warning.
 Then this time the command line was stronger than shebang.
 
 #### Shebang 2 - 1 Command line 
+
 To confuse you (and me) a bit more, if we put `-W` (= "disable all warning") instead of `-w`, this time the shebang `-W` wins...
 
 ```perl 
@@ -194,7 +197,7 @@ Some very old systems can also simply not recognize the shebang mechanism...
 
 Please note this important `#!/usr/bin/env` limitation for `perl` :
 
-`env` do not split args therefore you **CAN'T WRITE** :
+`env` does not split args therefore you **CAN'T WRITE** :
 
 `#!/usr/bin/env perl -w` 
 
@@ -254,7 +257,7 @@ Why "never reach third line" ?
 Because in shell script the newline terminates the command (!) and exec will replace the current execution by `perl`.
 
 In this case the following code :
-```bash
+```perl
 #!/usr/bin/perl
 eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
     if $running_under_some_shell;
@@ -262,7 +265,7 @@ eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
 
 is semantically the same than : 
 
-```bash
+```perl
 eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
 ```
 
