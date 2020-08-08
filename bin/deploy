@@ -1,22 +1,166 @@
 #!/usr/bin/env perl
+use v5.14;
+
 use Cwd;
+use File::Basename;
+use File::Path qw(make_path);
+use File::Spec::Functions;
 
-# check we're in perldotcom
-my $cwd = cwd();
-chomp $cwd; # for Mac OS?
-my $parent_dir = [split /\/|\\/, $cwd]->[-1];
-die "$0 must be run from the root project directory!\n"
-  unless $parent_dir eq 'perldotcom';
+use FindBin qw($Bin);
 
-my $staging_dir = '../perl.com-staging';
-system('hugo', '--buildFuture', '-d', "$staging_dir/perl.com/");
-chdir $staging_dir;
+=head1 NAME
+
+deploy - populate the Perl.com staging repo with the latest content
+
+=head1 SYNOPSIS
+
+	# in the tpf/perldotcom repo top level directory
+	% bin/deploy
+
+=head1 DESCRIPTION
+
+There are two repos for Perl.com. The public one, I<tpf/perldotcom>,
+is where all the work happens. The second one,
+I<tpf/perl.com-staging>, is the one that Perl NOC serves as the
+website.
+
+To convert the public repo to the public site, you run this program.
+There are no options or environment variables.
+
+=cut
+
+my $perldotcom_repo   = dirname($Bin);
+my $perldotcom_parent = dirname($perldotcom_repo);
+
+# Find the staging repo. We expect it to be at the same level
+my $staging_github = 'git@github.com:tpf/perl.com-staging.git';
+my $staging_repo   = basename( $staging_github ) =~ s/\.git\z//r;
+my $staging_clone  = catfile( $perldotcom_parent, $staging_repo );
+my $dest_dir       = catfile( $staging_clone, 'perl.com' );
+
+# If we don't have the staging clone, get it (or not, if you say no)
+unless( -d $staging_clone ) {
+	say "Didn't find <$staging_clone>";
+	local $SIG{ALRM} = sub { say "\nPrompt timeout. Exiting"; exit 1 };
+	alarm(10);
+	print "Clone <$staging_github> now? [yN] ";
+	chomp( my $answer = <STDIN> );
+	alarm(0);
+	unless( $answer =~ /\A y/xi ) {
+		say "Not cloning. Exiting.";
+		exit 1;
+		}
+	git( 'clone', $staging_github, $staging_clone );
+	}
+
+# check that we have the same version of Hugo that last generated
+# the site. If we don't, we shouldn't charge ahead automatically.
+# Different versions do different things with the HTML.
+my $hugo_generated = do {
+	my $index          = catfile( $dest_dir, 'index.html' );
+	open my $fh, '<:encoding(UTF-8)', $index;
+	my $last_version;
+	while( <$fh> ) {
+		next unless /<meta name="generator" content="(.*?)" \/>/;
+		my( $name, $version ) = split /\s+/, $1;
+		$last_version = $version;
+		last;
+		}
+	$last_version
+	};
+
+my( $hugo_installed ) = `hugo version` =~ m/Generator v(\d\.\d+\.\d+)-/;
+
+say <<~"HERE";
+	====================================
+	Hugo installed:    $hugo_installed
+	Hugo generated:    $hugo_generated
+	bin dir:           $Bin
+	perldotcom dir:    $perldotcom_repo
+	perldotcom parent: $perldotcom_parent
+	------------------------------------
+	staging github:    $staging_github
+	staging dir:       $staging_repo
+	staging clone:     $staging_clone
+	dest dir:          $dest_dir
+	------------------------------------
+	HERE
+
+unless( $hugo_generated eq $hugo_installed ) {
+	die "Hugo version mismatch. Generated: $hugo_generated Installed: $hugo_installed\n";
+	}
+
+# start in the tpf/perldotcom directory so the external commands
+# start from the right place
+die "Could not change to <$perldotcom_repo>: $!\n"
+	unless( chdir $perldotcom_repo );
+say "Now in ", getcwd();
+
+# Check that we are up-to-date
+if( git_is_behind_master() ) {
+	die "This clone is behind GitHub! `git pull` and try again\n";
+	}
+elsif( git_is_ahead_master() ) {
+	die "This clone is ahead of GitHub! `git pull` and try again\n";
+	alarm(10);
+	print "Push now? [yN] ";
+	chomp( my $answer = <STDIN> );
+	alarm(0);
+	if( $answer =~ /\A y/xi ) {
+		git( 'push' );
+		}
+	else {
+		# maybe we die here because we want GitHub to have everything
+		# to make the public site
+		say "Not pushing. Remember to do that later.";
+		}
+	}
+else {
+	say "This clone is up-to-date and pushed";
+	}
+
+# ensure the destination directory is there
+make_path $dest_dir;
+die "Destination dir <$dest_dir> does not exist!\n" unless -d $dest_dir;
+
+
+# still in the tpf/perldotcom directory, and make the website in
+# the staging directory
+system('hugo', '--buildFuture', '-d', $dest_dir );
+
+
+# now work inside the staging dir
+die "Could not change to <$staging_clone>: $!\n"
+	unless( chdir $staging_clone );
+say "Now in ", getcwd();
 
 # move the 404 template because Hugo can't generate it there
 my $error_dir = 'perl.com/error';
-mkdir $error_dir;
-system 'mv', 'perl.com/404.html', $error_dir;
+make_path $error_dir, { error => \my $errors };
+if( @$errors > 0 ) {
+	my $error = $errors->[0]{$error_dir};
+	die "Destination dir <$error_dir> is not there: $error\n"
+	}
 
-system('git', 'add', '.');
-system('git', 'commit', '-m', 'generate site');
-system('git', 'push');
+rename 'perl.com/404.html' => catfile( $error_dir, '404.html' );
+
+git('status');
+
+git('add', '.');
+git('commit', '-m', 'generate site');
+git('push');
+
+
+sub git { system 'git', @_ }
+
+sub git_status_master {
+	my( $line ) = map { /## master\Q.../ } `git status -sb`;
+	}
+
+sub git_is_behind_master {
+	git_status_master() =~ m/\[behind\s\d\]/
+	}
+
+sub git_is_ahead_master {
+	git_status_master() =~ m/\[ahead\s\d\]/
+	}
