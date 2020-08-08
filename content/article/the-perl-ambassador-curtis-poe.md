@@ -2,7 +2,7 @@
    "authors" : [
       "mohammad-anwar"
    ],
-   "draft" : true,
+   "draft" : false,
    "categories" : "community",
    "title" : "The Perl Ambassador: Curtis 'Ovid' Poe",
    "thumbnail" : "",
@@ -10,7 +10,7 @@
    ],
    "image" : "/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg",
    "description" : "The person behind the text-based Massive Multiplayer Online Browser Game (MMOBG), Tau Station",
-   "date" : "2020-07-22T04:40:00"
+   "date" : "2020-08-08T04:40:00"
 }
 
 This month's interview is Curtis 'Ovid' Poe, one of the most-respected and well-known leaders in the Perl community.
