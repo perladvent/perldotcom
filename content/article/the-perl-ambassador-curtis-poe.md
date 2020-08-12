@@ -84,7 +84,7 @@ The consulting world is a mess. Anyone can call themselves a consultant and pres
 
 So we decided to try a different approach. We can give our customers the reliability they want but at a more reasonable price if we do two things. First, we only hire the handful of senior developers who can pass both our technical test and a structured interview. Second, we limit the number of projects we take so we can dedicate serious attention to each customer. I'll put our team's quality up against the top-tier consulting firms any day of the week. But we're going to cost a much less than they do and we'll deliver faster, too.
 
-To give a concrete example, we had a client who had two weeks to improve their performance by an order of magnitude. They had worked with us before, so they turned to us. Here's the case study of that project. It's a fun read and gives you a lot of insight into how top-level developers really work.
+To give a concrete example, we had a client who had two weeks to improve their performance by an order of magnitude. They had worked with us before, so they turned to us. Here's the [case study](https://ovid.github.io/articles/project-500.html) of that project. It's a fun read and gives you a lot of insight into how top-level developers really work.
 
 I should also note that while we have a deep specialization in Perl, we have also done work in quite a few other languages and technologies, such as Golang, C++, Lua, Node, Angular, and so on.
 
