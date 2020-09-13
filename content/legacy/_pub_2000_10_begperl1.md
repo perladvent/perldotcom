@@ -122,7 +122,7 @@ If functions are Perl's verbs, then variables are its nouns. Perl has three type
 
         $i = 5;
         $pie_flavor = 'apple';
-        $constitution1776 = "We the People, etc.";
+        $constitution1789 = "We the People, etc.";
 
 You don't need to specify whether a scalar is a number or a string. It doesn't matter, because when Perl needs to treat a scalar as a string, it does; when it needs to treat it as a number, it does. The conversion happens automatically. (This is different from many other languages, where strings and numbers are two separate data types.)
 
