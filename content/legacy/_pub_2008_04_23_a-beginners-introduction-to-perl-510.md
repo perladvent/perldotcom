@@ -198,7 +198,7 @@ The three types of variables have three separate *namespaces*. That means that `
 
 Some of the code samples from the previous section contained code comments. These are useful for explaining what a particular piece of code does, and vital for any piece of code you plan to modify, enhance, fix, or just look at again. (That is to say, comments are important.)
 
-Anything in a line of Perl code that follows a `#` sign is a comment, unless that `#` sign appears in a string.)
+Anything in a line of Perl code that follows a `#` sign is a comment, unless that `#` sign appears in a string.
 
     use feature ':5.10';
     say "Hello world!";  # That's more like it.
@@ -216,7 +216,7 @@ Perl has several different functions that are useful for flow control, the most 
          say $i;
     }
 
-This loop prints the numbers 1 through 5, each on a separate line. (It's not very useful; you're might think "Why not just write `say 1, 2, 3, 4, 5;`?". This is because `say` adds only one newline, at the end of its list of arguments.)
+This loop prints the numbers 1 through 5, each on a separate line. (It's not very useful; you might think "Why not just write `say 1, 2, 3, 4, 5;`?". This is because `say` adds only one newline, at the end of its list of arguments.)
 
 A handy shortcut for defining loop values is the *range* operator `..`, which specifies a range of numbers. You can write `(1, 2, 3, 4, 5)` as `(1 .. 5)` instead. You can also use arrays and scalars in your loop list. Try this code and see what happens:
 
