@@ -1,7 +1,8 @@
 {
   "title": "About Perl.com",
   "type": "about",
-  "categories": "meta"
+  "categories": "meta",
+  "exclude_paginate": 1
 }
 
 Since 1997 Perl.com has been the home for quality articles about Perl programming, news and culture. The website is managed by the [The Perl Foundation](http://www.perlfoundation.org).
