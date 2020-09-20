@@ -17,6 +17,7 @@
    "categories" : "web"
 }
 
+**UPDATE** *In 0.55, Firefox removed the features which allowed MozRepl to work.*
 
 I've been playing with [WWW::Mechanize::Firefox]({{<mcpan "WWW::Mechanize::Firefox" >}}). It's like the LWP-backended [WWW::Mechanize]({{<mcpan "WWW::Mechanize" >}}), but with a browser doing all the work. Instead of doing it all in Perl, I can use it as the glue language that it is.
 
