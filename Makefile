@@ -1,12 +1,16 @@
 
 HUGO=hugo
 
+.PHONY: new
+new:
+	perl bin/new-article
+
 .PHONY: json
 json:
 
-.PHONY: local
-local:
-	$(HUGO) server --buildDrafts --buildFuture
+.PHONY: start
+start:
+	hugo server --buildDrafts --buildFuture --disableFastRender -d built
 
 .PHONY: deploy
 deploy: json
@@ -15,3 +19,5 @@ deploy: json
 .PHONY: show_drafts
 show_drafts:
 	grep -R '"draft" : true' content
+
+
