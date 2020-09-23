@@ -26,14 +26,14 @@ If you'd like me to interview you, or know someone you'd like me to interview, l
 \
 \
 
-#### How did you first start using Perl?
+## How did you first start using Perl?
 
 I first started using Perl about 20 years ago, when I was doing mainframe programming. I was trying to fix a problem with a COBOL program that was converting a CSV file from an NT system to the fixed-width format that COBOL prefers. COBOL has many weaknesses and working with text is one of them. The code was 150 lines long, but that’s because the author didn’t understand how the COBOL’s unstring function worked. I got it down to 80 lines of COBOL. Out of curiosity, I tried it in Perl and got it down to 10 lines of code. Everything I touched in Perl was shorter and easier to read, so I jumped ship.
 
 \
 \
 
-#### What do you think about Perl 7? Do you see the Perl is on the path of recovery?
+## What do you think about Perl 7? Do you see the Perl is on the path of recovery?
 
 I am 100% on board with the project and yes, it's the path for Perl's recovery. I've seen widespread support for the change, which was heartening, and with the amount of press, even TIOBE moved Perl from 19 to 14th place, though I suspect it will drop back after the press dies down.
 
@@ -44,7 +44,7 @@ So long as we manage to protect businesses currently using Perl (and that means 
 \
 \
 
-#### What inspired you to start the project "Cor"? When are you planning to release it?
+## What inspired you to start the project "Cor"? When are you planning to release it?
 
 First, for those who are not familiar with Cor, you can read about it at [https://github.com/Ovid/Cor/wiki](https://github.com/Ovid/Cor/wiki). In short, Cor is a plan to add modern OO to the Perl core. But the motto is "'Good enough' is not good enough." We have to stop settling for what we can have and start dreaming about what we want. For a trivial example, here's a naïve LRU cache implementation in Cor:
 
@@ -78,7 +78,7 @@ And Sawyer said he hopes a v1 will be available under a feature guard in 7.2 or 
 \
 \
 
-#### How does your company "All around the world" help people with Perl?
+## How does your company "All around the world" help people with Perl?
 
 The consulting world is a mess. Anyone can call themselves a consultant and presto, they're a consultant. This means that for the vast majority of consulting firms out there, quality is very hit-or-miss. So most companies hiring consultants are taking a huge gamble. But banks, insurance companies, and other "enterprise" companies prefer to stick with high-end consulting firms. From what I've seen, their code is more likely to do what you want it to do, but that's only if you can afford them.
 
@@ -91,7 +91,7 @@ I should also note that while we have a deep specialization in Perl, we have als
 \
 \
 
-#### How is "Tau Station" going and how much Perl helped in building the game?
+## How is "Tau Station" going and how much Perl helped in building the game?
 
 For those not familiar with it, [Tau Station](https://taustation.space) is a free to play narrative MMORPG with the backend written entirely in Perl. It's a beautiful sci-fi universe (unlike anything you've ever played before) and has all the stars within 20 light years of Earth. We're around half a million lines of code and we're still in open alpha. We're currently in the "final stretch" of building what we feel we need, so we anticipate the launch by the end of this year. Perl's tremendous flexibility has made it very easy to build out many of the features that we've needed. For example, we have a declarative system for building out many of the behaviors. Here's how you refuel a spaceship:
 
@@ -120,7 +120,7 @@ And by creating standard components like that, the developer who creates a new k
 \
 \
 
-#### Which Perl modules are you constantly using? How do they make your life easier?
+## Which Perl modules are you constantly using? How do they make your life easier?
 
 [Test::Class::Moose]({<% mcpan Test::Class::Moose %>}) is a go to module for me. Most Perl developers learn how to test modules, not applications. With [Test::Class::Moose]({<% mcpan Test::Class::Moose %>}), large test suites become easier to build and manage and, when it's written correctly, many test suites can be an order of magnitude faster.
 
@@ -129,21 +129,21 @@ I also have a module I write for personal code called `Less::Boilerplate`. It's 
 \
 \
 
-#### Which Perl feature do you overuse?
+## Which Perl feature do you overuse?
 
 It used to be the punctuation variables that I would sprinkle around my code like magic pixie dust. Things like local `$" = ', '` were natural to me. But I've stopped doing that because honestly, it's not readable. I do a lot of client work so I take care to ensure that my code is (as much as I can), easy to read and maintain. I've even rewritten some of my code to "dumb it down" because I want to ensure that it's maintainable.
 
 \
 \
 
-#### Which Perl feature do you wish you could use more?
+## Which Perl feature do you wish you could use more?
 
 Given that clients call me in to help build new systems or fix existing ones, I pretty much get to pick and choose what features I want to use, so I'm fortunate in that regard. Thus, there's not much I don't get to use if I think it's useful. However, a feature I wish I could use more is a feature that doesn't exist: more standardized introspection tools, similar to a MOP. Mucking about in the symbol table for the things I need, or pulling in external libraries to find out where my code is located in the filesystem is frustrating. I often write code that magically "works" without having to be loaded (similar to plugins). But without standardized, cross-platform tools for finding the code, loading it dynamically, converting between package and filenames automatically, I find that I'm often rewriting this code again, for a different client, based on their operating system, file system layout, and so on.
 
 \
 \
 
-####  What one thing you'd like to change about Perl?
+##  What one thing you'd like to change about Perl?
 
 How variables behave. There are a few things in that, but mainly, I wish Perl had invariant sigils like Raku and that arrays and hashes wouldn't flatten unless requested. But I'm not going to get that, so let's pretend I didn't ask :)
 
