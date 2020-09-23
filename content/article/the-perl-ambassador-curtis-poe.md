@@ -5,7 +5,7 @@
    "draft" : false,
    "categories" : "community",
    "title" : "The Perl Ambassador: Curtis 'Ovid' Poe",
-   "thumbnail" : "",
+   "thumbnail" : "/images/the-perl-ambassador-curtis-poe/curtis-poe-thumbnail.jpg",
    "tags" : [
    ],
    "image" : "/images/the-perl-ambassador-curtis-poe/curtis-poe.jpg",
