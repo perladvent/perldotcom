@@ -5,7 +5,7 @@
    "draft" : true,
    "categories" : "community",
    "title" : "The Perl Ambassador: Damian Conway",
-   "thumbnail" : "",
+   "thumbnail" : "/images/the-perl-ambassador-damian-conway/damian-conway-thumbnail.jpg",
    "tags" : [
    ],
    "image" : "/images/the-perl-ambassador-damian-conway/damian-conway.jpg",
