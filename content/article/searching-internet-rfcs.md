@@ -1,8 +1,8 @@
 {
 "categories" : "tooling",
 "description" : "A smart way to scrape RFCs",
-"draft" : true,
-"date" : "2020-09-16T07:28:49",
+"draft" : false,
+"date" : "2020-09-24T07:28:49",
 "authors" : [ "edoardo-mantovani" ],
 "title" : "Searching Internet RFCs",
 "tags" : [ "Request for Comments", "perl tools","protocols knoweledge" ]
