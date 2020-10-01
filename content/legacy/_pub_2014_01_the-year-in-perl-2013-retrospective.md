@@ -7,7 +7,7 @@
    ],
    "thumbnail" : null,
    "tags" : [],
-   "date" : "2014-01-01T06:00:01-08:00",
+   "date" : "2014-01-01T06:00:01",
    "image" : null,
    "title" : "The Year in Perl 2013 Retrospective",
    "categories" : "community"

@@ -10,7 +10,7 @@
    "draft" : null,
    "thumbnail" : null,
    "categories" : "development",
-   "date" : "2013-10-28T06:00:01-08:00"
+   "date" : "2013-10-28T06:00:01"
 }
 
 
