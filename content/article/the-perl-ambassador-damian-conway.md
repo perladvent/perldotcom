@@ -2,7 +2,7 @@
    "authors" : [
       "mohammad-anwar"
    ],
-   "draft" : true,
+   "draft" : false,
    "categories" : "community",
    "title" : "The Perl Ambassador: Damian Conway",
    "thumbnail" : "/images/the-perl-ambassador-damian-conway/damian-conway-thumbnail.jpg",
