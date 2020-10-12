@@ -13,7 +13,7 @@
 
 *Image credit: [Rob Nguyen on Flickr](https://www.flickr.com/photos/rob_nguyen/4825313399/in/photolist-8moZyB-4F7P92-2a8nJsX-51pZVG-54XALL-EGpPw-APZM8-4rcAmM-4Fc3s3-2hZ4Rda-7bKxmy-4uifKZ-4uigsM-9hozPR-67hKJY-7PLYc4-4F7PtX-7vE59y-4uiHW6-4F7Qma-4CYoWA-4CU9hX-4CU9at-9944f3-nXDwwV-7mue3G-7XNVLz-2E9Zba-5XwYAf-HMZN7J-57WA3L-qDw1vt-afGkSG-hfdkf-azYcfR-hgnQe-4BmXTh-h7qCJ-hcCSS-uHxKGM-dfyF4a-8Hrqg5-pAsXDF-i5a6WK-8PmthW-EPp3X-roBDF-89oTap-8Hoi2v-9wSY7D)*
 
-I've previously written about [Stupid Open Tricks](https://www.perl.com/article/182/2015/7/15/Stupid-open-tricks/), so know it's time for some stupid `DATA` tricks. You probably already know that you can "embed" a file inside a Perl program then read it from the `DATA` filehandle. David Farrell wrote about this in [Perl tokens you should know](https://www.perl.com/article/24/2013/5/11/Perl-tokens-you-should-know/) and he's the one who reminded me about the curiousity that I'll demonstrate here.
+I've previously written about [Stupid Open Tricks](https://www.perl.com/article/182/2015/7/15/Stupid-open-tricks/), so now it's time for some stupid `DATA` tricks. You probably already know that you can "embed" a file inside a Perl program then read it from the `DATA` filehandle. David Farrell wrote about this in [Perl tokens you should know](https://www.perl.com/article/24/2013/5/11/Perl-tokens-you-should-know/) and he's the one who reminded me about the curiousity that I'll demonstrate here.
 
 Anything after the `__DATA__` line is not part of the program but is available to the program through the special `DATA` filehandle:
 
