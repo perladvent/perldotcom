@@ -86,7 +86,7 @@ The Rapi::FS distribution does many things well: it performs a useful purpose, i
 -   Use the Tiny Implementation Algorithm with [Crypt::TEA\_PP]({{<mcpan "Crypt::TEA_PP" >}})
 -   [Math::Calc::Parser]({{<mcpan "Math::Calc::Parser" >}}) can parse and evaluate mathematical expressions
 -   [Math::InterpolationCompiler]({{<mcpan "Math::InterpolationCompiler" >}}) compiles mathematical interpolations into coderefs, for fast querying
--   [RestrictionDigest]({{<mcpan "RestrictionDigest" >}}) is: "a simulation tool for reducing the genome with one DNA endonuclease or a pair DNA endonucleases"
+-   [RestrictionDigest](https://metacpan.org/pod/release/JINPENG/RestrictionDigest.V1.1/lib/RestrictionDigest.pm) is: "a simulation tool for reducing the genome with one DNA endonuclease or a pair DNA endonucleases"
 
 ### Web
 
