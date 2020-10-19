@@ -64,7 +64,7 @@
 ### Web
 
 -   Add an auto-timeout to your Dancer routes with [Dancer::Plugin::TimeoutManager]({{<mcpan "Dancer::Plugin::TimeoutManager" >}})
--   [Lavoco::Website]({{<mcpan "Lavoco::Website" >}}) is an experimental micro web framework for hosting template toolkit templates
+-   [Lavoco::Website](https://metacpan.org/pod/release/CAGAO/Lavoco-Website-0.06/lib/Lavoco/Website.pm) is an experimental micro web framework for hosting template toolkit templates
 -   Check if a URL is active with [URL::Exists]({{<mcpan "URL::Exists" >}})
 
 
