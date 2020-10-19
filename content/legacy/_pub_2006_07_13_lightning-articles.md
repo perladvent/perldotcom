@@ -95,7 +95,7 @@ If you take in consideration the distribution `HTML::Tagset` again, the rough sk
         create_readme => 1,
         create_makefile_pl => 'traditional',
        );
-      
+
      $build->create_build_script;
 
 As you can see, while `ExtUtils::MakeMaker` prefers uppercased arguments, `Module::Build` goes by entirely lowercased arguments, which obey the rule of least surprise by being as intuitive as a description can be.
@@ -259,7 +259,7 @@ Phil Crow
 
 Perl does not have a native graphical user interface (GUI) toolkit. So we use all manner of existing GUI tools in front of our Perl applications. Often we use a web browser. We have long had Perl/Tk and other libraries based on C/C++. Now we can also use Java's Swing toolkit with similar ease.
 
-In my sample application, when the user presses a button, Perl evaluates an arithmetic expression from the input text box. The result appears in another text box. I'll show the code for this application a piece at a time with a discussion after each piece. To see the whole thing, look in the examples directory of the [`Java::Swing`]({{<mcpan "Java::Swing" >}}) distribution.
+In my sample application, when the user presses a button, Perl evaluates an arithmetic expression from the input text box. The result appears in another text box. I'll show the code for this application a piece at a time with a discussion after each piece. To see the whole thing, look in the examples directory of the [`Java::Swing`](https://metacpan.org/pod/release/PHILCROW/Java-Swing-0.14/lib/Java/Swing.pm) distribution.
 
         #!/usr/bin/perl
         use strict; use warnings;
@@ -339,14 +339,14 @@ Recently during an MJD talk at Chicago.pm, I saw a little Perl trick that was so
 To illustrate, start with an example module that contains two utility subroutines that convert weights between pounds and kilograms. The subroutines accept some number and multiplies it by a conversion factor.
 
       package WeightConverter;
-      
+
       use strict;
       use warnings;
       use constant LB_PER_KG => 2.20462262;
       use constant KG_PER_LB => 1/LB_PER_KG;
-      
+
       sub kilograms_to_pounds { $_[0] * LB_PER_KG; }
-      
+
       sub pounds_to_kilograms { $_[0] * KG_PER_LB; }
 
 Assuming that the real module has a little error checking and POD, this module would serve you just fine. However, what if you decided that we needed to be able to easily do weight conversions from the command line? One option would be to write a Perl script that used `WeightConverter`. If that seems like too much effort, there is a one-liner that would do conversions.
