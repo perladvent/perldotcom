@@ -98,7 +98,7 @@ New Mojolicious modules:
 -   [Mojolicious::Plugin::Logf]({{<mcpan "Mojolicious::Plugin::Logf" >}}) flattens and logs complex data structures using sprintf
 -   [Mojolicious::Plugin::MoreUtilHelpers]({{<mcpan "Mojolicious::Plugin::MoreUtilHelpers" >}}) implements some utility methods
 -   [Mojolicious::Plugin::NetsPayment]({{<mcpan "Mojolicious::Plugin::NetsPayment" >}}) is an experimental module for making payments using Nets
--   [Mojolicious::Plugin::PayPal]({{<mcpan "Mojolicious::Plugin::PayPal" >}}) is an experimental module for making payments using PayPal
+-   [Mojolicious::Plugin::PayPal](https://metacpan.org/release/JHTHORSEN/Mojolicious-Plugin-PayPal-0.08) is an experimental module for making payments using PayPal
 -   [MojoX::GlobalEvents]({{<mcpan "MojoX::GlobalEvents" >}}) is an event handler
 
 
