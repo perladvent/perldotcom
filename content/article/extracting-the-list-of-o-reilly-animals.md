@@ -12,7 +12,7 @@
   }
 
 O'Reilly Media, who publishes most of my books, is distinctively known
-by the animals it chooses for their covers. Edie Freedman explains how she came up with the well-known design in [A short history of the O’Reilly animals](https://www.oreilly.com/content/a-short-history-of-the-oreilly-animals/). I think I first saw this design on the cover of [sed & awk](https://shop.oreilly.com/product/9781565922259.do); those Slender Lorises (Lori?) are a bit creepy.
+by the animals it chooses for their covers. Edie Freedman explains how she came up with the well-known design in [A short history of the O’Reilly animals](https://www.oreilly.com/content/a-short-history-of-the-oreilly-animals/). I think I first saw this design on the cover of [sed & awk](https://shop.oreilly.com/product/9781565922259.do); those Slender Lorises (Lori?) are a bit creepy. I want to grab the entire list at once, and [Mojolicious](https://www.mojolicious.org) is going to help me do that.
 
 ![sed & awk](/images/extracting-the-list-of-o-reilly-animals/sed.jpeg)
 
