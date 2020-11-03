@@ -10,7 +10,7 @@
   "categories"  : "development"
 }
 
-Interpreters reads and executes scripts (when shells are more like a kitchen pass-through and can either execute or hand over to another interpreter). When we specify interpreter on the command line, it is the one that will be used. For instance `Rscript script.R` will execute `script.R` using the `Rscript` interpreter.
+Interpreters reads and executes scripts (when shells are more like a kitchen pass-through and can either execute or hand over to another interpreter). When we specify interpreter on the command line, it is the one that will be used. For instance `Rscript script.R` will execute _script.R_ using the `Rscript` interpreter.
 
 When we execute a file without explicitly giving an interpreter (for instance, like `./myscript.pl`), it is the job of the "shebang" to tell to the shell/OS which interpreter to use. The shebang is that first line of a text file that starts with `#!` and is followed by the interpreter path:
 
@@ -18,12 +18,17 @@ When we execute a file without explicitly giving an interpreter (for instance, l
 #!/usr/bin/perl
 ```
 
-Sometimes you see the `env` program, which finds the right path for the program:
+Sometimes you see the `env` program, which finds the the first `perl` in your path:
 
 ```
 #!/usr/bin/env perl
 ```
 
+`env` does not split args therefore you can't add options:
+
+`#!/usr/bin/env perl -w`
+
+And, `env` is not always located in `/usr/bin/env` so it can guarantee some portability at machine/distribution level but not always between distributions.
 
 ## Perl is nice
 
@@ -31,7 +36,7 @@ The `perl` is not like other interpreters—its nice, even with challenges. `per
 
 ![](/images/bang-bang/nice.jpg)
 
-For instance the file `i-am-python.pl` contains this :
+For instance the file _i-am-python.pl_ contains this :
 
 ```python
 #!/usr/bin/python
@@ -45,7 +50,7 @@ while True:
     time.sleep(5)
 ```
 
-Obviouly we don't care about the extension as it does not mean any kind of file association (although some systems let you associate it). So we have a `.pl` file and we execute it with `perl` but inside we have a `python` shebang and some python code. It's clearly not a valid Perl file.
+Obviouly we don't care about the extension as it does not mean any kind of file association (although some systems let you associate it). So we have a _.pl_ file and we execute it with `perl` but inside we have a `python` shebang and some python code. It's clearly not a valid Perl file.
 
 If you don't believe me, check this with a quick syntax check `perl -c i-am-python.pl` that tells us it isn't valid Perl:
 
@@ -73,7 +78,6 @@ Note that `i-am-pytho[n].pl` with the brackets, which puts the `n` in a characte
 
 Don't forget to kill the program since it's sleeping forever.
 
-
 Now, what if we want to test the converse and run Perl code with a `python` interpreter?
 
 ```perl
@@ -99,7 +103,7 @@ This is special to Python. Try it yourself with bash, Ruby, or something else.
 
 ## I have something for you
 
-Having the correct interpreter on the command line does not mean that the shebang is totally ignored. `perl` is once again super smart and behaves exactly as we can imagine (DWIM). For instance, what if we put a warning switch (`-w`) in the shebang, like in this file `override-bang.pl` :
+Having the correct interpreter on the command line does not mean that the shebang is totally ignored. `perl` is once again super smart and behaves exactly as we can imagine (DWIM). For instance, what if we put a warning switch (`-w`) in the shebang, like in this file _override-bang.pl_:
 
 ```perl
 #!/usr/bin/perl -w
@@ -107,7 +111,7 @@ Having the correct interpreter on the command line does not mean that the sheban
 $str = "will produce a warning";
 ```
 
-Even though we don't put the `-w` on the command line, we still get warnings;
+Even though we don't put the `-w` on the command line, we still get warnings:
 
 ```bash
 $ perl override-bang.pl
@@ -116,37 +120,16 @@ Name "main::str" used only once: possible typo at override-bang.pl line 3.
 
 ## Plenty is no plague
 
-Now, what if I specify some switches on the command line and some others in the shebang? **SPOILER**: they are simply merged together.
+Now, what if we specify some switches on the command line and some others in the shebang? **SPOILER**: they are simply merged together.
 
-When we run `perl -c overridebang.pl` to check syntax (on a file where the syntax is ok), we get the switches from the command line and the shebang line. We get a `perl -cw` execution:
+When we run `perl -c overridebang.pl` to check a syntactically-valid file, we get the switches from the command line and the shebang line. We get a `perl -cw` execution:
 
 ```bash
 Name "main::str" used only once: possible typo at override-bang.pl line 5.
 override-bang.pl syntax OK
 ```
 
-### Life is a matter of choices
-
-What if we have conflicting options like a shebang that disables warnings `#!/usr/bin/perl -X` and a command line with warning switch `perl -w disable-warnings.pl` ?
-
-#### Shebang 1 - Command line 0
-
-With a `disablewarnings.pl` file like this  :
-
-```perl
-#!/usr/bin/perl -X
-
-$str = "will produce a warning";
-```
-
-The shebang (`-X`) is taken in priority versus the command line and no warning is reported.
-Same if we execute the file with `perl -W disablewarnings.pl`.
-
-We could imagine that's a rule to resolve conflicts with "last seen" parameter but wait, it's not that simple.
-
-#### Shebang 1 - 1 Command line
-
-Let's try the contrary, with a file `enablewarnings.pl`:
+What if we have conflicting options like `-w` to enable warnings and `-X` to disable them? Here's _enable-warnings.pl_:
 
 ```perl
 #!/usr/bin/perl -w
@@ -154,125 +137,101 @@ Let's try the contrary, with a file `enablewarnings.pl`:
 $str = "will produce a warning";
 ```
 
-This time `perl -X enablewarnings.pl` does not produce any warning.
+When we run this on its own, we get a warning as expected:
 
-Then this time the command line was stronger than shebang.
+```
+$ perl enable-warnings.pl
+Name "main::str" used only once: possible typo at warnings.pl line 3.
+```
 
-#### Shebang 2 - 1 Command line
+When we add `-X` on the command line, there is no output:
 
-To confuse you (and me) a bit more, if we put `-W` (= "disable all warning") instead of `-w`, this time the shebang `-W` wins...
+```
+$ perl -X enable-warnings.pl
+```
+
+How about the other way around with `-X` on the shebang? Here's _disable-warnings.pl_.
+
 
 ```perl
-#!/usr/bin/perl -W
+#!/usr/bin/perl -X
 
 $str = "will produce a warning";
 ```
 
-This is what we get:
-```bash
-$ perl -X enableallwarnings.pl
-Name "main::str" used only once: possible typo at enableallwarnings.pl line 3.
+When we run this with `-w`, we still don't get output:
+
+```
+$ perl -X enable-warnings.pl
 ```
 
-## Hashbang limitations
+The `-X` always turns off warnings.
 
-The hashbang implementations can have some limitations like the length of the hashbang line (16 or 32 chars in the very early versions of Linux kernel)
+The shebang (`-X`) is taken in priority versus the command line and no warning is reported.
+Same if we execute the file with `perl -W disable-warnings.pl`.
 
-Some very old systems can also simply not recognize the shebang mechanism...
+We could imagine that's a rule to resolve conflicts with "last seen" parameter but wait, it's not that simple.
 
-![Crying man](/images/bang-bang/cryingman.jpg)
+How about `-X` versus `-W`, which enables all warnings? Who wins then? It turns out that the last on defined wins. We can see that right on the command line:
 
-Please note this important `#!/usr/bin/env` limitation for `perl` :
+```
+$ perl -W -X -e '$str = "will produce a warning"'
+$ perl -X -W -e '$str = "will produce a warning"'
+Name "main::str" used only once: possible typo at -e line 1.
+```
 
-`env` does not split args therefore you **CAN'T WRITE** :
+As an exercise for the reader, try the different combinations of taint checking options: `-T` and `-U`.
 
-`#!/usr/bin/env perl -w`
 
-Please also note that `env` is not always located in `/usr/bin/env` so it can garantee some portability at machine/distribution level but not always between distributions.
+## A magic incantation
 
-## Magic incantation
+![](/images/bang-bang/blackmagic.png)
 
-```perl
+Sometimes we see some odd lines at the beginning of Perl programs. What the hell is this black magic? This is actually very smart opening is "polyglot" and correct for both shells (with or without shebang support) and `perl`:
+
+```
 #!/usr/bin/perl
 eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
     if $running_under_some_shell;
 ```
 
-What the hell is this black magic ?
+If the script is started by `perl`, the job is done and `perl` executes:
 
-![](/images/bang-bang/blackmagic.png)
-
-This is actually very smart `perl` scripts openings...
-
-Very smart because this code is **"polyglot"** means correct for both **shells** (with or without shebang support) AND **perl**.
-
-(not totally true actually, `csh` seems to require a modified version for instance)
-
-Let's look how it will be read and understood by shells/perl.
-
-### Script started by perl
-
-In this case, job is done and perl executes :
-```perl
+```
 eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
 if $running_under_some_shell;
 ```
 
-(I removed shebang but `perl` actually interpreted it... for instance to pick up options, as we discussed earlier)
+That `$running_under_some_shell` has no value, so the code translate to a false conditional. This line is ignored and the rest of the file is interpreted normally.:
 
-The code snippet above is actually the same than :
-```perl
+```
 eval 'exec /usr/bin/perl -S $0 ${1+"$@"} if 0;'
 ```
 
-And this code just does nothing (`eval ... if 0;`) and just get ignored and the rest of the file is interpreted normally.
+If the we start the script with a shell that recognizes the shebang? The shell does the handover to `perl`, which then reads the first line (shebang then `eval ...`). The execution flow is then the same than above (magic incantation does nothing and file is interpreted). Nothing surprising there.
 
-### Script started by a shell/OS that recognizes shebangs
+But what if we started the script with a shell that does not recognize the shebang so no handover occurs right away? This is actually where this magic is useful. The shell will ignore first line and will never reach third line. Why will it never reach third line? A newline terminates the shell command and `exec` will replace the current execution by `perl`. The rest of the script doesn't matter after that `exec`. Our code changes from this:
 
-The shell/OS recognizes the shebang and does the handover to `perl` that start reading the first line (shebang then `eval ...`)
-
-The execution flow is then the same than above (magic incantation does nothing and file is interpreted).
-
-### Script started by a shell/OS that does NOT recognize shebang
-
-This is actually where this magic is useful.
-
-The shell will ignore first line and will never reach third line.
-
-Why "never reach third line" ?
-
-Because in shell script the newline terminates the command (!) and exec will replace the current execution by `perl`.
-
-In this case the following code :
-```perl
+```
 #!/usr/bin/perl
 eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
     if $running_under_some_shell;
 ```
 
-is semantically the same than :
+to effectively this:
 
-```perl
+```
 eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
 ```
 
-With `$0` and `$@` being shell words for the script name and arguments
-and `-S` option being `look for programfile using PATH environment variable` ([perldoc](https://perldoc.perl.org/perlrun.html#Command-Switches))
+Those `$0` and `$@` are shell words for the script name and arguments
+and the `-S` tells `perl` look for the value in `$0` using PATH environment variable. ([perldoc](https://perldoc.perl.org/perlrun.html#Command-Switches))
 
-## Basic fun with perl -x
+## -x is fun
 
-In this article we had fun with perl interpreter and shebang, but `perl` has a `-x` which is already fun *by design*.
+We've had fun with the `perl` interpreter and the shebang, but `perl` has a `-x` which is already fun by design. This option tells Perl that the program to execute is actually embedded in a larger chunk of unrelated text to ignore. Perhaps the Perl program is in the middle of an email message:
 
-This `-x` option tells Perl that the program to execute is actually embedded in a larger chunk of unrelated text to ignore.
-
-### -x is fun
-
-(pun based on [XS is fun](https://github.com/xsawyerx/xs-fun))
-
-
-Just an example of what we can do with `perl -x`
-
-```bash
+```
 "I do not know if it is what you want, but it is what you get.
         -- Larry Wall"
 
@@ -288,9 +247,10 @@ old computer.
         -- Larry Wall"
 ```
 
-When we execute this code with `perl -x` :
+Executing this as a program is a syntax error because the Larry Wall quote before the shebang is not valid Perl. When we execute this code with `perl -x`, everything before the shebang is ignored and it works:
 
 ```bash
+$ perl -x email.txt
 perl -x ignores everything before shebang
 
 "Fortunately, it is easier to keep an old interpreter around than an
@@ -298,93 +258,32 @@ old computer.
         -- Larry Wall"
 ```
 
-Everything before shebang was ignored as everything in the `DATA` section (after `__END__`)
-but I was able to retrieve and print `DATA` section with `<DATA>` (it is cool right?).
-
-### perl -x-ception
-
-If you are greedy and want to do some **"perl -x-ception"** then you will get an error.
-
-For instance with this file called `minusx.pl` :
-
-```perl
-#!/usr/bin/perl -x
-#!/usr/bin/perl
-```
-
-The execution of :
-```bash
-$ ./minusx.pl
-```
-
-Will produce an error :
-```
-Can't emulate -x on #! line.
-```
-
-All good things come to an end... :D
-
-But wait, maybe we have a chance if we combine with "magic incantation trick" we can do the **"perl -x-ception"** :
-
-```perl
-#!/bin/sh
-eval 'if [ -x /opt/myperl/bin/perl ]; then exec /opt/myperl/bin/perl -x -- $0 ${1+"$@"}; else exec /usr/bin/perl -x $0 ${1+"$@"}; fi;'
-  if 0;
-
-#!/usr/bin/perl
-
-print "$]\n";
-```
-
-This cool trick will execute my code with my own perl binary or fallback to vendor perl.
-
-*Why does the "perl -x-ception" worked this time whereas it failed in the first attempt ?*
-
-Because the `perl -x` is now executed in a shell process and not interpreted by perl binary like previously.
-
-This is mad.
-
-![](/images/bang-bang/mad.jpg)
-
 ## startperl
 
-We would not be complete about perl shebang without discussing a bit about the config variable `$Congig{startperl}`.
-
-This variable comes from `Config.pm` which is an **heavy config** that provides information about configuration environment.
+We would not be complete about perl shebang without discussing a bit about the config variable `$Congig{startperl}`. This variable comes from _Config.pm_  that provides information about configuration environment (which you also see with `perl -V`):
 
 ```bash
 $ perl -e 'use Config; print $Config{startperl}'
 #!/usr/bin/perl
 ```
 
-It is actually built during compilation from defaults or user/vendor provided configs.
-
-Then how to customize it ?
-
-Simply choose the value of this during the `./Configure` step, the configure option is `-Dstartperl='...'`.
-
-Look at the following line where I choose to set `startperl` to `/my/shebang` :
+This is actually built during compilation from defaults or user/vendor provided configs. What if we want a different value? Simply specify the value of this during the `./Configure` step, the configure option is `-Dstartperl='...'`. We then need to rebuild `perl`:
 
 ```bash
 $ ./Configure -des -Dstartperl='#!/my/shebang'
+$ make test install
 ```
 
-It will change numerous (if not all...) shebang in tools around perl interpreter (like `prove` for instance).
-
-Later when we use `perl` interpreter to read `$Config{startperl}`, we have well our **custom shebang** :
-
-And the `$Config{startperl}` itself :
+Now our custom value is the default:
 
 ```bash
 $ perl -e 'use Config; print $Config{startperl}'
 #!/my/shebang
 ```
 
-In addition, `ExtUtils::MakeMaker` and `Module::Build` seems also to use `startperl` among other methods to fix modules shebangs.
+[ExtUtils::MakeMaker]{{<mcpan "ExtUtils::MakeMaker" >}} and [Module::Build]{{<mcpan "Module::Build" >}} seems also to use `startperl` among other methods to fix modules shebangs.
 
-If you want to use this trick, take care of using a perl intepreter or a program that behaves like a perl interpreter (means : can handle or pass-through the same command line options).
-
-Why exactly ? It is because some CPAN modules use `startperl` to write first line of generated perl tests and the `/usr/bin/env` limitation still apply here (they suppose it's a perl interpreter and that they can add switches...).
+Take care to use an intepreter or a program that behaves like a `perl` interpreter. Some CPAN modules use `startperl` to write first line of generated perl tests. The `/usr/bin/env` limitation still apply here.
 
 ## Resources
 
