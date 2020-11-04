@@ -258,6 +258,31 @@ old computer.
         -- Larry Wall"
 ```
 
+### Stupid trick with -x
+By curiosity I tried to go one step further in the crazyness of `-x`
+
+I placed multiple shebang in a file like this:
+```perl 
+#!/usr/bin/perl -x
+#!/usr/bin/perl
+```
+But it only produces an error `Can't emulate -x on #! line.`.
+
+There is however a trick to achieve this, by using shell `eval`:
+```perl
+#!/bin/sh
+eval 'exec perl -x $0 ${1+"$@"}'
+die "another day"
+#!perl
+print "$]\n";
+```
+
+The tips is that `perl -x` is now executed in a shell process and not interpreted by perl binary like previously.
+
+This is mad.
+
+![](/images/bang-bang/mad.jpg)
+
 ## startperl
 
 We would not be complete about perl shebang without discussing a bit about the config variable `$Congig{startperl}`. This variable comes from _Config.pm_  that provides information about configuration environment (which you also see with `perl -V`):
