@@ -43,7 +43,7 @@ For instance the file _i-am-python.pl_ contains this :
 import os;
 import time;
 
-print "I'm a snake : " + os.environ["SHELL"] + " " + os.environ["_"];
+print("I'm a snake : " + os.environ["SHELL"] + " " + os.environ["_"]);
 
 # Keep it alive to have time to inspect with ps
 while True:
