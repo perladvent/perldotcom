@@ -272,7 +272,7 @@ There is however a trick to achieve this, by using shell `eval`:
 ```perl
 #!/bin/sh
 eval 'exec perl -x $0 ${1+"$@"}'
-die "another day"
+die "another day"; exit 1
 #!perl
 print "$]\n";
 ```
