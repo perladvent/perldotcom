@@ -40,10 +40,10 @@ For instance the file _i-am-python.pl_ contains this :
 
 ```python
 #!/usr/bin/python
-import os;
-import time;
+import os
+import time
 
-print("I'm a snake : " + os.environ["SHELL"] + " " + os.environ["_"]);
+print("I'm a snake : " + os.environ["SHELL"] + " " + os.environ["_"])
 
 # Keep it alive to have time to inspect with ps
 while True:
@@ -56,8 +56,8 @@ If you don't believe me, check this with a quick syntax check `perl -c i-am-pyth
 
 ```
 $ perl -c i-am-python.pl
-syntax error at i-am-python.pl line 4, near "environ["
-iampython.pl had compilation errors.
+syntax error at test.py line 3, near "import time"
+test.py had compilation errors.
 ```
 
 When we execute this file with perl, surprisingly, everything goes fine. How did that happen? `perl` is smart enough to give the script to `python`!
