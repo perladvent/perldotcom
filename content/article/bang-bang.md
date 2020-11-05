@@ -258,7 +258,7 @@ old computer.
         -- Larry Wall"
 ```
 
-Out of curiosity, what if we tried to go one step further? How about multiple shebangs in a file, where one of them has a `x`:
+Out of curiosity, what if we tried to go one step further? How about multiple shebangs in a file, where one of them has a `-x`:
 
 ```perl
 #!/usr/bin/perl -x
