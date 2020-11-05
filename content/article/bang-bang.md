@@ -50,7 +50,7 @@ while True:
     time.sleep(5)
 ```
 
-Obviouly we don't care about the extension as it does not mean any kind of file association (although some systems let you associate it). So we have a _.pl_ file and we execute it with `perl` but inside we have a `python` shebang and some python code. It's clearly not a valid Perl file.
+Obviously we don't care about the extension as it does not mean any kind of file association (although some systems let you associate it). So we have a _.pl_ file and we execute it with `perl` but inside we have a `python` shebang and some python code. It's clearly not a valid Perl file.
 
 If you don't believe me, check this with a quick syntax check `perl -c i-am-python.pl` that tells us it isn't valid Perl:
 
