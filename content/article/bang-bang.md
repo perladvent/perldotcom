@@ -258,17 +258,21 @@ old computer.
         -- Larry Wall"
 ```
 
-### Stupid trick with -x
-By curiosity I tried to go one step further in the crazyness of `-x`
+Out of curiosity, what if we tried to go one step further? How about multiple shebangs in a file, where one of them has a `x`:
 
-I placed multiple shebang in a file like this:
-```perl 
+```perl
 #!/usr/bin/perl -x
 #!/usr/bin/perl
 ```
-But it only produces an error `Can't emulate -x on #! line.`.
 
-There is however a trick to achieve this, by using shell `eval`:
+But it only produces an error:
+
+```
+Can't emulate -x on #! line.
+```
+
+There is however a trick to achieve this, by using shell `eval`. That `perl -x` is now executed in a shell process and not interpreted by perl binary like previously.:
+
 ```perl
 #!/bin/sh
 eval 'exec perl -x $0 ${1+"$@"}'
@@ -276,12 +280,6 @@ die "another day"; exit 1
 #!perl
 print "$]\n";
 ```
-
-The tips is that `perl -x` is now executed in a shell process and not interpreted by perl binary like previously.
-
-This is mad.
-
-![](/images/bang-bang/mad.jpg)
 
 ## startperl
 
@@ -308,14 +306,14 @@ $ perl -e 'use Config; print $Config{startperl}'
 
 [ExtUtils::MakeMaker]{{<mcpan "ExtUtils::MakeMaker" >}} and [Module::Build]{{<mcpan "Module::Build" >}} seems also to use `startperl` among other methods to fix modules shebangs.
 
-Take care to use an intepreter or a program that behaves like a `perl` interpreter. Some CPAN modules use `startperl` to write first line of generated perl tests. The `/usr/bin/env` limitation still apply here.
+Take care to use an interpreter or a program that behaves like a `perl` interpreter. Some CPAN modules use `startperl` to write first line of generated perl tests. The `/usr/bin/env` limitation still apply here.
 
 ## Resources
 
-* [Great resource about shebang](https://www.in-ulm.de/~mascheck/various/shebang/)
+* [The #! magic, details about the shebang/hash-bang mechanism on various Unix flavours](https://www.in-ulm.de/~mascheck/various/shebang/)
 
 * [Why it is better to usr /usr/bin/env interpreter instead of /path/to/interpreter](https://unix.stackexchange.com/questions/29608/why-is-it-better-to-use-usr-bin-env-name-instead-of-path-to-name-as-my)
 
 * [Could someone explain this shebang line which uses sh and then does exec perl?](https://unix.stackexchange.com/questions/450509/could-someone-explain-this-shebang-line-which-uses-sh-and-then-does-exec-perl)
 
-* A tiny portion is derivated from [LinuxFR article](https://linuxfr.org/news/sortie-de-perl-5-30-0) (same author).
+* A tiny portion comes from [Sortie de Perl 5.30.0](https://linuxfr.org/news/sortie-de-perl-5-30-0) (en français).
