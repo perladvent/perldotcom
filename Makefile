@@ -18,7 +18,7 @@ deploy: json ## deploy the website to the static repo
 	bin/deploy
 
 .PHONY: show_drafts
-show_drafts: # show a list of drafts
+show_drafts: ## show a list of drafts
 	grep -R '"draft" : true' content
 
 ######################################################################
