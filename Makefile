@@ -6,7 +6,7 @@ new: ## start a new article
 	perl bin/new-article
 
 .PHONY: json
-json:
+json: ## create the JSON files (static/json)
 	perl bin/collate_metadata
 
 .PHONY: start
