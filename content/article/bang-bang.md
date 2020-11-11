@@ -57,8 +57,8 @@ If you don't believe me, check this with a quick syntax check `perl -c i-am-pyth
 
 ```
 $ perl -c i-am-python.pl
-syntax error at test.py line 3, near "import time"
-test.py had compilation errors.
+syntax error at i-am-python.pl line 3, near "import time"
+i-am-python.pl had compilation errors.
 ```
 
 When we execute this file with perl, surprisingly, everything goes fine. How did that happen? `perl` is smart enough to give the script to `python`!
@@ -302,7 +302,7 @@ $ perl -e 'use Config; print $Config{startperl}'
 #!/my/shebang
 ```
 
-[ExtUtils::MakeMaker]{{<mcpan "ExtUtils::MakeMaker" >}} and [Module::Build]{{<mcpan "Module::Build" >}} seems also to use `startperl` among other methods to fix modules shebangs.
+[ExtUtils::MakeMaker]({{<mcpan "ExtUtils::MakeMaker" >}}) and [Module::Build]({{<mcpan "Module::Build" >}}) seems also to use `startperl` among other methods to fix modules shebangs.
 
 Take care to use an interpreter or a program that behaves like a `perl` interpreter! Some CPAN modules use `startperl` to write first line of generated perl tests. The `/usr/bin/env` limitation still apply here.
 
