@@ -7,6 +7,7 @@ new: ## start a new article
 
 .PHONY: json
 json:
+	perl bin/collate_metadata
 
 .PHONY: start
 start: ## start the local server
