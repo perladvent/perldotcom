@@ -361,7 +361,7 @@ This is mad.
 
 ## startperl
 
-We would not be complete about perl shebang without discussing a bit about the config variable `$Congig{startperl}`.
+We would not be complete about perl shebang without discussing a bit about the config variable `$Config{startperl}`.
 
 This variable comes from `Config.pm` which is an **heavy config** that provides information about configuration environment.
 
