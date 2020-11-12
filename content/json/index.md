@@ -5,8 +5,6 @@
   "exclude_paginate": 1
 }
 
-## JSON files
-
 Perl.com provides various JSON files for its articles for your programming pleasure. Get all the articles, or just the last 10 (for a smaller file):
 
 * [All articles](/json/all_articles.json)
