@@ -1,0 +1,73 @@
+#!perl
+use v5.10;
+use open qw(:std :utf8);
+
+use Mojo::File;
+use Mojo::JSON qw(decode_json);
+use Mojo::Util qw(dumper);
+my %kill = map { $_, 1 } qw(perldotcom);
+
+my %map = map {
+	chomp;
+	my( $key, $value ) = split /\s+/, $_, 2;
+	} <DATA>;
+
+my %git_contributors =
+	map { $_->{name} => $_ }
+	map {
+		my %hash = (
+			name => s/\A\s*\d+\s*//gr,
+			key  => '',
+			link => '',
+			);
+		\%hash;
+		}
+	map { chomp;
+		s/\A\s*\d+\s*//;
+		( exists($map{$_}) && $map{$_} ) ? $map{$_} : $_
+		}
+	`git shortlog -s`;
+
+my %authors =
+	map {
+		my $j = decode_json( Mojo::File->new($_)->slurp );
+		$j->{link} = "https://www.perl.com/authors/$j->{key}/";
+		$j->{name} => $j;
+		}
+	grep { ! /perldotcom/ }
+	glob 'data/author/*.json';
+
+my %contributors = ( %git_contributors, %authors );
+
+my $contributors = join ", ",
+	map {
+		$contributors{$_}{link} ? "[$contributors{$_}{name}]($contributors{$_}{link})" : $contributors{$_}{name}
+		}
+	sort { lc $a cmp lc $b }
+	keys %contributors;
+
+say <<"HERE";
+{
+  "title": "Perl.com contributors",
+  "type": "about",
+  "categories": "meta",
+  "exclude_paginate": 1
+}
+
+$contributors
+
+HERE
+
+
+__END__
+astrajeriu Alexandru Strajeriu
+fostytou
+jrw John Wiersba
+mohawk2
+nagasrisai Naga Sri Sai
+noureddin
+sdeseille Sebastien Deseille
+sshaw Skye Shaw
+thibaultduponchelle Thibault Duponchelle
+tmurray Timm Murray
+yozzik

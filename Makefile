@@ -9,12 +9,16 @@ new: ## start a new article
 json: ## create the JSON files (static/json)
 	perl bin/collate_metadata
 
+.PHONY: contributors
+contributors:
+	perl bin/list_contributors > content/contributors.md
+
 .PHONY: start
-start: ## start the local server
+start: json contributors ## start the local server
 	hugo server --buildDrafts --buildFuture --disableFastRender -d built
 
 .PHONY: deploy
-deploy: json ## deploy the website to the static repo
+deploy: json contributors ## deploy the website to the static repo
 	bin/deploy
 
 .PHONY: show_drafts
