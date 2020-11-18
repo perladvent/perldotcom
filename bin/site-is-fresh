@@ -1,0 +1,55 @@
+#!perl
+use v5.10;
+
+=head1 NAME
+
+site-is-fresh - exits with true if the deployed commit matches the live site commit
+
+=head1 SYNOPSIS
+
+	% perl bin/site-is-fresh
+	Deployed: 044b140f28a04b73a66c46f3110dd99e46f2cc99
+	Live:     044b140f28a04b73a66c46f3110dd99e46f2cc99
+	Site is fresh
+	% echo $?
+	0
+
+=head1 DESCRIPTION
+
+The I<perldotcom> repo creates a JSON file with the commit and time
+data for the deployment, and tags the current commit. Checking the values
+in the file on the live site against the local tag lets you know if
+the live site is fresh.
+
+	% make deploy
+	...
+	% make site_is_fresh
+
+=cut
+
+use IO::Interactive qw(interactive);
+use Mojo::UserAgent;
+
+my $url = 'https://www.perl.com/json/build.json';
+
+chomp( my $deployed_commit = `git log -1 --format="%H" deployed` );
+my $live_commit = Mojo::UserAgent
+	->new
+	->get( $url )
+	->result
+	->json
+	->{commit};
+
+print { interactive } <<~"HERE";
+	Deployed: $deployed_commit
+	Live:     $live_commit
+	HERE
+
+if( $deployed_commit eq $live_commit ) {
+	say {interactive} "Site is fresh";
+	exit 0;
+	}
+else {
+	say {interactive} "Site is stale";
+	exit 1;
+	}
