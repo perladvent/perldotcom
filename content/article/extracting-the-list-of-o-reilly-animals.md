@@ -2,25 +2,24 @@
   {
     "title"       : "Extracting the list of O'Reilly Animals",
     "authors"     : ["brian-d-foy"],
-    "date"        : "2020-10-29T18:02:50",
-    "tags"        : [mojolicious promises oreilly],
+    "date"        : "2020-11-22T18:02:50",
+    "tags"        : ["mojolicious", "promises", "oreilly"],
     "draft"       : true,
     "image"       : "",
     "thumbnail"   : "",
-    "description" : "",
+    "description" : "Website fun with Mojolicious's Promises",
     "categories"  : "community"
   }
 
-O'Reilly Media, who publishes most of my books, is distinctively known
-by the animals it chooses for their covers. Edie Freedman explains how she came up with the well-known design in [A short history of the O’Reilly animals](https://www.oreilly.com/content/a-short-history-of-the-oreilly-animals/). I think I first saw this design on the cover of [sed & awk](https://shop.oreilly.com/product/9781565922259.do); those Slender Lorises (Lori?) are a bit creepy. I want to grab the entire list at once, and [Mojolicious](https://www.mojolicious.org) is going to help me do that.
+O'Reilly Media, which publishes most of my books, is distinctively known by the animals it chooses for their covers. Edie Freedman explains how she came up with the well-known design in [A short history of the O’Reilly animals](https://www.oreilly.com/content/a-short-history-of-the-oreilly-animals/). I think I first saw this design on the cover of [sed & awk](https://shop.oreilly.com/product/9781565922259.do); those Slender Lorises (Lori?) are a bit creepy.
 
 ![sed & awk](/images/extracting-the-list-of-o-reilly-animals/sed.jpeg)
 
-O'Reilly has [a list of almost all of the animals](https://www.oreilly.com/animals.csp) from their covers, even if "animals" is a bit of a loose term that encompasses "Catholic Priests" (*[Ethics of Big Data](https://shop.oreilly.com/product/0636920021872.do)*) or "Soldiers or rangers, with rifles" (*[SELinux](https://shop.oreilly.com/product/9780596007164.do)*). You can page through that list 20 results at a time, or search it. But, as with most lists I see online, I want them all at once, and locally.
+O'Reilly has [a list of almost all of the animals](https://www.oreilly.com/animals.csp) from their covers, even if "animals" is a bit of a loose term that encompasses "Catholic Priests" (*[Ethics of Big Data](https://shop.oreilly.com/product/0636920021872.do)*) or "Soldiers or rangers, with rifles" (*[SELinux](https://shop.oreilly.com/product/9780596007164.do)*). You can page through that list 20 results at a time, or search it. But, as with most lists I see online, I want to grab the entire list at once.
 
-Scrapping a bunch of pages is no problem for Perl, especially with [Mojolicious](https://www.mojolicious.org) (as I write about in *[Mojo Web Clients](https://leanpub.com/mojo_web_clients)*). I whipped up a quick script and soon had it [all of the animals in a JSON file](https://gist.github.com/briandfoy/d68915eb425e1fc4932ceac5cdf2d60d).
+Scraping a bunch of pages is no problem for Perl, especially with [Mojolicious](https://www.mojolicious.org) (as I write about in *[Mojo Web Clients](https://leanpub.com/mojo_web_clients)*). I whipped up a quick script and soon had [all of the animals in a JSON file](https://gist.github.com/briandfoy/d68915eb425e1fc4932ceac5cdf2d60d).
 
-There's nothing particularly fancy in my programming, although I do use [Mojo::Promise](https://docs.mojolicious.org/Mojo/Promise) so I can make the requests in parallel. That wasn't something that I cared that much about, but I had just answered [a StackOverflow question about Promises](https://stackoverflow.com/q/64597755/2766176). This is only slightly different than "regular" Mojo; I set up all of the web requests but don't run them right away. Once I have all of them, I run them at once through the `all()` Promise:
+There's nothing particularly fancy in my programming, although I do use [Mojo::Promise](https://docs.mojolicious.org/Mojo/Promise) so I can make the requests in parallel. That wasn't something that I cared that much about, but I had just answered [a StackOverflow question about Promises](https://stackoverflow.com/q/64597755/2766176) so it was on my mind. I set up all of the web requests but don't run them right away. Once I have all of them, I run them at once through the `all()` Promise:
 
 ```perl
 #!perl
@@ -124,13 +123,13 @@ sub parse_page ( $tx ) {
 	}
 ```
 
-Those parallel requests make this program much faster than it would be if I did them individually one after the other. Most of the web request time is simply waiting and I get all of those requests to wait at the same time. Now, this isn't really parallelism because once once request has something to do, such as reading the data, the other requests still need to wait their turn. Perhaps I'll rewrite this program later to use [Minion](https://docs.mojolicious.org/Minion), the Mojo-based job queue that can do things in different processes.
+Those parallel requests make this program much faster than it would be if I did them individually one after the other, although it can really hammer a server if I'm not careful. Most of the web request time is simply waiting and I get all of those requests to wait at the same time. Now, this isn't really parallelism because once once request has something to do, such as reading the data, the other requests still need to wait their turn. Perhaps I'll rewrite this program later to use [Minion](https://docs.mojolicious.org/Minion), the Mojo-based job queue that can do things in different processes.
 
-The rest of the program is data extraction. In `parse_page`, I have various [CSS Selectors](https://docs.mojolicious.org/Mojo/DOM/CSS) to extract all the `div.animal-row` in the result and turn each animal into its own hash (again, I have lots of examples in *[Mojo Web Clients](https://leanpub.com/mojo_web_clients)*). Each Promise adds those results to the `@grand` array. At the end, I turn that into a JSON file, which I've also uploaded as a [gist](https://gist.github.com/briandfoy/d68915eb425e1fc4932ceac5cdf2d60d).
+The rest of the program is data extraction. In `parse_page`, I have various [CSS Selectors](https://docs.mojolicious.org/Mojo/DOM/CSS) to extract all of the `div.animal-row` and turn each animal into a hash (again, I have lots of examples in *[Mojo Web Clients](https://leanpub.com/mojo_web_clients)*). Each Promise adds its results to the `@grand` array. At the end, I turn that into a JSON file, which I've also uploaded as a [gist](https://gist.github.com/briandfoy/d68915eb425e1fc4932ceac5cdf2d60d).
 
 As someone who has been doing this sort of extraction for quite a while, I'm always quite pleased how easy Mojolicious makes this. I get the page and select some elements. A long time ago, I would have had long series of substitutions, regexes, and other low-level text processing. Perl's certainly good at text processing, but that doesn't mean I want to work at that level in every program.
 
-## A few tricks
+## A nifty trick
 
 I do use a few interesting tricks just because I do. Lately in these sorts of programs I'm collecting things into data structure then presenting it at the end. Typically that means I do the setup at the top of the program file and the output at the end.  However, after I've defined the `@grand` variable, I immediately define an `END` block to specify what to do with `@grand` once everything else has happened:
 
@@ -152,7 +151,7 @@ END {
 
 ## A little safari
 
-And I leave you with a little safari. My animals are the Llama, Alpaca, Vicuñas, Camel, and Hamadryas Butterfly. Search the O'Reilly list (or my JSON) to find those titles. Some of them are missing and some have surprising results.
+And I leave you with a little safari for your own amusement. My animals are the Llama, Alpaca, Vicuñas, Camel, and Hamadryas Butterfly. Search the O'Reilly list (or my JSON) to find those titles. Some of them are missing and some have surprising results.
 
 ![](/images/extracting-the-list-of-o-reilly-animals/learning_perl.jpeg)
 
