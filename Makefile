@@ -35,7 +35,7 @@ show_drafts: ## show a list of drafts
 
 .PHONY: show_live_build
 show_live_build: ## show the build data for the live site
-	curl $(BUILD_JSON_URL) | jq .
+	curl -s $(BUILD_JSON_URL) | jq .
 
 ######################################################################
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
