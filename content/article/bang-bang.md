@@ -12,7 +12,8 @@
 
 ![](/images/bang-bang/blackmagic.png)
 
-\\
+\
+\
 
 Interpreters read and execute scripts (whereas shells are more like a kitchen pass-through and can either execute or hand over to another interpreter). When we specify interpreter on the command line, it is the one that will be used. For instance `Rscript script.R` will execute _script.R_ using the `Rscript` interpreter.
 
