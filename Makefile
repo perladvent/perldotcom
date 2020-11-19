@@ -31,7 +31,7 @@ start: json contributors ## start the local server
 deploy: json contributors ## deploy the website to the static repo
 	bin/deploy
 	git tag -d $(DEPLOYED_TAG_NAME)
-	git push origin --delete $(DEPLOYED_TAG_NAME)
+	- git push origin --delete $(DEPLOYED_TAG_NAME)
 	git tag $(DEPLOYED_TAG_NAME)
 	git push origin --tags
 
@@ -41,7 +41,7 @@ show_drafts: ## show a list of drafts
 
 .PHONY: show_live_build
 show_live_build: ## show the build data for the live site
-	perl bin/site-is-fresh
+	- perl bin/site-is-fresh
 
 .PHONY: refresh_tags
 refresh_tags: ## sync the tags with the repo
