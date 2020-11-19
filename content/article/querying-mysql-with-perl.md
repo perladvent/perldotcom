@@ -64,7 +64,7 @@ Now we're connected to the database, with `$dbh` as our handler. Creating the ta
 my $query = 'INSERT INTO coffee ( cups ) VALUES ( ? )';
 ```
 
-You'll notice the `?`. This serves as a **placeholder**, allowing me to enterone cup or ten, depending on what kind of day I'm having. Yes, we **could** change that question mark into the actual number, but in the world of computing, [you're not always in control of what data is going in.](https://xkcd.com/327/)
+You'll notice the `?`. This serves as a **placeholder**, allowing me to enter one cup or ten, depending on what kind of day I'm having. Yes, we **could** change that question mark into the actual number, but in the world of computing, [you're not always in control of what data is going in.](https://xkcd.com/327/)
 
 ![The Image from xkcd 327](exploits_of_a_mom.png)
 
@@ -151,6 +151,14 @@ This gives us an array of hashrefs.
    },
 ...]
 ```
+
+## Results
+
+I stopped the coffee tracking a while ago, and I _could_ pull my FitBit data and correlate the nights of poor sleep to the days of excessive consumption, that'd be a project for another forum. I _can_ say that my consumption became incredibly consistent, until it wasn't.
+
+I also had a mechanism that reported my consumption to Twitter, as a means of accountability, but there's a lot of coffee enablers in my social circles. _A lot._
+
+![Plot of all my coffee](coffee_plot.png)
 
 ## More Info
 
