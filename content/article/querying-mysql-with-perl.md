@@ -150,6 +150,14 @@ This gives us an array of hashrefs:
 ...]
 ```
 
+## Results
+
+I stopped the coffee tracking a while ago, and I _could_ pull my FitBit data and correlate the nights of poor sleep to the days of excessive consumption, that'd be a project for another forum. I _can_ say that my consumption became incredibly consistent, until it wasn't.
+
+I also had a mechanism that reported my consumption to Twitter, as a means of accountability, but there's a lot of coffee enablers in my social circles. _A lot._
+
+![Plot of all my coffee](coffee_plot.png)
+
 ## More Info
 
 The documentation for [DBI]({{<mcpan "DBI" >}}) and [DBD::mysql]({{<mcpan "DBD::mysql" >}}) are in-depth and excellent, and there are several articles on Perl.com that are well worth reading. [Mark-Jason Dominus has a Short Guide to DBI](https://www.perl.com/pub/1999/10/DBI.html/)  and [Simon Cozens wrote more generally about DBI](https://www.perl.com/pub/2003/10/23/databases.html/).
