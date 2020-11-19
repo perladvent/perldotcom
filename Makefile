@@ -5,6 +5,8 @@ HUGO=hugo
 JSON_DIRNAME=json
 JSON_LOCAL_DIR=static/$(JSON_DIRNAME)
 
+DEPLOYED_TAG_NAME=deployed
+
 BUILD_JSON_FILE=build.json
 BUILD_JSON_URL=$(SITE)/$(JSON_DIRNAME)/$(BUILD_JSON_FILE)
 
@@ -28,6 +30,10 @@ start: json contributors ## start the local server
 .PHONY: deploy
 deploy: json contributors ## deploy the website to the static repo
 	bin/deploy
+	git tag -d $(DEPLOYED_TAG_NAME)
+	- git push origin --delete $(DEPLOYED_TAG_NAME)
+	git tag $(DEPLOYED_TAG_NAME)
+	git push origin --tags
 
 .PHONY: show_drafts
 show_drafts: ## show a list of drafts
@@ -35,7 +41,11 @@ show_drafts: ## show a list of drafts
 
 .PHONY: show_live_build
 show_live_build: ## show the build data for the live site
-	curl -s $(BUILD_JSON_URL) | jq .
+	- perl bin/site-is-fresh
+
+.PHONY: refresh_tags
+refresh_tags: ## sync the tags with the repo
+	git fetch --tags --force
 
 ######################################################################
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
