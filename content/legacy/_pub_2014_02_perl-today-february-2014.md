@@ -1,7 +1,7 @@
 {
    "tags" : [],
    "thumbnail" : null,
-   "date" : "2014-02-10T06:00:00-08:00",
+   "date" : "2014-02-10T06:00:00",
    "categories" : "community",
    "image" : null,
    "title" : "Perl Today (February 2014)",

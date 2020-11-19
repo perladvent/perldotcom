@@ -68,8 +68,7 @@ This script constructs a new object using "get\_instance" and assigns it to a va
 
 -   brian d foy's [Perl Review article](http://www.theperlreview.com/Articles/v0i1/singletons.pdf) on the Singleton pattern is a more in-depth consideration of the Singleton pattern in Perl.
 -   [Wikpedia's Singleton entry](https://en.wikipedia.org/wiki/Singleton_pattern) has useful background and discussion on the pattern.
--   [Design Patterns: Elements of Reusable Object-Oriented Software](http://www.amazon.com/gp/product/B000SEIBB8/ref=as_li_qf_sp_asin_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=B000SEIBB8&linkCode=as2&tag=perltrickscom-20) - The classic "gang of four" book that popularized the concept of Design Patterns, including the Singleton (affiliate link).
--   The Perl Design Patterns site has a [Singleton entry](http://perldesignpatterns.com/?SingletonPattern), with alternative implementations.
+-   [Design Patterns: Elements of Reusable Object-Oriented Software](http://www.amazon.com/gp/product/B000SEIBB8/) - The classic "gang of four" book that popularized the concept of Design Patterns, including the Singleton (affiliate link).
 
 
 \

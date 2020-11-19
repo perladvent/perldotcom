@@ -116,7 +116,7 @@ This captures the text of the current program, sorts each line alphabetically an
 In [Gzipping data directly from Perl](http://perltricks.com/article/162/2015/3/27/Gzipping-data-directly-from-Perl), I showed how I could compress data on the fly by using Perl's gzip IO layer. This is handy when I have limited disk space:
 
 ```perl
-open my $fh, '>:gzip' $filename 
+open my $fh, '>:gzip', $filename
   or die "Could not write to $filename: $!";
 
 while( $_ = something_interesting() ) {
@@ -127,7 +127,7 @@ while( $_ = something_interesting() ) {
 I can go the other direction as well, reading directly from compressed files when I don't have enough space to uncompress them first:
 
 ```perl
-open my $fh, '<:gzip' $filename 
+open my $fh, '<:gzip', $filename
   or die "Could not read from $filename: $!";
 
 while( <$fh> ) {
@@ -166,7 +166,7 @@ say 'This should show in the terminal';
 If I only have the file descriptor, perhaps because I'm working with an old Unix programmer who thinks **vi** is a crutch, I can use that:
 
 ```perl
-open my $fh, "<&=$fd" 
+open my $fh, "<&=$fd"
   or die "Could not open filehandle on $fd\n";
 ```
 

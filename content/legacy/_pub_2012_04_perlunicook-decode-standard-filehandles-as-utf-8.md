@@ -32,9 +32,9 @@ Within your program, the [open]({{<perldoc "open" >}}) pragma allows you to set 
 
 Because Perl uses IO layers to implement encoding and decoding, you may also use the [binmode]({{<perlfunc "binmode" >}}) operator on filehandles directly:
 
-         binmode(STDIN,  ":utf8");
-         binmode(STDOUT, ":utf8");
-         binmode(STDERR, ":utf8");
+         binmode(STDIN,  ":encoding(UTF-8)");
+         binmode(STDOUT, ":encoding(UTF-8)");
+         binmode(STDERR, ":encoding(UTF-8)");
 
 Previous: [℞ 14: Decode @ARGV as Local Encoding](/pub/2012/04/perlunicookbook-decode-argv-as-local-encoding.html)
 

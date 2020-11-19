@@ -16,7 +16,7 @@ use Local::Metadata;
 
 my @keys = qw(tags authors categories);
 
-my @files = glob( "content/**/*.md" );
+my @files = glob( "content/{article,legacy}/*.md" );
 say {interactive} "There are " . @files . " files";
 
 my %grand_collation;
@@ -47,7 +47,9 @@ FILE: foreach my $file ( @files ) {
 
 
 # This won't be the final directory, but it's good for now.
-my $dir = Mojo::File->new('collations');
+my $dir = Mojo::File->new('static/json');
+$dir->make_path;
+
 my $j = JSON::XS->new->utf8->pretty(1);
 
 my @all_articles = sort { $b->{epoch} <=> $a->{epoch} } values %all_articles;
@@ -59,9 +61,14 @@ $dir->child( 'previous_ten_articles.json' )->spurt(
 	$j->encode( [ @all_articles[0..9] ] )
 	);
 
-foreach my $subdir ( qw(tags categories authors) ) {
+my %by = (
+	tags       => 'by_tag',
+	categories => 'by_category',
+	authors    => 'by_author',
+	);
 
-	$dir->child( $subdir )->make_path;
+foreach my $subdir ( qw(tags categories authors) ) {
+	$dir->child( $by{$subdir} )->make_path;
 	my @values = keys $grand_collation{$subdir}->%*;
 	$dir->child( "$subdir.json" )->spurt(
 		$j->encode( [
@@ -72,7 +79,7 @@ foreach my $subdir ( qw(tags categories authors) ) {
 		);
 
 	foreach my $value ( keys $grand_collation{$subdir}->%* ) {
-		$dir->child( $subdir, "$value.json" )->spurt(
+		$dir->child( $by{$subdir}, "$value.json" )->spurt(
 			$j->encode( $grand_collation{$subdir}{$value} )
 			);
 		}

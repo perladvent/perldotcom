@@ -159,7 +159,7 @@ sub categories ( $self ) { $self->_get_list( 'categories' ) }
 
 sub _get_list ( $self, $key ) {
 	unless( exists $self->{$key} ) {
-		carp "Didn't find <$key> in metadata object";
+		carp "Didn't find <$key> in metadata object for <" . $self->augmented->{filename} . ">";
 		return [];
 		}
 	my $values = $self->{$key};
@@ -167,7 +167,7 @@ sub _get_list ( $self, $key ) {
 	return [ $values ] unless ref $values;    # single value
 
 	if( ref $values eq ref {} ) {
-		carp "Expected single value or array for <$key> but got a hash";
+		carp "Expected single value or array for <$key> but got a hash for <" . $self->augmented->{filename} . ">";
 		return [];
 		}
 
@@ -284,12 +284,12 @@ Returns an integer version of the publication date.
 # 2016-05-04T20:37:57
 sub _date_to_epoch ( $self ) {
 	my $date = $self->{date};
-	$date .= 'Z' unless $date =~ /[+-]\d\d:?\d\d\z/;
+ 	$date .= 'Z' unless $date =~ /[+-]\d\d:?\d\d\z/;
 	my $epoch = eval {
 		Time::Moment->from_string( $date )->epoch
 		};
 	if( $@ ) {
-		carp "Couldn't parse <" . $self->{date} . "> ($date) as a date";
+		carp "Couldn't parse <" . $self->{date} . "> ($date) as a date for <" . $self->augmented->{filename} . '>';
 		return;
 		}
 	return $epoch;

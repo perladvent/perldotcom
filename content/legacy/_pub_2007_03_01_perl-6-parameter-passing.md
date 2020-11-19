@@ -37,7 +37,7 @@ Sir Isaac Newton was a noted computer scientist and sometime astronomer, physici
         #!/usr/bin/pugs
         use v6;
 
-        my Num  $target = 9;
+        my Num  $target = 9e0;
         my Num  $guess  = $target;
 
         while (abs( $guess**2 - $target ) > 0.005) {
