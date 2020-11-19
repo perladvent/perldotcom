@@ -14,7 +14,7 @@
 
 MySQL is one of the top databases, with options from [installing it on a Raspberry PI](http://www.raspberry-projects.com/pi/software_utilities/web-servers/mysql) to DBaaS providers such as [Google](https://cloud.google.com/sql/) and [Amazon](https://aws.amazon.com/rds/).
 
-When I was first learning to work with databases, I needed a toy project, where I could learn without it affecting work data. I was getting into Quantified Self and wanted to get better sleep, so I wrote a coffee tracker and a _lot_ of MySQL.
+When I was first learning to work with databases, I needed a toy project, where I could learn without it affecting work data. I was getting into [Quantified Self](https://quantifiedself.com) and wanted to get better sleep. If I could see when and how much caffeine I was taking in, maybe I'd get better sleep. Like any good programmer, I wrote a coffee tracker using a _lot_ of MySQL.
 
 ## Setup
 
@@ -25,8 +25,6 @@ If you're wanting to run from Windows, [Strawberry Perl](http://strawberryperl.c
 Note: [MariaDB](https://mariadb.com/) was forked from MySQL by the original developer, Michael Widenius. They are functionally interchangeable. If you want to hear more of the story, [Randal Schwartz interviewed him for FLOSS Weekly](https://twit.tv/shows/floss-weekly/episodes/194). If you want to work with MariaDB instead, there is [DBD::MariaDB](https://mariadb.com/kb/en/library/perl-dbi/), but the MySQL driver "should generally work" with MariaDB. This article will cover MySQL.
 
 There also exists a pure Perl module that interacts with MySQL without the drivers, called [Net::MySQL](https://metacpan.org/pod/Net::MySQL). If you are coding where you cannot install drivers, it could be helpful, but it won't be covered here.
-
-(note to editor: SETUP is WAY big. We kinda need it, but if the goal is < 1000 words, there's a problem.)
 
 ## Connecting
 
@@ -58,13 +56,13 @@ Now we're connected to the database, with `$dbh` as our handler. Creating the ta
 +-----------+--------------+------+-----+-------------------+-------+
 ```
 
-`id` and `datestamp` are auto-populated, so the query is as easy as
+The `id` and `datestamp` columns are auto-populated, so the query is as easy as inserting a single column:
 
 ```perl
 my $query = 'INSERT INTO coffee ( cups ) VALUES ( ? )';
 ```
 
-You'll notice the `?`. This serves as a **placeholder**, allowing me to enterone cup or ten, depending on what kind of day I'm having. Yes, we **could** change that question mark into the actual number, but in the world of computing, [you're not always in control of what data is going in.](https://xkcd.com/327/)
+Notice the `?`. This serves as a **placeholder**, allowing us to enter one cup or ten, depending on what kind of day I'm having. Yes, we **could** change that question mark into the actual number, but in the world of computing, [you're not always in control of what data is going in.](https://xkcd.com/327/)
 
 ![The Image from xkcd 327](exploits_of_a_mom.png)
 
@@ -85,7 +83,7 @@ $dbh->do('INSERT INTO coffee ( cups ) VALUES ( 1 )');
 
 ## Data Out Of DB
 
-So, now I have several years of coffee tracked, and I want to do something with it. Like, how many cups of coffee have I had per day?
+So, now we have several years of coffee tracked, and we want to do something with it. Like, how many cups of coffee have we had per day?
 
 ```perl
 my $query = <<'SQL';
@@ -101,7 +99,7 @@ $sth->execute() or croak $dbh->errstr;
 my $arrayref = $fetchall_arrayref();
 ```
 
-This is good, but it has two problems: we're getting everything and we're not getting it by name. It's an array of arrays, and we have hashes for a reason.
+This is good, but it has two problems: we're getting everything and we're not getting it by name. It's an array of arrays, and we have hashes for a reason:
 
 ```perl
 my $query = <<'SQL';
@@ -131,7 +129,7 @@ Here we have a hashref that looks like this:
 ...}
 ```
 
-This is good, but it could be better. We're duplicating the date, but we cannot have a key be anything that isn't in the query.
+This is good, but it could be better. We're duplicating the date, but we cannot have a key be anything that isn't in the query:
 
 ```perl
 
@@ -141,7 +139,7 @@ $sth->execute(@$dates) or croak $dbh->errstr;
 my $hashref = $sth->fetchall_arrayref({});
 ```
 
-This gives us an array of hashrefs.
+This gives us an array of hashrefs:
 
 ```json
 [
@@ -154,6 +152,6 @@ This gives us an array of hashrefs.
 
 ## More Info
 
-The documentation for [DBI](https://metacpan.org/pod/DBI) and [DBD::mysql](https://metacpan.org/pod/DBD::mysql) are in-depth and excellent, and there are several articles on Perl.com that are well worth reading. [Mark-Jason Dominus has a Short Guide to DBI](https://www.perl.com/pub/1999/10/DBI.html/)  and [Simon Cozens wrote more generally about DBI](https://www.perl.com/pub/2003/10/23/databases.html/).
+The documentation for [DBI]({{<mcpan "DBI" >}}) and [DBD::mysql]({{<mcpan "DBD::mysql" >}}) are in-depth and excellent, and there are several articles on Perl.com that are well worth reading. [Mark-Jason Dominus has a Short Guide to DBI](https://www.perl.com/pub/1999/10/DBI.html/)  and [Simon Cozens wrote more generally about DBI](https://www.perl.com/pub/2003/10/23/databases.html/).
 
 For more on how to protect your databases, [Andy Lester](https://blog.petdance.com/) maintains [Bobby-Tables](http://bobby-tables.com/), which shows you how to avoid SQL injection attacks.
