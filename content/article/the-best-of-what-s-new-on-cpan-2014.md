@@ -41,7 +41,7 @@ C-related Perl libraries got a big boost in 2014. Asides from Ingy's refreshed [
 
 [Hash::Ordered]({{<mcpan "Hash::Ordered" >}}) was a best-in-class implementation of an ordered hash class by David Golden. He also gave an in-depth [talk](https://www.youtube.com/watch?v=p4U6FWyRBoQ&feature=youtu.be) of the trade offs of the solution and the alternatives on CPAN (slides [here](http://www.dagolden.com/wp-content/uploads/2009/04/Adventures-in-Optimization-NYpm-July-2014.pdf)).
 
-Did you know that [File::Slurp]({{<mcpan "File::Slurp" >}}) can have issues with the Perl encoding layer? (among other [issues](http://blogs.perl.org/users/leon_timmermans/2013/05/why-you-dont-need-fileslurp.html)). Leon Timmermans wrote [File::Slurper]({{<mcpan "File::Slurper" >}}) as a better alternative.
+Did you know that [File::Slurp]({{<mcpan "File::Slurp" >}}) can have issues with the Perl encoding layer? (among other [issues](https://web.archive.org/web/20130609035412/http://blogs.perl.org/users/leon_timmermans/2013/05/why-you-dont-need-fileslurp.html)). Leon Timmermans wrote [File::Slurper]({{<mcpan "File::Slurper" >}}) as a better alternative.
 
 Ah [Sereal]({{<mcpan "Sereal" >}}), the super-fast seralizer software. [SerealX::Store]({{<mcpan "SerealX::Store" >}}) was an attempt to create a storable-like interface over Sereal, except tastier. [XML::Dataset]({{<mcpan "XML::Dataset" >}}) implements a simple DSL for extracting data from XML/XHTML documents.
 

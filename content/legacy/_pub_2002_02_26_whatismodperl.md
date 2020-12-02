@@ -43,7 +43,7 @@ mod\_perl allows you to configure your Apache server and handlers in Perl (using
 
 ### <span id="how fast and stable is mod_perl">How Fast and Stable Is mod\_perl?</span>
 
-Many people ask, \`\`How much of a performance improvement does mod\_perl give?'' Well, it all depends on what you are doing with mod\_perl -- and possibly whom you ask. Developers report speed boosts from 200 percent to 2,000 percent. The best way to measure is to try it and see for yourself! (see <http://perl.apache.org/tidbits.html> and <http://perl.apache.org/stories/> for the facts).
+Many people ask, \`\`How much of a performance improvement does mod\_perl give?'' Well, it all depends on what you are doing with mod\_perl -- and possibly whom you ask. Developers report speed boosts from 200 percent to 2,000 percent. The best way to measure is to try it and see for yourself! (see <http://perl.apache.org/tidbits.html> and <https://web.archive.org/web/20020202121445/http://perl.apache.org/stories/> for the facts).
 
 Every second of every day, thousands of Web sites all over the world are using mod\_perl to serve hundreds of thousands of Web pages. Apache and mod\_perl are some of the best-tested programs ever written. Of course, they are continually being developed and improved, but you do not have to work on the \`\`bleeding edge'' of development -- you can use the stable products for your sites and let others do the testing of the new versions for you.
 
@@ -60,10 +60,10 @@ I want to show you just a few of the many busy and popular sites that are driven
 According to Netcraft ( <http://netcraft.com> ), as of August 2001 - 18 million hosts are running the free Apache Web server, which is about 60 percent of all checked in survey hosts!
 
 [Here is the graph](http://www.netcraft.com/survey/) of "Server Share in Internet Web Sites."
-What about mod\_perl? <http://perl.apache.org/netcraft/> reports that sites running mod\_perl account for 2,823,060 host names and 283,180 unique IP addresses. This is actually an underestimate, since when hosts are scanned for running Web servers only well-known ports are checked (80, 81, 8080 and a few others). If a server runs on unusual port, then it does not enter the count unless the owner has manually added it to the Netcraft database. Here is a graph of the growth in mod\_perl usage:
+What about mod\_perl? <https://web.archive.org/web/20020206221356/http://perl.apache.org/netcraft/> reports that sites running mod\_perl account for 2,823,060 host names and 283,180 unique IP addresses. This is actually an underestimate, since when hosts are scanned for running Web servers only well-known ports are checked (80, 81, 8080 and a few others). If a server runs on unusual port, then it does not enter the count unless the owner has manually added it to the Netcraft database. Here is a graph of the growth in mod\_perl usage:
 
 <img src="/images/_pub_2002_02_26_whatismodperl/mod_perl.jpg" alt="mod_perl growth graph" width="450" height="257" />
-For the latest numbers see <http://perl.apache.org/netcraft/> .
+For the latest numbers see <https://web.archive.org/web/20020206221356/http://perl.apache.org/netcraft/> .
 
 ### <span id="the road ahead">The Road Ahead</span>
 

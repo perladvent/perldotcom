@@ -365,7 +365,7 @@ The `Apache::Timeit` package is a part of the *Apache-Perl-contrib* files collec
 -   http\_load -- another webserver Benchmarking tool
     <http://www.acme.com/software/http_load/>
 -   Apache-Perl-contrib package
-    <http://perl.apache.org/dist/contrib/>
+    <https://web.archive.org/web/20020602043342/http://perl.apache.org/dist/contrib/>
 -   [Time::HiRes]({{<mcpan "Time::HiRes" >}}) and [Benchmark]({{<mcpan "Benchmark" >}}) is a part of the Core Perl
 -   `LWP` (libwww-perl)
     <https://metacpan.org/release/libwww-perl>

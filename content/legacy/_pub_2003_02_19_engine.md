@@ -393,7 +393,7 @@ There's a vast body of material available on search engine design, but little of
 **<span id="item_http%3A%2F%2Fhotwired%2Elycos%2Ecom%2Fwebmonkey%2F"></span><http://hotwired.lycos.com/webmonkey/code/97/16/index2a.html?collection=perl>**  
 This Webmonkey article dates back to 1997, but it's still the best tutorial on writing a reverse index search engine in Perl.
 
-**<span id="item_http%3A%2F%2Fmoskalyuk%2Ecom%2Fsoftware%2Fperl%2Fs"></span><http://moskalyuk.com/software/perl/search/kiss.htm>**  
+**<span id="item_http%3A%2F%2Fmoskalyuk%2Ecom%2Fsoftware%2Fperl%2Fs"></span><https://web.archive.org/web/20010409205457/http://moskalyuk.com/software/perl/search/kiss.htm>**  
 An example of a simple keyword search engine - no database, just a deep faith in Perl's ability to parse files quickly.
 
 **<span id="item_http%3A%2F%2Fwww%2Emovabletype%2Eorg%2Fdownload%2E"></span><http://www.movabletype.org/download.shtml>**  

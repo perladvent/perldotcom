@@ -38,7 +38,7 @@ Back in 2003, a couple of years after discovering Perl, I heard about Perl 6. I 
 
 I did more bits with Parrot over the following years—mostly on the bytecode format and some object orientation bits. I didn't really get involved with the Perl 6 compiler itself until 2007. That summer, I went to OSCON, drank a few beers and then told Larry Wall, of all people, that implementing junctions in the Perl 6 on Parrot compiler sounded interesting.
 
-Sadly, autumn of 2007 saw me pretty depressed. I withdrew from hacking on just about everything, went to wander around China for a month and hurriedly arranged to move abroad, in hope of putting some distance between myself and things. With the Spanish sun to improve my mood, and noticing that the latest iteration of the Perl 6 compiler—built on the [Parrot Compiler Toolkit](http://docs.parrot.org/parrot/devel/html/PCT_Tutorial.html)—had landed, it felt like time to try and make good on my junctions remark.
+Sadly, autumn of 2007 saw me pretty depressed. I withdrew from hacking on just about everything, went to wander around China for a month and hurriedly arranged to move abroad, in hope of putting some distance between myself and things. With the Spanish sun to improve my mood, and noticing that the latest iteration of the Perl 6 compiler—built on the [Parrot Compiler Toolkit](https://web.archive.org/web/20100822183254/http://docs.parrot.org/parrot/devel/html/PCT_Tutorial.html)—had landed, it felt like time to try and make good on my junctions remark.
 
 **What have you worked on?**
 
