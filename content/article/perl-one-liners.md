@@ -3,7 +3,7 @@
     "title"       : "Perl One-Liners",
     "authors"     : ["sundeep-agarwal"],
     "date"        : "2020-11-30T20:54:23",
-    "tags"        : [],
+    "tags"        : [one-liners],
     "draft"       : true,
     "image"       : "",
     "thumbnail"   : "",
@@ -11,21 +11,15 @@
     "categories"  : "tutorials"
   }
 
-This article discusses `perl` one-liner usage and where it shines compared to similar text processing tools.
+A shell utility like `bash` provides built-in commands and scripting features to easily solve and automate various tasks. External \*nix commands like `grep`, `sed`, `awk`, `sort`, `find`, or `parallel` can be combined to work with each other. Sometimes you can use `perl` either as a single replacement or a complement to them for specific use cases.
 
-## Why use Perl for one-liners?
-
-I assume you are already familiar with use cases where command line is more productive compared to GUI. See also this series of articles titled [Unix as IDE](https://sanctum.geek.nz/arabesque/series/unix-as-ide/).
-
-A shell utility like `bash` provides built-in commands and scripting features to easily solve and automate various tasks. External \*nix commands like `grep`, `sed`, `awk`, `sort`, `find`, `parallel`, etc can be combined to work with each other. Depending upon your familiarity with those tools, you can either use `perl` as a single replacement or complement them for specific use cases.
-
-The selling point of `perl` over tools like `grep`, `sed` and `awk` includes feature rich regular expression engine, built-in functions, extensive ecosystem and portability. Disadvantages include slower performance for most features that are supported out of the box by those tools and verbosity.
-
-See also [unix.stackexchange: when to use grep, sed, awk, perl, etc](https://unix.stackexchange.com/questions/303044/when-to-use-grep-less-awk-sed).
+`perl` has a feature rich regular expression engine, built-in functions, an extensive ecosystem, and is quite portable. However, `perl` may have slower performance compared to specialized tools and can be more verbose. Consider [when to use grep, sed, awk, perl, etc](https://unix.stackexchange.com/questions/303044/when-to-use-grep-less-awk-sed) on StackOverflow.
 
 ## Why use one-liners instead of scripts?
 
-Some tasks need just a few lines of code. For assembly level testing of a DSP chip, I had to replicate same scenario for multiple address ranges. My working knowledge of Linux command line was limited at that time and I didn't know how to use `sed` or `awk`. I used `vim` and `perl` for all sorts of text processing needs. I didn't know about `perl` options for one-liners, so I used to modify a script whenever I had to do search and replace for multiple files. Once, I even opened the files as `vim` buffers and used `bufdo` to see if that'd make my workflow simpler. If I had known about `sed` or `perl` one-liners, I could have easily combined `find` and/or `bash` globs and made my life easier.
+For assembly level testing of a DSP chip, I had to replicate the same scenario for multiple address ranges. My working knowledge of Linux command line was limited at that time and I didn't know how to use `sed` or `awk`. I used `vim` and `perl` for all sorts of text processing needs.
+
+I didn't know about `perl` options for one-liners, so I used to modify a script whenever I had to do search and replace for multiple files. Once, I even opened the files as `vim` buffers and used `bufdo` to see if that'd make my workflow simpler. If I had known about `sed` or `perl` one-liners, I could have easily combined `find` and/or `bash` globs and made my life easier.
 
 ```bash
 $ perl -i -pe 's/0xABCD;/0x1234;/; s/0xDEAD;/0xBEEF;/;' *.tests
@@ -38,11 +32,11 @@ $ mkdir backups
 $ perl -i'backups/*' -pe 's/SEARCH/REPLACE/g' *.txt
 ```
 
-See [Perl Command-Line Options](https://www.perl.com/pub/2004/08/09/commandline.html/) article by Dave Cross for an introduction to Perl cli options.
+See Dave Cross's [Perl Command-Line Options](https://www.perl.com/pub/2004/08/09/commandline.html/) for an introduction to Perl runtime switches.
 
 ## Powerful regexp features
 
-Perl regexp is much more powerful compared to Basic/Extended regular expressions that are used by utilities like `grep/sed/awk`. There's just too many differences to list here. The common features I often use are non-greedy and possessive quantifiers, lookarounds, `e` flag, subexpression call, `(*SKIP)(*FAIL)`, etc. Here's some examples from stackoverflow threads that I have answered over the years.
+Perl regexps are much more powerful than either basic or xxtended regular expressions used by utilities like `grep`, `sed`, `awk`. The common features I often use are non-greedy and possessive quantifiers, lookarounds, the `e` flag, subexpression calls, and `(*SKIP)(*FAIL)`. Here's some examples from stackoverflow threads that I have answered over the years.
 
 * [convert avr-asm to arm-gnu comments](https://stackoverflow.com/questions/64368280/sed-script-to-convert-avr-asm-to-arm-gnu-comments)
 
@@ -85,14 +79,14 @@ $ echo 'romarana:qwerty12543' | perl -pe 's/\d+$/reverse $&/e'
 romarana:qwerty34521
 ```
 
-Another common issue with BRE/ERE is escaping metacharacters. Here's how you can perform multiline fixed string substitution with `perl`. Don't save contents of `search.txt` and `replace.txt` in shell variables. Trailing newlines and ASCII NUL characters will cause issues. See [stackoverflow: pitfalls of reading file into shell variable](https://stackoverflow.com/questions/7427262/how-to-read-a-file-into-a-variable-in-shell/22607352#22607352) for details.
+Another common issue with any regexp is escaping metacharacters. Here's how you can perform multiline fixed string substitution with `perl`. Don't save contents of *search.txt* and *replace.txt* in shell variables. Trailing newlines and ASCII NUL characters will cause issues. See [stackoverflow: pitfalls of reading file into shell variable](https://stackoverflow.com/questions/7427262/how-to-read-a-file-into-a-variable-in-shell/22607352#22607352) for details.
 
 ```bash
 perl -0777 -ne '$#ARGV==1 ? $s=$_ : $#ARGV==0 ? $r=$_ :
                 print s/\Q$s/$r/gr' search.txt replace.txt ip.txt
 ```
 
-Unlike `grep/sed/awk`, the input record separator isn't removed by default.
+Unlike `grep`, `sed`, or `awk`, `perl` doesn't remove the input record by default:
 
 ```bash
 $ cat msg.txt
