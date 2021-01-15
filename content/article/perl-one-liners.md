@@ -427,6 +427,45 @@ $ echo $s | jq '.marks | join(":")'
 "78:62:93"
 ```
 
+## Speed
+
+Perl is usually slower, but performs better for certain cases of backreferences and quantifiers.
+
+```bash
+$ time LC_ALL=C grep -xE '([a-z]..)\1' /usr/share/dict/words > f1
+real    0m0.135s
+
+$ time perl -ne 'print if /^([a-z]..)\1$/' /usr/share/dict/words > f2
+real    0m0.039s
+
+$ time LC_ALL=C grep -xP '([a-z]..)\1' /usr/share/dict/words > f3
+real    0m0.012s
+```
+
+Perl's hash implementation performs better compared to Awk's associative arrays. The `SCOWL-wl.txt` file used below was created using [app.aspell.net](http://app.aspell.net/create). `words.txt` is from `/usr/share/dict/words`.
+
+```bash
+$ wc -l words.txt SCOWL-wl.txt
+  99171 words.txt
+ 662349 SCOWL-wl.txt
+ 761520 total
+
+# finding common lines between two files
+# shorter file passed as first argument here
+$ time awk 'NR==FNR{a[$0]; next} $0 in a' words.txt SCOWL-wl.txt > t1
+real    0m0.376s
+$ time perl -ne 'if(!$#ARGV){$h{$_}=1; next}
+                 print if exists $h{$_}' words.txt SCOWL-wl.txt > t2
+real    0m0.284s
+
+# longer file passed as first argument here
+$ time awk 'NR==FNR{a[$0]; next} $0 in a' SCOWL-wl.txt words.txt > f1
+real    0m0.603s
+$ time perl -ne 'if(!$#ARGV){$h{$_}=1; next}
+                 print if exists $h{$_}' SCOWL-wl.txt words.txt > f2
+real    0m0.536s
+```
+
 ## Other things to read
 
 * [When to use grep, sed, Awk, Perl, etc](https://unix.stackexchange.com/questions/303044/when-to-use-grep-less-awk-sed)
