@@ -20,7 +20,7 @@
 
 
 
-In a recent lightning article, [Customizing Emacs with Perl](/pub/2005/03/31/lightning2.html), [Bob DuCharme](/authors/bob-ducharme) explained how to use the Emacs `shell-command-on-region` function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the time needed to write the [elisp](http://www.gnu.org/software/emacs/elisp-manual/html_mono/elisp.html) code needed for a particular string manipulation, especially when he knew how much easier it would be for him to do that manipulation with Perl. However, by using the Emacs function `shell-command-on-region`, Bob could have his cake an eat it too--keep editing with Emacs, while using Perl on demand for string manipulation.
+In a recent lightning article, [Customizing Emacs with Perl](/pub/2005/03/31/lightning2.html), [Bob DuCharme](/authors/bob-ducharme) explained how to use the Emacs `shell-command-on-region` function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the time needed to write the [elisp](http://web.archive.org/web/20101228163508/http://www.gnu.org:80/software/emacs/elisp-manual/html_mono/elisp.html) code needed for a particular string manipulation, especially when he knew how much easier it would be for him to do that manipulation with Perl. However, by using the Emacs function `shell-command-on-region`, Bob could have his cake an eat it too--keep editing with Emacs, while using Perl on demand for string manipulation.
 
 I've often been in the same boat as Bob, though while using Microsoft Word. When facing a thorny string manipulation problem, I, too, have found myself thinking, *This would be so easy if I could just use Perl!*
 

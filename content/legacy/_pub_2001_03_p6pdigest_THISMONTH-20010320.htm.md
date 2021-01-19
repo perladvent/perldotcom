@@ -68,7 +68,7 @@ The discussion died down, and the PDD wasn't actually given a number or put in t
 
 Gee, what is it with garbage collection? I mean, it's not even interesting, but people just can't shake off the religious fervour attached to it.
 
-A few more ideas were brought to the table this time: Karl Hegbloom mentioned the real-time generational GC mechanism in [rScheme](http://www.rscheme.org/). Alan Burlison mentioned another model, the Sun WorkShop Memory Monitor, but this only works with Sun compilers. Damien Neil countered with http://www.hpl.hp.com/personal/Hans\_Boehm/gc/ Boehm's GC.
+A few more ideas were brought to the table this time: Karl Hegbloom mentioned the real-time generational GC mechanism in [rScheme](http://web.archive.org/web/20160310184142/http://www.rscheme.org/). Alan Burlison mentioned another model, the Sun WorkShop Memory Monitor, but this only works with Sun compilers. Damien Neil countered with http://www.hpl.hp.com/personal/Hans\_Boehm/gc/ Boehm's GC.
 
 Hong Zhang's thoughts are worth quoting in full:
 

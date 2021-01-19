@@ -35,7 +35,7 @@ Hot on the heels of the Israel conference will be the [Canadian YAPC](http://www
 
 YAPC::Canada will be keynoted by [Dick Hardt](http://www.yapc.ca/keynote.html) of [ActiveState](http://www.activestate.com/) - Dick will be talking about the history of Perl on Windows.
 
-There'll be both free and professional tutorials at this YAPC, with [Peter Scott](http://www.psdt.com/news/yapc-canada.html) giving tuition on object-oriented Perl. The two free tutorials are Mick Villeneuve's "Yet Another Perl Tutorial" for first-time Perl programmers, and Steve Jenkins' "Introduction to Regular Expressions."
+There'll be both free and professional tutorials at this YAPC, with [Peter Scott](http://web.archive.org/web/20080709061131/http://www.psdt.com/news/yapc-canada.html) giving tuition on object-oriented Perl. The two free tutorials are Mick Villeneuve's "Yet Another Perl Tutorial" for first-time Perl programmers, and Steve Jenkins' "Introduction to Regular Expressions."
 
 The presentations will be divided into a beginner and an advanced stream; highlights include talks on the Perl debugger, [Class::DBI](http://www.class-dbi.com/), event loops, extreme testing, and Perl date and time handling.
 
@@ -73,6 +73,6 @@ Details of speakers are not yet confirmed, but we know it'll be July 23-25, and 
 
 ### And finally ...
 
-In case you're overwhelmed by the amount of conferences on this year, I maintain an at-a-glance calendar at [iCal Exchange](http://www.icalx.com/html/PerlConf/year.php?cal=Perl32Conferences); if you're a user of Apple's iCal, you can subscribe to the Perl Conferences calendar at http://www.icalx.com/public/PerlConf/Perl32Conferences.ics
+In case you're overwhelmed by the amount of conferences on this year, I maintain an at-a-glance calendar at [iCal Exchange](http://www.icalx.com/html/PerlConf/year.php?cal=Perl32Conferences); if you're a user of Apple's iCal, you can subscribe to the Perl Conferences calendar at http://web.archive.org/web/20040121183005/http://www.icalx.com:80/public/PerlConf/Perl32Conferences.ics
 
 I hope to see you at one or more of the above!

@@ -129,7 +129,7 @@ While this example does a good job of showing how to fill the data structure, it
 
 ### The Dot Specification
 
-[Dot](http://www.graphviz.org/Documentation/dotguide.pdf) (PDF) is a diagramming, or directed, graph language created by Emden Gansner, Eleftherios Koutsofios, and Stephen North at Bell Labs. There are several implementations of Dot, including [GraphViz](http://www.graphviz.org), [WebDot](http://www.graphviz.org/webdot/), and [Grappa](http://www.research.att.com/~john/Grappa/). Interestingly, [OmniGraffle](http://www.omnigroup.com/applications/omnigraffle/), a powerful diagramming tool for Macintosh computers, can read simple Dot files.
+[Dot](http://www.graphviz.org/Documentation/dotguide.pdf) (PDF) is a diagramming, or directed, graph language created by Emden Gansner, Eleftherios Koutsofios, and Stephen North at Bell Labs. There are several implementations of Dot, including [GraphViz](http://www.graphviz.org), [WebDot](http://web.archive.org/web/20171026075454/http://www.graphviz.org:80/webdot/), and [Grappa](http://www.research.att.com/~john/Grappa/). Interestingly, [OmniGraffle](http://www.omnigroup.com/applications/omnigraffle/), a powerful diagramming tool for Macintosh computers, can read simple Dot files.
 
 ### Creating Dot Files
 

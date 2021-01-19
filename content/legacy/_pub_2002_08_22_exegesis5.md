@@ -99,7 +99,7 @@ As Piers Cawley has so eloquently misquoted: *“It is a truth universally ackno
 
 ### <span id="#whats_the_diff">What's the diff?</span>
 
-So let's take a look at some of those new features. To do that, we'll consider a series of examples structured around a common theme: recognizing and manipulating data in the Unix *[diff](http://www.gnu.org/manual/diffutils-2.8.1/html_node/Detailed-Normal.html)*
+So let's take a look at some of those new features. To do that, we'll consider a series of examples structured around a common theme: recognizing and manipulating data in the Unix *[diff](http://web.archive.org/web/20031204104626/http://www.gnu.org:80/manual/diffutils-2.8.1/html_node/Detailed-Normal.html)*
 
 A classic diff consists of zero-or-more text transformations, each of which is known as a “hunk”. A hunk consists of a modification specifier, followed by one or more lines of context. Each hunk is either an append, a delete, or a change, and the type of hunk is specified by a single letter (`'a'`, `'d'`, or `'c'`). Each of these single-letter specifiers is prefixed by the line numbers of the lines in the original document it affects, and followed by the equivalent line numbers in the transformed file. The context information consists of the lines of the original file (each preceded by a `'<'` character), then the lines of the transformed file (each preceded by a `'>'`). Deletes omit the transformed context, appends omit the original context. If both contexts appear, then they are separated by a line consisting of three hyphens.
 
