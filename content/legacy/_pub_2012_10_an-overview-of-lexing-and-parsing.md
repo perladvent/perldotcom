@@ -65,7 +65,7 @@ There are many situations where the only path to a solution requires a lexer and
 
                 <title>Short</title><p>Text</head><head>
 
-    See [Marpa::HTML]({{<mcpan "Marpa::HTML" >}}) for more details. So far, I have used [Marpa::R2]({{<mcpan "Marpa::R2" >}}) in all my work, which does not involve HTML.
+    See [Marpa::HTML](https://metacpan.org/pod/release/JKEGL/Marpa-HTML-0.112000/lib/Marpa/HTML.pm) for more details. So far, I have used [Marpa::R2]({{<mcpan "Marpa::R2" >}}) in all my work, which does not involve HTML.
 
 3.  Rendering an image, perhaps in SVG
 
@@ -121,16 +121,16 @@ There's another—more significant— reason to discuss lexing and parsing: to t
 
 Sure, regexps suit many simple cases, and the old standbys of flex and bison are always available, but now there's a new kid on the block: [Marpa](http://www.jeffreykegler.com/marpa). Marpa draws heavily from theoretical work done over many decades, and comes in various forms:
 
-libmarpa  
+libmarpa
 Hand-crafted in C.
 
-`Marpa::XS`  
+`Marpa::XS`
 The Perl and C-based interface to the previous version of libmarpa.
 
-`Marpa::R2`  
+`Marpa::R2`
 The Perl and C-based interface to the most recent version of libmarpa. This is the version I use.
 
-`Marpa::R2::Advanced::Thin`  
+`Marpa::R2::Advanced::Thin`
 The newest and thinnest interface to libmarpa, which documents how to make Marpa accessible to non-Perl languages.
 
 The problem, of course, is whether or not any of these are a good, or even excellent, choice. Good news! Marpa's advantages are huge. It's well tested, which alone is of great significance. It has a Perl interface, so that I can specify my task in Perl and let Marpa handle the details. It has its own [Marpa Google Group](http://groups.google.com/group/marpa-parser?hl=en). It's already used by various modules on the CPAN (see [a search for Marpa on the CPAN](https://metacpan.org/search?q=Marpa)); Open Source says you can see exactly how other people use it.
@@ -296,29 +296,29 @@ This is code I've used, taken directly from [GraphViz2::Marpa::Lexer::DFA]({{<mc
 
 Let's discuss these parameters.
 
-accepting  
+accepting
 This is an arrayref of state names. After processing the entire input stream, if the machine ends up in one of these states, it has accepted that input stream. All that means is that every input token matched an appropriate regexp, where "appropriate" means every char matched the regexp belonging to the current state, whatever the state was at the instant that char was input.
 
-actions  
+actions
 This is a hashref of function names so that the machine can call a function, optionally, upon entering or leaving any state. That's how the stockpile for recognized tokens works.
 
 Because I wrote these functions myself and wrote the rules to attach each to a particular combination of state and regexp, I encoded into each function the knowledge of what type of token the DFA has matched. That's how the stockpile ends up with (token, type) pairs to output at the end of the run.
 
-die\_on\_loop  
+die\_on\_loop
 This flag, if true, tells the DFA to stop if none of the regexps belonging to the current state match the current input char. Rather than looping forever, stop. Throw an exception.
 
 You might wonder what stopping automatically is not the default, or even mandatory. The default behavior allows you to try to recover from this bad state, or at least give a reasonable error message, before dying.
 
-logger  
+logger
 This is an (optional) logger object.
 
-start  
+start
 This is the name of the state in which the STT starts, so the code knows which regexp(s) to try upon receiving the very first character of input.
 
-transitions  
+transitions
 This is a potentially large arrayref which lists separately for all states all the regexps which may possibly match the current input char.
 
-verbose  
+verbose
 Specifies how much to report if the logger object is not defined.
 
 With all of that configured, the next problem is how to prepare the grammar in such a way as to fit into this parameter list.
@@ -330,35 +330,35 @@ The coder thus needs to develop regexps etc which can be fed directly into the c
 
 I use a spreadsheet with nine columns:
 
-Start  
+Start
 This contains one word, "Yes", against the name of the state which is the start state.
 
-Accept  
+Accept
 This contains the word "Yes" against the name of any state which will be an accepting state (the machine has matched an input stream).
 
-State  
+State
 This is the name of the state.
 
-Event  
+Event
 This is a regexp. The event will fire the current input char matches this regexp.
 
 Because the regexp belongs to a given state, we know the DFA will only process regexps associated with the current state, of which there will be usually one or or at most a few.
 
 When there are multiple regexps per state, I leave all other columns empty.
 
-Next  
+Next
 The name of the "next" state to which the STT will jump if the current char matches the regexp given on the same line of the spreadsheet (in the current state of course).
 
-Entry  
+Entry
 The optional name of the function the DFA is to call upon (just before) entry to the (new) state.
 
-Exit  
+Exit
 The optional name of the function the DFA is to call upon exiting from the current state.
 
-Regexp  
+Regexp
 This is a working column, in which I put formulas so that I can refer to them in various places in the Event column. It is not passed to the DFA in the transitions parameter.
 
-Interpretation  
+Interpretation
 Comments to myself.
 
 I've put the STT for [STT for GraphViz2::Marpa](http://savage.net.au/Perl-modules/html/graphviz2.marpa/default.stt.html) online.
@@ -421,16 +421,16 @@ Here's a sample of a `Marpa::R2` grammar (adapted from its synopsis):
 
 Despite the differences between this and the calls to `Set::FA::Element     -> new()` in the lexer example, these two snippets are basically the same:
 
-actions  
+actions
 This is the name of a Perl package in which Marpa will look for actions such as `do_add()` and `do_multiply()`. (Okay, the lexer has no such option, as it defaults to the current package.)
 
-start  
+start
 This is the *lhs* name of the rule to start with, as with the lexer.
 
-rules  
+rules
 This is an arrayref of *rule descriptors* defining the syntax of the grammar. This is the lexer's *transitions* parameter.
 
-default\_action  
+default\_action
 Use this (optional) callback as the action for any rule element which does not explicitly specify its own action.
 
 The real problem is recasting the syntax from BNF, or whatever, into a set of *rule descriptors*. How do you think about this problem? I suggest contrast-and-compare real code with what the grammar says it must be.

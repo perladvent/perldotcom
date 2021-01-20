@@ -48,7 +48,7 @@
 
 -   Slurp with confidence using [File::Slurper]({{<mcpan "File::Slurper" >}})
 -   It has a long title but it's worth it: [DBIx::Class::InflateColumn::Serializer::Sereal]({{<mcpan "DBIx::Class::InflateColumn::Serializer::Sereal" >}}) inflates / deflates into DBIx columns using the super-fast Sereal!
--   [Couchbase]({{<mcpan "Couchbase::README" >}}) is a new Perl client for the NoSQL database, implemented in XS
+-   [Couchbase]({{<mcpan "Couchbase" >}}) is a new Perl client for the NoSQL database, implemented in XS
 -   [Geo::Address::Formatter]({{<mcpan "Geo::Address::Formatter" >}}) formats addresses from all over the World.
 
 ### Config & DevOps

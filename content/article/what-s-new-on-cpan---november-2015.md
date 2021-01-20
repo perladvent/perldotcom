@@ -78,7 +78,7 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 ### Science & Mathematics
 
 -   [LCS::Similar]({{<mcpan "LCS::Similar" >}}) allows differences in the compared elements of Longest Common Subsequence (LCS) Algorithm
--   Simulate genomic restriction digests with [RestrictionDigest]({{<mcpan "RestrictionDigest" >}})
+-   Simulate genomic restriction digests with [RestrictionDigest](https://metacpan.org/pod/release/JINPENG/RestrictionDigest.V1.1/lib/RestrictionDigest.pm)
 
 ### Web
 

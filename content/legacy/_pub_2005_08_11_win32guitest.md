@@ -276,7 +276,7 @@ It can be simpler to create a wrapper around these three functions in order to m
 Here are some links you may find useful.
 
 -   [Win32::GuiTest documentation]({{<mcpan "Win32::GuiTest" >}})
--   [Win32::GuiTest::Examples]({{<mcpan "Win32::GuiTest::Examples" >}})
+-   [Win32::GuiTest::Examples](https://metacpan.org/pod/release/CTRONDLP/Win32-GuiTest-1_50.5/Examples.pm)
 -   The [PerlGuiTest group](http://groups.yahoo.com/group/perlguitest/) on Yahoo; this is quite an active group.
 -   [Win32::GuiTest extended tutorial](http://www.piotrkaluski.com/files/winguitest/docs/index.html)
 

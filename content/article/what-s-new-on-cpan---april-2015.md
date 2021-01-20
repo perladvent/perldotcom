@@ -67,8 +67,8 @@ Jasmine is a popular JavaScript test framework, and with frontend frameworks lik
 
 Two new BusPirate modules from Paul Evans:
 
--   [Device::BusPirate::Chip::SSD1306]({{<mcpan "Device::BusPirate::Chip::SSD1306" >}})
--   [Device::BusPirate::Chip::DS1307]({{<mcpan "Device::BusPirate::Chip::DS1307" >}})
+-   [Device::BusPirate::Chip::SSD1306]({{<mcpan "Device::Chip::SSD1306" >}})
+-   [Device::BusPirate::Chip::DS1307]({{<mcpan "Device::Chip::DS1307" >}})
 
 ### Web
 
