@@ -32,7 +32,7 @@ APIs & Apps
 
 Config & Devops
 ---------------
-* [App::ucpan](https://metacpan.org/pod/distribution/App-ucpan/script/ucpan) updates CPAN modules with easy-to-read information
+* [App::ucpan](https://metacpan.org/pod/release/KPEE/App-ucpan-1.13/script/ucpan) updates CPAN modules with easy-to-read information
 * [Dotenv](https://metacpan.org/pod/Dotenv) supports per-environment configurations, which is the *only* way to do them in 12 factor apps
 
 

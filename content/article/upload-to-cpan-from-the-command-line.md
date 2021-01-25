@@ -17,7 +17,7 @@
 }
 
 
-The Perl module [CPAN::Uploader]({{<mcpan "CPAN::Uploader" >}}) comes with a neat command line application called [cpan-upload]({{<mcpan "RJBS/CPAN-Uploader-0.103004/bin/cpan-upload" >}}) which allows Perl module authors to upload to CPAN from the command line. This article describes how to install cpan-upload and use it.
+The Perl module [CPAN::Uploader]({{<mcpan "CPAN::Uploader" >}}) comes with a neat command line application called [cpan-upload]({{<mcpan "RJBS/CPAN-Uploader-0.103015/bin/cpan-upload" >}}) which allows Perl module authors to upload to CPAN from the command line. This article describes how to install cpan-upload and use it.
 
 To upload modules to CPAN you must have a registered [PAUSE](http://pause.perl.org/pause/query) account. Registration is free and an account is usually activated within 24 hours. Once you have a registered PAUSE account, install CPAN::Uploader via the command line:
 
@@ -39,7 +39,7 @@ usage: cpan-upload [options] file-to-upload
     -v --verbose       enable verbose logging
     -h --help          display this help message
     --dry-run          do not actually upload anything
-                     
+
     -u --user          your PAUSE username
     -p --password      the password to your PAUSE account
     -d --directory     a dir in your CPAN space in which to put the files
@@ -67,7 +67,7 @@ PAUSE add message sent ok [200]
 The 2 step method involves calling cpan-upload with just your username and the filepath to the files to be uploaded. cpan-upload will then prompt for your password, which is entered directly into Perl, in a hidden format:
 
 ```perl
-cpan-upload -u sillymoos My-App-0.01.tar.gz 
+cpan-upload -u sillymoos My-App-0.01.tar.gz
 PAUSE Password:
 POSTing upload for My-App-0.01.tar.gz to https://pause.perl.org/pause/authenquery
 PAUSE add message sent ok [200]

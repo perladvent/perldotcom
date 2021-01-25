@@ -27,7 +27,7 @@ A few weeks ago, I attended NYC [Quack & Hack](http://duckduckgo.ticketleap.com/
 
 DuckDuckGo support several different types of instant answers, but today I'm going to focus on creating a cheatsheet, which is displayed by the search engine whenever a user searches for a matching set of keywords.
 
-To get going you'll need Perl 5.18 or higher and have installed [App::DuckPAN]({{<mcpan "App::duckpan" >}}), which you can do with `cpan` or `cpanminus`:
+To get going you'll need Perl 5.18 or higher and have installed [App::DuckPAN]({{<mcpan "App::DuckPAN" >}}), which you can do with `cpan` or `cpanminus`:
 
 ```perl
 $ cpan App::DuckPAN
@@ -242,7 +242,7 @@ my @test_zci = (
   heading => 'Perldoc Cheat Sheet',
   # check the html pattern
   html    => qr#$#s,
-);  
+);
 
 ddg_goodie_test(
     # name of goodie to test
@@ -277,7 +277,7 @@ Most of this is easy to follow; but there are a few gotchas; `@test_zci` is a va
 $ prove -I t/PerldocCheatSheet.t
 ```
 
-    t/PerldocCheatSheet.t .. ok    
+    t/PerldocCheatSheet.t .. ok
     All tests successful.
     Files=1, Tests=12,  0 wallclock secs ( 0.02 usr  0.00 sys +  0.17 cusr  0.01 csys =  0.20 CPU)
     Result: PASS
