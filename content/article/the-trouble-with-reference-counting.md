@@ -44,7 +44,7 @@ Reference counting scales linearly insofar as every variable created increases t
 
 Only objects that have a [DESTROY](https://perldoc.perl.org/perlobj#Destructors) method need timely reclamation, yet Perl  treats _every_ variable like it needs it, incrementing and decrementing reference counts live. Whenever Perl exits a block it must check for and clean up any unreferenced variables.
 
-Reference counting usually spreads the cost of GC over runtime, however deterministic and timely reclamation means that the potential cost of any given scope exit is unbounded. Imagine Perl returning from a subroutine which reclaims the final reference to a _huge_ graph of data, triggering an avalanche of reclamation's. Perl _has_ to clean it all up immediately; a tracing GC could choose not to.
+Reference counting usually spreads the cost of GC over runtime, however deterministic and timely reclamation means that the potential cost of any given scope exit is unbounded. Imagine Perl returning from a subroutine which reclaims the final reference to a _huge_ graph of data, triggering an avalanche of reclamations. Perl _has_ to clean it all up immediately; a tracing GC could choose not to.
 
 Reference counts increase memory use a little as every variable has a `refcnt` integer associated with it. Compared to tracing schemes, reference counting actually saves memory by not requiring a larger heap to avoid thrashing<sup>3</sup>. However circular references can increase memory use a lot via memory leaks (if detected the developer can [weaken](https://metacpan.org/pod/Scalar::Util#weaken) the reference to fix this).
 
@@ -56,7 +56,7 @@ Opportunity?
 ------------
 At first glance it seems like Perl can save runtime by switching to a tracing GC scheme and not checking or updating reference counts, but periodically reclaiming unused variables. Observe that most variables are [short-lived](https://en.wikipedia.org/wiki/Tracing_garbage_collection#Generational_GC_(ephemeral_GC)); therefore the cost of tracing should scale better than linearly (as only long-lived variables are traceable).
 
-However to avoid breaking a lot of code, Perl would still need to honor timely reclamation of objects with `DESTROY` methods. Perhaps it could follow a hybrid model, reference counting only those objects that need it, but that would reduce the performance benefits of tracing GC, and it complexifies the interpreter adding conditional branches for reference-counted variables. As objects may gain or lose a`DESTROY` method during runtime, the interpreter would also need to be able promote and demote variables from the reference counting scheme.
+However to avoid breaking a lot of code, Perl would still need to honor timely reclamation of objects with `DESTROY` methods. Perhaps it could follow a hybrid model, reference counting only those objects that need it, but that would reduce the performance benefits of tracing GC, and it complexifies the interpreter adding conditional branches for reference-counted variables. As objects may gain or lose a`DESTROY` method during runtime, the interpreter would also need to be able to add and remove variables from the reference counting scheme dynamically.
 
 A further wrinkle is that references to objects with `DESTROY` methods must _also_ be reference counted (and references to those references and so on). Imagine an array of database handles: the array itself must be reference counted so that when it is reclaimed, Perl can decrement the database handles' `refcnt` and possibly reclaim them as well.
 
@@ -64,6 +64,7 @@ A more promising line of inquiry may be to review Perl's reference counting code
 
 Before starting that effort, we should collect data on how much time Perl is spending on GC. Two Perl core developers, Todd Rinaldo and Tony Cook have told me they think Perl spends very little time on GC relative to other operations like memory allocation, IO and so on. If 2% of the runtime is spent on GC, reducing it by 30% is nothing to brag about. It may be the case that for Perl at least, better opportunities lie elsewhere.
 
+\
 \
 
 Thanks to Tony Cook, Dave Mitchell and Todd Rinaldo for their insights on Perl's GC behavior.
