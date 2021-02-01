@@ -12,19 +12,21 @@
   }
 
   function buildLinksList() {
-    var hosts = [ 'www.perl.com', 'perl.com', 'perldotcom.perl.org' ];
+    var ignore_hosts = [ 'www.perl.com', 'perl.com', 'perldotcom.perl.org' ];
     if (httpRequest.readyState === XMLHttpRequest.DONE) {
       if (httpRequest.status === 200 || httpRequest.status === 304) {
         response = JSON.parse(httpRequest.responseText);
         hostDomain = extractDomain(window.location.href);
-        hosts.push( hostDomain );
+        ignore_hosts.push( hostDomain );
         // build list of html links
         ul = '<ul>';
         links = [];
         for (i=0; i < 10; i++){
           linkDomain = extractDomain(response[i].url);
+          console.log( "linkDomain is " + linkDomain );
           // skip links to articles on the host's own website
-          if (hosts.include(linkDomain)) {
+          if (ignore_hosts.includes(linkDomain)) {
+          console.log( "linkDomain is in the ignore list" );
             continue;
           }
           links.push('<li><a href="' + response[i].url + '">' + response[i].title + '</a><br/>' + linkDomain + '</li>');
