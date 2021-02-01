@@ -17,13 +17,13 @@
 
 
 
-### <span id="introduction">Introduction</span>
+### Introduction
 
 Active Directory of Windows 2000's directory service, allowing organizations to keep and share information about networked resources and users. One significant feature of the Active Directory is that it is LDAP-compliant. Unfortunately, it is still very difficult to access the Active Directory without using the Active Directory Services Interface (ADSI). As a COM component, ADSI is very partial to the Windows operating system.
 
 What if you want to access information in your organization's Active Directory from a host that is not running Windows? One option is to build a piece of middleware (a daemon) to bridge a non-Windows host to the Active Directory. This article describes how to build such a daemon, and how to build a simple client would communicate with that daemon.
 
-### <span id="xmlrpc and active perl to the rescue">XML-RPC and Active Perl to the Rescue</span>
+### XML-RPC and Active Perl to the Rescue
 
 XML-RPC is a mechanism that enables platform-independent and language-independent distributed computing. It serializes function calls and their associated arguments into an XML stream, and transports the stream via the ubiquitous HTTP protocol. Although it might be an over-simplification, XML-RPC provides some of the power of CORBA without the associated pain.
 
@@ -38,7 +38,7 @@ Before we get into the details of our Active Directory Daemon and Active Directo
 Active Directory Daemon: [activedirectory\_daemon.pl](/media/_pub_2001_12_19_xmlrpc/activedirectory_daemon.pl)
 Active Directory Client: [activedirectory\_client.pl](/media/_pub_2001_12_19_xmlrpc/activedirectory_client.pl)
 
-### <span id="the active directory daemon">The Active Directory Daemon</span>
+### The Active Directory Daemon
 
 Our daemon will be able to do the following:
 
@@ -58,9 +58,9 @@ The first two are part of Active Perl, while the third module is available from 
 The `AuthenticateUser` subroutine authenticates the user against the active directory.
 
       sub AuthenticateUser {
-            my $strUserID       = shift || "someuserid"; 
+            my $strUserID       = shift || "someuserid";
             my $strUserPassword = shift || "Somepassword1";
-            my $strADsPath      = shift || 
+            my $strADsPath      = shift ||
                'LDAP://OU=somedivision,OU=somedepartment,DC=someuniversity,DC=edu';
             my $strDomain       = shift || "\@someuniversity.edu";
             my $strAttributeName = "userPrincipalName";
@@ -68,7 +68,7 @@ The `AuthenticateUser` subroutine authenticates the user against the active dire
 
 We've assigned default values to some of the scalars above to provide an example of how arguments will be used at various points in the process of querying the Active Directory. There are several ways of interacting with ADSI. In this bit of code, we bind directly to ADSI. Later on, we will show how we can use ADO to bind to ADSI. It is important to note that each method of interacting with ADSI has its own peculiarities.
 
-             my $objNameSpace = Win32::OLE->GetObject ('LDAP:') 
+             my $objNameSpace = Win32::OLE->GetObject ('LDAP:')
                     or die ("Cannot create LDAP object");.
              my $objObjSec = $objNameSpace->OpenDSObject($strADsPath, $strUserID,
        $strUserPassword, 1);
@@ -108,7 +108,7 @@ Now, we move on to the XML-RPC specific bits of the daemon program.
 
 We declare a hash of subroutines that are accessible to the XML-RPC client. The key of each entry is the name of the method prefixed by an identifier using the dot convention. In our case, we arbitrarily use the name of the daemon file as the identifier. The value part of each hash entry is the de-referenced pointer to the corresponding method. This hash serves as a sort of look up table for requests to methods made at the XML-RPC client. The subroutines besides `AuthenticateUser` will be discussed later in this article.
 
-        Frontier::Daemon->new(LocalPort => 8080, methods => $methods) 
+        Frontier::Daemon->new(LocalPort => 8080, methods => $methods)
                or die ("Cannot start HTTP daemon: $!");
 
 At this juncture, we insert the code that fires up the XML-RPC daemon. We do so creating a new `Frontier::Daemon` instance. The constructor subroutine takes two arguments, each as a key-value pair. The first argument is the port used by the daemon. Since the host may already be running a web server, we'll use port 8080. The second argument is the set of subroutines to be published for use by the XML-RPC client (see above).
@@ -120,10 +120,10 @@ Besides the `AuthenticateUser` subroutine, we've also included a couple of subro
             my $strAttributeValue = shift; #could be user ID, cn value etc
             my $strADsPath        = shift; #could be
             # "LDAP://OU=somedivision,OU=somedepartment,DC=someuniversity,DC=edu"
-            
+
             my $strDomain         = shift; #could be "someuniversity.edu"
 
-            if ($strAttributeName eq "userPrincipalName") { 
+            if ($strAttributeName eq "userPrincipalName") {
                 $strAttributeValue = $strAttributeValue . $strDomain; s
             }
 
@@ -141,13 +141,13 @@ Besides the `AuthenticateUser` subroutine, we've also included a couple of subro
             my $strCommandText = "<" . $strADsPath . "E>;" . $strFilter . "
             ;" . $strAttribs . ";" . $strScope;
 
-            my $objConnection = Win32::OLE->new ("ADODB.Connection") 
+            my $objConnection = Win32::OLE->new ("ADODB.Connection")
                  or die ("Cannot create ADODB object!");
 
             my $objRecordset = Win32::OLE->new ("ADODB.Recordset")
                  or die ("Cannot create ADODB recordset!");
 
-            my $objCommand = Win32::OLE-E<gt>new ("ADODB.Command") 
+            my $objCommand = Win32::OLE-E<gt>new ("ADODB.Command")
                  or die ("Cannot create ADODB command!");
 
             my %hashAdRecord;
@@ -166,8 +166,8 @@ At this juncture, I'll try to explain how the above variables are used. In our c
 
 Since we have used the user ID instead of the full `userPrincipalName`, we need to append *@somedomain* to the user ID. Hence we get,
 
-        if ($strAttributeName eq "userPrincipalName") { 
-            $strAttributeValue = $strAttributeValue . $strDomain; 
+        if ($strAttributeName eq "userPrincipalName") {
+            $strAttributeValue = $strAttributeValue . $strDomain;
         }
 
 The remainder of the above variable declarations with the exception of `%hashAdRecord` are required to enable ADO to bind with ADSI. I'll try to explain what's happening there. First we create the following objects:
@@ -190,7 +190,7 @@ We open the ADODB connection, and assign the ADODB Connection object to the Acti
 
         $objCommand->{CommandText} = ($strCommandText);
 
-        $objRecordset = $objCommand->Execute($strCommandText) 
+        $objRecordset = $objCommand->Execute($strCommandText)
             or die ("Cannot execute!");
 
 We assign $strCommandText to the CommandText property of the ADODB Command object, and next, we run the Execute method of the ADODB Command object.The $strCommandText variable is the argument of the Execute method. The value of the $strCommandText is the Active Directory analog of an SQL statement use to query an relational database. $strCommandText comprises four elements:
@@ -246,7 +246,7 @@ Next we use the `GetManagerCN` subroutine to extract the canonical name from the
 
             push @arrCommandChain, {%hashAdRecord};
             $strManagerString = GetManagerString($refAdRecord);
-            $strManagerCN = GetManagerCN($strManagerString); 
+            $strManagerCN = GetManagerCN($strManagerString);
         } until ($strTitle eq $strApexTitle);
         $refCommandChain = \@arrCommandChain;
         return $refCommandChain;
@@ -255,7 +255,7 @@ A `do` loop is used to traverse up the management hierarchy till we reach the us
 
 In the next section we will examine how the client uses the XML-RPC mechanism to make requests of the daemon.
 
-### <span id="the client in perl">The Client in Perl</span>
+### The Client in Perl
 
 Since most of the work is done by the active directory daemon, the active directory client in Perl is relatively simple. Because we've used the XML-RPC protocol, the client can be written in various languages, e.g. PHP 4, Python, Java, etc. However we shall continue with Perl to be consistent with the theme of this web site.
 
@@ -279,16 +279,16 @@ The first argument in the `$objServer->call` subroutine is the qualified daemon 
 
 As mentioned earlier, the XML-RPC daemon, can only return references. As such, we need to convert references to hashes, or arrays as appropriate. For example, `%hashAdRecord = %$refAdRecord`.
 
-### <span id="conclusion">Conclusion</span>
+### Conclusion
 
 XML-RPC is a much more than an effective mechanism to enable distributed computing. We can use it to provide access to platform specific services. In our case, we used XML-RPC to enable a non-Windows host to access data and services in the Active Directory. Furthermore, XML-RPC is simple to implement. I've made forays into distributed computing several years ago by way of Java's RMI and Microsoft's DCOM. In my experience, XML-RPC is by far the cleanest and most fuss-free mechanism of the three.
 
 So, if you're a Perl programmer, and are looking to leveraging off a service that only runs on the Windows platform, give Active Perl and XML-RPC a go. You'll be pleasantly surprised.
 
-### <span id="resources">Resources</span>
+### Resources
 
-<http://www.cpan.org>
+* [CPAN](http://www.cpan.org)
 
-<http://www.activestate.com>
+* [ActiveState](http://www.activestate.com)
 
-<http://xmlrpc-c.sourceforge.net/xmlrpc-howto/xmlrpc-howto.html>
+* [XML-RPC Howto](http://web.archive.org/web/20051102170445/http://xmlrpc-c.sourceforge.net:80/xmlrpc-howto/xmlrpc-howto.html)

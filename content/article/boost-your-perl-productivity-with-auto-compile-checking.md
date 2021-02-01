@@ -62,7 +62,7 @@ This enables me to catch the error before running the program, saving time.
 
 ### Checking syntax in a text-editor
 
-Using `watch` is useful, but I find it can be annoying to have to check a separate terminal window to know if my program compiles or not. Another way to do this is to run the command from within your text-editor. I'll show how you how to do this in vim, but it should be possible to do this in any text-editor that has save events which you can hook in to (e.g. examples for [Sublime Text](http://www.klaascuvelier.be/2013/06/sublime-command-on-save/) and [Emacs](http://flycheck.readthedocs.org/en/latest/)).
+Using `watch` is useful, but I find it can be annoying to have to check a separate terminal window to know if my program compiles or not. Another way to do this is to run the command from within your text-editor. I'll show how you how to do this in vim, but it should be possible to do this in any text-editor that has save events which you can hook in to (e.g. examples for [Sublime Text](http://web.archive.org/web/20150512200343/http://www.klaascuvelier.be:80/2013/06/sublime-command-on-save/) and [Emacs](http://flycheck.readthedocs.org/en/latest/)).
 
 Add the following line to your .vimrc file:
 

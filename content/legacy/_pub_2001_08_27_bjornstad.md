@@ -87,7 +87,7 @@ It would also be nice if she had a way to tidy things up: clean up her files, de
 
 ### Q: Do you plan to make the program available?
 
-A: Definitely. I'm going to have it downloadable from [my Web site](http://www.icogitate.com/~perl/sue) soon, with some detailed instructions on how to install it. I've hoped all along that other people could benefit from the program.
+A: Definitely. I'm going to have it downloadable from [my Web site](http://web.archive.org/web/20060510011217/http://www.icogitate.com:80/~perl/sue/) soon, with some detailed instructions on how to install it. I've hoped all along that other people could benefit from the program.
 
 ### Q: Many attendees found your talk inspiring. What are some ways that you see for the Perl community and other programmers to use their abilities for the good of others?
 
@@ -107,4 +107,4 @@ The worst thing about Perl may be its flexibility. Being so flexible has gained 
 
 ### Q: Any final words?
 
-A: That's all folks, but I'll continue to work on making that [Web site](http://www.icogitate.com/~perl/sue) more easily accessed and complete.
+A: That's all folks, but I'll continue to work on making that [Web site](http://web.archive.org/web/20060510011217/http://www.icogitate.com:80/~perl/sue/) more easily accessed and complete.

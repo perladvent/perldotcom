@@ -26,7 +26,7 @@ To be a better programmer, practice programming.
 
 It's not enough to practice, though. You must practice well and persistently. You need to explore branches and ideas and combinations as they come to your attention. Set aside some time to experiment with a new idea to see what you can learn and what you can use in your normal programming.
 
-How do you find new ideas? One way is through [code katas](https://pragprog.com/pragdave/Practices/CodeKata.rdoc), short pieces of code that start your learning.
+How do you find new ideas? One way is through [code katas](http://codekata.com), short pieces of code that start your learning.
 
 This article is the first in a series of code kata for Perl programmers. All of these exercises take place in the context of writing tests for Perl programs.
 

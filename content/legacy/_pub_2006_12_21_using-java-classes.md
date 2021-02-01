@@ -68,7 +68,7 @@ After proceeding to the "Second Hop" in the Jackrabbit tutorial, I ran into my f
 
 I also realized that I did not want to use lengthy Java namespaces in my Perl code. Writing out `org::apache::jackrabbit::core::TransientRepository` or `javax::jcr::Repository` is not a very productive use of my time and makes for odd-looking Perl code.
 
-In addition, I didn't want a library that depended on Jackrabbit. There are several other JCR implementations either already written or on the way. Day has [CRX](https://www.day.com/day/en/products/crx.html), there's another Open Source implementation named [Jaceira](http://freshmeat.sourceforge.net/projects/jeceira) in the works, and [eXo](https://docs.exoplatform.org/exo-documents/exo-jcr.site/index.html) has also created a JCR implementation, to name a few.
+In addition, I didn't want a library that depended on Jackrabbit. There are several other JCR implementations either already written or on the way. Day has [CRX](https://www.day.com/day/en/products/crx.html), there's another Open Source implementation named [Jaceira](http://freshmeat.sourceforge.net/projects/jeceira) in the works, and [eXo](https://exojcr.jboss.org) has also created a JCR implementation, to name a few.
 
 Given these difficulties and the potential for other problems that I knew would come up, it was time to build this project as a Perl module.
 

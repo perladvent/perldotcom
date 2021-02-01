@@ -68,7 +68,7 @@ First look for the main window of the application, and then descend the hierarch
 
 How can you know the windows hierarchy? There are two main ways. If you have written the GUI yourself or have access to its sources and have enough experience, you may find out what the hierarchy of windows is. Unfortunately, that's quite tricky and prone to error.
 
-Another much simpler way to do this on Windows platforms is to use the free [WinSpy++](http://www.catch22.net/software/winspy.asp) program. Basically, it allows you to [peek at an application's window structure](http://www.piotrkaluski.com/files/winguitest/docs/ch02.html).
+Another much simpler way to do this on Windows platforms is to use the free [WinSpy++](content/legacy/_pub_2005_08_11_win32guitest.md) program. Basically, it allows you to [peek at an application's window structure](http://www.piotrkaluski.com/files/winguitest/docs/ch02.html).
 
 When you use WinSpy++ to look at an application windowing structure, you will notice that every window has a numeric handle, expressed in hex. However, Perl expresses in decimal. This will come up again in a moment.
 
