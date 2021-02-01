@@ -83,12 +83,12 @@ An ISP has three choices:
           ...
           # Included so that user can set his own configuration
           Include username.httpd.conf
-          
+
           # User-specific settings which will override any potentially
           # dangerous configuration directives in username.httpd.conf
           ...
           ...
-          
+
           username.httpd.conf
           -------------------
           # Settings that your user would like to add/override, like
