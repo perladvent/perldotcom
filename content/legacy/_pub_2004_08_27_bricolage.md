@@ -176,7 +176,7 @@ Bricolage"). So who uses it?
 -   Academia
     -   [Oxford University Press](http://www.oup.co.uk/)
     -   [Adams State College](http://www.adams.edu/)
-    -   [The Lab School of Washington](http://my.labschool.org/)
+    -   [The Lab School of Washington](https://web.archive.org/web/20031205063215/http://my.labschool.org/welcome/)
     -   [Brain Mapping Unit, University of Cambridge](http://www-bmu.psychiatry.cam.ac.uk/)
 -   Research
     -   [The RAND Corporation](http://www.rand.org/)

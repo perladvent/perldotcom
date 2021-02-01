@@ -512,7 +512,7 @@ If you're interested in getting involved with the project, just install the prog
 
 -   [The Siesta home page](http://siesta.unixbeard.net)
 -   [Hates-Software](http://hates-software.com)
--   [\*That\* thread](http://london.pm.org/pipermail/london.pm/Week-of-Mon-20020701/011937.html)
--   [And \*again\*](http://london.pm.org/pipermail/london.pm/Week-of-Mon-20020729/012366.html)
+-   [\*That\* thread](https://web.archive.org/web/20030723013923/http://london.pm.org/pipermail/london.pm/Week-of-Mon-20020701/011937.html)
+-   [And \*again\*](https://web.archive.org/web/20041012002732/http://london.pm.org/pipermail/london.pm/Week-of-Mon-20020729/012366.html)
 -   [The philosophy of the Email::\* project](http://simon-cozens.org/draft-articles/email.html)
 

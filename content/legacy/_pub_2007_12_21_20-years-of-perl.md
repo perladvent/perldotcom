@@ -54,7 +54,7 @@ Later on I talked to a few fellow students about the assignment. One of them cla
 
 Enough said.
 
-(Originally published at [Perl Success Story, Israel.pm](http://perl.org.il/pipermail/perl/2003-October/003151.html).)
+(Originally published at [Perl Success Story, Israel.pm](https://web.archive.org/web/20071226112834/http://perl.org.il/pipermail/perl/2003-October/003151.html).)
 
 *Shlomi Fish has worked with Perl since 1996 and considers himself a happy user, developer and advocate of Perl and other open-source technologies.*
 

@@ -139,7 +139,7 @@ Achim Bohnet, who maintains the p5p mailing list archive at `www.xray.mpe.mpg.de
 
 ### <span id="Perl_Art">Perl Art</span>
 
-Some time ago I reported an [entertainment](http://www4.telge.kth.se/~d99_kme/). Since then, Michael Henning has gone ahead and produced a [camel](http://rto.dk/images/camel.html) and a [llama](http://rto.dk/images/llama.html).
+Some time ago I reported an [entertainment](http://www4.telge.kth.se/~d99_kme/). Since then, Michael Henning has gone ahead and produced a [camel](https://web.archive.org/web/20000815214239/http://rto.dk/images/camel.html) and a [llama](https://web.archive.org/web/20000815214245/http://rto.dk/images/llama.html).
 
 ### <span id="Floating_Point_Numbers">Floating-Point Numbers</span>
 

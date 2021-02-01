@@ -340,7 +340,7 @@ Here's a naturally occuring insecticide. An organic pesticide, if you will. It o
 
 [<img src="/images/_pub_1999_08_onion_talk1/ddt.gif" alt="ddt" width="300" height="300" />](/media/_pub_1999_08_onion_talk1/ddt.pdb)
 
-This molecule with the [Mr. Yuk](http://einstein.drexel.edu/pages/students/kohr/pages/Who_is_Mr.Yuck.html) chlorines is DDT, still used in many parts of the world, but not here. We thought it was death for insects, but it was also death for birds. The law of unintended consequences again. But where DDT is still used, millions of people are alive who would have been dead of malaria.
+This molecule with the [Mr. Yuk](https://web.archive.org/web/19981205043835/http://einstein.drexel.edu:80/pages/students/kohr/pages/Who_is_Mr.Yuck.html) chlorines is DDT, still used in many parts of the world, but not here. We thought it was death for insects, but it was also death for birds. The law of unintended consequences again. But where DDT is still used, millions of people are alive who would have been dead of malaria.
 
 To an organic chemist, pesticides are organic.
 

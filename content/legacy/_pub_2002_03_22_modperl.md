@@ -25,7 +25,7 @@ In this article I'll show step-by-step installation and configuration scenarios,
 
 The mod\_perl installation was tested on many mainstream Unix platforms, so unless you have a nonstandard system, you shouldn't have any problems building the basic mod\_perl server.
 
-If you are a Windows user, then the easiest way is to use the binary package available from <http://perl.apache.org/distributions.html.> From the same location, you can download the Linux RPM version and CVS snapshots. However, I always recommend to build the mod\_perl from the source, and as you will see in a moment, it's an easy thing to do.
+If you are a Windows user, then the easiest way is to use the binary package available from <http://perl.apache.org/distributions.html> From the same location, you can download the Linux RPM version and CVS snapshots. However, I always recommend to build the mod\_perl from the source, and as you will see in a moment, it's an easy thing to do.
 
 ### <span id="installing mod_perl is easy">Installing mod\_perl Is Easy</span>
 
@@ -66,7 +66,7 @@ Now we download the latest source distributions of Apache and mod\_perl. If you 
       % lwp-download http://www.apache.org/dist/httpd/apache_1.3.20.tar.gz
       % lwp-download http://perl.apache.org/dist/mod_perl-1.26.tar.gz
 
-You can make sure that you're downloading the latest stable versions by visiting the following distribution directories: *<http://www.apache.org/dist/httpd/>* and *<http://perl.apache.org/dist/>*. As you have guessed already, the former URL is the main Apache distribution directory, the latter is the same thing for mod\_perl.
+You can make sure that you're downloading the latest stable versions by visiting the following distribution directories: *<http://www.apache.org/dist/httpd/>* and *<https://web.archive.org/web/20020204183625/http://perl.apache.org/dist/>*. As you have guessed already, the former URL is the main Apache distribution directory, the latter is the same thing for mod\_perl.
 
 Untar both sources. You have to uncompress and untar the files. In addition to its main usage for tarring and untarring files, the GNU `tar` utility is able to uncompress files compressed by the `gzip` utility, when the `-z` option is used.
 
