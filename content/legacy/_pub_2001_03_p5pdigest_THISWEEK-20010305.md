@@ -41,7 +41,7 @@ And you wonder why Jarkko throws his hands in the air at the mention of anything
 
 ### <span id="Coderef_INC">Coderef @INC</span>
 
-[Nicholas Clark](http://simon-cozens.org/writings/whos-who.html#CLARK) provided a patch which extended the little-known coderef-in- `@INC` feature to allow passing an object; if you pass an object instead of a coderef, the `INC` method will be called on it. This has allowed him to create an experimental pragma, [`ex::lib::zip`](http://www.flirble.org/~nick/P/ex-lib-zip-0.01.tar.gz) which lets you put a module tree inside a ZIP archive and Perl will extract the modules it needs from it.
+[Nicholas Clark](http://simon-cozens.org/writings/whos-who.html#CLARK) provided a patch which extended the little-known coderef-in- `@INC` feature to allow passing an object; if you pass an object instead of a coderef, the `INC` method will be called on it. This has allowed him to create an experimental pragma, [`ex::lib::zip`](http://web.archive.org/web/20120525112357/http://www.flirble.org/~nick/P/ex-lib-zip-0.01.tar.gz) which lets you put a module tree inside a ZIP archive and Perl will extract the modules it needs from it.
 
 He then also explained what it was all about, in the hope that someone would write some proper documentation. Nobody did so, (my fault, I promised to but didn't get around to it) but his extremely helpful explanation of the coderef-in- `@INC` API, and the cheap source filter API it allows can be found [here](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01780.html).
 

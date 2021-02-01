@@ -81,7 +81,7 @@ Work on the `Encode` module to convert character sets continues, and it's really
 
 Peter Prymmer's did an excellent job and created an EBCDIC-&gt;Unicode mapping with it; Nick came up with a POD translation of the documentation on [how Encode's mapping files work](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-10/msg01122.html). (We stole them from Tcl! Ha!)
 
-The thread wandered off into discussion of what the Unicode characters `0x0000` and `0xFFFF` mean. Don't just guess, see the [Unicode FAQ](http://www.unicode.org/unicode/faq/)!
+The thread wandered off into discussion of what the Unicode characters `0x0000` and `0xFFFF` mean. Don't just guess, see the [Unicode FAQ](https://unicode.org//faq/)!
 
 ### <span id="Switch">Switch</span>
 

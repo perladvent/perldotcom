@@ -55,7 +55,7 @@ Or Keith Bostic's [famous claim](http://www.goodreads.com/quotes/437174-perl-the
 
 > Perl – The only language that looks the same before and after RSA encryption.
 
-Uncyclopedia has a hilarious [Perl entry](http://uncyclopedia.wikia.com/wiki/Perl), which mostly pokes fun at Perl's legibility. Perl isn't just unreadable. It's [ugly](http://www.dmclaughlin.com/2009/04/19/ugly-perl-a-lesson-in-the-importance-of-api-design/), [dirty](http://kalyanchakravarthy.net/?p=115) and even [hairy](http://everything2.com/title/I+hate+Perl).
+Uncyclopedia has a hilarious [Perl entry](http://uncyclopedia.wikia.com/wiki/Perl), which mostly pokes fun at Perl's legibility. Perl isn't just unreadable. It's [ugly](http://web.archive.org/web/20140411120356/http://www.dmclaughlin.com:80/2009/04/19/ugly-perl-a-lesson-in-the-importance-of-api-design/), [dirty](http://kalyanchakravarthy.net/?p=115) and even [hairy](http://everything2.com/title/I+hate+Perl).
 
 ### Perl 6
 

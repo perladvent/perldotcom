@@ -97,7 +97,7 @@ $mech->eval_in_page( 'StackExchange.switchMobile("on")' );
 
 When I run this, the screen changes from the full site to the mobile site.
 
-[![screenshots](https://farm9.staticflickr.com/8640/15943126852_07692bfc09.jpg)](https://farm9.staticflickr.com/8640/15943126852_07692bfc09.jpg "screenshots by brian d foy, on Flickr")
+[![screenshots](http://web.archive.org/web/20170812162748/https://farm9.staticflickr.com/8640/15943126852_07692bfc09.jpg)](http://web.archive.org/web/20170812162748/https://farm9.staticflickr.com/8640/15943126852_07692bfc09.jpg "screenshots by brian d foy, on Flickr")
 
 ### Some problems
 

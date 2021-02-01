@@ -44,7 +44,7 @@ The list of links is updated hourly, served over HTTPS and hosted on GitHub page
 
 If you'd rather not add that sidebar, consider adding a  **Editor's Note: Reddit does not support widgets anymore** for `/r/perl`. The Reddit widget respects Do Not Track.
 
-Finally, participate on [/r/perl](https://reddit.com/r/perl) and Twitter! Link to Perl resources and content you like; upvote or retweet Perl-related tweets. If you have something to say, reply to tweets or add yours comments to the subreddit links. Use the `#perl` hashtag.
+Finally, participate on  **See Editor's Note** and Twitter! Link to Perl resources and content you like; upvote or retweet Perl-related tweets. If you have something to say, reply to tweets or add yours comments to the subreddit links. Use the `#perl` hashtag.
 
 ### Stuff we're already good at
 [StackOverflow.com](https://stackoverflow.com/questions/tagged/perl) has excellent Perl answers that are regularly updated; this is a great resource for Perl programmers. [PerlWeekly](http://perlweekly.com) is a fantastic newsletter that links to the best Perl content of the week, subscribe if you haven't already. [PerlMonks](http://perlmonks.org) has tonnes of in-depth Perl guides and resources.

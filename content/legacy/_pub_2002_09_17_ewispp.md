@@ -246,7 +246,7 @@ It is outside the scope of this article to cover graph operations, but I've name
 
     How is the Web browser going to communicate back to the Web server? The only way it can is by requesting pages (via URLs.) For a graph browser we need two different kinds.
 
-    First, an image representing the graph. Second, a HTML page containing the **IMG** tag for the graph and the [imagemap](http://www.cris.com/~automata/tutorial.shtml).
+    First, an image representing the graph. Second, a HTML page containing the **IMG** tag for the graph and the [imagemap](http://web.archive.org/web/20110112012108/http://www.cris.com:80/~automata/tutorial.shtml).
 
     Since every node has a unique name we can use that to represent which node, and then use an extension to determine whether it is the HTML page or the graphic.
 
