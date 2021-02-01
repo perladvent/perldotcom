@@ -19,20 +19,20 @@
 
 *In this article we will talk about tools that we need before we can start working on the performance of our service.*
 
-<span id="essential_tools">Essential Tools</span>
+Essential Tools
 -------------------------------------------------
 
 In order to improve performance, we need measurement tools. The main tool categories are benchmarking and code profiling.
 
 It's important to understand that, in a large number of the benchmarking tests that we will execute, we will not look at the absolute result numbers but the relation between two or more result sets. The purpose of the benchmarks is to try to show which coding approach is preferable. You shouldn't try to compare the **absolute** results presented in the articles with those that you get while running the same benchmarks on your machine, since you won't have the exact hardware and software setup anyway. This kind of comparison would be misleading. If you compare the relative results from the tests running on your machine, then you will do the right thing.
 
-### <span id="benchmarking_applications">Benchmarking Applications</span>
+### Benchmarking Applications
 
 How much faster is mod\_perl than mod\_cgi (aka plain Perl/CGI)? There are many ways to benchmark the two. I'll present a few examples and numbers below. Check out the `benchmark` directory of the mod\_perl distribution for more examples.
 
 There is no need to write a special benchmark though. If you want to impress your boss or colleagues, then just take some heavy CGI script you have (e.g. a script that crunches some data and prints the results to STDOUT), open two xterms and call the same script in mod\_perl mode in one xterm and in mod\_cgi mode in the other. You can use `lwp-get` from the `LWP` package to emulate the browser. The `benchmark` directory of the mod\_perl distribution includes such an example.
 
-#### <span id="benchmarking_perl_code">Benchmarking Perl Code</span>
+#### Benchmarking Perl Code
 
 If you are going to write your own benchmarking utility, then use the `Benchmark` module and the `Time::HiRes` module where you need better time precision (&lt;10msec).
 
@@ -60,7 +60,7 @@ If you want to get the benchmark results in microseconds, then you will have to 
       my $elapsed = tv_interval($start_time,$end_time);
       print "The sub took $elapsed seconds."
 
-#### <span id="benchmarking_a_graphic_hits_counter_with_persistent_db_connections">Benchmarking a Graphic Hits Counter with Persistent DB Connections</span>
+#### Benchmarking a Graphic Hits Counter with Persistent DB Connections
 
 Here are the numbers from Michael Parker's mod\_perl presentation at the Perl Conference (Aug, 98). The script is a standard hits counter, but it logs the counts into a mysql relational DataBase:
 
@@ -83,7 +83,7 @@ We don't know what server configurations were used for these tests, but I guess 
 
 The source code of the script was available online, but, sadly, isn't anymore. However, you can reproduce the same performance speedup with pretty much any CGI script written in Perl.
 
-#### <span id="benchmarking_response_times_with_apachebench">Benchmarking Response Times With ApacheBench</span>
+#### Benchmarking Response Times With ApacheBench
 
 ApacheBench (**ab**) is a tool for benchmarking your Apache HTTP server. It is designed to give you an idea of the performance that your current Apache installation can give. In particular, it shows you how many requests per second your Apache server is capable of serving. The **ab** tool comes bundled with the Apache source distribution.
 
@@ -115,7 +115,7 @@ We can see that under load of 10 concurrent users our server is capable of proce
 
 For example, if we believe that the script *perl/test.pl* is not efficient, then we will try to improve it and run the benchmark again to see whether we have any improvement in performance.
 
-#### <span id="benchmarking_response_times_with_httperf">Benchmarking Response Times With httperf</span>
+#### Benchmarking Response Times With httperf
 
 httperf is a utility written by David Mosberger. Just like ApacheBench, it measures the performance of the Web server.
 
@@ -148,7 +148,7 @@ The timeout option defines the number of seconds that the client is willing to w
          Errors: total 299 client-timo 299 socket-timo 0 connrefused 0 connreset 0
          Errors: fd-unavail 0 addrunavail 0 ftab-full 0 other 0
 
-#### <span id="benchmarking_response_times_with_http_load">Benchmarking Response Times With http\_load</span>
+#### Benchmarking Response Times With http\_load
 
 `http_load` is yet another utility that does Web server load testing. It can simulate a 33.6 modem connection (*-throttle*) and allows you to provide a file with a list of URLs, which we be fetched randomly. You can specify how many parallel connections to run using the *-parallel N* option, or you can specify the number of requests to generate per second with *-rate N* option. Finally, you can tell the utility when to stop by specifying either the test time length (*-seconds N*) or the total number of fetches (*-fetches N*).
 
@@ -177,7 +177,7 @@ Note that when you provide a file with a list of URLs make sure that you don't h
 
       ./http_load: unknown protocol -
 
-#### <span id="benchmarking_response_times_with_the_crashme_script">Benchmarking Response Times With crashme Script</span>
+#### Benchmarking Response Times With crashme Script
 
 This is another crashme suite originally written by Michael Schilli (and was located at <http://www.linux-magazin.de> site, but now the link has gone). I made a few modifications, mostly adding `my()` operators. I also allowed it to accept more than one url to test, since sometimes you want to test more than one script.
 
@@ -338,7 +338,7 @@ And the code:
         write;
       }
 
-#### <span id="benchmarking_perlhandlers">Benchmarking PerlHandlers</span>
+#### Benchmarking PerlHandlers
 
 The `Apache::Timeit` module does `PerlHandler` Benchmarking. With the help of this module you can log the time taken to process the request, just like you'd use the `Benchmark` module to benchmark a regular Perl script. Of course, you can extend this module to perform more advanced processing like putting the results into a database for a later processing. But all it takes is adding this configuration directive inside *httpd.conf*:
 
@@ -355,7 +355,7 @@ An example of the lines which show up in the *error\_log* file:
 
 The `Apache::Timeit` package is a part of the *Apache-Perl-contrib* files collection available from CPAN.
 
-<span id="references">References</span>
+References
 ---------------------------------------
 
 -   The mod\_perl site's URL:
